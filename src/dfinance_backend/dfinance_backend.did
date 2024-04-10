@@ -1,1 +1,1 @@
-service : { say_hello : (text) -> (text) query }
+service : { check_username : (text) -> (bool) query }

@@ -1,3 +1,1 @@
-service : {
-    "greet": (text) -> (text) query;
-}
+service : { say_hello : (text) -> (text) query }

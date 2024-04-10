@@ -1,23 +1,35 @@
-import { useState } from 'react';
-import { dfinance_backend } from 'declarations/dfinance_backend';
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useAuth, AuthProvider } from "./utils/useAuthClient";
+import routes from './routes/routes';
+
 
 function App() {
-  const [greeting, setGreeting] = useState('');
+  const { reloadLogin } = useAuth();
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    const name = event.target.elements.name.value;
-    dfinance_backend.greet(name).then((greeting) => {
-      setGreeting(greeting);
-    });
-    return false;
-  }
+  useEffect(() => {
+    reloadLogin();
+  }, []);
 
   return (
-    <main>
-      <h1 className='text-3xl font-bold underline'> hello</h1>
-    </main>
+
+    <Router>
+      <Routes>
+        {routes.map((route, index) => (
+          <Route
+            key={index}
+            path={route.path}
+            element={route.component}
+          />
+        ))}
+
+      </Routes>
+    </Router>
   );
 }
 
-export default App;
+export default () => (
+  <AuthProvider>
+    <App />
+  </AuthProvider>
+);

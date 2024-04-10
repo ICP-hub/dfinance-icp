@@ -1,4 +1,5 @@
 import { AuthClient } from "@dfinity/auth-client";
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
     createActor,
@@ -7,7 +8,7 @@ import {
 } from "../../../declarations/dfinance_backend/index";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { Actor, HttpAgent } from "@dfinity/agent";
-import appConstants from "../../Constants/appConstants";
+// import appConstants from "../../Constants/appConstants";
 
 const AuthContext = createContext();
 
@@ -33,7 +34,7 @@ const defaultOptions = {
         identityProvider:
             process.env.DFX_NETWORK === "ic"
                 ? "https://identity.ic0.app/#authorize"
-                : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
+                : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/`,
     },
 };
 
@@ -47,7 +48,7 @@ const defaultOptions = {
 export const useAuthClient = (options = defaultOptions) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [accountIdString, setAccountIdString] = useState("");
-    const [userType, setUserType] = useState(appConstants.UNKNOWN);
+    // const [userType, setUserType] = useState(appConstants.UNKNOWN);
     const [authClient, setAuthClient] = useState(null);
     const [identity, setIdentity] = useState(null);
     const [principal, setPrincipal] = useState(null);
@@ -130,8 +131,8 @@ export const useAuthClient = (options = defaultOptions) => {
             }
         );
         setBackendActor(backendActorNew);
-        let userType = await backendActorNew.check_user_type();
-        setUserType(userType);
+        // let userType = await backendActorNew.check_user_type();
+        // setUserType(userType);
     }
 
     const createLedgerActor = (canisterId) => {
@@ -169,7 +170,7 @@ export const useAuthClient = (options = defaultOptions) => {
         actor,
         reloadLogin,
         accountIdString,
-        userType,
+
     };
 };
 

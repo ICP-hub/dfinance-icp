@@ -1,8 +1,4 @@
-use crate::{
-    api,
-    types::{User},
-    with_state,
-};
+use crate::{api, types::User, with_state};
 use ic_cdk::{caller, query, update};
 
 #[query]

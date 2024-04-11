@@ -3,3 +3,23 @@
 @tailwind utilities;
 
 
+*{
+    font-family: "Poppins", sans-serif;
+}
+
+body{
+    background: rgba(255, 255, 255, 1);
+}
+
+.d_color{
+    color: #517688 !important;
+    font-style: normal !important;
+}
+
+.tab_cards_gradient{
+    background: radial-gradient(circle at 95.33% 99.97%, #9EE1EC 15%, #4659CF 100%);
+}
+
+.button_gradient{
+    background: rradial-gradient(circle at 102.51% -1.56%, #FCBD78 15%, #D379AB 54%, #C562BD 67%, #4659CF 100%);
+}

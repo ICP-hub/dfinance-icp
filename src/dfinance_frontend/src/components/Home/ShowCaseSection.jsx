@@ -6,20 +6,20 @@ const ShowCaseSection = ({ data }) => {
     return (
         <>
             <div className="w-full">
-                <h1 className="text-[#2A1F9D] font-bold text-[64px]">{data.title}</h1>
+                <h1 className="text-[#2A1F9D] font-bold text-xl xl:text-[64px]">{data.title}</h1>
             </div>
-            <div className="w-full flex">
-                <div className="w-8/12 pr-6">
-                    <p className="text-[#737373] font-semibold">
+            <div className="w-full flex flex-wrap">
+                <div className="w-full lg:w-8/12 pr-6">
+                    <p className="text-[#737373] font-semibold my-6 text-sm lg:text-base">
                         {data.description}
                     </p>
                 </div>
                 {
-                    data.isICP && <div className="w-4/12 text-white font-semibold pl-6">
-                        <div className="w-full flex justify-start mb-2">
+                    data.isICP && <div className="w-full lg:w-4/12 text-white font-semibold pl-6 mt-5 lg:mt-0">
+                        <div className="w-full flex justify-center lg:justify-start mb-2">
                             <button type="button" className="rounded-full p-2 px-6 bg-gradient-to-r from-[#4659CF] to-[#FCBD78] border border-[#517688] flex items-center gap-2">Apply for a Grant <MoveRight /> </button>
                         </div>
-                        <div className="w-full flex justify-end mb-2">
+                        <div className="w-full flex justify-center lg:justify-end mb-2">
                             <button type="button" className="rounded-full p-2 px-6 bg-gradient-to-r from-[#4659CF] to-[#FCBD78] border border-[#517688] flex items-center gap-2">Subscribe to ICP News <MoveRight /> </button>
                         </div>
                     </div>

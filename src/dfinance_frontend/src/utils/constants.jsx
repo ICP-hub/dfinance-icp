@@ -158,3 +158,5 @@ export const FAQ_QUESTION = [
 
 
 export const TAB_CARD_DESCRIPTION_LENGTH = 300
+
+export const TEMP_HERO_COUNTER_NUMBER = 10000000

@@ -8,6 +8,8 @@ import TabPanel from "../../components/Home/TabPanel";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import ShowCaseSection from "../../components/Home/ShowCaseSection";
 import MobileTobNav from "../../components/Home/MobileTobNav";
+import HeroSection from "../../components/Home/HeroSection";
+import HowITWork from "../../components/Home/HowITWork";
 
 const Home = () => {
     const [currentTab, setCurrentTab] = React.useState(0)
@@ -17,7 +19,7 @@ const Home = () => {
     return (
         <>
             {/* Main Home Page */}
-            <div className="w-full px-4 md:px-12 xl:px-24 relative overflow-hidden">
+            <div className="w-full xl2:w-1/2 xl2:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden">
                 <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
                     <Ellipse position={"top-right"} className="w-48 h-48 md:w-[400px] md:h-[400px]" />
                 </div>
@@ -39,20 +41,7 @@ const Home = () => {
                         <Menu />
                     </button>
                 </nav>
-                <div id="hero" className="flex justify-center text-2xl md:text-[32px] xl:text-[45px] font-medium lg:font-extralight text-[#2A1F9D] mt-4">
-                    <div className="w-fit xl:w-[700px] gap-2 flex flex-col items-center justify-center px-8">
-                        <h1 className="lg:my-2">ICP <span className="font-semibold bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] bg-clip-text text-transparent">DeFi</span> Earn And</h1>
-                        <h1 className="lg:my-2"><span className="font-semibold bg-gradient-to-tr from-[#4659CF]/100 to-[#C562BD]/70 bg-clip-text text-transparent">Borrow</span> Across Network</h1>
-                        <p className="text-sm font-normal text-[#737373] text-center mt-3">Contrary to popular belief, Lorem Ipsum is not simply random text.  45 BC text is It has roots in a piece of classical Latin literature from 45 BC.</p>
-
-
-                        <div className="w-fit mt-8 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl text-center p-6">
-                            <h1 className="text-[#2A1F9D] font-bold lg:my-3">$ 15,101,759,917.04M</h1>
-                            <p className="text-sm font-normal text-[#585454] lg:my-3">of liquidity is locked in crypto across {8} networks and over {15} markets.</p>
-                        </div>
-                    </div>
-
-                </div>
+                <HeroSection/>
 
                 {/* Tab based section */}
                 <section className="mt-24">
@@ -135,44 +124,7 @@ const Home = () => {
                 </section>
 
                 {/* How it Works */}
-                <section className="mt-24">
-                    <div className="w-full text-center text-[#2A1F9D]">
-                        <h1 className="text-[45px] font-extralight">How it Works</h1>
-                    </div>
-                    <div className="w-full h-auto lg:h-[400px] flex justify-center items-center flex-col relative cursor-pointer">
-                        <div className="w-fit lg:w-[700px] bg-[#DBE8EE] border-2 border-[#233D6324] my-3 top-0 rounded-3xl lg:absolute lg:translate-y-[0%] flex justify-center items-center p-4">
-
-                            <div className="w-1/12 flex justify-center text-[64px] font-bold">
-                                1
-                            </div>
-                            <div className="w-11/12 p-3 text-sm">
-                                <p className="font-semibold text-[#517687]">Submit ICP Request for comment(ARC)</p>
-                                <p className="text-[#737373]">Discuss with community members and receive feedback.</p>
-                            </div>
-                        </div>
-                        <div className="w-fit lg:w-[800px] bg-[#DBE8EE] border-2 border-[#233D6324] my-3 top-0 rounded-3xl lg:absolute lg:translate-y-[75%] flex justify-center items-center p-4">
-
-                            <div className="w-1/12 flex justify-center text-[64px] font-bold">
-                                2
-                            </div>
-                            <div className="w-11/12 p-3 text-sm lg:text-base">
-                                <p className="font-semibold text-[#517687]">Create a snapshot</p>
-                                <p className="text-[#737373]">Gauge community sentiment on a new proposal through a Snapshot.</p>
-                            </div>
-                        </div>
-                        <div className="w-fit lg:w-[900px] bg-[#DBE8EE] border-2 border-[#233D6324] my-3 top-0 rounded-3xl lg:absolute lg:translate-y-[145%] flex justify-center items-center p-4">
-
-                            <div className="w-1/12 flex justify-center text-[64px] font-bold">
-                                3
-                            </div>
-                            <div className="w-11/12 p-3 text-sm lg:text-base">
-                                <p className="font-semibold text-[#517687]">Submit an Aave Request for Improvement(AIP)</p>
-                                <p className="text-[#737373]">The proposal is submitted through a GitHub pull request, & community votes on approvals.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                </section>
+                <HowITWork/>
 
                 {/* Showcase Section (ICP Grants DAO & Security Contributors) */}
                 {

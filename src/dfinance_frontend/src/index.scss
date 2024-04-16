@@ -17,9 +17,32 @@ body{
 }
 
 .tab_cards_gradient{
-    background: radial-gradient(circle at 95.33% 99.97%, #9EE1EC 15%, #4659CF 100%);
+    background: radial-gradient(circle at 95.33% 99.97%, #83d8e6 15%, #4659CF 100%);
 }
 
 .button_gradient{
     background: rradial-gradient(circle at 102.51% -1.56%, #FCBD78 15%, #D379AB 54%, #C562BD 67%, #4659CF 100%);
+}
+.rotate_card{
+    perspective: 1000px;
+}
+.main_face{
+    backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    transform-style: preserve-3d;
+}
+.rotate_card:hover .main_face{
+    transition: ease-in-out 500ms;
+    transform: rotateY(180deg);
+}
+
+.back_face{
+    z-index: 1;
+    transform: rotateY(180deg);
+        transition: ease-in-out 500ms;
+
+}
+
+.stack_card_single{
+    @apply w-fit bg-[#DBE8EE] border-[3px] border-[#233D6324] rounded-[40px] flex justify-center items-center p-4 ease-in-out duration-500
 }

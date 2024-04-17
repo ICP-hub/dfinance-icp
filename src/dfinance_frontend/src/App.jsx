@@ -1,35 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {useRoutes } from "react-router-dom";
 import { useAuth, AuthProvider } from "./utils/useAuthClient";
-import routes from './routes/routes';
+import routesList from './routes/routes';
+
+export default function App() {
+  // const { reloadLogin } = useAuth();
+
+  // useEffect(() => {
+  //   reloadLogin();
+  // }, []);
 
 
-function App() {
-  const { reloadLogin } = useAuth();
+  const routes = useRoutes(routesList)
 
-  useEffect(() => {
-    reloadLogin();
-  }, []);
-
-  return (
-
-    <Router>
-      <Routes>
-        {routes.map((route, index) => (
-          <Route
-            key={index}
-            path={route.path}
-            element={route.component}
-          />
-        ))}
-
-      </Routes>
-    </Router>
-  );
+  return routes;
 }
-
-export default () => (
-  <AuthProvider>
-    <App />
-  </AuthProvider>
-);

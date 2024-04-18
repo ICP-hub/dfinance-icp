@@ -62,7 +62,7 @@ const DashboardNav = () => {
           </span>
           {isDrop && (
             <div
-              className={`w-fit z-50 absolute overflow-hidden ease-in-out top-full mt-3 bg-[#0C5974] text-white rounded-2xl`}
+              className={`w-fit z-50 absolute overflow-hidden animate-fade-down animate-duration-500 top-full mt-3 bg-[#0C5974] text-white rounded-2xl`}
             >
               {TAB_CARD_DATA.map((data, index) => (
                 <div

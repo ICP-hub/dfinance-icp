@@ -1,12 +1,14 @@
-import { Search, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 import React from "react"
 import {
   WALLET_ASSETS_TABLE_ROW,
   WALLET_ASSETS_TABLE_COL,
 } from "../../utils/constants"
 import Button from "../Button"
+import { useNavigate } from "react-router-dom"
 
 const WalletDetails = () => {
+  const navigate = useNavigate()
   const [isSearch, setIsSearch] = React.useState(false)
   return (
     <div className="w-full mt-10">
@@ -36,44 +38,69 @@ const WalletDetails = () => {
           </button>
         </form>
       </div>
-      <div className="w-full min-h-[400px] mt-6">
+      <div className="w-full min-h-[400px] mt-6 px-12">
         <div className="w-full">
-          <table className="w-full text-[#2A1F9D] font-semibold">
+          <table className="w-full text-[#2A1F9D] font-[500]">
             <thead>
               <tr className="text-left text-[#233D63]">
                 {WALLET_ASSETS_TABLE_COL.map((item, index) => (
-                  <td key={index}>
+                  <td key={index} className="p-3">
                     {item.header}
                   </td>
                 ))}
-                <th>Action</th>
+                
               </tr>
             </thead>
             <tbody>
-              {WALLET_ASSETS_TABLE_ROW.map((item, index) => (
-                <tr key={index}>
-                  <td className="p-3">{item.asset}</td>
-                  <td className="p-3">
+              {WALLET_ASSETS_TABLE_ROW.slice(0, 8).map((item, index) => (
+                <tr key={index} className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg">
+                  <td className="p-3 align-top">
+                    <div className="flex items-center gap-1">
+                      <img src={item.image} alt={item.asset} className="w-8 h-8 rounded-full"/>
+                      {item.asset}
+                    </div>
+                    
+                  </td>
+                  <td className="p-3 align-top">
                     <div className="flex flex-col">
                       <p>{item.total_supply_count}</p>
                       <p className="font-light">${item.total_supply}M</p>
                     </div>
                   </td>
-                  <td className="p-3">{item.supply_apy}</td>
-                  <td className="p-3">
+                  <td className="p-3 align-top">{item.supply_apy}</td>
+                  <td className="p-3 align-top">
                     <div className="flex flex-col">
                       <p>{item.total_borrow_count}</p>
                       <p className="font-light">${item.total_borrow}M</p>
                     </div>
                   </td>
-                  <td className="p-3">{item.borrow_apy}</td>
-                  <td className="p-3">
-                    <Button title={"Details"} />
+                  <td className="p-3 align-top">{item.borrow_apy}</td>
+                  <td className="p-3 align-top">
+                    <div className="w-full flex justify-end">
+                      <Button title={"Details"} onClickHandler={() => navigate("/dashboard/asset-details")}/>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          <div className="w-full flex justify-end mt-6">
+            <div id="pagination" className="flex gap-2">
+              <button
+                type="button"
+                className="border rounded-full p-1 border-[#517688] hover:border-[#73b1cf] hover:text-[#73b1cf] text-[#517688]"
+              >
+                <ChevronLeft />
+              </button>
+              <button
+                type="button"
+                className="border rounded-full p-1 border-[#517688] hover:border-[#73b1cf] hover:text-[#73b1cf] text-[#517688]"
+              >
+                <ChevronRight />
+              </button>
+            </div>
+          </div>
         </div>
         {/* <div className="w-full h-full flex items-center justify-center">
           <h1 className='text-[#7EA0B0] text-lg'>No Assets Found</h1>

@@ -1,10 +1,18 @@
 import React from 'react'
 import { HOME_TOP_NAV_LINK } from '../utils/constants'
 import { NavLink } from 'react-router-dom'
+import Ellipse from './Ellipse'
 
 const Footer = () => {
   return (
-      <footer className="bg-[#233D63] mt-24 z-0 px-3 xl:px-24 py-20">
+      <footer className="bg-[#233D63] w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto mt-24 px-3 xl:px-24 py-20 relative">
+            {/* Background Overlay */}
+          <div className="absolute top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
+              <Ellipse
+                  position={"bottom-left"}
+                  className="w-48 h-48 md:w-[400px] md:h-[400px]"
+              />
+          </div>
           <div className="w-full flex flex-wrap ">
               <div className="w-full md:w-3/12 text-white mb-5 md:mb-0">
                   <img src="/DFinance-Dark.svg" alt="DFinance" />

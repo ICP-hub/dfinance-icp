@@ -248,6 +248,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 0,
         asset: "ckBTC",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -258,6 +259,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 1,
         asset: "ckETH",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -268,6 +270,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 2,
         asset: "Dragginz",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -278,6 +281,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 3,
         asset: "Internet",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -288,6 +292,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 4,
         asset: "OpenChat",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -298,6 +303,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 5,
         asset: "Kinic",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -307,6 +313,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     },
     {
         row_id: 6,
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         asset: "Hot or Not",
         total_supply_count: 3.19,
         total_supply: 156.51,
@@ -317,6 +324,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     },
     {
         row_id: 7,
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         asset: "ICX",
         total_supply_count: 3.19,
         total_supply: 156.51,
@@ -328,6 +336,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 8,
         asset: "ICGhost",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -338,6 +347,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 9,
         asset: "Modclub",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -348,6 +358,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     {
         row_id: 10,
         asset: "BOOM DAO",
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         total_supply_count: 3.19,
         total_supply: 156.51,
         supply_apy: 3.19,
@@ -357,6 +368,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
     },
     {
         row_id: 11,
+        image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
         asset: "Catalyze",
         total_supply_count: 3.19,
         total_supply: 156.51,
@@ -367,6 +379,13 @@ export const WALLET_ASSETS_TABLE_ROW = [
     }
 ];
 
+
+export const ASSET_DETAILS = [
+  "Supply Info",
+  "Borrow Info",
+  "E-Mode info",
+  "Interest rate model"
+]
 
 export const TAB_CARD_DESCRIPTION_LENGTH = 300
 

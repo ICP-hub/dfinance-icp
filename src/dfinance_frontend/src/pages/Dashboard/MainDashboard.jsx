@@ -14,7 +14,7 @@ const MainDashboard = ({children}) => {
 
   return (
     <>
-      <div className="w-full xl2:w-1/2 xl2:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden">
+      <div className="w-full h-full xl2:w-1/2 xl2:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden">
         <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"top-right"}
@@ -30,13 +30,6 @@ const MainDashboard = ({children}) => {
           <DashboardNav />
           {children}
         </div>
-      </div>
-
-      <div className="absolute bottom-[-10%] left-0 xl:w-auto xl:h-auto -z-10">
-        <Ellipse
-          position={"bottom-left"}
-          className="w-48 h-48 md:w-[400px] md:h-[400px]"
-        />
       </div>
 
       {/* footer */}

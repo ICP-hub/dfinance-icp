@@ -2,7 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 
 
 const initialState = {
-    isWalletCreated: false
+    isWalletCreated: false,
+    assetDetailFilter:"Supply Info"
 };
 
 const utilitySlice = createSlice({
@@ -11,10 +12,13 @@ const utilitySlice = createSlice({
     reducers: {
         setIsWalletCreated: (state, action) => {
             state.isWalletCreated = action.payload;
+        },
+        setAssetDetailFilter: (state, action) => {
+            state.assetDetailFilter = action.payload;
         }
     }
 });
 
 
-export const { setIsWalletCreated } = utilitySlice.actions;
+export const { setIsWalletCreated, setAssetDetailFilter } = utilitySlice.actions;
 export default utilitySlice.reducer;

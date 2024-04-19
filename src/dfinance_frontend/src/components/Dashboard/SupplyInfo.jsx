@@ -4,12 +4,12 @@ import LineGraph from "./LineGraph"
 
 const SupplyInfo = () => {
   return (
-    <div className="w-10/12 ">
-      <div className="w-full flex items-start">
-        <div className="w-3/12">
+    <div className="w-full lg:w-10/12 ">
+      <div className="w-full flex flex-col md:flex-row items-start">
+        <div className="w-full md:w-3/12">
           <CircleProgess progessValue={58} />
         </div>
-        <div className="w-9/12 flex gap-8 px-3">
+        <div className="w-full md:w-9/12 flex gap-8 lg:px-3 overflow-auto text-xs md:text-sm lg:text-base whitespace-nowrap">
           <div className="relative text-[#5B62FE]">
             <h1 className="text-[#2A1F9D] font-medium">Total Supplied</h1>
             <hr
@@ -38,7 +38,7 @@ const SupplyInfo = () => {
           Collateral usage Can be collateral
         </p>
 
-        <div className="w-full flex gap-8 mt-6">
+        <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap">
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl">
             <h1 className="text-[#2A1F9D] font-medium">Max LTV</h1>
             <hr

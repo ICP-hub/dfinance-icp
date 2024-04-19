@@ -1,13 +1,15 @@
 import React from 'react'
 import { DASHBOARD_TOP_NAV_LINK, HOME_TOP_NAV_LINK } from '../utils/constants';
-import Logo from './Logo';
 import { NavLink } from 'react-router-dom';
 import { Menu } from 'lucide-react';
+import MobileTobNav from './Home/MobileTobNav';
 
 export default function Navbar({ isHomeNav }) {
+    const [isMobileNav, setIsMobileNav] = React.useState(false)
     return (
+        <>
         <nav className="w-full py-10 flex items-center justify-between">
-            <img src="/DFinance-Light.svg" alt="DFinance" />
+            <img src="/DFinance-Light.svg" alt="DFinance" className='w-[100px] md:w-[150px] lg:w-auto'/>
 
             <div className="gap-4 hidden md:flex">
                 {
@@ -27,5 +29,8 @@ export default function Navbar({ isHomeNav }) {
                 <Menu />
             </button>
         </nav>
+
+            <MobileTobNav isMobileNav={isMobileNav} setIsMobileNav={setIsMobileNav} isHomeNav={isHomeNav}/>
+        </>
     )
 }

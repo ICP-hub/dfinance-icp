@@ -3,9 +3,7 @@ import Navbar from "../../components/Navbar"
 import Footer from "../../components/Footer"
 import Ellipse from "../../components/Ellipse"
 
-import Button from "../../components/Button"
 import DashboardNav from "../../components/Dashboard/DashboardNav"
-import CreateWallet from "../../components/Dashboard/CreateWallet"
 
 const MainDashboard = ({children}) => {
   useEffect(() => {
@@ -14,7 +12,7 @@ const MainDashboard = ({children}) => {
 
   return (
     <>
-      <div className="w-full h-full xl2:w-1/2 xl2:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden">
+      <div className="w-full h-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative">
         <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"top-right"}
@@ -26,7 +24,7 @@ const MainDashboard = ({children}) => {
         <Navbar isHomeNav={false} />
 
         {/* main area */}
-        <div className="w-full">
+        <div className="w-full xl3:h-screen flex flex-col justify-center">
           <DashboardNav />
           {children}
         </div>

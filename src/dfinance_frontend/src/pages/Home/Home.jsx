@@ -22,7 +22,6 @@ import Button from "../../components/Button"
 const Home = () => {
   const [currentTab, setCurrentTab] = React.useState(0)
   const [currentFAQ, setCurrentFAQ] = React.useState(0)
-  const [isMobileNav, setIsMobileNav] = React.useState(false)
 
   return (
     <>
@@ -237,7 +236,7 @@ const Home = () => {
       {/* Footer */}
       <Footer />
 
-      <MobileTobNav isMobileNav={isMobileNav} setIsMobileNav={setIsMobileNav} />
+     
     </>
   )
 }

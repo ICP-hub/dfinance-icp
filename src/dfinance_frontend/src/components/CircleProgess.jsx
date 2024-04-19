@@ -21,7 +21,7 @@ const CircleProgess = ({ progessValue }) => {
     }
   }, [])
   return (
-      <svg width={90} height={90} className="block my-0 mx-auto">
+      <svg className="block my-0 mx-auto w-[90px] h-[90px]">
       <defs>
         <radialGradient
           id="gradient"

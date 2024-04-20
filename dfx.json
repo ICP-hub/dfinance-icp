@@ -1,38 +1,44 @@
 {
   "canisters": {
-    "icrc1_ledger_canister_backend": {
-      "candid": "src/icrc1_ledger_canister_backend/icrc1_ledger_canister_backend.did",
-      "package": "icrc1_ledger_canister_backend",
-      "type": "rust"
-    },
-    "icrc1_ledger_canister_frontend": {
-      "dependencies": [
-        "icrc1_ledger_canister_backend"
-      ],
-      "source": [
-        "src/icrc1_ledger_canister_frontend/dist"
-      ],
-      "type": "assets",
-      "workspace": "icrc1_ledger_canister_frontend"
-    },
-    "internet_identity": {
-      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
-      "frontend": {},
-      "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
-      },
+    "icrc1_ledger_canister": {
       "type": "custom",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
-    }
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/19dbb5cc6e3dc85c0ccd899b3182552612f1607d/rs/rosetta-api/icrc1/ledger/ledger.did",
+      "wasm": "https://download.dfinity.systems/ic/19dbb5cc6e3dc85c0ccd899b3182552612f1607d/canisters/ic-icrc1-ledger.wasm.gz"
+    },
+  "icrc1_ledger_canister_backend": {
+    "candid": "src/icrc1_ledger_canister_backend/icrc1_ledger_canister_backend.did",
+    "package": "icrc1_ledger_canister_backend",
+    "type": "rust"
   },
-  "defaults": {
-    "build": {
-      "args": "",
-      "packtool": ""
-    }
+  "icrc1_ledger_canister_frontend": {
+    "dependencies": [
+      "icrc1_ledger_canister_backend"
+    ],
+    "source": [
+      "src/icrc1_ledger_canister_frontend/dist"
+    ],
+    "type": "assets",
+    "workspace": "icrc1_ledger_canister_frontend"
   },
-  "output_env_file": ".env",
-  "version": 1
+  "internet_identity": {
+    "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+    "frontend": {},
+    "remote": {
+      "id": {
+        "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+      }
+    },
+    "type": "custom",
+    "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+  }
+},
+"defaults": {
+  "build": {
+    "args": "",
+    "packtool": ""
+  }
+},
+"output_env_file": ".env",
+"version": 1
 }
+

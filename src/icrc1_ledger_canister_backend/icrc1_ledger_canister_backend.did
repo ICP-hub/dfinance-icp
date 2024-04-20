@@ -1,3 +1,32 @@
+type Account = record { owner : principal; subaccount : opt blob };
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
+};
+type Result = variant { Ok : record { TransferFromResult }; Err : text };
+type Result_1 = variant {
+  Ok : record { TransferFromResult };
+  Err : record { RejectionCode; text };
+};
+type TransferFromError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  InsufficientAllowance : record { allowance : nat };
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
+};
+type TransferFromResult = variant { Ok : nat; Err : TransferFromError };
 service : {
-    "greet": (text) -> (text) query;
+  deposit_to_smart_contract : () -> (Result);
+  greet : (text) -> (text) query;
+  transfer_bucks : (Account, Account, nat) -> (Result_1);
 }

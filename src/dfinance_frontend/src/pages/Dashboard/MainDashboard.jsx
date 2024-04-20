@@ -5,7 +5,7 @@ import Ellipse from "../../components/Ellipse"
 
 import DashboardNav from "../../components/Dashboard/DashboardNav"
 
-const MainDashboard = ({children}) => {
+const MainDashboard = ({ children, isDGov }) => {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
@@ -24,10 +24,16 @@ const MainDashboard = ({children}) => {
         <Navbar isHomeNav={false} />
 
         {/* main area */}
-        <div className="w-full">
-          <DashboardNav />
-          {children}
-        </div>
+        {isDGov ? (
+          <div className="w-full">
+            {children}
+          </div>
+        ) : (
+          <div className="w-full">
+            <DashboardNav />
+            {children}
+          </div>
+        )}
       </div>
 
       {/* footer */}

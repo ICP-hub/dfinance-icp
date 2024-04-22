@@ -15,7 +15,7 @@ const CreateWallet = () => {
        }
     }, [isWalletCreated]);
   return (
-      <div className="w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[450px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6">
+      <div className="w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[450px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6">
           <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg">
               Please, connect your wallet
           </h1>

@@ -6,7 +6,7 @@ import Ellipse from './Ellipse'
 const Footer = () => {
   return (
       <div className="w-full bg-[#233D63]">
-      <footer className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto mt-24 px-3 xl:px-24 py-20 relative">
+          <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto mt-24 px-3 xl:px-24 py-20 relative">
             {/* Background Overlay */}
           <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
               <Ellipse

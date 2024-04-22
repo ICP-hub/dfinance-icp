@@ -3,13 +3,10 @@ import WalletDetails from "../components/Dashboard/WalletDetails"
 import MainDashboard from "../pages/Dashboard/MainDashboard"
 import Home from "../pages/Home/Home"
 import Login from "../pages/login/Login"
-import {useSelector} from 'react-redux';
 import { store } from "../redux/store"
 import AssetDetails from "../components/Dashboard/AssetDetails"
 import DFinanceGov from "../components/Dashboard/DFinanceGov"
-
-
-const { utility } = store.getState()
+import ProposalDetails from "../components/Dashboard/ProposalDetails"
 
 export default [
   {
@@ -53,7 +50,14 @@ export default [
           <MainDashboard isDGov={true}>
             <DFinanceGov />
           </MainDashboard>
-        ),
+        )
+      }, {
+        path: "dfinance-gov/proposal-details",
+        element: (
+          <MainDashboard isDGov={true}>
+            <ProposalDetails />
+          </MainDashboard>
+        )
       }
     ],
   },

@@ -1,18 +1,20 @@
-mod state_handler;
 pub mod api;
+pub mod math;
 mod memory;
+mod state_handler;
 mod types;
 mod upgrade;
 mod user;
-use state_handler::State;
 use candid::Principal;
 use ic_cdk::{caller, export_candid, post_upgrade, pre_upgrade};
 use ic_cdk_macros::{query, update};
 use ic_stable_structures::StableBTreeMap;
+use math::lending_borrowing::*;
 use memory::Memory;
 use serde::{Deserialize, Serialize};
-use std::{cell::RefCell};
-
+use state_handler::State;
+use std::cell::RefCell;
+use types::*;
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::new());

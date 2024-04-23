@@ -1,1 +1,7 @@
-service : { check_username : (text) -> (bool) query }
+type Deposit = record { wallet_address : text; amount : float64 };
+service : {
+  add_deposit : (Deposit) -> (text);
+  amount_available_for_borrowing : () -> (float64) query;
+  check_username : (text) -> (bool) query;
+  get_current_deposist : () -> (float64) query;
+}

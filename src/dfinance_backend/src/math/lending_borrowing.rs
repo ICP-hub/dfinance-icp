@@ -35,7 +35,7 @@ fn add_monthly_deposit(month: u32, amount: f64) {
     *total += amount;
 }
 
-//this function is used to
+//this function is used to add deposits
 #[update]
 fn add_deposit(deposit: Deposit) -> String {
     let key = if cfg!(test) {

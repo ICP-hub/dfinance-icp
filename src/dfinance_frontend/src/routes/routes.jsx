@@ -1,18 +1,51 @@
-import Home from "../pages/Home/Home";
-import Login from "../pages/login/Login";
-import Market from "../pages/market/Market";
-const routes = [
+import CreateWallet from "../components/Dashboard/CreateWallet"
+import WalletDetails from "../components/Dashboard/WalletDetails"
+import MainDashboard from "../pages/Dashboard/MainDashboard"
+import Home from "../pages/Home/Home"
+import Login from "../pages/login/Login"
+import {useSelector} from 'react-redux';
+import { store } from "../redux/store"
+import AssetDetails from "../components/Dashboard/AssetDetails"
+
+
+const { utility } = store.getState()
+
+export default [
   {
     path: "/",
-    component: <Home></Home>,
+    element: <Home />,
   },
   {
-    path: '/login',
-    component: <Login></Login>
+    path: "/login",
+    element: <Login></Login>,
   },
   {
-    path: '/market',
-    component: <Market></Market>
-  }
+    path: "/dashboard",
+    children: [
+      {
+        path: "main",
+        element: (
+          <MainDashboard>
+            <CreateWallet />
+          </MainDashboard>
+        ),
+      },
+      {
+        path: "wallet-details",
+        element: (
+          <MainDashboard>
+            <WalletDetails />
+          </MainDashboard>
+        ),
+      },
+      {
+        path: "asset-details",
+        element: (
+          <MainDashboard>
+            <AssetDetails />
+          </MainDashboard>
+        ),
+      }
+    ],
+  },
 ]
-export default routes;

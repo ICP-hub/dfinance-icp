@@ -2,42 +2,39 @@ use crate::{types::*, with_state};
 use candid::Principal;
 use ic_cdk::api::time;
 use ic_cdk::{caller, query, update};
-use once_cell::sync::Lazy;
-use std::sync::{Arc, Mutex};
+
 use time::OffsetDateTime;
 
 //global constant for utilization rate
-const UTILIZATION_RATE: f64 = 0.5;
+pub const UTILIZATION_RATE: f64 = 0.5;
 
 //global constant for interest rate
-const INTEREST_RATE: f64 = 0.1;
+pub const INTEREST_RATE: f64 = 0.1;
 
-// a global static variable for the total deposits
-pub static TOTAL_DEPOSITS: Lazy<Arc<Mutex<f64>>> = Lazy::new(|| Arc::new(Mutex::new(0.0)));
+
 
 //this function returns the current deposit
 #[query]
-fn get_current_deposist() -> f64 {
+pub fn get_current_deposist() -> f64 {
     let total_balance = {
-        let total_deposits = TOTAL_DEPOSITS.lock().unwrap();
-        *total_deposits
+        let total_deposits = with_state(|state| state.total_deposits);
+        total_deposits
     };
     total_balance
 }
 
 //this function gets called internally to add total deposits per month
-fn add_monthly_deposit(month: u32, amount: f64) {
+pub fn add_monthly_deposit(month: u32, amount: f64) {
     with_state(|state| {
         let current_deposit = state.total_deposit.entry(month).or_insert(0.0);
         *current_deposit += amount;
-    });
-    let mut total = TOTAL_DEPOSITS.lock().unwrap();
-    *total += amount;
+        state.total_deposits += amount;
+    })
 }
 
 //this function is used to add deposits
 #[update]
-fn add_deposit(deposit: Deposit) -> String {
+pub fn add_deposit(deposit: Deposit) -> String {
     let key = if cfg!(test) {
         Principal::anonymous() // Assume a default for tests
     } else {
@@ -79,7 +76,7 @@ pub fn timestamp_to_month(timestamp_ns: u64) -> u32 {
 
 //this function returns the total amount available for borrowing
 #[query]
-fn amount_available_for_borrowing() -> f64 {
+pub fn amount_available_for_borrowing() -> f64 {
     let total_deposit = get_current_deposist();
     total_deposit * UTILIZATION_RATE
 }

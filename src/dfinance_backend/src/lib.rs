@@ -4,6 +4,9 @@ mod memory;
 mod types;
 mod upgrade;
 mod user;
+mod provide_liquidity;
+
+use provide_liquidity::*;
 use state_handler::State;
 use candid::Principal;
 use ic_cdk::{caller, export_candid, post_upgrade, pre_upgrade};

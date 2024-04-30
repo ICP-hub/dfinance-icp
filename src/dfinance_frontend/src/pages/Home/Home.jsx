@@ -163,8 +163,8 @@ const Home = () => {
 
         {/* Showcase Section (ICP Grants DAO & Security Contributors) */}
         {SHOWCASE_SECTION.map((item) => (
-          <section className="mt-24">
-            <ShowCaseSection key={item.id} data={item} />
+          <section className="mt-24" key={item.id}>
+            <ShowCaseSection data={item} />
           </section>
         ))}
 

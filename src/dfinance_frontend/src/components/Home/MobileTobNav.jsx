@@ -1,10 +1,18 @@
 import React from "react"
 import { Drawer } from "@mui/material"
 import { NavLink } from "react-router-dom"
-import { DASHBOARD_TOP_NAV_LINK, HOME_TOP_NAV_LINK } from "../../utils/constants"
-import { X } from "lucide-react"
+import {
+  DASHBOARD_TOP_NAV_LINK,
+  HOME_TOP_NAV_LINK,
+} from "../../utils/constants"
+import { ArrowDownUp, X } from "lucide-react"
+import Button from "../Button"
 
-const MobileTobNav = ({ isMobileNav, setIsMobileNav, isHomeNav }) => {
+const MobileTobNav = ({
+  isMobileNav,
+  setIsMobileNav,
+  isHomeNav,
+}) => {
   return (
     <Drawer
       anchor={"top"}
@@ -38,6 +46,7 @@ const MobileTobNav = ({ isMobileNav, setIsMobileNav, isHomeNav }) => {
         >
           Create Internet Identity
         </button>
+        
       </div>
       <span
         className="absolute top-2 right-2 text-red-400 cursor-pointer"

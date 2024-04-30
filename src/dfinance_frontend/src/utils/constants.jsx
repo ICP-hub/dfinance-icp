@@ -2,7 +2,7 @@ export const HOME_TOP_NAV_LINK = [
   {
     id: 0,
     title: "Governance",
-    route: "/governance",
+    route: "/dashboard/dfinance-gov",
     icon: "",
   },
   {
@@ -35,7 +35,7 @@ export const DASHBOARD_TOP_NAV_LINK = [
   {
     id: 1,
     title: "Market",
-    route: "/dashboard/market",
+    route: "/dashboard/main",
     icon: "",
   },
   {
@@ -410,3 +410,14 @@ export const TOP_TEN_PROP = [
 export const TAB_CARD_DESCRIPTION_LENGTH = 300
 
 export const TEMP_HERO_COUNTER_NUMBER = 10000000
+
+
+export function generateRandomUsername() {
+  const adjectives = ["lion", "eagle", "tiger", "hawk", "panther", "bear", "wolf", "fox", "shark", "dragon"];
+  const nouns = ["lender", "borrower", "trader", "investor", "spender", "saver", "buyer", "seller", "collector", "enthusiast"];
+
+  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+
+  return randomAdjective + "_"+ randomNoun;
+}

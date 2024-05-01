@@ -1,8 +1,4 @@
-type Account = record { owner : principal; subaccount : opt blob };
-type Allowance = record { allowance : nat; expires_at : opt nat64 };
-type AllowanceArgs = record { account : Account; spender : Account };
-type Result = variant { Ok : Allowance; Err : text };
-type Result_1 = variant { Ok : TransferFromResult; Err : text };
+type Result = variant { Ok : TransferFromResult; Err : text };
 type TransferFromError = variant {
   GenericError : record { message : text; error_code : nat };
   TemporarilyUnavailable;
@@ -16,8 +12,6 @@ type TransferFromError = variant {
 };
 type TransferFromResult = variant { Ok : nat; Err : TransferFromError };
 service : {
-  check_for_allowance : (AllowanceArgs, text) -> (Result);
+  add_liquidity_to_pool : (text, nat) -> (Result);
   check_username : (text) -> (bool) query;
-  provide_liquidity : (text, nat, principal) -> (Result_1);
-  transfer_bucks : (Account, Account, nat, text) -> (Result_1);
 }

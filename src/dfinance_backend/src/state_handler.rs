@@ -1,18 +1,20 @@
 use std::collections::HashMap;
-use candid::Principal;
-use serde::{Deserialize, Serialize};
-use crate::types::User;
+use crate::{Deserialize, Serialize, Principal};
+use crate::types::{User, TokenDeposits};
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct State {
     pub users: HashMap<Principal, User>,
+    pub provider_deposits : HashMap<Principal, TokenDeposits>,
+    //pub token_deposits : HashMap<String, Vec<LiquidityEvent>>,
 }
 
 impl State {
     pub fn new() -> Self {
         Self {
             users: HashMap::new(),
+            provider_deposits: HashMap::new()
         }
     }
 }

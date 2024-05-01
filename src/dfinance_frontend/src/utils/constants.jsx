@@ -421,3 +421,77 @@ export function generateRandomUsername() {
 
   return randomAdjective + "_"+ randomNoun;
 }
+
+
+export const MY_SUPPLY_ASSET_TABLE_COL = [
+  {
+    col_id: 0,
+    header: "Assest",
+  },
+  {
+    col_id: 1,
+    header: "Wallet Balance",
+  },
+  {
+    col_id: 2,
+    header: "APY",
+  },{
+    col_id: 3,
+    header: "Can be Collateral",
+  }
+]
+
+export const MY_SUPPLY_ASSET_TABLE_ROWS = [
+  {
+    row_id: 0,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy:1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  {
+    row_id: 1,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  {
+    row_id: 2,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  {
+    row_id: 3,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+]
+
+export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
+  {
+    col_id: 0,
+    header: "Assest",
+  },
+  {
+    col_id: 1,
+    header: "Available",
+  },
+  {
+    col_id: 2,
+    header1: "APY, variable",
+    header2: "APY, borrow rate",
+  }
+]

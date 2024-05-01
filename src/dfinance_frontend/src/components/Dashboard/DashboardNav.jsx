@@ -121,15 +121,30 @@ const DashboardNav = () => {
             </div>
           ) : (
             <>
-              <span className="text-[#0C5974] font-semibold px-4 flex items-center gap-1">
-                <span className="border-b border-b-[#8CC0D7]">Net</span>
-                <span>Worth</span>
-              </span>
-              <span className="text-[#0C5974] font-semibold px-4 flex items-center gap-1">
-                <span className="border-b border-b-[#8CC0D7]">Net</span>
-                <span>APY</span>
-                <Info size={18} />
-              </span>
+              <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6">
+                  {[{ title: "Net Worth", count: "$150M" }, { title: "Net APY", count: "15%" }].map((data, index) => (
+                  <button
+                    key={index}
+                    className="relative"
+                    onMouseEnter={() => handleHoverIn(index)}
+                    onMouseLeave={handleHoverOut}
+                  >
+                    {data.title}
+                    <hr
+                      className={`ease-in-out duration-500 bg-[#8CC0D7] h-[2px] ${
+                        hoverEle.index === index && hoverEle.isHover
+                          ? "w-full"
+                          : "w-1/4"
+                      }`}
+                    />
+                    {hoverEle.index === index && hoverEle.isHover && (
+                      <span className="animate-fade absolute top-full left-0 font-light py-2">
+                        {data.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </>
           )}
         </div>

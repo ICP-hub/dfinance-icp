@@ -7,6 +7,7 @@ import { store } from "../redux/store"
 import AssetDetails from "../components/Dashboard/AssetDetails"
 import DFinanceGov from "../components/Dashboard/DFinanceGov"
 import ProposalDetails from "../components/Dashboard/ProposalDetails"
+import MySupply from "../components/Dashboard/MySupply"
 
 export default [
   {
@@ -41,6 +42,14 @@ export default [
         element: (
           <MainDashboard>
             <AssetDetails />
+          </MainDashboard>
+        ),
+      },
+      {
+        path: "my-supply",
+        element: (
+          <MainDashboard>
+            <MySupply />
           </MainDashboard>
         ),
       },

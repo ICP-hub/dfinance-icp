@@ -1,3 +1,4 @@
+type Deposit = record { wallet_address : text; amount : float64 };
 type Result = variant { Ok : TransferFromResult; Err : text };
 type TransferFromError = variant {
   GenericError : record { message : text; error_code : nat };
@@ -11,7 +12,35 @@ type TransferFromError = variant {
   InsufficientFunds : record { balance : nat };
 };
 type TransferFromResult = variant { Ok : nat; Err : TransferFromError };
-service : {
+service : () -> {
+  add_deposit : (Deposit) -> (text);
   add_liquidity_to_pool : (text, nat) -> (Result);
+  add_monthly_data : () -> ();
+  amount_available_for_borrowing : () -> (float64) query;
   check_username : (text) -> (bool) query;
+  fees_generated : () -> (float64) query;
+  funds_to_projects : () -> (float64) query;
+  get_borrow_lp_yield : () -> (float64) query;
+  get_buy_and_burn : () -> (float64) query;
+  get_current_deposist : () -> (float64) query;
+  get_current_dfinance_price : () -> (float64) query;
+  get_current_growth_rate : () -> (float64) query;
+  get_current_phase : () -> (nat32);
+  get_fund_raised : () -> (float64) query;
+  get_launchpad_fees : () -> (float64) query;
+  get_lender_fees : () -> (float64) query;
+  get_lender_lp_yield : () -> (float64) query;
+  get_lending_apr : () -> (float64) query;
+  get_lp_fees : () -> (float64) query;
+  get_monthly_emission : () -> (float64) query;
+  get_rewards_for_borrowers : () -> (float64) query;
+  get_rewards_for_lenders : () -> (float64) query;
+  get_rewards_value : () -> (float64) query;
+  get_supply_stacked : () -> (float64) query;
+  get_team_fees : () -> (float64) query;
+  get_total_months : () -> (nat32) query;
+  number_of_tokens_stacked : () -> (float64) query;
+  stacking_apr : () -> (float64) query;
+  start_monthly_task : () -> ();
+  tokens_emitted_per_month : () -> (float64) query;
 }

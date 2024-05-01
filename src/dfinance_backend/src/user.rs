@@ -5,3 +5,5 @@ use ic_cdk::{caller, query, update};
 fn check_username(username: String) -> bool {
     with_state(|state| api::username_exists(state, username.clone()))
 }
+
+//testing

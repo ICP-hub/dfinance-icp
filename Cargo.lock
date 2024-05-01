@@ -424,6 +424,7 @@ dependencies = [
  "ic-stable-structures",
  "once_cell",
  "serde",
+ "serde_bytes",
  "time",
 ]
 

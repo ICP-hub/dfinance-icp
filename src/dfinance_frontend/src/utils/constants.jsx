@@ -41,7 +41,7 @@ export const DASHBOARD_TOP_NAV_LINK = [
   {
     id: 2,
     title: "Governance",
-    route: "/dashboard/governance",
+    route: "/dashboard/dfinance-gov",
     icon: "",
   },
 ]

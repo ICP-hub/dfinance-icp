@@ -1,12 +1,17 @@
-use crate::types::*;
-use candid::Principal;
-use ic_cdk_timers::TimerId;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use crate::{Deserialize, Serialize, Principal};
+//use crate::types::{User, TokenDeposits};
 
-#[derive(Serialize, Deserialize)]
+use crate::types::*;
+// use ic_cdk_timers::TimerId;
+// use serde::{Deserialize, Serialize};
+
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct State {
     pub users: HashMap<Principal, User>,
+    pub provider_deposits : HashMap<Principal, TokenDeposits>,
+    //pub token_deposits : HashMap<String, Vec<LiquidityEvent>>,
     pub total_deposit: HashMap<u32, f64>,
     pub deposits: HashMap<Principal, Vec<Deposit>>,
     pub launch_timestamp: Option<u64>,
@@ -19,6 +24,7 @@ impl State {
     pub fn new() -> Self {
         Self {
             users: HashMap::new(),
+            provider_deposits: HashMap::new(),
             total_deposit: HashMap::new(),
             deposits: HashMap::new(),
             launch_timestamp: None,

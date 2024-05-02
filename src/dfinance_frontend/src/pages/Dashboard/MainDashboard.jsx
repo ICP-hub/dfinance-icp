@@ -1,15 +1,23 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import Navbar from "../../components/Navbar"
 import Footer from "../../components/Footer"
 import Ellipse from "../../components/Ellipse"
 
 import DashboardNav from "../../components/Dashboard/DashboardNav"
+import { useAuth } from "../../utils/useAuthClient"
 
 const MainDashboard = ({ children, isDGov }) => {
+  const { isAuthenticated, login } = useAuth()
+
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
+  useEffect(() => {
+    if(!isAuthenticated){
+      login()
+    }
+  }, []);
   return (
     <>
       <div className="w-full h-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative">

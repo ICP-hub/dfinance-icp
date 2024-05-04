@@ -10,6 +10,7 @@ const MainDashboard = ({ children, isDGov }) => {
   const { isAuthenticated, login } = useAuth()
 
   useEffect(() => {
+    
     window.scrollTo(0, 0)
   }, [])
 

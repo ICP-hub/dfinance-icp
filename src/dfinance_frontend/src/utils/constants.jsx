@@ -2,13 +2,13 @@ export const HOME_TOP_NAV_LINK = [
   {
     id: 0,
     title: "Governance",
-    route: "/dashboard/dfinance-gov",
+    route: "/#gov",
     icon: "",
   },
   {
     id: 1,
     title: "Security",
-    route: "/security",
+    route: "/#security",
     icon: "",
   },
   {
@@ -20,7 +20,7 @@ export const HOME_TOP_NAV_LINK = [
   {
     id: 3,
     title: "FAQ",
-    route: "/faq",
+    route: "/#faq",
     icon: "",
   },
 ]
@@ -29,15 +29,15 @@ export const DASHBOARD_TOP_NAV_LINK = [
   {
     id: 0,
     title: "Dashboard",
-    route: "/dashboard/main",
+    route: "/dashboard/my-supply",
     icon: "",
   },
   {
     id: 1,
     title: "Market",
-    route: "/dashboard/main",
+    route: "/dashboard/wallet-details",
     icon: "",
-  },
+  },  
   {
     id: 2,
     title: "Governance",

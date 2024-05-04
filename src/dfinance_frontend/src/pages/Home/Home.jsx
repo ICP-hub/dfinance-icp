@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { NavLink } from "react-router-dom"
 import Ellipse from "../../components/Ellipse"
 import Logo from "../../components/Logo"
@@ -136,7 +136,7 @@ const Home = () => {
         </section>
 
         {/* Governed by the Community */}
-        <section className="mt-24">
+        <section className="mt-24" id="gov">
           <div className="w-full  text-center text-[#2A1F9D]">
             <h1 className="text-lg xl:text-[45px] font-extralight">
               Governed by the <span className="font-semibold">Community</span>
@@ -169,7 +169,7 @@ const Home = () => {
         ))}
 
         {/* FAQ */}
-        <section className="mt-24 overflow-auto">
+        <section className="mt-24 overflow-auto" id="faq">
           <div className="w-[800px] lg:w-full p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl">
             <div className="w-full">
               <h1 className="text-[45px] hidden lg:block font-extralight text-[#2A1F9D]">

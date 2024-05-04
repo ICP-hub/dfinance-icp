@@ -7,7 +7,7 @@ import {
   generateRandomUsername,
 } from "../utils/constants"
 import { NavLink } from "react-router-dom"
-import { ArrowDownUp, ChevronDown, ChevronUp, Menu } from "lucide-react"
+import { ArrowDownUp, Check, ChevronDown, ChevronUp, Menu } from "lucide-react"
 import MobileTopNav from "./Home/MobileTopNav"
 import { useAuth } from "../utils/useAuthClient"
 import { useEffect } from "react"
@@ -15,11 +15,13 @@ import { setUserData } from "../redux/reducers/userReducer"
 import { useSelector } from "react-redux"
 import Button from "./Button"
 import { ClickAwayListener } from "@mui/base/ClickAwayListener"
+import { setIsWalletConnected, setWalletModalOpen } from "../redux/reducers/utilityReducer"
 
 export default function Navbar({ isHomeNav }) {
   const [isMobileNav, setIsMobileNav] = React.useState(false)
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.user)
+  const { isWalletModalOpen, isWalletConnected } = useSelector((state) => state.utility)
   const [drop, setDrop] = useState(false)
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false)
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false)
@@ -51,9 +53,13 @@ export default function Navbar({ isHomeNav }) {
   }
 
   const handleSwitchToken = () => {
-    setSwitchTokenDrop(!switchTokenDrop)
-    setSwitchWalletDrop(false)
-    console.log("Hello")
+    if(isWalletConnected){
+      setSwitchTokenDrop(!switchTokenDrop)
+      setSwitchWalletDrop(false)
+      console.log("Hello")
+    }else{
+      dispatch(setWalletModalOpen(!isWalletModalOpen))
+    }
   }
   const handleSwitchWallet = () => {
     setSwitchWalletDrop(!switchWalletDrop)
@@ -87,6 +93,21 @@ export default function Navbar({ isHomeNav }) {
   useEffect(() => {
     console.log(switchTokenDrop)
   }, [switchTokenDrop])
+
+  const hash = window.location.hash
+
+
+  useEffect(() => {
+    if(hash){
+
+      const ele = document.querySelector(hash)
+      console.log(ele)
+      if(ele){
+        ele.scrollIntoView({behavior: "smooth"})
+      }
+    }
+    console.log(hash);
+  }, [hash])
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
@@ -122,23 +143,12 @@ export default function Navbar({ isHomeNav }) {
 
             {isHomeNav &&
               (isAuthenticated && user ? (
-                <div className="hidden lg:flex gap-2 relative">
-                  <div className="w-12 h-12 rounded-full border-2">
-                    <img src={user && user.imageUrl} alt="User Image" />
-                  </div>
-                  <div className="flex flex-col">
-                    <p>{user.name}</p>
-                    <p className="text-xs text-gray-700">User</p>
-                  </div>
-                  <button
-                    className="font-light text-sm text-gray-600"
-                    onClick={() => setDrop(!drop)}
-                  >
-                    {drop ? <ChevronUp /> : <ChevronDown />}
-                  </button>
+                <div className="hidden lg:flex items-center relative gap-3">
+                <Button title={'Launch App'} onClickHandler={() => navigate("/dashboard/main")}/>
+                <span className="text-slate-400 flex items-center gap-2 cursor-pointer" onClick={() => setDrop(!drop)}><Check size={18}/>Verified</span>
 
                   {drop && (
-                    <div className="absolute w-full top-full mt-2 animate-fade-down animate-once animate-duration-500 animate-ease-in-out">
+                    <div className="absolute w-1/2 right-0 top-full mt-2 animate-fade-down animate-once animate-duration-500 animate-ease-in-out">
                       <div
                         className="bg-red-400 text-white shadow-md rounded-lg p-4 cursor-pointer hover:bg-red-500"
                         onClick={handleLogout}
@@ -261,20 +271,7 @@ export default function Navbar({ isHomeNav }) {
             </button>
           </nav>
           <div className="w-full p-3 bg-slate-200 rounded-md flex lg:hidden">
-            {isHomeNav ? (
-              isAuthenticated &&
-              user && (
-                <div className="flex lg:hidden gap-2 relative">
-                  <div className="w-8 h-8 rounded-full border-2">
-                    <img src={user && user.imageUrl} alt="User Image" />
-                  </div>
-                  <div className="flex flex-col text-xs">
-                    <p>{user.name}</p>
-                    <p className="text-xs text-gray-700">User</p>
-                  </div>
-                </div>
-              )
-            ) : (
+            
               <div className="w-full flex gap-6">
                 <div className="w-full my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
                   <div
@@ -362,7 +359,7 @@ export default function Navbar({ isHomeNav }) {
                   )}
                 </div>
               </div>
-            )}
+            
           </div>
         </div>
       </ClickAwayListener>

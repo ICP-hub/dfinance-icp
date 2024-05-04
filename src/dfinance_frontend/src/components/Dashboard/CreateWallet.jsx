@@ -2,18 +2,26 @@ import React, { useEffect, useState } from 'react'
 import Button from '../Button'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { setIsWalletCreated } from '../../redux/reducers/utilityReducer'
+import {
+    setIsWalletConnected,
+setWalletModalOpen } from '../../redux/reducers/utilityReducer'
 import { Modal } from '@mui/material'
 
 const CreateWallet = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const {isWalletCreated} = useSelector(state => state.utility)
-    const [connectWalletOpen, setConnectWalletOpen] = useState(false)
+    const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
+
 
     const handleWalletConnect = () => {
-        setConnectWalletOpen(!connectWalletOpen)
+        dispatch(setWalletModalOpen(!isWalletModalOpen))
         // dispatch(setIsWalletCreated(true))
+    }
+
+    const handleWallet = () => {
+        dispatch(setWalletModalOpen(!isWalletModalOpen))
+        dispatch(setIsWalletConnected(true))
+        navigate('/dashboard/my-supply')
     }
 
     useEffect(() => {
@@ -33,7 +41,7 @@ const CreateWallet = () => {
 
           <Button title="Connect Wallet" onClickHandler={handleWalletConnect}/>
 
-          <Modal open={connectWalletOpen} onClose={handleWalletConnect}>
+          <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
               <div className='w-[300px] absolute bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white'>
                   <h1 className='font-semibold'>Connect a wallet</h1>
                   <div className='flex flex-col gap-2 mt-3 text-sm'>
@@ -62,7 +70,7 @@ const CreateWallet = () => {
                       <input type="text" className='w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md' placeholder='Enter ethereum address or username'/>
                   </div>
                   <div className="w-full flex justify-center mt-3">
-                      <Button title="Connect" onClickHandler={handleWalletConnect} className={"my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"}/>
+                      <Button title="Connect" onClickHandler={handleWallet} className={"my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"}/>
                   </div>
                 </div>
             </Modal>

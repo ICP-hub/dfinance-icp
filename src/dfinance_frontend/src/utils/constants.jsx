@@ -1,25 +1,38 @@
+const TabPanel = ({ items }) => {
+  return (
+    <div className="flex flex-wrap justify-center gap-4">
+      {items.map((item) => (
+        <div key={item.id} className="max-w-xs w-full p-4 border rounded-lg shadow-md">
+          <img src={item.image} alt={item.title} className="w-full h-48 object-cover rounded-md" />
+          <h2 className="mt-4 text-lg font-semibold text-[#0C5A74]">{item.title}</h2>
+          <p className="mt-2 text-sm text-gray-600">{item.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
 export const HOME_TOP_NAV_LINK = [
   {
     id: 0,
-    title: "Governance",
+    title: "Help Center",
     route: "/#gov",
     icon: "",
   },
   {
     id: 1,
-    title: "Security",
+    title: "Partners",
     route: "/#security",
     icon: "",
   },
   {
     id: 2,
-    title: "Docs",
+    title: "Sugesstions",
     route: "/docs",
     icon: "",
   },
   {
     id: 3,
-    title: "FAQ",
+    title: "Blogs",
     route: "/#faq",
     icon: "",
   },
@@ -37,7 +50,7 @@ export const DASHBOARD_TOP_NAV_LINK = [
     title: "Market",
     route: "/dashboard/wallet-details",
     icon: "",
-  },  
+  },
   {
     id: 2,
     title: "Governance",
@@ -50,21 +63,24 @@ export const MAIN_NAV_LINK = [
   {
     id: 0,
     title: "Supply",
+    content: "Supply into the protocol and watch your assets grow as a liquidity provider",
   },
   {
     id: 1,
     title: "Stake",
+    content: "Deposit your DFinance into the protocol and earn rewards for securing the protocol",
   },
   {
     id: 2,
     title: "Borrow",
+    content: "Borrow against your collateral from across multiple networks and assets",
   },
   {
     id: 3,
     title: "Vote",
+    content: "Participate in DFinance governance and vote on new proposals, new assets, and protocol upgrades",
   },
-]
-
+];
 export const TAB_CARD_DATA = [
   {
     id: 0,
@@ -134,7 +150,7 @@ export const TAB_CARD_DATA = [
     title: "Modclub",
     image: "https://i.ibb.co/BZgT6c4/image-98-5.png",
     description:
-      "Binance Coin is the native cryptocurrency of the Binance exchange, one of the largest cryptocurrency exchanges in the world. It is used to pay for transaction fees on the Binance exchange and can also be used for various other purposes within the Binance ecosystem. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+      "Binance Coin is the native cryptocurrency of the Binance exchange, one of the largest cryptocurrency exchanges in the world. It is used to pay for transaction fees on the Binance exchange and can also be used for various other purposes within the Binance ecosystem.",
   },
   {
     id: 10,
@@ -172,9 +188,9 @@ export const SHOWCASE_SECTION = [
 export const FAQ_QUESTION = [
   {
     id: 0,
-    question: "What is Aave?",
+    question: "What is DFinance?",
     answer:
-      "Aave is a decentralized lending protocol that allows users to borrow and lend crypto assets. The protocol is designed to be user-friendly, transparent, and easy to use.",
+      "DFinance is a decentralized lending protocol that allows users to borrow and lend crypto assets. The protocol is designed to be user-friendly, transparent, and easy to use.",
   },
   {
     id: 1,
@@ -419,7 +435,7 @@ export function generateRandomUsername() {
   const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
   const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
 
-  return randomAdjective + "_"+ randomNoun;
+  return randomAdjective + "_" + randomNoun;
 }
 
 
@@ -435,7 +451,7 @@ export const MY_SUPPLY_ASSET_TABLE_COL = [
   {
     col_id: 2,
     header: "APY",
-  },{
+  }, {
     col_id: 3,
     header: "Can be Collateral",
   }
@@ -448,7 +464,7 @@ export const MY_SUPPLY_ASSET_TABLE_ROWS = [
     image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
-    apy:1.50,
+    apy: 1.50,
     apy_desc: "Eligible for 2.9M$ GHO Community program"
   },
   {

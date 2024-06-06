@@ -180,7 +180,7 @@ export const SHOWCASE_SECTION = [
     id: 1,
     title: "Security Contributors",
     description:
-      "Audited by the world's leading security firms, security of the Aave Protocol is the highest priority.",
+      "Audited by the world's leading security firms, security of the DFinance Protocol is the highest priority.",
     isICP: false,
   },
 ]

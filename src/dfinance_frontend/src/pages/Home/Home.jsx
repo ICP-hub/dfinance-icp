@@ -121,7 +121,7 @@ const Home = () => {
               <div className="w-full xl:w-9/12">
                 <h1 className="font-semibold text-lg">And more to come...</h1>
                 <p className="mt-4 text-sm font-medium">
-                  Submit a proposal to deploy a new market in the Aave ecosystem. You can learn from the Aave governance.
+                  Submit a proposal to deploy a new market in the Dfinance ecosystem. You can learn from the DFinance governance.
                 </p>
               </div>
               <div className="w-full xl:w-3/12 flex justify-end mt-3 lg:mt-0">
@@ -138,14 +138,10 @@ const Home = () => {
               Governed by the <span className="font-semibold">Community</span>
             </h1>
             <p className="text-[#737373] lg:my-6">
-              Aave is a fully decentralized, community governed protocol with 166,579 token holders.
+            DFinance is a fully decentralized, community governed protocol with 166,579 token holders.
             </p>
             <Button title="LEARN MORE" />
-          </div>
-          <div className="w-full flex justify-center my-3">
-            <div className="w-[700px] h-auto mt-3 xl:mt-0 xl:h-[400px]">
-            </div>
-          </div>
+          </div>   
         </section>
 
         {/* How it Works */}
@@ -163,8 +159,8 @@ const Home = () => {
 
         </section>
 
-        {/* FAQ */}
-        <section className="mt-24 overflow-auto" id="faq">
+       {/* FAQ */}
+       <section className="mt-24 overflow-auto" id="faq">
           <div className="w-[800px] lg:w-full p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl">
             <div className="w-full">
               <h1 className="text-[45px] hidden lg:block font-extralight text-[#2A1F9D]">
@@ -232,5 +228,4 @@ const Home = () => {
     </>
   );
 };
-
 export default Home;

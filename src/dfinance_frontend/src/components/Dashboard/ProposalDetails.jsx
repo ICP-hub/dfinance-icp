@@ -43,7 +43,7 @@ const ProposalDetails = () => {
               </h1>
               <p>
                 On December 2023, a problem was detected on the AMPL custom
-                reserve on Aave v2 Ethereum, causing an unexpected inflation of
+                reserve on Dfinance v2 Ethereum, causing an unexpected inflation of
                 AMPL-related balances and supply, not following the intended
                 design by the Ampleforth team. While further analysis is
                 performed for the most reasonable strategy on giving withdrawal
@@ -61,7 +61,7 @@ const ProposalDetails = () => {
               <p>
                 The distribution will be done via the Merkl platform by Angle
                 Labs, specialized on these operations and used before in other
-                Aave DAO proposals, like the Merit program. Users with a balance
+                DFinance DAO proposals, like the Merit program. Users with a balance
                 below 30$ will be excluded from this initial distribution as the
                 gas-cost for claiming would not offset set amount claimed.
               </p>
@@ -72,8 +72,8 @@ const ProposalDetails = () => {
                 References
               </h1>
               <ul>
-                <li>Implementation: AaveV2Ethereum</li>
-                <li>Tests: AaveV2Ethereum</li>
+                <li>Implementation: DFinanceV2Ethereum</li>
+                <li>Tests: DFinanceV2Ethereum</li>
                 <li>Snapshot</li>
                 <li>Discussion</li>
                 <li>Distribution:IPFS</li>

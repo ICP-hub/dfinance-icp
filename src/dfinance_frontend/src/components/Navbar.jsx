@@ -244,15 +244,16 @@ export default function Navbar({ isHomeNav }) {
                           }
                         />
                       </div>
-                      <div className="w-full flex justify-center mt-3 gap-3">
-                        <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
-                          Lorem ipsum dolor sit amet consectetur, adipisicing.
-                        </div>
-                        <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
-                          Lorem ipsum dolor sit amet consectetur, adipisicing.
-                        </div>
-                      </div>
-                    </div>
+                      <div className="flex justify-center mt-3 gap-3">
+  <div className="flex justify-center mt-3 gap-3">
+    <div className="flex-1 bg-gray-400 p-3 rounded-md text-xs relative border border-red" style={{ position: 'relative', height: '60px',width:'20px' }}>
+      Network 
+      <p><span style={{ position: 'absolute', width: '8px', height: '8px', backgroundColor: 'green', borderRadius: '50%', top: '50%', transform: 'translate(-150%, -50%)' }}></span>Etherum</p>
+      </div>
+    </div>
+  </div>
+</div>
+                
                   )}
                 </div>
               </div>
@@ -349,10 +350,10 @@ export default function Navbar({ isHomeNav }) {
                       </div>
                       <div className="w-full flex justify-center mt-3 gap-3">
                         <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
-                          Lorem ipsum dolor sit amet consectetur, adipisicing.
+                        
                         </div>
                         <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
-                          Lorem ipsum dolor sit amet consectetur, adipisicing.
+                         
                         </div>
                       </div>
                     </div>

@@ -50,7 +50,7 @@ const HowITWork = () => {
                         3
                     </div>
                     <div className="w-11/12 p-3 text-sm lg:text-lg">
-                        <p className="font-semibold text-[#517687]">Submit an Aave Request for Improvement(AIP)</p>
+                        <p className="font-semibold text-[#517687]">Submit an DFinance Request for Improvement(AIP)</p>
                         <p className="text-[#737373] text-base">The proposal is submitted through a GitHub pull request, & community votes on approvals.</p>
                     </div>
                 </div>

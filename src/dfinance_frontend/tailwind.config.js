@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       fontFamily: {
@@ -40,8 +37,11 @@ export default {
         dxl1: "1380px",
         xl: "1440px",
         xl2: "1600px",
+        xl3: "1920px",
+        xl4: "2560px",
+        xl5: "3840px",
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animated")],
 }

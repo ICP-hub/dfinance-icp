@@ -170,8 +170,8 @@ const Home = () => {
                 FAQ
               </h1>
             </div>
-            <div className="w-full flex flex-col md:flex-row">
-              <div className="w-full md:w-6/12 relative flex items-center flex-col md:flex-row">
+            <div className="w-full grid grid-cols-2">
+              <div className="w-full relative z-10 flex items-center my-[29px] flex-col md:flex-row">
                 <div className="w-full md:w-[115%] bg-white shadow absolute md:relative rounded-xl overflow-hidden cursor-pointer">
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full">
@@ -203,7 +203,7 @@ const Home = () => {
                   ))}
                 </div>
               </div>
-              <div className="hidden md:block w-6/12 md:h-[400px] lg:h-auto bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6">
+              <div className="hidden md:block h-full ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6">
                 <h1 className="font-semibold mt-4">
                   {FAQ_QUESTION.find((item) => item.id === currentFAQ).question}
                 </h1>

@@ -38,6 +38,56 @@ export const HOME_TOP_NAV_LINK = [
   },
 ]
 
+export const FOOTER_LINK_1 = [
+  {
+    id: 0,
+    title: "Governance",
+    route: "/#",
+    icon: "",
+  },
+  {
+    id: 1,
+    title: "Security",
+    route: "/#",
+    icon: "",
+  },
+  {
+    id: 2,
+    title: "Docs",
+    route: "/#",
+    icon: "",
+  },
+  {
+    id: 3,
+    title: "FAQ",
+    route: "/#",
+    icon: "",
+  },
+]
+
+export const FOOTER_LINK_2 = [
+  {
+    id: 0,
+    title: "Dev Forum",
+    route: "/#",
+    icon: "",
+  },
+  {
+    id: 1,
+    title: "Discord",
+    route: "/#",
+    icon: "",
+  },
+  {
+    id: 2,
+    title: "Blogs",
+    route: "/#",
+    icon: "",
+  },
+]
+
+
+
 export const DASHBOARD_TOP_NAV_LINK = [
   {
     id: 0,

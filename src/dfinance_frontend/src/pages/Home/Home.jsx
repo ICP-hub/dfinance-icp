@@ -119,23 +119,7 @@ const Home = () => {
             <h1 className="text-[#0C5A74] font-semibold text-[36px] mb-2">
               Markets
             </h1>
-            <TabPanel currentTab={currentTab} />
-            <div className="w-full flex justify-end mt-6">
-              <div id="pagination" className="flex gap-2">
-                <button
-                  type="button"
-                  className="border rounded-full p-1 border border-red-500 hover:border-[#73b1cf] hover:text-[#73b1cf] text-[#517688]"
-                >
-                  <ChevronLeft />
-                </button>
-                <button
-                  type="button"
-                  className="border rounded-full p-1 border-[#517688] hover:border-[#73b1cf] hover:text-[#73b1cf] text-[#517688]"
-                >
-                  <ChevronRight />
-                </button>
-              </div>
-            </div>
+            <TabPanel />
           </div>
         </section>
 

@@ -8,12 +8,37 @@ import Footer from "../../components/Footer";
 import HeroSection from "../../components/Home/HeroSection";
 import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
+import { LuMoveUp } from "react-icons/lu";
 import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA } from "../../utils/constants"; // Assuming TAB_CARD_DATA is imported from the same place as other constants
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [currentTab, setCurrentTab] = useState(0);
   const [currentFAQ, setCurrentFAQ] = useState(0);
+
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset;
+      if (scrollTop > 600) { // Adjust this value to control when the button appears
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -224,6 +249,12 @@ const Home = () => {
         </div>
       </div>
       {/* Footer */}
+      <button
+      className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[75px] w-[75px] text-white rounded-full transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+      onClick={scrollToTop}
+    >
+      <LuMoveUp  className="text-[50px] mx-auto hover:text-white transition-colors"/>
+    </button>
       <Footer />
     </>
   );

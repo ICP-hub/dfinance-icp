@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 
 const TabCards = ({ data }) => {
   return (
-    <div className='min-h-[260px] text-white rotate_card cursor-pointer bg-transparent'>
+    <div className='h-[301px] mb-[50px] text-white rotate_card cursor-pointer bg-transparent'>
       <div id="main_face" className='main_face relative transition-transform duration-500 w-full h-full rounded-md'>
         <div id="front_face" className='tab_cards_gradient absolute w-full h-full z-10 p-4 rounded-md shadow'>
           <div className="w-full flex items-center gap-3">

@@ -69,7 +69,7 @@ const DFinanceGov = () => {
                       key={index}
                       className="w-full whitespace-nowrap text-left text-sm p-3 hover:bg-[#e1dfff]"
                       onClick={() => handleFilter(item)}
-                    >
+                    >  
                       {item}
                     </button>
                   ))}

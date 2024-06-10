@@ -53,11 +53,11 @@ export default function Navbar({ isHomeNav }) {
   }
 
   const handleSwitchToken = () => {
-    if(isWalletConnected){
+    if (isWalletConnected) {
       setSwitchTokenDrop(!switchTokenDrop)
       setSwitchWalletDrop(false)
       console.log("Hello")
-    }else{
+    } else {
       dispatch(setWalletModalOpen(!isWalletModalOpen))
     }
   }
@@ -98,12 +98,12 @@ export default function Navbar({ isHomeNav }) {
 
 
   useEffect(() => {
-    if(hash){
+    if (hash) {
 
       const ele = document.querySelector(hash)
       console.log(ele)
-      if(ele){
-        ele.scrollIntoView({behavior: "smooth"})
+      if (ele) {
+        ele.scrollIntoView({ behavior: "smooth" })
       }
     }
     console.log(hash);
@@ -122,30 +122,30 @@ export default function Navbar({ isHomeNav }) {
             <div className="gap-4 hidden lg:flex">
               {!isHomeNav
                 ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
-                    <NavLink
-                      key={index}
-                      to={link.route}
-                      className={`text-[#233D63] px-3`}
-                    >
-                      {link.title}
-                    </NavLink>
-                  ))
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className={`text-[#233D63] px-3`}
+                  >
+                    {link.title}
+                  </NavLink>
+                ))
                 : HOME_TOP_NAV_LINK.map((link, index) => (
-                    <NavLink
-                      key={index}
-                      to={link.route}
-                      className={`text-[#233D63] px-3`}
-                    >
-                      {link.title}
-                    </NavLink>
-                  ))}
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className={`text-[#233D63] px-3`}
+                  >
+                    {link.title}
+                  </NavLink>
+                ))}
             </div>
 
             {isHomeNav &&
               (isAuthenticated && user ? (
                 <div className="hidden lg:flex items-center relative gap-3">
-                <Button title={'Launch App'} onClickHandler={() => navigate("/dashboard/main")}/>
-                <span className="text-slate-400 flex items-center gap-2 cursor-pointer" onClick={() => setDrop(!drop)}><Check size={18}/>Verified</span>
+                  <Button title={'Launch App'} onClickHandler={() => navigate("/dashboard/main")} />
+                  <span className="text-slate-400 flex items-center gap-2 cursor-pointer" onClick={() => setDrop(!drop)}><Check size={18} />Verified</span>
 
                   {drop && (
                     <div className="absolute w-1/2 right-0 top-full mt-2 animate-fade-down animate-once animate-duration-500 animate-ease-in-out">
@@ -245,15 +245,15 @@ export default function Navbar({ isHomeNav }) {
                         />
                       </div>
                       <div className="flex justify-center mt-3 gap-3">
-  <div className="flex justify-center mt-3 gap-3">
-    <div className="flex-1 bg-gray-400 p-3 rounded-md text-xs relative border border-red" style={{ position: 'relative', height: '60px',width:'20px' }}>
-      Network 
-      <p><span style={{ position: 'absolute', width: '8px', height: '8px', backgroundColor: 'green', borderRadius: '50%', top: '50%', transform: 'translate(-150%, -50%)' }}></span>Etherum</p>
-      </div>
-    </div>
-  </div>
-</div>
-                
+                        <div className="flex justify-center mt-3 gap-3">
+                          <div className="flex-1 bg-gray-400 p-3 rounded-md text-xs relative border border-red" style={{ position: 'relative', height: '60px', width: '20px' }}>
+                            Network
+                            <p><span style={{ position: 'absolute', width: '8px', height: '8px', backgroundColor: 'green', borderRadius: '50%', top: '50%', transform: 'translate(-150%, -50%)' }}></span>Etherum</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                   )}
                 </div>
               </div>
@@ -272,95 +272,95 @@ export default function Navbar({ isHomeNav }) {
             </button>
           </nav>
           <div className="w-full p-3 bg-slate-200 rounded-md flex lg:hidden">
-            
-              <div className="w-full flex gap-6">
-                <div className="w-full my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
-                  <div
-                    className="flex items-center gap-3 p-2 px-3"
-                    onClick={handleSwitchToken}
-                  >
-                      <span>Switch Token</span>
-                    <ArrowDownUp size={14} />
-                  </div>
 
-                  {switchTokenDrop && (
-                    <div className="w-[250px] absolute left-0 mt-3 rounded-md bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl border p-4 z-50">
-                      <h1 className="font-semibold">Switch Tokens</h1>
-
-                      <div className="w-full my-2">
-                        <input
-                          type="text"
-                          className="w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md"
-                        />
-                      </div>
-                      <div className="w-full my-2">
-                        <input
-                          type="text"
-                          className="w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md"
-                        />
-                      </div>
-                      <div className="w-full flex justify-center mt-3">
-                        <Button
-                          title="Switch"
-                          className={
-                            "my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
-                          }
-                        />
-                      </div>
-                    </div>
-                  )}
+            <div className="w-full flex gap-6">
+              <div className="w-full my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
+                <div
+                  className="flex items-center gap-3 p-2 px-3"
+                  onClick={handleSwitchToken}
+                >
+                  <span>Switch Token</span>
+                  <ArrowDownUp size={14} />
                 </div>
-                <div className="w-full flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
-                  <div
-                    className="flex items-center gap-3 p-2 px-3"
-                    onClick={handleSwitchWallet}
-                  >
-                    <img
-                      src={"/connect_wallet_icon.png"}
-                      alt="connect_wallet_icon"
-                      className="object-contain w-4 h-4"
-                    />
-                    <span>0x65.125s</span>
-                  </div>
 
-                  {switchWalletDrop && (
-                    <div className="absolute w-[250px] z-50 p-4 top-full right-0 mt-3 rounded-md bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl border">
-                      <div className="w-full flex items-center gap-3">
-                        <img
-                          src="/connect_wallet_icon.png"
-                          alt="connect_wallet_icon"
-                          className="w-8 h-8"
-                        />
-                        <h1 className="font-semibold text-xl">0x65.125ssdf</h1>
-                      </div>
+                {switchTokenDrop && (
+                  <div className="w-[250px] absolute left-0 mt-3 rounded-md bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl border p-4 z-50">
+                    <h1 className="font-semibold">Switch Tokens</h1>
 
-                      <div className="w-full flex justify-center mt-3 gap-3">
-                        <Button
-                          title="Switch Wallet"
-                          className={
-                            "my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 shadow-lg font-semibold text-xs"
-                          }
-                        />
-                        <Button
-                          title="Disconnect"
-                          className={
-                            "my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 shadow-lg font-semibold text-xs"
-                          }
-                        />
-                      </div>
-                      <div className="w-full flex justify-center mt-3 gap-3">
-                        <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
-                        
-                        </div>
-                        <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
-                         
-                        </div>
-                      </div>
+                    <div className="w-full my-2">
+                      <input
+                        type="text"
+                        className="w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md"
+                      />
                     </div>
-                  )}
-                </div>
+                    <div className="w-full my-2">
+                      <input
+                        type="text"
+                        className="w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md"
+                      />
+                    </div>
+                    <div className="w-full flex justify-center mt-3">
+                      <Button
+                        title="Switch"
+                        className={
+                          "my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            
+              <div className="w-full flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
+                <div
+                  className="flex items-center gap-3 p-2 px-3"
+                  onClick={handleSwitchWallet}
+                >
+                  <img
+                    src={"/connect_wallet_icon.png"}
+                    alt="connect_wallet_icon"
+                    className="object-contain w-4 h-4"
+                  />
+                  <span>0x65.125s</span>
+                </div>
+
+                {switchWalletDrop && (
+                  <div className="absolute w-[250px] z-50 p-4 top-full right-0 mt-3 rounded-md bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl border">
+                    <div className="w-full flex items-center gap-3">
+                      <img
+                        src="/connect_wallet_icon.png"
+                        alt="connect_wallet_icon"
+                        className="w-8 h-8"
+                      />
+                      <h1 className="font-semibold text-xl">0x65.125ssdf</h1>
+                    </div>
+
+                    <div className="w-full flex justify-center mt-3 gap-3">
+                      <Button
+                        title="Switch Wallet"
+                        className={
+                          "my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 shadow-lg font-semibold text-xs"
+                        }
+                      />
+                      <Button
+                        title="Disconnect"
+                        className={
+                          "my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 shadow-lg font-semibold text-xs"
+                        }
+                      />
+                    </div>
+                    <div className="w-full flex justify-center mt-3 gap-3">
+                      <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
+
+                      </div>
+                      <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
+
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       </ClickAwayListener>

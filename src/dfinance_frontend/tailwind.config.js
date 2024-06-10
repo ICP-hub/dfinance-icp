@@ -6,6 +6,9 @@ export default {
       fontFamily: {
         fontUse: ["Poppins"],
       },
+      lineHeight: {
+        '11': '2.75rem',
+      },
       screens: {
         sxxs: "255px",
         sxs: "265px",
@@ -43,5 +46,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animated")],
+  plugins: [require("tailwindcss-animated"), require('@tailwindcss/line-clamp')],
 }

@@ -9,6 +9,7 @@ export default {
       lineHeight: {
         '11': '2.75rem',
       },
+      placeholderColor: ['responsive', 'focus', 'hover'], 
       screens: {
         sxxs: "255px",
         sxs: "265px",

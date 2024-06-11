@@ -3,11 +3,9 @@ import Button from "../Button"
 import { BsToggles2 } from "react-icons/bs";
 import { BiSolidSearch } from "react-icons/bi";
 import {
-  SlidersHorizontal,
-  SlidersVertical,
+  
   ExternalLink,
-  Search,
-  X,
+  
 } from "lucide-react"
 import { PROPOSALS_DETAILS } from "../../utils/constants"
 import { Link } from "react-router-dom"
@@ -15,20 +13,42 @@ import { Link } from "react-router-dom"
 const DFinanceGov = () => {
   const [isFilter, setIsFilter] = useState(false)
   const [showsearch, setShowSearch] = useState(false);
-
+  const [selectedItem, setSelectedItem] = useState("All Proposals");
+  
   const showSearchBar =()=>{
     setShowSearch(!showsearch);
   }
+  const handleFilter = (item) => {
+    setSelectedItem(item);
+    setIsFilter(false); // Close the dropdown after selecting an item
+  };
+  const handleClickOutside = (event) => {
+    if (!event.target.closest(".dropdown")) {
+      setIsFilter(false); // Close the dropdown if clicked outside of it
+    }
+  };
+
+  React.useEffect(() => {
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
+  const handleToggleClick = (event) => {
+    event.stopPropagation(); // Prevent propagation of the click event to the document
+    setIsFilter(!isFilter); // Toggle the dropdown
+  };
 
   return (
     <>
       <div className="w-full mt-6">
         <h1 className="text-[#5B62FE] text-sm inline-flex items-center ml-6">
           Available on
-          <img src="https://w7.pngwing.com/pngs/268/1013/png-transparent-ethereum-eth-hd-logo-thumbnail.png" alt="Ethereum Logo" className="mx-2 w-6 h-6" />
-          Ethereum Mainnet
+          <img src="https://static.vecteezy.com/system/resources/thumbnails/024/092/990/small/internet-computer-icp-glass-crypto-coin-3d-illustration-free-png.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+          Icp Mainnet
         </h1>
-        <div className="w-full flex flex-col md2:flex-row mt-8">
+        <div className="w-full flex flex-col  md2:flex-row mt-8">
           <div className="w-full md2:w-8/12 dxl:w-6/12 p-6">
             <h1 className="text-[#2A1F9D] font-medium text-xl">
               DFinance Governance
@@ -42,9 +62,9 @@ const DFinanceGov = () => {
               more check out the Governance.
             </p>
           </div>
-          <div className="w-full md2:w-4/12 dxl:w-4/12 p-6">
-            <h1 className="text-[#2A1F9D] font-medium text-xl">Others</h1>
-            <div className="w-full flex gap-4 flex-wrap mt-3">
+          <div className="w-full justify-start md2:w-7/12 dxl:w-4/12 md2:p-6 md2:ml-16">
+            <h1 className="text-[#2A1F9D] font-medium text-xl mx-8">Others</h1>
+            <div className="w-full flex gap-4 flex-wrap mt-3 mx-8">
               {["SNAPSHOTS", "GOVERNANCE", "FORUM", "FAQ"].map((i) => (
                 <span className="bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] p-2 whitespace-nowrap rounded-full text-xs flex items-center gap-2 text-white px-6">
                   {i} <ExternalLink size={16} />
@@ -61,26 +81,25 @@ const DFinanceGov = () => {
             Proposals
             </div>
             <div className="flex relative gap-3 items-center">
-            {isFilter && (
-                <div className="w-fit absolute -left-3/4 top-10 z-30 bg-white text-[#2A1F9D] rounded-xl overflow-hidden animate-fade-down">
-                  {PROPOSALS_DETAILS.map((item, index) => (
-                    <button
-                      type="button"
-                      key={index}
-                      className="w-full whitespace-nowrap text-left text-sm p-3 hover:bg-[#e1dfff]"
-                      onClick={() => handleFilter(item)}
-                    >  
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              )}
-            <BsToggles2 onClick={()=>setIsFilter(!isFilter)} size={22} className="text-[#AFAFAF]  " />
-              <span className="bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] p-2 whitespace-nowrap rounded-full text-xs flex items-center gap-2 text-white font-semibold px-3">
-                All Proposals
-                </span>
-
-            </div>
+      {isFilter && (
+        <div className="w-fit absolute dropdown -left-3/4 top-10 z-30 bg-white text-[#2A1F9D] rounded-xl overflow-hidden animate-fade-down">
+          {PROPOSALS_DETAILS.map((item, index) => (
+            <button
+              type="button"
+              key={index}
+              className="w-full whitespace-nowrap text-left text-sm p-3 hover:bg-[#e1dfff]"
+              onClick={() => handleFilter(item)}
+            >  
+              {item}
+            </button>
+          ))}
+        </div>
+      )}
+      <BsToggles2 onClick={handleToggleClick} size={22} className="text-[#AFAFAF] cursor-pointer" />
+      <span className="bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] p-2 whitespace-nowrap rounded-full text-xs flex items-center gap-2 text-white font-semibold px-3">
+        {selectedItem}
+      </span>
+    </div>
           
             <div  className="flex gap-2 items-center">
             {showsearch && 
@@ -89,14 +108,14 @@ const DFinanceGov = () => {
             name="search"
             id="search"
             placeholder="Search for products"
-            className={`w-[187px] md:block hidden z-20  bg-[#cdeefc] p-2 px-4 rounded-lg focus:outline-none box-border ${
+            className={`placeholder-gray-500 w-[190px] md:block hidden z-20  bg-[#ceced1] p-2 px-4 rounded-lg focus:outline-none box-border  ${
               showsearch
                 ? "animate-fade-left flex"
-                : "animate-fade-right hidden"
-            }`}
+                : "animate-fade-right hidden"}
+            `}
           />
           }
-            <BiSolidSearch onClick={showSearchBar} size={32} className="text-[#AFAFAF]  "/>
+            <BiSolidSearch onClick={showSearchBar} size={22} className="text-[#AFAFAF] cursor-pointer "/>
             </div>
 
          </div>
@@ -106,7 +125,7 @@ const DFinanceGov = () => {
             name="search"
             id="search"
             placeholder="Search for products"
-            className={`w-full block md:hidden z-20  bg-[#cdeefc] p-2 px-4 rounded-lg focus:outline-none box-border ${
+            className={`placeholder-gray-500 w-full block md:hidden z-20 mt-4 bg-[#b4b4bf] p-2 px-4 rounded-lg focus:outline-none box-border ${
               showsearch
                 ? "animate-fade-left flex"
                 : "animate-fade-right hidden"

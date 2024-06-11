@@ -20,7 +20,7 @@ const Footer = () => {
                   <img src="/DFinance-Dark.svg" alt="DFinance" />
                   <p className="mt-6 font-light text-[13px]">DFinance is a decentralized lending and borrowing protocol on ICP. The protocol uniquely combines liquidity mining with deflationary buy and burn mechanics.</p>
               </div>
-              <div className="w-full sxs3:w-6/12 md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm">
+              <div className="w-full sxs3:w-6/12 md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-[8px]">
                   <h1 className="font-semibold">Useful Links</h1>
                   <div className="w-full flex flex-col mt-5">
                       {
@@ -30,7 +30,7 @@ const Footer = () => {
                       }
                   </div>
               </div>
-              <div className="w-full sxs3:w-6/12 md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm">
+              <div className="w-full sxs3:w-6/12 md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-[8px]">
                   <h1 className="font-semibold">Community</h1>
                   <div className="w-full flex flex-col mt-5">
                       {
@@ -40,7 +40,7 @@ const Footer = () => {
                       }
                   </div>
               </div>
-              <div className="w-full md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-3">
+              <div className="w-full md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-2">
                   <h1 className="font-semibold">Follow us on</h1>
                   <div className="flex gap-2 mt-6">
                       <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">

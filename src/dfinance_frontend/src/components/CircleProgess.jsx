@@ -62,7 +62,7 @@ const CircleProgess = ({ progessValue }) => {
         y="50%"
         textAnchor="middle"
         alignmentBaseline="middle"
-        fontSize={12}
+        fontSize={15}
         fill="#2A1F9D"
         fontWeight={500}
       >

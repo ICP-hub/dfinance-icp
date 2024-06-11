@@ -46,7 +46,7 @@ const AssetDetails = () => {
         <div className="w-full mt-8 lg:flex">
           
             <div className="w-full mb-6 xl:hidden">
-              <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative">
+              <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%]">
                 <span className="font-medium">{assetDetailFilter}</span>
                 <span onClick={() => setIsFilter(!isFilter)}>
                   {!isFilter ? (

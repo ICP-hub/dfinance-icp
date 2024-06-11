@@ -5,26 +5,26 @@ import LineGraph from "./LineGraph"
 const SupplyInfo = () => {
   return (
     <div className="w-full lg:w-10/12 ">
-      <div className="w-full flex flex-col md:flex-row items-start">
+      <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7">
         <div className="w-full md:w-3/12">
           <CircleProgess progessValue={58} />
         </div>
-        <div className="w-full md:w-9/12 flex gap-8 lg:px-3 overflow-auto text-xs md:text-sm lg:text-base whitespace-nowrap">
+        <div className="w-full md:w-9/12 flex gap-8 lg:px-3 overflow-auto text-xs md:text-sm lg:text-base whitespace-nowrap sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden">
           <div className="relative text-[#5B62FE]">
-            <h1 className="text-[#2A1F9D] font-medium">Total Supplied</h1>
+            <h1 className="text-[#2A1F9D] font-medium mb-[1px]">Total Supplied</h1>
             <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
             />
             <p>3.19M of 5.70M</p>
-            <p>$123.19M of $786.55M</p>
+            <p className="text-[11px]">$123.19M of $786.55M</p>
           </div>
           <div className="relative text-[#5B62FE]">
-            <h1 className="text-[#2A1F9D] font-medium">Total Supplied</h1>
+            <h1 className="text-[#2A1F9D] font-medium  mb-[1px]">Total Supplied</h1>
             <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5  mb-[1px]`}
             />
             <p>3.19M of 5.70M</p>
-            <p>$123.19M of $786.55M</p>
+            <p className="text-[11px]">$123.19M of $786.55M</p>
           </div>
         </div>
       </div>
@@ -35,7 +35,7 @@ const SupplyInfo = () => {
         <LineGraph />
 
         <p className="mt-8 text-[#5B62FE]">
-          Collateral usage Can be collateral
+          Collateral usage ✔️ Can be collateral
         </p>
 
         <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap">

@@ -7,6 +7,7 @@ import AssetDetails from "../components/Dashboard/AssetDetails"
 import DFinanceGov from "../components/Dashboard/DFinanceGov"
 import ProposalDetails from "../components/Dashboard/ProposalDetails"
 import MySupply from "../components/Dashboard/MySupply"
+import { elements } from "chart.js"
 
 export default [
   {

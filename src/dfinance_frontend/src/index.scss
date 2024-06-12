@@ -21,8 +21,47 @@ body{
 }
 
 .button_gradient{
-    background: rradial-gradient(circle at 102.51% -1.56%, #FCBD78 15%, #D379AB 54%, #C562BD 67%, #4659CF 100%);
+    background: radial-gradient(circle at 111.51% -1.56%,  #FCBD78 10%, #4659CF 90%, );
 }
+.gradient-border {
+    background: 
+    linear-gradient(#e8dad6, #e8dad6) padding-box,
+              linear-gradient(to right, #FCBD78, #4659CF) border-box;
+  border-radius: 50em;
+  border: 2px solid transparent;
+  }
+  .gradient-border:hover {
+    border-color: #4351c8;
+  }
+
+  /* Add this in your CSS file */
+/* Add this in your CSS file */
+.gradient-line-bottom {
+    position: relative;
+  }
+  
+  .gradient-line-bottom::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-left: 0.5rem; /* Adjust margin as needed */
+    width: calc(100% - 1.5rem); /* Adjust padding if needed */
+    height: 1px;
+    background: linear-gradient(to right, #4659CF, #FCBD78);
+    transition: background 0.3s ease-in-out;
+    z-index: 4; /* Ensure the line is on top of other content */
+  }
+  
+  .gradient-line-bottom:hover::after {
+    background: #5B62FE; /* Light blue color */
+  }
+  
+  /* This rule removes any other border styles */
+  .gradient-line-bottom > * {
+    border: none !important;
+  }
+  
 .rotate_card{
     perspective: 1000px;
 }

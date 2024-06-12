@@ -14,15 +14,15 @@ const ProposalDetails = () => {
             Back
           </span>
         </div>
-        <h1 className="text-[#2A1F9D] mt-3 text-xl font-semibold">
+        <h1 className="text-[#2A1F9D] text-xl font-semibold mt-8">
           Proposal overview
         </h1>
       </div>
       <div className="w-full flex flex-col md2:flex-row mt-4 gap-6">
-        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
+        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-3 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
           <div className="w-full">
             <div className="w-full p-3">
-              <h1 className="text-[#2A1F9D] text-lg font-semibold my-2">
+              <h1 className="text-[#2A1F9D] text-xl font-semibold my-2 ml-1">
                 Interim aAMPL distribution
               </h1>
               <span className="p-2 block rounded-full px-3 border border-white w-fit text-xs mt-3">
@@ -31,92 +31,87 @@ const ProposalDetails = () => {
             </div>
           </div>
           <div className="w-full mt-8">
-            <div className="w-full my-6 text-[#59588D] text-sm">
-              <h1 className="text-[#5B62FE] font-semibold text-lg">
-                Simple Summary
-              </h1>
-              <p>Distribute 300.000 USDC to users affected by aAMPL problem.</p>
-            </div>
-            <div className="w-full my-6 text-[#59588D] text-sm">
-              <h1 className="text-[#5B62FE] font-semibold text-lg">Motivation</h1>
-              <p className="text-justify">
-                On December 2023, a problem was detected on the AMPL custom reserve on Aave v2 Ethereum, causing an unexpected inflation of AMPL-related balances and supply, not following the intended design by the Ampleforth team. While further analysis is performed for the most reasonable strategy on giving withdrawal liquidity for aAMPL supplies, an interim distribution of 300’000 USD value is proposed as lower threshold, to allow aAMPL suppliers to proceed partially with their withdrawals. With aip 72 having passed the governance process, aAMPL transfers are no longer permitted, which allows to snapshot the current aAMPL balances to perform a fair distribution between affected users.
-              </p>
-              <p className="text-justify">
-                This distribution have been defined the following way, with the help of @ChaosLabs and the Ampleforth team (for ubaAMPL holders):
-              </p>
-              <ul className="list-disc pl-5 mt-1">
-                <li>
-                  From each address holding aAMPL, a percentage over the total aAMPL supply has been calculated, to understand how is the proportion of each address.
-                </li>
-                <li>
-                  Using the previously calculated percentages, they have been applied over the total 300,000 USDC distribution: for example, for an address holding 5% of the total aAMPL, the claim has been calculated as 5% of 300,000; 15,000 USDC.
-                </li>
-                <li>
-                  For the holders of aAMPL through Unbuttoned aAMPL (ubaAMPL), the proportion over the total supply of ubaAMPL has been used to calculate the claims on aAMPL. For example, if an address held 20% of the total ubaAMPL supply, and ubaAMPL itself would be 20% of the aAMPL supply, the claims of that address would be the 4% of the total aAMPL. We appreciate the Ampleforth team providing us these "internal" holdings of ubaAMPL, given their knowledge of the system.
-                </li>
-                <li>
-                  Only claims over a value of 30 USDC have been included, given that gas-wise, it would not be profitable to claim lower amounts. However, those values lower than 30 USDC will be naturally taken into account for the final follow-up distribution.
-                </li>
-                <li>
-                  Once again, this is an interim distribution, that will be followed up by another with more precise numbers and bigger in size.
-                </li>
-                <li>
-                  For the sake of reducing complexity, the Aave governance proposal will release the whole 300,000 USDC, and the Ampleforth team can just transfer to the Aave Collector the 40% of that amount, removing any dependency for users to claim as soon as possible.
-                </li>
-                <li>
-                  It is possible to check each address claims <a href="https://github.com/bgd-labs/aave-proposals-v3/blob/8d5b3e902adf7c5c246e752b5d6b6e0e5d9831b7/src/20240409_AaveV2Ethereum_InterimAAMPLDistribution/distribution.pdf" className="text-blue-500 underline">HERE</a>.
-                </li>
-              </ul>
-            </div>
+          <div className="w-full mt-8 max-w-[calc(100%-2rem)] mx-auto">
+    <div className="w-full my-4 text-[#59588D] text-sm">
+        <h1 className="text-[#5B62FE] font-semibold text-lg">
+            Simple Summary
+        </h1>
+        <p>Distribute 300.000 USDC to users affected by aAMPL problem.</p>
+    </div>
+    <div className="w-full my-4 text-[#59588D] text-sm ">
+        <h1 className="text-[#5B62FE] font-semibold text-lg">Motivation</h1>
+        <p className="text-justify">
+            On December 2023, a problem was detected on the AMPL custom reserve on Aave v2 Ethereum, causing an unexpected inflation of AMPL-related balances and supply, not following the intended design by the Ampleforth team. While further analysis is performed for the most reasonable strategy on giving withdrawal liquidity for aAMPL supplies, an interim distribution of 300’000 USD value is proposed as lower threshold, to allow aAMPL suppliers to proceed partially with their withdrawals. With aip 72 having passed the governance process, aAMPL transfers are no longer permitted, which allows to snapshot the current aAMPL balances to perform a fair distribution between affected users.
+        </p>
+        <p className="text-justify">
+            This distribution has been defined the following way, with the help of @ChaosLabs and the Ampleforth team (for ubaAMPL holders):
+        </p>
+        <ul className="list-disc pl-5 mt-1">
+            <li>
+                From each address holding aAMPL, a percentage over the total aAMPL supply has been calculated, to understand how is the proportion of each address.
+            </li>
+            <li>
+                Using the previously calculated percentages, they have been applied over the total 300,000 USDC distribution: for example, for an address holding 5% of the total aAMPL, the claim has been calculated as 5% of 300,000; 15,000 USDC.
+            </li>
+            <li>
+                For the holders of aAMPL through Unbuttoned aAMPL (ubaAMPL), the proportion over the total supply of ubaAMPL has been used to calculate the claims on aAMPL. For example, if an address held 20% of the total ubaAMPL supply, and ubaAMPL itself would be 20% of the aAMPL supply, the claims of that address would be the 4% of the total aAMPL. We appreciate the Ampleforth team providing us these "internal" holdings of ubaAMPL, given their knowledge of the system.
+            </li>
+            <li>
+                Only claims over a value of 30 USDC have been included, given that gas-wise, it would not be profitable to claim lower amounts. However, those values lower than 30 USDC will be naturally taken into account for the final follow-up distribution.
+            </li>
+            <li>
+                Once again, this is an interim distribution, that will be followed up by another with more precise numbers and bigger in size.
+            </li>
+            <li>
+                For the sake of reducing complexity, the Aave governance proposal will release the whole 300,000 USDC, and the Ampleforth team can just transfer to the Aave Collector the 40% of that amount, removing any dependency for users to claim as soon as possible.
+            </li>
+            <li>
+                It is possible to check each address claims <a href="https://github.com/bgd-labs/aave-proposals-v3/blob/8d5b3e902adf7c5c246e752b5d6b6e0e5d9831b7/src/20240409_AaveV2Ethereum_InterimAAMPLDistribution/distribution.pdf" className="text-blue-500 underline">HERE</a>.
+            </li>
+        </ul>
+    </div>
+    <div className="w-full my-6 text-[#59588D] text-sm ">
+        <h1 className="text-[#5B62FE] font-semibold text-lg">
+            Specification
+        </h1>
+        <p className="text-justify">
+            The distribution will be done via the <a href="https://app.merkl.xyz/" className="text-blue-500 underline">Merkl</a> platform by Angle Labs, specialized in these operations and used before in other Aave DAO proposals, like the Merit program.
+        </p>
+        <p className="text-justify">
+            Users with a balance below 30$ will be excluded from this initial distribution as the gas-cost for claiming would not offset the amount claimed.
+        </p>
+        <p className="text-justify">
+            Therefore the proposal will perform the following steps upon execution:
+        </p>
+        <ul className="list-disc pl-5 text-justify">
+            <li>Withdraw USDC from the collector (298.5k including a 0.5% fee for Angle Labs)</li>
+            <li class="break-words whitespace-pre-wrap">
+                Approve the full amount to <a href="https://etherscan.io/address/0x8BB4C975Ff3c250e0ceEA271728547f3802B36Fd" class="text-blue-500 underline">0x8BB4C975Ff3c250e0ceEA271728547f3802B36Fd</a> which is the distribution creator by Angle Labs
+            </li>
+            <li>Sign the TOS of <a href="https://app.merkl.xyz/" className="text-blue-500 underline">https://app.merkl.xyz/</a> via an onchain transaction, a requirement on the Merkl platform</li>
+            <li>Create a campaign to distribute funds to the affected users</li>
+        </ul>
+        <p className="text-justify">
+            2 hours after proposal execution, users will be able to claim the USDC on <a href="https://app.merkl.xyz/" className="text-blue-500 underline">https://app.merkl.xyz/</a>
+        </p>
+    </div>
+    <div className="w-full my-4 text-[#59588D] text-sm ">
+        <h1 className="text-[#5B62FE] font-semibold text-lg">
+            References
+        </h1>
+        <ul>
+            <li>Implementation: <a href="https://github.com/bgd-labs/aave-proposals-v3/blob/2244338d3cb5b0482ff3499bf8f95c0762cc004c/src/20240409_AaveV2Ethereum_InterimAAMPLDistribution/AaveV2Ethereum_InterimAAMPLDistribution_20240409.sol#L1" className="underline">AaveV2Ethereum</a></li>
+            <li>Tests: <a href="https://github.com/bgd-labs/aave-proposals-v3/blob/2244338d3cb5b0482ff3499bf8f95c0762cc004c" className="underline">Aave DAO Proposals</a></li>
+        </ul>
+    </div>
+    <div className="w-full my-4 text-[#59588D] text-sm">
+        <p className="text-[#78757A]">
+            Copyright © 2024 Aave DAO
+        </p>
+    </div>
+</div>
 
-            <div className="w-full my-6 text-[#59588D] text-sm">
-              <h1 className="text-[#5B62FE] font-semibold text-lg">
-                Specification
-              </h1>
-              <p className="text-justify">
-                The distribution will be done via the <a href="https://app.merkl.xyz/" className="text-blue-500 underline">Merkl</a> platform by Angle Labs, specialized in these operations and used before in other Aave DAO proposals, like the Merit program.
-              </p>
-              <p className="text-justify">
-                Users with a balance below 30$ will be excluded from this initial distribution as the gas-cost for claiming would not offset the amount claimed.
-              </p>
-              <p className="text-justify">
-                Therefore the proposal will perform the following steps upon execution:
-              </p>
-              <ul className="list-disc pl-5 text-justify">
-                <li>Withdraw USDC from the collector (298.5k including a 0.5% fee for Angle Labs)</li>
-                <li class="break-words whitespace-pre-wrap">
-                  Approve the full amount to <a href="https://etherscan.io/address/0x8BB4C975Ff3c250e0ceEA271728547f3802B36Fd" class="text-blue-500 underline">0x8BB4C975Ff3c250e0ceEA271728547f3802B36Fd</a> which is the distribution creator by Angle Labs
-                </li>
-                <li>Sign the TOS of <a href="https://app.merkl.xyz/" className="text-blue-500 underline">https://app.merkl.xyz/</a> via an onchain transaction, a requirement on the Merkl platform</li>
-                <li>Create a campaign to distribute funds to the affected users</li>
-              </ul>
-              <p className="text-justify">
-                2 hours after proposal execution, users will be able to claim the USDC on <a href="https://app.merkl.xyz/" className="text-blue-500 underline">https://app.merkl.xyz/</a>
-              </p>
-            </div>
-
-            <div className="w-full my-6 text-[#59588D] text-sm">
-              <h1 className="text-[#5B62FE] font-semibold text-lg">
-                References
-              </h1>
-              <ul>
-                <li>Implementation: <a href="https://github.com/bgd-labs/aave-proposals-v3/blob/2244338d3cb5b0482ff3499bf8f95c0762cc004c/src/20240409_AaveV2Ethereum_InterimAAMPLDistribution/AaveV2Ethereum_InterimAAMPLDistribution_20240409.sol#L1" className="underline">AaveV2Ethereum</a></li>
-                <li>Tests: <a href="https://github.com/bgd-labs/aave-proposals-v3/blob/2244338d3cb5b0482ff3499bf8f95c0762cc004c/src/20240409_AaveV2Ethereum_InterimAAMPLDistribution/AaveV2Ethereum_InterimAAMPLDistribution_20240409.t.sol#L1" className="underline">AaveV2Ethereum</a></li>
-                <li><a href="https://snapshot.org/#/aave.eth/proposal/0xb7226dd6441b67225924082215f7a512bfd98252897ee43a879084e07ab53607" className="underline">Snapshot</a></li>
-                <li><a href="https://governance.aave.com/t/arfc-aampl-interim-distribution/17184" className="underline">Discussion</a></li>
-                <li><a href="https://angle-blog.infura-ipfs.io/ipfs/Qmb9uJbEdppQsL8W4aVKxREoHo42iXtcp4CV1FLE5tY8Rt" className="underline">Distribution:IPFS</a></li>
-                <li><a href="https://github.com/bgd-labs/aave-proposals-v3/blob/2244338d3cb5b0482ff3499bf8f95c0762cc004c/src/20240409_AaveV2Ethereum_InterimAAMPLDistribution/distribution.pdf" className="underline">Distribution:formatted</a></li>
-              </ul>
-            </div>
-
-
-
-            <div className="w-full my-6 text-[#59588D] text-sm">
-              <h1 className="text-[#5B62FE] font-semibold text-lg">Copyright</h1>
-              <p>Copyright and related rights waived via <a href="https://creativecommons.org/publicdomain/zero/1.0/" className="text-blue-500 underline">CC0</a>.</p>
-            </div>
-
+            
           </div>
         </div>
         <div className="w-full md2:w-4/12 dxl:w-3/12">

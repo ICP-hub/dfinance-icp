@@ -9,6 +9,12 @@ export default {
       lineHeight: {
         '11': '2.75rem',
       },
+      colors: {
+        gradientStart: '#2E28A5',
+        gradientEnd: '#FAAA98',
+        gradientMiddle: '#C88A9B',
+      },
+      placeholderColor: ['responsive', 'focus', 'hover'], 
       screens: {
         sxxs: "255px",
         sxs: "265px",
@@ -46,5 +52,8 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animated")],
-}
+  plugins: [
+    require("tailwindcss-animated"),
+  ],
+};
+

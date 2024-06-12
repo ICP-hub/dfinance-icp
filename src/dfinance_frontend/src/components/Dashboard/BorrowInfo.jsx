@@ -5,11 +5,11 @@ import LineGraph from "./LineGraph"
 const BorrowInfo = () => {
   return (
     <div className="w-full lg:w-10/12 ">
-      <div className="w-full flex flex-col lg:flex-row items-start">
+      <div className="w-full flex flex-col lg:flex-row items-start sxs3:flex-row sxs3:mb-7">
         <div className="w-full lg:w-3/12">
           <CircleProgess progessValue={58} />
         </div>
-        <div className="w-full lg:w-9/12 flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs md:text-sm lg:text-base mt-3 lg:mt-0">
+        <div className="w-full lg:w-9/12 flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs md:text-sm lg:text-base mt-3 lg:mt-0 sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden">
           {/* Total Borrowed */}
           <div className="relative text-[#5B62FE]">
             <h1 className="text-[#2A1F9D] font-medium">Total Borrowed</h1>
@@ -17,7 +17,7 @@ const BorrowInfo = () => {
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
             <p>3.19M of 5.70M</p>
-            <p>$123.19M of $786.55M</p>
+            <p className="text-[11px]">$123.19M of $786.55M</p>
           </div>
 
           {/* APY, variable */}

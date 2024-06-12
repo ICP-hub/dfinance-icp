@@ -14,7 +14,7 @@ const ProposalDetails = () => {
             Back
           </span>
         </div>
-        <h1 className="text-[#2A1F9D] mt-3 text-xl font-semibold">
+        <h1 className="text-[#2A1F9D] text-xl font-semibold mt-8">
           Proposal overview
         </h1>
       </div>

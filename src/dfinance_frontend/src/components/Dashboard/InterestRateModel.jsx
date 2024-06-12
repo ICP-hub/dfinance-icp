@@ -7,7 +7,7 @@ const InterestRateModel = () => {
     <div className="w-full lg:w-10/12 ">
       <div className="w-full flex md:px-4 lg:px-8 text-xs md:text-sm lg:text-base">
         <div className="relative text-[#5B62FE]">
-          <h1 className="text-[#2A1F9D] font-medium">
+          <h1 className="text-[#2A1F9D] font-medium text-base">
             Utilization Rate
           </h1>
           <hr

@@ -38,7 +38,7 @@ export default [
         ),
       },
       {
-        path: "asset-details",
+        path: "asset-details/:id?",
         element: (
           <MainDashboard>
             <AssetDetails />

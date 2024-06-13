@@ -10,9 +10,12 @@ import EModeInfo from "./EModeInfo"
 import InterestRateModel from "./InterestRateModel"
 import LineGraph from "./LineGraph"
 import CircleProgess from "../CircleProgess"
+import { useParams } from "react-router-dom"
 
 const AssetDetails = () => {
   const [isFilter, setIsFilter] = React.useState(false)
+  const {id} = useParams();
+  console.log(id);
 
   // redux
   const dispatch = useDispatch()

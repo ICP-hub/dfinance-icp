@@ -33,6 +33,16 @@ body{
   .gradient-border:hover {
     border-color: #4351c8;
   }
+  .gradient-borderr {
+    background: 
+    linear-gradient(#eff6f9, #eff6f9) padding-box,
+              linear-gradient(to right, #FCBD78, #4659CF) border-box;
+  border-radius: 50em;
+  border: 2px solid transparent;
+  }
+  .gradient-borderr:hover {
+    border-color: #4351c8;
+  }
 
   /* Add this in your CSS file */
 /* Add this in your CSS file */

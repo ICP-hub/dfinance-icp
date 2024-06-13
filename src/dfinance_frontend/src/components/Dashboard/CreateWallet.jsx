@@ -14,6 +14,7 @@ const CreateWallet = () => {
 
 
     const handleWalletConnect = () => {
+        console.log("connrcterd");
         dispatch(setWalletModalOpen(!isWalletModalOpen))
         // dispatch(setIsWalletCreated(true))
     }

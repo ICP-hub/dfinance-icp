@@ -25,7 +25,7 @@ const ProposalDetails = () => {
               <h1 className="text-[#2A1F9D] text-xl font-semibold my-2 ml-1">
                 Interim aAMPL distribution
               </h1>
-              <span className="p-2 block rounded-full px-3 border border-white w-fit text-xs mt-3">
+              <span className=" text-[#5b62fe] p-2 block rounded-full px-3 border border-white w-fit text-xs mt-3">
                 Open for votings
               </span>
             </div>

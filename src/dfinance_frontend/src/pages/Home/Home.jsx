@@ -124,7 +124,7 @@ const Home = () => {
         </section>
 
         {/* Info section */}
-        <section className="mt-24">
+        <section className="mt-[44px] md:mt-24">
           <div className="w-full flex justify-center">
             <div className="w-full xl:w-3/4 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap">
               <div className="w-full xl:w-9/12">
@@ -141,12 +141,12 @@ const Home = () => {
         </section>
 
         {/* Governed by the Community */}
-        <section className="mt-24" id="gov">
+        <section className="mt-[44px] md:mt-24" id="gov">
           <div className="w-full text-center text-[#2A1F9D]">
-            <h1 className="text-lg xl:text-[45px] font-extralight">
+            <h1 className="text-lg text-[28px] md:text-[45px] font-extralight">
               Governed by the <span className="font-semibold">Community</span>
             </h1>
-            <p className="text-[#737373] lg:my-6">
+            <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6">
             DFinance is a fully decentralized, community governed protocol with 166,579 token holders.
             </p>
             <Button title="LEARN MORE" />

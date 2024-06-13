@@ -2,10 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-
-*{
-    font-family: "Poppins", sans-serif;
-}
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
 body{
     background: rgba(255, 255, 255, 1);
@@ -16,9 +14,6 @@ body{
     font-style: normal !important;
 }
 
-.tab_cards_gradient{
-    background: radial-gradient(circle at 95.33% 99.97%, #83d8e6 15%, #4659CF 100%);
-}
 
 .button_gradient{
     background: radial-gradient(circle at 111.51% -1.56%,  #FCBD78 10%, #4659CF 90%, );

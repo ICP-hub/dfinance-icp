@@ -218,6 +218,41 @@ export const TAB_CARD_DATA = [
   },
 ]
 
+
+export const SECURITY_CONTRIBUTORS_DATA = [
+  {
+    id: 0,
+    title: "Trail of bits",
+    image: "https://i.ibb.co/QH6w79v/trail-Of-Bits-svg-fill.png",
+  },
+  {
+    id: 1,
+    title: "Certora",
+    image: "https://i.ibb.co/tPwwdBV/certora-svg-fill.png",
+  },
+  {
+    id: 2,
+    title: "OpenZeppellin",
+    image: "https://i.ibb.co/2Nd6d5F/open-Zeppelin-svg.png",
+  },
+  {
+    id: 3,
+    title: "Sigma Prime",
+    image: "https://i.ibb.co/Fg4hyfP/sigma-Prime-svg-fill.png",
+  },
+  {
+    id: 4,
+    title: "Peckshield",
+    image: "https://i.ibb.co/Kx0fWXJ/peckshield-logo-svg.png",
+  },
+  {
+    id: 5,
+    title: "ABDK",
+    image:"https://i.ibb.co/7VC5zYz/abdk-svg.png"
+  }
+  
+]
+
 export const SHOWCASE_SECTION = [
   {
     id: 0,

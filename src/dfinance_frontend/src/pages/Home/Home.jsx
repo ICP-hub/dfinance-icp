@@ -9,7 +9,7 @@ import HeroSection from "../../components/Home/HeroSection";
 import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
-import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA } from "../../utils/constants"; // Assuming TAB_CARD_DATA is imported from the same place as other constants
+import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA } from "../../utils/constants"; // Assuming TAB_CARD_DATA is imported from the same place as other constants
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -158,30 +158,34 @@ const Home = () => {
 
         {/* Security Contributors */}
         <section className="mt-24">
-          <h1 className="font-semibold text-3xl lg:text-5xl text-blue-800">Security Contributors</h1>
+          <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-blue-800">Security Contributors</h1>
           <br></br>
-          <p className="text-sm lg:text-base text-gray-800 font-semibold">
+          <p className="text-[12px] font-poppins font-[500] text-center lg:text-[18px] text-[#737373] ">
             Audited by the world’s leading security firms, security of the <br></br>
             DFinance Protocol is the highest priority.
           </p>
+          <div className="flex flex-wrap gap-4 mx-auto items-center pt-[34px] pb-[24px]">
+            {SECURITY_CONTRIBUTORS_DATA.map((item)=>(
+              <img className="mx-auto mt-[29px] " src={item.image} draggable="false" />
+            ))}
+
+          </div>
 
 
         </section>
 
        {/* FAQ */}
-       <section className="mt-24 overflow-auto" id="faq">
-          <div className="w-[800px] lg:w-full p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl">
+       <section className="mt-24 " id="faq">
+          <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl">
             <div className="w-full">
-              <h1 className="text-[45px] hidden lg:block font-extralight text-[#2A1F9D]">
+              <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D]">
                 Frequently Asked Questions
               </h1>
-              <h1 className="text-[45px] block lg:hidden font-extralight text-[#2A1F9D]">
-                FAQ
-              </h1>
+             
             </div>
-            <div className="w-full grid grid-cols-2">
-              <div className="w-full relative z-10 flex items-center my-[29px] flex-col md:flex-row">
-                <div className="w-full md:w-[115%] bg-white shadow absolute md:relative rounded-xl overflow-hidden cursor-pointer">
+            <div className="w-full md:grid grid-cols-2">
+              <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px] ">
+                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer">
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full">
                       <div
@@ -197,14 +201,14 @@ const Home = () => {
                         </div>
                         <div className="w-10/12">{item.question}</div>
                         <div
-                          className={`w-1/12 ${currentFAQ === index ? "text-[#517687]" : "text-[#DBE8EE]"
+                          className={`w-1/12 ${currentFAQ === index ? "text-[#517687] rotate-90 md:rotate-0" : "text-[#DBE8EE]"
                             } flex justify-end`}
                         >
                           <ChevronRight />
                         </div>
                       </div>
                       {currentFAQ === index && (
-                        <div className="block md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full overflow-y-auto">
+                        <div className="block animate-fade-down md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full ">
                           <p>{item.answer}</p>
                         </div>
                       )}
@@ -212,7 +216,7 @@ const Home = () => {
                   ))}
                 </div>
               </div>
-              <div className="hidden md:block h-full ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6">
+              <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6">
                 <h1 className="font-semibold mt-4">
                   {FAQ_QUESTION.find((item) => item.id === currentFAQ).question}
                 </h1>

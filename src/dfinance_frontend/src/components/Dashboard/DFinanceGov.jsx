@@ -46,10 +46,10 @@ const DFinanceGov = () => {
         <h1 className="text-[#5B62FE] text-sm inline-flex items-center ml-6">
           Available on
           <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
-          Icp Mainnet
+          ICP Mainnet
         </h1>
         <div className="w-full flex flex-col  md2:flex-row mt-2">
-          <div className="w-full md2:w-9/12 dxl:w-9/12 p-6">
+          <div className="w-full md2:w-8/12 dxl:w-9/12 p-6">
             <h1 className="text-[#2A1F9D] font-medium text-xl">
               DFinance Governance
             </h1>
@@ -62,9 +62,9 @@ const DFinanceGov = () => {
               more check out the Governance.
             </p>
           </div>
-          <div className="w-full justify-start md2:w-4/12 dxl:w-4/12 md2:p-6 md2:ml-16">
+          <div className="w-full justify-start md2:w-5/12 dxl:w-4/12 md2:p-6 md2:ml-16">
             <h1 className="text-[#2A1F9D] font-medium text-xl mx-5">Others</h1>
-            <div className="w-full flex gap-4 flex-wrap mt-3 mx-5">
+            <div className="w-full flex gap-4 flex-wrap mt-3 mx-5 cursor-pointer">
               {["SNAPSHOTS", "GOVERNANCE", "FORUM", "FAQ"].map((i) => (
                 <span className="button_gradient p-2 whitespace-nowrap rounded-full text-xs flex items-center gap-2 text-white px-6">
                   {i} <ExternalLink size={16} />
@@ -75,7 +75,7 @@ const DFinanceGov = () => {
         </div>
       </div>
       <div className="w-full flex flex-col md2:flex-row mt-8 my-4 gap-8">
-        <div className="w-full md2:w-9/12 dxl:w-8.5/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl pt-10">
+        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl pt-10">
           <div className="flex items-center justify-between ">
             <div className="text-[#2A1F9D] text-2xl font-semibold ml-2">
               Proposals
@@ -83,24 +83,23 @@ const DFinanceGov = () => {
 
             <div className="flex relative gap-1 items-center">
               {showsearch && (
-                
+
                 <div className="test">
                   <input
-                  type="text"
-                  name="search"
-                  id="search"
-                  placeholder="Search for proposals"
-                  style={{ fontSize: '0.75rem' }}
-                  className={`placeholder-gray-500 w-[200px] md:block hidden z-20 rounded-full p-2 px-4 focus:outline-none box-border gradient-border  ${
-              showsearch
-                ? "animate-fade-left flex"
-                : "animate-fade-right hidden"
-            }`}
-                />
+                    type="text"
+                    name="search"
+                    id="search"
+                    placeholder="Search for proposals"
+                    style={{ fontSize: '0.75rem' }}
+                    className={`placeholder-gray-500 w-[200px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-border  ${showsearch
+                        ? "animate-fade-left flex"
+                        : "animate-fade-right hidden"
+                      }`}
+                  />
                 </div>
               )}
 
-              <svg onClick={showSearchBar} className="cursor-pointer" width="55" height="25" p-1 viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg onClick={showSearchBar} className="cursor-pointer" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
                 <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
                 <defs>
@@ -129,7 +128,7 @@ const DFinanceGov = () => {
                   ))}
                 </div>
               )}
-              
+
               <svg onClick={handleToggleClick} className="cursor-pointer" width="25" height="25" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2.25 5.25H4.5" stroke="#998FFF" stroke-linecap="round" stroke-linejoin="round" />
                 <path d="M2.25 12.75H6.75" stroke="#998FFF" stroke-linecap="round" stroke-linejoin="round" />
@@ -142,7 +141,7 @@ const DFinanceGov = () => {
                 {selectedItem}
               </span>
 
-              
+
             </div>
           </div>
 
@@ -159,36 +158,36 @@ const DFinanceGov = () => {
             />
           }
 
-<div className="w-full mt-8">
-  {[1, 2, 3, 4].map((i, index) => (
-    <div key={i} className={`w-full flex flex-col sm:flex-row rounded-lg p-3 ${index !== [1, 2, 3, 4].length - 1 ? 'gradient-line-bottom' : ''}`}>
-      <div className="w-full sm:w-9/12 flex flex-col gap-6 ">
-        <Link to={"proposal-details"} className="text-[#2A1F9D] text-lg font-semibold  ml-[-0.2rem] mt-2">
-          weETH Onboarding
-        </Link> 
-        <span className="p-1 rounded-full px-6 border border-white w-fit text-xs text-[#5B62FE]  mb-4">
-          Open for voting
-        </span>
-      </div>
-      <div className="w-full sm:w-3/12 flex flex-col gap-3 mt-3 sm:mt-0">
-        <div className="w-full text-[#5B62FE]">
-          <div className="w-full flex items-center justify-between text-xs">
-            <span>YAE 531K</span>
-            <span>100.00%</span>
+          <div className="w-full mt-8">
+            {[1, 2, 3, 4].map((i, index) => (
+              <div key={i} className={`w-full flex flex-col sm:flex-row rounded-lg p-3 ${index !== [1, 2, 3, 4].length - 1 ? 'gradient-line-bottom' : ''}`}>
+                <div className="w-full sm:w-9/12 flex flex-col gap-6 ">
+                  <Link to={"proposal-details"} className="text-[#2A1F9D] text-lg font-semibold  ml-[-0.2rem] mt-2">
+                    weETH Onboarding
+                  </Link>
+                  <span className="p-1 rounded-full px-6 border border-white w-fit text-xs text-[#5B62FE]  mb-4">
+                    Open for voting
+                  </span>
+                </div>
+                <div className="w-full sm:w-3/12 flex flex-col gap-3 mt-3 sm:mt-0">
+                  <div className="w-full text-[#5B62FE]">
+                    <div className="w-full flex items-center justify-between text-xs">
+                      <span>YAE 531K</span>
+                      <span>100.00%</span>
+                    </div>
+                    <div className="bg-[#2A1F9D] w-full h-2 rounded-full mt-2"></div>
+                  </div>
+                  <div className="w-full text-[#5B62FE]">
+                    <div className="w-full flex items-center justify-between text-xs mt-3 mb-2">
+                      <span>NAY 0</span>
+                      <span>0%</span>
+                    </div>
+                    <div className="bg-[#B6B6B6] w-full h-2 rounded-full mt-2"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="bg-[#2A1F9D] w-full h-2 rounded-full mt-2"></div>
-        </div>
-        <div className="w-full text-[#5B62FE]">
-          <div className="w-full flex items-center justify-between text-xs mt-3 mb-2">
-            <span>NAY 0</span>
-            <span>0%</span>
-          </div>
-          <div className="bg-[#B6B6B6] w-full h-2 rounded-full mt-2"></div>
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
 
 
         </div>

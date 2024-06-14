@@ -51,7 +51,7 @@ const Home = () => {
   return (
     <>
       {/* Main Home Page */}
-      <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden shadow-sm">
+      <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden shadow-sm font-poppins">
         {/* Background Overlay Ellipse */}
         <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse

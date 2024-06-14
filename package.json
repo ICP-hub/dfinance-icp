@@ -17,6 +17,7 @@
     "src/dfinance_frontend"
   ],
   "dependencies": {
+    "@canvasjs/react-charts": "^1.0.2",
     "@dfinity/auth-client": "^1.2.0",
     "@dfinity/ledger-icp": "^2.2.2",
     "@emotion/react": "^11.11.4",

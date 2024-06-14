@@ -52,7 +52,7 @@ const CircleProgess = ({ progessValue }) => {
         r={35}
         fill="transparent"
         stroke="url(#gradient)"
-        strokeWidth={4}
+        strokeWidth={5}
         strokeLinecap="round"
         strokeDasharray={"0"}
       />
@@ -62,7 +62,7 @@ const CircleProgess = ({ progessValue }) => {
         y="50%"
         textAnchor="middle"
         alignmentBaseline="middle"
-        fontSize={15}
+        fontSize={16}
         fill="#2A1F9D"
         fontWeight={500}
       >

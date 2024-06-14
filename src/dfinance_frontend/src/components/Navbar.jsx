@@ -125,7 +125,7 @@ export default function Navbar({ isHomeNav }) {
                   <NavLink
                     key={index}
                     to={link.route}
-                    className={`text-[#233D63] px-3`}
+                    className={`text-[#2a1f9d] px-3 py-2 text-lg`}
                   >
                     {link.title}
                   </NavLink>

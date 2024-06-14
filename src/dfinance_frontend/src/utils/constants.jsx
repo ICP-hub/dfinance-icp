@@ -321,6 +321,19 @@ export const WALLET_DETAILS_TABS = [
     count: "290.76",
   },
 ]
+export const WALLET_DETAIL_TAB = [
+  {
+    id: 0,
+    title: "Net Worth",
+    count: "$163.39",
+  },
+  {
+    id: 1,
+    title: "Net APY",
+    count: "12.26 %",
+  },
+  
+]
 
 export const WALLET_ASSETS_TABLE_COL = [
   {
@@ -545,8 +558,8 @@ export const MY_SUPPLY_ASSET_TABLE_COL = [
 export const MY_SUPPLY_ASSET_TABLE_ROWS = [
   {
     row_id: 0,
-    asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -555,25 +568,17 @@ export const MY_SUPPLY_ASSET_TABLE_ROWS = [
   {
     row_id: 1,
     asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/WP7FFRH/image-98.png",
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
     apy_desc: "Eligible for 2.9M$ GHO Community program"
   },
-  {
-    row_id: 2,
-    asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
-    wallet_balance_count: 3.19,
-    wallet_balance: 156.51,
-    apy: 1.50,
-    apy_desc: "Eligible for 2.9M$ GHO Community program"
-  },
+  
   {
     row_id: 3,
-    asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    asset: "Dragginz",
+    image: "https://i.ibb.co/xJ8KLK7/image-98-6.png",
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -595,4 +600,121 @@ export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
     header1: "APY, variable",
     header2: "APY, borrow rate",
   }
+]
+export const MY_ASSET_TO_BORROW_TABLE_COL = [
+  {
+    col_id: 0,
+    header: "",
+  },
+  {
+    col_id: 1,
+    header: "Available",
+  },
+  {
+    col_id: 2,
+    header1: "APY, variable",
+    header2: "APY, borrow rate",
+  }
+]
+export const MY_ASSET_TO_SUPPLY_TABLE_ROW = [
+  {
+    row_id: 0,
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  {
+    row_id: 1,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/WP7FFRH/image-98.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  
+  {
+    row_id: 3,
+    asset: "Dragginz",
+    image: "https://i.ibb.co/xJ8KLK7/image-98-6.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  {
+    row_id: 4,
+    asset: "OpenChat",
+    image: "https://i.ibb.co/Lghfh2k/image-98-7.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+]
+export const MY_ASSET_TO_BORROW_TABLE_ROW = [
+  
+  {
+    row_id: 0,
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy:" 1.50-2.02%",
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+]
+export const MY_BORROW_ASSET_TABLE_COL = [
+  {
+    col_id: 0,
+    header: "Assest",
+  },
+  {
+    col_id: 1,
+    header: "Debt",
+  },
+  {
+    col_id: 2,
+    header: "APY",
+  }, {
+    col_id: 3,
+    header: "APY TYPE",
+  }
+]
+
+export const MY_BORROW_ASSET_TABLE_ROWS = [
+  {
+    row_id: 0,
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program",
+    apy_type: "variable"
+  },
+  {
+    row_id: 1,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/WP7FFRH/image-98.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program",
+    apy_type: "variable"
+  },
+  
+  {
+    row_id: 3,
+    asset: "Dragginz",
+    image: "https://i.ibb.co/xJ8KLK7/image-98-6.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program",
+    apy_type: "variable"
+  },
 ]

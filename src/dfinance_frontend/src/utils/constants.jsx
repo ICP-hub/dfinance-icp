@@ -332,6 +332,12 @@ export const WALLET_DETAIL_TAB = [
     title: "Net APY",
     count: "12.26 %",
   },
+  {
+    id: 2,
+    title: "Health Factor",
+    count: "12.26 %",
+  },
+  
   
 ]
 
@@ -718,3 +724,12 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
     apy_type: "variable"
   },
 ]
+// constants.jsx
+
+export const transactionHistory = [
+  // { id: 1, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
+  // { id: 2, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
+  // { id: 3, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
+  // { id: 4, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
+  // Add more transactions as needed
+];

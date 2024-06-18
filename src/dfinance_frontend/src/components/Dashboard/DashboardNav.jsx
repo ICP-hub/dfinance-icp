@@ -56,11 +56,19 @@ const DashboardNav = () => {
     ? "Market"
     : "Dashboard";
 
-  const shouldRenderTransactionHistoryButton = location.pathname === '/dashboard/my-supply' ||
-    location.pathname === '/dashboard/transaction-history';
+  // Determine if Risk Details button should be rendered
+  const shouldRenderRiskDetailsButton = !pathname.includes("/dashboard/wallet-details") && !pathname.includes("/dashboard/main");
+
+  // Filter WALLET_DETAIL_TAB to exclude health with id=3 if pathname is /dashboard/main
+  const filteredWalletDetailTabs = WALLET_DETAIL_TAB.filter(item => {
+    if (pathname === "/dashboard/main" && item.id === 2) {
+      return false; // exclude health with id=3
+    }
+    return true;
+  });
 
   return (
-    <div className="w-full">
+    <div className="w-full ">
       <div className="w-full">
         <span
           className="w-fit bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] p-2 mb-6 mt-2 whitespace-nowrap rounded-md text-xs flex items-center gap-2 text-white px-6 cursor-pointer hover:from-[#6575dd]"
@@ -131,7 +139,7 @@ const DashboardNav = () => {
             </div>
           </div>
           <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6">
-            {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+            {filteredWalletDetailTabs.map((data, index) => (
               <div key={index} className="relative group ml-10">
                 <button className="relative">
                   {data.title}
@@ -142,22 +150,23 @@ const DashboardNav = () => {
                 </button>
               </div>
             ))}
-            <button className=" py-1 px-2 border border-blue-500 text-blue-900 rounded-lg">
+            {shouldRenderRiskDetailsButton && (
+              <button className=" -mt-2 py-1 px-2 border border-blue-500 text-blue-900 rounded-lg">
               Risk Details
             </button>
-
+            
+            )}
           </div>
         </div>
         <div className="">
-          {shouldRenderTransactionHistoryButton && (
-            <a href="/dashboard/transaction-history" className="block">
-              <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
-                Transaction History
-              </button>
-            </a>
-          )}
-        </div>
-
+      {pathname === '/dashboard/my-supply' && (
+        <a href="/dashboard/transaction-history" className="block">
+          <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E99] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer">
+            Transaction History
+          </button>
+        </a>
+      )}
+    </div>
       </div>
     </div>
   );

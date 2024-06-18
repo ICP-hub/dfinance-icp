@@ -11,32 +11,6 @@ const TabPanel = ({ items }) => {
     </div>
   );
 };
-export const HOME_TOP_NAV_LINK = [
-  {
-    id: 0,
-    title: "Help Center",
-    route: "/#gov",
-    icon: "",
-  },
-  {
-    id: 1,
-    title: "Partners",
-    route: "/#security",
-    icon: "",
-  },
-  {
-    id: 2,
-    title: "Sugesstions",
-    route: "/docs",
-    icon: "",
-  },
-  {
-    id: 3,
-    title: "Blogs",
-    route: "/#faq",
-    icon: "",
-  },
-]
 
 export const FOOTER_LINK_1 = [
   {
@@ -82,6 +56,32 @@ export const FOOTER_LINK_2 = [
     id: 2,
     title: "Blogs",
     route: "/#",
+    icon: "",
+  },
+]
+export const HOME_TOP_NAV_LINK = [
+  {
+    id: 0,
+    title: "Governance",
+    route: "/dashboard/dfinance-gov",
+    icon: "",
+  },
+  {
+    id: 1,
+    title: "Market",
+    route: "/dashboard/wallet-details",
+    icon: "",
+  },
+  {
+    id: 2,
+    title: "Docs",
+    route: "/docs",
+    icon: "",
+  },
+  {
+    id: 3,
+    title: "FAQ",
+    route: "/#faq",
     icon: "",
   },
 ]
@@ -727,9 +727,9 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
 // constants.jsx
 
 export const transactionHistory = [
-  // { id: 1, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
-  // { id: 2, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
-  // { id: 3, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
-  // { id: 4, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
+  { id: 1, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
+  { id: 2, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
+  { id: 3, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
+  { id: 4, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
   // Add more transactions as needed
 ];

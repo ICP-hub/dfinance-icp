@@ -121,27 +121,28 @@ export default function Navbar({ isHomeNav }) {
               className="w-[100px] md:w-[150px] lg:w-auto"
             />
 
-            <div className="gap-4 hidden lg:flex">
-              {!isHomeNav
-                ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
-                    <NavLink
-                      key={index}
-                      to={link.route}
-                      className="text-[#2a1f9d] px-3 py-2 text-lg"
-                    >
-                      {link.title}
-                    </NavLink>
-                  ))
-                : HOME_TOP_NAV_LINK.map((link, index) => (
-                    <NavLink
-                      key={index}
-                      to={link.route}
-                      className="text-[#233D63] px-3"
-                    >
-                      {link.title}
-                    </NavLink>
-                  ))}
-            </div>
+<div className="gap-4 hidden lg:flex">
+  {!isHomeNav
+    ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
+        <NavLink
+          key={index}
+          to={link.route}
+          className="text-[#2a1f9d] px-3 py-2 text-lg nav-link"
+        >
+          {link.title}
+        </NavLink>
+      ))
+    : HOME_TOP_NAV_LINK.map((link, index) => (
+        <NavLink
+          key={index}
+          to={link.route}
+          className="text-[#233D63] px-3 py-2 text-lg nav-link"
+        >
+          {link.title}
+        </NavLink>
+      ))}
+</div>
+
 
             {isHomeNav && (
               <Button title={'Launch App'} onClickHandler={handleLaunchApp} />

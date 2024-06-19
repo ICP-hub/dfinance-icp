@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { TAB_CARD_DATA, WALLET_DETAILS_TABS, WALLET_DETAIL_TAB } from "../../utils/constants";
 import { useSelector } from "react-redux";
 import RiskPopup from './RiskDetails';
+
 const DashboardNav = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();

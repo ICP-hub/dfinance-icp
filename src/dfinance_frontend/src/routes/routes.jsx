@@ -3,13 +3,12 @@ import WalletDetails from "../components/Dashboard/WalletDetails"
 import MainDashboard from "../pages/Dashboard/MainDashboard"
 import Home from "../pages/Home/Home"
 import Login from "../pages/login/Login"
-import {useSelector} from 'react-redux';
-import { store } from "../redux/store"
 import AssetDetails from "../components/Dashboard/AssetDetails"
 import DFinanceGov from "../components/Dashboard/DFinanceGov"
-
-
-const { utility } = store.getState()
+import ProposalDetails from "../components/Dashboard/ProposalDetails"
+import MySupply from "../components/Dashboard/MySupply"
+import { elements } from "chart.js"
+import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
 
 export default [
   {
@@ -40,10 +39,26 @@ export default [
         ),
       },
       {
-        path: "asset-details",
+        path: "asset-details/:id?",
         element: (
           <MainDashboard>
             <AssetDetails />
+          </MainDashboard>
+        ),
+      },
+      {
+        path: "my-supply",
+        element: (
+          <MainDashboard>
+            <MySupply />
+          </MainDashboard>
+        ),
+      },
+      {
+        path: "transaction-history",
+        element: (
+          <MainDashboard>
+            <TransactionHistoryBox />
           </MainDashboard>
         ),
       },
@@ -53,7 +68,14 @@ export default [
           <MainDashboard isDGov={true}>
             <DFinanceGov />
           </MainDashboard>
-        ),
+        )
+      }, {
+        path: "dfinance-gov/proposal-details",
+        element: (
+          <MainDashboard isDGov={true}>
+            <ProposalDetails />
+          </MainDashboard>
+        )
       }
     ],
   },

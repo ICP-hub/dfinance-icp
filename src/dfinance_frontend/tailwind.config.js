@@ -80,8 +80,18 @@ module.exports = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       fontFamily: {
-        fontUse: ["Poppins"],
+        'poppins': ["Poppins", 'sans-serif'],
+        'inter':  ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'],
       },
+      lineHeight: {
+        '11': '2.75rem',
+      },
+      colors: {
+        gradientStart: '#2E28A5',
+        gradientEnd: '#FAAA98',
+        gradientMiddle: '#C88A9B',
+      },
+      placeholderColor: ['responsive', 'focus', 'hover'], 
       screens: {
         sxxs: "255px",
         sxs: "265px",
@@ -119,5 +129,8 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animated")],
-}
+  plugins: [
+    require("tailwindcss-animated"),
+  ],
+};
+

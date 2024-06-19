@@ -1,32 +1,67 @@
-import React from "react"
-import { NavLink } from "react-router-dom"
-import Ellipse from "../../components/Ellipse"
-import Logo from "../../components/Logo"
-import {
-  FAQ_QUESTION,
-  HOME_TOP_NAV_LINK,
-  MAIN_NAV_LINK,
-  SHOWCASE_SECTION,
-} from "../../utils/constants"
-import { Drawer, Tab, Tabs } from "@mui/material"
-import TabPanel from "../../components/Home/TabPanel"
-import { ChevronLeft, ChevronRight, Menu } from "lucide-react"
-import ShowCaseSection from "../../components/Home/ShowCaseSection"
-import MobileTobNav from "../../components/Home/MobileTobNav"
-import HeroSection from "../../components/Home/HeroSection"
-import HowITWork from "../../components/Home/HowITWork"
-import Navbar from "../../components/Navbar"
-import Footer from "../../components/Footer"
-import Button from "../../components/Button"
+import React, { useState, useEffect } from "react";
+import { Tab, Tabs } from "@mui/material";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Button from "../../components/Button";
+import Ellipse from "../../components/Ellipse";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
+import HeroSection from "../../components/Home/HeroSection";
+import HowITWork from "../../components/Home/HowITWork";
+import TabPanel from "../../components/Home/TabPanel";
+import { LuMoveUp } from "react-icons/lu";
+import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA } from "../../utils/constants"; // Assuming TAB_CARD_DATA is imported from the same place as other constants
 
 const Home = () => {
-  const [currentTab, setCurrentTab] = React.useState(0)
-  const [currentFAQ, setCurrentFAQ] = React.useState(0)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [currentTab, setCurrentTab] = useState(0);
+  const [currentFAQ, setCurrentFAQ] = useState(0);
+  const [isPaused, setIsPaused] = useState(false); 
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+        if (!isPaused) {
+      const nextIndex = (currentFAQ + 1) % FAQ_QUESTION.length;
+      setCurrentFAQ(nextIndex);
+    }
+    }, 2500); 
+    return () => clearInterval(interval);
+  }, [currentFAQ, isPaused]);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset;
+      if (scrollTop > 600) { // Adjust this value to control when the button appears
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const visibleCards = isMobile ? TAB_CARD_DATA.slice(0, 4) : TAB_CARD_DATA;
 
   return (
     <>
       {/* Main Home Page */}
-      <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden shadow-sm">
+      <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden shadow-sm font-poppins">
         {/* Background Overlay Ellipse */}
         <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
@@ -80,55 +115,35 @@ const Home = () => {
                 ))}
               </Tabs>
             </nav>
-            <p className="text-sm font-normal text-[#737373] text-center mt-3">
-              Supply into the protocol and watch your assets grow as a liquidity
-              provider
-            </p>
+            {MAIN_NAV_LINK.map((item) => (
+              <React.Fragment key={item.id}>
+                {currentTab === item.id && (
+                  <p className="text-sm font-normal text-[#737373] text-center mt-3">
+                    {item.content}
+                  </p>
+                )}
+              </React.Fragment>
+            ))}
           </div>
           <div className="w-full mt-10">
             <h1 className="text-[#0C5A74] font-semibold text-[36px] mb-2">
               Markets
             </h1>
-            <TabPanel currentTab={currentTab} />
-            <div className="w-full flex justify-end mt-6">
-              <div id="pagination" className="flex gap-2">
-                <button
-                  type="button"
-                  className="border rounded-full p-1 border-[#517688] hover:border-[#73b1cf] hover:text-[#73b1cf] text-[#517688]"
-                >
-                  <ChevronLeft />
-                </button>
-                <button
-                  type="button"
-                  className="border rounded-full p-1 border-[#517688] hover:border-[#73b1cf] hover:text-[#73b1cf] text-[#517688]"
-                >
-                  <ChevronRight />
-                </button>
-              </div>
-            </div>
+            <TabPanel />
           </div>
         </section>
 
-        {/* Background Overlay Ellipse */}
-        <div className="absolute left-0 top-[55%] lg:top-1/4 -z-10">
-          <Ellipse
-            position={"middle-left"}
-            className="w-52 h-96 lg:w-auto lg:h-auto"
-          />
-        </div>
-
-        {/* info section */}
-        <section className="mt-24">
+        {/* Info section */}
+        <section className="mt-[44px] md:mt-24">
           <div className="w-full flex justify-center">
             <div className="w-full xl:w-3/4 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap">
               <div className="w-full xl:w-9/12">
                 <h1 className="font-semibold text-lg">And more to come...</h1>
                 <p className="mt-4 text-sm font-medium">
-                  Submit a proposal to deploy a new market in the Aave
-                  ecosystem. You can learn from the Aave governance.
+                  Submit a proposal to deploy a new market in the Dfinance ecosystem. You can learn from the DFinance governance.
                 </p>
               </div>
-              <div className="w-full xl:w-3/12 flex justify-center mt-6 lg:mt-0">
+              <div className="w-full xl:w-3/12 flex justify-end mt-3 lg:mt-0">
                 <Button title="LEARN MORE" />
               </div>
             </div>
@@ -136,84 +151,82 @@ const Home = () => {
         </section>
 
         {/* Governed by the Community */}
-        <section className="mt-24">
-          <div className="w-full  text-center text-[#2A1F9D]">
-            <h1 className="text-lg xl:text-[45px] font-extralight">
+        <section className="mt-[44px] md:mt-24" id="gov">
+          <div className="w-full text-center text-[#2A1F9D]">
+            <h1 className="text-lg text-[28px] md:text-[45px] font-extralight">
               Governed by the <span className="font-semibold">Community</span>
             </h1>
-            <p className="text-[#737373] lg:my-6">
-              Aave is a fully decentralized, community governed protocol with
-              166,579 token holders.
+            <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6">
+            DFinance is a fully decentralized, community governed protocol with 166,579 token holders.
             </p>
             <Button title="LEARN MORE" />
-          </div>
-          <div className="w-full flex justify-center my-3">
-            <div className="w-[700px] h-auto mt-3 xl:mt-0 xl:h-[400px]">
-              <img
-                src="/image-78.svg"
-                alt="Governed by the Community"
-                className="w-full h-full object-contain"
-              />
-            </div>
-          </div>
+          </div>   
         </section>
 
         {/* How it Works */}
         <HowITWork />
 
-        {/* Showcase Section (ICP Grants DAO & Security Contributors) */}
-        {SHOWCASE_SECTION.map((item) => (
-          <section className="mt-24">
-            <ShowCaseSection key={item.id} data={item} />
-          </section>
-        ))}
+        {/* Security Contributors */}
+        <section className="mt-24">
+          <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-blue-800">Security Contributors</h1>
+          <br></br>
+          <p className="text-[12px] font-poppins font-[500] text-center lg:text-[18px] text-[#737373] ">
+            Audited by the world’s leading security firms, security of the <br></br>
+            DFinance Protocol is the highest priority.
+          </p>
+          <div className="flex flex-wrap gap-4 mx-auto items-center pt-[34px] pb-[24px]">
+            {SECURITY_CONTRIBUTORS_DATA.map((item)=>(
+              <img className="mx-auto mt-[29px] " src={item.image} draggable="false" />
+            ))}
 
-        {/* FAQ */}
-        <section className="mt-24 overflow-auto">
-          <div className="w-[800px] lg:w-full p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl">
+          </div>
+
+
+        </section>
+
+       {/* FAQ */}
+       <section className="mt-24 " id="faq">
+          <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl">
             <div className="w-full">
-              <h1 className="text-[45px] hidden lg:block font-extralight text-[#2A1F9D]">
+              <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D]">
                 Frequently Asked Questions
               </h1>
-              <h1 className="text-[45px] block lg:hidden font-extralight text-[#2A1F9D]">
-                FAQ
-              </h1>
+             
             </div>
-            <div className="w-full flex">
-              <div className="w-6/12 relative flex items-center">
-                <div className="w-[115%] bg-white absolute shadow inset-auto rounded-xl overflow-hidden cursor-pointer">
+            <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)} className="w-full md:grid grid-cols-2">
+              <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px] ">
+                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer">
                   {FAQ_QUESTION.map((item, index) => (
-                    <div
-                      key={index}
-                      className={`w-full flex p-4 items-center ${
-                        currentFAQ === index ? "bg-[#eef0f5]" : ""
-                      } hover:bg-[#FAFBFF]`}
-                      onClick={() => setCurrentFAQ(index)}
-                    >
-                      <div className="w-1/12">
-                        <div
-                          className={`w-4 h-4 rounded-full ${
-                            currentFAQ === index
-                              ? "bg-[#517687]"
-                              : "bg-[#DBE8EE]"
-                          }`}
-                        ></div>
-                      </div>
-                      <div className="w-10/12">{item.question}</div>
+                    <div key={index} className="w-full">
                       <div
-                        className={`w-1/12 ${
-                          currentFAQ === index
-                            ? "text-[#517687]"
-                            : "text-[#DBE8EE]"
-                        } flex justify-end`}
+                        className={`w-full flex p-4 items-center ${currentFAQ === index ? "bg-[#eef0f5]" : ""
+                          } hover:bg-[#FAFBFF]`}
+                        onClick={() => setCurrentFAQ(index)}
                       >
-                        <ChevronRight />
+                        <div className="w-1/12">
+                          <div
+                            className={`w-4 h-4 rounded-full ${currentFAQ === index ? "bg-[#517687]" : "bg-[#DBE8EE]"
+                              }`}
+                          ></div>
+                        </div>
+                        <div className="w-10/12">{item.question}</div>
+                        <div
+                          className={`w-1/12 ${currentFAQ === index ? "text-[#517687] rotate-90 md:rotate-0" : "text-[#DBE8EE]"
+                            } flex justify-end`}
+                        >
+                          <ChevronRight />
+                        </div>
                       </div>
+                      {currentFAQ === index && (
+                        <div className="block animate-fade-down md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full ">
+                          <p>{item.answer}</p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="w-6/12 h-[400px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6">
+              <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6">
                 <h1 className="font-semibold mt-4">
                   {FAQ_QUESTION.find((item) => item.id === currentFAQ).question}
                 </h1>
@@ -234,11 +247,14 @@ const Home = () => {
         </div>
       </div>
       {/* Footer */}
+      <button
+      className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[75px] w-[75px] text-white rounded-full transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+      onClick={scrollToTop}
+    >
+      <LuMoveUp  className="text-[50px] mx-auto hover:text-white transition-colors"/>
+    </button>
       <Footer />
-
-     
     </>
-  )
-}
-
-export default Home
+  );
+};
+export default Home;

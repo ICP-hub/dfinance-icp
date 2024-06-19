@@ -31,9 +31,49 @@ export const options = {
     },
     elements: {
         line: {
-            tension: 0.4,
+            tension: 0.2,
         },
     },
+    scales: {
+        x: {
+            grid: {
+                display: true,
+                color: 'rgba(255, 255, 255, 0.3)',
+                lineWidth: 6,
+                circular: true,
+                borderDashOffset: 0,
+            },
+            border: {
+                display: false
+            },
+            ticks: {
+                color: 'blue',
+                font: {
+                    family: 'Poppins, sans-serif'
+                }
+            }
+
+        },
+        y: {
+            grid: {
+                display: true,
+                color: 'rgba(255, 255, 255, 0.3)',
+                lineWidth: 6,
+                circular: true,
+                borderDashOffset: 0,
+            },
+            border: {
+                display: false
+            },
+            ticks: {
+                color: 'blue',
+                font: {
+                    family: 'Poppins, sans-serif'
+                }
+            }
+
+        },
+    }
 }
 
 const labels = ["January", "February", "March", "April", "May", "June", "July"]
@@ -51,9 +91,9 @@ export const data = {
 }
 
 const LineGraph = () => {
-  return (
-      <Line options={options} data={data} />
-  )
+    return (
+        <Line options={options} data={data} />
+    )
 }
 
 export default LineGraph

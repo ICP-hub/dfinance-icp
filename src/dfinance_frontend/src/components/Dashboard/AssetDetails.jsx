@@ -10,9 +10,12 @@ import EModeInfo from "./EModeInfo"
 import InterestRateModel from "./InterestRateModel"
 import LineGraph from "./LineGraph"
 import CircleProgess from "../CircleProgess"
+import { useParams } from "react-router-dom"
 
 const AssetDetails = () => {
   const [isFilter, setIsFilter] = React.useState(false)
+  const {id} = useParams();
+  console.log(id);
 
   // redux
   const dispatch = useDispatch()
@@ -40,13 +43,13 @@ const AssetDetails = () => {
   return (
     <div className="w-full flex flex-col lg:flex-row mt-16 my-6 gap-6">
       <div className="w-full lg:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
-        <h1 className="text-[#2A1F9D] font-semibold my-2">
+        <h1 className="text-[#2A1F9D] font-bold my-2">
           Reserve status & configuration
         </h1>
         <div className="w-full mt-8 lg:flex">
           
             <div className="w-full mb-6 xl:hidden">
-              <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative">
+              <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%]">
                 <span className="font-medium">{assetDetailFilter}</span>
                 <span onClick={() => setIsFilter(!isFilter)}>
                   {!isFilter ? (
@@ -74,7 +77,7 @@ const AssetDetails = () => {
           
           <div className="w-2/12 hidden xl:block">
             <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative">
-              <span className="font-medium">{assetDetailFilter}</span>
+              <span className="font-medium text-[16px]">{assetDetailFilter}</span>
               <span onClick={() => setIsFilter(!isFilter)}>
                 {!isFilter ? (
                   <SlidersHorizontal size={16} className="text-[#695fd4]" />
@@ -102,9 +105,9 @@ const AssetDetails = () => {
         </div>
       </div>
       <div className="w-full lg:w-3/12">
-        <div className="w-full bg-[#233D63] p-4 rounded-xl text-white">
+        <div className="w-full bg-[#233D63] p-4 rounded-[20px] text-white">
           <h1 className="font-semibold">Total Supplied</h1>
-          <p className="text-gray-500 text-xs my-1">
+          <p className="text-gray-300 text-[12px] my-1">
             Please connect a wallet to view your personal information here.
           </p>
           <div className="w-full mt-4">

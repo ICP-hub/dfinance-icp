@@ -1,4 +1,6 @@
 use crate::math;
+use crate::state_handler;
+use crate::state_handler::*;
 use crate::types::*;
 use crate::{api::*, math::*, with_state};
 use ic_cdk::api::time;
@@ -37,10 +39,11 @@ pub fn get_current_month() -> u32 {
 pub fn get_total_months() -> u32 {
     let current_month = get_current_month();
     with_state(|state| {
-        let timestamp = state
+        let timestamp_opt = state
             .launch_timestamp
-            .expect("Launch timestamp must be set before accessing");
-        let launch_month = timestamp_to_month(timestamp);
+            .get()
+            .expect("Failed to get StableCell value");
+        let launch_month = timestamp_to_month(timestamp_opt); // Calling with u64
         (current_month - launch_month) + 1
     })
 }
@@ -57,8 +60,8 @@ pub fn get_current_phase() -> u32 {
         current_phase = 3
     }
     with_state(|state| {
-        state.current_phase = current_phase;
-        state.current_phase
+        state.current_phase.set(current_phase);
+        *state.current_phase.get()
     })
 }
 
@@ -81,10 +84,9 @@ pub fn add_monthly_data() {
 
     with_state(|state| {
         let current_month = get_current_month();
-        if let Some(existing_data) = state.monthly_data.get_mut(&current_month) {
-            *existing_data = monthly_data;
-        } else {
-            state.monthly_data.insert(current_month, monthly_data);
-        }
+
+        state
+            .monthly_data
+            .insert(current_month, Candid(monthly_data));
     })
 }

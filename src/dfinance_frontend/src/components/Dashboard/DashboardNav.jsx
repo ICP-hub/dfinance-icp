@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { TAB_CARD_DATA, WALLET_DETAILS_TABS, WALLET_DETAIL_TAB } from "../../utils/constants";
 import { useSelector } from "react-redux";
-
+import RiskPopup from './RiskDetails';
 const DashboardNav = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
@@ -42,7 +42,15 @@ const DashboardNav = () => {
       setCurrentValueIndex(state.id);
     }
   }, [state]);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  const handleOpenPopup = () => {
+    setIsPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
   // Determine if it's dashboard supply or main based on pathname
   const isDashboardSupplyOrMain = pathname === "/dashboard/my-supply" || pathname === "/dashboard/main";
 
@@ -68,6 +76,7 @@ const DashboardNav = () => {
   });
 
   return (
+
     <div className="w-full ">
       <div className="w-full">
         <span
@@ -77,7 +86,7 @@ const DashboardNav = () => {
           Back
         </span>
       </div>
-      <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4">
+      <h1 className="text-[#3739b4] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4">
         {dashboardTitle}
       </h1>
 
@@ -92,19 +101,19 @@ const DashboardNav = () => {
               />
             </div>
 
-            <h1 className="text-[#2A1F9D] font-semibold">
+            <h1 className="text-[#3739b4] font-semibold">
               {currentValueData ? currentValueData.title : ""}
             </h1>
 
             <div className="relative" ref={dropdownRef}>
               <span
-                className="block p-1 rounded-full bg-[#8CC0D770] text-[#2A1F9D] cursor-pointer"
+                className="block p-1 rounded-full bg-[#8CC0D770] text-[#3739b4] cursor-pointer"
                 onClick={toggleDropdown}
               >
                 {!isDrop ? (
-                  <ChevronRight size={16} color="#2A1F9D" />
+                  <ChevronRight size={16} color="#3739b4" />
                 ) : (
-                  <ChevronDown size={16} color="#2A1F9D" />
+                  <ChevronDown size={16} color="#3739b4" />
                 )}
               </span>
               {isDrop && (
@@ -138,7 +147,8 @@ const DashboardNav = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6">
+
+          <div className="flex items-center flex-wrap text-[#3739b4] font-semibold gap-6">
             {filteredWalletDetailTabs.map((data, index) => (
               <div key={index} className="relative group ml-10">
                 <button className="relative">
@@ -151,24 +161,28 @@ const DashboardNav = () => {
               </div>
             ))}
             {shouldRenderRiskDetailsButton && (
-              <button className=" -mt-2 py-1 px-2 border border-blue-500 text-blue-900 rounded-lg">
-              Risk Details
-            </button>
-            
+              <button
+                className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg"
+                onClick={handleOpenPopup}
+              >
+                Risk Details
+              </button>
             )}
           </div>
-        </div>
-        <div className="">
-      {pathname === '/dashboard/my-supply' && (
-        <a href="/dashboard/transaction-history" className="block">
-          <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E99] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer">
-            Transaction History
-          </button>
-        </a>
-      )}
-    </div>
+          {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
+        
+      </div>
+      <div className="">
+        {pathname === '/dashboard/my-supply' && (
+          <a href="/dashboard/transaction-history" className="block">
+            <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E99] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer">
+              Transaction History
+            </button>
+          </a>
+        )}
       </div>
     </div>
+    </div >
   );
 };
 

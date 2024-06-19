@@ -78,13 +78,16 @@ export default function Navbar({ isHomeNav }) {
     // Logic to handle copy address functionality
     console.log("Copy Address clicked");
   };
+
   const handleViewOnExplorerClick = () => {
     // Logic to navigate to explorer
     console.log("View on Explorer clicked");
   };
+
   const handleLaunchApp = () => {
     navigate("/dashboard/main");
   };
+
   useEffect(() => {
     if (isAuthenticated === true) {
       dispatch(
@@ -96,9 +99,10 @@ export default function Navbar({ isHomeNav }) {
             "https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg",
         })
       )
+      navigate("/dashboard/my-supply")
     } else {
       dispatch(setUserData(null))
-      navigate("/")
+      // navigate("/") 
     }
   }, [isAuthenticated])
 
@@ -120,6 +124,7 @@ export default function Navbar({ isHomeNav }) {
     }
     console.log(hash);
   }, [hash])
+
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
@@ -153,14 +158,12 @@ export default function Navbar({ isHomeNav }) {
                 ))}
             </div>
 
-            {isHomeNav && (
-        <Button
-          title={"Launch App"}
-          onClickHandler={handleLaunchApp}
-        />
-      )}
-
-            {isAuthenticated && !isHomeNav && (
+            {isHomeNav ? (
+              <Button
+                title={"Launch App"}
+                onClickHandler={handleLaunchApp}
+              />
+            ) : (isAuthenticated ? (
               <div className="hidden lg:flex gap-6">
                 <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
                   <div
@@ -172,7 +175,7 @@ export default function Navbar({ isHomeNav }) {
                   </div>
 
                   {switchTokenDrop && (
-                  <SwitchWallet/>
+                    <SwitchWallet />
                   )}
                 </div>
                 <div className="flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
@@ -203,11 +206,12 @@ export default function Navbar({ isHomeNav }) {
                         <Button
                           title="Switch Wallet"
                           className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
-                        onClickHandler={handleSwitchToken}
+                          onClickHandler={handleSwitchToken}
                         />
                         <Button
                           title="Disconnect"
                           className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          onClickHandler={handleLogout}
                         />
                       </div>
 
@@ -221,10 +225,7 @@ export default function Navbar({ isHomeNav }) {
                               <span className="ml-2 text-base text-blue-800">ICP</span>
                             </div>
                           </div>
-
                         </div>
-
-
 
                         {/* Second Container */}
                         <div className="flex justify-center">
@@ -240,16 +241,14 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
                       </div>
-
-
                     </div>
                   )}
-
-
                 </div>
               </div>
-            )}
-
+            ) : (
+              <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
+            ))}
+            
             {/* Mobile/Tablet Menu */}
             <button
               type="button"

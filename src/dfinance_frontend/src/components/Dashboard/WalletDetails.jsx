@@ -42,7 +42,7 @@ const WalletDetails = () => {
     <div className="w-full mt-10">
 
 
-      <div className="w-full md:h-[40px] flex items-center px-6 mt-6 md:px-16 ">
+      <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-16 ">
         <h1 className="text-[#2A1F9D] font-semibold text-lg">ICP Assets</h1>
         <div className="ml-auto   ">
         {Showsearch && (

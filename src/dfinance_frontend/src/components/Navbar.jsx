@@ -16,7 +16,9 @@ import { useSelector } from "react-redux"
 import Button from "./Button"
 import { ClickAwayListener } from "@mui/base/ClickAwayListener"
 import { setIsWalletConnected, setWalletModalOpen } from "../redux/reducers/utilityReducer"
-
+import { GrCopy } from "react-icons/gr";
+import { CiShare1 } from "react-icons/ci";
+import SwitchWallet from "./SwitchWallet"
 export default function Navbar({ isHomeNav }) {
   const [isMobileNav, setIsMobileNav] = React.useState(false)
   const dispatch = useDispatch()
@@ -72,7 +74,17 @@ export default function Navbar({ isHomeNav }) {
     setSwitchTokenDrop(false)
     setSwitchWalletDrop(false)
   }
-
+  const handleCopyAddress = () => {
+    // Logic to handle copy address functionality
+    console.log("Copy Address clicked");
+  };
+  const handleViewOnExplorerClick = () => {
+    // Logic to navigate to explorer
+    console.log("View on Explorer clicked");
+  };
+  const handleLaunchApp = () => {
+    navigate("/dashboard/main");
+  };
   useEffect(() => {
     if (isAuthenticated === true) {
       dispatch(
@@ -141,32 +153,12 @@ export default function Navbar({ isHomeNav }) {
                 ))}
             </div>
 
-            {isHomeNav &&
-              (isAuthenticated && user ? (
-                <div className="hidden lg:flex items-center relative gap-3">
-                  <Button title={'Launch App'} onClickHandler={() => navigate("/dashboard/main")} />
-                  <span className="text-slate-400 flex items-center gap-2 cursor-pointer" onClick={() => setDrop(!drop)}><Check size={18} />Verified</span>
-
-                  {drop && (
-                    <div className="absolute w-1/2 right-0 top-full mt-2 animate-fade-down animate-once animate-duration-500 animate-ease-in-out">
-                      <div
-                        className="bg-red-400 text-white shadow-md rounded-lg p-4 cursor-pointer hover:bg-red-500"
-                        onClick={handleLogout}
-                      >
-                        <p>Logout</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleCreateInternetIdentity}
-                  className="d_color border border-[#517688] p-2 text-sm rounded-full hidden lg:flex"
-                >
-                  Create Internet Identity
-                </button>
-              ))}
+            {isHomeNav && (
+        <Button
+          title={"Launch App"}
+          onClickHandler={handleLaunchApp}
+        />
+      )}
 
             {isAuthenticated && !isHomeNav && (
               <div className="hidden lg:flex gap-6">
@@ -180,30 +172,7 @@ export default function Navbar({ isHomeNav }) {
                   </div>
 
                   {switchTokenDrop && (
-                    <div className="w-[300px] absolute top-full right-0 mt-3 rounded-md bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl border p-4">
-                      <h1 className="font-semibold">Switch Tokens</h1>
-
-                      <div className="w-full my-2">
-                        <input
-                          type="text"
-                          className="w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md"
-                        />
-                      </div>
-                      <div className="w-full my-2">
-                        <input
-                          type="text"
-                          className="w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md"
-                        />
-                      </div>
-                      <div className="w-full flex justify-center mt-3">
-                        <Button
-                          title="Switch"
-                          className={
-                            "my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
-                          }
-                        />
-                      </div>
-                    </div>
+                  <SwitchWallet/>
                   )}
                 </div>
                 <div className="flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
@@ -220,41 +189,63 @@ export default function Navbar({ isHomeNav }) {
                   </div>
 
                   {switchWalletDrop && (
-                    <div className="absolute p-4 top-full right-0 mt-3 rounded-md bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl border">
-                      <div className="w-full flex items-center gap-3">
+                    <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100  shadow-xl border mb-4  z-10" >
+                      <div className="w-full flex items-center gap-3 mt-2">
                         <img
                           src="/connect_wallet_icon.png"
                           alt="connect_wallet_icon"
                           className="w-10 h-10"
                         />
-                        <h1 className="font-semibold text-2xl">0x65.125ssdf</h1>
+                        <h1 className="font-semibold text-2xl text-blue-800">0x65.125ssdf</h1>
                       </div>
 
                       <div className="w-full flex justify-center mt-3 gap-3">
                         <Button
                           title="Switch Wallet"
-                          className={
-                            "my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
-                          }
+                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                        onClickHandler={handleSwitchToken}
                         />
                         <Button
                           title="Disconnect"
-                          className={
-                            "my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
-                          }
+                          className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
                         />
                       </div>
-                      <div className="flex justify-center mt-3 gap-3">
-                        <div className="flex justify-center mt-3 gap-3">
-                          <div className="flex-1 bg-gray-400 p-3 rounded-md text-xs relative border border-red" style={{ position: 'relative', height: '60px', width: '20px' }}>
-                            Network
-                            <p><span style={{ position: 'absolute', width: '8px', height: '8px', backgroundColor: 'green', borderRadius: '50%', top: '50%', transform: 'translate(-150%, -50%)' }}></span>Etherum</p>
+
+                      <div className="flex mt-3 gap-3 ">
+                        {/* First Container */}
+                        <div className="flex justify-center">
+                          <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative" style={{ height: '70px', width: '160px' }}>
+                            <span className="absolute top-1/4 transform -translate-y-1/2 text-blue-800" style={{ right: '55%' }}>Network</span>
+                            <div className="absolute bottom-2 left-2 mt-4 flex items-center">
+                              <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="w-6 h-6" />
+                              <span className="ml-2 text-base text-blue-800">ICP</span>
+                            </div>
+                          </div>
+
+                        </div>
+
+
+
+                        {/* Second Container */}
+                        <div className="flex justify-center">
+                          <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative" style={{ height: '70px', width: '160px' }}>
+                            <button className="text-blue-800 hover:text-gray-800 flex items-center -ml-2">
+                              <GrCopy className="h-5 w-4" />
+                              <span className="ml-1">Copy Address</span>
+                            </button>
+                            <button className="text-blue-800 hover:text-gray-800 flex items-center mt-2">
+                              <CiShare1 className="h-5 w-4" />
+                              <span className="ml-1 text-nowrap">View On Explorer</span>
+                            </button>
                           </div>
                         </div>
                       </div>
-                    </div>
 
+
+                    </div>
                   )}
+
+
                 </div>
               </div>
             )}

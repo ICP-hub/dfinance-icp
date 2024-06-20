@@ -149,7 +149,7 @@ export default function Navbar({ isHomeNav }) {
                 <div className="hidden lg:flex items-center relative gap-3">
                   <Button title={'Launch App'} onClickHandler={() => navigate("/dashboard/main")} />
                   <span className="text-slate-400 flex items-center gap-2 cursor-pointer" onClick={() => setDrop(!drop)}><Check size={18} />Verified</span>
-
+                  <ThemeToggle />
                   {drop && (
                     <div className="absolute w-1/2 right-0 top-full mt-2 animate-fade-down animate-once animate-duration-500 animate-ease-in-out">
                       <div
@@ -163,15 +163,17 @@ export default function Navbar({ isHomeNav }) {
                 </div>
               ) : (
                 
-               <div className="flex gap-2">
-                 <ThemeToggle />
+               <div className="flex gap-1">
+                
                  <button
                   type="button"
                   onClick={handleCreateInternetIdentity}
-                  className="d_color border border-[#517688] p-2 text-sm rounded-full hidden lg:flex"
+                  className="d_color border border-[#517688] p-3 text-sm rounded-full hidden lg:flex"
                 >
                   Create Internet Identity
                 </button>
+
+                <ThemeToggle />
                
                </div>
                 
@@ -289,7 +291,7 @@ export default function Navbar({ isHomeNav }) {
               <Menu />
             </button>
           </nav>
-          <div className="w-full p-3 bg-slate-200 rounded-md flex lg:hidden">
+          <div className="w-full p-3 bg-slate-200 rounded-md flex lg:hidden dark:bg-darkBackground">
 
             <div className="w-full flex gap-6">
               <div className="w-full flex justify-center align-center my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">

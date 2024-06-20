@@ -18,7 +18,8 @@ import { ClickAwayListener } from "@mui/base/ClickAwayListener"
 import { setIsWalletConnected, setWalletModalOpen } from "../redux/reducers/utilityReducer"
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
-import SwitchWallet from "./SwitchWallet"import settingsicon from "../../public/settings.png"
+import SwitchWallet from "./SwitchWallet"
+import settingsicon from "../../public/settings.png";
 import ThemeToggle from "./ThemeToggle"
 
 export default function Navbar({ isHomeNav }) {

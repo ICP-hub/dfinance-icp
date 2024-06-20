@@ -69,14 +69,14 @@ const MySupply = () => {
     }
   }
   return (
-    <div className="w-full flex-col lg:flex-row flex gap-6">
+    <div className="w-full flex-col lg:flex-row flex gap-6 mt-[1rem] mb-[4rem]">
       <div className="w-full lg:w-6/12 mt-6">
-        <div className="w-full min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
-          <h1 className="text-[#2A1F9D] font-semibold my-2">Your Supply</h1>
+        <div className="w-full min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
+          <h1 className="text-[#2A1F9D] font-semibold my-2 dark:text-darkText">Your Supply</h1>
           <div className="w-full overflow-auto">
-            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
               <thead>
-                <tr className="text-left text-[#233D63] text-xs">
+                <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary">
                   {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
                     <td key={index} className="p-3 whitespace-nowrap">
                       {item.header}
@@ -149,14 +149,14 @@ const MySupply = () => {
             </table>
           </div>
         </div>
-        <div className="w-full mt-6 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
-          <h1 className="text-[#2A1F9D] font-semibold my-2">
+        <div className="w-full mt-6 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
+          <h1 className="text-[#2A1F9D] font-semibold my-2 dark:text-darkText">
             Assets to supply
           </h1>
           <div className="w-full overflow-auto">
-            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
               <thead>
-                <tr className="text-left text-[#233D63] text-xs">
+                <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary">
                   {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
                     <td key={index} className="p-3 whitespace-nowrap">
                       {item.header}
@@ -218,18 +218,18 @@ const MySupply = () => {
         </div>
       </div>
       <div className="w-full lg:w-6/12 mt-6">
-        <div className="w-full min-h-[250px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
-          <h1 className="text-[#2A1F9D] font-semibold my-2">Your borrows</h1>
-          <p className="text-[#233D63] text-sm">Nothing Borrowed Yet</p>
+        <div className="w-full min-h-[250px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)] ">
+          <h1 className="text-[#2A1F9D] font-semibold my-2 dark:text-darkText">Your borrows</h1>
+          <p className="text-[#233D63] text-sm dark:text-darkTextSecondary">Nothing Borrowed Yet</p>
         </div>
-        <div className="w-full mt-6 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
-          <h1 className="text-[#2A1F9D] font-semibold my-2">
+        <div className="w-full mt-6 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
+          <h1 className="text-[#2A1F9D] font-semibold my-2 dark:text-darkText">
             Assets to borrow
           </h1>
           <div className="w-full overflow-auto">
-            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
               <thead>
-                <tr className="text-left text-[#233D63] text-xs">
+                <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary">
                   {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
                     <td key={index} className="p-3 whitespace-nowrap">
                       {index === 2 ? item.header1 : item.header}

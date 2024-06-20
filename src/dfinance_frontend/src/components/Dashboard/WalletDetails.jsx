@@ -118,12 +118,12 @@ const WalletDetails = () => {
         />
       }
 
-      <div className="w-full min-h-[400px] mt-6 p-0 lg:px-12">
+      <div className="w-full min-h-[400px] mt-6 p-0 lg:px-12 mb-20">
         <div className="w-full">
           <div className="w-full overflow-auto">
-            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
               <thead>
-                <tr className="text-left text-[#233D63]">
+                <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {WALLET_ASSETS_TABLE_COL.map((item, index) => (
                     <td key={index} className="p-3 whitespace-nowrap">
                       {item.header}

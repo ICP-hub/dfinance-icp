@@ -67,7 +67,7 @@ const DashboardNav = () => {
             />
           </div>
 
-          <h1 className="text-[#2A1F9D] font-semibold">
+          <h1 className="text-[#2A1F9D] font-semibold  dark:text-darkText">
             {currentValueData ? currentValueData.title : ""}
           </h1>
 
@@ -114,7 +114,7 @@ const DashboardNav = () => {
       )}
     </div>
         </div>
-        <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6">
+        <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6  dark:text-darkText">
           {WALLET_DETAILS_TABS.map((data, index) => (
             <div key={index} className="relative group ml-10">
               <button className="relative">

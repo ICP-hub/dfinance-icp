@@ -16,6 +16,8 @@ import { useSelector } from "react-redux"
 import Button from "./Button"
 import { ClickAwayListener } from "@mui/base/ClickAwayListener"
 import { setIsWalletConnected, setWalletModalOpen } from "../redux/reducers/utilityReducer"
+import settingsicon from "../../public/settings.png"
+import ThemeToggle from "./ThemeToggle"
 
 export default function Navbar({ isHomeNav }) {
   const [isMobileNav, setIsMobileNav] = React.useState(false)
@@ -108,6 +110,7 @@ export default function Navbar({ isHomeNav }) {
     }
     console.log(hash);
   }, [hash])
+
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
@@ -125,7 +128,7 @@ export default function Navbar({ isHomeNav }) {
                   <NavLink
                     key={index}
                     to={link.route}
-                    className={`text-[#233D63] px-3`}
+                    className={`text-[#233D63] px-3 dark:text-darkText`}
                   >
                     {link.title}
                   </NavLink>
@@ -134,7 +137,7 @@ export default function Navbar({ isHomeNav }) {
                   <NavLink
                     key={index}
                     to={link.route}
-                    className={`text-[#233D63] px-3`}
+                    className={`text-[#233D63] px-3 dark:text-darkText`}
                   >
                     {link.title}
                   </NavLink>
@@ -159,13 +162,19 @@ export default function Navbar({ isHomeNav }) {
                   )}
                 </div>
               ) : (
-                <button
+                
+               <div className="flex gap-2">
+                 <ThemeToggle />
+                 <button
                   type="button"
                   onClick={handleCreateInternetIdentity}
                   className="d_color border border-[#517688] p-2 text-sm rounded-full hidden lg:flex"
                 >
                   Create Internet Identity
                 </button>
+               
+               </div>
+                
               ))}
 
             {isAuthenticated && !isHomeNav && (
@@ -245,17 +254,26 @@ export default function Navbar({ isHomeNav }) {
                         />
                       </div>
                       <div className="flex justify-center mt-3 gap-3">
-                        <div className="flex justify-center mt-3 gap-3">
-                          <div className="flex-1 bg-gray-400 p-3 rounded-md text-xs relative border border-red" style={{ position: 'relative', height: '60px', width: '20px' }}>
-                            Network
-                            <p><span style={{ position: 'absolute', width: '8px', height: '8px', backgroundColor: 'green', borderRadius: '50%', top: '50%', transform: 'translate(-150%, -50%)' }}></span>Etherum</p>
-                          </div>
+                        <div className="flex-1 bg-gray-400 p-3 rounded-md text-xs relative border border-red" style={{ position: 'relative', height: '60px', width: '20px' }}>
+                          Network
+                          <p><span style={{ position: 'absolute', width: '8px', height: '8px', backgroundColor: 'green', borderRadius: '50%', top: '50%', transform: 'translate(-150%, -50%)' }}></span>Etherum</p>
                         </div>
                       </div>
                     </div>
-
                   )}
                 </div>
+                {isAuthenticated && <div className="flex items-center gap-3 my-2 bg-transparent border-2 border-orange-100 rounded-md shadow-sm shadow-[#00000040] font-semibold text-sm cursor-pointer relative w-[45px]">
+                  <div
+                    className="flex items-center gap-1 p-2 px-3"
+
+                  >
+                    <img
+                      src={settingsicon}
+                      alt="settings_icon"
+                      className="object-contain w-5 h-5"
+                    />
+                  </div>
+                </div>}
               </div>
             )}
 
@@ -274,7 +292,7 @@ export default function Navbar({ isHomeNav }) {
           <div className="w-full p-3 bg-slate-200 rounded-md flex lg:hidden">
 
             <div className="w-full flex gap-6">
-              <div className="w-full my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
+              <div className="w-full flex justify-center align-center my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
                 <div
                   className="flex items-center gap-3 p-2 px-3"
                   onClick={handleSwitchToken}
@@ -310,9 +328,9 @@ export default function Navbar({ isHomeNav }) {
                   </div>
                 )}
               </div>
-              <div className="w-full flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
+              <div className="w-full flex items-center justify-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
                 <div
-                  className="flex items-center gap-3 p-2 px-3"
+                  className="flex items-center gap-3 p-1 px-1"
                   onClick={handleSwitchWallet}
                 >
                   <img
@@ -350,17 +368,26 @@ export default function Navbar({ isHomeNav }) {
                     </div>
                     <div className="w-full flex justify-center mt-3 gap-3">
                       <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
-
                       </div>
                       <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
-
                       </div>
                     </div>
                   </div>
                 )}
               </div>
-            </div>
+              {isAuthenticated && <div className="w-[89px] flex items-center justify-center gap-3 my-2 bg-white border-2 border-orange-100 rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
+                <div
+                  className="flex items-center gap-3 p-1 px-1"
 
+                >
+                  <img
+                    src={settingsicon}
+                    alt="settings_icon"
+                    className="object-contain w-4 "
+                  />
+                </div>
+              </div>}
+            </div>
           </div>
         </div>
       </ClickAwayListener>

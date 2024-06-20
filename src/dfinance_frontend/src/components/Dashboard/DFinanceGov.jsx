@@ -53,7 +53,7 @@ const DFinanceGov = () => {
             <h1 className="text-[#2A1F9D] font-medium text-xl">
               DFinance Governance
             </h1>
-            <p className="text-[#5B62FE] text-sm text-justify mt-3">
+            <p className="text-[#5B62FE] text-sm text-justify mt-3 dark:text-darkText">
               DFinance is a fully decentralized, community governed protocol by
               the DFINANCE token-holders. DFINANCE token-holders collectively
               discuss, propose, and vote on upgrades to the protocol. DFINANCE
@@ -75,9 +75,9 @@ const DFinanceGov = () => {
         </div>
       </div>
       <div className="w-full flex flex-col md2:flex-row mt-8 my-4 gap-8">
-        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl pt-10">
+        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl pt-10 mb-[5rem] dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
           <div className="flex items-center justify-between ">
-            <div className="text-[#2A1F9D] text-2xl font-semibold ml-2">
+            <div className="text-[#2A1F9D] text-2xl font-semibold ml-2 dark:text-darkText">
               Proposals
             </div>
 
@@ -162,23 +162,23 @@ const DFinanceGov = () => {
             {[1, 2, 3, 4].map((i, index) => (
               <div key={i} className={`w-full flex flex-col sm:flex-row rounded-lg p-3 ${index !== [1, 2, 3, 4].length - 1 ? 'gradient-line-bottom' : ''}`}>
                 <div className="w-full sm:w-9/12 flex flex-col gap-6 ">
-                  <Link to={"proposal-details"} className="text-[#2A1F9D] text-lg font-semibold  ml-[-0.2rem] mt-2">
+                  <Link to={"proposal-details"} className="text-[#2A1F9D] text-lg font-semibold  ml-[-0.2rem] mt-2 dark:text-darkText">
                     weETH Onboarding
                   </Link>
-                  <span className="p-1 rounded-full px-6 border border-white w-fit text-xs text-[#5B62FE]  mb-4">
+                  <span className="p-1 rounded-full px-6 border border-white w-fit text-xs text-[#5B62FE]  mb-4 dark:text-darkText">
                     Open for voting
                   </span>
                 </div>
                 <div className="w-full sm:w-3/12 flex flex-col gap-3 mt-3 sm:mt-0">
                   <div className="w-full text-[#5B62FE]">
-                    <div className="w-full flex items-center justify-between text-xs">
+                    <div className="w-full flex items-center justify-between text-xs dark:text-darkTextSecondary">
                       <span>YAE 531K</span>
                       <span>100.00%</span>
                     </div>
                     <div className="bg-[#2A1F9D] w-full h-2 rounded-full mt-2"></div>
                   </div>
                   <div className="w-full text-[#5B62FE]">
-                    <div className="w-full flex items-center justify-between text-xs mt-3 mb-2">
+                    <div className="w-full flex items-center justify-between text-xs mt-3 mb-2 dark:text-darkTextSecondary">
                       <span>NAY 0</span>
                       <span>0%</span>
                     </div>

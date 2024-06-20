@@ -24,7 +24,7 @@ const TabCards = ({ data }) => {
   return (
     <div className='h-[301px] flip-card mb-[50px] pt-[15px] text-white cursor-pointer bg-transparent'>
       <div
-        className='flip-card-inner relative transition-transform duration-500 w-full h-full rounded-2xl'>
+        className='flip-card-inner relative transition-transform duration-500 w-full h-full rounded-2xl '>
         
           <div
             className='flip-card-front absolute rounded-2xl w-full h-full z-10 p-4 shadow'
@@ -32,9 +32,9 @@ const TabCards = ({ data }) => {
           >
             <div className="w-full flex items-center gap-3">
               <img src={data.image} alt={data.title} className='rounded-full w-10 h-10 object-cover object-center' />
-              <h1 className='font-semibold text-lg'>{data.title}</h1>
+              <h1 className='font-semibold text-lg dark:text-darkBackground'>{data.title}</h1>
             </div>
-            <p className='text-sm mt-3'>
+            <p className='text-sm mt-3 dark:text-darkBackground'>
               {data.description.length > TAB_CARD_DESCRIPTION_LENGTH ? `${data.description.slice(0, TAB_CARD_DESCRIPTION_LENGTH)}...` : data.description}
             </p>
           </div>

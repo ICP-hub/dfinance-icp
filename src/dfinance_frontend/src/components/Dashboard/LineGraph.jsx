@@ -47,7 +47,7 @@ export const options = {
                 display: false
             },
             ticks: {
-                color: 'blue',
+                color: 'gray',
                 font: {
                     family: 'Poppins, sans-serif'
                 }
@@ -66,7 +66,7 @@ export const options = {
                 display: false
             },
             ticks: {
-                color: 'blue',
+                color: 'gray',
                 font: {
                     family: 'Poppins, sans-serif'
                 }

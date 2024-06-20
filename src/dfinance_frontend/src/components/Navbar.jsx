@@ -14,8 +14,10 @@ import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
   generateRandomUsername,
-} from '../utils/constants';
-import { setIsWalletConnected, setWalletModalOpen } from '../redux/reducers/utilityReducer';
+} from "../utils/constants"
+import { setIsWalletConnected, setWalletModalOpen } from "../redux/reducers/utilityReducer"
+import settingsicon from "../../public/settings.png";
+import ThemeToggle from "./ThemeToggle"
 
 export default function Navbar({ isHomeNav }) {
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -84,6 +86,11 @@ export default function Navbar({ isHomeNav }) {
     navigate('/dashboard/main'); // Directly navigate to /dashboard/main
   };
 
+  const handleWalletConnect = () => {
+    console.log("connrcterd");
+    dispatch(setWalletModalOpen(!isWalletModalOpen))
+    // dispatch(setIsWalletCreated(true))
+  }
 
   useEffect(() => {
     if (isAuthenticated === true) {
@@ -95,10 +102,11 @@ export default function Navbar({ isHomeNav }) {
           imageUrl:
             'https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg',
         })
-      );
+      )
+      navigate("/dashboard/my-supply")
     } else {
       dispatch(setUserData(null))
-      // navigate("/") 
+      // navigate("/")
     }
   }, [isAuthenticated]);
 
@@ -125,27 +133,27 @@ export default function Navbar({ isHomeNav }) {
               className="w-[100px] md:w-[150px] lg:w-auto"
             />
 
-<div className="gap-4 hidden lg:flex">
-  {!isHomeNav
-    ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
-        <NavLink
-          key={index}
-          to={link.route}
-          className="text-[#2a1f9d] px-3 py-2 text-lg nav-link"
-        >
-          {link.title}
-        </NavLink>
-      ))
-    : HOME_TOP_NAV_LINK.map((link, index) => (
-        <NavLink
-          key={index}
-          to={link.route}
-          className="text-[#233D63] px-3 py-2 text-lg nav-link"
-        >
-          {link.title}
-        </NavLink>
-      ))}
-</div>
+            <div className="gap-4 hidden lg:flex">
+              {!isHomeNav
+                ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#2a1f9d] px-3 py-2 text-lg nav-link"
+                  >
+                    {link.title}
+                  </NavLink>
+                ))
+                : HOME_TOP_NAV_LINK.map((link, index) => (
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#233D63] px-3 py-2 text-lg nav-link"
+                  >
+                    {link.title}
+                  </NavLink>
+                ))}
+            </div>
 
 
             {isHomeNav ? (
@@ -240,9 +248,11 @@ export default function Navbar({ isHomeNav }) {
                 </div>
               </div>
             ) : (
-              <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
+              // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
+              <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
+
             ))}
-            
+
             {/* Mobile/Tablet Menu */}
             <button
               type="button"
@@ -252,6 +262,106 @@ export default function Navbar({ isHomeNav }) {
               <Menu />
             </button>
           </nav>
+          <div className="w-full p-3 bg-slate-200 rounded-md flex lg:hidden">
+
+            <div className="w-full flex gap-6">
+              <div className="w-full flex justify-center align-center my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
+                <div
+                  className="flex items-center gap-3 p-2 px-3"
+                  onClick={handleSwitchToken}
+                >
+                  <span>Switch Token</span>
+                  <ArrowDownUp size={14} />
+                </div>
+
+                {switchTokenDrop && (
+                  <div className="w-[250px] absolute left-0 mt-3 rounded-md bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl border p-4 z-50">
+                    <h1 className="font-semibold">Switch Tokens</h1>
+
+                    <div className="w-full my-2">
+                      <input
+                        type="text"
+                        className="w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md"
+                      />
+                    </div>
+                    <div className="w-full my-2">
+                      <input
+                        type="text"
+                        className="w-full p-2 bg-[#7D7D7D73] border border-transparent focus:outline-none focus:border focus:border-[#9e3faa99] placeholder:text-xs rounded-md"
+                      />
+                    </div>
+                    <div className="w-full flex justify-center mt-3">
+                      <Button
+                        title="Switch"
+                        className={
+                          "my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="w-full flex items-center justify-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
+                <div
+                  className="flex items-center gap-3 p-1 px-1"
+                  onClick={handleSwitchWallet}
+                >
+                  <img
+                    src={"/connect_wallet_icon.png"}
+                    alt="connect_wallet_icon"
+                    className="object-contain w-4 h-4"
+                  />
+                  <span>0x65.125s</span>
+                </div>
+
+                {switchWalletDrop && (
+                  <div className="absolute w-[250px] z-50 p-4 top-full right-0 mt-3 rounded-md bg-gradient-to-r from-[#242151] via-[#262353] to-[#2F2D61] bg-opacity-75 shadow-xl border">
+                    <div className="w-full flex items-center gap-3">
+                      <img
+                        src="/connect_wallet_icon.png"
+                        alt="connect_wallet_icon"
+                        className="w-8 h-8"
+                      />
+                      <h1 className="font-semibold text-xl">0x65.125ssdf</h1>
+                    </div>
+
+                    <div className="w-full flex justify-center mt-3 gap-3">
+                      <Button
+                        title="Switch Wallet"
+                        className={
+                          "my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 shadow-lg font-semibold text-xs"
+                        }
+                      />
+                      <Button
+                        title="Disconnect"
+                        className={
+                          "my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 shadow-lg font-semibold text-xs"
+                        }
+                      />
+                    </div>
+                    <div className="w-full flex justify-center mt-3 gap-3">
+                      <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
+                      </div>
+                      <div className="flex-1 bg-gray-400 p-4 rounded-md text-xs">
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {isAuthenticated && <div className="w-[89px] flex items-center justify-center gap-3 my-2 bg-white border-2 border-orange-100 rounded-md shadow-xl shadow-[#00000040] font-semibold text-xs cursor-pointer relative">
+                <div
+                  className="flex items-center gap-3 p-1 px-1"
+
+                >
+                  <img
+                    src={settingsicon}
+                    alt="settings_icon"
+                    className="object-contain w-4 "
+                  />
+                </div>
+              </div>}
+            </div>
+          </div>
         </div>
       </ClickAwayListener>
 

@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
@@ -14,6 +15,21 @@ export default {
         gradientStart: '#2E28A5',
         gradientEnd: '#FAAA98',
         gradientMiddle: '#C88A9B',
+
+        //dark mode
+        darkBackground: '#070a18',
+        darkText: '#FFFFFF',
+        darkTextSecondary:"#8CC0D7",
+        darkEllipse:'#2A1F9D',
+        darkFAQBackground:'#29283B',
+        darkFAQBackground2:'#191825',
+        currentFAQBackground: '#59588D',
+        // custom gradient colors
+        darkGradientStart: '#27234F',
+        darkGradientEnd: '#0D123C',
+        textGradientStart: '#4659CF',
+        textGradientEnd: '#C562BD',
+
       },
       placeholderColor: ['responsive', 'focus', 'hover'], 
       screens: {

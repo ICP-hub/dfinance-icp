@@ -99,6 +99,7 @@ const Home = () => {
                     sx={{
                       textTransform: "capitalize",
                       fontStyle: "normal",
+                      fontFamily: "Poppins",
                       fontWeight: "600",
                       fontSize: "14px",
                       color: "#2A1F9D",
@@ -126,7 +127,7 @@ const Home = () => {
             ))}
           </div>
           <div className="w-full mt-10">
-            <h1 className="text-[#0C5A74] font-semibold text-[36px] mb-2">
+            <h1 className="font-semibold bg-gradient-to-tr from-[#4659CF] via-[#c35cba] bg-clip-text text-transparent text-[36px] mb-2">
               Markets
             </h1>
             <TabPanel />
@@ -136,7 +137,7 @@ const Home = () => {
         {/* Info section */}
         <section className="mt-[44px] md:mt-24">
           <div className="w-full flex justify-center">
-            <div className="w-full xl:w-3/4 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap">
+            <div className="w-full xl:w-3/4 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
               <div className="w-full xl:w-9/12">
                 <h1 className="font-semibold text-lg">And more to come...</h1>
                 <p className="mt-4 text-sm font-medium">
@@ -151,12 +152,12 @@ const Home = () => {
         </section>
 
         {/* Governed by the Community */}
-        <section className="mt-[44px] md:mt-24" id="gov">
-          <div className="w-full text-center text-[#2A1F9D]">
+        <section className="mt-[44px] md:mt-24 " id="gov">
+          <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
             <h1 className="text-lg text-[28px] md:text-[45px] font-extralight">
               Governed by the <span className="font-semibold">Community</span>
             </h1>
-            <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6">
+            <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6 dark:text-darkText">
             DFinance is a fully decentralized, community governed protocol with 166,579 token holders.
             </p>
             <Button title="LEARN MORE" />
@@ -168,9 +169,9 @@ const Home = () => {
 
         {/* Security Contributors */}
         <section className="mt-24">
-          <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-blue-800">Security Contributors</h1>
+          <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-blue-800 dark:text-darkText">Security Contributors</h1>
           <br></br>
-          <p className="text-[12px] font-poppins font-[500] text-center lg:text-[18px] text-[#737373] ">
+          <p className="text-[12px] font-poppins font-[500] text-center lg:text-[18px] text-[#737373] dark:text-darkText">
             Audited by the world’s leading security firms, security of the <br></br>
             DFinance Protocol is the highest priority.
           </p>
@@ -186,9 +187,9 @@ const Home = () => {
 
        {/* FAQ */}
        <section className="mt-24 " id="faq">
-          <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl">
+          <div className="w-full p-5 md:p-10 mb-20 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
             <div className="w-full">
-              <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D]">
+              <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
                 Frequently Asked Questions
               </h1>
              
@@ -199,8 +200,8 @@ const Home = () => {
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full">
                       <div
-                        className={`w-full flex p-4 items-center ${currentFAQ === index ? "bg-[#eef0f5]" : ""
-                          } hover:bg-[#FAFBFF]`}
+                        className={`w-full flex p-4 items-center ${currentFAQ === index ? "bg-[#eef0f5] dark:bg-currentFAQBackground" : ""
+                          } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
                         onClick={() => setCurrentFAQ(index)}
                       >
                         <div className="w-1/12">
@@ -226,7 +227,7 @@ const Home = () => {
                   ))}
                 </div>
               </div>
-              <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6">
+              <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText">
                 <h1 className="font-semibold mt-4">
                   {FAQ_QUESTION.find((item) => item.id === currentFAQ).question}
                 </h1>

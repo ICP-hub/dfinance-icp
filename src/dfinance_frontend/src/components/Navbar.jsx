@@ -88,9 +88,9 @@ export default function Navbar({ isHomeNav }) {
     console.log("connrcterd");
     dispatch(setWalletModalOpen(!isWalletModalOpen))
     // dispatch(setIsWalletCreated(true))
-}
-  
-useEffect(() => {
+  }
+
+  useEffect(() => {
     if (isAuthenticated === true) {
       dispatch(
         setUserData({
@@ -104,7 +104,8 @@ useEffect(() => {
       navigate("/dashboard/my-supply")
     } else {
       dispatch(setUserData(null))
-      // navigate("/") 
+      // navigate("/")
+    }
   }, [isAuthenticated]);
 
   const hash = window.location.hash;
@@ -130,30 +131,30 @@ useEffect(() => {
               className="w-[100px] md:w-[150px] lg:w-auto"
             />
 
-<div className="gap-4 hidden lg:flex">
-  {!isHomeNav
-    ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
-        <NavLink
-          key={index}
-          to={link.route}
-          className="text-[#2a1f9d] px-3 py-2 text-lg nav-link"
-        >
-          {link.title}
-        </NavLink>
-      ))
-    : HOME_TOP_NAV_LINK.map((link, index) => (
-        <NavLink
-          key={index}
-          to={link.route}
-          className="text-[#233D63] px-3 py-2 text-lg nav-link"
-        >
-          {link.title}
-        </NavLink>
-      ))}
-</div>
+            <div className="gap-4 hidden lg:flex">
+              {!isHomeNav
+                ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#2a1f9d] px-3 py-2 text-lg nav-link"
+                  >
+                    {link.title}
+                  </NavLink>
+                ))
+                : HOME_TOP_NAV_LINK.map((link, index) => (
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#233D63] px-3 py-2 text-lg nav-link"
+                  >
+                    {link.title}
+                  </NavLink>
+                ))}
+            </div>
 
 
-           {isHomeNav ? (
+            {isHomeNav ? (
               <Button
                 title={"Launch App"}
                 onClickHandler={handleLaunchApp}
@@ -185,7 +186,7 @@ useEffect(() => {
                     />
                     <span>0x65.125s</span>
                   </div>
-          
+
                   {switchWalletDrop && (
                     <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10">
                       <div className="w-full flex items-center gap-3 mt-2">
@@ -246,9 +247,9 @@ useEffect(() => {
             ) : (
               // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
               <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
-              
+
             ))}
-            
+
             {/* Mobile/Tablet Menu */}
             <button
               type="button"

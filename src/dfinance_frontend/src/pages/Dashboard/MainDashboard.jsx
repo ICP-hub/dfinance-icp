@@ -14,11 +14,11 @@ const MainDashboard = ({ children, isDGov }) => {
     window.scrollTo(0, 0)
   }, [])
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      login()
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     login()
+  //   }
+  // }, []);
   return (
     <>
       <div className="w-full h-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative font-poppins">

@@ -1,10 +1,10 @@
 import React from 'react'
 import Button from '../Button'
 
-const SupplyPopup = ({ }) => {
+const SupplyPopup = ({asset, image }) => {
     return (
         <>
-            <h1 className='font-semibold text-xl'>Supply LINK</h1>
+            <h1 className='font-semibold text-xl'>Supply {asset}</h1>
             <div className='flex flex-col gap-2 mt-5 text-sm'>
                 <div className="w-full">
                     <div className="w-full flex justify-between my-2">
@@ -18,8 +18,8 @@ const SupplyPopup = ({ }) => {
                         </div>
                         <div className="w-8/12 flex flex-col items-end">
                             <div className='w-auto flex items-center gap-2'>
-                                <img src={"/connect_wallet_icon.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                                <span className='text-lg'>LINK</span>
+                                <img src={image} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                <span className='text-lg'>{asset}</span>
                             </div>
                             <p className='text-xs mt-2'>Supply Balance  572.41 Max</p>
                         </div>

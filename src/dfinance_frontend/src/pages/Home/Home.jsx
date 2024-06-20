@@ -15,8 +15,18 @@ const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [currentTab, setCurrentTab] = useState(0);
   const [currentFAQ, setCurrentFAQ] = useState(0);
-
+  const [isPaused, setIsPaused] = useState(false); 
   const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+        if (!isPaused) {
+      const nextIndex = (currentFAQ + 1) % FAQ_QUESTION.length;
+      setCurrentFAQ(nextIndex);
+    }
+    }, 2500); 
+    return () => clearInterval(interval);
+  }, [currentFAQ, isPaused]);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -89,6 +99,7 @@ const Home = () => {
                     sx={{
                       textTransform: "capitalize",
                       fontStyle: "normal",
+                      fontFamily: "Poppins",
                       fontFamily: "Poppins",
                       fontWeight: "600",
                       fontSize: "14px",
@@ -184,12 +195,14 @@ const Home = () => {
               </h1>
              
             </div>
-            <div className="w-full md:grid grid-cols-2">
-              <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px]">
-                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer dark:bg-darkFAQBackground dark:text-darkText">
+            </div>
+            <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)} className="w-full md:grid grid-cols-2">
+              <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px] ">
+                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer">
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full">
                       <div
+                        
                         className={`w-full flex p-4 items-center ${currentFAQ === index ? "bg-[#eef0f5] dark:bg-currentFAQBackground" : ""
                           } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
                         onClick={() => setCurrentFAQ(index)}
@@ -218,6 +231,7 @@ const Home = () => {
                 </div>
               </div>
               <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText">
+              <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText">
                 <h1 className="font-semibold mt-4">
                   {FAQ_QUESTION.find((item) => item.id === currentFAQ).question}
                 </h1>
@@ -236,6 +250,7 @@ const Home = () => {
             className="w-72 h-96 lg:w-auto lg:h-[600px]"
           />
         </div>
+        
       </div>
       {/* Footer */}
       <button

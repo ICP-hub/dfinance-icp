@@ -28,7 +28,35 @@ body{
   .gradient-border:hover {
     border-color: #4351c8;
   }
+  .gradient-borderr {
+    background: 
+    linear-gradient(#eff6f9, #eff6f9) padding-box,
+              linear-gradient(to right, #FCBD78, #4659CF) border-box;
+  border-radius: 50em;
+  border: 2px solid transparent;
+  }
+  .gradient-borderr:hover {
+    border-color: #4351c8;
+  }
 
+  .nav-link {
+    position: relative;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .nav-link:hover {
+    color: transparent; /* Hide the actual text color on hover */
+    background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
+    background-clip: text;
+    -webkit-background-clip: text; /* For Safari/older browsers */
+    -webkit-text-fill-color: transparent; /* Hide the actual text color */
+    transition: none; /* Disable transition for the gradient effect */
+  }
+  
   /* Add this in your CSS file */
 /* Add this in your CSS file */
 .gradient-line-bottom {

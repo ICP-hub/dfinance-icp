@@ -8,6 +8,7 @@ import DFinanceGov from "../components/Dashboard/DFinanceGov"
 import ProposalDetails from "../components/Dashboard/ProposalDetails"
 import MySupply from "../components/Dashboard/MySupply"
 import { elements } from "chart.js"
+import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
 
 export default [
   {
@@ -50,6 +51,14 @@ export default [
         element: (
           <MainDashboard>
             <MySupply />
+          </MainDashboard>
+        ),
+      },
+      {
+        path: "transaction-history",
+        element: (
+          <MainDashboard>
+            <TransactionHistoryBox />
           </MainDashboard>
         ),
       },

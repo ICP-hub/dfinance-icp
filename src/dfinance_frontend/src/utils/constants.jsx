@@ -11,32 +11,6 @@ const TabPanel = ({ items }) => {
     </div>
   );
 };
-export const HOME_TOP_NAV_LINK = [
-  {
-    id: 0,
-    title: "Governance",
-    route: "/#gov",
-    icon: "",
-  },
-  {
-    id: 1,
-    title: "Market",
-    route: "/#security",
-    icon: "",
-  },
-  {
-    id: 2,
-    title: "Docs",
-    route: "/#docs",
-    icon: "",
-  },
-  {
-    id: 3,
-    title: "FAQ",
-    route: "/#faq",
-    icon: "",
-  },
-]
 
 export const FOOTER_LINK_1 = [
   {
@@ -82,6 +56,32 @@ export const FOOTER_LINK_2 = [
     id: 2,
     title: "Blogs",
     route: "/#",
+    icon: "",
+  },
+]
+export const HOME_TOP_NAV_LINK = [
+  {
+    id: 0,
+    title: "Governance",
+    route: "/dashboard/dfinance-gov",
+    icon: "",
+  },
+  {
+    id: 1,
+    title: "Market",
+    route: "/dashboard/wallet-details",
+    icon: "",
+  },
+  {
+    id: 2,
+    title: "Docs",
+    route: "/docs",
+    icon: "",
+  },
+  {
+    id: 3,
+    title: "FAQ",
+    route: "/#faq",
     icon: "",
   },
 ]
@@ -321,6 +321,25 @@ export const WALLET_DETAILS_TABS = [
     count: "290.76",
   },
 ]
+export const WALLET_DETAIL_TAB = [
+  {
+    id: 0,
+    title: "Net Worth",
+    count: "$163.39",
+  },
+  {
+    id: 1,
+    title: "Net APY",
+    count: "12.26 %",
+  },
+  {
+    id: 2,
+    title: "Health Factor",
+    count: "12.26 %",
+  },
+  
+  
+]
 
 export const WALLET_ASSETS_TABLE_COL = [
   {
@@ -349,7 +368,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 0,
     asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/WP7FFRH/image-98.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -360,7 +379,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 1,
     asset: "ckETH",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -371,7 +390,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 2,
     asset: "Dragginz",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/xJ8KLK7/image-98-6.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -381,8 +400,8 @@ export const WALLET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 3,
-    asset: "Internet",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    asset: "Internet computer",
+    image: "https://i.ibb.co/RzQNb5F/image98.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -393,7 +412,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 4,
     asset: "OpenChat",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/Lghfh2k/image-98-7.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -404,7 +423,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 5,
     asset: "Kinic",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/LQB24Sm/image-98-9.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -414,7 +433,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 6,
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/vZ5GJ9y/image-98-4.png",
     asset: "Hot or Not",
     total_supply_count: 3.19,
     total_supply: 156.51,
@@ -425,7 +444,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 7,
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/pbzXtWB/image-98-1.png",
     asset: "ICX",
     total_supply_count: 3.19,
     total_supply: 156.51,
@@ -437,7 +456,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 8,
     asset: "ICGhost",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/m6jKZYf/image-98-10.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -448,7 +467,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 9,
     asset: "Modclub",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/BZgT6c4/image-98-5.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -459,7 +478,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 10,
     asset: "BOOM DAO",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/WpP2nJH/image-98-2.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -545,8 +564,8 @@ export const MY_SUPPLY_ASSET_TABLE_COL = [
 export const MY_SUPPLY_ASSET_TABLE_ROWS = [
   {
     row_id: 0,
-    asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -555,25 +574,17 @@ export const MY_SUPPLY_ASSET_TABLE_ROWS = [
   {
     row_id: 1,
     asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    image: "https://i.ibb.co/WP7FFRH/image-98.png",
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
     apy_desc: "Eligible for 2.9M$ GHO Community program"
   },
-  {
-    row_id: 2,
-    asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
-    wallet_balance_count: 3.19,
-    wallet_balance: 156.51,
-    apy: 1.50,
-    apy_desc: "Eligible for 2.9M$ GHO Community program"
-  },
+  
   {
     row_id: 3,
-    asset: "ckBTC",
-    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    asset: "Dragginz",
+    image: "https://i.ibb.co/xJ8KLK7/image-98-6.png",
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -596,3 +607,148 @@ export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
     header2: "APY, borrow rate",
   }
 ]
+export const MY_ASSET_TO_BORROW_TABLE_COL = [
+  {
+    col_id: 0,
+    header: "",
+  },
+  {
+    col_id: 1,
+    header: "Available",
+  },
+  {
+    col_id: 2,
+    header1: "APY, variable",
+    header2: "APY, borrow rate",
+  }
+]
+export const MY_ASSET_TO_SUPPLY_TABLE_ROW = [
+  {
+    row_id: 0,
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  {
+    row_id: 1,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/WP7FFRH/image-98.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  
+  {
+    row_id: 3,
+    asset: "Dragginz",
+    image: "https://i.ibb.co/xJ8KLK7/image-98-6.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+  {
+    row_id: 4,
+    asset: "OpenChat",
+    image: "https://i.ibb.co/Lghfh2k/image-98-7.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+]
+export const MY_ASSET_TO_BORROW_TABLE_ROW = [
+  
+  {
+    row_id: 0,
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy:" 1.50-2.02%",
+    apy_desc: "Eligible for 2.9M$ GHO Community program"
+  },
+]
+export const MY_BORROW_ASSET_TABLE_COL = [
+  {
+    col_id: 0,
+    header: "Assest",
+  },
+  {
+    col_id: 1,
+    header: "Debt",
+  },
+  {
+    col_id: 2,
+    header: "APY",
+  }, {
+    col_id: 3,
+    header: "APY TYPE",
+  }
+]
+
+export const MY_BORROW_ASSET_TABLE_ROWS = [
+  {
+    row_id: 0,
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program",
+    apy_type: "variable"
+  },
+  {
+    row_id: 1,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/WP7FFRH/image-98.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program",
+    apy_type: "variable"
+  },
+  
+  {
+    row_id: 3,
+    asset: "Dragginz",
+    image: "https://i.ibb.co/xJ8KLK7/image-98-6.png",
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program",
+    apy_type: "variable"
+  },
+]
+// constants.jsx
+
+export const transactionHistory = [
+  { id: 1, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
+  { id: 2, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
+  { id: 3, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
+  { id: 4, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
+  // Add more transactions as needed
+];
+// constants.js
+
+// constants.js
+
+export const healthFactorValue = 5.26;
+export const healthFactorCutOutPositions = {
+    green: 10,
+    red: 60
+};
+
+export const currentLTVValue = 15.28;
+export const currentLTVCutOutPositions = {
+    green: 20,
+    red: 70
+};
+
+export const healthFactorMinValue = 1.00;
+export const currentLTVThreshold = "76.5%";
+export const liquidationThresholdLabel = "Liquidation Threshold";

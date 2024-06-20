@@ -1,6 +1,6 @@
 export const Card = () => {
     return (
-        <div class="flex justify-center items-center h-screen">
+        <div class="flex justify-center items-center h-screen pt-10">
 
             <div class="bg-gradient-to-r from-purple-300 via-pink-300 to-yellow-300 p-10 rounded-xl shadow-xl max-w-lg mx-auto">
                 <div class="text-center space-y-4">

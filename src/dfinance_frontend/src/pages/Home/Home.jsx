@@ -15,8 +15,18 @@ const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [currentTab, setCurrentTab] = useState(0);
   const [currentFAQ, setCurrentFAQ] = useState(0);
-
+  const [isPaused, setIsPaused] = useState(false); 
   const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+        if (!isPaused) {
+      const nextIndex = (currentFAQ + 1) % FAQ_QUESTION.length;
+      setCurrentFAQ(nextIndex);
+    }
+    }, 2500); 
+    return () => clearInterval(interval);
+  }, [currentFAQ, isPaused]);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -184,9 +194,9 @@ const Home = () => {
               </h1>
              
             </div>
-            <div className="w-full md:grid grid-cols-2">
-              <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px]">
-                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer dark:bg-darkFAQBackground dark:text-darkText">
+            <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)} className="w-full md:grid grid-cols-2">
+              <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px] ">
+                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer">
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full">
                       <div

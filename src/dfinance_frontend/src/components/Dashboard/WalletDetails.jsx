@@ -42,68 +42,39 @@ const WalletDetails = () => {
     <div className="w-full mt-10">
 
 
-      <div className="w-full flex items-center px-4 md:px-16">
+      <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-16 ">
         <h1 className="text-[#2A1F9D] font-semibold text-lg">ICP Assets</h1>
-        <div className="ml-auto">
-          {Showsearch && (
-            <input
-              type="text"
-              name="search"
-              id="search"
-              placeholder="Search for assets"
-              style={{ fontSize: '0.75rem' }}
-              className={`placeholder-gray-500 w-[200px] md:block hidden z-20 rounded-full  px-4 focus:outline-none box-border gradient-borderr ${Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
-                }`}
-            />
-          )}
+        <div className="ml-auto   ">
+        {Showsearch && (
+
+
+  <input
+    type="text"
+    name="search"
+    id="search"
+    placeholder="Search for proposals"
+    style={{ fontSize: '0.75rem' }}
+    className={`placeholder-gray-500 w-[300px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-borderr  ${Showsearch
+        ? "animate-fade-left flex"
+        : "animate-fade-right hidden"
+      }`}
+  />
+
+)}
         </div>
-        <svg
-          onClick={showSearchBar}
-          className="cursor-pointer ml-4"
-          width="55"
-          height="25"
-          viewBox="0 0 15 15"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z"
-            stroke="url(#paint0_linear_293_865)"
-            strokeWidth="0.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M11.2613 11.5531L13.4638 13.75"
-            stroke="url(#paint1_linear_293_865)"
-            strokeWidth="0.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <defs>
-            <linearGradient
-              id="paint0_linear_293_865"
-              x1="3.5"
-              y1="3.5"
-              x2="13.5"
-              y2="14"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stop-Color="#2E28A5" />
-              <stop offset="1" stop-Color="#FAAA98" />
-            </linearGradient>
-            <linearGradient
-              id="paint1_linear_293_865"
-              x1="12.3625"
-              y1="11.5531"
-              x2="12.3625"
-              y2="13.75"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stop-Color="#C88A9B" />
-            </linearGradient>
-          </defs>
-        </svg>
+        <svg onClick={showSearchBar} className="cursor-pointer" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                <defs>
+                  <linearGradient id="paint0_linear_293_865" x1="3.5" y1="3.5" x2="13.5" y2="14" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#2E28A5" />
+                    <stop offset="1" stop-color="#FAAA98" />
+                  </linearGradient>
+                  <linearGradient id="paint1_linear_293_865" x1="12.3625" y1="11.5531" x2="12.3625" y2="13.75" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#C88A9B" />
+                  </linearGradient>
+                </defs>
+              </svg>
       </div>
       {Showsearch &&
         <input
@@ -139,13 +110,13 @@ const WalletDetails = () => {
                       }`}
                   >
                     <td className="p-3 align-top">
-                      <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap">
+                      <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
                         <img src={item.image} alt={item.asset} className="w-8 h-8 rounded-full" />
                         {item.asset}
                       </div>
                     </td>
                     <td className="p-3 align-top">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col ml-2">
                         <p>{item.total_supply_count}</p>
                         <p className="font-light">${item.total_supply}M</p>
                       </div>

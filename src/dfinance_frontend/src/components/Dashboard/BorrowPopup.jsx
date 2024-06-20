@@ -1,10 +1,10 @@
-import { Info } from 'lucide-react'
-import React from 'react'
+import { Info } from 'lucide-react';
+import React from 'react';
 
-const BorrowPopup = ({ }) => {
+const BorrowPopup = ({ asset, image }) => {
     return (
         <>
-            <h1 className='font-semibold text-xl'>Borrow GHO</h1>
+            <h1 className='font-semibold text-xl'>Borrow {asset}</h1>
             <div className='flex flex-col gap-2 mt-5 text-sm'>
                 <div className="w-full">
                     <div className="w-full flex justify-between my-2">
@@ -18,8 +18,8 @@ const BorrowPopup = ({ }) => {
                         </div>
                         <div className="w-8/12 flex flex-col items-end">
                             <div className='w-auto flex items-center gap-2'>
-                                <img src={"/connect_wallet_icon.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                                <span className='text-lg'>LINK</span>
+                                <img src={image} alt="Item Image" className='object-fill w-8 h-8' />
+                                <span className='text-lg'>{asset}</span>
                             </div>
                             <p className='text-xs mt-2'>Supply Balance  572.41 Max</p>
                         </div>
@@ -49,17 +49,15 @@ const BorrowPopup = ({ }) => {
                 <div className='w-full'>
                     <h1>$6.06</h1>
 
-<div className="w-full flex my-3">
-    <div className="w-1/12">
+                    <div className="w-full flex my-3">
+                        <div className="w-1/12">
                             <Info size={16}/>
-    </div>
-    <div className="w-11/12 text-xs">
+                        </div>
+                        <div className="w-11/12 text-xs">
                             Attention: Parameter changes via governance can alter your account health factor and risk of liquidation.
                             Follow the ICP Governance forum for updates.
-    </div>
-                        
-                       
-</div>
+                        </div>
+                    </div>
                     
                 </div>
 
@@ -68,7 +66,7 @@ const BorrowPopup = ({ }) => {
                 </div>
             </div>
         </>
-    )
+    );
 }
 
-export default BorrowPopup
+export default BorrowPopup;

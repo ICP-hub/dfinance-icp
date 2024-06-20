@@ -84,7 +84,13 @@ export default function Navbar({ isHomeNav }) {
     navigate('/dashboard/main'); // Directly navigate to /dashboard/main
   };
 
-  useEffect(() => {
+  const handleWalletConnect = () => {
+    console.log("connrcterd");
+    dispatch(setWalletModalOpen(!isWalletModalOpen))
+    // dispatch(setIsWalletCreated(true))
+}
+  
+useEffect(() => {
     if (isAuthenticated === true) {
       dispatch(
         setUserData({
@@ -94,11 +100,11 @@ export default function Navbar({ isHomeNav }) {
           imageUrl:
             'https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg',
         })
-      );
+      )
+      navigate("/dashboard/my-supply")
     } else {
-      dispatch(setUserData(null));
-      // navigate('/');
-    }
+      dispatch(setUserData(null))
+      // navigate("/") 
   }, [isAuthenticated]);
 
   const hash = window.location.hash;
@@ -147,11 +153,12 @@ export default function Navbar({ isHomeNav }) {
 </div>
 
 
-            {isHomeNav && (
-              <Button title={'Launch App'} onClickHandler={handleLaunchApp} />
-            )}
-
-            {isAuthenticated && !isHomeNav && (
+           {isHomeNav ? (
+              <Button
+                title={"Launch App"}
+                onClickHandler={handleLaunchApp}
+              />
+            ) : (isAuthenticated ? (
               <div className="hidden lg:flex gap-6">
                 <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
                   <div
@@ -162,7 +169,9 @@ export default function Navbar({ isHomeNav }) {
                     <ArrowDownUp />
                   </div>
 
-                  {switchTokenDrop && <SwitchWallet />}
+                  {switchTokenDrop && (
+                    <SwitchWallet />
+                  )}
                 </div>
                 <div className="flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
                   <div
@@ -176,7 +185,7 @@ export default function Navbar({ isHomeNav }) {
                     />
                     <span>0x65.125s</span>
                   </div>
-
+          
                   {switchWalletDrop && (
                     <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10">
                       <div className="w-full flex items-center gap-3 mt-2">
@@ -200,6 +209,7 @@ export default function Navbar({ isHomeNav }) {
                           title="Disconnect"
                           onClick={handleLogout}
                           className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          onClickHandler={handleLogout}
                         />
                       </div>
 
@@ -213,7 +223,6 @@ export default function Navbar({ isHomeNav }) {
                               <span className="ml-2 text-base text-blue-800">ICP</span>
                             </div>
                           </div>
-
                         </div>
 
                         {/* Second Container */}
@@ -233,33 +242,14 @@ export default function Navbar({ isHomeNav }) {
                     </div>
                   )}
                 </div>
-                {isAuthenticated && <div className="flex items-center gap-3 my-2 bg-transparent border-2 border-orange-100 rounded-md shadow-sm shadow-[#00000040] font-semibold text-sm cursor-pointer relative w-[45px]">
-                  <div
-                    className="flex items-center gap-1 p-2 px-3"
-
-                  >
-                    <img
-                      src={settingsicon}
-                      alt="settings_icon"
-                      className="object-contain w-5 h-5"
-                    />
-                  </div>
-                </div>}
               </div>
-            )}
-
-            {isAuthenticated && location.pathname === '/dashboard/main' && (
+            ) : (
+              // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
+              <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
               
-                <div className="flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
-                <Button
-                          title="Connect Wallet"
-                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
-                          onClickHandler={handleSwitchToken}
-                        />
-                </div>
-              
-            )}
-
+            ))}
+            
+            {/* Mobile/Tablet Menu */}
             <button
               type="button"
               className="text-[#2A1F9D] cursor-pointer block lg:hidden"

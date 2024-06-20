@@ -372,14 +372,14 @@ const MySupply = () => {
                             title={"Borrow"}
                             onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
                             className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md p-2 px-3 shadow-lg font-semibold text-sm"
+                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-sm"
                             }
                           />
                           <Button
                             title={"Details"}
                             onClickHandler={() => handleModalOpen("payment")}
                             className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md p-2 px-3 shadow-lg font-semibold text-sm "
+                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-sm "
                             }
                           />
                         </div>
@@ -433,14 +433,14 @@ const MySupply = () => {
                             title={"Borrow"}
                             onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
                             className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md p-2 px-3 shadow-lg font-semibold text-sm"
+                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-sm"
                             }
                           />
                           <Button
                             title={"Details"}
                             onClickHandler={() => handleModalOpen("payment")}
                             className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md p-2 px-3 shadow-lg font-semibold text-sm "
+                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-sm "
                             }
                           />
                         </div>

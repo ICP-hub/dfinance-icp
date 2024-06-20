@@ -733,3 +733,22 @@ export const transactionHistory = [
   { id: 4, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
   // Add more transactions as needed
 ];
+// constants.js
+
+// constants.js
+
+export const healthFactorValue = 5.26;
+export const healthFactorCutOutPositions = {
+    green: 10,
+    red: 60
+};
+
+export const currentLTVValue = 15.28;
+export const currentLTVCutOutPositions = {
+    green: 20,
+    red: 70
+};
+
+export const healthFactorMinValue = 1.00;
+export const currentLTVThreshold = "76.5%";
+export const liquidationThresholdLabel = "Liquidation Threshold";

@@ -63,7 +63,7 @@ const DFinanceGov = () => {
             </p>
           </div>
           <div className="w-full justify-start md2:w-5/12 dxl:w-4/12 md2:p-6 md2:ml-16">
-            <h1 className="text-[#2A1F9D] font-medium text-xl mx-5">Others</h1>
+            <h1 className="text-[#2A1F9D] font-medium text-xl mx-5 dark:text-darkText">Others</h1>
             <div className="w-full flex gap-4 flex-wrap mt-3 mx-5 cursor-pointer">
               {["SNAPSHOTS", "GOVERNANCE", "FORUM", "FAQ"].map((i) => (
                 <span className="button_gradient p-2 whitespace-nowrap rounded-full text-xs flex items-center gap-2 text-white px-6">
@@ -75,7 +75,7 @@ const DFinanceGov = () => {
         </div>
       </div>
       <div className="w-full flex flex-col md2:flex-row mt-8 my-4 gap-8">
-        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl pt-10 mb-[5rem] dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
+        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl pt-10 mb-[5rem] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
           <div className="flex items-center justify-between ">
             <div className="text-[#2A1F9D] text-2xl font-semibold ml-2 dark:text-darkText">
               Proposals

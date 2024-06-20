@@ -84,6 +84,12 @@ export default function Navbar({ isHomeNav }) {
     navigate('/dashboard/main'); // Directly navigate to /dashboard/main
   };
 
+  const handleWalletConnect = () => {
+    console.log("connrcterd");
+    dispatch(setWalletModalOpen(!isWalletModalOpen))
+    // dispatch(setIsWalletCreated(true))
+  }
+
   useEffect(() => {
     if (isAuthenticated === true) {
       dispatch(
@@ -94,12 +100,14 @@ export default function Navbar({ isHomeNav }) {
           imageUrl:
             'https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg',
         })
-      );
+      )
+      // navigate("/dashboard/my-supply")
     } else {
-      dispatch(setUserData(null));
-      // navigate('/');
+      dispatch(setUserData(null))
     }
+    // navigate("/") 
   }, [isAuthenticated]);
+
 
   const hash = window.location.hash;
 
@@ -124,34 +132,38 @@ export default function Navbar({ isHomeNav }) {
               className="w-[100px] md:w-[150px] lg:w-auto"
             />
 
-<div className="gap-4 hidden lg:flex">
-  {!isHomeNav
-    ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
-        <NavLink
-          key={index}
-          to={link.route}
-          className="text-[#2a1f9d] px-3 py-2 text-lg nav-link"
-        >
-          {link.title}
-        </NavLink>
-      ))
-    : HOME_TOP_NAV_LINK.map((link, index) => (
-        <NavLink
-          key={index}
-          to={link.route}
-          className="text-[#233D63] px-3 py-2 text-lg nav-link"
-        >
-          {link.title}
-        </NavLink>
-      ))}
-</div>
+            <div className="gap-4 hidden lg:flex dark:text-darkText">
+              {!isHomeNav
+                ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#2a1f9d] px-3 py-2 text-lg nav-link"
+                  >
+                    {link.title}
+                  </NavLink>
+                ))
+                : HOME_TOP_NAV_LINK.map((link, index) => (
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#233D63] px-3 py-2 text-lg nav-link"
+                  >
+                    {link.title}
+                  </NavLink>
+                ))}
+            </div>
 
 
-            {isHomeNav && (
-              <Button title={'Launch App'} onClickHandler={handleLaunchApp} />
-            )}
-
-            {isAuthenticated && !isHomeNav && (
+            {isHomeNav ? (
+             <div className='flex gap-2'>
+               <Button
+                title={"Launch App"}
+                onClickHandler={handleLaunchApp}
+              />
+              <ThemeToggle />
+             </div>
+            ) : (isAuthenticated ? (
               <div className="hidden lg:flex gap-6">
                 <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
                   <div
@@ -162,7 +174,9 @@ export default function Navbar({ isHomeNav }) {
                     <ArrowDownUp />
                   </div>
 
-                  {switchTokenDrop && <SwitchWallet />}
+                  {switchTokenDrop && (
+                    <SwitchWallet />
+                  )}
                 </div>
                 <div className="flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
                   <div
@@ -178,14 +192,14 @@ export default function Navbar({ isHomeNav }) {
                   </div>
 
                   {switchWalletDrop && (
-                    <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10">
+                    <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10 dark:bg-darkOverlayBackground">
                       <div className="w-full flex items-center gap-3 mt-2">
                         <img
                           src="/connect_wallet_icon.png"
                           alt="connect_wallet_icon"
                           className="w-10 h-10"
                         />
-                        <h1 className="font-semibold text-2xl text-blue-800">
+                        <h1 className="font-semibold text-2xl text-blue-800 dark:text-darkText">
                           0x65.125ssdf
                         </h1>
                       </div>
@@ -200,32 +214,32 @@ export default function Navbar({ isHomeNav }) {
                           title="Disconnect"
                           onClick={handleLogout}
                           className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          onClickHandler={handleLogout}
                         />
                       </div>
 
                       <div className="flex mt-3 gap-3 ">
                         {/* First Container */}
                         <div className="flex justify-center">
-                          <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative" style={{ height: '70px', width: '160px' }}>
-                            <span className="absolute top-1/4 transform -translate-y-1/2 text-blue-800" style={{ right: '55%' }}>Network</span>
+                          <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative dark:border-currentFAQBackground" style={{ height: '70px', width: '160px' }}>
+                            <span className="absolute top-1/4 transform -translate-y-1/2 text-blue-800 dark:text-darkTextSecondary" style={{ right: '55%' }}>Network</span>
                             <div className="absolute bottom-2 left-2 mt-4 flex items-center">
                               <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="w-6 h-6" />
-                              <span className="ml-2 text-base text-blue-800">ICP</span>
+                              <span className="ml-2 text-base text-blue-800 dark:text-darkText">ICP</span>
                             </div>
                           </div>
-
                         </div>
 
                         {/* Second Container */}
                         <div className="flex justify-center">
-                          <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative" style={{ height: '70px', width: '160px' }}>
-                            <button className="text-blue-800 hover:text-gray-800 flex items-center -ml-2" onClick={handleCopyAddress}>
+                          <div className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative dark:border-currentFAQBackground" style={{ height: '70px', width: '160px' }}>
+                            <button className="text-blue-800 hover:text-gray-800 flex items-center -ml-2 dark:text-darkTextSecondary" onClick={handleCopyAddress}>
                               <GrCopy className="h-5 w-4" />
                               <span className="ml-1">Copy Address</span>
                             </button>
-                            <button className="text-blue-800 hover:text-gray-800 flex items-center mt-2" onClick={handleViewOnExplorerClick}>
+                            <button className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday" onClick={handleViewOnExplorerClick}>
                               <CiShare1 className="h-5 w-4" />
-                              <span className="ml-1 text-nowrap">View On Explorer</span>
+                              <span className="ml-1 text-nowrap dark:text-darkTextSecondary">View On Explorer</span>
                             </button>
                           </div>
                         </div>
@@ -246,20 +260,13 @@ export default function Navbar({ isHomeNav }) {
                   </div>
                 </div>}
               </div>
-            )}
+            ) : (
+              // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
+              <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
 
-            {isAuthenticated && location.pathname === '/dashboard/main' && (
-              
-                <div className="flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
-                <Button
-                          title="Connect Wallet"
-                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
-                          onClickHandler={handleSwitchToken}
-                        />
-                </div>
-              
-            )}
+            ))}
 
+            {/* Mobile/Tablet Menu */}
             <button
               type="button"
               className="text-[#2A1F9D] cursor-pointer block lg:hidden"

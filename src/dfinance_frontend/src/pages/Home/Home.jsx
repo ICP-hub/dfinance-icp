@@ -66,7 +66,7 @@ const Home = () => {
         <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"top-right"}
-            className="w-48 h-48 md:w-[400px] md:h-[400px]"
+            className="w-70 h-70 md:w-[950px] md:h-[590px]"
           />
         </div>
 
@@ -99,7 +99,6 @@ const Home = () => {
                     sx={{
                       textTransform: "capitalize",
                       fontStyle: "normal",
-                      fontFamily: "Poppins",
                       fontFamily: "Poppins",
                       fontWeight: "600",
                       fontSize: "14px",
@@ -138,7 +137,7 @@ const Home = () => {
         {/* Info section */}
         <section className="mt-[44px] md:mt-24">
           <div className="w-full flex justify-center">
-            <div className="w-full xl:w-3/4 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
+            <div className="w-full xl:w-3/4 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               <div className="w-full xl:w-9/12">
                 <h1 className="font-semibold text-lg">And more to come...</h1>
                 <p className="mt-4 text-sm font-medium">
@@ -188,34 +187,32 @@ const Home = () => {
 
        {/* FAQ */}
        <section className="mt-24 " id="faq">
-          <div className="w-full p-5 md:p-10 mb-20 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
+          <div className="w-full p-5 md:p-10 mb-20 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
             <div className="w-full">
               <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
                 Frequently Asked Questions
               </h1>
              
             </div>
-            </div>
             <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)} className="w-full md:grid grid-cols-2">
               <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px] ">
-                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer">
+                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer dark:bg-darkFAQBackground">
                   {FAQ_QUESTION.map((item, index) => (
-                    <div key={index} className="w-full">
+                    <div key={index} className="w-full dark:text-darkText">
                       <div
-                        
                         className={`w-full flex p-4 items-center ${currentFAQ === index ? "bg-[#eef0f5] dark:bg-currentFAQBackground" : ""
                           } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
                         onClick={() => setCurrentFAQ(index)}
                       >
                         <div className="w-1/12">
                           <div
-                            className={`w-4 h-4 rounded-full ${currentFAQ === index ? "bg-[#517687]" : "bg-[#DBE8EE]"
+                            className={`w-4 h-4 rounded-full ${currentFAQ === index ? "bg-[#517687] dark:bg-darkText" : "bg-[#DBE8EE] dark:bg-[#192C35]"
                               }`}
                           ></div>
                         </div>
                         <div className="w-10/12">{item.question}</div>
                         <div
-                          className={`w-1/12 ${currentFAQ === index ? "text-[#517687] rotate-90 md:rotate-0" : "text-[#DBE8EE]"
+                          className={`w-1/12 ${currentFAQ === index ? "text-[#517687] dark:text-darkText rotate-90 md:rotate-0" : "text-[#DBE8EE] dark:text-[#192C35]"
                             } flex justify-end`}
                         >
                           <ChevronRight />
@@ -230,7 +227,6 @@ const Home = () => {
                   ))}
                 </div>
               </div>
-              <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText">
               <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText">
                 <h1 className="font-semibold mt-4">
                   {FAQ_QUESTION.find((item) => item.id === currentFAQ).question}

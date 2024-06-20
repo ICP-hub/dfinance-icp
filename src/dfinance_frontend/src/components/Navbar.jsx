@@ -207,7 +207,6 @@ export default function Navbar({ isHomeNav }) {
                           title="Switch Wallet"
                           className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
                           onClickHandler={handleSwitchToken}
-                          onClickHandler={handleSwitchToken}
                         />
                         <Button
                           title="Disconnect"

@@ -52,6 +52,7 @@ export default function Navbar({ isHomeNav }) {
   const handleLogout = () => {
     dispatch(setUserData(null))
     logout()
+    
   }
 
   const handleSwitchToken = () => {
@@ -87,6 +88,12 @@ export default function Navbar({ isHomeNav }) {
   const handleLaunchApp = () => {
     navigate("/dashboard/main");
   };
+
+  const handleWalletConnect = () => {
+    console.log("connrcterd");
+    dispatch(setWalletModalOpen(!isWalletModalOpen))
+    // dispatch(setIsWalletCreated(true))
+}
 
   useEffect(() => {
     if (isAuthenticated === true) {
@@ -190,7 +197,7 @@ export default function Navbar({ isHomeNav }) {
                     />
                     <span>0x65.125s</span>
                   </div>
-
+          
                   {switchWalletDrop && (
                     <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100  shadow-xl border mb-4  z-10" >
                       <div className="w-full flex items-center gap-3 mt-2">
@@ -246,7 +253,9 @@ export default function Navbar({ isHomeNav }) {
                 </div>
               </div>
             ) : (
-              <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
+              // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
+              <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
+              
             ))}
             
             {/* Mobile/Tablet Menu */}

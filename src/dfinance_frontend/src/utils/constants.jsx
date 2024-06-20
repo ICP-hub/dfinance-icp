@@ -14,25 +14,25 @@ const TabPanel = ({ items }) => {
 export const HOME_TOP_NAV_LINK = [
   {
     id: 0,
-    title: "Help Center",
+    title: "Governance",
     route: "/#gov",
     icon: "",
   },
   {
     id: 1,
-    title: "Partners",
+    title: "Market",
     route: "/#security",
     icon: "",
   },
   {
     id: 2,
-    title: "Sugesstions",
-    route: "/docs",
+    title: "Docs",
+    route: "/#docs",
     icon: "",
   },
   {
     id: 3,
-    title: "Blogs",
+    title: "FAQ",
     route: "/#faq",
     icon: "",
   },

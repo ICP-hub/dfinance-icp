@@ -4,20 +4,20 @@ import { Zap } from 'lucide-react'
 
 const EModeInfo = () => {
   return (
-    <div className="w-full lg:w-10/12 text-[#5B62FE]">
+    <div className="w-full lg:w-10/12 text-[#5B62FE] dark:text-darkText">
       <div className="w-full flex px-2 lg:px-8">
         <h1 className='flex gap-2 items-center'>E-Mode Category  <Zap/>   AVAX correlated</h1>
       </div>
       <div className="w-full flex gap-8 mt-6 flex-wrap whitespace-nowrap">
-        <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl">
-          <h1 className="text-[#2A1F9D] font-medium">Max LTV</h1>
+        <div className="relative text-[#5B62FE] dark:text-darkText p-3 border border-[#FFFFFF] flex-1 rounded-xl">
+          <h1 className="text-[#2A1F9D] font-medium dark:text-darkText">Max LTV</h1>
           <hr
             className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
           />
           <p>60%</p>
         </div>
-        <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl">
-          <h1 className="text-[#2A1F9D] font-medium">
+        <div className="relative text-[#5B62FE] dark:text-darkText p-3 border border-[#FFFFFF] flex-1 rounded-xl">
+          <h1 className="text-[#2A1F9D] font-medium dark:text-darkText">
             Liquidation threshold
           </h1>
           <hr
@@ -25,8 +25,8 @@ const EModeInfo = () => {
           />
           <p>60%</p>
         </div>
-        <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl">
-          <h1 className="text-[#2A1F9D] font-medium">Liquidation penalty</h1>
+        <div className="relative text-[#5B62FE] dark:text-darkText p-3 border border-[#FFFFFF] flex-1 rounded-xl">
+          <h1 className="text-[#2A1F9D] font-medium dark:text-darkText">Liquidation penalty</h1>
           <hr
             className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
           />

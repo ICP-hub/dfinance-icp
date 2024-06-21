@@ -18,6 +18,7 @@ import {
 import { setIsWalletConnected, setWalletModalOpen } from "../redux/reducers/utilityReducer"
 import settingsicon from "../../public/settings.png";
 import ThemeToggle from "./ThemeToggle"
+import settingsIcon from "../../public/Settings.svg"
 
 export default function Navbar({ isHomeNav }) {
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -156,18 +157,18 @@ export default function Navbar({ isHomeNav }) {
 
 
             {isHomeNav ? (
-             <div className='flex gap-2'>
-               <Button
-                title={"Launch App"}
-                onClickHandler={handleLaunchApp}
-              />
-              <ThemeToggle />
-             </div>
+              <div className='flex gap-2'>
+                <Button
+                  title={"Launch App"}
+                  onClickHandler={handleLaunchApp}
+                />
+                <ThemeToggle />
+              </div>
             ) : (isAuthenticated ? (
-              <div className="hidden lg:flex gap-6">
-                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
+              <div className="hidden lg:flex gap-3">
+                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-3 p-2 px-3"
+                    className="flex items-center gap-2 p-2 px-3"
                     onClick={handleSwitchToken}
                   >
                     <span>Switch Token</span>
@@ -178,9 +179,9 @@ export default function Navbar({ isHomeNav }) {
                     <SwitchWallet />
                   )}
                 </div>
-                <div className="flex items-center gap-3 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md shadow-xl shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
+                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-3 p-2 px-3"
+                    className="flex items-center gap-1 p-2 px-3"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -247,22 +248,27 @@ export default function Navbar({ isHomeNav }) {
                     </div>
                   )}
                 </div>
-                {isAuthenticated && <div className="flex items-center gap-3 my-2 bg-transparent border-2 border-orange-100 rounded-md shadow-sm shadow-[#00000040] font-semibold text-sm cursor-pointer relative w-[45px]">
-                  <div
-                    className="flex items-center gap-1 p-2 px-3"
-
-                  >
-                    <img
-                      src={settingsicon}
-                      alt="settings_icon"
-                      className="object-contain w-5 h-5"
-                    />
-                  </div>
-                </div>}
+                <div className='flex items-center justify-center'>
+                  <img
+                    src={settingsIcon}
+                    alt="settings_icon"
+                    className="object-contain w-[40px] h-[40px]"
+                  />
+                </div>
               </div>
             ) : (
               // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
-              <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
+              <div className='flex gap-1'>
+                <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
+                <div className='flex items-center justify-center'>
+                  <img
+                    src={settingsIcon}
+                    alt="settings_icon"
+                    className="object-contain w-[42px] h-[42px]"
+                  />
+                </div>
+              </div>
+
 
             ))}
 

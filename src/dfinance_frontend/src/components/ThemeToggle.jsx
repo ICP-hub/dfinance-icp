@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from "../redux/reducers/themeReducer";
 import { AiOutlineMoon } from "react-icons/ai";
 import { GrSun } from "react-icons/gr";
+import Sun from "../../public/Sun.svg"
+import Moon from "../../public/Moon.svg"
 
 const ThemeToggle = () => {
   const theme = useSelector((state) => state.theme.theme);
@@ -35,17 +37,17 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={handleToggle}
-      className="flex items-center p-1 rounded-md text-gray-900 dark:text-gray-100"
+      className="flex items-center p-1 rounded-md"
     >
-      <div className="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-1 rounded-lg">
-        <div className="flex items-center justify-center bg-white dark:bg-darkFAQBackground p-1 rounded-lg w-9 h-9">
+    
+        <div className="flex items-center justify-center p-[2px] rounded-lg w-[45px] h-[45px]">
           {theme === 'dark' ? (
-            <GrSun size={26} style={gradientStyle} />
+            <img src={Sun} alt="Sun Icon" className="w-full h-full" />
           ) : (
-            <AiOutlineMoon size={26} style={gradientStyle} />
+            <img src={Moon} alt="Moon Icon" className="w-full h-full" />
           )}
         </div>
-      </div>
+  
     </button>
   );
 };

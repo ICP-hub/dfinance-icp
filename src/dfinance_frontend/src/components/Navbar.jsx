@@ -102,7 +102,7 @@ export default function Navbar({ isHomeNav }) {
             'https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg',
         })
       )
-      // navigate("/dashboard/my-supply")
+      navigate("/dashboard/my-supply")
     } else {
       dispatch(setUserData(null))
     }

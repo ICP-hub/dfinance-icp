@@ -13,7 +13,7 @@ const RiskPopup = ({ onClose }) => {
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black opacity-50"></div>
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg max-w-3xl mx-auto z-10 border p-4 relative">
+            <div className="bg-white rounded-lg overflow-hidden shadow-lg max-w-3xl mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
                 {/* Close button */}
                 <button
                     className="text-gray-600 hover:text-gray-900 absolute top-4 right-4"
@@ -23,15 +23,15 @@ const RiskPopup = ({ onClose }) => {
                 </button>
                 <div className="px-6 py-4">
                     <div className="flex justify-between items-center pb-3">
-                        <h3 className="text-lg font-semibold text-center w-full" style={{ color: '#4659CF' }}>Liquidation Risk Parameters</h3>
+                        <h3 className="text-lg font-semibold text-center w-full text-[#4659CF] dark:text-darkText">Liquidation Risk Parameters</h3>
                     </div>
-                    <div className="mt-2 text-sm text-gray-500">
+                    <div className="mt-2 text-sm text-gray-500 dark:text-darkText">
                         Your health factor and loan to value determine the assurance of your collateral. To avoid liquidations, you can supply more collateral or repay borrow positions. <a href="#" className="text-blue-500 underline">Learn more</a>
                     </div>
                     <div className="mt-4 space-y-6">
                         <div className="border border-gray-600 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-blue-700">Health Factor</h4>
-                            <p className="text-sm text-gray-500 mb-2">
+                            <h4 className="text-sm font-semibold text-blue-700 dark:text-darkText">Health Factor</h4>
+                            <p className="text-sm text-gray-500 mb-2 dark:text-darkTextSecondary">
                                 Safety of your deposited collateral against the borrowed assets and its underlying value.
                             </p>
                             <div className="flex items-center mt-4">
@@ -58,11 +58,11 @@ const RiskPopup = ({ onClose }) => {
                                 </svg>
                                 <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{healthFactorValue}</span>
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">If the health factor goes below {healthFactorMinValue}, the {liquidationThresholdLabel.toLowerCase()} of your collateral might be triggered.</p>
+                            <p className="text-xs text-gray-400 mt-1 dark:text-darkTextSecondary">If the health factor goes below {healthFactorMinValue}, the {liquidationThresholdLabel.toLowerCase()} of your collateral might be triggered.</p>
                         </div>
                         <div className="border border-gray-600 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-blue-700">Current LTV</h4>
-                            <p className="text-sm text-gray-500">
+                            <h4 className="text-sm font-semibold text-blue-700 dark:text-darkText">Current LTV</h4>
+                            <p className="text-sm text-gray-500 dark:text-darkTextSecondary">
                                 Your current loan to value based on your collateral supplied.
                             </p>
                             <div className="flex items-center mt-4">
@@ -90,7 +90,7 @@ const RiskPopup = ({ onClose }) => {
                                 </svg>
                                 <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{currentLTVValue}</span>
                             </div>
-                            <p className="text-xs text-gray-400 mt-6">If your loan to value goes above {currentLTVThreshold}, your collateral may be liquidated.</p>
+                            <p className="text-xs text-gray-400 mt-6 dark:text-darkTextSecondary">If your loan to value goes above {currentLTVThreshold}, your collateral may be liquidated.</p>
                         </div>
                     </div>
                 </div>

@@ -16,13 +16,13 @@ const MobileTobNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
       open={isMobileNav}
       onClose={() => setIsMobileNav(false)}
     >
-      <div className="flex flex-col mt-6 p-4">
+      <div className="flex flex-col pt-6 p-4 dark:bg-darkBackground">
         {!isHomeNav
           ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
               <NavLink
                 key={index}
                 to={link.route}
-                className={`text-[#233D63] p-3`}
+                className={`text-[#233D63] p-3 dark:text-darkTextSecondary`}
               >
                 {link.title}
               </NavLink>
@@ -31,7 +31,7 @@ const MobileTobNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
               <NavLink
                 key={index}
                 to={link.route}
-                className={`text-[#233D63] p-3`}
+                className={`text-[#233D63] p-3 dark:text-darkTextSecondary`}
               >
                 {link.title}
               </NavLink>

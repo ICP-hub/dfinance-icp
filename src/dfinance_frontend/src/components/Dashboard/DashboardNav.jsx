@@ -102,7 +102,7 @@ const DashboardNav = () => {
               />
             </div>
 
-            <h1 className="text-[#3739b4] font-semibold">
+            <h1 className="text-[#3739b4] font-semibold dark:text-darkText">
               {currentValueData ? currentValueData.title : ""}
             </h1>
 
@@ -149,7 +149,7 @@ const DashboardNav = () => {
             </div>
           </div>
 
-          <div className="flex items-center flex-wrap text-[#3739b4] font-semibold gap-6">
+          <div className="flex items-center flex-wrap text-[#3739b4] font-semibold gap-6 dark:text-darkText">
             {filteredWalletDetailTabs.map((data, index) => (
               <div key={index} className="relative group ml-10">
                 <button className="relative">
@@ -163,7 +163,7 @@ const DashboardNav = () => {
             ))}
             {shouldRenderRiskDetailsButton && (
               <button
-                className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg"
+                className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
                 onClick={handleOpenPopup}
               >
                 Risk Details

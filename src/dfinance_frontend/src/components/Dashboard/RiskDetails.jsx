@@ -53,8 +53,8 @@ const RiskPopup = ({ onClose }) => {
                                     <rect x={`${healthFactorCutOutPositions.red}%`} y="12" width="0.25%" height="9" fill="green" mt-4 />
 
                                     {/* Percentage markers */}
-                                    <text x={`${healthFactorCutOutPositions.green}%`} y="10" fill="green" fontSize="12" textAnchor="middle">{healthFactorMinValue}</text>
-                                    <text x={`${healthFactorCutOutPositions.red}%`} y="10" fill="red" fontSize="12" textAnchor="middle">{healthFactorValue}</text>
+                                    <text x={`${healthFactorCutOutPositions.green}%`} y="35" fill="red" fontSize="12" textAnchor="middle">{healthFactorMinValue}</text>
+                                    <text x={`${healthFactorCutOutPositions.red}%`} y="10" fill="blue" fontSize="12" textAnchor="middle">{healthFactorValue}</text>
                                 </svg>
                                 <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{healthFactorValue}</span>
                             </div>

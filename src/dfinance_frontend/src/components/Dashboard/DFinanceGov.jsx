@@ -63,14 +63,15 @@ const DFinanceGov = () => {
             </p>
           </div>
           <div className="w-full justify-start md2:w-5/12 dxl:w-4/12 md2:p-6 md2:ml-16">
-            <h1 className="text-[#2A1F9D] font-medium text-xl mx-5">Others</h1>
-            <div className="w-full flex gap-4 flex-wrap mt-3 mx-5 cursor-pointer">
+            <h1 className="text-[#2A1F9D] font-medium text-xl mx-5 lg:mx-10 ">Others</h1>
+            <div className="w-full flex gap-4 flex-wrap mt-3 mx-5 lg:mx-10 cursor-pointer">
               {["SNAPSHOTS", "GOVERNANCE", "FORUM", "FAQ"].map((i) => (
                 <span className="button_gradient p-2 whitespace-nowrap rounded-full text-xs flex items-center gap-2 text-white px-6">
                   {i} <ExternalLink size={16} />
                 </span>
               ))}
             </div>
+
           </div>
         </div>
       </div>
@@ -92,8 +93,8 @@ const DFinanceGov = () => {
                     placeholder="Search for proposals"
                     style={{ fontSize: '0.75rem' }}
                     className={`placeholder-gray-500 w-[200px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-border  ${showsearch
-                        ? "animate-fade-left flex"
-                        : "animate-fade-right hidden"
+                      ? "animate-fade-left flex"
+                      : "animate-fade-right hidden"
                       }`}
                   />
                 </div>

@@ -105,6 +105,7 @@ useEffect(() => {
     } else {
       dispatch(setUserData(null))
       // navigate("/") 
+    }
   }, [isAuthenticated]);
 
   const hash = window.location.hash;
@@ -207,7 +208,7 @@ useEffect(() => {
                         />
                         <Button
                           title="Disconnect"
-                          onClick={handleLogout}
+                         
                           className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
                           onClickHandler={handleLogout}
                         />

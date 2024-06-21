@@ -1,7 +1,10 @@
-import React from 'react'
-import Button from '../Button'
+import React from 'react';
+import Button from '../Button';
 
-const SupplyPopup = ({asset, image }) => {
+const SupplyPopup = ({ asset, image, balance }) => {
+    const transactionFee = 0.01; // Example transaction fee
+    const hasEnoughBalance = balance >= transactionFee;
+
     return (
         <>
             <h1 className='font-semibold text-xl'>Supply {asset}</h1>
@@ -18,10 +21,10 @@ const SupplyPopup = ({asset, image }) => {
                         </div>
                         <div className="w-8/12 flex flex-col items-end">
                             <div className='w-auto flex items-center gap-2'>
-                                <img src={image} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                <img src={image} alt="connect_wallet_icon" className='object-cover w-8 h-8' />
                                 <span className='text-lg'>{asset}</span>
                             </div>
-                            <p className='text-xs mt-2'>Supply Balance  572.41 Max</p>
+                            <p className='text-xs mt-2'>Supply Balance {balance} Max</p>
                         </div>
                     </div>
                 </div>
@@ -42,10 +45,20 @@ const SupplyPopup = ({asset, image }) => {
                 </div>
             </div>
 
+            {!hasEnoughBalance && (
+                <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1 text-yellow-500">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01m-6.938 4h13.856c.72 0 1.392-.386 1.732-1l6.939-12a2 2 0 00-1.732-3H4.134a2 2 0 00-1.732 3l6.939 12c.34.614 1.012 1 1.732 1z" />
+                    </svg>
+                    <p className="text-yellow-700">
+                        You do not have enough ETH in your account to pay for transaction fees on the Ethereum Sepolia network. Please deposit ETH from another account.
+                    </p>
+                </div>
+            )}
+
             <div className="w-full flex justify-between items-center mt-3">
                 <div className='w-auto flex items-end gap-2'>
                     <img src="/Group.svg" alt="Icon" className='w-8 h-8 object-contain' />
-                    {/* <h1>$6.06</h1> */}
                 </div>
                 
                 <div className="w-[200px]">
@@ -53,7 +66,7 @@ const SupplyPopup = ({asset, image }) => {
                 </div>
             </div>
         </>
-    )
+    );
 }
 
-export default SupplyPopup
+export default SupplyPopup;

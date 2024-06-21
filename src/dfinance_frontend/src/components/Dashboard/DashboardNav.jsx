@@ -43,6 +43,7 @@ const DashboardNav = () => {
       setCurrentValueIndex(state.id);
     }
   }, [state]);
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const handleOpenPopup = () => {
@@ -52,6 +53,7 @@ const DashboardNav = () => {
   const handleClosePopup = () => {
     setIsPopupOpen(false);
   };
+
   // Determine if it's dashboard supply or main based on pathname
   const isDashboardSupplyOrMain = pathname === "/dashboard/my-supply" || pathname === "/dashboard/main";
 
@@ -61,23 +63,22 @@ const DashboardNav = () => {
   };
 
   // Dynamic title based on pathname
-  const dashboardTitle = pathname.includes("/dashboard/wallet-details")
-    ? "Market"
-    : "Dashboard";
+  const dashboardTitle = pathname.includes("/dashboard/wallet-details") ? "Market" : "Dashboard";
 
   // Determine if Risk Details button should be rendered
   const shouldRenderRiskDetailsButton = !pathname.includes("/dashboard/wallet-details") && !pathname.includes("/dashboard/main");
 
-  // Filter WALLET_DETAIL_TAB to exclude health with id=3 if pathname is /dashboard/main
+  // Filter WALLET_DETAIL_TAB to exclude health with id=2 if pathname is /dashboard/main
   const filteredWalletDetailTabs = WALLET_DETAIL_TAB.filter(item => {
     if (pathname === "/dashboard/main" && item.id === 2) {
-      return false; // exclude health with id=3
+      return false; // exclude health with id=2
     }
     return true;
   });
 
-  return (
+  const shouldRenderTransactionHistoryButton = pathname === '/dashboard/my-supply' || pathname === '/dashboard/transaction-history';
 
+  return (
     <div className="w-full ">
       <div className="w-full">
         <span
@@ -87,7 +88,7 @@ const DashboardNav = () => {
           Back
         </span>
       </div>
-      <h1 className="text-[#3739b4] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4">
+      <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4">
         {dashboardTitle}
       </h1>
 
@@ -112,9 +113,9 @@ const DashboardNav = () => {
                 onClick={toggleDropdown}
               >
                 {!isDrop ? (
-                  <ChevronRight size={16} color="#3739b4" />
+                  <ChevronRight size={16} color="#2A1F9D" />
                 ) : (
-                  <ChevronDown size={16} color="#3739b4" />
+                  <ChevronDown size={16} color="#2A1F9D" />
                 )}
               </span>
               {isDrop && (
@@ -148,9 +149,8 @@ const DashboardNav = () => {
               )}
             </div>
           </div>
-
-          <div className="flex items-center flex-wrap text-[#3739b4] font-semibold gap-6 dark:text-darkText">
-            {filteredWalletDetailTabs.map((data, index) => (
+          <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6">
+            {(isDashboardSupplyOrMain ? filteredWalletDetailTabs : WALLET_DETAILS_TABS).map((data, index) => (
               <div key={index} className="relative group ml-10">
                 <button className="relative">
                   {data.title}
@@ -171,19 +171,18 @@ const DashboardNav = () => {
             )}
           </div>
           {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
-        
-      </div>
-      <div className="">
-        {pathname === '/dashboard/my-supply' && (
-          <a href="/dashboard/transaction-history" className="block">
-            <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E99] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer">
-              Transaction History
-            </button>
-          </a>
-        )}
+        </div>
+        <div>
+          {shouldRenderTransactionHistoryButton && (
+            <a href="/dashboard/transaction-history" className="block">
+              <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
+                Transaction History
+              </button>
+            </a>
+          )}
+        </div>
       </div>
     </div>
-    </div >
   );
 };
 

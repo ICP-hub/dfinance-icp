@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { 
     healthFactorValue, 
     healthFactorCutOutPositions, 
@@ -10,10 +10,25 @@ import {
 } from '../../utils/constants';
 
 const RiskPopup = ({ onClose }) => {
+    const popupRef = useRef(null);
+
+    const handleClickOutside = (event) => {
+        if (popupRef.current && !popupRef.current.contains(event.target)) {
+            onClose();
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black opacity-50"></div>
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg max-w-3xl mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
+            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg max-w-3xl mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
                 {/* Close button */}
                 <button
                     className="text-gray-600 hover:text-gray-900 absolute top-4 right-4"
@@ -41,7 +56,7 @@ const RiskPopup = ({ onClose }) => {
                                         <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                             <stop offset="5%" style={{ stopColor: 'red', stopOpacity: 1 }} />
                                             <stop offset="60%" style={{ stopColor: 'yellow', stopOpacity: 1 }} />
-                                            <stop offset="30%" style={{ stopColor: 'green', stopOpacity: 1 }} />
+                                            <stop offset="100%" style={{ stopColor: 'lightgreen', stopOpacity: 1 }} />
                                         </linearGradient>
                                     </defs>
 
@@ -50,11 +65,11 @@ const RiskPopup = ({ onClose }) => {
 
                                     {/* Cut-out rectangles */}
                                     <rect x={`${healthFactorCutOutPositions.green}%`} y="12" width="0.25%" height="9" fill="red" mt-4 />
-                                    <rect x={`${healthFactorCutOutPositions.red}%`} y="12" width="0.25%" height="9" fill="green" mt-4 />
+                                    <rect x={`${healthFactorCutOutPositions.red}%`} y="12" width="0.25%" height="9" fill="yellow" mt-4 />
 
                                     {/* Percentage markers */}
                                     <text x={`${healthFactorCutOutPositions.green}%`} y="35" fill="red" fontSize="12" textAnchor="middle">{healthFactorMinValue}</text>
-                                    <text x={`${healthFactorCutOutPositions.red}%`} y="10" fill="blue" fontSize="12" textAnchor="middle">{healthFactorValue}</text>
+                                    <text x={`${healthFactorCutOutPositions.red}%`} y="9" fill="blue" fontSize="10" textAnchor="middle">{healthFactorValue}</text>
                                 </svg>
                                 <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{healthFactorValue}</span>
                             </div>

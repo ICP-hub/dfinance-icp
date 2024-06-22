@@ -165,7 +165,7 @@ const MySupply = () => {
             </div>
           )}
         </div>
-        <div className="w-full mt-10 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
+        <div className="w-full mt-8 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
           <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2">
             Assets to supply
           </h1>
@@ -310,7 +310,7 @@ const MySupply = () => {
             </div>
           )}
         </div>
-        <div className="w-full mt-10 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
+        <div className="w-full mt-8 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
           <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2">
             Assets to borrow
           </h1>

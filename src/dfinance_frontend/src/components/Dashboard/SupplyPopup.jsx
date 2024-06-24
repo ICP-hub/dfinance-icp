@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Button from '../Button';
 
 const SupplyPopup = ({ asset, image, balance }) => {
     const transactionFee = 0.01; // Example transaction fee
     const hasEnoughBalance = balance >= transactionFee;
+
+    const [amount, setAmount] = useState("0.00");
+
+    const handleAmountChange = (e) => {
+        setAmount(e.target.value);
+    };
+
+    const handleSupplyETH = () => {
+        // Implement your supply ETH logic here
+        console.log("Supply", asset, "ETH:", amount);
+    };
 
     return (
         <>
@@ -14,12 +25,19 @@ const SupplyPopup = ({ asset, image, balance }) => {
                         <h1>Amount</h1>
                         <h1>Slippage 0.10%</h1>
                     </div>
-                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-[#13112c] cursor-pointer p-3 rounded-md">
-                        <div className="w-4/12">
-                            <p className='text-xl'>0.00</p>
-                            <p className='mt-2'>$0</p>
-                        </div>
-                        <div className="w-8/12 flex flex-col items-end">
+                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md">
+                    <div className="w-3/12">
+            <input
+                type="text"
+                value={amount}
+                onChange={handleAmountChange}
+                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full'
+                placeholder="0.00"
+                
+            />
+            <p className='text-sm text-gray-500 mt-2'>$0</p>
+        </div>
+                        <div className="w-9/12 flex flex-col items-end">
                             <div className='w-auto flex items-center gap-2'>
                                 <img src={image} alt="connect_wallet_icon" className='object-cover w-8 h-8' />
                                 <span className='text-lg'>{asset}</span>
@@ -32,7 +50,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
                     <div className="w-full flex justify-between my-2">
                         <h1>Transaction overview</h1>
                     </div>
-                    <div className="w-full bg-gray-100 hover:bg-[#13112c] cursor-pointer p-3 rounded-md text-sm">
+                    <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm">
                         <div className="w-full flex justify-between items-center my-1">
                             <p>Supply APY</p>
                             <p>24.04%</p>
@@ -40,6 +58,19 @@ const SupplyPopup = ({ asset, image, balance }) => {
                         <div className="w-full flex justify-between items-center my-1">
                             <p>Collateralization</p>
                             <p>Enabled</p>
+                        </div>
+                        <div className="w-full flex flex-col my-1">
+                            <div className="w-full flex justify-between items-center">
+                                <p>Health Factor</p>
+                                <p>
+                                    <span className="text-red-500">1.00</span>
+                                    <span className="text-gray-500 mx-1">→</span>
+                                    <span className="text-green-500">5.23</span>
+                                </p>
+                            </div>
+                            <div className="w-full flex justify-end items-center mt-1 ">
+                                <p className="text-gray-500">liquidation at &lt;1.5</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -57,13 +88,15 @@ const SupplyPopup = ({ asset, image, balance }) => {
             )}
 
             <div className="w-full flex justify-between items-center mt-3">
-                <div className='w-auto flex items-end gap-2 bg-gray-200'>
-                    <img src="/Group.svg" alt="Icon" className='w-8 h-8 object-contain' />
-                </div>
                 
-                <div className="w-[200px]">
-                    <input type="text" placeholder='Enter an amount' className={"w-full my-2 focus:outline-none bg-gradient-to-r text-white from-[#00000073] to-[#0000007d] rounded-md p-3 px-8 shadow-lg font-semibold text-sm placeholder:text-white"} />
-                </div>
+                
+            <button 
+                onClick={handleSupplyETH}
+                className="bg-gradient-to-tr from-[#ffaf5a]  to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
+            >
+                Supply {asset}
+            </button>
+               
             </div>
         </>
     );

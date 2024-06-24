@@ -1,7 +1,17 @@
 import { Info } from 'lucide-react';
-import React from 'react';
+import React , { useState } from 'react';
 
 const BorrowPopup = ({ asset, image }) => {
+    const [amount, setAmount] = useState("0.00");
+
+    const handleAmountChange = (e) => {
+        setAmount(e.target.value);
+    };
+
+    const handleBorrowETH = () => {
+        // Implement your supply ETH logic here
+        console.log("Borrow", asset, "ETH:", amount);
+    };
     return (
         <>
             <h1 className='font-semibold text-xl'>Borrow {asset}</h1>
@@ -13,7 +23,14 @@ const BorrowPopup = ({ asset, image }) => {
                     </div>
                     <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-400 cursor-pointer p-3 rounded-md">
                         <div className="w-4/12">
-                            <p className='text-xl'>0.00</p>
+                        <input
+                type="text"
+                value={amount}
+                onChange={handleAmountChange}
+                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full'
+                placeholder="0.00"
+                
+            />
                             <p className='mt-2'>$30.00</p>
                         </div>
                         <div className="w-8/12 flex flex-col items-end">
@@ -62,8 +79,12 @@ const BorrowPopup = ({ asset, image }) => {
                 </div>
 
                 <div className="w-full">
-                    <input type="text" placeholder='Enter an amount' className={"w-full my-2  hover:bg-gray-400 focus:outline-none bg-gradient-to-r text-white from-[#00000073] to-[#0000007d] rounded-md p-3 px-8 shadow-lg font-semibold text-sm placeholder:text-white"} />
-                </div>
+                <button 
+                onClick={handleBorrowETH}
+                className="bg-gradient-to-tr from-[#ffaf5a]  to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
+            >
+                Borrow {asset}
+            </button></div>
             </div>
         </>
     );

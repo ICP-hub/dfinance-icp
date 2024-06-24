@@ -14,7 +14,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
                         <h1>Amount</h1>
                         <h1>Slippage 0.10%</h1>
                     </div>
-                    <div className="w-full flex items-center justify-between bg-[#1A173E] hover:bg-[#13112c] cursor-pointer p-3 rounded-md">
+                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-[#13112c] cursor-pointer p-3 rounded-md">
                         <div className="w-4/12">
                             <p className='text-xl'>0.00</p>
                             <p className='mt-2'>$0</p>
@@ -32,7 +32,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
                     <div className="w-full flex justify-between my-2">
                         <h1>Transaction overview</h1>
                     </div>
-                    <div className="w-full bg-[#1A173E] hover:bg-[#13112c] cursor-pointer p-3 rounded-md text-sm">
+                    <div className="w-full bg-gray-100 hover:bg-[#13112c] cursor-pointer p-3 rounded-md text-sm">
                         <div className="w-full flex justify-between items-center my-1">
                             <p>Supply APY</p>
                             <p>24.04%</p>
@@ -57,7 +57,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
             )}
 
             <div className="w-full flex justify-between items-center mt-3">
-                <div className='w-auto flex items-end gap-2'>
+                <div className='w-auto flex items-end gap-2 bg-gray-200'>
                     <img src="/Group.svg" alt="Icon" className='w-8 h-8 object-contain' />
                 </div>
                 

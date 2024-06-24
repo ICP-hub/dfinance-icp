@@ -11,7 +11,7 @@ const WithdrawPopup = ({asset, image}) => {
                       <h1>Amount</h1>
                       <h1>Slippage 0.10%</h1>
                 </div>
-                  <div className="w-full flex items-center justify-between bg-[#1A173E] hover:bg-[#13112c] cursor-pointer p-3 rounded-md">
+                  <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-400 cursor-pointer p-3 rounded-md">
                       <div className="w-4/12">
                         <p className='text-xl'>0.00</p>
                         <p className='mt-2'>$0</p>
@@ -29,7 +29,7 @@ const WithdrawPopup = ({asset, image}) => {
                   <div className="w-full flex justify-between my-2">
                       <h1>Transaction overview</h1>
                   </div>
-                  <div className="w-full flex items-center justify-between bg-[#1A173E] hover:bg-[#13112c] cursor-pointer p-3 rounded-md">
+                  <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-400 cursor-pointer p-3 rounded-md">
                       <div className="w-8/12">
                           <p className='text-sm'>Remaining supply</p>
                       </div>
@@ -42,7 +42,7 @@ const WithdrawPopup = ({asset, image}) => {
           
           <div className="w-full flex justify-between items-center mt-3">
              <div className='w-auto flex items-end gap-2'>
-                  <img src="/Group.svg" alt="Icon" className='w-8 h-8 object-contain'/>
+                  <img src="/Group.svg" alt="Icon" className='w-8 h-8 object-contain bg-gray-200 hover:bg-gray-400'/>
                   <h1>$6.06</h1>
              </div>
               <Button title="Withdraw LINK" onClickHandler={() => console.log("Hello")} className={"my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"} />

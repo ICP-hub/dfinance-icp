@@ -128,7 +128,7 @@ const MySupply = () => {
                               },
                               "& .MuiSwitch-track": {
                                 backgroundColor: '#fff',
-                                border: '1px solid black',
+                               
                                 boxShadow: '0 0 10px black',
                               },
                               "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":

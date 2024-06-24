@@ -11,7 +11,7 @@ const BorrowPopup = ({ asset, image }) => {
                         <h1>Amount</h1>
                         <h1>Slippage 0.10%</h1>
                     </div>
-                    <div className="w-full flex items-center justify-between bg-[#1A173E] hover:bg-[#13112c] cursor-pointer p-3 rounded-md">
+                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-400 cursor-pointer p-3 rounded-md">
                         <div className="w-4/12">
                             <p className='text-xl'>0.00</p>
                             <p className='mt-2'>$30.00</p>
@@ -29,7 +29,7 @@ const BorrowPopup = ({ asset, image }) => {
                     <div className="w-full flex justify-between my-2">
                         <h1>Transaction overview</h1>
                     </div>
-                    <div className="w-full bg-[#1A173E] hover:bg-[#13112c] cursor-pointer p-3 rounded-md text-sm">
+                    <div className="w-full bg-gray-100 hover:bg-gray-400 cursor-pointer p-3 rounded-md text-sm">
                         <div className="w-full flex justify-between items-center my-1">
                             <p>Health factor</p>
                             <p className='flex flex-col items-end'>
@@ -62,7 +62,7 @@ const BorrowPopup = ({ asset, image }) => {
                 </div>
 
                 <div className="w-full">
-                    <input type="text" placeholder='Enter an amount' className={"w-full my-2 focus:outline-none bg-gradient-to-r text-white from-[#00000073] to-[#0000007d] rounded-md p-3 px-8 shadow-lg font-semibold text-sm placeholder:text-white"} />
+                    <input type="text" placeholder='Enter an amount' className={"w-full my-2  hover:bg-gray-400 focus:outline-none bg-gradient-to-r text-white from-[#00000073] to-[#0000007d] rounded-md p-3 px-8 shadow-lg font-semibold text-sm placeholder:text-white"} />
                 </div>
             </div>
         </>

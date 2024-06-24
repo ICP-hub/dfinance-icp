@@ -246,12 +246,13 @@ export default function Navbar({ isHomeNav }) {
                       <div className="w-[350px] absolute -left-6 mt-4 rounded-md bg-white shadow-xl border p-4 z-50">
                         <h1 className="font-semibold text-2xl text-[#2A1F9D]">Switch Tokens</h1>
 
-                        <div className="w-full my-2 bg-gradient-to-r from-[#e7bfec] to-[#efbba8] text-center py-2 rounded-md">
-                          <p className="text-sm text-yellow">
+                        <div className="w-full my-2 bg-gradient-to-r from-[#e9ebfa] to-[#e5ddd4] text-center py-2 rounded-md">
+                          <p className="text-xs text-[#EB8863] text-left px-4">
                             Please switch to Ethereum
-                            <span className="text-yellow underline cursor-pointer ml-2">Switch Network</span>
+                            <span className=" text-[#EB8863] underline cursor-pointer ml-2">Switch Network</span>
                           </p>
                         </div>
+
 
                         <div className="flex justify-between items-center my-2 mt-4">
                           <div className='flex justify-center items-center  gap-x-2'>
@@ -278,7 +279,7 @@ export default function Navbar({ isHomeNav }) {
                               onFocus={handleInputFocus}
                               onBlur={handleInputBlur}
 
-                              className="w-full pl-12 pr-16 py-4 bg-gray-200 border border-gray-300 focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md"
+                              className="w-full pl-12 pr-16 py-4 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md"
                               placeholder="0.00"
                             />
                             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
@@ -293,7 +294,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div className="flex justify-center my-2">
-                            <img src="/switch.png" alt="Switch Icon" className="w-6 h-6 cursor-pointer" onClick={handleSwitchClick} />
+                            <img src="/arrow.png" alt="Switch Icon" className="w-6 h-6 cursor-pointer" onClick={handleSwitchClick} />
                           </div>
 
                           <div className="relative w-full">
@@ -301,7 +302,7 @@ export default function Navbar({ isHomeNav }) {
                               type="text"
                               value={selectedToken === 'ETH' ? oneInchValue : ethValue}
                               onChange={selectedToken === 'ETH' ? handleOneInchChange : handleEthChange}
-                              className="w-full pl-12 pr-16 py-4 bg-gray-200 border border-gray-300 focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md"
+                              className="w-full pl-12 pr-16 py-4 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md"
                               placeholder="0.00"
                             />
                             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
@@ -314,7 +315,7 @@ export default function Navbar({ isHomeNav }) {
                             <div className="absolute left-0 bottom-0 text-gray-500 text-xs ml-12 mb-1">$0</div>
                           </div>
                           {isInputFocused && (
-                            <div className="border-b border-gray-300 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between">
+                            <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between">
                               <p>1 ETH = 32.569 1INCH</p>
                               <p>
                                 <img src="./Vector.png" alt="" className="inline w-4 h-4 mr-1 text-[#2A1F9D] ml-14" />$18.75
@@ -330,28 +331,33 @@ export default function Navbar({ isHomeNav }) {
                                 <p >Min 1INCH Received: {selectedToken === 'ETH' ? (ethValue * 32.569).toFixed(2) : oneInchValue} 1INCH</p>
                                 <p>Min USD Received: {selectedToken === 'ETH' ? (ethValue * 32.569 * 100).toFixed(2) : (oneInchValue * 100).toFixed(2)} USD</p>
                               </div>
-                              {balance < ethValue && (
-      <div className="w-full my-2 p-2 justify rounded-md bg-pink-600">
-        Not enough balance
-      </div>
-    )}
+
                             </div>
                           )}
 
                         </div>
 
-                        <div className={`w-full my-2 text-[#EB8863] p-2 justify rounded-md ${isInputFocused ? 'block' : 'hidden'}`}>
-                          <span className="inline-flex items-center">
-                            <img src="./Group 216.png" alt="" className="w-4 h-4 mr-1" style={{ filter: 'invert(1)' }} />
-                            You don't have enough ETH in your account to pay for transaction fees on the Ethereum network. Please deposit ETH from another account.
-                          </span>
-                        </div>
+                        <div className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? 'block' : 'hidden'}`} style={{ maxWidth: '380px' }}>
+  <div className="flex items-center">
+    <img src="./Group 216.png" alt="" className="w-4 h-4 mr-2" style={{ filter: 'invert(1)' }} />
+    <span className="text-left">
+      You don't have enough ETH in your account to pay for transaction fees on the Ethereum network. Please deposit ETH from another account.
+    </span>
+  </div>
+</div>
 
+
+
+                        {balance < ethValue && (
+                          <div className="w-full  p-2 rounded-md ps-3 bg-[#f1a6a6] text-[#E92626]">
+                            Not enough balance
+                          </div>
+                        )}
                         {/* Button */}
                         <div className="w-full flex justify-center mt-3">
                           <button
                             onClick={handleTransaction}
-                            className="my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                            className=" w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
                           >
                             Switch
                           </button>
@@ -442,7 +448,7 @@ export default function Navbar({ isHomeNav }) {
                     {dropdownVisible && (
 
                       <div className="absolute w-[280px] top-12 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50">
-                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4">Global Settings</h2>
+                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4"> Settings</h2>
                         {/* Dropdown content for dark mode and testnet mode */}
                         <div className="flex items-center mb-4">
                           <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D]">Dark Mode</label>
@@ -456,7 +462,7 @@ export default function Navbar({ isHomeNav }) {
                               },
                               "& .MuiSwitch-track": {
                                 backgroundColor: '#fff',
-                                border: '1px solid black',
+                               
                                 boxShadow: '0 0 10px black',
                               },
                               "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
@@ -477,7 +483,7 @@ export default function Navbar({ isHomeNav }) {
                               },
                               "& .MuiSwitch-track": {
                                 backgroundColor: '#fff',
-                                border: '1px solid black',
+                               
                                 boxShadow: '0 0 10px black',
                               },
                               "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {

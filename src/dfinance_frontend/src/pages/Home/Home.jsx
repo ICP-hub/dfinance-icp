@@ -13,7 +13,7 @@ import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA 
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [currentTab, setCurrentTab] = useState(0);
+ 
   const [currentFAQ, setCurrentFAQ] = useState(0);
   const [isPaused, setIsPaused] = useState(false); 
   const [isVisible, setIsVisible] = useState(false);
@@ -48,6 +48,19 @@ const Home = () => {
       behavior: 'smooth'
     });
   };
+  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id); // Start with the first item
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Calculate the index of the next item
+      const nextIndex = (currentIndex + 1) % MAIN_NAV_LINK.length;
+      setCurrentIndex(nextIndex);
+      setCurrentTab(MAIN_NAV_LINK[nextIndex].id);
+    }, 3000); // 3000 milliseconds = 3 seconds
+
+    return () => clearInterval(interval); // Cleanup function to clear interval on component unmount
+  }, [currentIndex]); // Run effect whenever currentIndex changes
 
 
   useEffect(() => {
@@ -127,7 +140,7 @@ const Home = () => {
             ))}
           </div>
           <div className="w-full mt-10">
-            <h1 className="font-semibold bg-gradient-to-tr from-[#4659CF] via-[#c35cba] bg-clip-text text-transparent text-[36px] mb-2">
+            <h1 className="font-semibold bg-gradient-to-tr from-[#4659CF] via-[#C562BD] to-transparent h-12 w-48 bg-clip-text text-transparent text-[36px] mb-2">
               Markets
             </h1>
             <TabPanel />
@@ -136,20 +149,21 @@ const Home = () => {
 
         {/* Info section */}
         <section className="mt-[44px] md:mt-24">
-          <div className="w-full flex justify-center">
-            <div className="w-full xl:w-3/4 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-              <div className="w-full xl:w-9/12">
-                <h1 className="font-semibold text-lg">And more to come...</h1>
-                <p className="mt-4 text-sm font-medium">
-                  Submit a proposal to deploy a new market in the Dfinance ecosystem. You can learn from the DFinance governance.
-                </p>
-              </div>
-              <div className="w-full xl:w-3/12 flex justify-end mt-3 lg:mt-0">
-                <Button title="LEARN MORE" />
-              </div>
-            </div>
-          </div>
-        </section>
+  <div className="w-full flex justify-center">
+    <div className="w-full xl:w-5/5 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd ">
+      <div className="w-full xl:w-9/12">
+        <h1 className="font-semibold text-lg">And more to come...</h1>
+        <p className="mt-4 text-sm font-medium">
+          Submit a proposal to deploy a new market in the Dfinance ecosystem. You can learn from the DFinance governance.
+        </p>
+      </div>
+      <div className="w-full xl:w-3/12 flex justify-end mt-3 lg:mt-0">
+        <Button title="LEARN MORE" />
+      </div>
+    </div>
+  </div>
+</section>
+
 
         {/* Governed by the Community */}
         <section className="mt-[44px] md:mt-24 " id="gov">
@@ -158,9 +172,14 @@ const Home = () => {
               Governed by the <span className="font-semibold">Community</span>
             </h1>
             <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6 dark:text-darkText">
-            DFinance is a fully decentralized, community governed protocol with 166,579 token holders.
-            </p>
-            <Button title="LEARN MORE" />
+  DFinance is a fully decentralized, community governed protocol<br className="hidden lg:inline"/> with 166,579 token holders.
+</p>
+
+<div className="flex justify-center">
+  <Button className="button_gradient p-2 whitespace-nowrap rounded-md text-xs flex gap-2 text-white px-8" title="LEARN MORE" />
+</div>
+
+
           </div>   
         </section>
 
@@ -172,8 +191,8 @@ const Home = () => {
           <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-blue-800 dark:text-darkText">Security Contributors</h1>
           <br></br>
           <p className="text-[12px] font-poppins font-[500] text-center lg:text-[18px] text-[#737373] dark:text-darkText">
-            Audited by the world’s leading security firms, security of the <br></br>
-            DFinance Protocol is the highest priority.
+            Audited by the world’s leading security firms, security of the DFinance<br></br>
+             Protocol is the highest priority.
           </p>
           <div className="flex flex-wrap gap-4 mx-auto items-center pt-[34px] pb-[24px]">
             {SECURITY_CONTRIBUTORS_DATA.map((item)=>(

@@ -338,13 +338,13 @@ export default function Navbar({ isHomeNav }) {
                         </div>
 
                         <div className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? 'block' : 'hidden'}`} style={{ maxWidth: '380px' }}>
-  <div className="flex items-center">
-    <img src="./Group 216.png" alt="" className="w-4 h-4 mr-2" style={{ filter: 'invert(1)' }} />
-    <span className="text-left">
-      You don't have enough ETH in your account to pay for transaction fees on the Ethereum network. Please deposit ETH from another account.
-    </span>
-  </div>
-</div>
+                          <div className="flex items-center">
+                            <img src="./Group 216.png" alt="" className="w-4 h-4 mr-2" style={{ filter: 'invert(1)' }} />
+                            <span className="text-left">
+                              You don't have enough ETH in your account to pay for transaction fees on the Ethereum network. Please deposit ETH from another account.
+                            </span>
+                          </div>
+                        </div>
 
 
 
@@ -462,7 +462,7 @@ export default function Navbar({ isHomeNav }) {
                               },
                               "& .MuiSwitch-track": {
                                 backgroundColor: '#fff',
-                               
+
                                 boxShadow: '0 0 10px black',
                               },
                               "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
@@ -483,7 +483,7 @@ export default function Navbar({ isHomeNav }) {
                               },
                               "& .MuiSwitch-track": {
                                 backgroundColor: '#fff',
-                               
+
                                 boxShadow: '0 0 10px black',
                               },
                               "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {

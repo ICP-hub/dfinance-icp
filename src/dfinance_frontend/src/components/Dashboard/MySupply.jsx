@@ -19,6 +19,7 @@ import SupplyPopup from "./SupplyPopup"
 import BorrowPopup from "./BorrowPopup"
 import PaymentDone from "./PaymentDone"
 import { useNavigate } from "react-router-dom"
+import Borrow from "./BorrowwPopup"
 const MySupply = () => {
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState({
@@ -46,6 +47,15 @@ const MySupply = () => {
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
             children={<BorrowPopup asset={isModalOpen.asset} image={isModalOpen.image} />}
+          />
+
+        )
+      case "borroww":
+        return (
+          <MySupplyModal
+            isModalOpen={isModalOpen.isOpen}
+            handleModalOpen={handleModalOpen}
+            children={<Borrow asset={isModalOpen.asset} image={isModalOpen.image} />}
           />
 
         )
@@ -128,7 +138,7 @@ const MySupply = () => {
                               },
                               "& .MuiSwitch-track": {
                                 backgroundColor: '#fff',
-                               
+
                                 boxShadow: '0 0 10px black',
                               },
                               "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
@@ -318,50 +328,50 @@ const MySupply = () => {
             noAssetsToBorrowMessage
           ) : (
             <div className="w-full overflow-auto">
-            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
-              <thead>
-                <tr className="text-left text-[#233D63] text-xs">
-                  {MY_ASSET_TO_BORROW_TABLE_COL.map((item, index) => (
-                    <td key={index} className="p-3 whitespace-nowrap">
-                      {index === 2 ? item.header2 : item.header}
-                    </td>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {MY_ASSET_TO_BORROW_TABLE_ROW.slice(0, 8).map((item, index) => (
-                  <tr
-                    key={index}
-                    className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
-                  >
-                    <td className="p-3 align-top">
-                      <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
-                        <img
-                          src={item.image}
-                          alt={item.asset}
-                          className="w-8 h-8 rounded-full"
-                        />
-                        {item.asset}
-                      </div>
-                    </td>
-                    <td className="p-3 align-top">
-                      <div className="flex flex-col">
-                        <p>{item.wallet_balance_count}</p>
-                        <p className="font-light">${item.wallet_balance}M</p>
-                      </div>
-                    </td>
-                    <td className="p-3 align-top">
-                      <div className="flex flex-col">
-                        <p>{item.apy}</p>
-                        <p className="font-light break-words">
-                          {item.apy_desc.slice(0, 18)}<br />
-                          {item.apy_desc.slice(18, 32)}<br />
-                          {item.apy_desc.slice(32)}
-                        </p>
-                      </div>
+              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+                <thead>
+                  <tr className="text-left text-[#233D63] text-xs">
+                    {MY_ASSET_TO_BORROW_TABLE_COL.map((item, index) => (
+                      <td key={index} className="p-3 whitespace-nowrap">
+                        {index === 2 ? item.header2 : item.header}
+                      </td>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {MY_ASSET_TO_BORROW_TABLE_ROW.slice(0, 8).map((item, index) => (
+                    <tr
+                      key={index}
+                      className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                    >
+                      <td className="p-3 align-top">
+                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                          <img
+                            src={item.image}
+                            alt={item.asset}
+                            className="w-8 h-8 rounded-full"
+                          />
+                          {item.asset}
+                        </div>
+                      </td>
+                      <td className="p-3 align-top">
+                        <div className="flex flex-col">
+                          <p>{item.wallet_balance_count}</p>
+                          <p className="font-light">${item.wallet_balance}M</p>
+                        </div>
+                      </td>
+                      <td className="p-3 align-top">
+                        <div className="flex flex-col">
+                          <p>{item.apy}</p>
+                          <p className="font-light break-words">
+                            {item.apy_desc.slice(0, 18)}<br />
+                            {item.apy_desc.slice(18, 32)}<br />
+                            {item.apy_desc.slice(32)}
+                          </p>
+                        </div>
 
-                    </td>
-                    <td className="p-3 align-top">
+                      </td>
+                      <td className="p-3 align-top">
                         <div className="w-full flex gap-3">
                           <Button
                             title={"Borrow"}
@@ -381,14 +391,14 @@ const MySupply = () => {
                       </td>
                     </tr>
                   ))}
-                   {/* Gradient border line */}
-                   <tr className="relative">
+                  {/* Gradient border line */}
+                  <tr className="relative">
                     <td colSpan="4" className="p-0">
                       <div className="absolute left-0 w-full h-0.5 bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] opacity-50" />
                     </td>
                   </tr>
-                  </tbody>
-                  <thead>
+                </tbody>
+                <thead>
                   <tr className="text-left text-[#233D63] text-xs">
                     {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
                       <td key={index} className="p-3 whitespace-nowrap">
@@ -396,7 +406,7 @@ const MySupply = () => {
                       </td>
                     ))}
                   </tr>
-                  </thead>
+                </thead>
                 <tbody>
                   {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
                     <tr
@@ -424,7 +434,7 @@ const MySupply = () => {
                         <div className="w-full flex gap-3">
                           <Button
                             title={"Borrow"}
-                            onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
+                            onClickHandler={() => handleModalOpen("borroww", item.asset, item.image)}
                             className={
                               "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md p-2 px-3 shadow-lg font-semibold text-sm"
                             }

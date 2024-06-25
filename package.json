@@ -10,7 +10,11 @@
     "pretest": "npm run prebuild --workspaces --if-present",
     "start": "npm start --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
-    "generate": "scripts/generate_did.sh && dfx generate dfinance_backend"
+    "generate": "scripts/generate_did.sh && dfx generate dfinance_backend",
+    "deployckETH": "./deployments/deployckETH.sh",
+    "deployckBTC": "./deployments/deployckBTC.sh",
+    "deployDtoken": "deployments/deployLpToken.sh",
+    "allow": "chmod +x ./deployments/deployckETH.sh && chmod +x ./deployments/deployLpToken.sh && chmod +x ./deployments/deployckBTC.sh"
   },
   "type": "module",
   "workspaces": [

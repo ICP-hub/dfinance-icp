@@ -1,36 +1,62 @@
-mod state_handler;
 pub mod api;
-mod memory;
+mod constants;
+
+pub mod math;
+
+mod state_handler;
 mod types;
-mod upgrade;
-mod user;
-use state_handler::State;
+
 use candid::Principal;
-use ic_cdk::{caller, export_candid, post_upgrade, pre_upgrade};
-use ic_cdk_macros::{query, update};
-use ic_stable_structures::StableBTreeMap;
-use memory::Memory;
+use ic_cdk::api::time;
+use ic_cdk::{caller, export_candid, init, post_upgrade, pre_upgrade};
+use state_handler::*;
+// use ic_cdk_macros::{query, update};
+use crate::types::*;
+
 use serde::{Deserialize, Serialize};
-use std::{cell::RefCell};
+use std::cell::RefCell;
 
+use ic_stable_structures::{
+    memory_manager::{MemoryManager, VirtualMemory},
+    DefaultMemoryImpl,
+};
+use math::*;
 
+pub type VMem = VirtualMemory<DefaultMemoryImpl>;
 thread_local! {
-    static STATE: RefCell<State> = RefCell::new(State::new());
+
+
+    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
+    RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
+
+
+    static STATE: RefCell<State> = RefCell::new(
+        MEMORY_MANAGER.with(|mm| State {
+
+            users:Users::init(mm.borrow().get(USER_MEMORY_ID)),
+            total_deposits:TotalDeposit::init(mm.borrow().get(TOTAL_DEPOSIT_MEMORY_ID)),
+            current_phase:CurrentPhase::init(mm.borrow().get(CURRENT_PHASE_MEMORY_ID), 1).expect("Failed to initialize current phase"),
+            launch_timestamp:LaunchTimestamp::init(mm.borrow().get(LAUNCH_TIMESTAMP_MEMORY_ID), Some(ic_cdk::api::time())).expect("Failed to initialize launch timestamp"),
+            monthly_data:MonthlyDataMap::init(mm.borrow().get(MONTHLY_DATA_MEMORY_ID)),
+
+
+        })
+    );
 }
 
 pub fn with_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
     STATE.with(|cell| f(&mut cell.borrow_mut()))
 }
 
-// PreUpgrade and PostUpgrade for stable memory
-#[pre_upgrade]
-fn pre_upgrade() {
-    upgrade::pre_upgrade();
-}
-
-#[post_upgrade]
-fn post_upgrade() {
-    upgrade::post_upgrade();
+#[init]
+fn init() {
+    // with_state(|state| {
+    //     if state.launch_timestamp.is_none() {
+    //         state.launch_timestamp = Some(time());
+    //     }
+    // });
+    ic_cdk::println!("init function runs ! ! !");
+    start_monthly_task();
 }
 
 export_candid!();

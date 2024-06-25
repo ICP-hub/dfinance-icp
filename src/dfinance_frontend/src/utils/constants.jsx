@@ -752,3 +752,9 @@ export const currentLTVCutOutPositions = {
 export const healthFactorMinValue = 1.00;
 export const currentLTVThreshold = "76.5%";
 export const liquidationThresholdLabel = "Liquidation Threshold";
+   
+
+// constants.js
+
+export const INITIAL_ETH_VALUE = "0.00";
+export const INITIAL_1INCH_VALUE = "0.00";

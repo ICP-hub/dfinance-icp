@@ -2,6 +2,7 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: "class",
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
@@ -19,14 +20,16 @@ export default {
         //dark mode
         darkBackground: '#070a18',
         darkText: '#FFFFFF',
-        darkTextSecondary:"#8CC0D7",
+        darkTextSecondary:"#cdced1",
+        darkTextSecondary1:"#8CC0D7",
         darkEllipse:'#2A1F9D',
         darkFAQBackground:'#29283B',
         darkFAQBackground2:'#191825',
         currentFAQBackground: '#59588D',
+        darkOverlayBackground:'#252347',
         // custom gradient colors
-        darkGradientStart: '#27234F',
-        darkGradientEnd: '#0D123C',
+        darkGradientStart: 'rgba(13, 18, 60, 0.5)',
+        darkGradientEnd: 'rgba(39, 35, 79, 0.5)',
         textGradientStart: '#4659CF',
         textGradientEnd: '#C562BD',
 

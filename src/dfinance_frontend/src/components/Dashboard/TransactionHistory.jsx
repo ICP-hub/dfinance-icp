@@ -9,19 +9,19 @@ const TransactionHistory = () => {
   return (
     <div className="w-full lg:w-12/12 mt-12">
       {shouldRenderTransactionHistory && (
-        <div className="w-full min-h-[500px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl relative"> {/* Added relative positioning */}
-           <h1 className="text-[#2A1F9D] font-bold text-xl md:text-2xl my-2 ml-2">Transaction History</h1> 
+        <div className="w-full min-h-[500px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl relative dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd"> {/* Added relative positioning */}
+           <h1 className="text-[#2A1F9D] font-bold text-xl md:text-2xl my-2 ml-2 dark:text-darkText">Transaction History</h1> 
           {transactionHistory.length === 0 ? (
             <div className="text-center mt-40">
-              <p className="text-[#2A1F9D] text-sm font-semibold">
+              <p className="text-[#2A1F9D] text-sm font-semibold dark:text-darkText">
               Transaction History is not currently available for this market.
               </p>
             </div>
           ) : (
             <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                 <thead>
-                  <tr className="text-left text-[#233D63]">
+                  <tr className="text-left text-[#233D63] dark:text-darkTextSecondary1">
                     <th className="p-3 whitespace-nowrap">Date</th>
                     <th className="p-3 whitespace-nowrap">Type</th>
                     <th className="p-3 whitespace-nowrap">Amount</th>

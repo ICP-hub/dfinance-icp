@@ -13,7 +13,7 @@ import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA 
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [currentTab, setCurrentTab] = useState(0);
+ 
   const [currentFAQ, setCurrentFAQ] = useState(0);
   const [isPaused, setIsPaused] = useState(false); 
   const [isVisible, setIsVisible] = useState(false);
@@ -48,6 +48,19 @@ const Home = () => {
       behavior: 'smooth'
     });
   };
+  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id); // Start with the first item
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Calculate the index of the next item
+      const nextIndex = (currentIndex + 1) % MAIN_NAV_LINK.length;
+      setCurrentIndex(nextIndex);
+      setCurrentTab(MAIN_NAV_LINK[nextIndex].id);
+    }, 3000); // 3000 milliseconds = 3 seconds
+
+    return () => clearInterval(interval); // Cleanup function to clear interval on component unmount
+  }, [currentIndex]); // Run effect whenever currentIndex changes
 
 
   useEffect(() => {
@@ -61,12 +74,12 @@ const Home = () => {
   return (
     <>
       {/* Main Home Page */}
-      <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden shadow-sm font-poppins">
+      <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden font-poppins">
         {/* Background Overlay Ellipse */}
         <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"top-right"}
-            className="w-48 h-48 md:w-[400px] md:h-[400px]"
+            className="w-70 h-70 md:w-[950px] md:h-[590px]"
           />
         </div>
 
@@ -127,7 +140,7 @@ const Home = () => {
             ))}
           </div>
           <div className="w-full mt-10">
-            <h1 className="font-semibold bg-gradient-to-tr from-[#4659CF] via-[#c35cba] bg-clip-text text-transparent text-[36px] mb-2">
+            <h1 className="font-semibold bg-gradient-to-tr from-[#4659CF] via-[#C562BD] to-transparent h-12 w-48 bg-clip-text text-transparent text-[36px] mb-2">
               Markets
             </h1>
             <TabPanel />
@@ -136,20 +149,21 @@ const Home = () => {
 
         {/* Info section */}
         <section className="mt-[44px] md:mt-24">
-          <div className="w-full flex justify-center">
-            <div className="w-full xl:w-3/4 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
-              <div className="w-full xl:w-9/12">
-                <h1 className="font-semibold text-lg">And more to come...</h1>
-                <p className="mt-4 text-sm font-medium">
-                  Submit a proposal to deploy a new market in the Dfinance ecosystem. You can learn from the DFinance governance.
-                </p>
-              </div>
-              <div className="w-full xl:w-3/12 flex justify-end mt-3 lg:mt-0">
-                <Button title="LEARN MORE" />
-              </div>
-            </div>
-          </div>
-        </section>
+  <div className="w-full flex justify-center">
+    <div className="w-full xl:w-5/5 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd ">
+      <div className="w-full xl:w-9/12">
+        <h1 className="font-semibold text-lg">And more to come...</h1>
+        <p className="mt-4 text-sm font-medium">
+          Submit a proposal to deploy a new market in the Dfinance ecosystem. You can learn from the DFinance governance.
+        </p>
+      </div>
+      <div className="w-full xl:w-3/12 flex justify-end mt-3 lg:mt-0">
+        <Button title="LEARN MORE" />
+      </div>
+    </div>
+  </div>
+</section>
+
 
         {/* Governed by the Community */}
         <section className="mt-[44px] md:mt-24 " id="gov">
@@ -158,9 +172,14 @@ const Home = () => {
               Governed by the <span className="font-semibold">Community</span>
             </h1>
             <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6 dark:text-darkText">
-            DFinance is a fully decentralized, community governed protocol with 166,579 token holders.
-            </p>
-            <Button title="LEARN MORE" />
+  DFinance is a fully decentralized, community governed protocol<br className="hidden lg:inline"/> with 166,579 token holders.
+</p>
+
+<div className="flex justify-center">
+  <Button className="button_gradient p-2 whitespace-nowrap rounded-md text-xs flex gap-2 text-white px-8" title="LEARN MORE" />
+</div>
+
+
           </div>   
         </section>
 
@@ -172,8 +191,8 @@ const Home = () => {
           <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-blue-800 dark:text-darkText">Security Contributors</h1>
           <br></br>
           <p className="text-[12px] font-poppins font-[500] text-center lg:text-[18px] text-[#737373] dark:text-darkText">
-            Audited by the world’s leading security firms, security of the <br></br>
-            DFinance Protocol is the highest priority.
+            Audited by the world’s leading security firms, security of the DFinance<br></br>
+             Protocol is the highest priority.
           </p>
           <div className="flex flex-wrap gap-4 mx-auto items-center pt-[34px] pb-[24px]">
             {SECURITY_CONTRIBUTORS_DATA.map((item)=>(
@@ -187,7 +206,7 @@ const Home = () => {
 
        {/* FAQ */}
        <section className="mt-24 " id="faq">
-          <div className="w-full p-5 md:p-10 mb-20 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
+          <div className="w-full p-5 md:p-10 mb-20 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
             <div className="w-full">
               <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
                 Frequently Asked Questions
@@ -196,9 +215,9 @@ const Home = () => {
             </div>
             <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)} className="w-full md:grid grid-cols-2">
               <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px] ">
-                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer">
+                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer dark:bg-darkFAQBackground">
                   {FAQ_QUESTION.map((item, index) => (
-                    <div key={index} className="w-full">
+                    <div key={index} className="w-full dark:text-darkText">
                       <div
                         className={`w-full flex p-4 items-center ${currentFAQ === index ? "bg-[#eef0f5] dark:bg-currentFAQBackground" : ""
                           } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
@@ -206,13 +225,13 @@ const Home = () => {
                       >
                         <div className="w-1/12">
                           <div
-                            className={`w-4 h-4 rounded-full ${currentFAQ === index ? "bg-[#517687]" : "bg-[#DBE8EE]"
+                            className={`w-4 h-4 rounded-full ${currentFAQ === index ? "bg-[#517687] dark:bg-darkText" : "bg-[#DBE8EE] dark:bg-[#192C35]"
                               }`}
                           ></div>
                         </div>
                         <div className="w-10/12">{item.question}</div>
                         <div
-                          className={`w-1/12 ${currentFAQ === index ? "text-[#517687] rotate-90 md:rotate-0" : "text-[#DBE8EE]"
+                          className={`w-1/12 ${currentFAQ === index ? "text-[#517687] dark:text-darkText rotate-90 md:rotate-0" : "text-[#DBE8EE] dark:text-[#192C35]"
                             } flex justify-end`}
                         >
                           <ChevronRight />
@@ -246,6 +265,7 @@ const Home = () => {
             className="w-72 h-96 lg:w-auto lg:h-[600px]"
           />
         </div>
+        
       </div>
       {/* Footer */}
       <button

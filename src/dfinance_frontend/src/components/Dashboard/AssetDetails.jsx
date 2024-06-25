@@ -42,7 +42,7 @@ const AssetDetails = () => {
   }
   return (
     <div className="w-full flex flex-col lg:flex-row mt-16 my-6 gap-6 mb-[5rem]">
-      <div className="w-full lg:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-[linear-gradient(to_bottom_right,#27234F,#0D123C)]">
+      <div className="w-full lg:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
         <h1 className="text-[#2A1F9D] font-bold my-2 dark:text-darkText">
           Reserve status & configuration
         </h1>

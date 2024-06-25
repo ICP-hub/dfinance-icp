@@ -1,7 +1,7 @@
 import { Info } from 'lucide-react';
 import React, { useState } from 'react';
 
-const BorrowPopup = ({ asset, image }) => {
+const Borrow = ({ asset, image }) => {
     const [amount, setAmount] = useState("0.00");
 
     const handleAmountChange = (e) => {
@@ -60,17 +60,7 @@ const BorrowPopup = ({ asset, image }) => {
                                 <p className="text-gray-500">liquidation at &lt;1.5</p>
                             </div>
                         </div>
-                        <div className="w-full flex justify-between items-center my-1">
-                            <p>Rewards APR</p>
-                            <div className="flex items-center">
-                                <p className="mr-2">2.54%</p>
-                                <img src={image} alt="Item Image" className='w-7 h-7' />
-                            </div>
-                        </div>
-                        <div className="w-full flex justify-between items-center my-1">
-                            <p>APY, borrow rate</p>
-                            <p>2.02%</p>
-                        </div>
+                       
                     </div>
                 </div>
             </div>
@@ -85,7 +75,7 @@ const BorrowPopup = ({ asset, image }) => {
                     <div className="w-full flex my-3 bg-[#D7F1FC] p-1 rounded">
                         <div className="w-1/12 flex items-center justify-center">
                             <div className="warning-icon-container">
-                                <img src="/warning.png" alt="Warning Icon" className="w-4 h-4" />
+                            <Info size={12} className="ml-2" />
                             </div>
                         </div>
                         <div className="w-11/12 text-xs flex items-center">
@@ -107,4 +97,4 @@ const BorrowPopup = ({ asset, image }) => {
     );
 }
 
-export default BorrowPopup;
+export default Borrow;

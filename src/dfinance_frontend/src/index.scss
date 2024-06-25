@@ -43,7 +43,7 @@ body{
     position: relative;
     display: inline-block;
     padding: 0.5rem 1rem;
-    color: inherit;
+    color:#2a1f9d;
     text-decoration: none;
     transition: color 0.3s ease;
   }
@@ -85,7 +85,6 @@ body{
     border: none !important;
   }
   
-
 
 .stack_card_single{
     @apply w-fit bg-[#DBE8EE] border-[3px] border-[#233D6324] rounded-[40px] flex justify-center items-center p-4 ease-in-out duration-500

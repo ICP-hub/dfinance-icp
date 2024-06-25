@@ -19,7 +19,7 @@ import SupplyPopup from "./SupplyPopup"
 import BorrowPopup from "./BorrowPopup"
 import PaymentDone from "./PaymentDone"
 import { useNavigate } from "react-router-dom"
-
+import Borrow from "./BorrowwPopup"
 const MySupply = () => {
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState({
@@ -28,7 +28,6 @@ const MySupply = () => {
     asset: "",
     image: ""
   })
-
   const handleModalOpen = (type, asset, image) => {
     console.log("Handle modal opened")
     setIsModalOpen({
@@ -39,6 +38,7 @@ const MySupply = () => {
     })
   }
 
+
   const renderModalOpen = (type) => {
     switch (type) {
       case "borrow":
@@ -47,6 +47,15 @@ const MySupply = () => {
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
             children={<BorrowPopup asset={isModalOpen.asset} image={isModalOpen.image} />}
+          />
+
+        )
+      case "borroww":
+        return (
+          <MySupplyModal
+            isModalOpen={isModalOpen.isOpen}
+            handleModalOpen={handleModalOpen}
+            children={<Borrow asset={isModalOpen.asset} image={isModalOpen.image} />}
           />
 
         )
@@ -78,10 +87,6 @@ const MySupply = () => {
         return null
     }
   }
-  const noBorrowMessage = <p className="text-[#2a5f98] font-semibold ml-2">Nothing is borrowed.</p>;
-  const noSupplyMessage = <p className="text-[#2a5f98] font-semibold ml-2">Nothing is supplied.</p>;
-  const noAssetsToSupplyMessage = <p className="text-[#2a5f98] font-semibold ml-2">No assets to supply.</p>;
-  const noAssetsToBorrowMessage = <p className="text-[#2a5f98] font-semibold ml-2">No assets to borrow.</p>;
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6">
       <div className="w-full lg:w-6/12 mt-20">
@@ -108,7 +113,7 @@ const MySupply = () => {
                       className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
                     >
                       <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-1 whitespace-nowrap">
+                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
                           <img
                             src={item.image}
                             alt={item.asset}
@@ -133,7 +138,7 @@ const MySupply = () => {
                               },
                               "& .MuiSwitch-track": {
                                 backgroundColor: '#fff',
-                                border: '1px solid black',
+
                                 boxShadow: '0 0 10px black',
                               },
                               "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
@@ -148,14 +153,14 @@ const MySupply = () => {
                         <div className="w-full flex gap-2 pt-2">
                           <Button
                             title={"Supply"}
-                            onClickHandler={() => handleModalOpen("supply",item.asset, item.image)}
+                            onClickHandler={() => handleModalOpen("supply", item.asset, item.image)}
                             className={
                               "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
                             }
                           />
                           <Button
                             title={"Withdraw"}
-                            onClickHandler={() => handleModalOpen("withdraw",item.asset, item.image)}
+                            onClickHandler={() => handleModalOpen("withdraw", item.asset, item.image)}
                             className={
                               "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
                             }
@@ -170,7 +175,7 @@ const MySupply = () => {
             </div>
           )}
         </div>
-        <div className="w-full mt-10 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
+        <div className="w-full mt-8 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
           <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2">
             Assets to supply
           </h1>
@@ -195,7 +200,7 @@ const MySupply = () => {
                       className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
                     >
                       <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-1 whitespace-nowrap">
+                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
                           <img
                             src={item.image}
                             alt={item.asset}
@@ -211,7 +216,6 @@ const MySupply = () => {
                         </div>
                       </td>
                       <td className="p-3 align-top">{item.apy}</td>
-
                       <td className="p-3 align-top">
                         <div className="w-full flex items-center justify-center">
                           <Check color="#32851E" size={14} />
@@ -219,9 +223,9 @@ const MySupply = () => {
                       </td>
                       <td className="p-3 align-top">
                         <div className="w-full flex gap-2 ">
-                        <Button
+                          <Button
                             title={"Supply"}
-                            onClickHandler={() => handleModalOpen("supply",item.asset, item.image)}
+                            onClickHandler={() => handleModalOpen("supply", item.asset, item.image)}
                             className={
                               "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
                             }
@@ -251,6 +255,7 @@ const MySupply = () => {
           {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
             noBorrowMessage
           ) : (
+
             <div className="w-full overflow-auto">
               <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
                 <thead>
@@ -269,7 +274,7 @@ const MySupply = () => {
                       className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
                     >
                       <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-1 whitespace-nowrap">
+                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
                           <img
                             src={item.image}
                             alt={item.asset}
@@ -300,7 +305,7 @@ const MySupply = () => {
 
                           <Button
                             title={"Repay"}
-                            onClickHandler={() => handleModalOpen("withdraw" ,item.asset, item.image)}
+                            onClickHandler={() => handleModalOpen("withdraw", item.asset, item.image)}
                             className={
                               "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
                             }
@@ -315,7 +320,7 @@ const MySupply = () => {
             </div>
           )}
         </div>
-        <div className="w-full mt-10 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
+        <div className="w-full mt-8 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
           <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2">
             Assets to borrow
           </h1>
@@ -340,7 +345,7 @@ const MySupply = () => {
                       className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
                     >
                       <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-1 whitespace-nowrap">
+                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
                           <img
                             src={item.image}
                             alt={item.asset}
@@ -372,21 +377,20 @@ const MySupply = () => {
                             title={"Borrow"}
                             onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
                             className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-sm"
+                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md p-2 px-3 shadow-lg font-semibold text-sm"
                             }
                           />
                           <Button
                             title={"Details"}
                             onClickHandler={() => handleModalOpen("payment")}
                             className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-sm "
+                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md p-2 px-3 shadow-lg font-semibold text-sm "
                             }
                           />
                         </div>
                       </td>
                     </tr>
                   ))}
-
                   {/* Gradient border line */}
                   <tr className="relative">
                     <td colSpan="4" className="p-0">
@@ -394,7 +398,6 @@ const MySupply = () => {
                     </td>
                   </tr>
                 </tbody>
-
                 <thead>
                   <tr className="text-left text-[#233D63] text-xs">
                     {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
@@ -411,7 +414,7 @@ const MySupply = () => {
                       className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
                     >
                       <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-1 whitespace-nowrap">
+                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
                           <img
                             src={item.image}
                             alt={item.asset}
@@ -431,16 +434,16 @@ const MySupply = () => {
                         <div className="w-full flex gap-3">
                           <Button
                             title={"Borrow"}
-                            onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
+                            onClickHandler={() => handleModalOpen("borroww", item.asset, item.image)}
                             className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-sm"
+                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md p-2 px-3 shadow-lg font-semibold text-sm"
                             }
                           />
                           <Button
                             title={"Details"}
                             onClickHandler={() => handleModalOpen("payment")}
                             className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-sm "
+                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md p-2 px-3 shadow-lg font-semibold text-sm "
                             }
                           />
                         </div>
@@ -453,7 +456,7 @@ const MySupply = () => {
           )}
         </div>
       </div>
-      {renderModalOpen(isModalOpen.type, isModalOpen.asset, isModalOpen.image)}
+      {renderModalOpen(isModalOpen.type)}
     </div>
   )
 }

@@ -2,7 +2,7 @@ use std::thread::current;
 
 use crate::{
     api::*,
-    math::{lending_borrowing::*, timing::*},
+    protocol::libraries::math::{lending_borrowing::*, timing::*},
 };
 use candid::Principal;
 use ic_cdk::api::time;

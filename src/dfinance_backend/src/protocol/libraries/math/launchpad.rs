@@ -1,6 +1,6 @@
 use std::thread::current;
 
-use crate::{api::*, math::*};
+use crate::{api::*, protocol::libraries::math::*};
 use candid::Principal;
 use ic_cdk::api::time;
 use ic_cdk::{caller, query, update};

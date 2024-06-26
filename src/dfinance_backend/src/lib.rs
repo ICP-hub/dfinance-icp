@@ -1,7 +1,10 @@
 pub mod api;
 mod constants;
 
-pub mod math;
+// pub mod math;
+pub mod protocol;
+
+use crate::protocol::libraries::math::*;
 
 mod state_handler;
 mod types;
@@ -20,7 +23,7 @@ use ic_stable_structures::{
     memory_manager::{MemoryManager, VirtualMemory},
     DefaultMemoryImpl,
 };
-use math::*;
+// use math::*;
 
 pub type VMem = VirtualMemory<DefaultMemoryImpl>;
 thread_local! {

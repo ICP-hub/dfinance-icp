@@ -1,8 +1,8 @@
-use crate::math;
+// use crate::math;
 use crate::state_handler;
 use crate::state_handler::*;
 use crate::types::*;
-use crate::{api::*, math::*, with_state};
+use crate::{api::*, protocol::libraries::math::*, with_state};
 use ic_cdk::api::time;
 use ic_cdk::{caller, query, update};
 use ic_cdk_macros::*;

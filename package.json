@@ -27,6 +27,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "aos": "^2.3.4",
     "chart.js": "^4.4.2",
+    "js-sha256": "^0.11.0",
     "lucide-react": "^0.367.0",
     "react-chartjs-2": "^5.2.0",
     "react-icons": "^5.2.1",

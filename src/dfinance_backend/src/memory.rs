@@ -1,27 +1,40 @@
+use candid::Principal;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::DefaultMemoryImpl;
+use ic_stable_structures::{ DefaultMemoryImpl, StableBTreeMap};
 use std::cell::RefCell;
+use crate::types::user::UserDataStorage;
 
-const UPGRADES: MemoryId = MemoryId::new(0);
-const FILE_CONTENTS: MemoryId = MemoryId::new(1);
-const STATE_CONTENTS: MemoryId = MemoryId::new(1);
+// A memory for upgrades, where data from the heap can be serialized/deserialized.
+// const UPGRADES: MemoryId = MemoryId::new(0);
 
-pub type Memory = VirtualMemory<DefaultMemoryImpl>;
+// A memory for the StableBTreeMap we're using. A new memory should be created for
+// every additional stable structure.
+// const STABLE_BTREE: MemoryId = MemoryId::new(1);
+
+
+
+
+const USER_DATA_MEMORY_ID: MemoryId = MemoryId::new(0);
+
+pub struct State {
+    pub user_data: UserDataStorage,
+}
 
 thread_local! {
     // The memory manager is used for simulating multiple memories. Given a `MemoryId` it can
     // return a memory that can be used by stable structures.
-    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
-        RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
+    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
+    static STATE: RefCell<State> = RefCell::new(
+        MEMORY_MANAGER.with(|mm| State {
+            user_data: UserDataStorage::init(mm.borrow().get(USER_DATA_MEMORY_ID)),
+    }));
 }
 
-pub fn get_upgrades_memory() -> Memory {
-    MEMORY_MANAGER.with(|m| m.borrow().get(UPGRADES))
+pub fn read_state<R>(f: impl FnOnce(&State) -> R) -> R {
+    STATE.with(|cell| f(&cell.borrow()))
 }
 
-pub fn get_file_contents_memory() -> Memory {
-    MEMORY_MANAGER.with(|m| m.borrow().get(FILE_CONTENTS))
+pub fn mutate_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
+    STATE.with(|cell| f(&mut cell.borrow_mut()))
 }
-pub fn get_state_contents_memory() -> Memory {
-    MEMORY_MANAGER.with(|m| m.borrow().get(STATE_CONTENTS))
-}
+

@@ -408,6 +408,7 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "candid-extractor",
+ "candid_derive",
  "ciborium",
  "ic-cdk",
  "ic-cdk-macros 0.8.4",

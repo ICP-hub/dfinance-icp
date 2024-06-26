@@ -1,2 +1,2 @@
-mod user_info;
-pub use user_info::*;
+pub mod implementation;
+pub mod declaration;

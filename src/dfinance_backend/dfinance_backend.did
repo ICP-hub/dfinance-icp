@@ -1,1 +1,1 @@
-service : { check_username : (text) -> (bool) query }
+service : { get_username : () -> (text) query; set_username : (text) -> () }

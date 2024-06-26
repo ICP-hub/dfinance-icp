@@ -24,9 +24,7 @@ export DEFAULT=$(dfx identity get-principal)
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=100
 
-dfx identity new archive_controller || true
-
-dfx identity use archive_controller 
+dfx identity use default 
 
 export ARCHIVE_CONTROLLER=$(dfx identity get-principal)
 

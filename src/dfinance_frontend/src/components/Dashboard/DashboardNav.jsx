@@ -55,7 +55,7 @@ const DashboardNav = () => {
   };
 
   // Determine if it's dashboard supply or main based on pathname
-  const isDashboardSupplyOrMain = pathname === "/dashboard/my-supply" || pathname === "/dashboard/main";
+  const isDashboardSupplyOrMain = pathname === "/dashboard";
 
   const handleAssetSelect = (index) => {
     setCurrentValueIndex(index);
@@ -63,20 +63,15 @@ const DashboardNav = () => {
   };
 
   // Dynamic title based on pathname
-  const dashboardTitle = pathname.includes("/dashboard/wallet-details") ? "Market" : "Dashboard";
+  const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
 
   // Determine if Risk Details button should be rendered
-  const shouldRenderRiskDetailsButton = !pathname.includes("/dashboard/wallet-details") && !pathname.includes("/dashboard/main");
+  const shouldRenderRiskDetailsButton = !pathname.includes("/market") && !pathname.includes("/governance");
 
   // Filter WALLET_DETAIL_TAB to exclude health with id=2 if pathname is /dashboard/main
-  const filteredWalletDetailTabs = WALLET_DETAIL_TAB.filter(item => {
-    if (pathname === "/dashboard/main" && item.id === 2) {
-      return false; // exclude health with id=2
-    }
-    return true;
-  });
+  
 
-  const shouldRenderTransactionHistoryButton = pathname === '/dashboard/my-supply' || pathname === '/dashboard/transaction-history';
+  const shouldRenderTransactionHistoryButton = pathname === '/dashboard' || pathname === '/dashboard/transaction-history';
 
   return (
     <div className="w-full ">
@@ -109,7 +104,7 @@ const DashboardNav = () => {
 
             <div className="relative" ref={dropdownRef}>
               <span
-                className="block p-1 rounded-full bg-[#8CC0D770] text-[#3739b4] cursor-pointer"
+                className="block p-1 rounded-full bg-[#8CC0D770] text-[#3739b4] cursor-pointer dark:text-darkText"
                 onClick={toggleDropdown}
               >
                 {!isDrop ? (
@@ -149,8 +144,8 @@ const DashboardNav = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6">
-            {(isDashboardSupplyOrMain ? filteredWalletDetailTabs : WALLET_DETAILS_TABS).map((data, index) => (
+          <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
+            {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
               <div key={index} className="relative group ml-10">
                 <button className="relative">
                   {data.title}

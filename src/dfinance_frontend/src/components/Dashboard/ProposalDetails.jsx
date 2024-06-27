@@ -18,28 +18,28 @@ const ProposalDetails = () => {
           Proposal overview
         </h1>
       </div>
-      <div className="w-full flex flex-col md2:flex-row mt-4 gap-6">
-        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-3 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
+      <div className="w-full flex flex-col md2:flex-row mt-4 gap-6 mb-10">
+        <div className="w-full md2:w-8/12 dxl:w-9/12 min-h-[450px] p-3 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
           <div className="w-full">
             <div className="w-full p-3">
-              <h1 className="text-[#2A1F9D] text-xl font-semibold my-2 ml-1">
+              <h1 className="text-[#2A1F9D] text-xl font-semibold my-2 ml-1 dark:text-darkText">
                 Interim aAMPL distribution
               </h1>
-              <span className=" text-[#5b62fe] p-2 block rounded-full px-3 border border-white w-fit text-xs mt-3">
+              <span className=" text-[#5b62fe] p-2 block rounded-full px-3 border border-white w-fit text-xs mt-3 dark:text-darkTextSecondary">
                 Open for votings
               </span>
             </div>
           </div>
           <div className="w-full mt-8">
           <div className="w-full mt-8 max-w-[calc(100%-2rem)] mx-auto">
-    <div className="w-full my-4 text-[#59588D] text-sm">
-        <h1 className="text-[#5B62FE] font-semibold text-lg">
+    <div className="w-full my-4 text-[#59588D] text-sm dark:text-darkTextSecondary">
+        <h1 className="text-[#5B62FE] font-semibold text-lg dark:text-darkText">
             Simple Summary
         </h1>
         <p>Distribute 300.000 USDC to users affected by aAMPL problem.</p>
     </div>
-    <div className="w-full my-4 text-[#59588D] text-sm ">
-        <h1 className="text-[#5B62FE] font-semibold text-lg">Motivation</h1>
+    <div className="w-full my-4 text-[#59588D] text-sm  dark:text-darkTextSecondary">
+        <h1 className="text-[#5B62FE] font-semibold text-lg dark:text-darkText">Motivation</h1>
         <p className="text-justify">
             On December 2023, a problem was detected on the AMPL custom reserve on Aave v2 Ethereum, causing an unexpected inflation of AMPL-related balances and supply, not following the intended design by the Ampleforth team. While further analysis is performed for the most reasonable strategy on giving withdrawal liquidity for aAMPL supplies, an interim distribution of 300’000 USD value is proposed as lower threshold, to allow aAMPL suppliers to proceed partially with their withdrawals. With aip 72 having passed the governance process, aAMPL transfers are no longer permitted, which allows to snapshot the current aAMPL balances to perform a fair distribution between affected users.
         </p>
@@ -70,8 +70,8 @@ const ProposalDetails = () => {
             </li>
         </ul>
     </div>
-    <div className="w-full my-6 text-[#59588D] text-sm ">
-        <h1 className="text-[#5B62FE] font-semibold text-lg">
+    <div className="w-full my-6 text-[#59588D] text-sm  dark:text-darkTextSecondary">
+        <h1 className="text-[#5B62FE] font-semibold text-lg dark:text-darkText">
             Specification
         </h1>
         <p className="text-justify">
@@ -95,8 +95,8 @@ const ProposalDetails = () => {
             2 hours after proposal execution, users will be able to claim the USDC on <a href="https://app.merkl.xyz/" className="text-blue-500 underline">https://app.merkl.xyz/</a>
         </p>
     </div>
-    <div className="w-full my-4 text-[#59588D] text-sm ">
-        <h1 className="text-[#5B62FE] font-semibold text-lg">
+    <div className="w-full my-4 text-[#59588D] text-sm  dark:text-darkTextSecondary">
+        <h1 className="text-[#5B62FE] font-semibold text-lg dark:text-darkText">
             References
         </h1>
         <ul>
@@ -104,7 +104,7 @@ const ProposalDetails = () => {
             <li>Tests: <a href="https://github.com/bgd-labs/aave-proposals-v3/blob/2244338d3cb5b0482ff3499bf8f95c0762cc004c" className="underline">Aave DAO Proposals</a></li>
         </ul>
     </div>
-    <div className="w-full my-4 text-[#59588D] text-sm">
+    <div className="w-full my-4 text-[#59588D] text-sm dark:text-darkText">
         <p className="text-[#78757A]">
             Copyright © 2024 Aave DAO
         </p>

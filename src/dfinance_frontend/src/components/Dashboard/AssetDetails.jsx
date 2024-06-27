@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from "react-redux"
 import React from "react"
 import Button from "../Button"
+import { useAuth } from "../../utils/useAuthClient"
 import { SlidersHorizontal, SlidersVertical } from "lucide-react"
 import { ASSET_DETAILS } from "../../utils/constants"
 import { setAssetDetailFilter } from "../../redux/reducers/utilityReducer"
@@ -25,6 +26,15 @@ const AssetDetails = () => {
     setIsFilter(false)
     dispatch(setAssetDetailFilter(value))
   }
+
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    principal,
+    reloadLogin,
+    accountIdString,
+  } = useAuth();
 
   const renderFilterComponent = () => {
     switch (assetDetailFilter) {
@@ -106,13 +116,13 @@ const AssetDetails = () => {
       </div>
       <div className="w-full lg:w-3/12">
         <div className="w-full bg-[#233D63] p-4 rounded-[20px] text-white">
-          <h1 className="font-semibold">Total Supplied</h1>
-          <p className="text-gray-300 text-[12px] my-1">
+          {isAuthenticated ? <h1 className="font-semibold">Your Info</h1>:<h1 className="font-semibold">Total Supplied</h1>}
+          {isAuthenticated ? <p className="text-gray-300 text-[12px] my-1">The Wallet has been connected!</p>:<p className="text-gray-300 text-[12px] my-1">
             Please connect a wallet to view your personal information here.
-          </p>
-          <div className="w-full mt-4">
+          </p>}
+          {!isAuthenticated && <div className="w-full mt-4">
             <Button title={"Connect Wallet"} className={"my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-3 px-8 shadow-lg font-semibold text-sm'"}/>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

@@ -92,7 +92,7 @@ const DashboardNav = () => {
         {dashboardTitle}
       </h1>
 
-      <div className="w-full flex flex-wrap justify-between py-2 items-center gap-2">
+      <div className="w-full flex flex-wrap justify-between  items-center gap-2">
         <div className="flex">
           <div className="flex items-center gap-2">
             <div className="rounded-full border overflow-hidden shrink-0">

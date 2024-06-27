@@ -11,6 +11,10 @@ import { GrCopy } from 'react-icons/gr';
 import { CiShare1 } from 'react-icons/ci';
 import Button from './Button';
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from '../utils/constants';
+
+import { Drawer } from "@mui/material";
+import CloseIcon from './Home/CloseIcon';
+import MenuIcon from './Home/MenuIcon';
 import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
@@ -23,6 +27,7 @@ import settingsIcon from "../../public/Settings.svg"
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 //  
 export default function Navbar({ isHomeNav }) {
+  
   const isMobile = window.innerWidth <= 768; // Adjust the breakpoint as needed
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -31,6 +36,8 @@ export default function Navbar({ isHomeNav }) {
   const { isWalletModalOpen, isWalletConnected } = useSelector(
     (state) => state.utility
   );
+
+
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const navigate = useNavigate();
@@ -191,6 +198,24 @@ export default function Navbar({ isHomeNav }) {
     console.log(hash);
   }, [hash])
 
+
+
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 768);
+
+  const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+  };
+
+  useEffect(() => {
+      window.addEventListener('resize', handleResize);
+
+      // Cleanup: remove event listener on component unmount
+      return () => {
+          window.removeEventListener('resize', handleResize);
+      };
+  }, []);
+
+
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
@@ -228,7 +253,7 @@ export default function Navbar({ isHomeNav }) {
             {isHomeNav ? (
               <div className='flex gap-2'>
                 <div className="ml-16 text-nowrap">
-                  <Button title={"Launch App"} onClick={handleLaunchApp} />
+                  <Button title={"Launch App"} onClickHandler={handleLaunchApp} />
                 </div>
                 <div >
                   {renderThemeToggle && <ThemeToggle />}
@@ -298,7 +323,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div className="flex justify-center my-2">
-                            <img src="/arrow.png" alt="Switch Icon" className="w-6 h-6 cursor-pointer" onClick={handleSwitchClick} />
+                            <img src="/arrow.png" alt="Switch Icon" className="w-6 h-6 cursor-pointer" onClickHandler={handleSwitchClick} />
                           </div>
 
                           <div className="relative w-full">
@@ -451,7 +476,7 @@ export default function Navbar({ isHomeNav }) {
                     />
                     {dropdownVisible && (
 
-                      <div className="absolute w-[280px] top-12 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50">
+                      <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50">
                         <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4"> Settings</h2>
                         {/* Dropdown content for dark mode and testnet mode */}
                         <div className="flex items-center mb-4">
@@ -518,20 +543,77 @@ export default function Navbar({ isHomeNav }) {
 
             ))}
 
-            {/* Mobile/Tablet Menu */}
             {isMobile && (
-              <img
-                src="/menu.png"
-                alt="Clickable Image"
-                className="cursor-pointer"
-                onClick={() => {
-                  // Perform your functionality here
-                  setIsMobileNav(true); // Example functionality: set state to open mobile navigation
-                }}
-              />
-           
-           
-           )}
+              <div>
+                <div onClick={() => setIsMobileNav(!isMobileNav)} className="cursor-pointer">
+                  {isMobileNav ? <CloseIcon /> : <MenuIcon />} {/* Toggle between Menu and X icons */}
+                </div>
+                <Drawer
+                  anchor={"right"}
+                  open={isMobileNav}
+                  onClose={() => setIsMobileNav(false)}
+                  PaperProps={{
+                    style: {
+                      marginTop: "88px", // Adjust the margin as needed
+                      borderRadius: "12px",  // Add rounded borders
+                      className: "drawer-right-to-left",
+                    },
+                  }}
+                >
+                  <div className="flex flex-col pt-6 p-4 dark:bg-darkBackground">
+                    <h2 className="text-lg font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">Menu</h2>
+
+                    {!isHomeNav
+                      ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
+                        <NavLink
+                          key={index}
+                          to={link.route}
+                          className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                          >
+                          {link.title}
+                        </NavLink>
+                      ))
+                      : HOME_TOP_NAV_LINK.map((link, index) => (
+                        <NavLink
+                          key={index}
+                          to={link.route}
+                          className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
+                    <h2 className="text-lg my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">Setting</h2>
+                    <div className="p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1">
+                      <div className="flex items-center">
+                        <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D] dark:text-darkTextSecondary">Dark Mode</label>
+                        <span className="ml-auto">{isDarkMode ? 'ON' : 'OFF'}</span>
+                        <Switch
+                          checked={isDarkMode}
+                          onChange={handleDarkModeToggle}
+                          className="ml-2"
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": {
+                              color: "#fff",
+                            },
+                            "& .MuiSwitch-track": {
+                              backgroundColor: '#fff',
+                              boxShadow: '0 0 10px black',
+                            },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                              backgroundColor: "#1939ea",
+                            },
+                          }}
+                          style={{ minWidth: '40px' }} // Ensure a minimum width for the Switch
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </Drawer>
+              </div>
+            )}
+
+
+
 
 
           </nav>

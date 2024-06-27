@@ -3,6 +3,7 @@ import WalletDetails from "../components/Dashboard/WalletDetails"
 import MainDashboard from "../pages/Dashboard/MainDashboard"
 import Home from "../pages/Home/Home"
 import Login from "../pages/login/Login"
+import Error from "../pages/Error/Error"
 import AssetDetails from "../components/Dashboard/AssetDetails"
 import DFinanceGov from "../components/Dashboard/DFinanceGov"
 import ProposalDetails from "../components/Dashboard/ProposalDetails"
@@ -18,6 +19,14 @@ export default [
   {
     path: "/login",
     element: <Login></Login>,
+  },
+  {
+    path: "*",
+      element: (
+      <MainDashboard includeDashboardNav={false}>
+        <Error></Error> 
+      </MainDashboard>
+    ),
   },
   {
     path: "/dashboard",
@@ -54,6 +63,7 @@ export default [
           </MainDashboard>
         ),
       },
+     
       {
         path: "transaction-history",
         element: (

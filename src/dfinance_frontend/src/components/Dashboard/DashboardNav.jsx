@@ -109,7 +109,7 @@ const DashboardNav = () => {
 
             <div className="relative" ref={dropdownRef}>
               <span
-                className="block p-1 rounded-full bg-[#8CC0D770] text-[#3739b4] cursor-pointer"
+                className="block p-1 rounded-full bg-[#8CC0D770] text-[#3739b4] cursor-pointer dark:text-darkText"
                 onClick={toggleDropdown}
               >
                 {!isDrop ? (
@@ -149,7 +149,7 @@ const DashboardNav = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6">
+          <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
             {(isDashboardSupplyOrMain ? filteredWalletDetailTabs : WALLET_DETAILS_TABS).map((data, index) => (
               <div key={index} className="relative group ml-10">
                 <button className="relative">

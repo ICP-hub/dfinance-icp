@@ -13,21 +13,21 @@ import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA 
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
- 
+
   const [currentFAQ, setCurrentFAQ] = useState(0);
-  const [isPaused, setIsPaused] = useState(false); 
+  const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-        if (!isPaused) {
-      const nextIndex = (currentFAQ + 1) % FAQ_QUESTION.length;
-      setCurrentFAQ(nextIndex);
-    }
-    }, 2500); 
+      if (!isPaused) {
+        const nextIndex = (currentFAQ + 1) % FAQ_QUESTION.length;
+        setCurrentFAQ(nextIndex);
+      }
+    }, 2500);
     return () => clearInterval(interval);
   }, [currentFAQ, isPaused]);
-  
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset;
@@ -90,7 +90,7 @@ const Home = () => {
         <HeroSection />
 
         {/* Tab based section */}
-        <section className="mt-24">
+        <section className="mt-16">
           <div className="w-full">
             <nav className="flex justify-center not-italic">
               <Tabs
@@ -132,7 +132,7 @@ const Home = () => {
             {MAIN_NAV_LINK.map((item) => (
               <React.Fragment key={item.id}>
                 {currentTab === item.id && (
-                  <p className="text-sm font-normal text-[#737373] text-center mt-3">
+                  <p className="text-sm font-normal text-[#737373] text-center mt-1">
                     {item.content}
                   </p>
                 )}
@@ -140,7 +140,7 @@ const Home = () => {
             ))}
           </div>
           <div className="w-full mt-10">
-            <h1 className="font-semibold bg-gradient-to-tr from-[#4659CF] via-[#C562BD] to-transparent h-12 w-48 bg-clip-text text-transparent text-[36px] mb-2">
+            <h1 className="font-semibold bg-gradient-to-r from-[#4659CF] via-[#C562BD] to-transparent h-12 w-48 bg-clip-text text-transparent text-[36px] mb-2">
               Markets
             </h1>
             <TabPanel />
@@ -148,21 +148,22 @@ const Home = () => {
         </section>
 
         {/* Info section */}
-        <section className="mt-[44px] md:mt-24">
-  <div className="w-full flex justify-center">
-    <div className="w-full xl:w-5/5 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd ">
-      <div className="w-full xl:w-9/12">
-        <h1 className="font-semibold text-lg">And more to come...</h1>
-        <p className="mt-4 text-sm font-medium">
-          Submit a proposal to deploy a new market in the Dfinance ecosystem. You can learn from the DFinance governance.
-        </p>
-      </div>
-      <div className="w-full xl:w-3/12 flex justify-end mt-3 lg:mt-0">
-        <Button title="LEARN MORE" />
-      </div>
-    </div>
-  </div>
-</section>
+        <section className="mt-2 md:mt-8">
+          <div className="w-full flex justify-center">
+            <div className="w-full xl:w-5/5 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+              <div className="w-full xl:w-9/12">
+                <h1 className="font-semibold text-lg">And more to come...</h1>
+                <p className="mt-4 text-sm font-medium">
+                  Submit a proposal to deploy a new market in the Dfinance ecosystem. You can learn from the DFinance governance.
+                </p>
+              </div>
+              <div className="w-full xl:w-3/12 flex justify-start mt-3 lg:mt-0 md:justify-end"> {/* Center align the button on mobile screens only */}
+                <Button title="LEARN MORE" />
+              </div>
+            </div>
+          </div>
+        </section>
+
 
 
         {/* Governed by the Community */}
@@ -172,30 +173,33 @@ const Home = () => {
               Governed by the <span className="font-semibold">Community</span>
             </h1>
             <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6 dark:text-darkText">
-  DFinance is a fully decentralized, community governed protocol<br className="hidden lg:inline"/> with 166,579 token holders.
-</p>
+              DFinance is a fully decentralized, community governed protocol<br className="hidden lg:inline" /> with 166,579 token holders.
+            </p>
 
-<div className="flex justify-center">
-  <Button className="button_gradient p-2 whitespace-nowrap rounded-md text-xs flex gap-2 text-white px-8" title="LEARN MORE" />
-</div>
+            <div className="w-full flex justify-center mt-3"> {/* Center align the button on all screens */}
+              <Button className="button_gradient text-white rounded-2xl p-3 px-8 shadow-2xl shadow-gray-500/50 font-semibold text-sm" title="LEARN MORE" />
+            </div>
 
 
-          </div>   
+
+
+
+          </div>
         </section>
 
         {/* How it Works */}
         <HowITWork />
 
         {/* Security Contributors */}
-        <section className="mt-24">
-          <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-blue-800 dark:text-darkText">Security Contributors</h1>
+        <section className="mt-[44px] md:mt-24 ">
+          <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-[#2A1F9D] dark:text-darkText">Security Contributors</h1>
           <br></br>
           <p className="text-[12px] font-poppins font-[500] text-center lg:text-[18px] text-[#737373] dark:text-darkText">
             Audited by the world’s leading security firms, security of the DFinance<br></br>
-             Protocol is the highest priority.
+            Protocol is the highest priority.
           </p>
           <div className="flex flex-wrap gap-4 mx-auto items-center pt-[34px] pb-[24px]">
-            {SECURITY_CONTRIBUTORS_DATA.map((item)=>(
+            {SECURITY_CONTRIBUTORS_DATA.map((item) => (
               <img className="mx-auto mt-[29px] " src={item.image} draggable="false" />
             ))}
 
@@ -204,16 +208,16 @@ const Home = () => {
 
         </section>
 
-       {/* FAQ */}
-       <section className="mt-24 " id="faq">
+        {/* FAQ */}
+        <section className="mt-[44px] md:mt-24 " id="faq">
           <div className="w-full p-5 md:p-10 mb-20 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
             <div className="w-full">
               <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
                 Frequently Asked Questions
               </h1>
-             
+
             </div>
-            <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)} className="w-full md:grid grid-cols-2">
+            <div onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} className="w-full md:grid grid-cols-2">
               <div className="w-full relative  z-10 flex h-auto md:h-auto items-center my-[29px] ">
                 <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow  md:relative rounded-xl overflow-hidden cursor-pointer dark:bg-darkFAQBackground">
                   {FAQ_QUESTION.map((item, index) => (
@@ -265,15 +269,15 @@ const Home = () => {
             className="w-72 h-96 lg:w-auto lg:h-[600px]"
           />
         </div>
-        
+
       </div>
       {/* Footer */}
       <button
-      className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[75px] w-[75px] text-white rounded-full transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-      onClick={scrollToTop}
-    >
-      <LuMoveUp  className="text-[50px] mx-auto hover:text-white transition-colors"/>
-    </button>
+        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        onClick={scrollToTop}
+      >
+        <LuMoveUp className="text-[30px] mx-auto hover:text-white transition-colors" />
+      </button>
       <Footer />
     </>
   );

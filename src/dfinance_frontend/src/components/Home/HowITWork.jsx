@@ -13,7 +13,7 @@ const HowITWork = () => {
     // https://i.ibb.co/Bw2dGRz/Submit-ICPRequest.png
     // https://i.ibb.co/j8jGcgd/calculator.png
     return (
-        <section className="mt-24 font-poppins ">
+        <section className="mt-20 font-poppins ">
             <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
                 <h1 className="text-[32px] md:text-[45px] font-extralight">How it Works</h1>
             </div>
@@ -24,7 +24,7 @@ const HowITWork = () => {
                     <p className='text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText'>1</p>
                     <div className='text-[16px] '>
                 <p className='text-[#517687] font-[700] font-poppins dark:text-darkText'>Submit ICP </p>
-              <p className='text-[#737373] font-[400] dark:text-darkText'>Request for comment Discuss with community members and receive feedback.</p>
+              <p className='text-[#737373] font-[400] mt-2 dark:text-darkText'>Request for comment Discuss with community members and receive feedback.</p>
               <p className='text-[#233D63] flex gap-3 text-[12px] mt-[14px] items-center font-[700] dark:text-darkText'>Visit Docs <GoArrowRight size={20} /></p>
               </div>
               </div>
@@ -36,7 +36,7 @@ const HowITWork = () => {
                     <p className='text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText'>2</p>
                     <div className='text-[16px] '>
                 <p className='text-[#517687] font-[700] font-poppins dark:text-darkText'>Create a snapshot</p>
-              <p className='text-[#737373] font-[400] dark:text-darkText'>Gauge community sentiment on a new proposal through a Snapshot.</p>
+              <p className='text-[#737373] font-[400] mt-2 dark:text-darkText'>Gauge community sentiment on a new proposal through a Snapshot.</p>
               <p className='text-[#233D63] flex gap-3 text-[12px] mt-[14px] items-center font-[700] dark:text-darkText'>How to create Snapshot <GoArrowRight size={20} /></p>
               </div>
               </div>
@@ -49,7 +49,7 @@ const HowITWork = () => {
                     <p className='text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText'>3</p>
                     <div className='text-[16px] dark:text-darkText'>
                 <p className='text-[#517687] font-[700] font-poppins dark:text-darkText'>Submit an DFinance Request for Improvement</p>
-              <p className='text-[#737373] font-[400] dark:text-darkText'>The proposal is submitted through a GitHub pull request, & community votes on approvals</p>
+              <p className='text-[#737373] font-[400] mt-2 dark:text-darkText'>The proposal is submitted through a GitHub pull request, & community votes on approvals</p>
               </div>
               </div>
               <img className='mx-auto mt-[16px] mb-[21px] w-[153px]  ' src="https://i.ibb.co/Bw2dGRz/Submit-ICPRequest.png" draggable="false" />

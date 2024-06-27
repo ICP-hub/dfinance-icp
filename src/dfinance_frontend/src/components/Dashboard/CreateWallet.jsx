@@ -10,6 +10,7 @@ import {
 import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/Elements.svg"
+import MySupply from './MySupply'
 
 const CreateWallet = () => {
     const navigate = useNavigate()
@@ -58,7 +59,8 @@ const CreateWallet = () => {
     };
 
     return (
-        <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[450px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+        <>
+      {isAuthenticated ? <MySupply />:  <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[450px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
             <div className="absolute right-0 top-0 h-full w-1/2 pointer-events-none">
                 <img src={Element} alt="Elements" className="h-full w-full object-cover rounded-r-3xl opacity-60" />
             </div>
@@ -121,7 +123,9 @@ const CreateWallet = () => {
 
                 </div>
             </Modal>
-        </div>
+        </div>}
+
+        </>
     )
 }
 

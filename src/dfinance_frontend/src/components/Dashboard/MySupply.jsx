@@ -88,17 +88,17 @@ const MySupply = () => {
     }
   }
   return (
-    <div className="w-full flex-col lg:flex-row flex gap-6">
+    <div className="w-full flex-col lg:flex-row flex gap-6 mb-20">
       <div className="w-full lg:w-6/12 mt-20">
-        <div className="w-full min-h-[300px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2">Your Supplies</h1>
+        <div className="w-full min-h-[300px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">Your Supplies</h1>
           {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
             noSupplyMessage
           ) : (
             <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                 <thead>
-                  <tr className="text-left text-[#233D63] text-xs ">
+                  <tr className="text-left text-[#233D63] text-xs  dark:text-darkTextSecondary1">
                     {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
                       <td key={index} className="p-3 whitespace-nowrap">
                         {item.header}
@@ -175,17 +175,17 @@ const MySupply = () => {
             </div>
           )}
         </div>
-        <div className="w-full mt-8 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2">
+        <div className="w-full mt-8 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
             Assets to supply
           </h1>
           {MY_ASSET_TO_SUPPLY_TABLE_ROW.length === 0 ? (
             noAssetsToSupplyMessage
           ) : (
             <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                 <thead>
-                  <tr className="text-left text-[#233D63] text-xs">
+                  <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
                     {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
                       <td key={index} className="p-3 whitespace-nowrap">
                         {item.header}
@@ -249,17 +249,17 @@ const MySupply = () => {
         </div>
       </div>
       <div className="w-full lg:w-6/12 mt-20">
-        <div className="w-full min-h-[250px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
+        <div className="w-full min-h-[250px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
 
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2">Your Borrows</h1>
+          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">Your Borrows</h1>
           {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
             noBorrowMessage
           ) : (
 
             <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                 <thead>
-                  <tr className="text-left text-[#233D63] text-xs ">
+                  <tr className="text-left text-[#233D63] text-xs  dark:text-darkTextSecondary1">
                     {MY_BORROW_ASSET_TABLE_COL.map((item, index) => (
                       <td key={index} className="p-3 whitespace-nowrap">
                         {item.header}
@@ -320,17 +320,17 @@ const MySupply = () => {
             </div>
           )}
         </div>
-        <div className="w-full mt-8 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl">
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2">
+        <div className="w-full mt-8 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
             Assets to borrow
           </h1>
           {MY_ASSET_TO_BORROW_TABLE_ROW.length === 0 ? (
             noAssetsToBorrowMessage
           ) : (
             <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base">
+              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                 <thead>
-                  <tr className="text-left text-[#233D63] text-xs">
+                  <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
                     {MY_ASSET_TO_BORROW_TABLE_COL.map((item, index) => (
                       <td key={index} className="p-3 whitespace-nowrap">
                         {index === 2 ? item.header2 : item.header}
@@ -399,7 +399,7 @@ const MySupply = () => {
                   </tr>
                 </tbody>
                 <thead>
-                  <tr className="text-left text-[#233D63] text-xs">
+                  <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
                     {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
                       <td key={index} className="p-3 whitespace-nowrap">
                         {index === 2 ? item.header1 : item.header}

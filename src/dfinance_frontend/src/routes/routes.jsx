@@ -17,66 +17,54 @@ export default [
   },
   {
     path: "/login",
-    element: <Login></Login>,
+    element: <Login />,
   },
   {
     path: "/dashboard",
-    children: [
-      {
-        path: "main",
-        element: (
-          <MainDashboard>
-            <CreateWallet />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "wallet-details",
-        element: (
-          <MainDashboard>
-            <WalletDetails />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "asset-details/:id?",
-        element: (
-          <MainDashboard>
-            <AssetDetails />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "my-supply",
-        element: (
-          <MainDashboard>
-            <MySupply />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "transaction-history",
-        element: (
-          <MainDashboard>
-            <TransactionHistoryBox />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "dfinance-gov",
-        element: (
-          <MainDashboard isDGov={true}>
-            <DFinanceGov />
-          </MainDashboard>
-        )
-      }, {
-        path: "dfinance-gov/proposal-details",
-        element: (
-          <MainDashboard isDGov={true}>
-            <ProposalDetails />
-          </MainDashboard>
-        )
-      }
-    ],
+    element: (
+      <MainDashboard>
+        <CreateWallet />
+      </MainDashboard>
+    ),
   },
-]
+  {
+    path: "/dashboard/asset-details/:id?",
+    element: (
+      <MainDashboard>
+        <AssetDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/dashboard/transaction-history",
+    element: (
+      <MainDashboard>
+        <TransactionHistoryBox />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/market",
+    element: (
+      <MainDashboard>
+        <WalletDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/governance",
+    element: (
+      <MainDashboard>
+        <DFinanceGov />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/governance/proposal-details",
+    element: (
+      <MainDashboard>
+        <ProposalDetails />
+      </MainDashboard>
+    ),
+  },
+];

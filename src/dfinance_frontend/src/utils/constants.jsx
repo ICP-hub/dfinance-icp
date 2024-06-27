@@ -108,7 +108,13 @@ export const DASHBOARD_TOP_NAV_LINK = [
     icon: "",
   },
 ]
-
+export const error = [
+  {
+    id: 0,
+    title: "4o4",
+    route: "*",
+    
+  },]
 export const MAIN_NAV_LINK = [
   {
     id: 0,

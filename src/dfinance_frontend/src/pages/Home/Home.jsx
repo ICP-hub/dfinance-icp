@@ -132,7 +132,7 @@ const Home = () => {
             {MAIN_NAV_LINK.map((item) => (
               <React.Fragment key={item.id}>
                 {currentTab === item.id && (
-                  <p className="text-sm font-normal text-[#737373] text-center mt-1">
+                  <p className="text-sm font-normal text-[#737373] text-center mt-6">
                     {item.content}
                   </p>
                 )}

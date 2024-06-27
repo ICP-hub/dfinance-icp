@@ -4,6 +4,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+/* Example of importing Google Fonts in CSS */
+@import url('https://fonts.googleapis.com/css2?family=Vampiro+One&display=swap');
 
 body{
     background: rgba(255, 255, 255, 1);
@@ -14,8 +16,20 @@ body{
     font-style: normal !important;
 }
 
+@keyframes subtle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    transform: translateY(-20px); /* Adjust the bounce height as needed */
+    animation-timing-function: ease-in-out;
+  }
+}
 
-
+.subtle-bounce {
+  animation: subtle-bounce 4s infinite; /* Adjust duration as needed */
+}
 
 .button_gradient{
     background: radial-gradient(circle at 111.51% -1.56%,  #FCBD78 10%, #4659CF 90%, );

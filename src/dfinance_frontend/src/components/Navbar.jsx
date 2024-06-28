@@ -37,7 +37,7 @@ export default function Navbar({ isHomeNav }) {
     (state) => state.utility
   );
 
-
+  const theme = useSelector((state) => state.theme.theme);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const navigate = useNavigate();
@@ -140,7 +140,7 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleLaunchApp = () => {
-    navigate('/dashboard/main'); // Directly navigate to /dashboard/main
+    navigate('/dashboard'); // Directly navigate to /dashboard/main
   };
   const handleClose = () => {
     setSwitchTokenDrop(false);
@@ -222,9 +222,9 @@ export default function Navbar({ isHomeNav }) {
         <div className="w-full">
           <nav className="w-full py-4 lg:py-10 flex items-center justify-between">
             <img
-              src="/DFinance-Light.svg"
+              src={theme === 'dark' ? "/DFinance-Dark.svg" : "/DFinance-Light.svg"}
               alt="DFinance"
-              className="w-[100px] md:w-[150px] lg:w-auto"
+              className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]"
             />
 
             <div className="gap-4 hidden lg:flex dark:text-darkText">
@@ -252,7 +252,7 @@ export default function Navbar({ isHomeNav }) {
 
             {isHomeNav ? (
               <div className='flex gap-2'>
-                <div className="ml-16 text-nowrap">
+                <div className="sxs3:ml-7 lg:ml-0 md:ml-0 text-nowrap ">
                   <Button title={"Launch App"} onClickHandler={handleLaunchApp} />
                 </div>
                 <div className='flex align-center justify-center'>
@@ -261,13 +261,13 @@ export default function Navbar({ isHomeNav }) {
               </div>
 
             ) : (isAuthenticated ? (
-              <div className="hidden lg:flex gap-3">
+              <div className="hidden lg:flex gap-3 sxs3:flex sxs3:ml-6">
                 <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
                     className="flex items-center gap-2 p-2 px-3"
                     onClick={handleSwitchToken}
                   >
-                    <span>Switch Token</span>
+                    <span className='sxs3:hidden lg:flex md:flex'>Switch Token</span>
                     <ArrowDownUp />
                   </div>
                   <div className="relative">
@@ -399,7 +399,7 @@ export default function Navbar({ isHomeNav }) {
                 </div>
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 p-2 px-3"
+                    className="flex items-center gap-1 p-2 px-3 overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -407,7 +407,7 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5"
                     />
-                    <span>0x65.125s</span>
+                    <span className='text-[12px]'>0x65.125s</span>
                   </div>
 
                   {switchWalletDrop && (
@@ -471,7 +471,7 @@ export default function Navbar({ isHomeNav }) {
                     <img
                       src={settingsIcon}
                       alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer"
+                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block"
                       onClick={handleDropdownToggle}
                     />
                     {dropdownVisible && (
@@ -529,14 +529,14 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : (
               // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
-              <div className='flex gap-2'>
+              <div className='flex md:gap-3 lg:gap-3 sxs3:gap-0'>
                 <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
                 <div className="flex items-center justify-center">
                   <div className="relative">
                     <img
                       src={settingsIcon}
                       alt="settings_icon"
-                      className="object-contain w-[43px] h-[43px] cursor-pointer"
+                      className="object-contain w-[43px] h-[43px] cursor-pointer hidden lg:block md:block"
                       onClick={handleDropdownToggle}
                     />
                     {dropdownVisible && (

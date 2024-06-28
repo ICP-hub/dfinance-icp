@@ -97,16 +97,29 @@ export const DASHBOARD_TOP_NAV_LINK = [
   },
   {
     id: 1,
+    title: "Governance",
+    route: "/governance",
+    icon: "",
+  },
+  {
+    id: 2,
     title: "Market",
     route: "/market",
     icon: "",
   },
   {
-    id: 2,
-    title: "Governance",
-    route: "/governance",
+    id: 3,
+    title: "Stake",
+    route: "/stake",
     icon: "",
   },
+  {
+    id: 4,
+    title: "Faq",
+    route: "/Faq",
+    icon: "",
+  },
+
 ]
 export const error = [
   {

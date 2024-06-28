@@ -10,9 +10,10 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS
 } from "../../utils/constants"
+
 import Button from "../Button"
 import { Switch } from "@mui/material"
-import { Check } from "lucide-react"
+import { Check, Eye, EyeOff } from "lucide-react"
 import MySupplyModal from "./MySupplyModal"
 import WithdrawPopup from "./WithdrawPopup"
 import SupplyPopup from "./SupplyPopup"
@@ -38,7 +39,11 @@ const MySupply = () => {
     })
   }
 
+  const [isVisible, setIsVisible] = useState(true);
 
+  const toggleVisibility = () => {
+    setIsVisible(!isVisible);
+  };
   const renderModalOpen = (type) => {
     switch (type) {
       case "borrow":
@@ -175,78 +180,88 @@ const MySupply = () => {
             </div>
           )}
         </div>
-        <div className="w-full mt-8 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
-            Assets to supply
-          </h1>
-          {MY_ASSET_TO_SUPPLY_TABLE_ROW.length === 0 ? (
-            noAssetsToSupplyMessage
-          ) : (
-            <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
-                <thead>
-                  <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
-                    {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
-                      <td key={index} className="p-3 whitespace-nowrap">
-                        {item.header}
-                      </td>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MY_ASSET_TO_SUPPLY_TABLE_ROW.slice(0, 8).map((item, index) => (
-                    <tr
-                      key={index}
-                      className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
-                    >
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
-                          <img
-                            src={item.image}
-                            alt={item.asset}
-                            className="w-8 h-8 rounded-full"
-                          />
-                          {item.asset}
-                        </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-col">
-                          <p>{item.wallet_balance_count}</p>
-                          <p className="font-light">${item.wallet_balance}M</p>
-                        </div>
-                      </td>
-                      <td className="p-3 align-top">{item.apy}</td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-center">
-                          <Check color="#32851E" size={14} />
-                        </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex gap-2 ">
-                          <Button
-                            title={"Supply"}
-                            onClickHandler={() => handleModalOpen("supply", item.asset, item.image)}
-                            className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                            }
-                          />
-                          <Button
-                            title={"Details"}
-                            onClickHandler={() => navigate('/dashboard/asset-details')}
-                            className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                            }
-                          />
-                        </div>
-
-                      </td>
-                    </tr>
+        <div className={`w-full mt-8 ${isVisible ? 'min-h-[350px]' : 'min-h-[100px]'} p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}>
+      <div className="flex justify-between items-center">
+        <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
+          Assets to supply
+        </h1>
+        <button
+          className="flex items-center text-sm text-blue-500 dark:text-darkTextSecondary cursor-pointer ml-4"
+          onClick={toggleVisibility}
+        >
+          {isVisible ? 'Hide' : 'Show'}
+          {isVisible ? <EyeOff className="ml-1" size={16} /> : <Eye className="ml-1" size={16} />}
+        </button>
+      </div>
+      {isVisible && (
+        MY_ASSET_TO_SUPPLY_TABLE_ROW.length === 0 ? (
+          noAssetsToSupplyMessage
+        ) : (
+          <div className="w-full overflow-auto">
+            <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
+              <thead>
+                <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
+                  {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
+                    <td key={index} className="p-3 whitespace-nowrap">
+                      {item.header}
+                    </td>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                </tr>
+              </thead>
+              <tbody>
+                {MY_ASSET_TO_SUPPLY_TABLE_ROW.slice(0, 8).map((item, index) => (
+                  <tr
+                    key={index}
+                    className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                  >
+                    <td className="p-3 align-top">
+                      <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                        <img
+                          src={item.image}
+                          alt={item.asset}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        {item.asset}
+                      </div>
+                    </td>
+                    <td className="p-3 align-top">
+                      <div className="flex flex-col">
+                        <p>{item.wallet_balance_count}</p>
+                        <p className="font-light">${item.wallet_balance}M</p>
+                      </div>
+                    </td>
+                    <td className="p-3 align-top">{item.apy}</td>
+                    <td className="p-3 align-top">
+                      <div className="w-full flex items-center justify-center">
+                        <Check color="#32851E" size={14} />
+                      </div>
+                    </td>
+                    <td className="p-3 align-top">
+                      <div className="w-full flex gap-2 ">
+                        <Button
+                          title={"Supply"}
+                          onClickHandler={() => handleModalOpen("supply", item.asset, item.image)}
+                          className={
+                            "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                          }
+                        />
+                        <Button
+                          title={"Details"}
+                          onClickHandler={() => navigate('/dashboard/asset-details')}
+                          className={
+                            "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                          }
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+    </div>
       </div>
       <div className="w-full lg:w-6/12 mt-20">
         <div className="w-full min-h-[250px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">

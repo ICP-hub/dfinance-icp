@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { Tab, Tabs } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Button from "../../components/Button";
@@ -13,6 +14,7 @@ import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA 
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const theme = useSelector((state) => state.theme.theme);
 
   const [currentFAQ, setCurrentFAQ] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -115,7 +117,7 @@ const Home = () => {
                       fontFamily: "Poppins",
                       fontWeight: "600",
                       fontSize: "14px",
-                      color: "#2A1F9D",
+                      color: theme === 'dark' ? 'white' : '#2A1F9D',
                       "&.Mui-selected": {
                         color: "transparent",
                         backgroundImage:
@@ -132,7 +134,7 @@ const Home = () => {
             {MAIN_NAV_LINK.map((item) => (
               <React.Fragment key={item.id}>
                 {currentTab === item.id && (
-                  <p className="text-sm font-normal text-[#737373] text-center mt-6">
+                  <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
                     {item.content}
                   </p>
                 )}
@@ -177,7 +179,7 @@ const Home = () => {
             </p>
 
             <div className="w-full flex justify-center mt-3"> {/* Center align the button on all screens */}
-              <Button className="button_gradient text-white rounded-2xl p-3 px-8 shadow-2xl shadow-gray-500/50 font-semibold text-sm" title="LEARN MORE" />
+              <Button className="button_gradient text-white rounded-xl p-3 px-8 shadow-2xl shadow-gray-500/50 font-semibold text-sm" title="LEARN MORE" />
             </div>
 
 
@@ -242,7 +244,7 @@ const Home = () => {
                         </div>
                       </div>
                       {currentFAQ === index && (
-                        <div className="block animate-fade-down md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full ">
+                        <div className="block animate-fade-down md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText">
                           <p>{item.answer}</p>
                         </div>
                       )}

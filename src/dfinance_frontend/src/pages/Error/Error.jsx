@@ -15,7 +15,7 @@ const Error = () => {
                 <img
                     src={Element}
                     alt="Elements"
-                    className="h-full w-full object-cover rounded-r-3xl opacity-60 "
+                    className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
                     // Ensure image scales properly
                 />
             </div>
@@ -39,7 +39,7 @@ const Error = () => {
                     <div className="text-[140px] sm:text-[100px] md:text-[250px] font-light text-white dark:text-darkText -rotate-12" style={{ fontFamily: 'Vampiro One' }}>4</div>
                 </div>
 
-                <p className="text-lg sm:text-xl mb-2 text-[#2A1F9D] font-bold dark:text-darkText -mt-8 md:-mt-10">Uh-oh! Lost in Space</p>
+                <p className="text-lg sm:text-xl mb-2 text-[#2A1F9D] font-bold dark:text-darkText -mt-8 md:-mt-12">Uh-oh! Lost in Space</p>
                 <p className="text-base sm:text-lg mb-6 text-[#2A1F9D] text-opacity-75 dark:text-darkText md:mb-8">The page you are trying to reach does not exist.</p>
 
                 <button

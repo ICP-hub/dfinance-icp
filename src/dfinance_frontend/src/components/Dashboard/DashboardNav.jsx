@@ -4,8 +4,10 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { TAB_CARD_DATA, WALLET_DETAILS_TABS, WALLET_DETAIL_TAB } from "../../utils/constants";
 import { useSelector } from "react-redux";
 import RiskPopup from './RiskDetails';
-
+import { useAuth } from '../../utils/useAuthClient';
 const DashboardNav = () => {
+  const { isAuthenticated } = useAuth();
+
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { isWalletConnected } = useSelector((state) => state.utility);
@@ -168,13 +170,13 @@ const DashboardNav = () => {
           {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
         </div>
         <div>
-          {shouldRenderTransactionHistoryButton && (
-            <a href="/dashboard/transaction-history" className="block">
-              <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
-                Transaction History
-              </button>
-            </a>
-          )}
+        {isAuthenticated && shouldRenderTransactionHistoryButton && (
+        <a href="/dashboard/transaction-history" className="block">
+          <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
+            Transaction History
+          </button>
+        </a>
+      )}
         </div>
       </div>
     </div>

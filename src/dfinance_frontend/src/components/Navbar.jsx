@@ -10,6 +10,7 @@ import { Switch } from "@mui/material"
 import { GrCopy } from 'react-icons/gr';
 import { CiShare1 } from 'react-icons/ci';
 import Button from './Button';
+
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from '../utils/constants';
 
 import { Drawer } from "@mui/material";
@@ -140,7 +141,7 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleLaunchApp = () => {
-    navigate('/dashboard/main'); // Directly navigate to /dashboard/main
+    navigate('/dashboard'); // Directly navigate to /dashboard/main
   };
   const handleClose = () => {
     setSwitchTokenDrop(false);
@@ -233,7 +234,7 @@ export default function Navbar({ isHomeNav }) {
                   <NavLink
                     key={index}
                     to={link.route}
-                    className="text-[#2a1f9d] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                    className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                   >
                     {link.title}
                   </NavLink>
@@ -242,7 +243,7 @@ export default function Navbar({ isHomeNav }) {
                   <NavLink
                     key={index}
                     to={link.route}
-                    className="text-[#233D63] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                    className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                   >
                     {link.title}
                   </NavLink>

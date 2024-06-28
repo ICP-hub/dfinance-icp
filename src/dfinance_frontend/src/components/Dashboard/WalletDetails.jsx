@@ -34,7 +34,7 @@ const WalletDetails = () => {
     console.log("Selected Asset:", asset); // Optional: Log selected asset for debugging
     navigate(`/dashboard/asset-details/${asset}`); // Navigate to asset details page
   };
-  
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = WALLET_ASSETS_TABLE_ROW.slice(indexOfFirstItem, indexOfLastItem);
@@ -45,36 +45,36 @@ const WalletDetails = () => {
       <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-16 ">
         <h1 className="text-[#2A1F9D] font-semibold text-lg">ICP Assets</h1>
         <div className="ml-auto   ">
-        {Showsearch && (
+          {Showsearch && (
 
 
-  <input
-    type="text"
-    name="search"
-    id="search"
-    placeholder="Search for proposals"
-    style={{ fontSize: '0.75rem' }}
-    className={`placeholder-gray-500 w-[300px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-borderr  ${Showsearch
-        ? "animate-fade-left flex"
-        : "animate-fade-right hidden"
-      }`}
-  />
+            <input
+              type="text"
+              name="search"
+              id="search"
+              placeholder="Search for proposals"
+              style={{ fontSize: '0.75rem' }}
+              className={`placeholder-gray-500 w-[300px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-borderr  ${Showsearch
+                ? "animate-fade-left flex"
+                : "animate-fade-right hidden"
+                }`}
+            />
 
-)}
+          )}
         </div>
         <svg onClick={showSearchBar} className="cursor-pointer" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
-                <defs>
-                  <linearGradient id="paint0_linear_293_865" x1="3.5" y1="3.5" x2="13.5" y2="14" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#2E28A5" />
-                    <stop offset="1" stop-color="#FAAA98" />
-                  </linearGradient>
-                  <linearGradient id="paint1_linear_293_865" x1="12.3625" y1="11.5531" x2="12.3625" y2="13.75" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#C88A9B" />
-                  </linearGradient>
-                </defs>
-              </svg>
+          <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+          <defs>
+            <linearGradient id="paint0_linear_293_865" x1="3.5" y1="3.5" x2="13.5" y2="14" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#2E28A5" />
+              <stop offset="1" stop-color="#FAAA98" />
+            </linearGradient>
+            <linearGradient id="paint1_linear_293_865" x1="12.3625" y1="11.5531" x2="12.3625" y2="13.75" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#C88A9B" />
+            </linearGradient>
+          </defs>
+        </svg>
       </div>
       {Showsearch &&
         <input
@@ -130,7 +130,7 @@ const WalletDetails = () => {
                     </td>
                     <td className="p-3 align-top">{item.borrow_apy}</td>
                     <td className="p-3 align-top">
-                    <div className="w-full flex justify-end">
+                      <div className="w-full flex justify-end">
                         <Button
                           title={"Details"}
                           onClickHandler={() => handleDetailsClick(item.asset)}

@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from "react"
+import { useSelector } from "react-redux";
 
 const CircleProgess = ({ progessValue }) => {
   const progressText = useRef(null)
   const progressIndicator = useRef(null)
+  const theme = useSelector((state) => state.theme.theme);
 
   useEffect(() => {
     if (progressText.current && progressIndicator.current) {
@@ -63,7 +65,7 @@ const CircleProgess = ({ progessValue }) => {
         textAnchor="middle"
         alignmentBaseline="middle"
         fontSize={16}
-        fill="#2A1F9D"
+        fill={theme === 'dark' ? "#FFFFFF" : "#2A1F9D"}
         fontWeight={500}
       >
         0%

@@ -15,7 +15,7 @@ const Error = () => {
                 <img
                     src={Element}
                     alt="Elements"
-                    className="h-full w-full object-cover rounded-r-3xl opacity-60 "
+                    className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
                     // Ensure image scales properly
                 />
             </div>

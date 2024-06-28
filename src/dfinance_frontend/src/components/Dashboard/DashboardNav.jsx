@@ -9,17 +9,24 @@ const DashboardNav = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { isWalletConnected } = useSelector((state) => state.utility);
+  const theme = useSelector((state) => state.theme.theme);
 
   const [isDrop, setIsDrop] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentValueIndex, setCurrentValueIndex] = useState(state?.id || 0);
   const [currentValueData, setCurrentValueData] = useState(
     state || TAB_CARD_DATA[0]
   );
   const dropdownRef = useRef(null);
+  const menuRef = useRef(null);
 
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
       setIsDrop(false);
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    if (menuRef.current && !menuRef.current.contains(event.target)) {
+      setIsMenuOpen(false);
       document.removeEventListener("mousedown", handleClickOutside);
     }
   };
@@ -31,6 +38,15 @@ const DashboardNav = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     }
     setIsDrop(!isDrop);
+  };
+
+  const toggleMenu = () => {
+    if (!isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    setIsMenuOpen(!isMenuOpen);
   };
 
   useEffect(() => {
@@ -68,8 +84,7 @@ const DashboardNav = () => {
   // Determine if Risk Details button should be rendered
   const shouldRenderRiskDetailsButton = !pathname.includes("/market") && !pathname.includes("/governance");
 
-  // Filter WALLET_DETAIL_TAB to exclude health with id=2 if pathname is /dashboard/main
-  
+  const chevronColor = theme === 'dark' ? '#ffffff' : '#3739b4';
 
   const shouldRenderTransactionHistoryButton = pathname === '/dashboard' || pathname === '/dashboard/transaction-history';
 
@@ -83,11 +98,11 @@ const DashboardNav = () => {
           Back
         </span>
       </div>
-      <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4">
+      <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4 dark:text-darkBlue">
         {dashboardTitle}
       </h1>
 
-      <div className="w-full flex flex-wrap justify-between  items-center gap-2">
+      <div className="w-full flex flex-wrap justify-start items-center gap-2">
         <div className="flex">
           <div className="flex items-center gap-2">
             <div className="rounded-full border overflow-hidden shrink-0">
@@ -108,14 +123,14 @@ const DashboardNav = () => {
                 onClick={toggleDropdown}
               >
                 {!isDrop ? (
-                  <ChevronRight size={16} color="#2A1F9D" />
+                  <ChevronRight size={16} color={chevronColor} />
                 ) : (
-                  <ChevronDown size={16} color="#2A1F9D" />
+                  <ChevronDown size={16} color={chevronColor} />
                 )}
               </span>
               {isDrop && (
                 <div
-                  className={`w-fit z-50 absolute overflow-hidden animate-fade-down animate-duration-500 top-full mt-3 bg-[#0C5974] text-white rounded-2xl`}
+                  className="w-fit z-50 absolute overflow-hidden animate-fade-down animate-duration-500 top-full mt-3 bg-[#0C5974] text-white rounded-2xl"
                 >
                   {TAB_CARD_DATA.map((data, index) => (
                     <div
@@ -144,34 +159,79 @@ const DashboardNav = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
-            {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
-              <div key={index} className="relative group ml-10">
-                <button className="relative">
-                  {data.title}
-                  <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                  <span className="absolute top-full left-0 font-light py-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {data.count}
-                  </span>
-                </button>
-              </div>
-            ))}
-            {shouldRenderRiskDetailsButton && (
-              <button
-                className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
-                onClick={handleOpenPopup}
-              >
-                Risk Details
-              </button>
-            )}
+          {/* Menu button for small screens */}
+          <div className=" md:hidden flex w-[70vw] justify-end">
+            <button onClick={toggleMenu} className="p-2 rounded-md">
+            <img
+              src={theme === 'dark' ? "/wallet-details-menu-dark.svg" : "/wallet-details-menu-light.svg"}
+              alt=""
+            />
+            </button>
           </div>
-          {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
         </div>
-        <div>
+
+        {/* Menu items */}
+        <div
+          className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}
+        >
+          <div className="absolute top-1/4 left-1/2 bg-white p-7 rounded-md dark:bg-darkOverlayBackground dark:text-darkText" ref={menuRef}>
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Menu</h2>
+              <button onClick={toggleMenu} className="text-gray-600">
+                <ChevronDown size={16} color={chevronColor} />
+              </button>
+            </div>
+            <div className="mt-9">
+              {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+                <div key={index} className="relative group mb-9">
+                  <button className="relative w-full text-left">
+                    {data.title}
+                    <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                    <span className="absolute top-full left-0 font-light py-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {data.count}
+                    </span>
+                  </button>
+                </div>
+              ))}
+              {shouldRenderRiskDetailsButton && (
+                <button
+                  className="mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
+                  onClick={handleOpenPopup}
+                >
+                  Risk Details
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
+          {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+            <div key={index} className="relative group ml-10">
+              <button className="relative">
+                {data.title}
+                <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                <span className="absolute top-full left-0 font-light py-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {data.count}
+                </span>
+              </button>
+            </div>
+          ))}
+          {shouldRenderRiskDetailsButton && (
+            <button
+              className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
+              onClick={handleOpenPopup}
+            >
+              Risk Details
+            </button>
+          )}
+        </div>
+        {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
+        <div className="sxs3:mt-4 md:mt-0 lg:mt-0 sxs3:flex sxs3:justify-end sxs3:w-full md:w-auto md:ml-auto">
           {shouldRenderTransactionHistoryButton && (
             <a href="/dashboard/transaction-history" className="block">
-              <button className="px-4 py-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md shadow-xl hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative">
-                Transaction History
+              <button className="px-4 py-2 border text-blue-900 rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none">
+                Transactions
               </button>
             </a>
           )}

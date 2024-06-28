@@ -20,6 +20,7 @@ export default {
         //dark mode
         darkBackground: '#070a18',
         darkText: '#FFFFFF',
+        darkBlue:"#5B62FE",
         darkTextSecondary:"#cdced1",
         darkTextSecondary1:"#8CC0D7",
         darkEllipse:'#2A1F9D',

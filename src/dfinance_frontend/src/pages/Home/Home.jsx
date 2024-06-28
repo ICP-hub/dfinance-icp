@@ -24,7 +24,7 @@ const Home = () => {
         const nextIndex = (currentFAQ + 1) % FAQ_QUESTION.length;
         setCurrentFAQ(nextIndex);
       }
-    }, 2500);
+    }, 3500);
     return () => clearInterval(interval);
   }, [currentFAQ, isPaused]);
 
@@ -210,7 +210,7 @@ const Home = () => {
 
         {/* FAQ */}
         <section className="mt-[44px] md:mt-24 " id="faq">
-          <div className="w-full p-5 md:p-10 mb-20 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+          <div className="w-full p-5 md:p-10  bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
             <div className="w-full">
               <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
                 Frequently Asked Questions

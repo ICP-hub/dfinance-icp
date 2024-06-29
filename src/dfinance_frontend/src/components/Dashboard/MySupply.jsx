@@ -10,9 +10,10 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS
 } from "../../utils/constants"
+import EModeButton from './Emode';
 import Button from "../Button"
 import { Switch } from "@mui/material"
-import { Check } from "lucide-react"
+import { Check, Eye, EyeOff, Info } from "lucide-react"
 import MySupplyModal from "./MySupplyModal"
 import WithdrawPopup from "./WithdrawPopup"
 import SupplyPopup from "./SupplyPopup"
@@ -37,8 +38,23 @@ const MySupply = () => {
       image: image
     })
   }
-
-
+  const [activeSection, setActiveSection] = useState('supply');
+  const [isVisible, setIsVisible] = useState(true);
+  const [isBorrowVisible, setIsBorrowVisible] = useState(true);
+  const [isborrowVisible, setIsborrowVisible] = useState(true);
+  const [isSupplyVisible, setIsSupplyVisible] = useState(true);
+  const toggleVisibility = () => {
+    setIsVisible(!isVisible);
+  };
+  const toggleBorrowVisibility = () => {
+    setIsBorrowVisible(!isBorrowVisible);
+  };
+  const toggleborrowVisibility = () => {
+    setIsborrowVisible(!isborrowVisible);
+  };
+  const toggleSupplyVisibility = () => {
+    setIsSupplyVisible(!isSupplyVisible);
+  };
   const renderModalOpen = (type) => {
     switch (type) {
       case "borrow":
@@ -83,54 +99,89 @@ const MySupply = () => {
             children={<PaymentDone asset={isModalOpen.asset} image={isModalOpen.image} />}
           />
         )
+      case "repay":
+        return (
+          <MySupplyModal
+            isModalOpen={isModalOpen.isOpen}
+            handleModalOpen={handleModalOpen}
+            children={<Repay asset={isModalOpen.asset} image={isModalOpen.image} />}
+          />
+        )
       default:
         return null
     }
   }
+  const hasNoBorrows = MY_BORROW_ASSET_TABLE_ROWS.length === 0;
+  const noBorrowMessage = <p className="text-[#233D63] font-semibold ml-2 mt-10">Nothing borrowed yet</p>;
+  const noSupplyMessage = <p className="text-[#233D63] font-semibold ml-2 mt-10">Nothing supplied yet</p>;
+  const noAssetsToSupplyMessage = <p className="text-[#233D63] font-semibold ml-2 mt-10">No assets to supply.</p>;
+  const noAssetsToBorrowMessage = <p className="text-[#233D63] font-semibold ml-2 mt-10">No assets to borrow.</p>;
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 mb-20">
-      <div className="w-full lg:w-6/12 mt-20">
-        <div className="w-full min-h-[300px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">Your Supplies</h1>
-          {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
-            noSupplyMessage
-          ) : (
-            <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
-                <thead>
-                  <tr className="text-left text-[#233D63] text-xs  dark:text-darkTextSecondary1">
-                    {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
-                      <td key={index} className="p-3 whitespace-nowrap">
-                        {item.header}
-                      </td>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
-                    <tr
-                      key={index}
-                      className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
-                    >
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+      <div className="flex justify-center -mb-30 lg:hidden">
+        <button
+          className={`w-1/2 py-2 -ml-20 -mt-4 ${activeSection === 'supply' ? 'text-[#2A1F9D] font-bold underline' : ''}`}
+          onClick={() => setActiveSection('supply')}
+        >
+          Supply
+        </button>
+        <button
+          className={`w-1/2 py-1 -ml-20 mr-16 -mt-4 ${activeSection === 'borrow' ? 'text-[#2A1F9D] font-bold underline' : ''}`}
+          onClick={() => setActiveSection('borrow')}
+        >
+          Borrow
+        </button>
+      </div>
+
+      <div className="w-full lg:w-6/12 mt-6 md:mt-20">
+      <div className={`${activeSection === 'supply' ? 'block' : 'hidden'} lg:block`}>
+        <div className={`w-full ${isSupplyVisible ? 'min-h-[350px]' : 'min-h-[100px]'} p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}>
+
+          {/* Header */}
+          <div className="flex justify-between items-center">
+            <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
+              Your supplies
+            </h1>
+            <button
+              className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-4"
+              onClick={toggleSupplyVisibility}
+            >
+              {isSupplyVisible ? 'Hide' : 'Show'}
+              {isSupplyVisible ? <EyeOff className="ml-1" size={16} /> : <Eye className="ml-1" size={16} />}
+            </button>
+          </div>
+
+          {/* Content for Mobile Screens */}
+          <div className="md:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+            {isSupplyVisible && (
+              <>
+                {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+                  noSupplyMessage
+                ) : (
+                  <div className="overflow-auto mt-4">
+                    {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+                      <div key={index} className={`p-3 rounded-lg  dark:bg-darkSurface`}>
+                        <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                           <img
                             src={item.image}
                             alt={item.asset}
                             className="w-8 h-8 rounded-full"
                           />
-                          {item.asset}
+                          <span className="text-sm font-semibold">{item.asset}</span>
                         </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-col">
-                          <p>{item.wallet_balance_count}</p>
-                          <p className="font-light">${item.wallet_balance}M</p>
+                        <div className="flex justify-between text-xs font-semibold mb-2">
+                          <p>Wallet Balance:</p>
+                          <p className="text-right text-[#2A1F9D]">${item.wallet_balance_count}M</p>
                         </div>
-                      </td>
-                      <td className="p-3 align-top">{item.apy}</td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-center">
+                        <div className="flex justify-end text-xs mb-2">
+                          <p className="text-right text-[#2A1F9D]">${item.wallet_balance}M</p>
+                        </div>
+                        <div className="flex justify-between text-xs font-semibold mb-2">
+                          <p>APY:</p>
+                          <p className="text-right text-[#2A1F9D]">{item.apy}%</p>
+                        </div>
+                        <div className="flex justify-between text-xs font-semibold mb-2">
+                          <p className="text-nowrap">Can Be Collateral</p>
                           <Switch
                             sx={{
                               "& .MuiSwitch-switchBase.Mui-checked": {
@@ -138,326 +189,663 @@ const MySupply = () => {
                               },
                               "& .MuiSwitch-track": {
                                 backgroundColor: '#fff',
-
                                 boxShadow: '0 0 10px black',
                               },
-                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                              {
+                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
                                 backgroundColor: "#1939ea",
                               },
                             }}
                           />
                         </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex gap-2 pt-2">
+
+                        <div className="flex justify-center gap-2 mt-2 mb-2">
                           <Button
                             title={"Supply"}
                             onClickHandler={() => handleModalOpen("supply", item.asset, item.image)}
-                            className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                            }
+                            className="bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-8 py-3 shadow-lg font-semibold text-xs"
                           />
                           <Button
                             title={"Withdraw"}
                             onClickHandler={() => handleModalOpen("withdraw", item.asset, item.image)}
-                            className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                            }
+                            className="box-border gradient-border rounded-md px-9 py-3 shadow-lg font-semibold text-xs"
+                            style={{
+                              backgroundClip: "padding-box" // Ensure gradient doesn't overflow into padding
+                            }}
                           />
                         </div>
-
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-        <div className="w-full mt-8 min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
-            Assets to supply
-          </h1>
-          {MY_ASSET_TO_SUPPLY_TABLE_ROW.length === 0 ? (
-            noAssetsToSupplyMessage
-          ) : (
-            <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
-                <thead>
-                  <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
-                    {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
-                      <td key={index} className="p-3 whitespace-nowrap">
-                        {item.header}
-                      </td>
+                        {index !== MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
+                          <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+                        )}
+                      </div>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MY_ASSET_TO_SUPPLY_TABLE_ROW.slice(0, 8).map((item, index) => (
-                    <tr
-                      key={index}
-                      className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
-                    >
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+
+          {/* Content for Desktop Screens */}
+          <div className="hidden md:block">
+            {isSupplyVisible && (
+              <>
+                {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+                  noSupplyMessage
+                ) : (
+                  <div className="w-full overflow-auto mt-4">
+                    <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
+                      <thead>
+                        <tr className="text-left text-[#233D63] text-xs  dark:text-darkTextSecondary1">
+                          {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
+                            <td key={index} className="p-3 whitespace-nowrap">
+                              {item.header}
+                            </td>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+                          <tr
+                            key={index}
+                            className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                          >
+                            <td className="p-3 align-top">
+                              <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                                <img
+                                  src={item.image}
+                                  alt={item.asset}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                                {item.asset}
+                              </div>
+                            </td>
+                            <td className="p-3 align-top">
+                              <div className="flex flex-col">
+                                <p>{item.wallet_balance_count}</p>
+                                <p className="font-light">${item.wallet_balance}M</p>
+                              </div>
+                            </td>
+                            <td className="p-3 align-top">{item.apy}</td>
+                            <td className="p-3 align-top">
+                              <div className="w-full flex items-center justify-center">
+                                <Switch
+                                  sx={{
+                                    "& .MuiSwitch-switchBase.Mui-checked": {
+                                      color: "#fff",
+                                    },
+                                    "& .MuiSwitch-track": {
+                                      backgroundColor: '#fff',
+                                      boxShadow: '0 0 10px black',
+                                    },
+                                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                      backgroundColor: "#1939ea",
+                                    },
+                                  }}
+                                />
+                              </div>
+                            </td>
+                            <td className="p-3 align-top">
+                              <div className="w-full flex gap-2 pt-2">
+                                <Button
+                                  title={"Supply"}
+                                  onClickHandler={() => handleModalOpen("supply", item.asset, item.image)}
+                                  className="bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                />
+                                <Button
+                                  title={"Withdraw"}
+                                  onClickHandler={() => handleModalOpen("withdraw", item.asset, item.image)}
+                                  className="bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+        </div>
+
+
+        <div className={`w-full mt-8 ${isVisible ? 'min-h-[350px]' : 'min-h-[100px]'} p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}>
+          <div className="flex justify-between items-center">
+            <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
+              Assets to supply
+            </h1>
+            <button
+              className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-4"
+              onClick={toggleVisibility}
+            >
+              {isVisible ? 'Hide' : 'Show'}
+              {isVisible ? <EyeOff className="ml-1" size={16} /> : <Eye className="ml-1" size={16} />}
+            </button>
+          </div>
+          {/* mobile screen  */}
+          <div className="md:hidden  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+            {isVisible && (
+              <>
+                {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+                  noSupplyMessage
+                ) : (
+                  <div className="overflow-auto mt-4">
+                    {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+                      <div key={index} className="p-3 rounded-lg  dark:bg-darkSurface mb-4">
+                        <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                           <img
                             src={item.image}
                             alt={item.asset}
                             className="w-8 h-8 rounded-full"
                           />
-                          {item.asset}
+                          <span className="text-sm font-semibold">{item.asset}</span>
                         </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-col">
-                          <p>{item.wallet_balance_count}</p>
-                          <p className="font-light">${item.wallet_balance}M</p>
+                        <div className="flex justify-between text-xs font-semibold mb-1">
+                          <p>Wallet Balance:</p>
+                          <p className="text-right text-[#2A1F9D]">{item.wallet_balance_count}
+                          </p>
+
                         </div>
-                      </td>
-                      <td className="p-3 align-top">{item.apy}</td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-center">
-                          <Check color="#32851E" size={14} />
+                        <div className="flex justify-end text-xs mb-2">
+
+                          <p className="text-right text-[#2A1F9D]">${item.wallet_balance}M</p>
                         </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex gap-2 ">
+                        <div className="flex justify-between  text-xs font-semibold mb-2">
+                          <p>APY:</p>
+                          <p className="text-right text-[#2A1F9D] mb-2">{item.apy}%</p>
+                        </div>
+                        <div className="flex justify-between  text-xs font-semibold mb-2">
+                          <p className="text-nowrap ">Can Be Coletral</p>
+                          <div className="w-full flex items-center justify-end mb-2">
+                            <Check color="#2A1F9D" size={16} />
+                          </div>
+
+                        </div>
+                        <div className="flex  justify-center gap-2 mt-2">
                           <Button
                             title={"Supply"}
                             onClickHandler={() => handleModalOpen("supply", item.asset, item.image)}
-                            className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                            }
+                            className="bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-8 py-3 shadow-lg font-semibold text-xs"
                           />
                           <Button
                             title={"Details"}
                             onClickHandler={() => navigate('/dashboard/asset-details')}
-                            className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                            }
+                            className="box-border gradient-border   rounded-md px-9 py-3 shadow-lg font-semibold text-xs"
+                            style={{
+                              backgroundClip: "padding-box" // Set border-radius to 0 for square corners
+                            }}
+
                           />
                         </div>
+                        {index !== MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
+                          <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+
+          {/* for desktop screen */}
+          <div className="hidden md:block">
+            {isVisible && (
+              MY_ASSET_TO_SUPPLY_TABLE_ROW.length === 0 ? (
+                noAssetsToSupplyMessage
+              ) : (
+                <div className="w-full overflow-auto">
+                  <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
+                    <thead>
+                      <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
+                        {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
+                          <td key={index} className="p-3 whitespace-nowrap">
+                            {item.header}
+                          </td>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {MY_ASSET_TO_SUPPLY_TABLE_ROW.slice(0, 8).map((item, index) => (
+                        <tr
+                          key={index}
+                          className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                        >
+                          <td className="p-3 align-top">
+                            <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                              <img
+                                src={item.image}
+                                alt={item.asset}
+                                className="w-8 h-8 rounded-full"
+                              />
+                              {item.asset}
+                            </div>
+                          </td>
+                          <td className="p-3 align-top">
+                            <div className="flex flex-col">
+                              <p>{item.wallet_balance_count}</p>
+                              <p className="font-light">${item.wallet_balance}M</p>
+                            </div>
+                          </td>
+                          <td className="p-3 align-top">{item.apy}</td>
+                          <td className="p-3 align-top">
+                            <div className="w-full flex items-center justify-center">
+                              <Check color="#32851E" size={14} />
+                            </div>
+                          </td>
+                          <td className="p-3 align-top">
+                            <div className="w-full flex gap-2 ">
+                              <Button
+                                title={"Supply"}
+                                onClickHandler={() => handleModalOpen("supply", item.asset, item.image)}
+                                className={
+                                  "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                }
+                              />
+                              <Button
+                                title={"Details"}
+                                onClickHandler={() => navigate('/dashboard/asset-details')}
+                                className={
+                                  "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                }
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            )}
+          </div>
+        </div>
         </div>
       </div>
-      <div className="w-full lg:w-6/12 mt-20">
-        <div className="w-full min-h-[250px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+      <div className="w-full lg:w-6/12 -mt-6 md:mt-20">
+      <div className={`${activeSection === 'borrow' ? 'block' : 'hidden'} lg:block`}>
+        <div className={`w-full ${isborrowVisible ? 'min-h-[350px]' : 'min-h-[100px]'} p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}>
 
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">Your Borrows</h1>
-          {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
-            noBorrowMessage
-          ) : (
+          <div className="flex justify-between items-center">
+            <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
+              Your borrow
+            </h1>
+            <button
+              className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-auto md:ml-0"
+              onClick={toggleborrowVisibility}
+            >
+              {isborrowVisible ? 'Hide' : 'Show'}
+              {isborrowVisible ? <EyeOff className="ml-1" size={16} /> : <Eye className="ml-1" size={16} />}
+            </button>
+          </div>
 
-            <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
-                <thead>
-                  <tr className="text-left text-[#233D63] text-xs  dark:text-darkTextSecondary1">
-                    {MY_BORROW_ASSET_TABLE_COL.map((item, index) => (
-                      <td key={index} className="p-3 whitespace-nowrap">
-                        {item.header}
-                      </td>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
-                    <tr
-                      key={index}
-                      className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
-                    >
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+          {/* E-Mode section for mobile screens only */}
+          <div className="md:hidden flex flex-col items-start mt-2 ml-2">
+
+            <div className="flex items-center space-x-4">
+              <span className="text-[#2A1F9D] opacity-50 font-semibold dark:text-darkText">E-Mode</span>
+              <EModeButton />
+            </div>
+
+          </div>
+          <div className="hidden md:flex items-center space-x-4  ml-40 -mt-8">
+
+            <div className="flex items-center space-x-4">
+              <span className="text-[#2A1F9D] opacity-50 font-semibold dark:text-darkText">E-Mode</span>
+              <EModeButton />
+            </div>
+
+          </div>
+          {/* mobile screen for borrow */}
+          {isborrowVisible && (
+            <>
+              {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
+                noBorrowMessage
+              ) : (
+                <div className="md:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+                  <div className="overflow-auto ">
+                    {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+                      <div key={index} className="p-3 rounded-lg  dark:bg-darkSurface mb-4">
+                        <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                           <img
                             src={item.image}
                             alt={item.asset}
                             className="w-8 h-8 rounded-full"
                           />
-                          {item.asset}
+                          <span className="text-sm font-semibold">{item.asset}</span>
                         </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-col">
-                          <p>{item.wallet_balance_count}</p>
-                          <p className="font-light">${item.wallet_balance}M</p>
+                        <div className="flex justify-between text-xs font-semibold mb-2">
+                          <p>Debt</p>
+                          <p className="text-right text-[#2A1F9D]">${item.wallet_balance}M</p>
                         </div>
-                      </td>
-                      <td className="p-3 align-top">{item.apy}</td>
-                      <td className="p-3 align-top">
-                        {item.apy_type}
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex gap-2">
+                        <div className="flex justify-end text-xs font-semibold">
+
+                          <p className="text-right text-[#2A1F9D] mb-2">{item.wallet_balance_count}</p>
+                        </div>
+                        <div className="flex justify-between text-xs font-semibold mb-2">
+                          <p>APY:</p>
+                          <p className="text-right text-[#2A1F9D]">{item.apy}</p>
+                        </div>
+                        <div className="flex justify-between text-xs font-semibold mb-2">
+                          <p>APY Type:</p>
+                          <p className="text-right text-[#2A1F9D] bg-[#AEADCB] border border-white rounded-lg p-2">{item.apy_type}</p>
+                        </div>
+                        <div className="flex justify-center gap-2 mt-4">
                           <Button
                             title={"Borrow"}
                             onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
-                            className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                            }
+                            className="bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-8 py-3 shadow-lg font-semibold text-xs"
                           />
-
                           <Button
                             title={"Repay"}
-                            onClickHandler={() => handleModalOpen("withdraw", item.asset, item.image)}
-                            className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                            }
-                          />
+                            onClickHandler={() => handleModalOpen("repay", item.asset, item.image)}
+                            className="box-border gradient-border   rounded-md px-9 py-3 shadow-lg font-semibold text-xs"
+                            style={{
+                              backgroundClip: "padding-box" // Set border-radius to 0 for square corners
+                            }} />
                         </div>
-
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-        <div className="w-full mt-8 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-          <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
-            Assets to borrow
-          </h1>
-          {MY_ASSET_TO_BORROW_TABLE_ROW.length === 0 ? (
-            noAssetsToBorrowMessage
-          ) : (
-            <div className="w-full overflow-auto">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
-                <thead>
-                  <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
-                    {MY_ASSET_TO_BORROW_TABLE_COL.map((item, index) => (
-                      <td key={index} className="p-3 whitespace-nowrap">
-                        {index === 2 ? item.header2 : item.header}
-                      </td>
+                        {index !== MY_BORROW_ASSET_TABLE_ROWS.length - 1 && (
+                          <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
+                        )}
+                      </div>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MY_ASSET_TO_BORROW_TABLE_ROW.slice(0, 8).map((item, index) => (
-                    <tr
-                      key={index}
-                      className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
-                    >
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+
+          {/* desktop screen */}
+          <div className="hidden md:block">
+            {isborrowVisible && (
+              <>
+                {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
+                  noBorrowMessage
+                ) : (
+                  <div className="w-full overflow-auto md: mt-4 ">
+                    <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
+                      <thead>
+                        <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 mt-10">
+                          {MY_BORROW_ASSET_TABLE_COL.map((item, index) => (
+                            <td key={index} className="p-3 whitespace-nowrap">
+                              {item.header}
+                            </td>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+                          <tr
+                            key={index}
+                            className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                          >
+                            <td className="p-3 align-top">
+                              <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                                <img
+                                  src={item.image}
+                                  alt={item.asset}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                                {item.asset}
+                              </div>
+                            </td>
+                            <td className="p-3 align-top">
+                              <div className="flex flex-col">
+                                <p>{item.wallet_balance_count}</p>
+                                <p className="font-light">${item.wallet_balance}M</p>
+                              </div>
+                            </td>
+                            <td className="p-3 align-top">{item.apy}</td>
+                            <td className="p-3 align-top">{item.apy_type}</td>
+                            <td className="p-3 align-top">
+                              <div className="w-full flex gap-2">
+                                <Button
+                                  title={"Borrow"}
+                                  onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
+                                  className={
+                                    "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                  }
+                                />
+                                <Button
+                                  title={"Repay"}
+                                  onClickHandler={() => handleModalOpen("repay", item.asset, item.image)}
+                                  className={
+                                    "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                  }
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+
+
+        <div className={`w-full mt-8 ${isBorrowVisible ? 'min-h-[350px]' : 'min-h-[100px]'} p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}>
+          <div className="flex justify-between items-center">
+            <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
+              Assets to borrow
+            </h1>
+            <button onClick={toggleBorrowVisibility} className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText flex items-center">
+              {isBorrowVisible ? 'Hide' : 'Show'}
+              {isBorrowVisible ? <EyeOff className="ml-2" /> : <Eye className="ml-2" />}
+            </button>
+          </div>
+          {isBorrowVisible && (
+            <>
+              {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
+                noBorrowMessage
+              ) : (
+                <div className="md:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+                  <div className="overflow-auto ">
+                    {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+                      <div key={index} className="p-3 rounded-lg  dark:bg-darkSurface mb-4">
+                        <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                           <img
                             src={item.image}
                             alt={item.asset}
                             className="w-8 h-8 rounded-full"
                           />
-                          {item.asset}
+                          <span className="text-sm font-semibold">{item.asset}</span>
                         </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-col">
-                          <p>{item.wallet_balance_count}</p>
-                          <p className="font-light">${item.wallet_balance}M</p>
+                        <div className="flex justify-between text-xs font-semibold mb-2">
+                          <p>Avaliable</p>
+                          <p className="text-right text-[#2A1F9D]">${item.wallet_balance}M</p>
                         </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-col">
-                          <p>{item.apy}</p>
-                          <p className="font-light break-words">
-                            {item.apy_desc.slice(0, 18)}<br />
-                            {item.apy_desc.slice(18, 32)}<br />
-                            {item.apy_desc.slice(32)}
-                          </p>
-                        </div>
+                        <div className="flex justify-end text-xs font-semibold">
 
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex gap-3">
+                          <p className="text-right text-[#2A1F9D] mb-2">{item.wallet_balance_count}</p>
+                        </div>
+                        <div className="flex justify-between text-xs font-semibold mb-2">
+                          <p>APY:</p>
+                          <p className="text-right text-[#2A1F9D]">{item.apy}</p>
+                        </div>
+                       
+                        <div className="flex justify-center gap-2 mt-4">
                           <Button
                             title={"Borrow"}
                             onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
-                            className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md p-2 px-3 shadow-lg font-semibold text-sm"
-                            }
+                            className="bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-8 py-3 shadow-lg font-semibold text-xs"
                           />
                           <Button
-                            title={"Details"}
-                            onClickHandler={() => handleModalOpen("payment")}
-                            className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md p-2 px-3 shadow-lg font-semibold text-sm "
-                            }
-                          />
+                           title={"Details"}
+                           onClickHandler={() => handleModalOpen("payment")}
+                            className="box-border gradient-border   rounded-md px-9 py-3 shadow-lg font-semibold text-xs"
+                            style={{
+                              backgroundClip: "padding-box" // Set border-radius to 0 for square corners
+                            }} />
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {/* Gradient border line */}
-                  <tr className="relative">
-                    <td colSpan="4" className="p-0">
-                      <div className="absolute left-0 w-full h-0.5 bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] opacity-50" />
-                    </td>
-                  </tr>
-                </tbody>
-                <thead>
-                  <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
-                    {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
-                      <td key={index} className="p-3 whitespace-nowrap">
-                        {index === 2 ? item.header1 : item.header}
-                      </td>
+                        {index !== MY_BORROW_ASSET_TABLE_ROWS.length - 1 && (
+                          <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
+                        )}
+                      </div>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
-                    <tr
-                      key={index}
-                      className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
-                    >
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
-                          <img
-                            src={item.image}
-                            alt={item.asset}
-                            className="w-8 h-8 rounded-full"
-                          />
-                          {item.asset}
-                        </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-col">
-                          <p>{item.wallet_balance_count}</p>
-                          <p className="font-light">${item.wallet_balance}M</p>
-                        </div>
-                      </td>
-                      <td className="p-3 align-top">{item.apy}</td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex gap-3">
-                          <Button
-                            title={"Borrow"}
-                            onClickHandler={() => handleModalOpen("borroww", item.asset, item.image)}
-                            className={
-                              "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md p-2 px-3 shadow-lg font-semibold text-sm"
-                            }
-                          />
-                          <Button
-                            title={"Details"}
-                            onClickHandler={() => handleModalOpen("payment")}
-                            className={
-                              "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md p-2 px-3 shadow-lg font-semibold text-sm "
-                            }
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
+
+          {/* DESKTOP  */}
+          <div className="hidden md:block">
+          {isBorrowVisible && (
+            <>
+              <div className="bg-[#AEADCB] mt-2 px-2 py-2 rounded-lg flex items-center mb-2">
+
+                <span className="text-white ms-4 text-sm">
+                  To borrow you need to supply any asset to be used as collateral.
+                </span>
+                <Info className="ml-4 text-[#2A1F9D]" />
+              </div>
+              {MY_ASSET_TO_BORROW_TABLE_ROW.length === 0 ? (
+                noAssetsToBorrowMessage
+              ) : (
+                <div className="w-full overflow-auto">
+                  <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
+                    <thead>
+                      <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
+                        {MY_ASSET_TO_BORROW_TABLE_COL.map((item, index) => (
+                          <td key={index} className="p-3 whitespace-nowrap">
+                            {index === 2 ? item.header2 : item.header}
+                          </td>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {MY_ASSET_TO_BORROW_TABLE_ROW.slice(0, 8).map((item, index) => (
+                        <tr
+                          key={index}
+                          className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                        >
+                          <td className="p-3 align-top">
+                            <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                              <img
+                                src={item.image}
+                                alt={item.asset}
+                                className="w-8 h-8 rounded-full"
+                              />
+                              {item.asset}
+                            </div>
+                          </td>
+                          <td className="p-3 align-top">
+                            <div className="flex flex-col">
+                              <p>{item.wallet_balance_count}</p>
+                              <p className="font-light">${item.wallet_balance}M</p>
+                            </div>
+                          </td>
+                          <td className="p-3 align-top">
+                            <div className="flex flex-col">
+                              <p>{item.apy}</p>
+                              <p className="font-light break-words">
+                                {item.apy_desc.slice(0, 18)}<br />
+                                {item.apy_desc.slice(18, 32)}<br />
+                                {item.apy_desc.slice(32)}
+                              </p>
+                            </div>
+
+                          </td>
+                          <td className="p-3 align-top">
+                            <div className="w-full flex gap-3">
+                              <Button
+                                title={"Borrow"}
+                                onClickHandler={() => handleModalOpen("borrow", item.asset, item.image)}
+                                className={
+                                  "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                }
+                              />
+                              <Button
+                                title={"Details"}
+                                onClickHandler={() => handleModalOpen("payment")}
+                                className={
+                                  "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                }
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {/* Gradient border line */}
+                      <tr className="relative">
+                        <td colSpan="4" className="p-0">
+                          <div className="absolute left-0 w-full h-0.5 bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] opacity-50" />
+                        </td>
+                      </tr>
+                    </tbody>
+                    <thead>
+                      <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
+                        {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
+                          <td key={index} className="p-3 whitespace-nowrap">
+                            {index === 2 ? item.header1 : item.header}
+                          </td>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+                        <tr
+                          key={index}
+                          className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                        >
+                          <td className="p-3 align-top">
+                            <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                              <img
+                                src={item.image}
+                                alt={item.asset}
+                                className="w-8 h-8 rounded-full"
+                              />
+                              {item.asset}
+                            </div>
+                          </td>
+                          <td className="p-3 align-top">
+                            <div className="flex flex-col">
+                              <p>{item.wallet_balance_count}</p>
+                              <p className="font-light">${item.wallet_balance}M</p>
+                            </div>
+                          </td>
+                          <td className="p-3 align-top">{item.apy}</td>
+                          <td className="p-3 align-top">
+                            <div className="w-full flex gap-3">
+                              <Button
+                                title={"Borrow"}
+                                onClickHandler={() => handleModalOpen("borroww", item.asset, item.image)}
+                                className={
+                                  "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                }
+                              />
+                              <Button
+                                title={"Details"}
+                                onClickHandler={() => handleModalOpen("payment")}
+                                className={
+                                  "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                }
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+          </div>
+        </div>
         </div>
       </div>
       {renderModalOpen(isModalOpen.type)}
-    </div>
+    </div >
   )
 }
 

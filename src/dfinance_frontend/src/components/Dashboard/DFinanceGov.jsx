@@ -103,7 +103,7 @@ const DFinanceGov = () => {
                     id="search"
                     placeholder="Search for proposals"
                     style={{ fontSize: '0.75rem' }}
-                    className={`placeholder-gray-500 w-[200px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-border  ${showsearch
+                    className={`placeholder-gray-500 w-[200px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-border border-radius:50rem ${showsearch
                       ? "animate-fade-left flex"
                       : "animate-fade-right hidden"
                       }`}

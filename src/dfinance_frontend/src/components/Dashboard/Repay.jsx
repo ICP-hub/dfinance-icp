@@ -1,20 +1,20 @@
 import { Info } from 'lucide-react';
 import React, { useState } from 'react';
 
-const Borrow = ({ asset, image }) => {
+const Repay = ({ asset, image }) => {
     const [amount, setAmount] = useState("0.00");
 
     const handleAmountChange = (e) => {
         setAmount(e.target.value);
     };
 
-    const handleBorrowETH = () => {
+    const handleRepayETH = () => {
         // Implement your supply ETH logic here
-        console.log("Borrow", asset, "ETH:", amount);
+        console.log("Repay", asset, "ETH:", amount);
     };
     return (
         <>
-            <h1 className='font-semibold text-xl'>Borrow {asset}</h1>
+            <h1 className='font-semibold text-xl'>Repay {asset}</h1>
             <div className='flex flex-col gap-2 mt-5 text-sm'>
                 <div className="w-full">
                     <div className="w-full flex justify-between my-2">
@@ -48,16 +48,30 @@ const Borrow = ({ asset, image }) => {
                     </div>
                     <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm">
                         <div className="w-full flex flex-col my-1">
+                        <div className="w-full flex justify-between items-center mt-2">
+                                <p className='text-nowrap -mt-12'>Remaining debt</p>
+                                <p>
+                                    <span className="text-[#2A1F9D] text-nowrap mt-2">0.00001250 ETH</span>
+                                    <span className="text-[#2A1F9D] ">→</span> 
+                                    <div className="w-full flex justify-end items-center mt-1 ">
+                                <p className="text-[#2A1F9D] mb-2">0.00002010 ETH</p>
+                            </div>
+                            <div className="w-full flex justify-end items-center ">
+                               
+                                <span className="text-[#909094] text-nowrap -mt-2">$6.0</span>
+                                    <span className="text-[#909094] -mt-2 ">→</span> 
+                                    <span className="text-[#909094] text-nowrap -mt-2">$6.0</span>
+                            </div>
+                                </p>
+                            </div>
                             <div className="w-full flex justify-between items-center">
                                 <p>Health Factor</p>
                                 <p>
-                                    <span className="text-red-500">1.00</span>
-                                    <span className="text-gray-500 mx-1">→</span>
                                     <span className="text-green-500">5.23</span>
                                 </p>
                             </div>
                             <div className="w-full flex justify-end items-center mt-1 ">
-                                <p className="text-gray-500">liquidation at &lt;1.5</p>
+                                <p className="text-[#909094]">liquidation at &lt;1.5</p>
                             </div>
                         </div>
                        
@@ -84,29 +98,20 @@ const Borrow = ({ asset, image }) => {
                             </div>
                         </div>
 
-                        <div className="w-full flex bg-[#1e627e] opacity-80 p-1 rounded">
-                            <div className="w-1/12 flex items-center justify-center">
-                                <div className="warning-icon-container">
-                                    <Info className=" text-[#120f34]" />
-                                </div>
-                            </div>
-                            <div className="w-11/12 text-xs text-white flex items-center ml-1">
-                                Attention: Parameter changes via governance can alter your account health factor and risk of liquidation. Follow the ICP Governance forum for updates.
-                            </div>
-                        </div>
+                       
                     </div>
                 </div>
 
                 <div className="w-full">
                     <button
-                        onClick={handleBorrowETH}
+                        onClick={handleRepayETH}
                         className="bg-gradient-to-tr from-[#ffaf5a]  to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
                     >
-                        Borrow {asset}
+                        Repay {asset}
                     </button></div>
             </div>
         </>
     );
 }
 
-export default Borrow;
+export default Repay;

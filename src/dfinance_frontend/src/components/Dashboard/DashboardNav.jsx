@@ -4,8 +4,11 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { TAB_CARD_DATA, WALLET_DETAILS_TABS, WALLET_DETAIL_TAB } from "../../utils/constants";
 import { useSelector } from "react-redux";
 import RiskPopup from './RiskDetails';
-
+import { X } from "lucide-react"
+import { useAuth } from '../../utils/useAuthClient';
 const DashboardNav = () => {
+  const { isAuthenticated } = useAuth();
+
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { isWalletConnected } = useSelector((state) => state.utility);
@@ -71,7 +74,8 @@ const DashboardNav = () => {
   };
 
   // Determine if it's dashboard supply or main based on pathname
-  const isDashboardSupplyOrMain = pathname === "/dashboard";
+  const isDashboardSupplyOrMain = pathname === "/dashboard" || pathname.includes("/dashboard/transaction-history");
+
 
   const handleAssetSelect = (index) => {
     setCurrentValueIndex(index);
@@ -160,83 +164,91 @@ const DashboardNav = () => {
             </div>
           </div>
           {/* Menu button for small screens */}
-          <div className=" md:hidden flex w-[70vw] justify-end">
-            <button onClick={toggleMenu} className="p-2 rounded-md">
-            <img
-              src={theme === 'dark' ? "/wallet-details-menu-dark.svg" : "/wallet-details-menu-light.svg"}
-              alt=""
-            />
-            </button>
-          </div>
-        </div>
-
-        {/* Menu items */}
-        <div
-          className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}
-        >
-          <div className="absolute top-1/4 left-1/2 bg-white p-7 rounded-md dark:bg-darkOverlayBackground dark:text-darkText" ref={menuRef}>
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Menu</h2>
-              <button onClick={toggleMenu} className="text-gray-600">
-                <ChevronDown size={16} color={chevronColor} />
+          <div className="relative">
+            {/* Menu Button */}
+            <div className="md:hidden flex w-[70vw] justify-end">
+              <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
+                <img
+                  src={theme === 'dark' ? "/wallet-details-menu-dark.svg" : "/wallet-details-menu-light.svg"}
+                  alt=""
+                />
               </button>
             </div>
-            <div className="mt-9">
-              {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
-                <div key={index} className="relative group mb-9">
-                  <button className="relative w-full text-left">
-                    {data.title}
-                    <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                    <span className="absolute top-full left-0 font-light py-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {data.count}
-                    </span>
-                  </button>
+
+            {/* Menu Items */}
+            <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}>
+              <div
+                className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
+                         bg-white p-7 rounded-md w-11/12 max-w-md dark:bg-darkOverlayBackground dark:text-darkText"
+                ref={menuRef}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <span
+                    className="absolute top-2 right-2 text-red-400 cursor-pointer"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <X />
+                  </span>
                 </div>
-              ))}
-              {shouldRenderRiskDetailsButton && (
-                <button
-                  className="mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
-                  onClick={handleOpenPopup}
-                >
-                  Risk Details
-                </button>
-              )}
+                <div className="space-y-6">
+                  {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+                    <div key={index} className="relative group text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
+                        ">
+                      <button className="relative w-full text-left flex justify-between items-center">
+                        <span>{data.title}</span>
+                        <span className="font-light">{data.count}</span>
+                        <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                      </button>
+                    </div>
+                  ))}
+                  {shouldRenderRiskDetailsButton && (
+                    <button
+                      className="w-full mt-2 py-2 px-2 bg-[#FFC1C1]  shadow-xl text-red-600 text-xl rounded-lg dark:text-darkTextSecondary"
+                      onClick={handleOpenPopup}
+                    >
+                      Risk Details
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
-          {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
-            <div key={index} className="relative group ml-10">
-              <button className="relative">
-                {data.title}
-                <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                <span className="absolute top-full left-0 font-light py-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {data.count}
-                </span>
+          <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
+            {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+              <div key={index} className="relative group ml-10">
+                <button className="relative">
+                  {data.title}
+                  <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                  <span className="absolute top-full left-0 font-light py-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {data.count}
+                  </span>
+                </button>
+              </div>
+            ))}
+            {shouldRenderRiskDetailsButton && (
+              <button
+                className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
+                onClick={handleOpenPopup}
+              >
+                Risk Details
               </button>
-            </div>
-          ))}
-          {shouldRenderRiskDetailsButton && (
-            <button
-              className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
-              onClick={handleOpenPopup}
-            >
-              Risk Details
-            </button>
-          )}
-        </div>
-        {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
-        <div className="sxs3:mt-4 md:mt-0 lg:mt-0 sxs3:flex sxs3:justify-end sxs3:w-full md:w-auto md:ml-auto">
-          {shouldRenderTransactionHistoryButton && (
-            <a href="/dashboard/transaction-history" className="block">
-              <button className="px-4 py-2 border text-blue-900 rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none">
-                Transactions
-              </button>
-            </a>
-          )}
+            )}
+          </div>
+          {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
+          <div className="sxs3:mt-16 -mb-6 -ml-40  mr-2 md:mt-0 lg:ml-[465px] sxs3:flex sxs3:justify-end sxs3:w-full md:w-auto md:ml-auto">
+            {isAuthenticated && shouldRenderTransactionHistoryButton && (
+              <a href="/dashboard/transaction-history" className="block">
+                <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
+                  Transaction History
+                </button>
+              </a>
+            )}
+          </div>
+
         </div>
       </div>
+
     </div>
   );
 };

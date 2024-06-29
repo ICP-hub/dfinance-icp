@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import Button from "../Button"
+import { useAuth } from "../../utils/useAuthClient"
 import { BsToggles2 } from "react-icons/bs";
 import { IoIosSearch } from "react-icons/io";
 import {
@@ -14,6 +15,16 @@ const DFinanceGov = () => {
   const [isFilter, setIsFilter] = useState(false)
   const [showsearch, setShowSearch] = useState(false);
   const [selectedItem, setSelectedItem] = useState("All Proposals");
+
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    principal,
+    reloadLogin,
+    accountIdString,
+  } = useAuth();
+
 
   const showSearchBar = () => {
     setShowSearch(!showsearch);
@@ -195,17 +206,17 @@ const DFinanceGov = () => {
         <div className="w-full md2:w-4/12 dxl:w-3/12">
           <div className="w-full bg-[#233D63] p-4 rounded-xl text-white">
             <h1 className="font-semibold">Your info</h1>
-            <p className="text-gray-200 text-xs my-2">
+           {isAuthenticated ? <p className="text-gray-200 text-xs my-2">Your wallet has been connected</p>: <p className="text-gray-200 text-xs my-2">
               Please connect a wallet to view your personal information here.
-            </p>
-            <div className="w-full mt-4">
+            </p>}
+            {!isAuthenticated && <div className="w-full mt-4">
               <Button
                 title={"Connect Wallet"}
                 className={
                   "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-3 px-8 shadow-lg font-semibold text-sm'"
                 }
               />
-            </div>
+            </div>}
           </div>
         </div>
       </div>

@@ -11,6 +11,11 @@ import { GrCopy } from 'react-icons/gr';
 import { CiShare1 } from 'react-icons/ci';
 import Button from './Button';
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from '../utils/constants';
+import { toggleTheme } from "../redux/reducers/themeReducer"
+
+import { Drawer } from "@mui/material";
+import CloseIcon from './Home/CloseIcon';
+import MenuIcon from './Home/MenuIcon';
 import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
@@ -23,6 +28,7 @@ import settingsIcon from "../../public/Settings.svg"
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 //  
 export default function Navbar({ isHomeNav }) {
+  
   const isMobile = window.innerWidth <= 768; // Adjust the breakpoint as needed
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -31,6 +37,7 @@ export default function Navbar({ isHomeNav }) {
   const { isWalletModalOpen, isWalletConnected } = useSelector(
     (state) => state.utility
   );
+
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const navigate = useNavigate();
@@ -135,7 +142,7 @@ export default function Navbar({ isHomeNav }) {
 
 
   const handleLaunchApp = () => {
-    navigate('/dashboard/main'); // Directly navigate to /dashboard/main
+    navigate('/dashboard'); // Directly navigate to /dashboard/main
   };
   const handleClose = () => {
     setSwitchTokenDrop(false);
@@ -164,18 +171,16 @@ export default function Navbar({ isHomeNav }) {
     }
   }, [isAuthenticated]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('isDarkMode');
+    return savedTheme ? JSON.parse(savedTheme) : theme === 'dark';
+  });
   const [isTestnetMode, setIsTestnetMode] = useState(false);
 
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
   };
 
-
-
-  const handleDarkModeToggle = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
 
   const handleTestnetModeToggle = () => {
     setIsTestnetMode((prevMode) => !prevMode);
@@ -193,15 +198,60 @@ export default function Navbar({ isHomeNav }) {
     console.log(hash);
   }, [hash])
 
+
+
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 768);
+
+  const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+  };
+
+  useEffect(() => {
+      window.addEventListener('resize', handleResize);
+
+      // Cleanup: remove event listener on component unmount
+      return () => {
+          window.removeEventListener('resize', handleResize);
+      };
+  }, []);
+
+  const theme = useSelector((state) => state.theme.theme);
+
+  
+
+  const handleDarkModeToggle = () => {
+    dispatch(toggleTheme());
+    setIsDarkMode((prevMode) => {
+      const newMode = !prevMode;
+      localStorage.setItem('isDarkMode', JSON.stringify(newMode));
+      return newMode;
+    });
+  };
+
+  React.useEffect(() => {
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+    if (theme === 'dark') {
+      htmlElement.classList.add('dark');
+      bodyElement.classList.add('dark');
+      bodyElement.style.backgroundColor = '#070a18';
+    } else {
+      htmlElement.classList.remove('dark');
+      bodyElement.classList.remove('dark');
+      bodyElement.style.backgroundColor = '';
+    }
+  }, [theme]);
+
+
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
         <div className="w-full">
           <nav className="w-full py-4 lg:py-10 flex items-center justify-between">
             <img
-              src="/DFinance-Light.svg"
+              src={theme === 'dark' ? "/DFinance-Dark.svg" : "/DFinance-Light.svg"}
               alt="DFinance"
-              className="w-[100px] md:w-[150px] lg:w-auto"
+              className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]"
             />
 
             <div className="gap-4 hidden lg:flex dark:text-darkText">
@@ -210,7 +260,7 @@ export default function Navbar({ isHomeNav }) {
                   <NavLink
                     key={index}
                     to={link.route}
-                    className="text-[#2a1f9d] px-3 py-2 text-lg nav-link"
+                    className="text-[#2a1f9d] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                   >
                     {link.title}
                   </NavLink>
@@ -219,7 +269,7 @@ export default function Navbar({ isHomeNav }) {
                   <NavLink
                     key={index}
                     to={link.route}
-                    className="text-[#233D63] px-3 py-2 text-lg nav-link"
+                    className="text-[#233D63] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                   >
                     {link.title}
                   </NavLink>
@@ -229,30 +279,30 @@ export default function Navbar({ isHomeNav }) {
 
             {isHomeNav ? (
               <div className='flex gap-2'>
-                <div className="ml-16 text-nowrap">
-                  <Button title={"Launch App"} onClick={handleLaunchApp} />
+                <div className="sxs3:ml-7 lg:ml-0 md:ml-0 text-nowrap ">
+                  <Button title={"Launch App"} onClickHandler={handleLaunchApp} />
                 </div>
-                <div >
+                <div className='flex align-center justify-center'>
                   {renderThemeToggle && <ThemeToggle />}
                 </div>
               </div>
 
             ) : (isAuthenticated ? (
-              <div className="hidden lg:flex gap-3">
+              <div className="hidden lg:flex gap-3 sxs3:flex sxs3:ml-6">
                 <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
                     className="flex items-center gap-2 p-2 px-3"
                     onClick={handleSwitchToken}
                   >
-                    <span>Switch Token</span>
+                    <span className='sxs3:hidden lg:flex md:flex'>Switch Token</span>
                     <ArrowDownUp />
                   </div>
                   <div className="relative">
                     {switchTokenDrop && (
-                      <div className="w-[350px] absolute -left-6 mt-4 rounded-md bg-white shadow-xl border p-4 z-50">
-                        <h1 className="font-semibold text-2xl text-[#2A1F9D]">Switch Tokens</h1>
+                      <div className="w-[350px] absolute -left-6 mt-4 rounded-md bg-white shadow-xl border p-4 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
+                        <h1 className="font-semibold text-2xl text-[#2A1F9D] dark:text-darkText">Switch Tokens</h1>
 
-                        <div className="w-full my-2 bg-gradient-to-r from-[#e9ebfa] to-[#e5ddd4] text-center py-2 rounded-md">
+                        <div className="w-full my-2 bg-gradient-to-r from-[#e9ebfa] to-[#e5ddd4] text-center py-2 rounded-md dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ">
                           <p className="text-xs text-[#EB8863] text-left px-4">
                             Please switch to Ethereum
                             <span className=" text-[#EB8863] underline cursor-pointer ml-2">Switch Network</span>
@@ -263,11 +313,11 @@ export default function Navbar({ isHomeNav }) {
                         <div className="flex justify-between items-center my-2 mt-4">
                           <div className='flex justify-center items-center  gap-x-2'>
                             <img src="/square.png" alt="Connect Wallet" className=" left-3   w-8 h-8  " />
-                            <label className=" text-sm font-medium text-[#2A1F9D]  justify-start">Token</label>
+                            <label className=" text-sm font-medium text-[#2A1F9D]  justify-start dark:text-darkText">Token</label>
 
                           </div>
                           <div className="flex items-center space-x-1">
-                            <span className="text-sm text-[#2A1F9D]">Slippage 0.10%</span>
+                            <span className="text-sm text-[#2A1F9D] dark:text-darkText">Slippage 0.10%</span>
 
                             <img
                               src="/settings.png"
@@ -285,22 +335,22 @@ export default function Navbar({ isHomeNav }) {
                               onFocus={handleInputFocus}
                               onBlur={handleInputBlur}
 
-                              className="w-full pl-12 pr-16 py-4 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md"
+                              className="w-full pl-12 pr-16 py-4 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md dark:bg-darkBackground/30 dark:text-darkTextSecondary"
                               placeholder="0.00"
                             />
                             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-                              <img src="/square.png" alt="ETH" className="w-4 h-4 text-gray-500" />
-                              <span className="text-[#2A1F9D]">ETH</span>
-                              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                              <img src="/square.png" alt="ETH" className="w-4 h-4 text-gray-500 dark:text-darkTextSecondary" />
+                              <span className="text-[#2A1F9D] dark:text-darkText">ETH</span>
+                              <svg className="w-4 h-4 text-gray-500 dark:text-darkTextSecondary" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z" clipRule="evenodd" />
                               </svg>
                             </div>
-                            <div className="absolute left-0 bottom-0 text-gray-600 text-xs ml-12 mb-1 mt-1">$0</div>
-                            <div className="absolute left-12 bottom-2 text-[#2A1F9D] text-xs ml-40 -mb-0.5">Balance: {balance} Max</div>
+                            <div className="absolute left-0 bottom-0 text-gray-600 text-xs ml-12 mb-1 mt-1 dark:text-darkTextSecondary">$0</div>
+                            <div className="absolute left-12 bottom-2 text-[#2A1F9D] text-xs ml-40 -mb-0.5 dark:text-darkText">Balance: {balance} Max</div>
                           </div>
 
                           <div className="flex justify-center my-2">
-                            <img src="/arrow.png" alt="Switch Icon" className="w-6 h-6 cursor-pointer" onClick={handleSwitchClick} />
+                            <img src="/arrow.png" alt="Switch Icon" className="w-6 h-6 cursor-pointer" onClickHandler={handleSwitchClick} />
                           </div>
 
                           <div className="relative w-full">
@@ -308,13 +358,13 @@ export default function Navbar({ isHomeNav }) {
                               type="text"
                               value={selectedToken === 'ETH' ? oneInchValue : ethValue}
                               onChange={selectedToken === 'ETH' ? handleOneInchChange : handleEthChange}
-                              className="w-full pl-12 pr-16 py-4 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md"
+                              className="w-full pl-12 pr-16 py-4 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md dark:bg-darkBackground/30 dark:text-darkTextSecondary"
                               placeholder="0.00"
                             />
                             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                               <img src="/square.png" alt="1INCH" className="w-4 h-4 text-gray-500" />
-                              <span className="text-[#2A1F9D]">1INCH</span>
-                              <svg className="w-4 h-4 text-[#2A1F9D]" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                              <span className="text-[#2A1F9D] dark:text-darkText">1INCH</span>
+                              <svg className="w-4 h-4 text-[#2A1F9D] dark:text-darkText" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z" clipRule="evenodd" />
                               </svg>
                             </div>
@@ -376,7 +426,7 @@ export default function Navbar({ isHomeNav }) {
                 </div>
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 p-2 px-3"
+                    className="flex items-center gap-1 p-2 px-3 overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -384,11 +434,11 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5"
                     />
-                    <span>0x65.125s</span>
+                    <span className='text-[12px]'>0x65.125s</span>
                   </div>
 
                   {switchWalletDrop && (
-                    <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10 dark:bg-darkOverlayBackground">
+                    <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
                       <div className="w-full flex items-center gap-3 mt-2">
                         <img
                           src="/square.png"
@@ -448,16 +498,16 @@ export default function Navbar({ isHomeNav }) {
                     <img
                       src={settingsIcon}
                       alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer"
+                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block"
                       onClick={handleDropdownToggle}
                     />
                     {dropdownVisible && (
 
-                      <div className="absolute w-[280px] top-12 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50">
-                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4"> Settings</h2>
+                      <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText"> Settings</h2>
                         {/* Dropdown content for dark mode and testnet mode */}
                         <div className="flex items-center mb-4">
-                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D]">Dark Mode</label>
+                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
                           <span className="ml-8">{isDarkMode ? 'ON' : 'OFF'}</span>
                           <Switch
                             checked={isDarkMode}
@@ -478,7 +528,7 @@ export default function Navbar({ isHomeNav }) {
                           />
                         </div>
                         <div className="flex items-center">
-                          <label htmlFor="testnetMode" className="ml-2 text-lg font-bold text-[#2A1F9D] text-nowrap">Testnet Mode</label>
+                          <label htmlFor="testnetMode" className="ml-2 text-lg font-bold text-[#2A1F9D] text-nowrap dark:text-darkText">Testnet Mode</label>
                           <span className="ml-8">{isTestnetMode ? 'ON' : 'OFF'}</span>
                           <Switch
                             checked={isTestnetMode}
@@ -506,34 +556,145 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : (
               // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
-              <div className='flex gap-1'>
+              <div className='flex md:gap-3 lg:gap-3 sxs3:gap-0'>
                 <Button title={"Connect Wallet"} onClickHandler={handleWalletConnect} />
-                <div className='flex items-center justify-center'>
-                  <img
-                    src={settingsIcon}
-                    alt="settings_icon"
-                    className="object-contain w-[42px] h-[42px]"
-                  />
+                <div className="flex items-center justify-center">
+                  <div className="relative">
+                    <img
+                      src={settingsIcon}
+                      alt="settings_icon"
+                      className="object-contain w-[43px] h-[43px] cursor-pointer hidden lg:block md:block"
+                      onClick={handleDropdownToggle}
+                    />
+                    {dropdownVisible && (
+
+                      <div className="absolute w-[280px] top-12 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText"> Settings</h2>
+                        {/* Dropdown content for dark mode and testnet mode */}
+                        <div className="flex items-center mb-4">
+                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
+                          <span className="ml-8">{isDarkMode ? 'ON' : 'OFF'}</span>
+                          <Switch
+                            checked={isDarkMode}
+                            onChange={handleDarkModeToggle}
+                            id='darkMode'
+                            sx={{
+                              "& .MuiSwitch-switchBase.Mui-checked": {
+                                color: "#fff",
+                              },
+                              "& .MuiSwitch-track": {
+                                backgroundColor: '#fff',
+
+                                boxShadow: '0 0 10px black',
+                              },
+                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                backgroundColor: "#1939ea",
+                              },
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center">
+                          <label htmlFor="testnetMode" className="ml-2 text-lg font-bold text-[#2A1F9D] text-nowrap dark:text-darkText">Testnet Mode</label>
+                          <span className="ml-8">{isTestnetMode ? 'ON' : 'OFF'}</span>
+                          <Switch
+                            checked={isTestnetMode}
+                            onChange={handleTestnetModeToggle}
+                            sx={{
+                              "& .MuiSwitch-switchBase.Mui-checked": {
+                                color: "#fff",
+                              },
+                              "& .MuiSwitch-track": {
+                                backgroundColor: '#fff',
+
+                                boxShadow: '0 0 10px black',
+                              },
+                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                backgroundColor: "#1939ea",
+                              },
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                    )}
+                  </div>
                 </div>
               </div>
 
 
             ))}
 
-            {/* Mobile/Tablet Menu */}
             {isMobile && (
-              <img
-                src="/menu.png"
-                alt="Clickable Image"
-                className="cursor-pointer"
-                onClick={() => {
-                  // Perform your functionality here
-                  setIsMobileNav(true); // Example functionality: set state to open mobile navigation
-                }}
-              />
-           
-           
-           )}
+              <div>
+                <div onClick={() => setIsMobileNav(!isMobileNav)} className="cursor-pointer">
+                  {isMobileNav ? <CloseIcon /> : <MenuIcon />} {/* Toggle between Menu and X icons */}
+                </div>
+                <Drawer
+                  anchor={"right"}
+                  open={isMobileNav}
+                  onClose={() => setIsMobileNav(false)}
+                  PaperProps={{
+                    style: {
+                      marginTop: "88px", // Adjust the margin as needed
+                      borderRadius: "12px",  // Add rounded borders
+                      className: "drawer-right-to-left",
+                    },
+                  }}
+                >
+                  <div className="flex flex-col pt-6 p-4 dark:bg-darkBackground">
+                    <h2 className="text-lg font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">Menu</h2>
+
+                    {!isHomeNav
+                      ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
+                        <NavLink
+                          key={index}
+                          to={link.route}
+                          className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                          >
+                          {link.title}
+                        </NavLink>
+                      ))
+                      : HOME_TOP_NAV_LINK.map((link, index) => (
+                        <NavLink
+                          key={index}
+                          to={link.route}
+                          className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
+                    <h2 className="text-lg my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">Setting</h2>
+                    <div className="p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1">
+                      <div className="flex items-center">
+                        <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D] dark:text-darkTextSecondary">Dark Mode</label>
+                        <span className="ml-auto">{isDarkMode ? 'ON' : 'OFF'}</span>
+                        <Switch
+                          checked={isDarkMode}
+                          onChange={handleDarkModeToggle}
+                          className="ml-2"
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": {
+                              color: "#fff",
+                            },
+                            "& .MuiSwitch-track": {
+                              backgroundColor: '#fff',
+                              boxShadow: '0 0 10px black',
+                            },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                              backgroundColor: "#1939ea",
+                            },
+                          }}
+                          style={{ minWidth: '40px' }} // Ensure a minimum width for the Switch
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </Drawer>
+              </div>
+            )}
+
+
+
 
 
           </nav>

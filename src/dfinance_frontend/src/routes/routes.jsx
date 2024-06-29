@@ -3,6 +3,7 @@ import WalletDetails from "../components/Dashboard/WalletDetails"
 import MainDashboard from "../pages/Dashboard/MainDashboard"
 import Home from "../pages/Home/Home"
 import Login from "../pages/login/Login"
+import Error from "../pages/Error/Error"
 import AssetDetails from "../components/Dashboard/AssetDetails"
 import DFinanceGov from "../components/Dashboard/DFinanceGov"
 import ProposalDetails from "../components/Dashboard/ProposalDetails"
@@ -17,66 +18,62 @@ export default [
   },
   {
     path: "/login",
-    element: <Login></Login>,
+    element: <Login />,
+  },
+  {
+    path: "*",
+      element: (
+      <MainDashboard includeDashboardNav={false}>
+        <Error></Error> 
+      </MainDashboard>
+    ),
   },
   {
     path: "/dashboard",
-    children: [
-      {
-        path: "main",
-        element: (
-          <MainDashboard>
-            <CreateWallet />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "wallet-details",
-        element: (
-          <MainDashboard>
-            <WalletDetails />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "asset-details/:id?",
-        element: (
-          <MainDashboard>
-            <AssetDetails />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "my-supply",
-        element: (
-          <MainDashboard>
-            <MySupply />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "transaction-history",
-        element: (
-          <MainDashboard>
-            <TransactionHistoryBox />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "dfinance-gov",
-        element: (
-          <MainDashboard isDGov={true}>
-            <DFinanceGov />
-          </MainDashboard>
-        )
-      }, {
-        path: "dfinance-gov/proposal-details",
-        element: (
-          <MainDashboard isDGov={true}>
-            <ProposalDetails />
-          </MainDashboard>
-        )
-      }
-    ],
+    element: (
+      <MainDashboard>
+        <CreateWallet />
+      </MainDashboard>
+    ),
   },
-]
+  {
+    path: "/dashboard/asset-details/:id?",
+    element: (
+      <MainDashboard>
+        <AssetDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/dashboard/transaction-history",
+    element: (
+      <MainDashboard>
+        <TransactionHistoryBox />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/market",
+    element: (
+      <MainDashboard>
+        <WalletDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/governance",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <DFinanceGov  />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/governance/proposal-details",
+    element: (
+      <MainDashboard>
+        <ProposalDetails />
+      </MainDashboard>
+    ),
+  },
+];

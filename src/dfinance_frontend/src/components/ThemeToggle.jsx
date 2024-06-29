@@ -47,7 +47,6 @@ const ThemeToggle = () => {
             <img src={Moon} alt="Moon Icon" className="w-full h-full" />
           )}
         </div>
-  
     </button>
   );
 };

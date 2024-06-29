@@ -1,21 +1,21 @@
-import React, { useEffect } from "react"
-import Navbar from "../../components/Navbar"
-import Footer from "../../components/Footer"
-import Ellipse from "../../components/Ellipse"
+import React, { useEffect } from "react";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
+import Ellipse from "../../components/Ellipse";
 
-import DashboardNav from "../../components/Dashboard/DashboardNav"
-import { useAuth } from "../../utils/useAuthClient"
+import DashboardNav from "../../components/Dashboard/DashboardNav";
+import { useAuth } from "../../utils/useAuthClient";
 
-const MainDashboard = ({ children, isDGov }) => {
-  const { isAuthenticated, login } = useAuth()
+const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
+  const { isAuthenticated, login } = useAuth();
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    window.scrollTo(0, 0);
+  }, []);
 
   // useEffect(() => {
   //   if (!isAuthenticated) {
-  //     login()
+  //     login();
   //   }
   // }, []);
 
@@ -34,12 +34,10 @@ const MainDashboard = ({ children, isDGov }) => {
 
         {/* main area */}
         {isDGov ? (
-          <div className="w-full">
-            {children}
-          </div>
+          <div className="w-full">{children}</div>
         ) : (
           <div className="w-full">
-            <DashboardNav />
+            {includeDashboardNav && <DashboardNav />}
             {children}
           </div>
         )}
@@ -48,7 +46,7 @@ const MainDashboard = ({ children, isDGov }) => {
       {/* footer */}
       <Footer />
     </>
-  )
-}
+  );
+};
 
-export default MainDashboard
+export default MainDashboard;

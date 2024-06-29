@@ -13,16 +13,19 @@
 
 use ic_cdk_macros::*;
 use ic_cdk::export::candid::{CandidType, Deserialize};
+use crate::data_types::ReserveConfigurationMap;
+//add error file here
+
 //Rust's standard library does not provide a u256 type directly. Instead, the u128 type is a 128-bit unsigned integer, which may not be sufficient to store all the configuration parameters if they require more than 128 bits.
 //use external crates like ethnum or primitive-types to work with 256-bit integers in Rust.
 // use ethnum::U256;
 
 
-#[derive(CandidType, Deserialize)]
-pub struct ReserveConfigurationMap {
-    data: u128,
-    // data: U256,
-}
+// #[derive(CandidType, Deserialize)]
+// pub struct ReserveConfigurationMap {
+//     data: u128,
+//     // data: U256,
+// }
 
 // pub const LTV_MASK: U256 = U256::from_words(0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFF0000FFFFFFFF);
 pub const LTV_MASK: u128 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000;

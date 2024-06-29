@@ -38,7 +38,7 @@ const BorrowPopup = ({ asset, image }) => {
                                 <img src={image} alt="Item Image" className='object-fill w-8 h-8' />
                                 <span className='text-lg'>{asset}</span>
                             </div>
-                            <p className='text-xs mt-2'>Supply Balance  572.41 Max</p>
+                            <p className='text-xs mt-2'>Balance  0.0032560 Max</p>
                         </div>
                     </div>
                 </div>
@@ -82,17 +82,30 @@ const BorrowPopup = ({ asset, image }) => {
                         <h1>$6.06</h1>
                         <Info size={16} className="ml-2" />
                     </div>
-                    <div className="w-full flex my-3 bg-[#D7F1FC] p-1 rounded">
-                        <div className="w-1/12 flex items-center justify-center">
-                            <div className="warning-icon-container">
-                                <img src="/warning.png" alt="Warning Icon" className="w-4 h-4" />
+                    <div className="w-full flex flex-col my-3 space-y-2">
+                        <div className="w-full flex bg-[#6e3d17] p-1 rounded">
+                            <div className="w-1/12 flex items-center justify-center">
+                                <div className="warning-icon-container">
+                                    <Info className=" text-[#f6ba43]" />
+                                </div>
+                            </div>
+                            <div className="w-11/12 text-xs flex items-center text-white ml-1">
+                                You do not have enough ETH in your account to pay for transaction fees on Ethereum Sepolia network. Please deposit ETH from another account.
                             </div>
                         </div>
-                        <div className="w-11/12 text-xs flex items-center">
-                            Attention: Parameter changes via governance can alter your account health factor and risk of liquidation.
-                            Follow the ICP Governance forum for updates.
+
+                        <div className="w-full flex bg-[#1e627e] opacity-80 p-1 rounded">
+                            <div className="w-1/12 flex items-center justify-center">
+                                <div className="warning-icon-container">
+                                    <Info className=" text-[#120f34]" />
+                                </div>
+                            </div>
+                            <div className="w-11/12 text-xs text-white flex items-center ml-1">
+                                Attention: Parameter changes via governance can alter your account health factor and risk of liquidation. Follow the ICP Governance forum for updates.
+                            </div>
                         </div>
                     </div>
+
                 </div>
 
                 <div className="w-full">

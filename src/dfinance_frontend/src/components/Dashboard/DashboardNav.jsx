@@ -236,10 +236,10 @@ const DashboardNav = () => {
             )}
           </div>
           {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
-          <div className="sxs3:mt-12 -ml-40 mr-2 md:mt-0 lg:ml-[465px] sxs3:flex sxs3:justify-end sxs3:w-full md:w-auto md:ml-auto">
+          <div className="sxs3:mt-16 -mb-6 -ml-40  mr-2 md:mt-0 lg:ml-[465px] sxs3:flex sxs3:justify-end sxs3:w-full md:w-auto md:ml-auto">
             {isAuthenticated && shouldRenderTransactionHistoryButton && (
               <a href="/dashboard/transaction-history" className="block">
-                <button className=" text-nowrap px-4 py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
+                <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
                   Transaction History
                 </button>
               </a>

@@ -38,7 +38,7 @@ body{
     background: 
     linear-gradient(#e8dad6, #e8dad6) padding-box,
               linear-gradient(to right, #FCBD78, #4659CF) border-box;
-  border-radius: 50em;
+  
   border: 2px solid transparent;
   }
   .gradient-border:hover {
@@ -62,7 +62,16 @@ body{
     text-decoration: none;
     transition: color 0.3s ease;
   }
-  
+  .nav-link:active,
+.nav-link.active {
+  color: transparent; /* Hide the actual text color on hover */
+    background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
+    background-clip: text;
+    -webkit-background-clip: text; /* For Safari/older browsers */
+    -webkit-text-fill-color: transparent; /* Hide the actual text color */
+    transition: none; /* Disable transition for the gradient effect */
+    font-weight: 800;
+}
   .nav-link:hover {
     color: transparent; /* Hide the actual text color on hover */
     background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));

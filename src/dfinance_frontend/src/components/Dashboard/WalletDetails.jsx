@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 import React, { useState } from "react"
+import { useSelector } from "react-redux"
 import {
   WALLET_ASSETS_TABLE_ROW,
   WALLET_ASSETS_TABLE_COL,
@@ -7,10 +8,12 @@ import {
 import Button from "../Button"
 import { useNavigate } from "react-router-dom"
 
+
 const WalletDetails = () => {
 
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   }
@@ -38,12 +41,26 @@ const WalletDetails = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = WALLET_ASSETS_TABLE_ROW.slice(indexOfFirstItem, indexOfLastItem);
+  const theme = useSelector((state) => state.theme.theme);
+  const chevronColor = theme === 'dark' ? '#ffffff' : '#3739b4';
+
+  const handleChevronClick = (asset) => {
+    setSelectedAsset(asset);
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
+
+
   return (
     <div className="w-full mt-10">
 
 
       <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-16 ">
-        <h1 className="text-[#2A1F9D] font-semibold text-lg">ICP Assets</h1>
+        <h1 className="text-[#2A1F9D] font-semibold text-lg dark:text-darkText">ICP Assets</h1>
         <div className="ml-auto   ">
           {Showsearch && (
 
@@ -95,19 +112,22 @@ const WalletDetails = () => {
             <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
               <thead>
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
-                  {WALLET_ASSETS_TABLE_COL.map((item, index) => (
+                  {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                     <td key={index} className="p-3 whitespace-nowrap">
                       {item.header}
                     </td>
                   ))}
+                  <td className="p-3 hidden md:table-cell">{WALLET_ASSETS_TABLE_COL[2]?.header}</td>
+                  <td className="p-3 hidden md:table-cell">{WALLET_ASSETS_TABLE_COL[3]?.header}</td>
+                  <td className="p-3 hidden md:table-cell">{WALLET_ASSETS_TABLE_COL[4]?.header}</td>
+                  <td className="p-3">{WALLET_ASSETS_TABLE_COL[5]?.header}</td>
                 </tr>
               </thead>
               <tbody>
                 {currentItems.map((item, index) => (
                   <tr
                     key={index}
-                    className={`w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""
-                      }`}
+                    className={`w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
                     <td className="p-3 align-top">
                       <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
@@ -116,25 +136,27 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-3 align-top">
-                      <div className="flex flex-col ml-2">
-                        <p>{item.total_supply_count}</p>
-                        <p className="font-light">${item.total_supply}M</p>
+                      <div className="flex flex-row ml-2">
+                        <div>
+                          <p>{item.total_supply_count}</p>
+                          <p className="font-light">${item.total_supply}M</p>
+                        </div>
+                        <div className="md:hidden justify-center align-center mt-2 ml-5" onClick={() => handleChevronClick(item)}>
+                          <ChevronRight size={22} color={chevronColor} />
+                        </div>
                       </div>
                     </td>
-                    <td className="p-3 align-top">{item.supply_apy}</td>
-                    <td className="p-3 align-top">
+                    <td className="p-3 align-top hidden md:table-cell">{item.supply_apy}</td>
+                    <td className="p-3 align-top hidden md:table-cell">
                       <div className="flex flex-col">
                         <p>{item.total_borrow_count}</p>
                         <p className="font-light">${item.total_borrow}M</p>
                       </div>
                     </td>
-                    <td className="p-3 align-top">{item.borrow_apy}</td>
-                    <td className="p-3 align-top">
-                      <div className="w-full flex justify-end">
-                        <Button
-                          title={"Details"}
-                          onClickHandler={() => handleDetailsClick(item.asset)}
-                        />
+                    <td className="p-3 align-top hidden md:table-cell">{item.borrow_apy}</td>
+                    <td className="p-3 align-top flex">
+                      <div className="w-full flex justify-end align-center">
+                        <Button title={"Details"} className="mb-7 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg p-[7px] px-7 shadow-2xl shadow-black/90 font-semibold text-sm sxs3:px-6" onClickHandler={() => handleDetailsClick(item.asset)} />
                       </div>
                     </td>
                   </tr>
@@ -161,6 +183,65 @@ const WalletDetails = () => {
               </button>
             </div>
           </div>
+
+
+          {showPopup && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+              <div className="bg-white dark:bg-darkOverlayBackground p-8 rounded-2xl shadow-lg w-80 relative">
+                <button
+                  className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
+                  onClick={closePopup}
+                >
+                  <X size={45} />
+                </button>
+                <div >
+                  <div className="flex gap-2 justify-start items-center w-10 h-10">
+                    <img src={selectedAsset.image} alt={selectedAsset.asset} className="rounded-[50%]" />
+                    <p className="text-lg font-bold text-[#2A1F9D] dark:text-darkText">{selectedAsset.asset}</p>
+                  </div>
+
+                  <div className="flex flex-col gap-5 mt-8">
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Total Supply:</p>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_supply_count}M</p>
+                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">(${selectedAsset.total_supply}M)</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between mb-4">
+                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Supply APY:</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.supply_apy}</p>
+                    </div>
+
+
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Total Borrow:</p>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_borrow_count}M</p>
+                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
+                          (${selectedAsset.total_borrow}M)
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between mb-4">
+                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Borrow APY:</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.borrow_apy}</p>
+                    </div>
+                  </div>
+
+
+                </div>
+                <div className="flex w-full justify-center">
+                  <button
+                    className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-3 font-semibold w-[100%] text-lg"
+                    onClick={() => handleDetailsClick(selectedAsset.asset)}
+                  >
+                    Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
 
         </div>

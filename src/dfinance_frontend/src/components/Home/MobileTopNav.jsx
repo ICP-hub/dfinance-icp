@@ -13,15 +13,38 @@ import { toggleTheme } from "../../redux/reducers/themeReducer"
 
 const MobileTobNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInternetIdentity, handleLogout }) => {
   const { isAuthenticated } = useAuth()
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  
   
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
 
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('isDarkMode');
+    return savedTheme ? JSON.parse(savedTheme) : theme === 'dark';
+  });
+
   const handleDarkModeToggle = () => {
     dispatch(toggleTheme());
-    setIsDarkMode((prevMode) => !prevMode);
+    setIsDarkMode((prevMode) => {
+      const newMode = !prevMode;
+      localStorage.setItem('isDarkMode', JSON.stringify(newMode));
+      return newMode;
+    });
   };
+
+  React.useEffect(() => {
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+    if (theme === 'dark') {
+      htmlElement.classList.add('dark');
+      bodyElement.classList.add('dark');
+      bodyElement.style.backgroundColor = '#070a18';
+    } else {
+      htmlElement.classList.remove('dark');
+      bodyElement.classList.remove('dark');
+      bodyElement.style.backgroundColor = '';
+    }
+  }, [theme]);
 
 
   return (
@@ -71,6 +94,7 @@ const MobileTobNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
               checked={isDarkMode}
               onChange={handleDarkModeToggle}
               className="ml-8"
+              id="darkMode"
               sx={{
                 "& .MuiSwitch-switchBase.Mui-checked": {
                   color: "#fff",

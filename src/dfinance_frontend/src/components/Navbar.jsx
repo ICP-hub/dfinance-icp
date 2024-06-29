@@ -12,6 +12,7 @@ import { CiShare1 } from 'react-icons/ci';
 import Button from './Button';
 
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from '../utils/constants';
+import { toggleTheme } from "../redux/reducers/themeReducer"
 
 import { Drawer } from "@mui/material";
 import CloseIcon from './Home/CloseIcon';
@@ -37,7 +38,6 @@ export default function Navbar({ isHomeNav }) {
   const { isWalletModalOpen, isWalletConnected } = useSelector(
     (state) => state.utility
   );
-
   const theme = useSelector((state) => state.theme.theme);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
@@ -170,18 +170,16 @@ export default function Navbar({ isHomeNav }) {
     }
   }, [isAuthenticated]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('isDarkMode');
+    return savedTheme ? JSON.parse(savedTheme) : theme === 'dark';
+  });
   const [isTestnetMode, setIsTestnetMode] = useState(false);
 
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
   };
 
-
-
-  const handleDarkModeToggle = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
 
   const handleTestnetModeToggle = () => {
     setIsTestnetMode((prevMode) => !prevMode);
@@ -215,6 +213,33 @@ export default function Navbar({ isHomeNav }) {
           window.removeEventListener('resize', handleResize);
       };
   }, []);
+
+ 
+
+  
+
+  const handleDarkModeToggle = () => {
+    dispatch(toggleTheme());
+    setIsDarkMode((prevMode) => {
+      const newMode = !prevMode;
+      localStorage.setItem('isDarkMode', JSON.stringify(newMode));
+      return newMode;
+    });
+  };
+
+  React.useEffect(() => {
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+    if (theme === 'dark') {
+      htmlElement.classList.add('dark');
+      bodyElement.classList.add('dark');
+      bodyElement.style.backgroundColor = '#070a18';
+    } else {
+      htmlElement.classList.remove('dark');
+      bodyElement.classList.remove('dark');
+      bodyElement.style.backgroundColor = '';
+    }
+  }, [theme]);
 
 
   return (
@@ -551,6 +576,7 @@ export default function Navbar({ isHomeNav }) {
                           <Switch
                             checked={isDarkMode}
                             onChange={handleDarkModeToggle}
+                            id='darkMode'
                             sx={{
                               "& .MuiSwitch-switchBase.Mui-checked": {
                                 color: "#fff",

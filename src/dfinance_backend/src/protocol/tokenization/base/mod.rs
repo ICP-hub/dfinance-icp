@@ -1,0 +1,1 @@
+pub mod incentivized_icrc2;

@@ -1,132 +1,93 @@
-// ----------------------------------- IMPORTS ----------------------------------- //
+// // ----------------------------------- IMPORTS ----------------------------------- //
 
 
-// IERC20 -> Interface for ERC20 , IRCRC2 in our case
-// totalSupply(), balanceOf(), transfer(), allowance(), approve(), transferFrom()  
+// // IERC20 -> Interface for ERC20 , IRCRC2 in our case
+// // totalSupply(), balanceOf(), transfer(), allowance(), approve(), transferFrom()  
 
-// GPv2SafeERC20 -> Gnosis Protocol v2 Safe ERC20 Transfer Library
-// Uses the ERC20 interface
-// safeTransfer(), safeTransferFrom(), getLastTransferResult()
+// // GPv2SafeERC20 -> Gnosis Protocol v2 Safe ERC20 Transfer Library
+// // Uses the ERC20 interface
+// // safeTransfer(), safeTransferFrom(), getLastTransferResult()
 
-// AToken -> in our case DToken
-// Uses ERC20(ICRC2), ScaledBalanceToken, InitializableAToken
-// mint(), burn(), mintToTreasury(), transferOnLiquidation(), transferUnderlyingTo(), handleRepayment(), permit(), UNDERLYING_ASSET_ADDRESS(), RESERVE_TREASURY_ADDRESS(), DOMAIN_SEPARATOR(), nonces(), rescueTokens()
+// // AToken -> in our case DToken
+// // Uses ERC20(ICRC2), ScaledBalanceToken, InitializableAToken
+// // mint(), burn(), mintToTreasury(), transferOnLiquidation(), transferUnderlyingTo(), handleRepayment(), permit(), UNDERLYING_ASSET_ADDRESS(), RESERVE_TREASURY_ADDRESS(), DOMAIN_SEPARATOR(), nonces(), rescueTokens()
 
-    // IScaledBalanceToken -> Defines the basic interface for a scaled-balance token.
-    // scaledBalanceOf(), getScaledUserBalanceAndSupply(), scaledTotalSupply(), getPreviousIndex()
+//     // IScaledBalanceToken -> Defines the basic interface for a scaled-balance token.
+//     // scaledBalanceOf(), getScaledUserBalanceAndSupply(), scaledTotalSupply(), getPreviousIndex()
 
-    // IInitializableAToken -> Interface for the initialize function on AToken
-    // Uses IAaveIncentivesController, IPool
-    // initialize()
+//     // IInitializableAToken -> Interface for the initialize function on AToken
+//     // Uses IAaveIncentivesController, IPool
+//     // initialize()
 
-        // IAaveIncentivesController -> It only contains one single function, needed as a hook on aToken and debtToken transfers.
-        // handleAction()
+//         // IAaveIncentivesController -> It only contains one single function, needed as a hook on aToken and debtToken transfers.
+//         // handleAction()
 
-        // IPool -> Defines the basic interface for an Aave Pool.
-        // Uses IPoolAddressesProvider, DataTypes
-        // mintUnbacked(), backUnbacked(), supply(), supplyWithPermit(), withdraw(), borrow(), repay(), repayWithPermit(), repayWithATokens(), swapBorrowRateMode(), rebalanceStableBorrowRate(), setUserUseReserveAsCollateral(), liquidationCall(), flashLoan(), flashLoanSimple(), getUserAccountData(), initReserve(), dropReserve(), setReserveInterestRateStrategyAddress(), setConfiguration(), getConfiguration(), getUserConfiguration(), getReserveNormalizedIncome(), getReserveNormalizedVariableDebt(), getReserveData(), finalizeTransfer(), getReservesList(), getReserveAddressById(), ADDRESSES_PROVIDER(), updateBridgeProtocolFee(), updateFlashloanPremiums(), configureEModeCategory(), getEModeCategoryData(), setUserEMode(), getUserEMode(), resetIsolationModeTotalDebt(), MAX_STABLE_RATE_BORROW_SIZE_PERCENT(), FLASHLOAN_PREMIUM_TOTAL(), BRIDGE_PROTOCOL_FEE(), FLASHLOAN_PREMIUM_TO_PROTOCOL(), MAX_NUMBER_RESERVES(), mintToTreasury(), rescueTokens(), deposit()      
+//         // IPool -> Defines the basic interface for an Aave Pool.
+//         // Uses IPoolAddressesProvider, DataTypes
+//         // mintUnbacked(), backUnbacked(), supply(), supplyWithPermit(), withdraw(), borrow(), repay(), repayWithPermit(), repayWithATokens(), swapBorrowRateMode(), rebalanceStableBorrowRate(), setUserUseReserveAsCollateral(), liquidationCall(), flashLoan(), flashLoanSimple(), getUserAccountData(), initReserve(), dropReserve(), setReserveInterestRateStrategyAddress(), setConfiguration(), getConfiguration(), getUserConfiguration(), getReserveNormalizedIncome(), getReserveNormalizedVariableDebt(), getReserveData(), finalizeTransfer(), getReservesList(), getReserveAddressById(), ADDRESSES_PROVIDER(), updateBridgeProtocolFee(), updateFlashloanPremiums(), configureEModeCategory(), getEModeCategoryData(), setUserEMode(), getUserEMode(), resetIsolationModeTotalDebt(), MAX_STABLE_RATE_BORROW_SIZE_PERCENT(), FLASHLOAN_PREMIUM_TOTAL(), BRIDGE_PROTOCOL_FEE(), FLASHLOAN_PREMIUM_TO_PROTOCOL(), MAX_NUMBER_RESERVES(), mintToTreasury(), rescueTokens(), deposit()      
 
-            // IPoolAddressesProvider -> Defines the basic interface for a Pool Addresses Provider.
-            // getMarketId(), setMarketId(), getAddress(), setAddressAsProxy(), setAddress(), getPool(), setPoolImpl(), getPoolConfigurator(), setPoolConfiguratorImpl(), getPriceOracle(), setPriceOracle(), getACLManager(), setACLManager(), getACLAdmin(), setACLAdmin(), getPriceOracleSentinel(), setPriceOracleSentinel(), getPoolDataProvider(), setPoolDataProvider()    
+//             // IPoolAddressesProvider -> Defines the basic interface for a Pool Addresses Provider.
+//             // getMarketId(), setMarketId(), getAddress(), setAddressAsProxy(), setAddress(), getPool(), setPoolImpl(), getPoolConfigurator(), setPoolConfiguratorImpl(), getPriceOracle(), setPriceOracle(), getACLManager(), setACLManager(), getACLAdmin(), setACLAdmin(), getPriceOracleSentinel(), setPriceOracleSentinel(), getPoolDataProvider(), setPoolDataProvider()    
 
-// Errors -> Errors library
+// // Errors -> Errors library
 
-// UserConfiguration -> Implements the bitmap logic to handle the user configuration
-// Uses Errors, DataTypes, ReserveConfiguration
-// setBorrowing(), setUsingAsCollateral(), isUsingAsCollateralOrBorrowing(), isBorrowing(), isUsingAsCollateral(), isUsingAsCollateralOne(), isUsingAsCollateralAny(), isBorrowingOne(), isBorrowingAny(), isEmpty(), getIsolationModeState(), getSiloedBorrowingState(), _getFirstAssetIdByMask()  
+// // UserConfiguration -> Implements the bitmap logic to handle the user configuration
+// // Uses Errors, DataTypes, ReserveConfiguration
+// // setBorrowing(), setUsingAsCollateral(), isUsingAsCollateralOrBorrowing(), isBorrowing(), isUsingAsCollateral(), isUsingAsCollateralOne(), isUsingAsCollateralAny(), isBorrowingOne(), isBorrowingAny(), isEmpty(), getIsolationModeState(), getSiloedBorrowingState(), _getFirstAssetIdByMask()  
 
-    // ReserveConfiguration -> Implements the bitmap logic to handle the reserve configuration
-    // setLtv(), getLtv(), setLiquidationThreshold(), getLiquidationThreshold(), setLiquidationBonus(), getLiquidationBonus(), setDecimals(), getDecimals(), setActive(), getActive(), setFrozen(), getFrozen(), setPaused(), getPaused(), setBorrowableInIsolation(), getBorrowableInIsolation(), setSiloedBorrowing(), getSiloedBorrowing(), setBorrowingEnabled(), getBorrowingEnabled(), setStableRateBorrowingEnabled(), getStableRateBorrowingEnabled(), setReserveFactor(), getReserveFactor(), setBorrowCap(), getBorrowCap(), setSupplyCap(), getSupplyCap(), setDebtCeiling(), getDebtCeiling(), setLiquidationProtocolFee(), getLiquidationProtocolFee(), setUnbackedMintCap(), getUnbackedMintCap(), setEModeCategory(), getEModeCategory, setFlashLoanEnabled, getFlashLoanEnabled, getFlags, getParams, getCaps   
+//     // ReserveConfiguration -> Implements the bitmap logic to handle the reserve configuration
+//     // setLtv(), getLtv(), setLiquidationThreshold(), getLiquidationThreshold(), setLiquidationBonus(), getLiquidationBonus(), setDecimals(), getDecimals(), setActive(), getActive(), setFrozen(), getFrozen(), setPaused(), getPaused(), setBorrowableInIsolation(), getBorrowableInIsolation(), setSiloedBorrowing(), getSiloedBorrowing(), setBorrowingEnabled(), getBorrowingEnabled(), setStableRateBorrowingEnabled(), getStableRateBorrowingEnabled(), setReserveFactor(), getReserveFactor(), setBorrowCap(), getBorrowCap(), setSupplyCap(), getSupplyCap(), setDebtCeiling(), getDebtCeiling(), setLiquidationProtocolFee(), getLiquidationProtocolFee(), setUnbackedMintCap(), getUnbackedMintCap(), setEModeCategory(), getEModeCategory, setFlashLoanEnabled, getFlashLoanEnabled, getFlags, getParams, getCaps   
 
-// DataTypes -> Library for defining structs and types
+// // DataTypes -> Library for defining structs and types
 
-// WadRayMath -> Provides mul and div function for wads (decimal numbers with 18 digits of precision) and rays (decimal numbers* with 27 digits of precision)
-// wadMul, wadDiv, rayMul, rayDiv, rayToWad, wadToRay
+// // WadRayMath -> Provides mul and div function for wads (decimal numbers with 18 digits of precision) and rays (decimal numbers* with 27 digits of precision)
+// // wadMul, wadDiv, rayMul, rayDiv, rayToWad, wadToRay
 
-// PercentageMath -> Percentages are defined by default with 2 decimals of precision (100.00). The precision is indicated by PERCENTAGE_FACTOR
-// percentMul, percentDiv
+// // PercentageMath -> Percentages are defined by default with 2 decimals of precision (100.00). The precision is indicated by PERCENTAGE_FACTOR
+// // percentMul, percentDiv
 
-// ReserveConfiguration -> Implements the bitmap logic to handle the reserve configuration
-// setLtv(), getLtv(), setLiquidationThreshold(), getLiquidationThreshold(), setLiquidationBonus(), getLiquidationBonus(), setDecimals(), getDecimals(), setActive(), getActive(), setFrozen(), getFrozen(), setPaused(), getPaused(), setBorrowableInIsolation(), getBorrowableInIsolation(), setSiloedBorrowing(), getSiloedBorrowing(), setBorrowingEnabled(), getBorrowingEnabled(), setStableRateBorrowingEnabled(), getStableRateBorrowingEnabled(), setReserveFactor(), getReserveFactor(), setBorrowCap(), getBorrowCap(), setSupplyCap(), getSupplyCap(), setDebtCeiling(), getDebtCeiling(), setLiquidationProtocolFee(), getLiquidationProtocolFee(), setUnbackedMintCap(), getUnbackedMintCap(), setEModeCategory(), getEModeCategory, setFlashLoanEnabled, getFlashLoanEnabled, getFlags, getParams, getCaps   
+// // ReserveConfiguration -> Implements the bitmap logic to handle the reserve configuration
+// // setLtv(), getLtv(), setLiquidationThreshold(), getLiquidationThreshold(), setLiquidationBonus(), getLiquidationBonus(), setDecimals(), getDecimals(), setActive(), getActive(), setFrozen(), getFrozen(), setPaused(), getPaused(), setBorrowableInIsolation(), getBorrowableInIsolation(), setSiloedBorrowing(), getSiloedBorrowing(), setBorrowingEnabled(), getBorrowingEnabled(), setStableRateBorrowingEnabled(), getStableRateBorrowingEnabled(), setReserveFactor(), getReserveFactor(), setBorrowCap(), getBorrowCap(), setSupplyCap(), getSupplyCap(), setDebtCeiling(), getDebtCeiling(), setLiquidationProtocolFee(), getLiquidationProtocolFee(), setUnbackedMintCap(), getUnbackedMintCap(), setEModeCategory(), getEModeCategory, setFlashLoanEnabled, getFlashLoanEnabled, getFlags, getParams, getCaps   
 
-// ValidationLogic
+// // ValidationLogic
 
-// ReserveLogic
-
-
-// ----------------------------------- FUNCTIONS ----------------------------------- //
+// // ReserveLogic
 
 
-// executeSupply(reserveData, reservesList, userConfig, params)
-// executeWithdraw(reserveData, reservesList, eModeCategories, userConfig, params)
-// executeFinalizeTransfer(reserveData, reservesList, eModeCategories, userConfig, params)
-// executeUseReserveAsCollateral(reservesData, reservesList, eModeCategories, userConfig, asset, useAsCollateral, reservesCount, priceOracle, userEModeCategory)
+// // ----------------------------------- FUNCTIONS ----------------------------------- //
 
-// SPDX-License-Identifier: BUSL-1.1
+
+// // executeSupply(reserveData, reservesList, userConfig, params)
+// // executeWithdraw(reserveData, reservesList, eModeCategories, userConfig, params)
+// // executeFinalizeTransfer(reserveData, reservesList, eModeCategories, userConfig, params)
+// // executeUseReserveAsCollateral(reservesData, reservesList, eModeCategories, userConfig, asset, useAsCollateral, reservesCount, priceOracle, userEModeCategory)
 
 use std::collections::HashMap;
 
 use crate::dependencies::{
-    ICRC2,
-    SafeICRC2
+    icrc2::*,
+    safe_icrc2::*,
 };
 
-use crate::interface::d_token;
-
-use crate::events::{
-    ReserveUsedAsCollateralEnabled,
-    ReserveUsedAsCollateralDisabled,
-    Withdraw,
-    Supply,
+use crate::protocol::libraries::{
+    configuration::user_configuration::*,
+    helpers::errors::*,
+    logic::{validation_logic::*, reserve_logic::*},
+    math::{wadray::WadRayMath, percentage::PercentageMath},
+    types::datatypes::*,
 };
 
-// Definitions for external dependencies (mocked for illustration)
-mod dependencies {
-    pub struct IERC20;
-    pub struct GPv2SafeERC20;
-    pub struct IAToken;
-    pub struct Errors;
-    pub struct UserConfiguration;
-    pub struct DataTypes;
-    pub struct WadRayMath;
-    pub struct PercentageMath;
-    pub struct ValidationLogic;
-    pub struct ReserveLogic;
-    pub struct ReserveConfiguration;
-}
-
-mod events {
-    pub struct ReserveUsedAsCollateralEnabled {
-        pub reserve: String,
-        pub user: String,
-    }
-    pub struct ReserveUsedAsCollateralDisabled {
-        pub reserve: String,
-        pub user: String,
-    }
-    pub struct Withdraw {
-        pub reserve: String,
-        pub user: String,
-        pub to: String,
-        pub amount: u64,
-    }
-    pub struct Supply {
-        pub reserve: String,
-        pub user: String,
-        pub on_behalf_of: String,
-        pub amount: u64,
-        pub referral_code: u16,
-    }
-}
+use crate::interfaces::d_token;
 
 struct SupplyLogic;
 
 impl SupplyLogic {
+    
     pub fn execute_supply(
-        reserves_data: &mut HashMap<String, DataTypes::ReserveData>,
+        reserves_data: &mut HashMap<String, data_types::ReserveData>,
         reserves_list: &mut HashMap<u64, String>,
-        user_config: &mut DataTypes::UserConfigurationMap,
-        params: DataTypes::ExecuteSupplyParams,
+        user_config: &mut data_types::UserConfigurationMap,
+        params:data_types::ExecuteSupplyParams,
     ) {
         let reserve = reserves_data.get_mut(&params.asset).unwrap();
         let reserve_cache = reserve.cache();

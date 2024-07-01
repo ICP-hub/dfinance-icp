@@ -37,7 +37,7 @@ const EModeButton = () => {
             <div className="relative">
                 <button
                     onClick={isEnabled ? handleDisableClick : handleSettingClick}
-                    className="px-4 py-0.5 text-xs rounded bg-gray-700 text-white flex items-center"
+                    className="px-4 py-0.5 text-xs rounded bg-gray-400 opacity-80 text-white flex items-center"
                 >
                     <FaBolt className="mr-2" />
                     {isEnabled ? 'Enable' : 'Disable'}
@@ -137,8 +137,8 @@ const EModeButton = () => {
                                                 <img src="/Vector.png" alt="Vector Image" className='w-4 h-4 mr-1' />
                                                 <h1>&lt;$1.23</h1>
                                                 <div className="warning-icon-container">
-                                    <Info size={16} className=" text-[#120f34] ml-1" />
-                                </div>
+                                                    <Info size={16} className=" text-[#120f34] ml-1" />
+                                                </div>
                                             </div>
                                             <div className="w-full">
                                                 <button

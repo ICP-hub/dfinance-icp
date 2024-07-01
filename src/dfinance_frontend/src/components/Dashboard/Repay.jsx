@@ -21,13 +21,13 @@ const Repay = ({ asset, image }) => {
                         <h1>Amount</h1>
                         <h1>Slippage 0.10%</h1>
                     </div>
-                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md">
+                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground dark:text-darkText">
                         <div className="w-4/12">
                             <input
                                 type="text"
                                 value={amount}
                                 onChange={handleAmountChange}
-                                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full'
+                                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-darkBackground dark:text-darkText'
                                 placeholder="0.00"
 
                             />
@@ -42,11 +42,11 @@ const Repay = ({ asset, image }) => {
                         </div>
                     </div>
                 </div>
-                <div className="w-full">
+                <div className="w-full ">
                     <div className="w-full flex justify-between my-2">
                         <h1>Transaction overview</h1>
                     </div>
-                    <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm">
+                    <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground dark:text-darkText">
                         <div className="w-full flex flex-col my-1">
                         <div className="w-full flex justify-between items-center mt-2">
                                 <p className='text-nowrap -mt-12'>Remaining debt</p>

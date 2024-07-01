@@ -75,7 +75,7 @@ const CreateWallet = () => {
             <Button title="Connect Wallet" onClickHandler={handleWalletConnect} />
 
             <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
-                <div className='w-[300px] absolute bg-gray-100  shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground'>
+                <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                     <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
                     <div className='flex flex-col gap-2 mt-3 text-sm'>
                         <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkGradientEnd dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>

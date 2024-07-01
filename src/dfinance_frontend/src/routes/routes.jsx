@@ -47,7 +47,7 @@ export default [
   {
     path: "/dashboard/transaction-history",
     element: (
-      <MainDashboard>
+      <MainDashboard >
         <TransactionHistoryBox />
       </MainDashboard>
     ),

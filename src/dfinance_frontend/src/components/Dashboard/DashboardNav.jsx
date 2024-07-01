@@ -74,7 +74,7 @@ const DashboardNav = () => {
   };
 
   // Determine if it's dashboard supply or main based on pathname
-  const isDashboardSupplyOrMain = pathname === "/dashboard" || pathname.includes("/dashboard/transaction-history");
+  const isDashboardSupplyOrMain = pathname === "/dashboard" ;
 
 
   const handleAssetSelect = (index) => {
@@ -86,11 +86,11 @@ const DashboardNav = () => {
   const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
 
   // Determine if Risk Details button should be rendered
-  const shouldRenderRiskDetailsButton = !pathname.includes("/market") && !pathname.includes("/governance");
+  const shouldRenderRiskDetailsButton = !pathname.includes("/market") && !pathname.includes("/governance") && !pathname.includes("/dashboard/transaction-history");
 
   const chevronColor = theme === 'dark' ? '#ffffff' : '#3739b4';
 
-  const shouldRenderTransactionHistoryButton = pathname === '/dashboard' || pathname === '/dashboard/transaction-history';
+  const shouldRenderTransactionHistoryButton = pathname === '/dashboard' ;
 
   return (
     <div className="w-full ">
@@ -215,7 +215,7 @@ const DashboardNav = () => {
           </div>
 
           <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
-            {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+          {pathname !== '/dashboard/transaction-history' && (isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
               <div key={index} className="relative group ml-10">
                 <button className="relative">
                   {data.title}

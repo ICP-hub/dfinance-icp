@@ -253,7 +253,7 @@ export default function Navbar({ isHomeNav }) {
               className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]"
             />
 
-            <div className="gap-4 hidden ps-40 lg:flex dark:text-darkText justify-center items-center">
+            <div className="gap-4 hidden ps-40 lg:flex dark:text-darkText justify-beteen items-center">
               {!isHomeNav
                 ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
                   <NavLink
@@ -506,8 +506,8 @@ export default function Navbar({ isHomeNav }) {
                         <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText"> Settings</h2>
                         {/* Dropdown content for dark mode and testnet mode */}
                         <div className="flex items-center mb-4">
-                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
-                          <span className="ml-8">{isDarkMode ? 'ON' : 'OFF'}</span>
+                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-nowrap text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
+                          <span className="ml-14">{isDarkMode ? 'ON' : 'OFF'}</span>
                           <Switch
                             checked={isDarkMode}
                             onChange={handleDarkModeToggle}

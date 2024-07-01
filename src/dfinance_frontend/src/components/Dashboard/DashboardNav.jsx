@@ -203,7 +203,7 @@ const DashboardNav = () => {
                   ))}
                   {shouldRenderRiskDetailsButton && (
                     <button
-                      className="w-full mt-2 py-2 px-2 bg-[#FFC1C1]  shadow-xl text-red-600 text-xl rounded-lg dark:text-darkTextSecondary"
+                      className="w-full mt-2 py-2 px-2 bg-[#FFC1C1]  shadow-xl text-red-600 text-xl rounded-lg  dark:text-darkText"
                       onClick={handleOpenPopup}
                     >
                       Risk Details

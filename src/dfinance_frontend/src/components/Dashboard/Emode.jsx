@@ -37,7 +37,7 @@ const EModeButton = () => {
             <div className="relative">
                 <button
                     onClick={isEnabled ? handleDisableClick : handleSettingClick}
-                    className="px-4 py-0.5 text-xs rounded bg-gray-700 text-white flex items-center"
+                    className="px-4 py-0.5 text-xs rounded bg-gray-400 opacity-80 text-white flex items-center"
                 >
                     <FaBolt className="mr-2" />
                     {isEnabled ? 'Enable' : 'Disable'}

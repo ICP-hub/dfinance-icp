@@ -21,13 +21,13 @@ const Repay = ({ asset, image }) => {
                         <h1>Amount</h1>
                         <h1>Slippage 0.10%</h1>
                     </div>
-                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground dark:text-darkText">
+                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                         <div className="w-4/12">
                             <input
                                 type="text"
                                 value={amount}
                                 onChange={handleAmountChange}
-                                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-darkBackground dark:text-darkText'
+                                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-[#1D1B40] dark:text-darkText'
                                 placeholder="0.00"
 
                             />
@@ -46,15 +46,15 @@ const Repay = ({ asset, image }) => {
                     <div className="w-full flex justify-between my-2">
                         <h1>Transaction overview</h1>
                     </div>
-                    <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground dark:text-darkText">
+                    <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-[#1D1B40] dark:text-darkText">
                         <div className="w-full flex flex-col my-1">
                         <div className="w-full flex justify-between items-center mt-2">
                                 <p className='text-nowrap -mt-12'>Remaining debt</p>
                                 <p>
-                                    <span className="text-[#2A1F9D] text-nowrap mt-2">0.00001250 ETH</span>
-                                    <span className="text-[#2A1F9D] ">→</span> 
+                                    <span className="text-[#2A1F9D] text-nowrap mt-2 dark:text-darkText">0.00001250 ETH</span>
+                                    <span className="text-[#2A1F9D] dark:text-darkText">→</span> 
                                     <div className="w-full flex justify-end items-center mt-1 ">
-                                <p className="text-[#2A1F9D] mb-2">0.00002010 ETH</p>
+                                <p className="text-[#2A1F9D] mb-2 dark:text-darkText">0.00002010 ETH</p>
                             </div>
                             <div className="w-full flex justify-end items-center ">
                                
@@ -82,8 +82,8 @@ const Repay = ({ asset, image }) => {
             <div className="w-full mt-3">
                 <div className='w-full'>
                     <div className="flex items-center">
-                        <img src="/Vector.png" alt="Vector Image" className='w-4 h-4 mr-1' />
-                        <h1>$6.06</h1>
+                        <img src="/Vector.png" alt="Vector Image" className='w-4 h-4 mr-1 dark:text-[#8CC0D7]' />
+                        <p className='dark:text-[#8CC0D7]'>$6.06</p>
                         <Info size={16} className="ml-2" />
                     </div>
                     <div className="w-full flex flex-col my-3 space-y-2">

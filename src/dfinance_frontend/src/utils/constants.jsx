@@ -746,11 +746,68 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
 // constants.jsx
 
 export const transactionHistory = [
-  { id: 1, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
-  { id: 2, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
-  { id: 3, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
-  { id: 4, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
-  // Add more transactions as needed
+ 
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Lend",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Stake",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Borrow",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Collateral",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Repay",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Lend",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+  
 ];
 // constants.js
 

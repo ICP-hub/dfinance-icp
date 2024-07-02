@@ -1,20 +1,15 @@
-mod constants;
-
 pub mod api;
-pub mod protocol;
 pub mod dependencies;
 pub mod interfaces;
+pub mod protocol;
+pub mod provide_liquidity;
 
 use crate::protocol::libraries::math::*;
-
-mod state_handler;
-mod types;
 
 use candid::Principal;
 use ic_cdk::api::time;
 use ic_cdk::{caller, export_candid, init, post_upgrade, pre_upgrade};
 use state_handler::*;
-// use ic_cdk_macros::{query, update};
 use crate::types::*;
 
 use serde::{Deserialize, Serialize};
@@ -24,7 +19,6 @@ use ic_stable_structures::{
     memory_manager::{MemoryManager, VirtualMemory},
     DefaultMemoryImpl,
 };
-// use math::*;
 
 pub type VMem = VirtualMemory<DefaultMemoryImpl>;
 thread_local! {
@@ -54,11 +48,6 @@ pub fn with_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
 
 #[init]
 fn init() {
-    // with_state(|state| {
-    //     if state.launch_timestamp.is_none() {
-    //         state.launch_timestamp = Some(time());
-    //     }
-    // });
     ic_cdk::println!("init function runs ! ! !");
     start_monthly_task();
 }

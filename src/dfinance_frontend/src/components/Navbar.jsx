@@ -29,7 +29,7 @@ import settingsIcon from "../../public/Settings.svg"
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 //  
 export default function Navbar({ isHomeNav }) {
-  
+
   const isMobile = window.innerWidth <= 768; // Adjust the breakpoint as needed
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -202,26 +202,27 @@ export default function Navbar({ isHomeNav }) {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 768);
 
   const handleResize = () => {
-      setWindowWidth(window.innerWidth);
+    setWindowWidth(window.innerWidth);
   };
 
   useEffect(() => {
-      window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize);
 
-      // Cleanup: remove event listener on component unmount
-      return () => {
-          window.removeEventListener('resize', handleResize);
-      };
+    // Cleanup: remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
- 
 
-  
+
+
 
   const handleDarkModeToggle = () => {
     dispatch(toggleTheme());
     setIsDarkMode((prevMode) => {
       const newMode = !prevMode;
+      console.log(isDarkMode)
       localStorage.setItem('isDarkMode', JSON.stringify(newMode));
       return newMode;
     });
@@ -234,12 +235,14 @@ export default function Navbar({ isHomeNav }) {
       htmlElement.classList.add('dark');
       bodyElement.classList.add('dark');
       bodyElement.style.backgroundColor = '#070a18';
+      setIsDarkMode(true)
     } else {
       htmlElement.classList.remove('dark');
       bodyElement.classList.remove('dark');
       bodyElement.style.backgroundColor = '';
+      setIsDarkMode(false)
     }
-  }, [theme]);
+  }, [theme, isDarkMode]);
 
 
   return (
@@ -502,8 +505,8 @@ export default function Navbar({ isHomeNav }) {
                     />
                     {dropdownVisible && (
 
-                      <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText"> Settings</h2>
+                      <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-2xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                        <h2 className="text-sm text-[#2A1F9D]  mb-4 dark:text-darkTextSecondary"> Settings</h2>
                         {/* Dropdown content for dark mode and testnet mode */}
                         <div className="flex items-center mb-4">
                           <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-nowrap text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
@@ -567,16 +570,15 @@ export default function Navbar({ isHomeNav }) {
                     />
                     {dropdownVisible && (
 
-                      <div className="absolute w-[280px] top-12 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText"> Settings</h2>
+                      <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-2xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                        <h2 className="text-sm text-[#2A1F9D]  mb-4 dark:text-darkTextSecondary"> Settings</h2>
                         {/* Dropdown content for dark mode and testnet mode */}
                         <div className="flex items-center mb-4">
-                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
-                          <span className="ml-8">{isDarkMode ? 'ON' : 'OFF'}</span>
+                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-nowrap text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
+                          <span className="ml-14">{isDarkMode ? 'ON' : 'OFF'}</span>
                           <Switch
                             checked={isDarkMode}
                             onChange={handleDarkModeToggle}
-                            id='darkMode'
                             sx={{
                               "& .MuiSwitch-switchBase.Mui-checked": {
                                 color: "#fff",
@@ -649,7 +651,7 @@ export default function Navbar({ isHomeNav }) {
                           key={index}
                           to={link.route}
                           className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
-                          >
+                        >
                           {link.title}
                         </NavLink>
                       ))

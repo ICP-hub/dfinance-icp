@@ -206,7 +206,7 @@ const DFinanceGov = () => {
 
         </div>
         <div className="w-full md2:w-4/12 dxl:w-3/12">
-        
+
           {!isAuthenticated && <div className="w-full bg-[#233D63] p-4 rounded-2xl text-white mb-4">
             <h1 className="font-semibold">Your info</h1>
             <p className="text-gray-200 text-xs my-2">
@@ -252,6 +252,40 @@ const DFinanceGov = () => {
                     "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-3 px-8 shadow-lg font-semibold text-sm'"
                   }
                 />
+              </div>
+            </div>
+          </div>}
+
+
+          {isAuthenticated && <div className="w-full bg-[#233D63] p-4 rounded-2xl text-white mb-4">
+            <h1 className="font-semibold">Linked addresses</h1>
+            <div className="mt-3">
+              <span className='text-[12px]'>Representative smart contract wallet (ie. Safe) addresses on other chains.</span>
+            </div>
+            <div className="w-full mt-3 text-[12px]">
+              <div className="flex">
+                <p className="flex flex-row gap-3 items-center">Avalanche</p>
+                <div className="ml-auto flex justify-center align-center items-center gap-2 bg-gradient-to-tr from-[#EDD049] to-[#8CC0D7] bg-clip-text text-transparent rounded-lg px-2 p-2 h-7 border mb-2">
+                <Button
+                  title={"+"}
+                  className={
+                    "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] w-4 h-4  rounded-md shadow-lg font-semibold ml-auto'"
+                  }
+                />
+                <p className="font-semibold mr-[8px]">Connect</p>
+                </div>
+              </div>
+              <div className="flex">
+                <p className="flex flex-row gap-3 items-center">Algorand</p>
+                <div className="ml-auto flex justify-center align-center items-center gap-2 bg-gradient-to-tr from-[#EDD049] to-[#8CC0D7] bg-clip-text text-transparent rounded-lg px-2 p-2 h-7 border mb-2">
+                <Button
+                  title={"+"}
+                  className={
+                    "my-2 bg-gradient-to-r  text-white from-[#EDD049] to-[#8CC0D7] w-4 h-4  rounded-md shadow-lg font-semibold ml-auto'"
+                  }
+                />
+                <p className="font-semibold mr-[8px]">Connect</p>
+                </div>
               </div>
             </div>
           </div>}

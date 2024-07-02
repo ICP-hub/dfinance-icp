@@ -777,3 +777,17 @@ export const liquidationThresholdLabel = "Liquidation Threshold";
 
 export const INITIAL_ETH_VALUE = "0.00";
 export const INITIAL_1INCH_VALUE = "0.00";
+
+
+export const STACK_DETAILS_TABS = [
+  {
+    id: 0,
+    title: "Funds In Safety Module",
+    count: "488.62",
+  },
+  {
+    id: 1,
+    title: "Total Emmision Per Day",
+    count: "163.93",
+  },
+]

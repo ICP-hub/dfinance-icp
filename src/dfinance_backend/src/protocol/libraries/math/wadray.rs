@@ -9,7 +9,7 @@ pub struct WadRayMath;
 impl WadRayMath {
     const WAD: u128 = 1e18 as u128;
     const HALF_WAD: u128 = 0.5e18 as u128;
-    const RAY: u128 = 1e27 as u128;
+    pub const RAY: u128 = 1e27 as u128;
     const HALF_RAY: u128 = 0.5e27 as u128;
     const WAD_RAY_RATIO: u128 = 1e9 as u128;
 

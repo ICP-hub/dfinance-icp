@@ -66,7 +66,7 @@ use std::collections::HashMap;
 
 use crate::dependencies::{
     icrc2::*,
-    safe_icrc2::*,
+    safe_icrc2::{self, *},
 };
 
 use crate::protocol::libraries::{
@@ -98,9 +98,9 @@ impl SupplyLogic {
 
         reserve.update_interest_rates(&reserve_cache, &params.asset, params.amount, 0);
 
-        IERC20::safe_transfer_from(&params.asset, &reserve_cache.a_token_address, params.amount);
+        safe_icrc2::gpv2_safe_icrc2::safe_transfer_from(&params.asset, &reserve_cache.a_token_address, params.amount);
 
-        let is_first_supply = IAToken::mint(
+        let is_first_supply = d_token::mint(
             &reserve_cache.a_token_address,
             &params.user,
             &params.on_behalf_of,

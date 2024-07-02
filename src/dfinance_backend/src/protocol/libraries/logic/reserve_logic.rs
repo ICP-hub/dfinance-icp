@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::dependencies::{
     icrc2::*,
@@ -8,8 +9,8 @@ use crate::dependencies::{
 
 use crate::protocol::libraries::{
     configuration::reserve_configuration::*,
-    helpers::errors::*,
-    math::{wadray::WadRayMath, percentage::PercentageMath, math_utils::*},
+    helpers::errors::Error,
+    math::{wadray::WadRayMath, percentage::PercentageMath, math_utils::MathUtils},
     types::datatypes::*,
 };
 
@@ -39,12 +40,11 @@ impl ReserveLogic {
         if timestamp == current_timestamp() {
             reserve.variable_borrow_index
         } else {
-            MathUtils::calculate_compounded_interest(reserve.current_variable_borrow_rate, timestamp)
-                .ray_mul(reserve.variable_borrow_index)
+            MathUtils::calculate_compounded_interest(reserve.current_variable_borrow_rate, timestamp).ray_mul(reserve.variable_borrow_index)
         }
     }
 
-    pub fn update_state(reserve: &mut data_types::ReserveData, reserve_cache: ReserveCache) {
+    pub fn update_state(reserve: &mut data_types::ReserveData, reserve_cache: data_types::ReserveCache) {
         if reserve.last_update_timestamp == current_timestamp() {
             return;
         }
@@ -74,7 +74,7 @@ impl ReserveLogic {
         interest_rate_strategy_address: String,
     ) {
         if reserve.a_token_address != "" {
-            panic!(Errors::RESERVE_ALREADY_INITIALIZED);
+            panic!("{}", Error::ReserveAlreadyInitialized);
         }
 
         reserve.liquidity_index = WadRayMath::RAY;
@@ -87,7 +87,7 @@ impl ReserveLogic {
 
     pub fn update_interest_rates(
         reserve: &mut data_types::ReserveData,
-        reserve_cache: &ReserveCache,
+        reserve_cache: &data_types::ReserveCache,
         reserve_address: String,
         liquidity_added: u128,
         liquidity_taken: u128,
@@ -138,14 +138,14 @@ impl ReserveLogic {
         println!("{:?}", event);
     }
 
-    fn _accrue_to_treasury(reserve: &mut data_types::ReserveData, reserve_cache: data_types::ReserveCache
-            prev_total_stable_debt: 0,
-            prev_total_variable_debt: 0,
-            curr_total_variable_debt: 0,
-            cumulated_stable_interest: 0,
-            total_debt_accrued: 0,
-            amount_to_mint: 0,
-        };
+    fn _accrue_to_treasury(reserve: &mut data_types::ReserveData, reserve_cache: data_types::ReserveCache,
+            prev_total_stable_debt: u8,
+            prev_total_variable_debt: u8,
+            curr_total_variable_debt: u8,
+            cumulated_stable_interest: u8,
+            total_debt_accrued: u8,
+            amount_to_mint: u8,
+    ){
 
         if reserve_cache.reserve_factor == 0 {
             return;

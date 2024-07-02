@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 // Define ICRC1 trait for the ledger interface
 pub trait ICRC1 {
     fn total_supply(&self) -> u64;

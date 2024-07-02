@@ -1,4 +1,4 @@
-use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Principal};
 use ic_cdk_macros::{update, query};
 use std::cell::RefCell;
 
@@ -77,7 +77,7 @@ impl PriceOracleSentinel {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ic_cdk::export::candid::Principal;
+    use candid::Principal;
 
     #[test]
     fn test_addresses_provider() {

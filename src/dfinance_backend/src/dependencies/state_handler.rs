@@ -1,6 +1,6 @@
 use std::{collections::HashMap, default};
 //use crate::types::{User, TokenDeposits};
-use crate::types::*;
+use crate::protocol::libraries::types::types::*;
 use crate::VMem;
 use candid::{CandidType, Deserialize, Principal};
 use core::ops::Deref;

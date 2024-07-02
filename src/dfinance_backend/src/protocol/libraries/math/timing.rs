@@ -1,7 +1,5 @@
-// use crate::math;
-use crate::state_handler;
-use crate::state_handler::*;
-use crate::types::*;
+use crate::dependencies::state_handler::*;
+use crate::protocol::libraries::types::types::*;
 use crate::{api::*, protocol::libraries::math::*, with_state};
 use ic_cdk::api::time;
 use ic_cdk::{caller, query, update};

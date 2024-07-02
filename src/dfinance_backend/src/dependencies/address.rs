@@ -1,5 +1,5 @@
 use ic_cdk::api::call::{call, call_with_payment, CallResult};
-use ic_cdk::export::Principal;
+use candid::Principal;
 use std::future::Future;
 
 pub struct Address {}

@@ -1,4 +1,4 @@
-use crate::{types::*, with_state};
+use crate::{protocol::libraries::types::types::*, with_state};
 use candid::Principal;
 use ciborium::value;
 use ic_cdk::api::time;

@@ -1,4 +1,4 @@
-use crate::types::AllowedTokens;
+use crate::protocol::libraries::types::types::AllowedTokens;
 
 pub const ALLOWED_TOKENS: &[AllowedTokens] = &[
     AllowedTokens {

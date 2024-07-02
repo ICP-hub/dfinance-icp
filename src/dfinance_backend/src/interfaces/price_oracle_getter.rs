@@ -1,4 +1,4 @@
-use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize};
 use ic_cdk_macros::query;
 
 #[derive(CandidType, Deserialize)]
@@ -39,7 +39,7 @@ impl PriceOracle {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ic_cdk::export::candid::Principal;
+    use candid::Principal;
 
     #[test]
     fn test_base_currency() {

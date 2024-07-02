@@ -1,5 +1,6 @@
+use candid::Principal;
 use ic_cdk::api::caller;
-use ic_cdk_macros::{init, query, update};
+use ic_cdk::{init, query, update};
 use std::collections::HashMap;
 
 #[derive(Clone, Default)]

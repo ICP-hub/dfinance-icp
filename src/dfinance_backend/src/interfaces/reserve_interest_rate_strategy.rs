@@ -1,4 +1,4 @@
-use ic_cdk::export::candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize};
 use std::cell::RefCell;
 
 // Define DataTypes module and CalculateInterestRatesParams struct based on your original DataTypes module.

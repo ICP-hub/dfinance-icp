@@ -501,7 +501,7 @@ const MySupply = () => {
                                   )
                                 }
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg"
-                                />
+                              />
 
                               <Button
                                 title={"Details"}
@@ -721,8 +721,8 @@ const MySupply = () => {
                                   )
                                 }
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg"
-                                />
-                               <Button
+                              />
+                              <Button
                                 title={"Repay"}
                                 onClickHandler={() =>
                                   handleModalOpen(
@@ -917,14 +917,11 @@ const MySupply = () => {
                                   )
                                 }
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg"
-                                />
+                              />
                               <Button
                                 title={"Details"}
                                 onClickHandler={() =>
-                                  handleModalOpen(
-                                    "payment",
-                                   
-                                  )
+                                  handleModalOpen("payment")
                                 }
                                 className="box-border gradient-border dark:bg-darkBackground rounded-md px-9 py-1 shadow-lg font-semibold text-lg text-[#2A1F9D]"
                                 style={{

@@ -25,13 +25,13 @@ const SupplyPopup = ({ asset, image, balance }) => {
                         <h1>Amount</h1>
                         <h1>Slippage 0.10%</h1>
                     </div>
-                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-darkBackground dark:text-darkText">
+                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                     <div className="w-3/12">
             <input
                 type="text"
                 value={amount}
                 onChange={handleAmountChange}
-                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-darkBackground dark:text-darkText'
+                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-[#1D1B40] dark:text-darkText'
              placeholder="0.00"
                 
             />
@@ -50,7 +50,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
                     <div className="w-full flex justify-between my-2">
                         <h1>Transaction overview</h1>
                     </div>
-                    <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground dark:text-darkText">
+                    <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm dark:bg-[#1D1B40] dark:text-darkText">
                         <div className="w-full flex justify-between items-center my-1">
                             <p>Supply APY</p>
                             <p>24.04%</p>

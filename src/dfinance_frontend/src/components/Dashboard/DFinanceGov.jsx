@@ -105,10 +105,11 @@ const DFinanceGov = () => {
                     id="search"
                     placeholder="Search for proposals"
                     style={{ fontSize: '0.75rem' }}
-                    className={`placeholder-gray-500 w-[200px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-border border-radius:50rem ${showsearch
+                    className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent ${showsearch
                       ? "animate-fade-left flex"
                       : "animate-fade-right hidden"
                       }`}
+                  
                   />
                 </div>
               )}
@@ -165,7 +166,7 @@ const DFinanceGov = () => {
               name="search"
               id="search"
               placeholder="Search for products"
-              className={`placeholder-gray-500 w-full block md:hidden z-20 mt-4 bg-[#b4b4bf] p-2 px-4 rounded-lg focus:outline-none box-border gradient-border ${showsearch
+              className={`placeholder-gray-500 w-[250px] block md:hidden z-20 px-4 py-[7px] mt-2 focus:outline-none box bg-transparent ${showsearch
                 ? "animate-fade-left flex"
                 : "animate-fade-right hidden"
                 }`}

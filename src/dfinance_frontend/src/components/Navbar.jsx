@@ -10,6 +10,7 @@ import { Switch } from "@mui/material"
 import { GrCopy } from 'react-icons/gr';
 import { CiShare1 } from 'react-icons/ci';
 import Button from './Button';
+
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from '../utils/constants';
 import { toggleTheme } from "../redux/reducers/themeReducer"
 
@@ -37,7 +38,7 @@ export default function Navbar({ isHomeNav }) {
   const { isWalletModalOpen, isWalletConnected } = useSelector(
     (state) => state.utility
   );
-
+  const theme = useSelector((state) => state.theme.theme);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const navigate = useNavigate();
@@ -215,7 +216,7 @@ export default function Navbar({ isHomeNav }) {
       };
   }, []);
 
-  const theme = useSelector((state) => state.theme.theme);
+ 
 
   
 
@@ -254,13 +255,13 @@ export default function Navbar({ isHomeNav }) {
               className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]"
             />
 
-            <div className="gap-4 hidden lg:flex dark:text-darkText">
+            <div className="gap-4 hidden ps-40 lg:flex dark:text-darkText justify-beteen items-center">
               {!isHomeNav
                 ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
                   <NavLink
                     key={index}
                     to={link.route}
-                    className="text-[#2a1f9d] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                    className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                   >
                     {link.title}
                   </NavLink>
@@ -269,7 +270,7 @@ export default function Navbar({ isHomeNav }) {
                   <NavLink
                     key={index}
                     to={link.route}
-                    className="text-[#233D63] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                    className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                   >
                     {link.title}
                   </NavLink>
@@ -507,8 +508,8 @@ export default function Navbar({ isHomeNav }) {
                         <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText"> Settings</h2>
                         {/* Dropdown content for dark mode and testnet mode */}
                         <div className="flex items-center mb-4">
-                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
-                          <span className="ml-8">{isDarkMode ? 'ON' : 'OFF'}</span>
+                          <label htmlFor="darkMode" className="ml-2 text-lg font-bold text-nowrap text-[#2A1F9D] dark:text-darkText">Dark Mode</label>
+                          <span className="ml-14">{isDarkMode ? 'ON' : 'OFF'}</span>
                           <Switch
                             checked={isDarkMode}
                             onChange={handleDarkModeToggle}

@@ -33,13 +33,13 @@ const Error = () => {
                             src="/globe.png"
                             alt="Globe"
                             className="w-24 h-24 sm:w-20 sm:h-20 md:w-40 md:h-40 absolute bottom-0 left-0 z-0"
-                            style={{ marginBottom: '-70px' }} // Adjusted margin-bottom
+                            style={{ marginBottom: '-50px' }} // Adjusted margin-bottom
                         />
                     </div>
                     <div className="text-[140px] sm:text-[100px] md:text-[250px] font-light text-white dark:text-darkText -rotate-12" style={{ fontFamily: 'Vampiro One' }}>4</div>
                 </div>
 
-                <p className="text-lg sm:text-xl mb-2 text-[#2A1F9D] font-bold dark:text-darkText mt-2 md:-mt-10">Uh-oh! Lost in Space</p>
+                <p className="text-lg sm:text-xl mb-2 text-[#2A1F9D] font-bold dark:text-darkText -mt-8 md:-mt-12">Uh-oh! Lost in Space</p>
                 <p className="text-base sm:text-lg mb-6 text-[#2A1F9D] text-opacity-75 dark:text-darkText md:mb-8">The page you are trying to reach does not exist.</p>
 
                 <button

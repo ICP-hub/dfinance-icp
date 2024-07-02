@@ -13,7 +13,7 @@ const HowITWork = () => {
     // https://i.ibb.co/Bw2dGRz/Submit-ICPRequest.png
     // https://i.ibb.co/j8jGcgd/calculator.png
     return (
-        <section className="mt-20 font-poppins ">
+        <section className="mt-20 font-poppins " id="HowItWorks">
             <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
                 <h1 className="text-[32px] md:text-[45px] font-extralight">How it Works</h1>
             </div>

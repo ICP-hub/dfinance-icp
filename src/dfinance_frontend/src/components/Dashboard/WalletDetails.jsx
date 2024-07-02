@@ -71,7 +71,7 @@ const WalletDetails = () => {
               id="search"
               placeholder="Search for proposals"
               style={{ fontSize: '0.75rem' }}
-              className={`placeholder-gray-500 w-[300px] md:block hidden z-20 rounded-full p-1 px-4 focus:outline-none box-border gradient-borderr  ${Showsearch
+              className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent ${Showsearch
                 ? "animate-fade-left flex"
                 : "animate-fade-right hidden"
                 }`}
@@ -99,7 +99,7 @@ const WalletDetails = () => {
           name="search"
           id="search"
           placeholder="Search for products"
-          className={`placeholder-gray-500 w-full block md:hidden z-20 mt-4 bg-[#b4b4bf]  px-4 rounded-lg focus:outline-none box-border gradient-borderr ${Showsearch
+          className={`placeholder-gray-500 w-[300px] block  md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent ${Showsearch
             ? "animate-fade-left flex"
             : "animate-fade-right hidden"
             }`}

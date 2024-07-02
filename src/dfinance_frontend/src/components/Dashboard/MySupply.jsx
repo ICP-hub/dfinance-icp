@@ -10,6 +10,8 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
+
+
 import EModeButton from "./Emode";
 import Button from "../Button";
 import { Switch } from "@mui/material";
@@ -189,7 +191,7 @@ const MySupply = () => {
           <div
             className={`w-full ${
               isSupplyVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             {/* Header */}
             <div className="flex justify-between items-center">
@@ -296,10 +298,9 @@ const MySupply = () => {
                                     item.image
                                   )
                                 }
-                                className="box-border gradient-border dark:bg-darkBackground rounded-md px-9 py-1 shadow-lg font-semibold text-lg text-[#2A1F9D]"
-                                style={{
-                                  backgroundClip: "padding-box", // Ensure gradient doesn't overflow into padding
-                                }}
+                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent 
+                                  
+                                }`}
                               />
                             </div>
                             {index !==
@@ -419,7 +420,7 @@ const MySupply = () => {
           <div
             className={`w-full mt-8 ${
               isVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            } p-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -508,10 +509,9 @@ const MySupply = () => {
                                 onClickHandler={() =>
                                   navigate("/dashboard/asset-details")
                                 }
-                                className="box-border gradient-border dark:bg-darkBackground rounded-md px-9 py-1 shadow-lg font-semibold text-lg text-[#2A1F9D]"
-                                style={{
-                                  backgroundClip: "padding-box", // Ensure gradient doesn't overflow into padding
-                                }}
+                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent 
+                                  
+                                }`}
                               />
                             </div>
                             {index !==
@@ -571,9 +571,9 @@ const MySupply = () => {
                               </td>
                               <td className="p-3 align-top">{item.apy}</td>
                               <td className="p-3 align-top">
-                                <div className="w-full flex items-center justify-center">
-                                  <Check color="#32851E" size={14} />
-                                </div>
+                               <div className="w-full flex items-center justify-center dark:text-darkText">
+      <Check color={ "#4659CF"} size={14} />
+    </div>
                               </td>
                               <td className="p-3 align-top">
                                 <div className="w-full flex gap-2 ">
@@ -621,7 +621,7 @@ const MySupply = () => {
           <div
             className={`w-full ${
               isborrowVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -731,10 +731,9 @@ const MySupply = () => {
                                     item.image
                                   )
                                 }
-                                className="box-border gradient-border dark:bg-darkBackground rounded-md px-9 py-1 shadow-lg font-semibold text-lg text-[#2A1F9D]"
-                                style={{
-                                  backgroundClip: "padding-box", // Ensure gradient doesn't overflow into padding
-                                }}
+                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent 
+                                  
+                                }`}
                               />
                             </div>
                             {index !==
@@ -842,7 +841,7 @@ const MySupply = () => {
           <div
             className={`w-full mt-8 ${
               isBorrowVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -923,10 +922,9 @@ const MySupply = () => {
                                 onClickHandler={() =>
                                   handleModalOpen("payment")
                                 }
-                                className="box-border gradient-border dark:bg-darkBackground rounded-md px-9 py-1 shadow-lg font-semibold text-lg text-[#2A1F9D]"
-                                style={{
-                                  backgroundClip: "padding-box", // Ensure gradient doesn't overflow into padding
-                                }}
+                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent 
+                                  
+                                  }`}
                               />
                             </div>
                             {index !==

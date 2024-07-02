@@ -102,7 +102,7 @@ const DashboardNav = () => {
           Back
         </span>
       </div>
-      <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4 dark:text-darkBlue">
+      <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4 dark:text-darkText">
         {dashboardTitle}
       </h1>
 

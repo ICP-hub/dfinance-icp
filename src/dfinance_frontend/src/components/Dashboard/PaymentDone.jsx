@@ -18,10 +18,10 @@ const PaymentDone = () => {
                 <Check />
             </div>
             <h1 className='font-semibold text-xl'>All done!</h1>
-            <p>You supplied 1.0000000 LINK</p>
+            <p className='text-[12px]'>You supplied 1.0000000 LINK</p>
 
-            <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-darkBackground dark:text-darkText">
-                <div className="flex items-center gap-3 text-nowrap">
+            <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-1 items-center dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="flex items-center gap-3 text-nowrap text-[12px]">
                     <span>
                         Add aToken to wallet to track your balance.
                     </span>

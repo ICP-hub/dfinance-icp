@@ -10,6 +10,11 @@ import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "./Button";
+import { styled } from '@mui/material/styles';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from "../utils/constants";
 import { toggleTheme } from "../redux/reducers/themeReducer";
@@ -83,8 +88,7 @@ export default function Navbar({ isHomeNav }) {
     } else {
       // Perform transaction
       console.log(
-        `Transaction initiated with ${selectedToken} and amount ${
-          selectedToken === "ETH" ? ethValue : oneInchValue
+        `Transaction initiated with ${selectedToken} and amount ${selectedToken === "ETH" ? ethValue : oneInchValue
         }`
       );
     }
@@ -227,16 +231,20 @@ export default function Navbar({ isHomeNav }) {
   React.useEffect(() => {
     const htmlElement = document.documentElement;
     const bodyElement = document.body;
-    if (theme === "dark") {
-      htmlElement.classList.add("dark");
-      bodyElement.classList.add("dark");
-      bodyElement.style.backgroundColor = "#070a18";
+    if (theme === 'dark') {
+      htmlElement.classList.add('dark');
+      bodyElement.classList.add('dark');
+      bodyElement.style.backgroundColor = '#070a18';
+      setIsDarkMode(true)
     } else {
-      htmlElement.classList.remove("dark");
-      bodyElement.classList.remove("dark");
-      bodyElement.style.backgroundColor = "";
+      htmlElement.classList.remove('dark');
+      bodyElement.classList.remove('dark');
+      bodyElement.style.backgroundColor = '';
+      setIsDarkMode(false)
     }
-  }, [theme]);
+  }, [theme, isDarkMode]);
+
+
 
   return (
     <>
@@ -254,23 +262,23 @@ export default function Navbar({ isHomeNav }) {
             <div className="gap-1 hidden  lg:flex dark:text-darkText justify-between items-center ">
               {!isHomeNav
                 ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
-                    <NavLink
-                      key={index}
-                      to={link.route}
-                      className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                    >
-                      {link.title}
-                    </NavLink>
-                  ))
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                  >
+                    {link.title}
+                  </NavLink>
+                ))
                 : HOME_TOP_NAV_LINK.map((link, index) => (
-                    <NavLink
-                      key={index}
-                      to={link.route}
-                      className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                    >
-                      {link.title}
-                    </NavLink>
-                  ))}
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                  >
+                    {link.title}
+                  </NavLink>
+                ))}
             </div>
             <div>
               {isHomeNav ? (
@@ -481,9 +489,8 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div
-                            className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${
-                              isInputFocused ? "block" : "hidden"
-                            }`}
+                            className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? "block" : "hidden"
+                              }`}
                             style={{ maxWidth: "380px" }}
                           >
                             <div className="flex items-center">
@@ -621,9 +628,8 @@ export default function Navbar({ isHomeNav }) {
                         onClick={handleDropdownToggle}
                       />
                       {dropdownVisible && (
-                        <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                          <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText">
-                            {" "}
+                        <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border  rounded-2xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                          <h2 className="text-sm text-[#2A1F9D] font-light mb-4 dark:text-darkText">
                             Settings
                           </h2>
                           {/* Dropdown content for dark mode and testnet mode */}
@@ -650,9 +656,9 @@ export default function Navbar({ isHomeNav }) {
                                   boxShadow: "0 0 10px black",
                                 },
                                 "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                  {
-                                    backgroundColor: "#1939ea",
-                                  },
+                                {
+                                  backgroundColor: "#1939ea",
+                                },
                               }}
                             />
                           </div>
@@ -679,9 +685,9 @@ export default function Navbar({ isHomeNav }) {
                                   boxShadow: "0 0 10px black",
                                 },
                                 "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                  {
-                                    backgroundColor: "#1939ea",
-                                  },
+                                {
+                                  backgroundColor: "#1939ea",
+                                },
                               }}
                             />
                           </div>
@@ -706,26 +712,24 @@ export default function Navbar({ isHomeNav }) {
                         onClick={handleDropdownToggle}
                       />
                       {dropdownVisible && (
-                        <div className="absolute w-[280px] top-12 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                          <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText">
-                            {" "}
+                        <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border  rounded-2xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                          <h2 className="text-sm text-[#2A1F9D] font-light mb-4 dark:text-darkText">
                             Settings
                           </h2>
                           {/* Dropdown content for dark mode and testnet mode */}
                           <div className="flex items-center mb-4">
                             <label
                               htmlFor="darkMode"
-                              className="ml-2 text-lg font-bold text-[#2A1F9D] dark:text-darkText"
+                              className="ml-2 text-lg font-bold text-nowrap text-[#2A1F9D] dark:text-darkText"
                             >
                               Dark Mode
                             </label>
-                            <span className="ml-8">
+                            <span className="ml-14">
                               {isDarkMode ? "ON" : "OFF"}
                             </span>
                             <Switch
                               checked={isDarkMode}
                               onChange={handleDarkModeToggle}
-                              id="darkMode"
                               sx={{
                                 "& .MuiSwitch-switchBase.Mui-checked": {
                                   color: "#fff",
@@ -736,9 +740,9 @@ export default function Navbar({ isHomeNav }) {
                                   boxShadow: "0 0 10px black",
                                 },
                                 "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                  {
-                                    backgroundColor: "#1939ea",
-                                  },
+                                {
+                                  backgroundColor: "#1939ea",
+                                },
                               }}
                             />
                           </div>
@@ -765,9 +769,9 @@ export default function Navbar({ isHomeNav }) {
                                   boxShadow: "0 0 10px black",
                                 },
                                 "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                  {
-                                    backgroundColor: "#1939ea",
-                                  },
+                                {
+                                  backgroundColor: "#1939ea",
+                                },
                               }}
                             />
                           </div>
@@ -806,23 +810,23 @@ export default function Navbar({ isHomeNav }) {
 
                     {!isHomeNav
                       ? DASHBOARD_TOP_NAV_LINK.map((link, index) => (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
-                          >
-                            {link.title}
-                          </NavLink>
-                        ))
+                        <NavLink
+                          key={index}
+                          to={link.route}
+                          className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))
                       : HOME_TOP_NAV_LINK.map((link, index) => (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
-                          >
-                            {link.title}
-                          </NavLink>
-                        ))}
+                        <NavLink
+                          key={index}
+                          to={link.route}
+                          className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
                     <h2 className="text-lg my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">
                       Setting
                     </h2>
@@ -850,9 +854,9 @@ export default function Navbar({ isHomeNav }) {
                               boxShadow: "0 0 10px black",
                             },
                             "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                              {
-                                backgroundColor: "#1939ea",
-                              },
+                            {
+                              backgroundColor: "#1939ea",
+                            },
                           }}
                           style={{ minWidth: "40px" }} // Ensure a minimum width for the Switch
                         />

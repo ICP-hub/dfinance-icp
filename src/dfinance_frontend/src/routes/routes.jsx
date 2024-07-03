@@ -10,6 +10,7 @@ import ProposalDetails from "../components/Dashboard/ProposalDetails"
 import MySupply from "../components/Dashboard/MySupply"
 import { elements } from "chart.js"
 import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
+import Faucet from "../components/Dashboard/faucet"
 
 export default [
   {
@@ -73,6 +74,14 @@ export default [
     element: (
       <MainDashboard>
         <ProposalDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/Faucet",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <Faucet/>
       </MainDashboard>
     ),
   },

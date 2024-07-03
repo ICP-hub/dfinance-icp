@@ -20,7 +20,7 @@ const PaymentDone = () => {
             <h1 className='font-semibold text-xl'>All done!</h1>
             <p>You supplied 1.0000000 LINK</p>
 
-            <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-darkBackground dark:text-darkText">
+            <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="flex items-center gap-3 text-nowrap">
                     <span>
                         Add aToken to wallet to track your balance.

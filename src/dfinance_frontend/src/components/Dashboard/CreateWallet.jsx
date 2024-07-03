@@ -84,19 +84,19 @@ const CreateWallet = () => {
                                 <img src={"https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                             </div>
                         </div>
-                        <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkGradientEnd dark:hover:bg-[#b7b4b4] dark:text-darkText">
+                        <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkGradientEnd dark:hover:bg-[#8782d8] dark:text-darkText">
                             Plug
                             <div className='w-8 h-8'>
                                 <img src={"/plug.png.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                             </div>
                         </div>
-                        <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkGradientEnd dark:hover:bg-[#b7b4b4] dark:text-darkText">
+                        <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkGradientEnd dark:hover:bg-[#8782d8] dark:text-darkText">
                             Bifinity
                             <div className='w-8 h-8'>
                                 <img src={"/bifinity.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                             </div>
                         </div>
-                        <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkGradientEnd dark:hover:bg-[#b7b4b4] dark:text-darkText" onClick={() => loginHandler("nfid")}>
+                        <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkGradientEnd dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
                             NFID
                             <div className='w-8 h-8'>
                                 <img src={"/nfid.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
@@ -108,7 +108,7 @@ const CreateWallet = () => {
                     <div className="w-full">
                         <input
                             type="text"
-                            className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63]  text-xs rounded-md dark:bg-transparent"
+                            className="w-full p-2 border border-[#8CC0D7] focus:outline-none focus:border-blue-500 placeholder:text-[#8CC0D7]  text-xs rounded-md dark:bg-transparent"
                             placeholder="Enter ethereum address or username"
                         />
                     </div>

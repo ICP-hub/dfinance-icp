@@ -108,8 +108,8 @@ const WalletDetails = () => {
 
       <div className="w-full min-h-[400px] mt-6 lg:px-12 mb-20">
         <div className="w-full">
-          <div className="w-full overflow-auto content p-3">
-            <table className="w-full text-[#2A1F9D] font-[500] md:text-sm lg:text-sm dark:text-darkText">
+          <div className="w-full overflow-auto content">
+            <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText">
               <thead>
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
@@ -156,7 +156,7 @@ const WalletDetails = () => {
                     <td className="p-3 align-top hidden md:table-cell">{item.borrow_apy}</td>
                     <td className="p-3 align-top flex">
                       <div className="w-full flex justify-end align-center">
-                        <Button title={"Details"} className="mb-7 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-2xl font-semibold text-xs  sxs3:px-6" onClickHandler={() => handleDetailsClick(item.asset)} />
+                        <Button title={"Details"} className="mb-7 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md lg:px-6 lg:py-2 sxs3:px-3 sxs3:py-2 shadow-2xl font-semibold text-sm" onClickHandler={() => handleDetailsClick(item.asset)} />
                       </div>
                     </td>
                   </tr>

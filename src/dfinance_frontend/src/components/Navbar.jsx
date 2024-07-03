@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { ArrowDownUp } from "lucide-react";
+import { Info } from 'lucide-react';
 import MobileTopNav from "./Home/MobileTopNav";
 import { useAuth } from "../utils/useAuthClient";
 import { setUserData } from "../redux/reducers/userReducer";
@@ -10,7 +11,12 @@ import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "./Button";
-import { Info } from "lucide-react";
+import { styled } from '@mui/material/styles';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from "../utils/constants";
 import { toggleTheme } from "../redux/reducers/themeReducer";
 
@@ -83,8 +89,7 @@ export default function Navbar({ isHomeNav }) {
     } else {
       // Perform transaction
       console.log(
-        `Transaction initiated with ${selectedToken} and amount ${
-          selectedToken === "ETH" ? ethValue : oneInchValue
+        `Transaction initiated with ${selectedToken} and amount ${selectedToken === "ETH" ? ethValue : oneInchValue
         }`
       );
     }
@@ -238,16 +243,20 @@ export default function Navbar({ isHomeNav }) {
   React.useEffect(() => {
     const htmlElement = document.documentElement;
     const bodyElement = document.body;
-    if (theme === "dark") {
-      htmlElement.classList.add("dark");
-      bodyElement.classList.add("dark");
-      bodyElement.style.backgroundColor = "#070a18";
+    if (theme === 'dark') {
+      htmlElement.classList.add('dark');
+      bodyElement.classList.add('dark');
+      bodyElement.style.backgroundColor = '#070a18';
+      setIsDarkMode(true)
     } else {
-      htmlElement.classList.remove("dark");
-      bodyElement.classList.remove("dark");
-      bodyElement.style.backgroundColor = "";
+      htmlElement.classList.remove('dark');
+      bodyElement.classList.remove('dark');
+      bodyElement.style.backgroundColor = '';
+      setIsDarkMode(false)
     }
-  }, [theme]);
+  }, [theme, isDarkMode]);
+
+
 
   return (
     <>
@@ -891,14 +900,14 @@ export default function Navbar({ isHomeNav }) {
                           return null;
                         })
                       : HOME_TOP_NAV_LINK.map((link, index) => (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
-                          >
-                            {link.title}
-                          </NavLink>
-                        ))}
+                        <NavLink
+                          key={index}
+                          to={link.route}
+                          className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
                     <h2 className="text-lg my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">
                       Setting
                     </h2>
@@ -926,9 +935,9 @@ export default function Navbar({ isHomeNav }) {
                               boxShadow: "0 0 10px black",
                             },
                             "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                              {
-                                backgroundColor: "#1939ea",
-                              },
+                            {
+                              backgroundColor: "#1939ea",
+                            },
                           }}
                           style={{ minWidth: "40px" }} // Ensure a minimum width for the Switch
                         />

@@ -33,7 +33,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
       <h1 className="font-semibold text-xl">Supply {asset}</h1>
       <div className="flex flex-col gap-2 mt-5 text-sm">
         <div className="w-full">
-          <div className="w-full flex justify-between my-2 dark:bg-darkBackground dark:text-darkText">
+          <div className="w-full flex justify-between my-2  dark:text-darkText">
             <h1>Amount</h1>
             <h1>Slippage 0.10%</h1>
           </div>
@@ -43,7 +43,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
                 type="text"
                 value={amount}
                 onChange={handleAmountChange}
-                className="text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-[#1D1B40] dark:text-darkText"
+                className="text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                 placeholder="0.00"
               />
               <p className="text-sm text-gray-500 mt-2">$0</p>
@@ -65,14 +65,14 @@ const SupplyPopup = ({ asset, image, balance }) => {
           <div className="w-full flex justify-between my-2">
             <h1>Transaction overview</h1>
           </div>
-          <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm dark:bg-[#1D1B40] dark:text-darkText">
+          <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
             <div className="w-full flex justify-between items-center my-1">
               <p>Supply APY</p>
               <p>24.04%</p>
             </div>
             <div className="w-full flex justify-between items-center my-1">
               <p>Collateralization</p>
-              <p className="bg-[#68c861]  text-[#2A1F9D] rounded-full p-2">Enabled</p>
+              <p>Enabled</p>
             </div>
             <div className="w-full flex flex-col my-1">
               <div className="w-full flex justify-between items-center">
@@ -92,7 +92,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
       </div>
 
       {!hasEnoughBalance && (
-        <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground">
+        <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1 text-yellow-500">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01m-6.938 4h13.856c.72 0 1.392-.386 1.732-1l6.939-12a2 2 0 00-1.732-3H4.134a2 2 0 00-1.732 3l6.939 12c.34.614 1.012 1 1.732 1z" />
           </svg>

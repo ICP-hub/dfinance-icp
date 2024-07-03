@@ -3,6 +3,8 @@ import Button from "../Button"
 import { useAuth } from "../../utils/useAuthClient"
 import { BsToggles2 } from "react-icons/bs";
 import { IoIosSearch } from "react-icons/io";
+import { ArrowUpRight } from 'lucide-react';
+import { Info } from 'lucide-react';
 import {
 
   ExternalLink,
@@ -205,20 +207,90 @@ const DFinanceGov = () => {
 
         </div>
         <div className="w-full md2:w-4/12 dxl:w-3/12">
-          <div className="w-full bg-[#233D63] p-4 rounded-xl text-white">
+
+          {!isAuthenticated && <div className="w-full bg-[#233D63] p-4 rounded-2xl text-white mb-4">
             <h1 className="font-semibold">Your info</h1>
-           {isAuthenticated ? <p className="text-gray-200 text-xs my-2">Your wallet has been connected</p>: <p className="text-gray-200 text-xs my-2">
+            <p className="text-gray-200 text-xs my-2">
               Please connect a wallet to view your personal information here.
-            </p>}
-            {!isAuthenticated && <div className="w-full mt-4">
+            </p>
+            <div className="w-full mt-4">
               <Button
                 title={"Connect Wallet"}
                 className={
                   "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-3 px-8 shadow-lg font-semibold text-sm'"
                 }
               />
-            </div>}
-          </div>
+            </div>
+          </div>}
+
+          {isAuthenticated && <div className="w-full bg-[#233D63] p-4 rounded-2xl text-white mb-4">
+            <h1 className="font-semibold">Your info</h1>
+            <div className="flex items-center gap-1 p-2 px-3 overflow-hidden">
+              <div className="bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-2 mr-1">
+                <img
+                  src={'/square.png'}
+                  alt="square"
+                  className="object-contain w-5 h-5"
+                />
+              </div>
+              <span className='text-[12px]'>0x65.125s</span> <ArrowUpRight size={12} />
+            </div>
+            <div className="w-full mt-3 text-[12px]">
+              <div className="flex"><p className="flex flex-row gap-3 items-center">Voting Power <span><Info size={15} /></span></p>  <p className="ml-auto text-[16px]">0</p></div>
+              <div className="flex"><p className="flex flex-row gap-3 items-center">Proposition Power <span><Info size={15} /></span></p>  <p className="ml-auto text-[16px]">0</p></div>
+            </div>
+          </div>}
+
+          {isAuthenticated && <div className="w-full bg-[#233D63] p-4 rounded-2xl text-white mb-4">
+            <h1 className="font-semibold">Delegated Power</h1>
+            <div className="w-full mt-4 text-[12px]">
+              <p className="mb-3 ">Use your AAVE, stkAAVE, or aAave balance to delegate your voting and proposition powers. You will not be sending any tokens, only the rights to vote and propose changes to the protocol. You can re-delegate or revoke power to self at any time. <a href="#" className="text-blue-400 italic underline">Learn more.</a></p>
+              <p className="text-gray-400">You have no AAVE/stkAAVE/aAave balance to delegate.</p>
+              <div className="w-full mt-4 flex justify-center align-center">
+                <Button
+                  title={"Set Up Delegation"}
+                  className={
+                    "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-3 px-8 shadow-lg font-semibold text-sm'"
+                  }
+                />
+              </div>
+            </div>
+          </div>}
+
+
+          {isAuthenticated && <div className="w-full bg-[#233D63] p-4 rounded-2xl text-white mb-4">
+            <h1 className="font-semibold">Linked addresses</h1>
+            <div className="mt-3">
+              <span className='text-[12px]'>Representative smart contract wallet (ie. Safe) addresses on other chains.</span>
+            </div>
+            <div className="w-full mt-3 text-[12px]">
+              <div className="flex">
+                <p className="flex flex-row gap-3 items-center">Avalanche</p>
+                <div className="ml-auto flex justify-center align-center items-center gap-2 bg-gradient-to-tr from-[#EDD049] to-[#8CC0D7] bg-clip-text text-transparent rounded-lg px-2 p-2 h-7 border mb-2">
+                <Button
+                  title={"+"}
+                  className={
+                    "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] w-4 h-4  rounded-md shadow-lg font-semibold ml-auto'"
+                  }
+                />
+                <p className="font-semibold mr-[8px]">Connect</p>
+                </div>
+              </div>
+              <div className="flex">
+                <p className="flex flex-row gap-3 items-center">Algorand</p>
+                <div className="ml-auto flex justify-center align-center items-center gap-2 bg-gradient-to-tr from-[#EDD049] to-[#8CC0D7] bg-clip-text text-transparent rounded-lg px-2 p-2 h-7 border mb-2">
+                <Button
+                  title={"+"}
+                  className={
+                    "my-2 bg-gradient-to-r  text-white from-[#EDD049] to-[#8CC0D7] w-4 h-4  rounded-md shadow-lg font-semibold ml-auto'"
+                  }
+                />
+                <p className="font-semibold mr-[8px]">Connect</p>
+                </div>
+              </div>
+            </div>
+          </div>}
+
         </div>
       </div>
     </>

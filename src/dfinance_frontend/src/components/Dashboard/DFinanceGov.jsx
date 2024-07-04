@@ -5,6 +5,9 @@ import { BsToggles2 } from "react-icons/bs";
 import { IoIosSearch } from "react-icons/io";
 import { ArrowUpRight } from 'lucide-react';
 import { Info } from 'lucide-react';
+import { Trash } from 'lucide-react';
+import { Square } from 'lucide-react';
+import { Fuel } from 'lucide-react';
 import {
 
   ExternalLink,
@@ -12,11 +15,13 @@ import {
 } from "lucide-react"
 import { PROPOSALS_DETAILS } from "../../utils/constants"
 import { Link } from "react-router-dom"
+import { X } from "lucide-react"
 
 const DFinanceGov = () => {
   const [isFilter, setIsFilter] = useState(false)
   const [showsearch, setShowSearch] = useState(false);
   const [selectedItem, setSelectedItem] = useState("All Proposals");
+  const [showPopup, setShowPopup] = useState(false);
 
   const {
     isAuthenticated,
@@ -51,6 +56,15 @@ const DFinanceGov = () => {
   const handleToggleClick = (event) => {
     event.stopPropagation(); // Prevent propagation of the click event to the document
     setIsFilter(!isFilter); // Toggle the dropdown
+  };
+
+
+  const handleConnectClick = () => {
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
   };
 
   return (
@@ -109,7 +123,7 @@ const DFinanceGov = () => {
                       ? "animate-fade-left flex"
                       : "animate-fade-right hidden"
                       }`}
-                  
+
                   />
                 </div>
               )}
@@ -265,31 +279,99 @@ const DFinanceGov = () => {
             </div>
             <div className="w-full mt-3 text-[12px]">
               <div className="flex">
-                <p className="flex flex-row gap-3 items-center">Avalanche</p>
-                <div className="ml-auto flex justify-center align-center items-center gap-2 bg-gradient-to-tr from-[#EDD049] to-[#8CC0D7] bg-clip-text text-transparent rounded-lg px-2 p-2 h-7 border mb-2">
-                <Button
-                  title={"+"}
-                  className={
-                    "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] w-4 h-4  rounded-md shadow-lg font-semibold ml-auto'"
-                  }
-                />
-                <p className="font-semibold mr-[8px]">Connect</p>
+                <div className="flex align-center items-center">
+                  <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png?v=032" alt="Icp Logo" className="mx-2 w-5 h-5" />
+                  <p className="text-[12px] font-light">Algorand</p>
+                </div>
+                <div className="ml-auto flex justify-center align-center items-center gap-2 bg-gradient-to-tr from-[#EDD049] to-[#8CC0D7] bg-clip-text text-transparent rounded-lg px-2 p-2 h-7 border mb-2 cursor-pointer" onClick={handleConnectClick}>
+                  <Button
+                    title={"+"}
+                    className={
+                      "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] w-4 h-4  rounded-md shadow-lg font-semibold ml-auto'"
+                    }
+                  />
+                  <p className="font-semibold mr-[8px]">Connect</p>
                 </div>
               </div>
               <div className="flex">
-                <p className="flex flex-row gap-3 items-center">Algorand</p>
-                <div className="ml-auto flex justify-center align-center items-center gap-2 bg-gradient-to-tr from-[#EDD049] to-[#8CC0D7] bg-clip-text text-transparent rounded-lg px-2 p-2 h-7 border mb-2">
-                <Button
-                  title={"+"}
-                  className={
-                    "my-2 bg-gradient-to-r  text-white from-[#EDD049] to-[#8CC0D7] w-4 h-4  rounded-md shadow-lg font-semibold ml-auto'"
-                  }
-                />
-                <p className="font-semibold mr-[8px]">Connect</p>
+                <div className="flex align-center items-center">
+                  <img src="https://cryptologos.cc/logos/algorand-algo-logo.svg?v=032" alt="Icp Logo" className="mx-2 w-5 h-5 rounded-[50%] bg-gray-300" />
+                  <p className="text-[12px] font-light">Algorand</p>
+                </div>
+                <div className="ml-auto flex justify-center align-center items-center gap-2 bg-gradient-to-tr from-[#EDD049] to-[#8CC0D7] bg-clip-text text-transparent rounded-lg px-2 p-2 h-7 border mb-2 cursor-pointer" onClick={handleConnectClick}>
+                  <Button
+                    title={"+"}
+                    className={
+                      "my-2 bg-gradient-to-r  text-white from-[#EDD049] to-[#8CC0D7] w-4 h-4  rounded-md shadow-lg font-semibold ml-auto'"
+                    }
+                  />
+                  <p className="font-semibold mr-[8px]">Connect</p>
                 </div>
               </div>
             </div>
           </div>}
+
+          {showPopup && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+              <div className="bg-white dark:bg-darkOverlayBackground px-6 py-4 rounded-lg shadow-lg w-80 relative">
+                <button
+                  className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
+                  onClick={closePopup}
+                >
+                  <X size={30} />
+                </button>
+                <div >
+                  <div>
+                    <p className="text-lg font-bold text-[#2A1F9D] dark:text-darkText">Edit Address</p>
+                  </div>
+                  <div className="flex flex-col gap-5 mt-8">
+                    <div>
+                      <div className="flex items-center mb-3">
+                        <div className="flex align-center items-center">
+                          <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png?v=032" alt="Icp Logo" className="mx-2 w-7 h-7" />
+                          <p className="text-[12px] font-light text-[#2A1F9D] dark:text-darkText">Avalanche</p>
+                        </div>
+                        <div className="flex ml-auto gap-2">
+                          <Trash size={15} color="pink" />
+                          <Square size={15} color="gray" />
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full pl-3 pr-16 py-3 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md dark:bg-darkBackground/30 dark:text-darkTextSecondary"
+                        placeholder="Enter ETH address"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center mb-3">
+                        <div className="flex align-center items-center">
+                          <img src="https://cryptologos.cc/logos/algorand-algo-logo.svg?v=032" alt="Icp Logo" className="mx-2 w-7 h-7 rounded-[50%] bg-gray-300" />
+                          <p className="text-[12px] font-light text-[#2A1F9D] dark:text-darkText">Algorand</p>
+                        </div>
+                        <div className="flex ml-auto gap-2">
+                          <Trash size={15} color="pink" />
+                          <Square size={15} color="gray" />
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full pl-3 pr-16 py-3 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md dark:bg-darkBackground/30 dark:text-darkTextSecondary"
+                        placeholder="Enter ETH address"
+                      />
+                    </div>
+                    <Fuel className="mt-[-7px]" size={15} color="gray"/>
+                  </div>
+                </div>
+                <div className="flex w-full justify-center">
+                  <button
+                    className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-3 font-semibold w-[100%] text-[14px]"
+                  >
+                    Confirm Transaction
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

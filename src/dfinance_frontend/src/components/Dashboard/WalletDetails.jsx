@@ -1,13 +1,18 @@
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
-import React, { useState } from "react"
-import { useSelector } from "react-redux"
+import React, { useEffect, useState } from "react"
 import {
   WALLET_ASSETS_TABLE_ROW,
   WALLET_ASSETS_TABLE_COL,
 } from "../../utils/constants"
 import Button from "../Button"
 import { useNavigate } from "react-router-dom"
-
+import { Modal } from "@mui/material"
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  setIsWalletConnected,
+  setWalletModalOpen
+} from '../../redux/reducers/utilityReducer'
+import { useAuth } from "../../utils/useAuthClient"
 
 const WalletDetails = () => {
 
@@ -26,6 +31,11 @@ const WalletDetails = () => {
       setCurrentPage(currentPage - 1);
     }
   };
+
+  const {
+    isAuthenticated,
+    login,
+  } = useAuth();
 
   const handleNextPage = () => {
     if (currentPage < Math.ceil(WALLET_ASSETS_TABLE_ROW.length / itemsPerPage)) {
@@ -53,18 +63,54 @@ const WalletDetails = () => {
     setShowPopup(false);
   };
 
+  const dispatch = useDispatch()
+  const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
+
+
+
+  const handleWalletConnect = () => {
+    console.log("connrcterd");
+    dispatch(setWalletModalOpen(!isWalletModalOpen))
+    // dispatch(setIsWalletCreated(true))
+  }
+
+  const handleWallet = () => {
+    dispatch(setWalletModalOpen(!isWalletModalOpen))
+    dispatch(setIsWalletConnected(true))
+    navigate('/dashboard/my-supply')
+  }
+
+  useEffect(() => {
+    if (isWalletCreated) {
+      navigate('/dashboard/wallet-details')
+    }
+  }, [isWalletCreated]);
+
+
+
+  const loginHandler = async (val) => {
+    await login(val);
+    // navigate("/");
+
+    // await existingUserHandler();
+  };
+
+  const [inputValue, setInputValue] = useState('');
+
+  const handleInputChange = (event) => {
+    setInputValue(event.target.value);
+  };
+
 
 
   return (
     <div className="w-full mt-10">
 
 
-      <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-16 ">
-        <h1 className="text-[#2A1F9D] font-semibold text-lg dark:text-darkText">ICP Assets</h1>
+      <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
+        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">ICP Assets</h1>
         <div className="ml-auto   ">
           {Showsearch && (
-
-
             <input
               type="text"
               name="search"
@@ -106,7 +152,7 @@ const WalletDetails = () => {
         />
       }
 
-      <div className="w-full min-h-[400px] mt-6 lg:px-12 mb-20">
+      <div className="w-full min-h-[400px] mt-6 lg:px-10 mb-20">
         <div className="w-full">
           <div className="w-full overflow-auto content">
             <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText">
@@ -127,16 +173,16 @@ const WalletDetails = () => {
                 {currentItems.map((item, index) => (
                   <tr
                     key={index}
-                    className={`w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
+                    className={`w-full font-bold hover:bg-[#ddf5ff8f] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
                     <td className="p-3 align-top">
-                      <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
+                      <div className="w-full flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mr-1 mt-2">
                         <img src={item.image} alt={item.asset} className="w-8 h-8 rounded-full" />
                         {item.asset}
                       </div>
                     </td>
                     <td className="p-3 align-top">
-                      <div className="flex flex-row ml-2">
+                      <div className="flex flex-row ml-2 mt-2">
                         <div>
                           <p>{item.total_supply_count}</p>
                           <p className="font-light">${item.total_supply}M</p>
@@ -146,17 +192,17 @@ const WalletDetails = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell">{item.supply_apy}</td>
+                    <td className="p-3 align-top hidden md:table-cell pt-5">{item.supply_apy}</td>
                     <td className="p-3 align-top hidden md:table-cell">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col mt-2">
                         <p>{item.total_borrow_count}</p>
                         <p className="font-light">${item.total_borrow}M</p>
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell">{item.borrow_apy}</td>
+                    <td className="p-3 align-top hidden md:table-cell pt-5">{item.borrow_apy}</td>
                     <td className="p-3 align-top flex">
                       <div className="w-full flex justify-end align-center">
-                        <Button title={"Details"} className="mb-7 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md lg:px-6 lg:py-2 sxs3:px-3 sxs3:py-2 shadow-2xl font-semibold text-sm" onClickHandler={() => handleDetailsClick(item.asset)} />
+                        <Button title={"Details"} className="mb-8 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] shadow-xl shadow-black/50 font-semibold text-sm font-inter" onClickHandler={() => handleDetailsClick(item.asset)} />
                       </div>
                     </td>
                   </tr>
@@ -187,7 +233,7 @@ const WalletDetails = () => {
 
           {showPopup && (
             <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-              <div className="bg-white dark:bg-darkOverlayBackground p-8 rounded-2xl shadow-lg w-80 relative">
+              <div className="bg-white dark:bg-darkOverlayBackground p-6 rounded-2xl shadow-lg w-80 relative">
                 <button
                   className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                   onClick={closePopup}
@@ -202,29 +248,29 @@ const WalletDetails = () => {
 
                   <div className="flex flex-col gap-5 mt-8">
                     <div className="flex justify-between">
-                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Total Supply:</p>
+                      <p className="text-sm dark:text-darkTextSecondary">Total Supply:</p>
                       <div className="flex flex-col">
                         <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_supply_count}M</p>
-                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">(${selectedAsset.total_supply}M)</p>
+                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">${selectedAsset.total_supply}M</p>
                       </div>
                     </div>
                     <div className="flex justify-between mb-4">
-                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Supply APY:</p>
+                      <p className="text-sm dark:text-darkTextSecondary">Supply APY:</p>
                       <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.supply_apy}</p>
                     </div>
 
 
                     <div className="flex justify-between">
-                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Total Borrow:</p>
+                      <p className="text-sm  dark:text-darkTextSecondary">Total Borrow:</p>
                       <div className="flex flex-col">
                         <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_borrow_count}M</p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          (${selectedAsset.total_borrow}M)
+                          ${selectedAsset.total_borrow}M
                         </p>
                       </div>
                     </div>
                     <div className="flex justify-between mb-4">
-                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Borrow APY:</p>
+                      <p className="text-sm dark:text-darkTextSecondary">Borrow APY:</p>
                       <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.borrow_apy}</p>
                     </div>
                   </div>
@@ -242,6 +288,61 @@ const WalletDetails = () => {
               </div>
             </div>
           )}
+
+
+         {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+            <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
+              <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
+              <div className='flex flex-col gap-2 mt-3 text-sm'>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
+                  Internet Identity
+                  <div className='w-8 h-8'>
+                    <img src={"https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                  </div>
+                </div>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#b7b4b4] dark:text-darkText">
+                  Plug
+                  <div className='w-8 h-8'>
+                    <img src={"/plug.png.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                  </div>
+                </div>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#b7b4b4] dark:text-darkText">
+                  Bifinity
+                  <div className='w-8 h-8'>
+                    <img src={"/bifinity.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                  </div>
+                </div>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#b7b4b4] dark:text-darkText" onClick={() => loginHandler("nfid")}>
+                  NFID
+                  <div className='w-8 h-8'>
+                    <img src={"/nfid.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                  </div>
+                </div>
+              </div>
+              <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
+
+              <div className="w-full">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
+                  placeholder="Enter ethereum address or username"
+                />
+              </div>
+
+              {inputValue && (
+                <div className="w-full flex mt-3">
+                  <Button
+                    title="Connect"
+                    onClickHandler={handleWallet}
+                    className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                  />
+                </div>
+              )}
+
+            </div>
+          </Modal>}
 
 
         </div>

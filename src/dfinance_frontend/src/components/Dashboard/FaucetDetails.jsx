@@ -43,8 +43,8 @@ const FaucetDetails = () => {
 
   return (
     <div className="w-full mt-10">
-      <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-16">
-        <h1 className="text-[#2A1F9D] font-semibold text-lg dark:text-darkText">Test Assets</h1>
+      <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-12">
+        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Test Assets</h1>
       </div>
 
       <div className="w-full min-h-[390px] mt-6 p-0 lg:px-12 mb-20 ">
@@ -52,7 +52,7 @@ const FaucetDetails = () => {
           <div className="w-full overflow-auto content">
             <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
               <thead>
-                <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
+                <tr className="text-left text-[#233D63] dark:text-darkTextSecondary text-[12px]">
                   {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                     <td key={index} className="p-1 whitespace-nowrap">
                       {item.header}
@@ -65,13 +65,13 @@ const FaucetDetails = () => {
                 {currentItems.map((item, index) => (
                   <tr
                     key={index}
-                    className={`w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg ${
+                    className={`w-full font-bold hover:bg-[#ddf5ff8f] rounded-lg text-[12px] ${
                       index !== currentItems.length - 1 ? "gradient-line-bottom" : ""
                     }`}
                   >
                     <td className="p-3 align-top">
                       <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
-                        <img src={item.image} alt={item.asset} className="w-8 h-8 rounded-full" />
+                        <img src={item.image} alt={item.asset} className="w-8 h-8 rounded-full mr-2" />
                         {item.asset}
                       </div>
                     </td>
@@ -89,7 +89,7 @@ const FaucetDetails = () => {
                       <div className="w-full flex justify-end align-center">
                         <Button
                           title={"Faucet"}
-                          className="mb-7 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-3 py-1 shadow-2xl shadow-black/90 font-semibold text-sm sxs3:px-6"
+                          className="mb-7 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-3 py-1 shadow-xl shadow-black/40 font-semibold text-sm sxs3:px-6 font-inter"
                           onClickHandler={() => handleFaucetClick(item.asset, item.image)}
                         />
                       </div>

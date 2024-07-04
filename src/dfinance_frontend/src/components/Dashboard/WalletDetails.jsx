@@ -154,7 +154,7 @@ const WalletDetails = () => {
                     <td className="p-3 align-top hidden md:table-cell pt-5">{item.borrow_apy}</td>
                     <td className="p-3 align-top flex">
                       <div className="w-full flex justify-end align-center">
-                        <Button title={"Details"} className="mb-8 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] shadow-xl font-semibold text-sm font-inter" onClickHandler={() => handleDetailsClick(item.asset)} />
+                        <Button title={"Details"} className="mb-8 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] shadow-xl shadow-black/50 font-semibold text-sm font-inter" onClickHandler={() => handleDetailsClick(item.asset)} />
                       </div>
                     </td>
                   </tr>

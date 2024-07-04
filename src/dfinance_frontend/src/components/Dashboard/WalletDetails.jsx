@@ -59,12 +59,10 @@ const WalletDetails = () => {
     <div className="w-full mt-10">
 
 
-      <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-16 ">
-        <h1 className="text-[#2A1F9D] font-semibold text-lg dark:text-darkText">ICP Assets</h1>
+      <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
+        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">ICP Assets</h1>
         <div className="ml-auto   ">
           {Showsearch && (
-
-
             <input
               type="text"
               name="search"
@@ -106,7 +104,7 @@ const WalletDetails = () => {
         />
       }
 
-      <div className="w-full min-h-[400px] mt-6 lg:px-12 mb-20">
+      <div className="w-full min-h-[400px] mt-6 lg:px-10 mb-20">
         <div className="w-full">
           <div className="w-full overflow-auto content">
             <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText">
@@ -127,16 +125,16 @@ const WalletDetails = () => {
                 {currentItems.map((item, index) => (
                   <tr
                     key={index}
-                    className={`w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
+                    className={`w-full font-bold hover:bg-[#ddf5ff8f] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
                     <td className="p-3 align-top">
-                      <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
+                      <div className="w-full flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mr-1 mt-2">
                         <img src={item.image} alt={item.asset} className="w-8 h-8 rounded-full" />
                         {item.asset}
                       </div>
                     </td>
                     <td className="p-3 align-top">
-                      <div className="flex flex-row ml-2">
+                      <div className="flex flex-row ml-2 mt-2">
                         <div>
                           <p>{item.total_supply_count}</p>
                           <p className="font-light">${item.total_supply}M</p>
@@ -146,17 +144,17 @@ const WalletDetails = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell">{item.supply_apy}</td>
+                    <td className="p-3 align-top hidden md:table-cell pt-5">{item.supply_apy}</td>
                     <td className="p-3 align-top hidden md:table-cell">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col mt-2">
                         <p>{item.total_borrow_count}</p>
                         <p className="font-light">${item.total_borrow}M</p>
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell">{item.borrow_apy}</td>
+                    <td className="p-3 align-top hidden md:table-cell pt-5">{item.borrow_apy}</td>
                     <td className="p-3 align-top flex">
                       <div className="w-full flex justify-end align-center">
-                        <Button title={"Details"} className="mb-7 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md lg:px-6 lg:py-2 sxs3:px-3 sxs3:py-2 shadow-2xl font-semibold text-sm" onClickHandler={() => handleDetailsClick(item.asset)} />
+                        <Button title={"Details"} className="mb-8 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] shadow-xl shadow-black/50 font-semibold text-sm font-inter" onClickHandler={() => handleDetailsClick(item.asset)} />
                       </div>
                     </td>
                   </tr>
@@ -187,7 +185,7 @@ const WalletDetails = () => {
 
           {showPopup && (
             <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-              <div className="bg-white dark:bg-darkOverlayBackground p-8 rounded-2xl shadow-lg w-80 relative">
+              <div className="bg-white dark:bg-darkOverlayBackground p-6 rounded-2xl shadow-lg w-80 relative">
                 <button
                   className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                   onClick={closePopup}
@@ -202,29 +200,29 @@ const WalletDetails = () => {
 
                   <div className="flex flex-col gap-5 mt-8">
                     <div className="flex justify-between">
-                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Total Supply:</p>
+                      <p className="text-sm dark:text-darkTextSecondary">Total Supply:</p>
                       <div className="flex flex-col">
                         <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_supply_count}M</p>
-                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">(${selectedAsset.total_supply}M)</p>
+                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">${selectedAsset.total_supply}M</p>
                       </div>
                     </div>
                     <div className="flex justify-between mb-4">
-                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Supply APY:</p>
+                      <p className="text-sm dark:text-darkTextSecondary">Supply APY:</p>
                       <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.supply_apy}</p>
                     </div>
 
 
                     <div className="flex justify-between">
-                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Total Borrow:</p>
+                      <p className="text-sm  dark:text-darkTextSecondary">Total Borrow:</p>
                       <div className="flex flex-col">
                         <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_borrow_count}M</p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          (${selectedAsset.total_borrow}M)
+                          ${selectedAsset.total_borrow}M
                         </p>
                       </div>
                     </div>
                     <div className="flex justify-between mb-4">
-                      <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">Borrow APY:</p>
+                      <p className="text-sm dark:text-darkTextSecondary">Borrow APY:</p>
                       <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.borrow_apy}</p>
                     </div>
                   </div>

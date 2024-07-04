@@ -429,9 +429,9 @@ export default function Navbar({ isHomeNav }) {
                               <img
                                 src={loader}
                                 alt="connect_wallet_icon"
-                                className="object-cover w-8 h-8"
+                                className="object-cover w-6 h-6"
                               />
-                              <span className="text-lg text-[#2A1F9D]">ETH</span>
+                              <span className="text-lg text-[#2A1F9D] dark:text-darkText">ETH</span>
                               <svg
                                 className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
                                 fill="currentColor"
@@ -445,7 +445,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </svg>
                             </div>
-                            <p className="text-xs mt-2 text-[#2A1F9D]">
+                            <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
                               {" "}
                               Balance: {balance} Max
                             </p>
@@ -486,9 +486,9 @@ export default function Navbar({ isHomeNav }) {
                               <img
                                 src={loader}
                                 alt="connect_wallet_icon"
-                                className="object-cover w-8 h-8"
+                                className="object-cover w-6 h-6"
                               />
-                              <span className="text-lg text-[#2A1F9D]">1 INCH</span>
+                              <span className="text-lg text-[#2A1F9D] dark:text-darkText">1 INCH</span>
                               <svg
                                 className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
                                 fill="currentColor"
@@ -502,7 +502,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </svg>
                             </div>
-                            <p className="text-xs mt-2 text-[#2A1F9D]">
+                            <p className="text-xs mt-2 text-[#2A1F9D]dark:text-darkTextw-full md2:w-8/12 dxl:w-10/12 -mt-4  md:ms-10 p-6">
                               {" "}
                               Balance: {balance} Max
                             </p>

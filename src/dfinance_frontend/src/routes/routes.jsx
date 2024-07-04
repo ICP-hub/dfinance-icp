@@ -11,6 +11,7 @@ import MySupply from "../components/Dashboard/MySupply"
 import { elements } from "chart.js"
 import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
 import StakeDetails from "../components/Dashboard/StakeDetails"
+import Faucet from "../components/Dashboard/faucet"
 
 export default [
   {
@@ -82,6 +83,14 @@ export default [
     element: (
       <MainDashboard includeDashboardNav={false}>
         <StakeDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/Faucet",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <Faucet/>
       </MainDashboard>
     ),
   },

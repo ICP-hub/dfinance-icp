@@ -14,6 +14,7 @@ import Element from "../../../public/Elements.svg"
 import MySupply from './MySupply'
 import Error from '../../pages/Error/Error'
 import StakesConnected from './StakesConnected'
+import Loading from "../Loading"
 
 const StakeDetails = () => {
     const navigate = useNavigate()
@@ -54,7 +55,7 @@ const StakeDetails = () => {
     };
 
     return (
-        <>
+        <> 
             <div className="w-full mt-6">
                 <h1 className="text-[#5B62FE] text-sm inline-flex items-center ml-6">
                     Available on

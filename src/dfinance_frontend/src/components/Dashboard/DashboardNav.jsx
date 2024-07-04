@@ -226,7 +226,7 @@ const DashboardNav = () => {
                 </button>
               </div>
             ))}
-            {shouldRenderRiskDetailsButton && (
+            {isAuthenticated && shouldRenderRiskDetailsButton && (
               <button
                 className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
                 onClick={handleOpenPopup}

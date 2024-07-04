@@ -127,6 +127,8 @@ export default function Navbar({ isHomeNav }) {
   const handleSwitchToken = () => {
     setSwitchTokenDrop(!switchTokenDrop);
     setSwitchWalletDrop(false);
+    setIsPopupVisible(false);
+    setDropdownVisible(false);
   };
 
   const handleSwitchWallet = () => {
@@ -135,6 +137,8 @@ export default function Navbar({ isHomeNav }) {
     } else {
       setSwitchWalletDrop(!switchWalletDrop);
       setSwitchTokenDrop(false);
+      setDropdownVisible(false);
+      setIsPopupVisible(false);
     }
   };
 
@@ -237,6 +241,9 @@ export default function Navbar({ isHomeNav }) {
 
   const handlePopupToggle = () => {
     setIsPopupVisible((prevVisible) => !prevVisible);
+    setSwitchWalletDrop(false);
+      setSwitchTokenDrop(false);
+      setDropdownVisible(false);
   };
 
   const handleDarkModeToggle = () => {
@@ -277,7 +284,7 @@ export default function Navbar({ isHomeNav }) {
                 alt="DFinance"
                 className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]  sxs3:mb-3"
               />
-              {isTestnetMode && (
+              {!isHomeNav && isTestnetMode && (
                 <button className="bg-[#4659CF] hover:bg-blue-700 text-white font-bold p-2 rounded flex items-center text-[12px] w-20 h-6 lg:ml-3 -mt-1 sxs3:ml-10">
                   TESTNET
                   <Info size={20} className="ml-1" />
@@ -431,7 +438,7 @@ export default function Navbar({ isHomeNav }) {
                                 alt="connect_wallet_icon"
                                 className="object-cover w-8 h-8"
                               />
-                              <span className="text-lg text-[#2A1F9D]">ETH</span>
+                              <span className="text-lg text-[#2A1F9D] dark:text-darkText">ETH</span>
                               <svg
                                 className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
                                 fill="currentColor"
@@ -445,7 +452,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </svg>
                             </div>
-                            <p className="text-xs mt-2 text-[#2A1F9D]">
+                            <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
                               {" "}
                               Balance: {balance} Max
                             </p>
@@ -455,7 +462,7 @@ export default function Navbar({ isHomeNav }) {
                             <img
                               src={ARROW}
                               alt="Switch Icon"
-                              className="w-6 h-6 cursor-pointer"
+                              className="w-6 h-6 cursor-pointer dark:text-darkText"
                               onClickHandler={handleSwitchClick}
                             />
                           </div>
@@ -488,7 +495,7 @@ export default function Navbar({ isHomeNav }) {
                                 alt="connect_wallet_icon"
                                 className="object-cover w-8 h-8"
                               />
-                              <span className="text-lg text-[#2A1F9D]">1 INCH</span>
+                              <span className="text-lg text-[#2A1F9D] dark:text-darkText">1 INCH</span>
                               <svg
                                 className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
                                 fill="currentColor"
@@ -502,7 +509,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </svg>
                             </div>
-                            <p className="text-xs mt-2 text-[#2A1F9D]">
+                            <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
                               {" "}
                               Balance: {balance} Max
                             </p>

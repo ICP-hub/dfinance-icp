@@ -127,6 +127,8 @@ export default function Navbar({ isHomeNav }) {
   const handleSwitchToken = () => {
     setSwitchTokenDrop(!switchTokenDrop);
     setSwitchWalletDrop(false);
+    setIsPopupVisible(false);
+    setDropdownVisible(false);
   };
 
   const handleSwitchWallet = () => {
@@ -135,6 +137,8 @@ export default function Navbar({ isHomeNav }) {
     } else {
       setSwitchWalletDrop(!switchWalletDrop);
       setSwitchTokenDrop(false);
+      setDropdownVisible(false);
+      setIsPopupVisible(false);
     }
   };
 
@@ -237,6 +241,9 @@ export default function Navbar({ isHomeNav }) {
 
   const handlePopupToggle = () => {
     setIsPopupVisible((prevVisible) => !prevVisible);
+    setSwitchWalletDrop(false);
+      setSwitchTokenDrop(false);
+      setDropdownVisible(false);
   };
 
   const handleDarkModeToggle = () => {
@@ -277,7 +284,7 @@ export default function Navbar({ isHomeNav }) {
                 alt="DFinance"
                 className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]  sxs3:mb-3"
               />
-              {isTestnetMode && (
+              {!isHomeNav && isTestnetMode && (
                 <button className="bg-[#4659CF] hover:bg-blue-700 text-white font-bold p-2 rounded flex items-center text-[12px] w-20 h-6 lg:ml-3 -mt-1 sxs3:ml-10">
                   TESTNET
                   <Info size={20} className="ml-1" />
@@ -455,7 +462,7 @@ export default function Navbar({ isHomeNav }) {
                             <img
                               src={ARROW}
                               alt="Switch Icon"
-                              className="w-6 h-6 cursor-pointer"
+                              className="w-6 h-6 cursor-pointer dark:text-darkText"
                               onClickHandler={handleSwitchClick}
                             />
                           </div>
@@ -502,7 +509,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </svg>
                             </div>
-                            <p className="text-xs text-[#2A1F9D]dark:text-darkTextw-full md2:w-8/12 dxl:w-10/12 -mt-4  md:ms-10 p-6">
+                            <p className="text-xs text-[#2A1F9D]dark:text-darkText w-full md2:w-8/12 dxl:w-10/12 -mt-4  md:ms-10 p-6">
                               {" "}
                               Balance: {balance} Max
                             </p>

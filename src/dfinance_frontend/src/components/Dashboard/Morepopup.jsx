@@ -1,12 +1,19 @@
 import React from 'react';
 
-const Popup = () => {
+const Popup = ({ onClose }) => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#3a615e]">
-      <div className="bg-white rounded-lg p-6 w-80 text-center">
-        <p className="text-[#2A1F9D] text-xl mb-4">more</p>
-        <p className="text-[#2A1F9D] text-4xl mb-4">Doc</p>
-        <p className="text-[#2A1F9D] text-3xl">FAQ's</p>
+    <div className="fixed inset-0 flex items-center  bg-opacity-75 -top-[390px] left-[900px] z-50">
+      <div className="bg-white rounded-lg p-6 w-60 relative dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+        <button onClick={onClose} className="absolute top-2 right-2 text-[#3e3e40]">
+          ✕
+        </button>
+        <p className="text-[#2A1F9D] text-sm mb-4  dark:text-darkText">more</p>
+        <p>
+        <a href="/docs" className="text-[#2A1F9D] text-xl mb-6 font-bold dark:text-darkText">Doc</a>
+        </p>
+        <p>
+        <a href="/#faq"className="text-[#2A1F9D] text-xl font-bold  dark:text-darkText">FAQ's</a>
+        </p>
       </div>
     </div>
   );

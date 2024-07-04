@@ -9,7 +9,9 @@ const PaymentDone = () => {
     };
 
     if (!isVisible) {
-        return null; // Hide the component when isVisible is false
+        return null;
+        
+         // Hide the component when isVisible is false
     }
 
     return (

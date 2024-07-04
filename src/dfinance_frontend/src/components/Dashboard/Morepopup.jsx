@@ -9,7 +9,7 @@ const Popup = ({ onClose }) => {
         </button>
         <p className="text-[#2A1F9D] text-sm mb-4  dark:text-darkText">more</p>
         <p>
-        <a href="/docs" className="text-[#2A1F9D] text-xl mb-6 font-bold dark:text-darkText">Doc</a>
+        <a href="/docs" className="text-[#2A1F9D] text-xl -mb-4 font-bold dark:text-darkText">Doc</a>
         </p>
         <p>
         <a href="/#faq"className="text-[#2A1F9D] text-xl font-bold  dark:text-darkText">FAQ's</a>

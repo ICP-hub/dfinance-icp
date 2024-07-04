@@ -502,7 +502,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </svg>
                             </div>
-                            <p className="text-xs mt-2 text-[#2A1F9D]dark:text-darkTextw-full md2:w-8/12 dxl:w-10/12 -mt-4  md:ms-10 p-6">
+                            <p className="text-xs text-[#2A1F9D]dark:text-darkTextw-full md2:w-8/12 dxl:w-10/12 -mt-4  md:ms-10 p-6">
                               {" "}
                               Balance: {balance} Max
                             </p>

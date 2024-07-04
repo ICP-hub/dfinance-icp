@@ -75,7 +75,7 @@ export const HOME_TOP_NAV_LINK = [
   {
     id: 2,
     title: "Docs",
-    route: "/HowItWorks",
+    route: "/docs",
     icon: "",
   },
   {

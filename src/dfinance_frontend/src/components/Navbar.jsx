@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { ArrowDownUp } from "lucide-react";
-import { Info } from 'lucide-react';
+import { Info } from "lucide-react";
 import MobileTopNav from "./Home/MobileTopNav";
 import { useAuth } from "../utils/useAuthClient";
 import { setUserData } from "../redux/reducers/userReducer";
@@ -11,12 +11,13 @@ import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "./Button";
-import { styled } from '@mui/material/styles';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-
+import { styled } from "@mui/material/styles";
+import FormGroup from "@mui/material/FormGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import loader from "../../public/loader.svg";
+import ARROW from "../../public/ARROW.svg";
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from "../utils/constants";
 import { toggleTheme } from "../redux/reducers/themeReducer";
 
@@ -89,7 +90,8 @@ export default function Navbar({ isHomeNav }) {
     } else {
       // Perform transaction
       console.log(
-        `Transaction initiated with ${selectedToken} and amount ${selectedToken === "ETH" ? ethValue : oneInchValue
+        `Transaction initiated with ${selectedToken} and amount ${
+          selectedToken === "ETH" ? ethValue : oneInchValue
         }`
       );
     }
@@ -184,7 +186,14 @@ export default function Navbar({ isHomeNav }) {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
-  const [isTestnetMode, setIsTestnetMode] = useState(false);
+  const [isTestnetMode, setIsTestnetMode] = useState(() => {
+    const savedTestnetMode = localStorage.getItem("isTestnetMode");
+    return savedTestnetMode ? JSON.parse(savedTestnetMode) : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("isTestnetMode", JSON.stringify(isTestnetMode));
+  }, [isTestnetMode]);
 
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
@@ -193,9 +202,8 @@ export default function Navbar({ isHomeNav }) {
   const handleTestnetModeToggle = () => {
     setIsTestnetMode((prevMode) => !prevMode);
     if (isTestnetMode) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
-    
   };
 
   const hash = window.location.hash;
@@ -243,39 +251,39 @@ export default function Navbar({ isHomeNav }) {
   React.useEffect(() => {
     const htmlElement = document.documentElement;
     const bodyElement = document.body;
-    if (theme === 'dark') {
-      htmlElement.classList.add('dark');
-      bodyElement.classList.add('dark');
-      bodyElement.style.backgroundColor = '#070a18';
-      setIsDarkMode(true)
+    if (theme === "dark") {
+      htmlElement.classList.add("dark");
+      bodyElement.classList.add("dark");
+      bodyElement.style.backgroundColor = "#070a18";
+      setIsDarkMode(true);
     } else {
-      htmlElement.classList.remove('dark');
-      bodyElement.classList.remove('dark');
-      bodyElement.style.backgroundColor = '';
-      setIsDarkMode(false)
+      htmlElement.classList.remove("dark");
+      bodyElement.classList.remove("dark");
+      bodyElement.style.backgroundColor = "";
+      setIsDarkMode(false);
     }
   }, [theme, isDarkMode]);
-
-
 
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
         <div className="w-full">
           <nav className="w-full py-4 lg:py-10 flex items-center justify-between">
-            <img
-              src={
-                theme === "dark" ? "/DFinance-Dark.svg" : "/DFinance-Light.svg"
-              }
-              alt="DFinance"
-              className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]"
-            />
-            {isTestnetMode && (
-              <button className="bg-[#4659CF] hover:bg-blue-700 text-white font-bold py-1 px-6 mt-1 rounded flex items-center">
-                Testnet
-                <Info size={12} className="ml-2" />
-              </button>
-            )}
+          <div className="lg:flex md:flex  justify-center items-center sxs3:block sxs3:mt-3">
+              <img
+                src={
+                  theme === "dark" ? "/DFinance-Dark.svg" : "/DFinance-Light.svg"
+                }
+                alt="DFinance"
+                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]  sxs3:mb-3"
+              />
+              {isTestnetMode && (
+                <button className="bg-[#4659CF] hover:bg-blue-700 text-white font-bold p-2 rounded flex items-center text-[12px] w-20 h-6 lg:ml-3 -mt-1 sxs3:ml-10">
+                  TESTNET
+                  <Info size={20} className="ml-1" />
+                </button>
+              )}
+            </div>
             <div className="gap-4 hidden  lg:flex dark:text-darkText justify-beteen items-center">
               {!isHomeNav
                 ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
@@ -359,26 +367,26 @@ export default function Navbar({ isHomeNav }) {
                   </div>
                   <div className="relative">
                     {switchTokenDrop && (
-                      <div className="w-[350px] absolute -left-6 mt-4 rounded-md bg-white shadow-xl border p-4 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
-                        <h1 className="font-semibold text-2xl text-[#2A1F9D] dark:text-darkText">
+                      <div className="w-[380px] absolute -left-[160px] mt-6 rounded-xl bg-white shadow-xl  border p-4 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
+                        <h1 className="font-semibold text-xl text-[#2A1F9D] dark:text-darkText">
                           Switch Tokens
                         </h1>
 
-                        <div className="w-full my-2 bg-gradient-to-r from-[#e9ebfa] to-[#e5ddd4] text-center py-2 rounded-md dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ">
-                          <p className="text-xs text-[#EB8863] text-left px-4">
-                            Please switch to Ethereum
-                            <span className=" text-[#EB8863] underline cursor-pointer ml-2">
+                        <div className="w-full my-2 bg-gradient-to-r from-[#e9ebfa] to-[#e5ddd4] text-center py-3 rounded-xl dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ">
+                          <p className="text-sm text-[#EB8863] text-left px-4">
+                            Please switch to Ethereum.
+                            <span className=" text-xs text-[#EB8863] underline cursor-pointer ml-2">
                               Switch Network
                             </span>
                           </p>
                         </div>
 
                         <div className="flex justify-between items-center my-2 mt-4">
-                          <div className="flex justify-center items-center  gap-x-2">
+                          <div className="flex justify-center items-center  gap-x-1">
                             <img
-                              src="/square.png"
+                              src={loader}
                               alt="Connect Wallet"
-                              className=" left-3   w-8 h-8  "
+                              className=" left-3   w-5 h-5  "
                             />
                             <label className=" text-sm font-medium text-[#2A1F9D]  justify-start dark:text-darkText">
                               Token
@@ -386,7 +394,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                           <div className="flex items-center space-x-1">
                             <span className="text-sm text-[#2A1F9D] dark:text-darkText">
-                              Slippage 0.10%
+                              Slippage <b>0.10%</b>
                             </span>
 
                             <img
@@ -396,10 +404,9 @@ export default function Navbar({ isHomeNav }) {
                             />
                           </div>
                         </div>
-                        <div className="w-full my-4">
-                          <div className="relative w-full mb-4">
+                        <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+                          <div className="w-3/12">
                             <input
-                              type="text"
                               value={
                                 selectedToken === "ETH"
                                   ? ethValue
@@ -412,73 +419,19 @@ export default function Navbar({ isHomeNav }) {
                               }
                               onFocus={handleInputFocus}
                               onBlur={handleInputBlur}
-                              className="w-full pl-12 pr-16 py-4 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md dark:bg-darkBackground/30 dark:text-darkTextSecondary"
+                              className="text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full placeholder:text-sm text-gray-500 dark:bg-darkBackground/5 dark:text-darkText"
                               placeholder="0.00"
                             />
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-                              <img
-                                src="/square.png"
-                                alt="ETH"
-                                className="w-4 h-4 text-gray-500 dark:text-darkTextSecondary"
-                              />
-                              <span className="text-[#2A1F9D] dark:text-darkText">
-                                ETH
-                              </span>
-                              <svg
-                                className="w-4 h-4 text-gray-500 dark:text-darkTextSecondary"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                            <div className="absolute left-0 bottom-0 text-gray-600 text-xs ml-12 mb-1 mt-1 dark:text-darkTextSecondary">
-                              $0
-                            </div>
-                            <div className="absolute left-12 bottom-2 text-[#2A1F9D] text-xs ml-40 -mb-0.5 dark:text-darkText">
-                              Balance: {balance} Max
-                            </div>
+                            <p className="text-sm text-gray-500 mt-2">$0</p>
                           </div>
-
-                          <div className="flex justify-center my-2">
-                            <img
-                              src="/arrow.png"
-                              alt="Switch Icon"
-                              className="w-6 h-6 cursor-pointer"
-                              onClickHandler={handleSwitchClick}
-                            />
-                          </div>
-
-                          <div className="relative w-full">
-                            <input
-                              type="text"
-                              value={
-                                selectedToken === "ETH"
-                                  ? oneInchValue
-                                  : ethValue
-                              }
-                              onChange={
-                                selectedToken === "ETH"
-                                  ? handleOneInchChange
-                                  : handleEthChange
-                              }
-                              className="w-full pl-12 pr-16 py-4 bg-[#f5f4f4]  focus:outline-none focus:border-[#9e3faa99] placeholder:text-sm text-black rounded-md dark:bg-darkBackground/30 dark:text-darkTextSecondary"
-                              placeholder="0.00"
-                            />
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                          <div className="w-9/12 flex flex-col items-end">
+                            <div className="w-auto flex items-center gap-2">
                               <img
-                                src="/square.png"
-                                alt="1INCH"
-                                className="w-4 h-4 text-gray-500"
+                                src={loader}
+                                alt="connect_wallet_icon"
+                                className="object-cover w-8 h-8"
                               />
-                              <span className="text-[#2A1F9D] dark:text-darkText">
-                                1INCH
-                              </span>
+                              <span className="text-lg text-[#2A1F9D]">ETH</span>
                               <svg
                                 className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
                                 fill="currentColor"
@@ -492,10 +445,69 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </svg>
                             </div>
-                            <div className="absolute left-0 bottom-0 text-gray-500 text-xs ml-12 mb-1">
-                              $0
-                            </div>
+                            <p className="text-xs mt-2 text-[#2A1F9D]">
+                              {" "}
+                              Balance: {balance} Max
+                            </p>
                           </div>
+                        </div>
+                          <div className="flex justify-center my-2">
+                            <img
+                              src={ARROW}
+                              alt="Switch Icon"
+                              className="w-6 h-6 cursor-pointer"
+                              onClickHandler={handleSwitchClick}
+                            />
+                          </div>
+                     
+                      <div>
+                      <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+                          <div className="w-3/12">
+                            <input
+                              value={
+                                selectedToken === "ETH"
+                                  ? ethValue
+                                  : oneInchValue
+                              }
+                              onChange={
+                                selectedToken === "ETH"
+                                  ? handleEthChange
+                                  : handleOneInchChange
+                              }
+                              onFocus={handleInputFocus}
+                              onBlur={handleInputBlur}
+                              className="text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full placeholder:text-sm text-gray-500 dark:bg-darkBackground/5 dark:text-darkText"
+                              placeholder="0.00"
+                            />
+                            <p className="text-sm text-gray-500 mt-2">$0</p>
+                          </div>
+                          <div className="w-9/12 flex flex-col items-end">
+                            <div className="w-auto flex items-center gap-2">
+                              <img
+                                src={loader}
+                                alt="connect_wallet_icon"
+                                className="object-cover w-8 h-8"
+                              />
+                              <span className="text-lg text-[#2A1F9D]">1 INCH</span>
+                              <svg
+                                className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                            <p className="text-xs mt-2 text-[#2A1F9D]">
+                              {" "}
+                              Balance: {balance} Max
+                            </p>
+                          </div>
+                        </div>
                           {isInputFocused && (
                             <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between">
                               <p>1 ETH = 32.569 1INCH</p>
@@ -585,7 +597,7 @@ export default function Navbar({ isHomeNav }) {
                     onClick={handleSwitchWallet}
                   >
                     <img
-                      src={"/square.png"}
+                      src={loader}
                       alt="square"
                       className="object-contain w-5 h-5"
                     />
@@ -593,10 +605,10 @@ export default function Navbar({ isHomeNav }) {
                   </div>
 
                   {switchWalletDrop && (
-                    <div className="absolute p-4 top-full right-0 mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
+                    <div className="absolute p-4 top-full -left-[212px] mt-8 md:mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
                       <div className="w-full flex items-center gap-3 mt-2">
                         <img
-                          src="/square.png"
+                          src={loader}
                           alt="square"
                           className="w-10 h-10"
                         />
@@ -682,7 +694,7 @@ export default function Navbar({ isHomeNav }) {
                     />
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-16 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText">
+                        <h2 className="text-[12px] text-[#2A1F9D] font-light mb-4 dark:text-darkText">
                           {" "}
                           Settings
                         </h2>
@@ -900,14 +912,14 @@ export default function Navbar({ isHomeNav }) {
                           return null;
                         })
                       : HOME_TOP_NAV_LINK.map((link, index) => (
-                        <NavLink
-                          key={index}
-                          to={link.route}
-                          className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
-                        >
-                          {link.title}
-                        </NavLink>
-                      ))}
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-xl border-gray-300 bg-[#F6F6F6] dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                          >
+                            {link.title}
+                          </NavLink>
+                        ))}
                     <h2 className="text-lg my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">
                       Setting
                     </h2>
@@ -935,9 +947,9 @@ export default function Navbar({ isHomeNav }) {
                               boxShadow: "0 0 10px black",
                             },
                             "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                            {
-                              backgroundColor: "#1939ea",
-                            },
+                              {
+                                backgroundColor: "#1939ea",
+                              },
                           }}
                           style={{ minWidth: "40px" }} // Ensure a minimum width for the Switch
                         />

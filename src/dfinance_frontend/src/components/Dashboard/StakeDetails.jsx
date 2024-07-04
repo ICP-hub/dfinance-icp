@@ -45,7 +45,7 @@ const StakeDetails = () => {
         }
     }, [isWalletCreated]);
 
-   
+
 
     const loginHandler = async (val) => {
         await login(val);
@@ -54,8 +54,14 @@ const StakeDetails = () => {
         // await existingUserHandler();
     };
 
+    const [inputValue, setInputValue] = useState('');
+
+    const handleInputChange = (event) => {
+      setInputValue(event.target.value);
+    };
+
     return (
-        <> 
+        <>
             <div className="w-full mt-6">
                 <h1 className="text-[#5B62FE] text-sm inline-flex items-center ml-6">
                     Available on
@@ -90,9 +96,14 @@ const StakeDetails = () => {
             </div>
 
             {/* isAuthenticated */}
-             {isAuthenticated ? <StakesConnected />: <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[450px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
-                <div className="absolute right-0 top-0 h-full w-1/2 pointer-events-none sxs3:w-[65%] z-[-1]">
-                    <img src={Element} alt="Elements" className="h-full w-full object-cover rounded-r-3xl opacity-70 filter drop-shadow-[0_0_0_#fffff] dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]" />
+            {isAuthenticated ? <StakesConnected /> : <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[450px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
+                <div className="absolute right-0 top-0 h-full w-[55%] pointer-events-none z-[-1]">
+                    <img
+                        src={Element}
+                        alt="Elements"
+                        className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
+                    // Ensure image scales properly
+                    />
                 </div>
                 <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg dark:text-darkText">
                     Please, connect your wallet
@@ -136,7 +147,7 @@ const StakeDetails = () => {
                     </div>
                 </div>
 
-                <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+                {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
                     <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                         <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
                         <div className='flex flex-col gap-2 mt-3 text-sm'>
@@ -165,26 +176,31 @@ const StakeDetails = () => {
                                 </div>
                             </div>
                         </div>
-                        <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#EB8863]'>Track wallet balance in read-only mode</p>
+                        <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
 
                         <div className="w-full">
                             <input
                                 type="text"
-                                className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
+                                value={inputValue}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
                                 placeholder="Enter ethereum address or username"
                             />
                         </div>
 
-                        <div className="w-full flex mt-3">
-                            <Button
-                                title="Connect"
-                                onClickHandler={handleWallet}
-                                className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
-                            />
-                        </div>
+                        {inputValue && (
+                            <div className="w-full flex mt-3">
+                                <Button
+                                    title="Connect"
+                                    onClickHandler={handleWallet}
+                                    className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                                />
+                            </div>
+                        )}
 
                     </div>
-                </Modal>
+                </Modal>}
+
             </div>}
 
         </>

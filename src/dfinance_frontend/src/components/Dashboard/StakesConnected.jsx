@@ -33,7 +33,7 @@ const StakesConnected = () => {
                                 <p className="font-semibold text-[16px] ml-2">40.00%</p>
                             </div>
                             <div className="relative text-[#5B62FE] p-3 flex-1  lg:grow-0 rounded-xl dark:text-darkText sxs3:flex sxs3:justify-between lg:block">
-                                <h1 className="text-[#2A1F9D] dark:text-darkText text-[12px] text-light dark:text-darkTextSecondary">
+                                <h1 className="text-[#2A1F9D] text-[12px] text-light dark:text-darkTextSecondary">
                                     ● Wallet Balance
                                 </h1>
 
@@ -120,7 +120,7 @@ const StakesConnected = () => {
                                 <p className="font-semibold text-[16px] ml-2">40.00%</p>
                             </div>
                             <div className="relative text-[#5B62FE] p-3 flex-1  lg:grow-0 rounded-xl dark:text-darkText sxs3:flex sxs3:justify-between lg:block">
-                                <h1 className="text-[#2A1F9D] dark:text-darkText text-[12px] text-light dark:text-darkTextSecondary">
+                                <h1 className="text-[#2A1F9D] text-[12px] text-light dark:text-darkTextSecondary">
                                     ● Wallet Balance
                                 </h1>
 
@@ -209,7 +209,7 @@ const StakesConnected = () => {
                                 <p className="font-semibold text-[16px] ml-2">40.00%</p>
                             </div>
                             <div className="relative text-[#5B62FE] p-3 flex-1  lg:grow-0 rounded-xl dark:text-darkText sxs3:flex sxs3:justify-between lg:block">
-                                <h1 className="text-[#2A1F9D] dark:text-darkText text-[12px] text-light dark:text-darkTextSecondary">
+                                <h1 className="text-[#2A1F9D] text-[12px] text-light dark:text-darkTextSecondary">
                                     ● Wallet Balance
                                 </h1>
 

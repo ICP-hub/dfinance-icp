@@ -170,7 +170,8 @@ const DashboardNav = () => {
               <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
                 <img
                   src={theme === 'dark' ? "/wallet-details-menu-dark.svg" : "/wallet-details-menu-light.svg"}
-                  alt=""
+                  className="w-7 h-7"
+                  alt="toggle"
                 />
               </button>
             </div>
@@ -179,20 +180,20 @@ const DashboardNav = () => {
             <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}>
               <div
                 className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
-                         bg-white p-7 rounded-md w-11/12 max-w-md dark:bg-darkOverlayBackground dark:text-darkText"
+                         bg-white px-3 py-7 rounded-lg w-11/12 max-w-md dark:bg-darkOverlayBackground dark:text-darkText"
                 ref={menuRef}
               >
                 <div className="flex justify-between items-center mb-4">
                   <span
-                    className="absolute top-2 right-2 text-red-400 cursor-pointer"
+                    className="absolute top-2 right-3 text-[#5C5C5C] cursor-pointer"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <X />
+                    <X size={30}/>
                   </span>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
-                    <div key={index} className="relative group text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md border shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
+                    <div key={index} className="relative group text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md  shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
                         ">
                       <button className="relative w-full text-left flex justify-between items-center">
                         <span>{data.title}</span>
@@ -203,7 +204,7 @@ const DashboardNav = () => {
                   ))}
                   {shouldRenderRiskDetailsButton && (
                     <button
-                      className="w-full mt-2 py-2 px-2 bg-[#FFC1C1]  shadow-xl text-red-600 text-xl rounded-lg  dark:text-darkText"
+                      className="w-full mt-2 py-3 px-3 bg-[#FFC1C1]  shadow-xl text-red-600 text-xl rounded-lg  dark:text-darkText"
                       onClick={handleOpenPopup}
                     >
                       Risk Details

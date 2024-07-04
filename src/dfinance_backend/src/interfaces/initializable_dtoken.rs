@@ -1,3 +1,21 @@
+use std::fmt::{Debug, Formatter};
+
+impl Debug for &dyn IPool {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // Implement your custom formatting logic here
+        // You can use f.debug_struct("IPool"), f.debug_list(), etc.
+        write!(f, "IPool {{ ... }}")
+    }
+}
+
+impl Debug for &dyn IAaveIncentivesController {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // Implement your custom formatting logic here
+        // You can use f.debug_struct("IPool"), f.debug_list(), etc.
+        write!(f, "IPool {{ ... }}")
+    }
+}
+
 pub trait IAaveIncentivesController {
     fn handle_action(&self, user: &str, total_supply: u64, user_balance: u64);
 }
@@ -9,7 +27,7 @@ pub trait IPool {
 pub trait IInitializableAToken {
     fn initialize(
         &mut self,
-        pool: &dyn IPPool,
+        pool: &dyn IPool,
         treasury: &str,
         underlying_asset: &str,
         incentives_controller: &dyn IAaveIncentivesController,
@@ -56,7 +74,7 @@ pub struct MockInitializableAToken;
 impl IInitializableAToken for MockInitializableAToken {
     fn initialize(
         &mut self,
-        pool: &dyn IPPool,
+        pool: &dyn IPool,
         treasury: &str,
         underlying_asset: &str,
         incentives_controller: &dyn IAaveIncentivesController,

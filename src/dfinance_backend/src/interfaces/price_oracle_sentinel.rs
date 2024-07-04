@@ -2,7 +2,7 @@ use candid::{CandidType, Deserialize, Principal};
 use ic_cdk_macros::{update, query};
 use std::cell::RefCell;
 
-#[derive(CandidType, Deserialize, Clone, Default)]
+#[derive(CandidType, Deserialize, Clone)]
 pub struct PriceOracleSentinel {
     sequencer_oracle: RefCell<Principal>,
     grace_period: RefCell<u64>,

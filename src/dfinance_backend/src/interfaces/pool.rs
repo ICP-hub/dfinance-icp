@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 
 pub mod DataTypes {
     #[derive(Clone, Copy)]
@@ -30,6 +31,30 @@ pub mod DataTypes {
 
 pub trait IPoolAddressesProvider {
     // Define necessary methods for the PoolAddressesProvider trait
+}
+
+impl Debug for DataTypes::InterestRateMode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // Implement your custom formatting logic here
+        // You can use f.debug_struct("IPool"), f.debug_list(), etc.
+        write!(f, "IPool {{ ... }}")
+    }
+}
+
+impl Debug for DataTypes::ReserveConfigurationMap {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // Implement your custom formatting logic here
+        // You can use f.debug_struct("IPool"), f.debug_list(), etc.
+        write!(f, "IPool {{ ... }}")
+    }
+}
+
+impl Debug for DataTypes::EModeCategory {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // Implement your custom formatting logic here
+        // You can use f.debug_struct("IPool"), f.debug_list(), etc.
+        write!(f, "IPool {{ ... }}")
+    }
 }
 
 pub trait IPool {

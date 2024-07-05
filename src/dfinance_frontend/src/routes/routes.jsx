@@ -62,14 +62,14 @@ export default [
       </MainDashboard>
     ),
   },
-  {
-    path: "/governance",
-    element: (
-      <MainDashboard includeDashboardNav={false}>
-        <DFinanceGov  />
-      </MainDashboard>
-    ),
-  },
+  // {
+  //   path: "/governance",
+  //   element: (
+  //     <MainDashboard includeDashboardNav={false}>
+  //       <DFinanceGov  />
+  //     </MainDashboard>
+  //   ),
+  // },
   {
     path: "/governance/proposal-details",
     element: (

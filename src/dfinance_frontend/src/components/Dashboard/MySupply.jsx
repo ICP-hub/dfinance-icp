@@ -160,7 +160,7 @@ const MySupply = () => {
     <div className="w-full flex-col lg:flex-row flex gap-6 mb-20">
       <div className="flex justify-center -mb-30 lg:hidden">
         <button
-          className={`w-1/2 py-2 -ml-20 -mt-4 ${
+          className={`w-1/2 py-2 -ml-20 -mt-1 ${
             activeSection === "supply"
               ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
               : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
@@ -170,7 +170,7 @@ const MySupply = () => {
           &#8226; Supply
         </button>
         <button
-          className={`w-1/2 py-1 -ml-20 mr-16 -mt-4 ${
+          className={`w-1/2 py-1 -ml-20 mr-16 -mt-1 ${
             activeSection === "borrow"
               ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
               : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
@@ -500,7 +500,7 @@ const MySupply = () => {
                                     item.image
                                   )
                                 }
-                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg"
+                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg font-inter"
                               />
 
                               <Button
@@ -508,7 +508,7 @@ const MySupply = () => {
                                 onClickHandler={() =>
                                   navigate("/dashboard/asset-details")
                                 }
-                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent 
+                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter
                                   
                                 }`}
                               />
@@ -586,7 +586,7 @@ const MySupply = () => {
                                       )
                                     }
                                     className={
-                                      "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                      "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
                                     }
                                   />
                                   <Button
@@ -595,7 +595,7 @@ const MySupply = () => {
                                       navigate("/dashboard/asset-details")
                                     }
                                     className={
-                                      "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                      "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
                                     }
                                   />
                                 </div>
@@ -719,7 +719,7 @@ const MySupply = () => {
                                     item.image
                                   )
                                 }
-                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg"
+                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg font-inter"
                               />
                               <Button
                                 title={"Repay"}
@@ -730,7 +730,7 @@ const MySupply = () => {
                                     item.image
                                   )
                                 }
-                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent 
+                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter
                                   
                                 }`}
                               />
@@ -755,7 +755,7 @@ const MySupply = () => {
                   {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
                     noBorrowMessage
                   ) : (
-                    <div className="w-full overflow-auto md: mt-4 ">
+                    <div className="w-full overflow-auto md: mt-6 ">
                       <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                         <thead>
                           <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 mt-10">
@@ -820,7 +820,7 @@ const MySupply = () => {
                                         )
                                       }
                                       className={
-                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
                                       }
                                     />
                                   </div>
@@ -914,14 +914,14 @@ const MySupply = () => {
                                     item.image
                                   )
                                 }
-                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg"
+                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-lg font-semibold text-lg font-inter"
                               />
                               <Button
                                 title={"Details"}
                                 onClickHandler={() =>
                                   handleModalOpen("payment")
                                 }
-                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent 
+                                className={` w-[380px] block md:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter
                                   
                                   }`}
                               />
@@ -1013,7 +1013,7 @@ const MySupply = () => {
                                         )
                                       }
                                       className={
-                                        "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                        "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
                                       }
                                     />
                                     <Button
@@ -1022,7 +1022,7 @@ const MySupply = () => {
                                         handleModalOpen("payment")
                                       }
                                       className={
-                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
                                       }
                                     />
                                   </div>
@@ -1084,7 +1084,7 @@ const MySupply = () => {
                                         )
                                       }
                                       className={
-                                        "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                        "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
                                       }
                                     />
                                     <Button
@@ -1093,7 +1093,7 @@ const MySupply = () => {
                                         handleModalOpen("payment")
                                       }
                                       className={
-                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
                                       }
                                     />
                                   </div>

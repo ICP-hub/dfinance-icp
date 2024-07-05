@@ -63,13 +63,13 @@ export const HOME_TOP_NAV_LINK = [
   {
     id: 0,
     title: "Governance",
-    route: "/dashboard/dfinance-gov",
+    route: "/governance",
     icon: "",
   },
   {
     id: 1,
     title: "Market",
-    route: "/dashboard/wallet-details",
+    route: "/market",
     icon: "",
   },
   {
@@ -92,23 +92,54 @@ export const DASHBOARD_TOP_NAV_LINK = [
   {
     id: 0,
     title: "Dashboard",
-    route: "/dashboard/my-supply",
+    route: "/dashboard",
     icon: "",
+    alwaysPresent: true
   },
   {
     id: 1,
-    title: "Market",
-    route: "/dashboard/wallet-details",
+    title: "Governance",
+    route: "/governance",
     icon: "",
+    alwaysPresent: true
   },
   {
     id: 2,
-    title: "Governance",
-    route: "/dashboard/dfinance-gov",
+    title: "Market",
+    route: "/market",
     icon: "",
+    alwaysPresent: true
   },
-]
+  {
+    id: 3,
+    title: "Stake",
+    route: "/stake",
+    icon: "",
+    testnet: false
+  },
+  {
+    id: 4,
+    title: "Faq",
+    route: "/#Faq",
+    icon: "",
+    testnet: false
+  },
+  {
+    id: 5,
+    title: "Faucet",
+    route: "/Faucet",
+    icon: "",
+    testnet: true
+  },
 
+]
+export const error = [
+  {
+    id: 0,
+    title: "4o4",
+    route: "*",
+    
+  },]
 export const MAIN_NAV_LINK = [
   {
     id: 0,
@@ -362,6 +393,7 @@ export const WALLET_ASSETS_TABLE_COL = [
     col_id: 4,
     header: "Borrowing APY",
   },
+  
 ]
 
 export const WALLET_ASSETS_TABLE_ROW = [
@@ -727,12 +759,69 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
 // constants.jsx
 
 export const transactionHistory = [
-  { id: 1, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
-  { id: 2, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
-  { id: 3, date: '2024-06-15', type: 'Borrowed', amount: 100, status: 'Completed' },
-  { id: 4, date: '2024-06-14', type: 'Lent', amount: 50, status: 'Pending' },
-  // Add more transactions as needed
-];
+ 
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Lend",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Stake",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Borrow",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Collateral",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Repay",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+    {
+      hash: "0x65.125ef1d507...",
+      block: "6235698",
+      method: "Lend",
+      age: "2 hrs ago",
+      from: "0x65.125ef1d507...",
+      to: "0x65.125ef1d507...",
+      value: "0.01256321 ETH",
+      fee: "0.00000012",
+    },
+  ];
+
 // constants.js
 
 // constants.js
@@ -758,3 +847,104 @@ export const liquidationThresholdLabel = "Liquidation Threshold";
 
 export const INITIAL_ETH_VALUE = "0.00";
 export const INITIAL_1INCH_VALUE = "0.00";
+
+export const FAUCET_ASSETS_TABLE_COL = [
+  {
+    col_id: 0,
+    header: "Assest",
+  },
+  {
+    col_id: 1,
+    header: "Wallet Balance",
+  },
+  
+  
+]
+export const FAUCET_ASSETS_TABLE_ROW = [
+  {
+    row_id: 0,
+    asset: "ckBTC",
+    image: "https://i.ibb.co/WP7FFRH/image-98.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 1,
+    asset: "ckETH",
+    image: "https://i.ibb.co/XbHCNpS/image-98-3.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 2,
+    asset: "Dragginz",
+    image: "https://i.ibb.co/xJ8KLK7/image-98-6.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 3,
+    asset: "Internet computer",
+    image: "https://i.ibb.co/RzQNb5F/image98.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 4,
+    asset: "OpenChat",
+    image: "https://i.ibb.co/Lghfh2k/image-98-7.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 5,
+    asset: "Kinic",
+    image: "https://i.ibb.co/LQB24Sm/image-98-9.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 6,
+    image: "https://i.ibb.co/vZ5GJ9y/image-98-4.png",
+    asset: "Hot or Not",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 7,
+    image: "https://i.ibb.co/pbzXtWB/image-98-1.png",
+    asset: "ICX",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 8,
+    asset: "ICGhost",
+    image: "https://i.ibb.co/m6jKZYf/image-98-10.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 9,
+    asset: "Modclub",
+    image: "https://i.ibb.co/BZgT6c4/image-98-5.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 10,
+    asset: "BOOM DAO",
+    image: "https://i.ibb.co/WpP2nJH/image-98-2.png",
+    WalletBalance: 0,
+  },
+  {
+    row_id: 11,
+    image: "https://i.ibb.co/2vsW2pf/image-98-8.png",
+    asset: "Catalyze",
+    WalletBalance: 0,
+  },
+]
+
+
+export const STACK_DETAILS_TABS = [
+  {
+    id: 0,
+    title: "Funds In Safety Module",
+    count: "488.62",
+  },
+  {
+    id: 1,
+    title: "Total Emmision Per Day",
+    count: "163.93",
+  },
+]

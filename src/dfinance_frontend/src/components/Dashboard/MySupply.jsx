@@ -11,7 +11,6 @@ import {
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
 
-
 import EModeButton from "./Emode";
 import Button from "../Button";
 import { Switch } from "@mui/material";
@@ -571,9 +570,9 @@ const MySupply = () => {
                               </td>
                               <td className="p-3 align-top">{item.apy}</td>
                               <td className="p-3 align-top">
-                               <div className="w-full flex items-center justify-center dark:text-darkText">
-      <Check color={ "#4659CF"} size={14} />
-    </div>
+                                <div className="w-full flex items-center justify-center dark:text-darkText">
+                                  <Check color={"#4659CF"} size={14} />
+                                </div>
                               </td>
                               <td className="p-3 align-top">
                                 <div className="w-full flex gap-2 ">

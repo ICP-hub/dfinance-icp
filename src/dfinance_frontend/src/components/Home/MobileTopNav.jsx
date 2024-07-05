@@ -39,10 +39,12 @@ const MobileTobNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
       htmlElement.classList.add('dark');
       bodyElement.classList.add('dark');
       bodyElement.style.backgroundColor = '#070a18';
+      setIsDarkMode(true)
     } else {
       htmlElement.classList.remove('dark');
       bodyElement.classList.remove('dark');
       bodyElement.style.backgroundColor = '';
+      setIsDarkMode(false)
     }
   }, [theme]);
 

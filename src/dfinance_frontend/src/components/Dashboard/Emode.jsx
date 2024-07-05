@@ -18,7 +18,7 @@ const EModeButton = () => {
 
     const handleFinalEnableClick = () => {
         setIsEnabled(true);
-        alert('E-Mode enabled!');
+        
         setShowFinalPopup(false);
     };
 

@@ -6,35 +6,28 @@ import {
     setIsWalletConnected,
     setWalletModalOpen
 } from '../../redux/reducers/utilityReducer'
+import { STACK_DETAILS_TABS } from "../../utils/constants";
 
 import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/Elements.svg"
 import MySupply from './MySupply'
+import Error from '../../pages/Error/Error'
+import StakesConnected from './StakesConnected'
+import Loading from "../Loading"
 
-const CreateWallet = () => {
+const StakeDetails = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
     const {
         isAuthenticated,
         login,
-        logout,
-        updateClient,
-        authClient,
-        identity,
-        principal,
-        backendActor,
-        accountId,
-        createLedgerActor,
-        reloadLogin,
-        accountIdString,
     } = useAuth()
 
 
 
     const handleWalletConnect = () => {
-        console.log("connrcterd");
         dispatch(setWalletModalOpen(!isWalletModalOpen))
         // dispatch(setIsWalletCreated(true))
     }
@@ -51,11 +44,10 @@ const CreateWallet = () => {
         }
     }, [isWalletCreated]);
 
+
+
     const loginHandler = async (val) => {
         await login(val);
-        // navigate("/");
-
-        // await existingUserHandler();
     };
 
     const [inputValue, setInputValue] = useState('');
@@ -66,7 +58,41 @@ const CreateWallet = () => {
 
     return (
         <>
-            {isAuthenticated ? <MySupply /> : <div className="relative w-full md:w-11/12 mx-auto my-6 min-h-[450px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
+            <div className="w-full mt-6">
+                <h1 className="text-[#5B62FE] text-sm inline-flex items-center ml-6">
+                    Available on
+                    <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+                    ICP Mainnet
+                </h1>
+                <div className="w-full flex flex-col  md2:flex-row mt-2">
+                    <div className="w-full md2:w-8/12 dxl:w-9/12 p-6">
+                        <h1 className="text-[#2A1F9D] font-bold text-xl dark:text-darkText">
+                            Staking
+                        </h1>
+                        <p className="text-[#5B62FE] text-sm text-justify mt-3 dark:text-darkTextSecondary">
+                            Dfinance, GHO, and ABPT holders (ICP network only) can stake their assets in the Safety Module to add more security to the protocol and earn Safety Incentives. In the case of a shortfall event, your stake can be slashed to cover the deficit, providing an additional layer of protection for the protocol. Learn more about risks involved
+                        </p>
+                    </div>
+
+                </div>
+                <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
+                    {(STACK_DETAILS_TABS).map((data, index) => (
+                        <div key={index} className="relative group ml-5">
+                            <button className="relative">
+                                {data.title}
+                                <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                                <span className="absolute top-full left-0 font-light py-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {data.count}
+                                </span>
+                            </button>
+                        </div>
+                    ))}
+
+                </div>
+            </div>
+
+            {/* isAuthenticated */}
+            {isAuthenticated ? <StakesConnected /> : <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
                 <div className="absolute right-0 top-0 h-full md:w-1/2 pointer-events-none sxs3:w-[65%] z-[-1]">
                     <img
                         src={Element}
@@ -77,14 +103,46 @@ const CreateWallet = () => {
                 <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg dark:text-darkText">
                     Please, connect your wallet
                 </h1>
-                <p className="text-[#737373] my-2 font-medium text-center dark:text-darkTextSecondary">
-                    Please connect your wallet to see your supplies, borrowings anf
-                    open positions.
+                <p className="text-[#737373] my-2  text-center font-light dark:text-darkTextSecondary">
+                    We couldn’t detect a wallet. Connect a wallet to stake and view your balance.
                 </p>
 
                 <Button title="Connect Wallet" onClickHandler={handleWalletConnect} />
 
-                <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+                <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap justify-center align-center">
+                    <div className="flex relative text-white p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText  min-w-[250px]">
+                        <div className='flex w-full align-center items-center'>
+                            <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+                            <h1 className='font-bold'>XYZ</h1>
+                        </div>
+                        <div className='flex flex-col justify-center items-center'>
+                            <span className='text-[12px]'>Staking APR</span>
+                            <h1 className='font-bold ml-auto'>6.24%</h1>
+                        </div>
+                    </div>
+                    <div className="flex relative text-white p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText  min-w-[250px]">
+                        <div className='flex w-full align-center items-center'>
+                            <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+                            <h1 className='font-bold'>XYZ</h1>
+                        </div>
+                        <div className='flex flex-col justify-center items-center'>
+                            <span className='text-[12px]'>Staking APR</span>
+                            <h1 className='font-bold ml-auto'>6.24%</h1>
+                        </div>
+                    </div>
+                    <div className="flex relative text-white p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText  min-w-[250px]">
+                        <div className='flex w-full align-center items-center'>
+                            <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+                            <h1 className='font-bold'>XYZ</h1>
+                        </div>
+                        <div className='flex flex-col justify-center items-center'>
+                            <span className='text-[12px]'>Staking APR</span>
+                            <h1 className='font-bold ml-auto'>6.24%</h1>
+                        </div>
+                    </div>
+                </div>
+
+                {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
                     <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                         <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
                         <div className='flex flex-col gap-2 mt-3 text-sm'>
@@ -136,11 +194,12 @@ const CreateWallet = () => {
                         )}
 
                     </div>
-                </Modal>
+                </Modal>}
+
             </div>}
 
         </>
     )
 }
 
-export default CreateWallet
+export default StakeDetails

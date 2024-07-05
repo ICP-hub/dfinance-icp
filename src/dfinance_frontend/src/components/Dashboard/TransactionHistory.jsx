@@ -75,7 +75,7 @@ const TransactionHistory = () => {
                             </button>
                           </div>
                         </td>
-                        
+
 
                         <td className="py-2 px-4">
                           <div className="flex items-center dark:text-darkTextSecondary1">
@@ -97,64 +97,67 @@ const TransactionHistory = () => {
               </div>
               <div className="md:hidden"> {/* Display mobile-friendly layout on small screens */}
                 {transactionHistory.map((tx, index) => (
-                  
-                  <div key={tx.id} className="w-full border border-[#2A1F9D] rounded-lg shadow-lg mb-4 p-4 dark:[#FEFEFE] dark:bg-darkBackground">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[#2A1F9D] font-semibold text-base text-nowrap dark:text-darkText">Transaction Hash:</span>
-                      <div className="flex items-center">
-                        <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.hash}</span>
+                  <>
+                    <p className="text-[#5B62FE] text-[14px] mb-3 dark:text-darkTextSecondary">{tx.age}</p>
+                    <div key={tx.id} className="w-full border border-[#2A1F9D] dark:border-darkTextSecondary rounded-lg shadow-lg mb-6 p-4 dark:[#FEFEFE] dark:bg-[#2b2c4a]">
+
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[#2A1F9D] font-semibold text-base text-nowrap dark:text-darkText">Transaction Hash:</span>
+                        <div className="flex items-center">
+                          <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.hash}</span>
+                          <button
+                            className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
+                            onClick={() => copyToClipboard(tx.hash)}
+                          >
+                            <MdContentCopy />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText ">Block:</span>
+                        <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.block}</span>
+                      </div>
+
+
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText">From:</span>
+                        <div className="flex items-center">
+                          <span className="ml-2  text-[#2A1F9D] font-semibold text-base dark:text-darkText">To:</span>
+
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[#4659CF] text-xs dark:text-darkTextSecondary1">{tx.from}</span>
                         <button
-                          className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
-                          onClick={() => copyToClipboard(tx.hash)}
-                        >
-                          <MdContentCopy />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText ">Block:</span>
-                      <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.block}</span>
-                    </div>
-                    
-                    
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText">From:</span>
-                      <div className="flex items-center">
-                        <span className="ml-2  text-[#2A1F9D] font-semibold text-base dark:text-darkText">To:</span>
-                        
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[#4659CF] text-xs dark:text-darkTextSecondary1">{tx.from}</span>
-                      <button
                           className=" focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
                           onClick={() => copyToClipboard(tx.from)}
                         >
                           <MdContentCopy />
                         </button>
-                      <div className="flex items-center ">
-                        <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.to}</span>
-                        <button
-                          className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
-                          onClick={() => copyToClipboard(tx.to)}
-                        >
-                          <MdContentCopy />
-                        </button>
+                        <div className="flex items-center ">
+                          <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.to}</span>
+                          <button
+                            className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
+                            onClick={() => copyToClipboard(tx.to)}
+                          >
+                            <MdContentCopy />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mb-2 ">
+                        <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText">Method:</span>
+                        <span className="ml-2 text-xs bg-[#ADB0FF]  text-[#2A1F9D] rounded-full py-1 px-4 dark:text-darkText">{tx.method}</span>
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText">Value:</span>
+                        <span className="ml-2 text-[#4659CF] dark:text-darkTextSecondary1">{tx.value}</span>
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText">Txn Fee:</span>
+                        <span className="ml-2 text-[#4659CF] dark:text-darkTextSecondary1">{tx.fee}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between mb-2 ">
-                      <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText">Method:</span>
-                      <span className="ml-2 text-xs bg-[#ADB0FF]  text-[#2A1F9D] rounded-full py-1 px-4 dark:text-darkText">{tx.method}</span>
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText">Value:</span>
-                      <span className="ml-2 text-[#4659CF] dark:text-darkTextSecondary1">{tx.value}</span>
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[#2A1F9D] font-semibold text-base dark:text-darkText">Txn Fee:</span>
-                      <span className="ml-2 text-[#4659CF] dark:text-darkTextSecondary1">{tx.fee}</span>
-                    </div>
-                  </div>
+                  </>
                 ))}
               </div>
             </div>

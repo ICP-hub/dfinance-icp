@@ -21,13 +21,13 @@ const Repay = ({ asset, image }) => {
                         <h1>Amount</h1>
                         <h1>Slippage 0.10%</h1>
                     </div>
-                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+                    <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                         <div className="w-4/12">
                             <input
                                 type="text"
                                 value={amount}
                                 onChange={handleAmountChange}
-                                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-[#1D1B40] dark:text-darkText'
+                                className='text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText'
                                 placeholder="0.00"
 
                             />
@@ -46,7 +46,7 @@ const Repay = ({ asset, image }) => {
                     <div className="w-full flex justify-between my-2">
                         <h1>Transaction overview</h1>
                     </div>
-                    <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-[#1D1B40] dark:text-darkText">
+                    <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
                         <div className="w-full flex flex-col my-1">
                         <div className="w-full flex justify-between items-center mt-2">
                                 <p className='text-nowrap -mt-12'>Remaining debt</p>
@@ -87,13 +87,13 @@ const Repay = ({ asset, image }) => {
                         <Info size={16} className="ml-2" />
                     </div>
                     <div className="w-full flex flex-col my-3 space-y-2">
-                        <div className="w-full flex bg-[#6e3d17] p-1 rounded">
+                        <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">
                             <div className="w-1/12 flex items-center justify-center">
                                 <div className="warning-icon-container">
                                     <Info className=" text-[#f6ba43]" />
                                 </div>
                             </div>
-                            <div className="w-11/12 text-xs flex items-center text-white ml-1">
+                            <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
                                 You do not have enough ETH in your account to pay for transaction fees on Ethereum Sepolia network. Please deposit ETH from another account.
                             </div>
                         </div>

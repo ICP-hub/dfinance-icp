@@ -11,7 +11,7 @@ const WithdrawPopup = ({ asset, image }) => {
             <h1>Amount</h1>
             <h1>Slippage 0.10%</h1>
           </div>
-          <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-400 dark:bg-[#1D1B40] dark:text-darkText cursor-pointer p-3 rounded-md">
+          <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-400 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-3 rounded-md">
             <div className="w-4/12">
               <p className="text-xl">0.00</p>
               <p className="mt-2">$0</p>
@@ -30,10 +30,10 @@ const WithdrawPopup = ({ asset, image }) => {
           </div>
         </div>
         <div className="w-full ">
-          <div className="w-full flex justify-between my-2 dark:bg-darkBackground dark:text-darkText">
+          <div className="w-full flex justify-between my-2 dark:text-darkText">
             <h1>Transaction overview</h1>
           </div>
-          <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-400 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+          <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-400 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
             <div className="w-8/12">
               <p className="text-sm">Remaining supply</p>
             </div>

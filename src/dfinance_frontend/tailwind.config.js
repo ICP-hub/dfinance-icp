@@ -90,6 +90,7 @@ module.exports = {
         gradientStart: '#2E28A5',
         gradientEnd: '#FAAA98',
         gradientMiddle: '#C88A9B',
+        buttonShadow: '0px 7px 29px rgba(100, 100, 111, 0.2)',
 
         //dark mode
         darkBackground: '#070a18',

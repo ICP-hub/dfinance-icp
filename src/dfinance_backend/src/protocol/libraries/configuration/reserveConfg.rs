@@ -18,7 +18,7 @@ use crate::data_types::ReserveConfigurationMap;
 
 //Rust's standard library does not provide a u256 type directly. Instead, the u128 type is a 128-bit unsigned integer, which may not be sufficient to store all the configuration parameters if they require more than 128 bits.
 //use external crates like ethnum or primitive-types to work with 256-bit integers in Rust.
-// use ethnum::U256;
+// use ethnum::U256;  //read the docs
 
 
 // #[derive(CandidType, Deserialize)]

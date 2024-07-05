@@ -1,7 +1,7 @@
-use ic_cdk::export::candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize};
 use ic_cdk_macros::*;
-use std::collections::HashMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 
 #[derive(CandidType, Deserialize, Clone, Default)]
 pub struct UserState {
@@ -51,7 +51,10 @@ impl IncentivizedERC20 {
     }
 
     pub fn balance_of(&self, account: String) -> u128 {
-        self.user_state.borrow().get(&account).map_or(0, |state| state.balance)
+        self.user_state
+            .borrow()
+            .get(&account)
+            .map_or(0, |state| state.balance)
     }
 
     pub fn get_incentives_controller(&self) -> Option<String> {
@@ -69,7 +72,12 @@ impl IncentivizedERC20 {
     }
 
     pub fn allowance(&self, owner: String, spender: String) -> u128 {
-        self.allowances.borrow().get(&owner).and_then(|inner| inner.get(&spender)).copied().unwrap_or(0)
+        self.allowances
+            .borrow()
+            .get(&owner)
+            .and_then(|inner| inner.get(&spender))
+            .copied()
+            .unwrap_or(0)
     }
 
     pub fn approve(&self, owner: String, spender: String, amount: u128) -> bool {
@@ -90,7 +98,12 @@ impl IncentivizedERC20 {
         true
     }
 
-    pub fn decrease_allowance(&self, owner: String, spender: String, subtracted_value: u128) -> bool {
+    pub fn decrease_allowance(
+        &self,
+        owner: String,
+        spender: String,
+        subtracted_value: u128,
+    ) -> bool {
         let allowance = self.allowance(owner.clone(), spender.clone());
         self._approve(owner, spender, allowance - subtracted_value);
         true
@@ -107,9 +120,19 @@ impl IncentivizedERC20 {
         // Apply incentives if defined
         if let Some(incentives_controller) = &*self.incentives_controller.borrow() {
             let current_total_supply = *self.total_supply.borrow();
-            self.handle_action(incentives_controller.clone(), sender, current_total_supply, sender_state.balance);
+            self.handle_action(
+                incentives_controller.clone(),
+                sender,
+                current_total_supply,
+                sender_state.balance,
+            );
             if sender != recipient {
-                self.handle_action(incentives_controller.clone(), recipient, current_total_supply, recipient_state.balance);
+                self.handle_action(
+                    incentives_controller.clone(),
+                    recipient,
+                    current_total_supply,
+                    recipient_state.balance,
+                );
             }
         }
     }
@@ -121,7 +144,13 @@ impl IncentivizedERC20 {
         // Emit Approval event (not implemented here)
     }
 
-    fn handle_action(&self, _incentives_controller: String, _user: String, _total_supply: u128, _balance: u128) {
+    fn handle_action(
+        &self,
+        _incentives_controller: String,
+        _user: String,
+        _total_supply: u128,
+        _balance: u128,
+    ) {
         // Implement incentives handling logic here
     }
 

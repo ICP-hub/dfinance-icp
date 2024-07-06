@@ -10,7 +10,7 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
-
+import { useSelector } from "react-redux";
 import EModeButton from "./Emode";
 import Button from "../Button";
 import { Switch } from "@mui/material";
@@ -40,6 +40,8 @@ const MySupply = () => {
       image: image,
     });
   };
+  const theme = useSelector((state) => state.theme.theme);
+  const checkColor = theme === 'dark' ? '#ffffff' : '#2A1F9D';
   const [activeSection, setActiveSection] = useState("supply");
   const [isVisible, setIsVisible] = useState(true);
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
@@ -358,7 +360,7 @@ const MySupply = () => {
                                     </p>
                                   </div>
                                 </td>
-                                <td className="p-3 align-top">{item.apy}</td>
+                                <td className="p-3 align-top mt-1.5">{item.apy}</td>
                                 <td className="p-3 align-top">
                                   <div className="w-full flex items-center justify-center">
                                     <Switch
@@ -487,7 +489,7 @@ const MySupply = () => {
                                 Can Be Coletral
                               </p>
                               <div className="w-full flex items-center justify-end mb-2 dark:text-darkText">
-                                <Check color="#2A1F9D" size={16} />
+                                <Check color={checkColor} size={16} />
                               </div>
                             </div>
                             <div className="flex  justify-center gap-2 mt-2">
@@ -571,7 +573,7 @@ const MySupply = () => {
                               <td className="p-3 align-top">{item.apy}</td>
                               <td className="p-3 align-top">
                                 <div className="w-full flex items-center justify-center dark:text-darkText">
-                                  <Check color={"#4659CF"} size={14} />
+                                <Check color={checkColor} size={16} />
                                 </div>
                               </td>
                               <td className="p-3 align-top">
@@ -750,15 +752,15 @@ const MySupply = () => {
 
             {/* desktop screen */}
             <div className="hidden md:block">
-              {isborrowVisible && (
+              {isSupplyVisible && (
                 <>
                   {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
-                    noBorrowMessage
+                    noSupplyMessage
                   ) : (
-                    <div className="w-full overflow-auto md: mt-6 ">
+                    <div className="w-full overflow-auto mt-7">
                       <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                         <thead>
-                          <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 mt-10">
+                          <tr className="text-left text-[#233D63] text-xs  dark:text-darkTextSecondary1">
                             {MY_BORROW_ASSET_TABLE_COL.map((item, index) => (
                               <td key={index} className="p-3 whitespace-nowrap">
                                 {item.header}
@@ -791,37 +793,35 @@ const MySupply = () => {
                                     </p>
                                   </div>
                                 </td>
-                                <td className="p-3 align-top">{item.apy}</td>
+                                <td className="p-3 align-top mt-1.5">{item.apy}</td>
                                 <td className="p-3 align-top">
+                                  <div className="w-full flex items-center ">
                                   {item.apy_type}
+                                  </div>
                                 </td>
                                 <td className="p-3 align-top">
-                                  <div className="w-full flex gap-2">
+                                  <div className="w-full flex gap-2 pt-2">
                                     <Button
-                                      title={"Borrow"}
+                                      title={"Supply"}
                                       onClickHandler={() =>
                                         handleModalOpen(
-                                          "borrow",
+                                          "supply",
                                           item.asset,
                                           item.image
                                         )
                                       }
-                                      className={
-                                        "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
-                                      }
+                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
                                     />
                                     <Button
-                                      title={"Repay"}
+                                      title={"Withdraw"}
                                       onClickHandler={() =>
                                         handleModalOpen(
-                                          "repay",
+                                          "withdraw",
                                           item.asset,
                                           item.image
                                         )
                                       }
-                                      className={
-                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
-                                      }
+                                      className="bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs "
                                     />
                                   </div>
                                 </td>

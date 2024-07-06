@@ -175,3 +175,17 @@ body{
   animation-delay: 0.3s;
 }
 
+@keyframes fadeInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(20px); /* Start slightly off-screen to the right */
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0); /* Fade in to its original position */
+  }
+}
+
+.animate-fade-in-right {
+  animation: fadeInRight 0.5s ease forwards; /* Adjust duration (0.5s) and timing function (ease) as needed */
+}

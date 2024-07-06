@@ -20,8 +20,8 @@ import loader from "../../public/loader.svg";
 import ARROW from "../../public/ARROW.svg";
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from "../utils/constants";
 import { toggleTheme } from "../redux/reducers/themeReducer";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Drawer } from "@mui/material";
 import CloseIcon from "./Home/CloseIcon";
 import MenuIcon from "./Home/MenuIcon";
@@ -208,14 +208,22 @@ export default function Navbar({ isHomeNav }) {
   });
 
   useEffect(() => {
-    const storedIsTestnetMode = JSON.parse(localStorage.getItem("isTestnetMode"));
-  
+    const storedIsTestnetMode = JSON.parse(
+      localStorage.getItem("isTestnetMode")
+    );
+
     if (isTestnetMode !== storedIsTestnetMode) {
       localStorage.setItem("isTestnetMode", JSON.stringify(isTestnetMode));
-      toast.success(`Testnet mode ${!isTestnetMode ? 'disabled' : 'enabled'} successfully!`);
+
+      // Dismiss previous toast notifications
+      toast.dismiss();
+
+      // Show the new toast notification
+      toast.success(
+        `Testnet mode ${!isTestnetMode ? "disabled" : "enabled"} successfully!`
+      );
     }
   }, [isTestnetMode]);
-  
 
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
@@ -229,7 +237,6 @@ export default function Navbar({ isHomeNav }) {
     setIsTestnetMode((prevMode) => !prevMode);
     if (isTestnetMode) {
       navigate("/dashboard");
-      
     }
   };
 
@@ -277,9 +284,7 @@ export default function Navbar({ isHomeNav }) {
       return newMode;
     });
   };
- 
 
-  
   React.useEffect(() => {
     const htmlElement = document.documentElement;
     const bodyElement = document.body;
@@ -300,7 +305,7 @@ export default function Navbar({ isHomeNav }) {
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
         <div className="w-full">
-          <nav className="w-full py-4 lg:py-10 flex items-center justify-between">
+          <nav className="w-full py-4 lg:py-10  flex items-center justify-between">
             <div className="lg:flex md:flex  justify-center items-center sxs3:block sxs3:mt-3">
               <img
                 src={
@@ -311,21 +316,38 @@ export default function Navbar({ isHomeNav }) {
                 alt="DFinance"
                 className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]  sxs3:mb-3"
               />
-             {!isHomeNav && isTestnetMode && (
-        <button
-          className="bg-[#4659CF] z-50   hover:bg-blue-700 text-white font-bold p-2 rounded flex items-center text-[12px] w-20 h-6 lg:ml-3 -mt-1 sxs3:ml-10"
-          onClick={handleButtonClick}
-        >
-          TESTNET
-          <Info size={20} className="ml-1" />
-        </button>
-      )}
+              {!isHomeNav && isTestnetMode && (
+                <button
+                  className="bg-[#4659CF] z-50   hover:bg-blue-700 text-white font-bold p-2 rounded flex items-center text-[12px] w-20 h-6 lg:ml-3 -mt-1 sxs3:ml-10"
+                  onClick={handleButtonClick}
+                >
+                  TESTNET
+                  <Info size={20} className="ml-1" />
+                </button>
+              )}
 
-{showTestnetPopup && <TestnetModePopup onClose={handleClosePopup} setIsTestnetMode={setIsTestnetMode} />}
-      <ToastContainer />
-
+              {showTestnetPopup && (
+                <TestnetModePopup
+                  onClose={handleClosePopup}
+                  setIsTestnetMode={setIsTestnetMode}
+                />
+              )}
+              <ToastContainer
+                position="top-center"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                transition:Bounce
+                pauseOnHover
+                theme={isDarkMode ? "dark" : "light"} 
+                className="z-50 mt-20"
+              />
             </div>
-            <div className="gap-4 hidden  lg:flex dark:text-darkText justify-beteen items-center">
+            <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
               {!isHomeNav
                 ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
                     if (link.alwaysPresent) {
@@ -333,7 +355,7 @@ export default function Navbar({ isHomeNav }) {
                         <NavLink
                           key={index}
                           to={link.route}
-                          className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                          className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary"
                         >
                           {link.title}
                         </NavLink>
@@ -403,7 +425,7 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : isAuthenticated ? (
               <div className="hidden lg:flex gap-3 sxs3:flex sxs3:ml-6">
-                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-lg shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
                     className="flex items-center gap-2 p-2 px-3"
                     onClick={handleSwitchToken}
@@ -776,6 +798,7 @@ export default function Navbar({ isHomeNav }) {
                             }}
                           />
                         </div>
+
                         <div className="flex items-center">
                           <label
                             htmlFor="testnetMode"

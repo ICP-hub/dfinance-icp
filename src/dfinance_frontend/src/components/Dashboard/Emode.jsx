@@ -9,6 +9,7 @@ const EModeButton = () => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [showInitialPopup, setShowInitialPopup] = useState(false);
   const [showFinalPopup, setShowFinalPopup] = useState(false);
+  const [currentToastId, setCurrentToastId] = useState(null);
 
   const handleSettingClick = () => {
     setShowInitialPopup(!showInitialPopup);
@@ -22,13 +23,29 @@ const EModeButton = () => {
   const handleFinalEnableClick = () => {
     setIsEnabled(true);
     setShowFinalPopup(false);
-    toast.info("E-Mode enabled successfully!");
+
+    // Dismiss previous toast if any
+    if (currentToastId) {
+      toast.dismiss(currentToastId);
+    }
+
+    // Show new toast and store its id
+    const toastId = toast.info("E-Mode enabled successfully!");
+    setCurrentToastId(toastId);
   };
 
   const handleDisableClick = () => {
     setIsEnabled(false);
     setShowInitialPopup(false);
-    toast.info("E-Mode disabled successfully!");
+
+    // Dismiss previous toast if any
+    if (currentToastId) {
+      toast.dismiss(currentToastId);
+    }
+
+    // Show new toast and store its id
+    const toastId = toast.info("E-Mode disabled successfully!");
+    setCurrentToastId(toastId);
   };
 
   const handleClickAway = () => {

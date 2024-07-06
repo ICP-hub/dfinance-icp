@@ -37,6 +37,21 @@ export default {
 
       },
       placeholderColor: ['responsive', 'focus', 'hover'], 
+      keyframes: {
+        fadeInRight: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateX(60px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateX(0)',
+          },
+        },
+      },
+      animation: {
+        fadeInRight: 'fadeInRight 2s ease forwards',
+      },
       screens: {
         sxxs: "255px",
         sxs: "265px",

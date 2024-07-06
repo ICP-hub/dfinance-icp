@@ -221,33 +221,32 @@ const DashboardNav = () => {
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
-  {(isDashboardSupplyOrMain
-    ? WALLET_DETAIL_TAB
-    : WALLET_DETAILS_TABS
-  ).map((data, index) => (
-    <div
-      key={index}
-      className="relative group text-[#2A1F9D] p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
-      style={{ minWidth: '220px', flex: '1 0 220px' }} // Adjust minWidth and flex properties
-    >
-      <button className="relative w-full text-left flex justify-between items-center">
-        <span>{data.title}</span>
-        <span className="font-light">{data.count}</span>
-        <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-      </button>
-    </div>
-  ))}
-</div>
-<div className="flex justify-end mt-16 md:mt-0">
-  <button
-    className="py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-lg dark:text-darkText"
-    onClick={handleOpenPopup}
-    style={{ minWidth: '220px' }} // Ensure button has consistent width
-  >
-    Risk Details
-  </button>
-</div>
-
+                  {(isDashboardSupplyOrMain
+                    ? WALLET_DETAIL_TAB
+                    : WALLET_DETAILS_TABS
+                  ).map((data, index) => (
+                    <div
+                      key={index}
+                      className="relative group text-[#2A1F9D] p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+                      style={{ minWidth: "220px", flex: "1 0 220px" }} // Adjust minWidth and flex properties
+                    >
+                      <button className="relative w-full text-left flex justify-between items-center">
+                        <span>{data.title}</span>
+                        <span className="font-light">{data.count}</span>
+                        <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end mt-16 md:mt-0">
+                  <button
+                    className="py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-lg dark:text-darkText"
+                    onClick={handleOpenPopup}
+                    style={{ minWidth: "220px" }} // Ensure button has consistent width
+                  >
+                    Risk Details
+                  </button>
+                </div>
               </div>
             </div>
           </div>

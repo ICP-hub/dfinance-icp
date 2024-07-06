@@ -208,10 +208,14 @@ export default function Navbar({ isHomeNav }) {
   });
 
   useEffect(() => {
-    localStorage.setItem("isTestnetMode", JSON.stringify(isTestnetMode));
-    toast.success(`Testnet mode ${!isTestnetMode ? 'disabled' : 'enabled'} successfully!`);
+    const storedIsTestnetMode = JSON.parse(localStorage.getItem("isTestnetMode"));
   
+    if (isTestnetMode !== storedIsTestnetMode) {
+      localStorage.setItem("isTestnetMode", JSON.stringify(isTestnetMode));
+      toast.success(`Testnet mode ${!isTestnetMode ? 'disabled' : 'enabled'} successfully!`);
+    }
   }, [isTestnetMode]);
+  
 
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
@@ -557,7 +561,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
                           </div>
                           {isInputFocused && (
-                            <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between dark:text-darkTextSecondary1 ">
+                            <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between dark:text-darkText ">
                               <p>1 ETH = 32.569 1INCH</p>
                               <p>
                                 <img

@@ -230,7 +230,7 @@ const Home = () => {
         </section>
 
         {/* FAQ */}
-        <section className="mt-[44px] md:mt-24 " id="faq">
+       <section className="mt-[44px] md:mt-24 " id="faq">
   <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
     <div className="w-full">
       <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
@@ -287,14 +287,19 @@ const Home = () => {
           ))}
         </div>
       </div>
-      <div className="hidden md:block h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300">
-        <h1 className="font-semibold mt-4">
-          {FAQ_QUESTION.find((item) => item.id === currentFAQ).question}
-        </h1>
-        <p className="mt-8">
-          {FAQ_QUESTION.find((item) => item.id === currentFAQ).answer}
-        </p>
-      </div>
+      {FAQ_QUESTION.filter(faq => faq.id === currentFAQ).map(faq => (
+  <div key={faq.id} className="hidden md:block animate-fadeInRight h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300">
+    <h1 className="font-semibold mt-4">
+      {faq.question}
+    </h1>
+    <p className="mt-8  ">
+      {faq.answer}
+    </p>
+  </div>
+))}
+
+        
+      
     </div>
   </div>
 </section>

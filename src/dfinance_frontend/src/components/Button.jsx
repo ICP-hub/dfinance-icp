@@ -1,16 +1,15 @@
-import React from 'react'
+import React from 'react';
 
 const Button = ({ title, onClickHandler, className }) => {
-
   return (
-      <button
-          type="button"
-          className={className ? className : 'my-2 bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-xl p-3 px-8 shadow-lg font-semibold text-sm'}
-          onClick={onClickHandler}
-      >
-          {title}
-      </button>
-  )
-}
+    <button
+      type="button"
+      className={className ? className : 'my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] px-8 shadow-xl shadow-[#00000040] font-semibold text-sm sxs3:px-8'}
+      onClick={onClickHandler}
+    >
+      {title}
+    </button>
+  );
+};
 
-export default Button
+export default Button;

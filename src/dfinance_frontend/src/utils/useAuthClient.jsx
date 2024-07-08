@@ -1,54 +1,73 @@
 import { AuthClient } from "@dfinity/auth-client";
-
 import React, { createContext, useContext, useEffect, useState } from "react";
-import {
-    createActor,
-    dfinance_backend,
-    idlFactory,
-} from "../../../declarations/dfinance_backend/index";
+import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
-import { Actor, HttpAgent } from "@dfinity/agent";
-// import appConstants from "../../Constants/appConstants";
-
+import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
+// import { BifinityConnector, BifinityWallet } from "./BifinityConnector"; 
+// Create a React context for authentication state
 const AuthContext = createContext();
+
+
 
 const defaultOptions = {
     /**
      *  @type {import("@dfinity/auth-client").AuthClientCreateOptions}
      */
     createOptions: {
-        // idleOptions: {
-        //   // Set to true if you do not want idle functionality
-        //   disableIdle: true,
-        // },
-        idleOptions: {
-            idleTimeout: 1000 * 60 * 30, // set to 30 minutes
-            disableDefaultIdleCallback: true, // disable the default reload behavior
-            verifyQuerySignatures: false
-        },
+      // idleOptions: {
+      //   // Set to true if you do not want idle functionality
+      //   disableIdle: true,
+      // },
+      idleOptions: {
+        idleTimeout: 1000 * 60 * 30, // set to 30 minutes
+        disableDefaultIdleCallback: true, // disable the default reload behavior
+      },
     },
     /**
      * @type {import("@dfinity/auth-client").AuthClientLoginOptions}
      */
-    loginOptions: {
-        identityProvider:
-            process.env.DFX_NETWORK === "ic"
-                ? "https://identity.ic0.app/#authorize"
-                : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/`,
+    loginOptionsii: {
+      identityProvider:
+        process.env.DFX_NETWORK === "ic"
+          ? "https://identity.ic0.app/#authorize"
+          : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
+          // : `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`,
+          // :`https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
     },
-};
+    loginOptionsnfid: {
+      identityProvider:
+        process.env.DFX_NETWORK === "ic"
+          // ? "https://identity.ic0.app/#authorize"
+          // : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
+          ? `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
+          : `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
+    },
 
-/**
- *
- * @param options - Options for the AuthClient
- * @param {AuthClientCreateOptions} options.createOptions - Options for the AuthClient.create() method
- * @param {AuthClientLoginOptions} options.loginOptions - Options for the AuthClient.login() method
- * @returns
- */
+    loginOptionsbifinity: {
+        // identityProvider: `https://bifinity.com/authenticate/?applicationName=my-ic-app#authorize`,
+    },
+  };
+
+// Define default authentication options
+// const defaultOptions = {
+//     createOptions: {
+//         idleOptions: {
+//             idleTimeout: 1000 * 60 * 30, // 30 minutes timeout
+//             disableDefaultIdleCallback: true, // Prevent default behavior on idle
+//             verifyQuerySignatures: false // Disable query signature verification for now
+//         },
+//     },
+//     loginOptions: {
+//         identityProvider: process.env.DFX_NETWORK === "ic"
+//             ? "https://identity.ic0.app/#authorize" // Production identity provider
+//             : `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943/`, // Development identity provider
+//     },
+// };
+
+// Custom hook to manage authentication with Internet Identity
 export const useAuthClient = (options = defaultOptions) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [accountIdString, setAccountIdString] = useState("");
-    // const [userType, setUserType] = useState(appConstants.UNKNOWN);
     const [authClient, setAuthClient] = useState(null);
     const [identity, setIdentity] = useState(null);
     const [principal, setPrincipal] = useState(null);
@@ -56,31 +75,83 @@ export const useAuthClient = (options = defaultOptions) => {
     const [accountId, setAccountId] = useState(null);
 
     useEffect(() => {
-        // Initialize AuthClient
+        // On component mount, create an authentication client
         AuthClient.create(options.createOptions).then((client) => {
             setAuthClient(client);
         });
     }, []);
 
-    function toHexString(byteArray) {
-        return Array.from(byteArray, function (byte) {
-            return ("0" + (byte & 0xff).toString(16)).slice(-2);
-        }).join("");
-    }
+    useEffect(() => {
+        if (authClient) {
+            updateClient(authClient);
+        }
+    }, [authClient]);
 
-    const login = () => {
+    // Helper function to convert binary data to a hex string
+    const toHexString = (byteArray) => {
+        return Array.from(byteArray, (byte) => ("0" + (byte & 0xff).toString(16)).slice(-2)).join("");
+    };
+
+    // Function to handle login process
+    // const login = async () => {
+    //     try {
+    //         await authClient.login({
+    //             ...options.loginOptions,
+    //             onError: (error) => console.error("Login error:", error),
+    //             onSuccess: () => updateClient(authClient),
+    //         });
+    //     } catch (error) {
+    //         console.error("Login error:", error);
+    //     }
+    // };
+    
+
+
+    // const login = async (val) => {
+    //     // console.log('val',val)
+    //       return new Promise(async (resolve, reject) => {
+    //           try {
+
+    //             // console.log("authClient.getIdentity().getPrincipal().isAnonymous() =>>>>>>>>>>",authClient.getIdentity().getPrincipal().isAnonymous());
+    //             if (
+    //               authClient.isAuthenticated() &&
+    //               (await authClient.getIdentity().getPrincipal().isAnonymous()) ===
+    //                 false
+    //             ) {
+
+    //               clientInfo(authClient);
+    //               resolve(authClient);
+    //             } else {
+
+    //           // console.log("val=>>>.", val);
+    //             //   let opt = val === "ii" ? "loginOptionsii" : "loginOptionsnfid"
+    //               let opt = val === "ii" ? "loginOptionsii" : "loginOptionsii"
+    //     authClient.login({
+    //       ...options[opt],
+    //       onError: (error) => reject(error),
+    //       onSuccess: (val) => {
+    //         clientInfo(authClient);
+    //         resolve(authClient);
+    //       },
+    //     });
+    //             }
+    //           } catch (error) {
+    //             console.log('error',error)
+    //               reject(error);
+    //           }
+    //       });
+    //   };
+    
+    const login = async (provider) => {
         return new Promise(async (resolve, reject) => {
             try {
-                if (
-                    authClient.isAuthenticated() &&
-                    (await authClient.getIdentity().getPrincipal().isAnonymous()) ===
-                    false
-                ) {
+                if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
                     updateClient(authClient);
-                    resolve(AuthClient);
+                    resolve(authClient);
                 } else {
+                    const opt = getLoginOptions(provider);
                     authClient.login({
-                        ...options.loginOptions,
+                        ...opt,
                         onError: (error) => reject(error),
                         onSuccess: () => {
                             updateClient(authClient);
@@ -89,72 +160,108 @@ export const useAuthClient = (options = defaultOptions) => {
                     });
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 reject(error);
             }
         });
     };
 
-    const reloadLogin = () => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                if (
-                    authClient.isAuthenticated() &&
-                    (await authClient.getIdentity().getPrincipal().isAnonymous()) ===
-                    false
-                ) {
-                    updateClient(authClient);
-                    resolve(AuthClient);
-                }
-            } catch (error) {
-                reject(error);
-            }
-        });
+    const getLoginOptions = (provider) => {
+        switch (provider) {
+            case "ii":
+                return options.loginOptionsii;
+            case "nfid":
+                return options.loginOptionsnfid;
+            case "bifinity":
+                return options.loginOptionsbifinity;
+            default:
+                throw new Error(`Unsupported provider: ${provider}`);
+        }
+    };
+    // //temp
+    // const clientInfo = async (client) => {
+    //     const isAuthenticated = await client.isAuthenticated();
+    //     const identity = client.getIdentity();
+    //     const principal = identity.getPrincipal();
+  
+  
+    //     // console.log("isAuthenticated",isAuthenticated,"principal",principal, "identity",identity );
+    //     setAuthClient(client);
+    //     setIsAuthenticated(isAuthenticated);
+    //     setIdentity(identity);
+    //     setPrincipal(principal);
+    //       let principalText = principal.toText();
+  
+    //       // console.log("principalText???? ",principalText);
+    //       localStorage.setItem("id",JSON.stringify(principalText))
+  
+    //     if (isAuthenticated && identity && principal && principal.isAnonymous() === false) {
+    //         let backendActor = createActor(backendCanisterId, { agentOptions: { identity: identity, verifyQuerySignatures: false } });
+            
+    //         // console.log("backendActor",backendActor);
+    //         setBackendActor(backendActor);
+    //     }
+  
+    //     return true;
+    // }
+    
+    // Function to handle logout
+    const logout = async () => {
+        try {
+            await authClient.logout();
+            setIsAuthenticated(false);
+            setIdentity(null);
+            setPrincipal(null);
+            setBackendActor(null);
+            setAccountId(null);
+
+            window.location.reload();
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
     };
 
-    async function updateClient(client) {
-        const isAuthenticated = await client.isAuthenticated();
-        setIsAuthenticated(isAuthenticated);
-        const identity = client.getIdentity();
-        setIdentity(identity);
-        const principal = identity.getPrincipal();
-        setPrincipal(principal);
-        const accountId = AccountIdentifier.fromPrincipal({ principal });
-        setAccountId(toHexString(accountId.bytes));
-        setAuthClient(client);
-        let accountIdString = toHexString(accountId.bytes);
-        setAccountIdString(accountIdString);
-        const agent = new HttpAgent({ identity });
-        const backendActorNew = createActor(
-            process.env.CANISTER_ID_DFINANCE_BACKEND,
-            {
-                agent,
-            }
-        );
-        setBackendActor(backendActorNew);
-        // let userType = await backendActorNew.check_user_type();
-        // setUserType(userType);
-    }
+    // Update client state after authentication
+    const updateClient = async (client) => {
+        try {
+            const isAuthenticated = await client.isAuthenticated();
+            setIsAuthenticated(isAuthenticated);
 
+            const identity = client.getIdentity();
+            setIdentity(identity);
+
+            const principal = identity.getPrincipal();
+            setPrincipal(principal.toString());
+            console.log('principal',principal.toString());
+            const accountId = AccountIdentifier.fromPrincipal({ principal });
+            setAccountId(toHexString(accountId.bytes));
+            setAccountIdString(toHexString(accountId.bytes));
+
+            const agent = new HttpAgent({ identity });
+            const backendActor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, { agent });
+            setBackendActor(backendActor);
+        } catch (error) {
+            console.error("Authentication update error:", error);
+        }
+    };
+
+    // Function to create an actor for interacting with the ledger
     const createLedgerActor = (canisterId) => {
-        let identity = window.identity;
         const agent = new HttpAgent({ identity });
-        // Creates an actor with using the candid interface and the HttpAgent
-        return Actor.createActor(idlFactory, {
-            agent,
-            canisterId,
-        });
+        return Actor.createActor(idlFactory, { agent, canisterId });
     };
 
-    async function logout() {
-        await authClient?.logout();
-        await updateClient(authClient);
-        setIsAuthenticated(false);
-    }
-
-    const canisterId =
-        process.env.CANISTER_ID_DFINANCE_BACKEND;
-
-    const actor = createActor(canisterId, { agentOptions: { identity } });
+    // Function to refresh login without user interaction
+    const reloadLogin = async () => {
+        try {
+            if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
+                console.log("Called");
+                updateClient(authClient);
+            }
+        } catch (error) {
+            console.error("Reload login error:", error);
+        }
+    };
 
     return {
         isAuthenticated,
@@ -167,21 +274,21 @@ export const useAuthClient = (options = defaultOptions) => {
         backendActor,
         accountId,
         createLedgerActor,
-        actor,
         reloadLogin,
         accountIdString,
-
     };
 };
 
-/**
- * @type {React.FC}
- */
+// Authentication provider component
 export const AuthProvider = ({ children }) => {
     const auth = useAuthClient();
-    if (auth.authClient && auth.actor) {
-        return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+
+    if (!auth.authClient || !auth.backendActor) {
+        return null; // Or render a loading indicator
     }
+
+    return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
+// Hook to access authentication context
 export const useAuth = () => useContext(AuthContext);

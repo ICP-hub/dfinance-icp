@@ -2,211 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-    :root {
-        --background: 0 0% 100%;
-        --foreground: 222.2 84% 4.9%;
-
-        --card: 0 0% 100%;
-        --card-foreground: 222.2 84% 4.9%;
-
-        --popover: 0 0% 100%;
-        --popover-foreground: 222.2 84% 4.9%;
-
-        --primary: 222.2 47.4% 11.2%;
-        --primary-foreground: 210 40% 98%;
-
-        --secondary: 210 40% 96.1%;
-        --secondary-foreground: 222.2 47.4% 11.2%;
-
-        --muted: 210 40% 96.1%;
-        --muted-foreground: 215.4 16.3% 46.9%;
-
-        --accent: 210 40% 96.1%;
-        --accent-foreground: 222.2 47.4% 11.2%;
-
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 210 40% 98%;
-
-        --border: 214.3 31.8% 91.4%;
-        --input: 214.3 31.8% 91.4%;
-        --ring: 222.2 84% 4.9%;
-
-        --radius: 0.5rem;
-    }
-
-    .dark {
-        --background: 222.2 84% 4.9%;
-        --foreground: 210 40% 98%;
-
-        --card: 222.2 84% 4.9%;
-        --card-foreground: 210 40% 98%;
-
-        --popover: 222.2 84% 4.9%;
-        --popover-foreground: 210 40% 98%;
-
-        --primary: 210 40% 98%;
-        --primary-foreground: 222.2 47.4% 11.2%;
-
-        --secondary: 217.2 32.6% 17.5%;
-        --secondary-foreground: 210 40% 98%;
-
-        --muted: 217.2 32.6% 17.5%;
-        --muted-foreground: 215 20.2% 65.1%;
-
-        --accent: 217.2 32.6% 17.5%;
-        --accent-foreground: 210 40% 98%;
-
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 210 40% 98%;
-
-        --border: 217.2 32.6% 17.5%;
-        --input: 217.2 32.6% 17.5%;
-        --ring: 212.7 26.8% 83.9%;
-    }
-}
-
-@layer base {
-    * {
-        @apply border-border;
-    }
-
-    body {
-        @apply bg-background text-foreground;
-    }
-}
-
-.gradient-text {
-    @apply font-bold w-36 h-12 flex items-center justify-center;
-    background: radial-gradient(98.86% 198.27% at 102.51% -1.56%, #2A1F9D 15%, #4659CF 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-    /* Fallback for non-webkit browsers */
-}
-
-// .radial-button {
-//     @apply w-[74px] h-[23px] rounded-[4px] px-[20px] py-[11px] relative shadow-custom text-xs font-semibold text-white;
-//     background: radial-gradient(98.86% 198.27% at 102.51% -1.56%, #FCBD78 15%, #D379AB 54%, #C562BD 67%, #4659CF 100%);
-//     -webkit-background-clip: text;
-//     -webkit-text-fill-color: transparent;
-//     background-clip: text;
-//     color: transparent;
-// }
-
-@layer components {
-    .gradient-button {
-        background: radial-gradient(98.86% 198.27% at 102.51% -1.56%,
-                #FCBD78 15%,
-                #D379AB 54%,
-                #C562BD 67%,
-                #4659CF 100%);
-    }
-}
-
-
-.d_color {
-    color: #517688 !important;
-    font-style: normal !important;
-}
-
-body {
-    background: rgba(255, 255, 255, 1);
-}
-
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-/*
-    2. Remove default margin
-  */
-* {
-    margin: 0;
-}
-
-/*
-    3. Allow percentage-based heights in the application
-  */
-html,
-body {
-    height: 100%;
-}
-
-/*
-    Typographic tweaks!
-    4. Add accessible line-height
-    5. Improve text rendering
-  */
-body {
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-}
-
-/*
-    6. Improve media defaults
-  */
-img,
-picture,
-video,
-canvas,
-svg {
-    display: block;
-    max-width: 100%;
-}
-
-/*
-    7. Remove built-in form typography styles
-  */
-input,
-button,
-textarea,
-select {
-    font: inherit;
-}
-
-/*
-    8. Avoid text overflows
-  */
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    overflow-wrap: break-word;
-}
-
-/*
-    9. Create a root stacking context
-  */
-#root,
-#__next {
-    isolation: isolate;
-}
-
-.header-text {
-    position: sticky;
-    left: 0;
-    background-color: rgba(255, 255, 255, 0.8);
-    /* Semi-transparent background */
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-}
-.sticky-left-column {
-    position: sticky;
-    left: 0;
-    background: white;
-    box-shadow: 5px 0 5px -2px rgba(0,0,0,0.5); /* Shadow to the right */
-    z-index: 10;
-  }*{
-    font-family: "Poppins", sans-serif;
-}
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+/* Example of importing Google Fonts in CSS */
+@import url('https://fonts.googleapis.com/css2?family=Vampiro+One&display=swap');
 
 body{
     background: rgba(255, 255, 255, 1);
@@ -217,33 +16,176 @@ body{
     font-style: normal !important;
 }
 
-.tab_cards_gradient{
-    background: radial-gradient(circle at 95.33% 99.97%, #83d8e6 15%, #4659CF 100%);
+@keyframes subtle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    transform: translateY(-20px); /* Adjust the bounce height as needed */
+    animation-timing-function: ease-in-out;
+  }
 }
 
+.subtle-bounce {
+  animation: subtle-bounce 4s infinite; /* Adjust duration as needed */
+}
+// learn more buton
 .button_gradient{
-    background: rradial-gradient(circle at 102.51% -1.56%, #FCBD78 15%, #D379AB 54%, #C562BD 67%, #4659CF 100%);
+    background: radial-gradient(circle at 111.51% -1.56%,  #FCBD78 10%, #4659CF 90%, );
 }
-.rotate_card{
-    perspective: 1000px;
-}
-.main_face{
-    backface-visibility: hidden;
-    -moz-backface-visibility: hidden;
-    transform-style: preserve-3d;
-}
-.rotate_card:hover .main_face{
-    transition: ease-in-out 500ms;
-    transform: rotateY(180deg);
-}
+// search and all buttons in dark mode for dashboard 
+  .box {
+    border-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='none'%3e%3cpath stroke='url(%23a)' stroke-width='2' d='M8 1h84a7 7 0 0 1 7 7v84a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7Z'/%3e%3cdefs%3e%3clinearGradient id='a' x1='20.27' x2='120.715' y1='125' y2='113.589' gradientUnits='userSpaceOnUse'%3e%3cstop stop-color='%23EFAF68'/%3e%3cstop offset='.367' stop-color='%23CC69A0'/%3e%3cstop offset='.682' stop-color='%23C15CB9'/%3e%3cstop offset='1' stop-color='%235B6BCC'/%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e") 8 / 10px stretch;
+  }
+  
 
-.back_face{
-    z-index: 1;
-    transform: rotateY(180deg);
-        transition: ease-in-out 500ms;
-
+  .nav-link {
+    position: relative;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 800;
+  }
+  .nav-link:active,
+.nav-link.active {
+  color: transparent; /* Hide the actual text color on hover */
+    background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
+    background-clip: text;
+    -webkit-background-clip: text; /* For Safari/older browsers */
+    -webkit-text-fill-color: transparent; /* Hide the actual text color */
+    transition: none; /* Disable transition for the gradient effect */
+    font-weight: 800;
 }
-
+  .nav-link:hover {
+    color: transparent; /* Hide the actual text color on hover */
+    background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
+    background-clip: text;
+    -webkit-background-clip: text; /* For Safari/older browsers */
+    -webkit-text-fill-color: transparent; /* Hide the actual text color */
+    transition: none; /* Disable transition for the gradient effect */
+    font-weight: 800;
+  }
+  
+  /* Add this in your CSS file */
+/* Add this in your CSS file */
+.gradient-line-bottom {
+    position: relative;
+  }
+  
+  .gradient-line-bottom::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-left: 0.5rem; /* Adjust margin as needed */
+    width: calc(100% - 1.5rem); /* Adjust padding if needed */
+    height: 1px;
+    background: linear-gradient(to right, #4659CF, #FCBD78);
+    transition: background 0.3s ease-in-out;
+    z-index: 4; /* Ensure the line is on top of other content */
+  }
+  
+  .gradient-line-bottom:hover::after {
+    background: #5B62FE; /* Light blue color */
+  }
+  
+  /* This rule removes any other border styles */
+  .gradient-line-bottom > * {
+    border: none !important;
+  }
+  
 .stack_card_single{
     @apply w-fit bg-[#DBE8EE] border-[3px] border-[#233D6324] rounded-[40px] flex justify-center items-center p-4 ease-in-out duration-500
+}
+.no-scroll {
+  overflow: hidden;
+}
+.bouncing-loader {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* Dim background */
+  backdrop-filter: blur(5px); /* Blur effect */
+  z-index: 1000;
+}
+
+.bouncing-div{
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.bouncing-loader > .loader-element {
+  width: 20px;
+  height: 20px;
+  margin: 1px 3px;
+  margin-bottom: 35px;
+ 
+  animation: bouncing-loader 0.6s infinite alternate;
+}
+
+.bouncing-div  div {
+  width: 4px;
+  height: 4px;
+  margin: 3px 1px;
+  border-radius: 50%;
+  background-color: white;
+  animation: bouncing-div 0.7s infinite alternate;
+}
+
+@keyframes bouncing-loader {
+  to {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bouncing-div {
+  to {
+    transform: translateY(-6px);
+  }
+}
+
+.bouncing-loader > div:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bouncing-loader > div:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.bouncing-loader > div:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+
+.bouncing-div > div:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+
+.bouncing-div > div:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes fadeInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(20px); /* Start slightly off-screen to the right */
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0); /* Fade in to its original position */
+  }
+}
+
+.animate-fade-in-right {
+  animation: fadeInRight 0.5s ease forwards; /* Adjust duration (0.5s) and timing function (ease) as needed */
 }

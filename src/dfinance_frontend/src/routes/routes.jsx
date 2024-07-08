@@ -3,13 +3,15 @@ import WalletDetails from "../components/Dashboard/WalletDetails"
 import MainDashboard from "../pages/Dashboard/MainDashboard"
 import Home from "../pages/Home/Home"
 import Login from "../pages/login/Login"
-import {useSelector} from 'react-redux';
-import { store } from "../redux/store"
+import Error from "../pages/Error/Error"
 import AssetDetails from "../components/Dashboard/AssetDetails"
 import DFinanceGov from "../components/Dashboard/DFinanceGov"
-
-
-const { utility } = store.getState()
+import ProposalDetails from "../components/Dashboard/ProposalDetails"
+import MySupply from "../components/Dashboard/MySupply"
+import { elements } from "chart.js"
+import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
+import StakeDetails from "../components/Dashboard/StakeDetails"
+import Faucet from "../components/Dashboard/faucet"
 
 export default [
   {
@@ -18,43 +20,78 @@ export default [
   },
   {
     path: "/login",
-    element: <Login></Login>,
+    element: <Login />,
+  },
+  {
+    path: "*",
+      element: (
+      <MainDashboard includeDashboardNav={false}>
+        <Error></Error> 
+      </MainDashboard>
+    ),
   },
   {
     path: "/dashboard",
-    children: [
-      {
-        path: "main",
-        element: (
-          <MainDashboard>
-            <CreateWallet />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "wallet-details",
-        element: (
-          <MainDashboard>
-            <WalletDetails />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "asset-details",
-        element: (
-          <MainDashboard>
-            <AssetDetails />
-          </MainDashboard>
-        ),
-      },
-      {
-        path: "dfinance-gov",
-        element: (
-          <MainDashboard isDGov={true}>
-            <DFinanceGov />
-          </MainDashboard>
-        ),
-      }
-    ],
+    element: (
+      <MainDashboard>
+        <CreateWallet />
+      </MainDashboard>
+    ),
   },
-]
+  {
+    path: "/dashboard/asset-details/:id?",
+    element: (
+      <MainDashboard>
+        <AssetDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/dashboard/transaction-history",
+    element: (
+      <MainDashboard >
+        <TransactionHistoryBox />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/market",
+    element: (
+      <MainDashboard>
+        <WalletDetails />
+      </MainDashboard>
+    ),
+  },
+  // {
+  //   path: "/governance",
+  //   element: (
+  //     <MainDashboard includeDashboardNav={false}>
+  //       <DFinanceGov  />
+  //     </MainDashboard>
+  //   ),
+  // },
+  {
+    path: "/governance/proposal-details",
+    element: (
+      <MainDashboard>
+        <ProposalDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/stake",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <StakeDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/Faucet",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <Faucet/>
+      </MainDashboard>
+    ),
+  },
+];

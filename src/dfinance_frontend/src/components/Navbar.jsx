@@ -427,7 +427,7 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : isAuthenticated ? (
               <div className="hidden lg:flex gap-3 sxs3:flex sxs3:ml-6 sm:ml-[280px] md:flex md:ml-[335px] sm4:ml-[180px] lg:ml-[540px]  dlg:ml-81 lg1:ml-0">
-                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-md shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-xl shadow-md shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
                     className="flex items-center gap-2 p-2 px-3"
                     onClick={handleSwitchToken}
@@ -608,7 +608,7 @@ export default function Navbar({ isHomeNav }) {
                               <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4  dark:text-darkText">
                                 Transaction Overlay
                               </h2>
-                              <div className="border border-gray-300 rounded-lg shadow-md top-full left-0 mt-2 p-6">
+                              <div className="border border-gray-300 rounded-xl shadow-md top-full left-0 mt-2 p-6">
                                 <p>
                                   Min 1INCH Received:{" "}
                                   {selectedToken === "ETH"
@@ -667,7 +667,7 @@ export default function Navbar({ isHomeNav }) {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-md shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-xl shadow-md shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
                     className="flex items-center gap-1 p-2 px-3  overflow-hidden"
                     onClick={handleSwitchWallet}
@@ -706,7 +706,7 @@ export default function Navbar({ isHomeNav }) {
                         {/* First Container */}
                         <div className="flex justify-center">
                           <div
-                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative dark:border-currentFAQBackground"
+                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                             style={{ height: "70px", width: "160px" }}
                           >
                             <span
@@ -731,7 +731,7 @@ export default function Navbar({ isHomeNav }) {
                         {/* Second Container */}
                         <div className="flex justify-center">
                           <div
-                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative dark:border-currentFAQBackground"
+                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                             style={{ height: "70px", width: "160px" }}
                           >
                             <button

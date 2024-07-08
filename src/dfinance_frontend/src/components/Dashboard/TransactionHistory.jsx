@@ -18,7 +18,7 @@ const TransactionHistory = () => {
     <div className="w-full lg:w-12/12 mt-12">
       {shouldRenderTransactionHistory && (
         <div className="w-full min-h-[500px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl relative dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-          <h1 className={`text-[#2A1F9D] font-bold text-xl md:text-2xl my-2 ml-2 pb-4 dark:text-darkText ${transactionHistory.length > 0 ? 'lg:border-b-2 border-[#fff]' : ''}`}>
+          <h1 className={`text-[#2A1F9D] font-bold text-xl md:text-2xl my-2  pb-4 dark:text-darkText ${transactionHistory.length > 0 ? 'lg:border-b-2 border-[#fff]' : ''}`}>
             Transaction History
           </h1>
           {transactionHistory.length === 0 ? (

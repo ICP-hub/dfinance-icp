@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import React from "react";
 import {
   MY_ASSET_TO_SUPPLY_TABLE_COL,
@@ -10,7 +11,7 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
-import { useSelector } from "react-redux";
+
 import EModeButton from "./Emode";
 import Button from "../Button";
 import { Switch } from "@mui/material";
@@ -23,6 +24,7 @@ import PaymentDone from "./PaymentDone";
 import { useNavigate } from "react-router-dom";
 import Borrow from "./BorrowwPopup";
 import Repay from "./Repay";
+
 const MySupply = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState({
@@ -213,94 +215,109 @@ const MySupply = () => {
             </div>
 
             {/* Content for Mobile Screens */}
-            <div className="sm:block md:block lg:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-  {isSupplyVisible && (
-    <>
-      {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
-        noSupplyMessage
-      ) : (
-        <div className="overflow-auto mt-4">
-          {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
-            <div
-              key={index}
-              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText`}
-            >
-              <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                <img
-                  src={item.image}
-                  alt={item.asset}
-                  className="w-8 h-8 rounded-full dark:text-darkText"
-                />
-                <span className="text-sm font-semibold text-[#2A1F9D]">
-                  {item.asset}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
-                <p className="dark:text-darkTextSecondary">Wallet Balance:</p>
-                <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                  ${item.wallet_balance_count}M
-                </p>
-              </div>
-              <div className="flex justify-end text-xs mb-2 dark:text-darkText">
-                <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                  ${item.wallet_balance}M
-                </p>
-              </div>
-              <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
-                <p className="dark:text-darkTextSecondary">APY:</p>
-                <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                  {item.apy}%
-                </p>
-              </div>
-              <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
-                <p className="dark:text-darkTextSecondary">
-                  Can Be Collateral
-                </p>
-                <Switch
-                  sx={{
-                    "& .MuiSwitch-switchBase.Mui-checked": {
-                      color: "#fff",
-                    },
-                    "& .MuiSwitch-track": {
-                      backgroundColor: "#fff",
-                      boxShadow: "0 0 10px black",
-                    },
-                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                      backgroundColor: "#1939ea",
-                    },
-                  }}
-                />
-              </div>
-              <div className="flex justify-center gap-2 mt-2 mb-2">
-                <Button
-                  title={"Supply"}
-                  onClickHandler={() =>
-                    handleModalOpen("supply", item.asset, item.image)
-                  }
-                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg"
-                />
-                <Button
-                  title={"Withdraw"}
-                  onClickHandler={() =>
-                    handleModalOpen("withdraw", item.asset, item.image)
-                  }
-                  className={`w-[380px] sm:block md:block lg:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent`}
-                />
-              </div>
-              {index !== MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
-                <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+            <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+              {isSupplyVisible && (
+                <>
+                  {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+                    noSupplyMessage
+                  ) : (
+                    <div className="overflow-auto mt-4">
+                      {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map(
+                        (item, index) => (
+                          <div
+                            key={index}
+                            className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText`}
+                          >
+                            <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
+                              <img
+                                src={item.image}
+                                alt={item.asset}
+                                className="w-8 h-8 rounded-full dark:text-darkText"
+                              />
+                              <span className="text-sm font-semibold text-[#2A1F9D]">
+                                {item.asset}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
+                              <p className="dark:text-darkTextSecondary">
+                                Wallet Balance:
+                              </p>
+                              <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                                ${item.wallet_balance_count}M
+                              </p>
+                            </div>
+                            <div className="flex justify-end text-xs mb-2 dark:text-darkText">
+                              <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                                ${item.wallet_balance}M
+                              </p>
+                            </div>
+                            <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
+                              <p className="dark:text-darkTextSecondary">
+                                APY:
+                              </p>
+                              <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                                {item.apy}%
+                              </p>
+                            </div>
+                            <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
+                              <p className="dark:text-darkTextSecondary">
+                                Can Be Collateral
+                              </p>
+                              <Switch
+                                sx={{
+                                  "& .MuiSwitch-switchBase.Mui-checked": {
+                                    color: "#fff",
+                                  },
+                                  "& .MuiSwitch-track": {
+                                    backgroundColor: "#fff",
+                                    boxShadow: "0 0 10px black",
+                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                    {
+                                      backgroundColor: "#1939ea",
+                                    },
+                                }}
+                              />
+                            </div>
+                            <div className="flex justify-center gap-2 mt-2 mb-2">
+                              <Button
+                                title={"Supply"}
+                                onClickHandler={() =>
+                                  handleModalOpen(
+                                    "supply",
+                                    item.asset,
+                                    item.image
+                                  )
+                                }
+                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg"
+                              />
+                              <Button
+                                title={"Withdraw"}
+                                onClickHandler={() =>
+                                  handleModalOpen(
+                                    "withdraw",
+                                    item.asset,
+                                    item.image
+                                  )
+                                }
+                                className={`w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent`}
+                              />
+                            </div>
+                            {index !==
+                              MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
+                              <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
-          ))}
-        </div>
-      )}
-    </>
-  )}
-</div>
-
 
             {/* Content for Desktop Screens */}
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
                   {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
@@ -375,7 +392,7 @@ const MySupply = () => {
                                           item.image
                                         )
                                       }
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
                                     />
                                     <Button
                                       title={"Withdraw"}
@@ -386,8 +403,8 @@ const MySupply = () => {
                                           item.image
                                         )
                                       }
-                                      className="bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs "
-                                    />
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                       />
                                   </div>
                                 </td>
                               </tr>
@@ -424,7 +441,7 @@ const MySupply = () => {
               </button>
             </div>
             {/* mobile screen  */}
-            <div className="sm:block md:block lg:hidden  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+            <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
                   {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
@@ -473,7 +490,7 @@ const MySupply = () => {
                                 Can Be Coletral
                               </p>
                               <div className="w-full flex items-center justify-end mb-2 dark:text-darkText">
-                                <Check color={checkColor} size={16} />
+                                <Check color="#2A1F9D" size={16} />
                               </div>
                             </div>
                             <div className="flex  justify-center gap-2 mt-2">
@@ -494,7 +511,7 @@ const MySupply = () => {
                                 onClickHandler={() =>
                                   navigate("/dashboard/asset-details")
                                 }
-                                className={` w-[380px] sm:block md:block lg:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter
+                                className={` w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter
                                   
                                 }`}
                               />
@@ -513,7 +530,7 @@ const MySupply = () => {
             </div>
 
             {/* for desktop screen */}
-            <div className="hidden lg:block ">
+            <div className="hidden xl:block ">
               {isVisible &&
                 (MY_ASSET_TO_SUPPLY_TABLE_ROW.length === 0 ? (
                   noAssetsToSupplyMessage
@@ -580,9 +597,8 @@ const MySupply = () => {
                                     onClickHandler={() =>
                                       navigate("/dashboard/asset-details")
                                     }
-                                    className={
-                                      "bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
-                                    }
+                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      
                                   />
                                 </div>
                               </td>
@@ -626,7 +642,7 @@ const MySupply = () => {
             </div>
 
             {/* E-Mode section for mobile screens only */}
-            <div className="sm:block md:block lg:hidden flex flex-col items-start mt-2 ml-2">
+            <div className="md:block lgx:block xl:hidden flex flex-col items-start mt-2 ml-2">
               <div className="flex items-center space-x-4">
                 <span className="text-[#2A1F9D] opacity-50 font-semibold dark:text-darkText">
                   E-Mode
@@ -634,7 +650,7 @@ const MySupply = () => {
                 <EModeButton />
               </div>
             </div>
-            <div className="hidden lg:flex items-center space-x-4  ml-40 -mt-8">
+            <div className="hidden xl:flex items-center space-x-4  ml-40 -mt-8">
               <div className="flex items-center space-x-4">
                 <span className="text-[#2A1F9D] opacity-50 font-semibold dark:text-darkText">
                   E-Mode
@@ -648,7 +664,7 @@ const MySupply = () => {
                 {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
                   noBorrowMessage
                 ) : (
-                  <div className="sm:block md:block lg:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+                  <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                     <div className="overflow-auto ">
                       {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map(
                         (item, index) => (
@@ -716,7 +732,7 @@ const MySupply = () => {
                                     item.image
                                   )
                                 }
-                                className={` w-[380px] sm:block md:block lg:hidden z-20 px-4 py-[7px] shadow-md shadow-[#00000040] focus:outline-none box bg-transparent font-inter
+                                className={` w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] shadow-md shadow-[#00000040] focus:outline-none box bg-transparent font-inter
                                   
                                 }`}
                               />
@@ -735,16 +751,16 @@ const MySupply = () => {
             )}
 
             {/* desktop screen */}
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
                   {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
-                    noSupplyMessage
+                    noBorrowMessage
                   ) : (
-                    <div className="w-full overflow-auto mt-7">
+                    <div className="w-full overflow-auto md: mt-6 ">
                       <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                         <thead>
-                          <tr className="text-left text-[#233D63] text-xs  dark:text-darkTextSecondary1">
+                          <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 mt-10">
                             {MY_BORROW_ASSET_TABLE_COL.map((item, index) => (
                               <td key={index} className="p-3 whitespace-nowrap">
                                 {item.header}
@@ -786,12 +802,12 @@ const MySupply = () => {
                                   </div>
                                 </td>
                                 <td className="p-3 align-top">
-                                  <div className="w-full flex gap-2 pt-2">
+                                  <div className="w-full flex gap-2">
                                     <Button
-                                      title={"Supply"}
+                                      title={"Borrow"}
                                       onClickHandler={() =>
                                         handleModalOpen(
-                                          "supply",
+                                          "borrow",
                                           item.asset,
                                           item.image
                                         )
@@ -803,12 +819,13 @@ const MySupply = () => {
                                       onClickHandler={() =>
                                         handleModalOpen(
                                           "repay",
+                                          "repay",
                                           item.asset,
                                           item.image
                                         )
                                       }
-                                      className="bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5  font-semibold text-xs "
-                                    />
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      />
                                   </div>
                                 </td>
                               </tr>
@@ -849,7 +866,7 @@ const MySupply = () => {
                 {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
                   noBorrowMessage
                 ) : (
-                  <div className="sm:block md:block lg:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+                  <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                     <div className="overflow-auto ">
                       {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map(
                         (item, index) => (
@@ -907,7 +924,7 @@ const MySupply = () => {
                                 onClickHandler={() =>
                                   handleModalOpen("payment")
                                 }
-                                className={` w-[380px] sm:block md:block lg:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter
+                                className={` w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter
                                   
                                   }`}
                               />
@@ -1007,9 +1024,8 @@ const MySupply = () => {
                                       onClickHandler={() =>
                                         handleModalOpen("payment")
                                       }
-                                      className={
-                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
-                                      }
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      
                                     />
                                   </div>
                                 </td>
@@ -1078,9 +1094,8 @@ const MySupply = () => {
                                       onClickHandler={() =>
                                         handleModalOpen("payment")
                                       }
-                                      className={
-                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
-                                      }
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      
                                     />
                                   </div>
                                 </td>

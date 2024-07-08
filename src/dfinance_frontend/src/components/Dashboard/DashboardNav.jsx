@@ -102,7 +102,7 @@ const DashboardNav = () => {
     <div className="w-full ">
       <div className="w-full">
         <span
-          className="w-fit bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] p-2 mb-6 mt-2 whitespace-nowrap rounded-md text-xs flex items-center gap-2 text-white px-6 cursor-pointer hover:from-[#6575dd]"
+          className="w-fit bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] p-2 mb-6 mt-2 whitespace-nowrap rounded-lg text-xs flex items-center gap-2 text-white px-6 cursor-pointer hover:from-[#6575dd]"
           onClick={() => navigate(-1)}
         >
           <svg
@@ -227,7 +227,7 @@ const DashboardNav = () => {
                   ).map((data, index) => (
                     <div
                       key={index}
-                      className="relative group text-[#2A1F9D] p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+                      className="relative group text-[#2A1F9D] p-3 font-bold dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                       style={{ minWidth: "220px", flex: "1 0 220px" }} // Adjust minWidth and flex properties
                     >
                       <button className="relative w-full text-left flex justify-between items-center">
@@ -240,7 +240,7 @@ const DashboardNav = () => {
                 </div>
                 <div className="flex justify-end mt-14 md:mt-0">
                   <button
-                    className=" w-full py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-lg dark:text-darkText"
+                    className=" w-full py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-md dark:text-darkText"
                     onClick={handleOpenPopup}
                     style={{ minWidth: "220px" }} // Ensure button has consistent width
                   >

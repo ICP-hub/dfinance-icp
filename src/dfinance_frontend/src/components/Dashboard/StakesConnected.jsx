@@ -86,11 +86,11 @@ const StakesConnected = () => {
                                         <div className="grid grid-cols-2 items-center place-items-center mb-3 gap-6">
                                             <Button
                                                 title={"Claim"}
-                                                className="w-[128px] bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-4 py-[10px] shadow-xl text-[14px]"
+                                                className="w-full bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-4 py-[10px] shadow-xl text-[14px]"
                                             />
                                             <Button
                                                 title={"Restake"}
-                                                className="w-[128px] px-4 z-20  py-[10px] focus:outline-none shadow-xl box bg-transparent rounded-lg text-[14px]"
+                                                className="w-full px-4 z-20  py-[10px] focus:outline-none shadow-xl box bg-transparent rounded-lg text-[14px]"
                                             />
                                         </div>
                                         <div className="flex justify-between">
@@ -173,11 +173,11 @@ const StakesConnected = () => {
                                         <div className="grid grid-cols-2 items-center place-items-center mb-3 gap-6">
                                             <Button
                                                 title={"Claim"}
-                                                className="w-[128px] bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-4 py-[10px] shadow-xl text-[14px]"
+                                                className="w-full bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-4 py-[10px] shadow-xl text-[14px]"
                                             />
                                             <Button
                                                 title={"Restake"}
-                                                className="w-[128px] px-4 z-20  py-[10px] focus:outline-none shadow-xl box bg-transparent rounded-lg text-[14px]"
+                                                className="w-full px-4 z-20  py-[10px] focus:outline-none shadow-xl box bg-transparent rounded-lg text-[14px]"
                                             />
                                         </div>
                                         <div className="flex justify-between">

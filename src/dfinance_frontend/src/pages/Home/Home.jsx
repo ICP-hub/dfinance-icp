@@ -288,15 +288,16 @@ const Home = () => {
         </div>
       </div>
       {FAQ_QUESTION.filter(faq => faq.id === currentFAQ).map(faq => (
-  <div key={faq.id} className="hidden md:block animate-fadeInRight h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300">
+  <div key={faq.id} className="hidden md:block animate-fadeInLeft h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300">
     <h1 className="font-semibold mt-4">
       {faq.question}
     </h1>
-    <p className="mt-8  ">
+    <p className="mt-8">
       {faq.answer}
     </p>
   </div>
 ))}
+
 
         
       

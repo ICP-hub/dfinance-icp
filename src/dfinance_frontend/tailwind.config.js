@@ -50,7 +50,7 @@ export default {
         },
       },
       animation: {
-        fadeInRight: 'fadeInRight 2s ease forwards',
+        fadeInLeft: 'fadeInLeft 2s ease-out',
       },
       screens: {
         sxxs: "255px",

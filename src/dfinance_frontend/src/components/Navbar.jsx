@@ -427,7 +427,7 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : isAuthenticated ? (
               <div className="hidden lg:flex gap-3 sxs3:flex sxs3:ml-6 sm:ml-[280px] md:flex md:ml-[335px] sm4:ml-[180px] lg:ml-[540px]  dlg:ml-81 lg1:ml-0">
-                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-lg shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-md shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
                     className="flex items-center gap-2 p-2 px-3"
                     onClick={handleSwitchToken}
@@ -658,7 +658,7 @@ export default function Navbar({ isHomeNav }) {
                         <div className="w-full flex justify-center mt-3">
                           <button
                             onClick={handleTransaction}
-                            className=" w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                            className=" w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           >
                             Switch
                           </button>
@@ -667,9 +667,9 @@ export default function Navbar({ isHomeNav }) {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-md shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 p-2 px-3 overflow-hidden"
+                    className="flex items-center gap-1 p-2 px-3  overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -677,11 +677,11 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5"
                     />
-                    <span className=" sxxs:text-[10px] lg:text-[10px] lg1:text-[12px]">0x65.125s</span>
+                    <span className=" sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] ">0x65.125s</span>
                   </div>
 
                   {switchWalletDrop && (
-                    <div className="absolute p-4 top-full -left-[212px] mt-8 md:mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
+                    <div className="absolute p-4 top-full -left-[207px] mt-8 md:mt-4 rounded-xl bg-white   mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
                       <div className="w-full flex items-center gap-3 mt-2">
                         <img src={loader} alt="square" className="w-10 h-10" />
                         <h1 className="font-semibold text-2xl text-blue-800 dark:text-darkText">
@@ -692,12 +692,12 @@ export default function Navbar({ isHomeNav }) {
                       <div className="w-full flex justify-center mt-3 gap-3">
                         <Button
                           title="Switch Wallet"
-                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           onClickHandler={handleSwitchWallet}
                         />
                         <Button
                           title="Disconnect"
-                          className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           onClickHandler={handleLogout}
                         />
                       </div>
@@ -761,12 +761,12 @@ export default function Navbar({ isHomeNav }) {
                     {!isMobile && <img
                       src={settingsIcon}
                       alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block"
+                      className="object-contain w-[40px] h-[40px] cursor-pointer  sxs3:hidden md:block lg:block"
                       onClick={handleDropdownToggle}
                     />}
                     {dropdownVisible && (
-                      <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                        <h2 className="text-[12px] text-[#2A1F9D] font-light mb-4 dark:text-darkText">
+                      <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-4 bg-white text-[#2A1F9D]   rounded-xl shadow-md shadow-[#00000040] z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                        <h2 className="text-[16px] text-[#2A1F9D] font-poppins mb-2 ml-1.5 dark:text-darkText">
                           {" "}
                           Settings
                         </h2>
@@ -841,7 +841,7 @@ export default function Navbar({ isHomeNav }) {
                 <Button
                   title={"Connect Wallet"}
                   onClickHandler={handleWalletConnect}
-                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] px-8 shadow-xl shadow-[#00000040] font-semibold text-sm sxs3:px-8 sxs3:text-[11px] md:text-[12px]"}
+                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] px-8 shadow-md shadow-[#00000040] font-semibold text-sm sxs3:px-8 sxs3:text-[11px] md:text-[12px]"}
                 />
                 <div className="flex items-center justify-center">
                   <div className="relative">

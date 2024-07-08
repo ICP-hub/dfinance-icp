@@ -238,9 +238,9 @@ const DashboardNav = () => {
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-end mt-16 md:mt-0">
+                <div className="flex justify-end mt-14 md:mt-0">
                   <button
-                    className="py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-lg dark:text-darkText"
+                    className=" w-full py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-lg dark:text-darkText"
                     onClick={handleOpenPopup}
                     style={{ minWidth: "220px" }} // Ensure button has consistent width
                   >

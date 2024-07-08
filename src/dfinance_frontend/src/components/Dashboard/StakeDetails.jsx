@@ -77,11 +77,11 @@ const StakeDetails = () => {
                 </div>
                 <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
                     {(STACK_DETAILS_TABS).map((data, index) => (
-                        <div key={index} className="relative group ml-5">
+                        <div key={index} className="relative group ml-5 mb-5">
                             <button className="relative">
                                 {data.title}
                                 <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                                <span className="absolute top-full left-0 font-light py-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="absolute top-full left-0 font-light py-2 opacity-100  transition-opacity">
                                     {data.count}
                                 </span>
                             </button>

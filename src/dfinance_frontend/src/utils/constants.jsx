@@ -60,26 +60,21 @@ export const FOOTER_LINK_2 = [
   },
 ]
 export const HOME_TOP_NAV_LINK = [
+  
   {
     id: 0,
-    title: "Governance",
-    route: "/governance",
-    icon: "",
-  },
-  {
-    id: 1,
     title: "Market",
     route: "/market",
     icon: "",
   },
   {
-    id: 2,
+    id: 1,
     title: "Docs",
     route: "/docs",
     icon: "",
   },
   {
-    id: 3,
+    id: 2,
     title: "FAQ",
     route: "/#faq",
     icon: "",
@@ -96,36 +91,30 @@ export const DASHBOARD_TOP_NAV_LINK = [
     icon: "",
     alwaysPresent: true
   },
+  
   {
     id: 1,
-    title: "Governance",
-    route: "/governance",
-    icon: "",
-    alwaysPresent: true
-  },
-  {
-    id: 2,
     title: "Market",
     route: "/market",
     icon: "",
     alwaysPresent: true
   },
   {
-    id: 3,
+    id: 2,
     title: "Stake",
     route: "/stake",
     icon: "",
     testnet: false
   },
   {
-    id: 4,
+    id: 3,
     title: "Faq",
     route: "/#Faq",
     icon: "",
     testnet: false
   },
   {
-    id: 5,
+    id: 4,
     title: "Faucet",
     route: "/Faucet",
     icon: "",

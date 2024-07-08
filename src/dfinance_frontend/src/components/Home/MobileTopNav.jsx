@@ -44,7 +44,7 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
   }, [theme]);
 
   // Check screen size and conditionally render Drawer for mobile view
-  const isLargeScreen = useMediaQuery('(min-width: 1024px)');
+  const isLargeScreen = useMediaQuery('(min-width: 1134px)');
 
   if (isLargeScreen) {
     return null; // Return null if it's a large screen

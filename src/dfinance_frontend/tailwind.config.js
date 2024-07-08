@@ -77,6 +77,7 @@ export default {
         md3: "936px",
         lg: "976px",
         dlg: "1024px",
+        dlg1:"1028px",
         lg1: "1100px",
         lgx: "1134px",
         dxl: "1280px",

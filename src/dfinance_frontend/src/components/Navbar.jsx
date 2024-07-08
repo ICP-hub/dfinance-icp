@@ -43,7 +43,7 @@ import Group216 from "../../public/Group216.svg";
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 import Popup from "./Dashboard/Morepopup";
 export default function Navbar({ isHomeNav }) {
-  const isMobile = window.innerWidth <= 768; // Adjust the breakpoint as needed
+  const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
   const dispatch = useDispatch();
@@ -306,7 +306,7 @@ export default function Navbar({ isHomeNav }) {
       <ClickAwayListener onClickAway={handleClickAway}>
         <div className="w-full">
           <nav className="w-full py-4 lg:py-10  flex items-center justify-between">
-            <div className="lg:flex md:flex  justify-center items-center sxs3:block sxs3:mt-3">
+            <div className="lg:block lgx:block dxl:flex justify-center items-center sxs3:block sxs3:mt-3">
               <img
                 src={
                   theme === "dark"
@@ -347,7 +347,8 @@ export default function Navbar({ isHomeNav }) {
                 className="z-50 mt-20"
               />
             </div>
-            <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
+            {!isMobile && <>
+              <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
               {!isHomeNav
                 ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
                     if (link.alwaysPresent) {
@@ -410,10 +411,11 @@ export default function Navbar({ isHomeNav }) {
                     </NavLink>
                   ))}
             </div>
+            </>}
 
             {isHomeNav ? (
               <div className="flex gap-2">
-                <div className="sxs3:ml-7 lg:ml-0 md:ml-0 text-nowrap ">
+                <div className="sxs3:ml-7 md:ml-20rem lg:ml-[30rem] text-nowrap lg1:ml-0 sm4:ml-[180px] sm:ml-[280px]">
                   <Button
                     title={"Launch App"}
                     onClickHandler={handleLaunchApp}
@@ -424,13 +426,13 @@ export default function Navbar({ isHomeNav }) {
                 </div>
               </div>
             ) : isAuthenticated ? (
-              <div className="hidden lg:flex gap-3 sxs3:flex sxs3:ml-6">
+              <div className="hidden lg:flex gap-3 sxs3:flex sxs3:ml-6 sm:ml-[280px] md:flex md:ml-[335px] sm4:ml-[180px] lg:ml-[540px]  dlg:ml-81 lg1:ml-0">
                 <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-lg shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
                     className="flex items-center gap-2 p-2 px-3"
                     onClick={handleSwitchToken}
                   >
-                    <span className="sxs3:hidden lg:flex md:flex">
+                    <span className="hidden lg1:flex ">
                       Switch Token
                     </span>
                     <ArrowDownUp />
@@ -675,7 +677,7 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5"
                     />
-                    <span className="text-[12px]">0x65.125s</span>
+                    <span className=" sxxs:text-[10px] lg:text-[10px] lg1:text-[12px]">0x65.125s</span>
                   </div>
 
                   {switchWalletDrop && (
@@ -756,12 +758,12 @@ export default function Navbar({ isHomeNav }) {
                 </div>
                 <div className="flex items-center justify-center">
                   <div className="relative">
-                    <img
+                    {!isMobile && <img
                       src={settingsIcon}
                       alt="settings_icon"
                       className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block"
                       onClick={handleDropdownToggle}
-                    />
+                    />}
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-4 dark:text-darkText">
@@ -835,19 +837,20 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : (
               // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
-              <div className="flex md:gap-3 lg:gap-3 sxs3:gap-0">
+              <div className="flex md:gap-3 lg:gap-3 sxs3:gap-0 sxs3:flex sxs3:ml-0 sm:ml-[230px] md:flex md:ml-[290px] sm4:ml-[180px] lg:ml-[480px]  dlg:ml-81 lg1:ml-0">
                 <Button
                   title={"Connect Wallet"}
                   onClickHandler={handleWalletConnect}
+                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] px-8 shadow-xl shadow-[#00000040] font-semibold text-sm sxs3:px-8 sxs3:text-[11px] md:text-[12px]"}
                 />
                 <div className="flex items-center justify-center">
                   <div className="relative">
-                    <img
+                  {!isMobile &&  <img
                       src={settingsIcon}
                       alt="settings_icon"
                       className="object-contain w-[43px] h-[43px] cursor-pointer hidden lg:block md:block"
                       onClick={handleDropdownToggle}
-                    />
+                    />}
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-12 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText">

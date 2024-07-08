@@ -10,7 +10,7 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
-import { useSelector } from "react-redux";
+
 import EModeButton from "./Emode";
 import Button from "../Button";
 import { Switch } from "@mui/material";
@@ -23,7 +23,10 @@ import PaymentDone from "./PaymentDone";
 import { useNavigate } from "react-router-dom";
 import Borrow from "./BorrowwPopup";
 import Repay from "./Repay";
+
+
 const MySupply = () => {
+
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
@@ -40,8 +43,6 @@ const MySupply = () => {
       image: image,
     });
   };
-  const theme = useSelector((state) => state.theme.theme);
-  const checkColor = theme === 'dark' ? '#ffffff' : '#2A1F9D';
   const [activeSection, setActiveSection] = useState("supply");
   const [isVisible, setIsVisible] = useState(true);
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
@@ -162,21 +163,19 @@ const MySupply = () => {
     <div className="w-full flex-col lg:flex-row flex gap-6 mb-20">
       <div className="flex justify-center -mb-30 lg:hidden">
         <button
-          className={`w-1/2 py-2 -ml-20 -mt-1 ${
-            activeSection === "supply"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
-              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
-          }`}
+          className={`w-1/2 py-2 -ml-20 -mt-1 ${activeSection === "supply"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
+            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
+            }`}
           onClick={() => setActiveSection("supply")}
         >
           &#8226; Supply
         </button>
         <button
-          className={`w-1/2 py-1 -ml-20 mr-16 -mt-1 ${
-            activeSection === "borrow"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
-              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
-          }`}
+          className={`w-1/2 py-1 -ml-20 mr-16 -mt-1 ${activeSection === "borrow"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
+            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
+            }`}
           onClick={() => setActiveSection("borrow")}
         >
           &#8226; Borrow
@@ -185,14 +184,12 @@ const MySupply = () => {
 
       <div className="w-full lg:w-6/12 mt-6 md:mt-20">
         <div
-          className={`${
-            activeSection === "supply" ? "block" : "hidden"
-          } lg:block`}
+          className={`${activeSection === "supply" ? "block" : "hidden"
+            } lg:block`}
         >
           <div
-            className={`w-full ${
-              isSupplyVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full ${isSupplyVisible ? "min-h-[350px]" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             {/* Header */}
             <div className="flex justify-between items-center">
@@ -271,9 +268,9 @@ const MySupply = () => {
                                     boxShadow: "0 0 10px black",
                                   },
                                   "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                    {
-                                      backgroundColor: "#1939ea",
-                                    },
+                                  {
+                                    backgroundColor: "#1939ea",
+                                  },
                                 }}
                               />
                             </div>
@@ -306,8 +303,8 @@ const MySupply = () => {
                             </div>
                             {index !==
                               MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
-                              <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
-                            )}
+                                <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+                              )}
                           </div>
                         )
                       )}
@@ -360,7 +357,7 @@ const MySupply = () => {
                                     </p>
                                   </div>
                                 </td>
-                                <td className="p-3 align-top mt-1.5">{item.apy}</td>
+                                <td className="p-3 align-top">{item.apy}</td>
                                 <td className="p-3 align-top">
                                   <div className="w-full flex items-center justify-center">
                                     <Switch
@@ -373,9 +370,9 @@ const MySupply = () => {
                                           boxShadow: "0 0 10px black",
                                         },
                                         "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                          {
-                                            backgroundColor: "#1939ea",
-                                          },
+                                        {
+                                          backgroundColor: "#1939ea",
+                                        },
                                       }}
                                     />
                                   </div>
@@ -419,9 +416,8 @@ const MySupply = () => {
           </div>
 
           <div
-            className={`w-full mt-8 ${
-              isVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full mt-8 ${isVisible ? "min-h-[350px]" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -489,7 +485,7 @@ const MySupply = () => {
                                 Can Be Coletral
                               </p>
                               <div className="w-full flex items-center justify-end mb-2 dark:text-darkText">
-                                <Check color={checkColor} size={16} />
+                                <Check color="#2A1F9D" size={16} />
                               </div>
                             </div>
                             <div className="flex  justify-center gap-2 mt-2">
@@ -517,8 +513,8 @@ const MySupply = () => {
                             </div>
                             {index !==
                               MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
-                              <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
-                            )}
+                                <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+                              )}
                           </div>
                         )
                       )}
@@ -573,7 +569,7 @@ const MySupply = () => {
                               <td className="p-3 align-top">{item.apy}</td>
                               <td className="p-3 align-top">
                                 <div className="w-full flex items-center justify-center dark:text-darkText">
-                                <Check color={checkColor} size={16} />
+                                  <Check color={"#4659CF"} size={14} />
                                 </div>
                               </td>
                               <td className="p-3 align-top">
@@ -615,14 +611,12 @@ const MySupply = () => {
       </div>
       <div className="w-full lg:w-6/12 -mt-6 md:mt-20">
         <div
-          className={`${
-            activeSection === "borrow" ? "block" : "hidden"
-          } lg:block`}
+          className={`${activeSection === "borrow" ? "block" : "hidden"
+            } lg:block`}
         >
           <div
-            className={`w-full ${
-              isborrowVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full ${isborrowVisible ? "min-h-[350px]" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -739,8 +733,8 @@ const MySupply = () => {
                             </div>
                             {index !==
                               MY_BORROW_ASSET_TABLE_ROWS.length - 1 && (
-                              <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
-                            )}
+                                <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
+                              )}
                           </div>
                         )
                       )}
@@ -752,15 +746,15 @@ const MySupply = () => {
 
             {/* desktop screen */}
             <div className="hidden md:block">
-              {isSupplyVisible && (
+              {isborrowVisible && (
                 <>
                   {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
-                    noSupplyMessage
+                    noBorrowMessage
                   ) : (
-                    <div className="w-full overflow-auto mt-7">
+                    <div className="w-full overflow-auto md: mt-6 ">
                       <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                         <thead>
-                          <tr className="text-left text-[#233D63] text-xs  dark:text-darkTextSecondary1">
+                          <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 mt-10">
                             {MY_BORROW_ASSET_TABLE_COL.map((item, index) => (
                               <td key={index} className="p-3 whitespace-nowrap">
                                 {item.header}
@@ -793,35 +787,37 @@ const MySupply = () => {
                                     </p>
                                   </div>
                                 </td>
-                                <td className="p-3 align-top mt-1.5">{item.apy}</td>
+                                <td className="p-3 align-top">{item.apy}</td>
                                 <td className="p-3 align-top">
-                                  <div className="w-full flex items-center ">
                                   {item.apy_type}
-                                  </div>
                                 </td>
                                 <td className="p-3 align-top">
-                                  <div className="w-full flex gap-2 pt-2">
+                                  <div className="w-full flex gap-2">
                                     <Button
-                                      title={"Supply"}
+                                      title={"Borrow"}
                                       onClickHandler={() =>
                                         handleModalOpen(
-                                          "supply",
+                                          "borrow",
                                           item.asset,
                                           item.image
                                         )
                                       }
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                      className={
+                                        "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white  rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs"
+                                      }
                                     />
                                     <Button
-                                      title={"Withdraw"}
+                                      title={"Repay"}
                                       onClickHandler={() =>
                                         handleModalOpen(
-                                          "withdraw",
+                                          "repay",
                                           item.asset,
                                           item.image
                                         )
                                       }
-                                      className="bg-gradient-to-r text-white from-[#2A1F9D] to-[#4659CF] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs "
+                                      className={
+                                        "bg-gradient-to-r text-white from-[#4659CF] via-[#D379AB] to-[#FCBD78] rounded-md px-3 py-1.5 shadow-lg font-semibold text-xs font-inter"
+                                      }
                                     />
                                   </div>
                                 </td>
@@ -838,9 +834,8 @@ const MySupply = () => {
           </div>
 
           <div
-            className={`w-full mt-8 ${
-              isBorrowVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full mt-8 ${isBorrowVisible ? "min-h-[350px]" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -928,8 +923,8 @@ const MySupply = () => {
                             </div>
                             {index !==
                               MY_BORROW_ASSET_TABLE_ROWS.length - 1 && (
-                              <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
-                            )}
+                                <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
+                              )}
                           </div>
                         )
                       )}

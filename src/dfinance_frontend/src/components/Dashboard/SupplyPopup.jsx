@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Info, Check, Wallet } from "lucide-react"; // Ensure lucide-react is installed
+import { Info, Check, Wallet } from "lucide-react";
+import { useAuth } from "../../utils/useAuthClient";
+import { Principal } from "@dfinity/principal";
 
 const SupplyPopup = ({ asset, image, balance }) => {
-  const transactionFee = 0.01; // Example transaction fee
+  const transactionFee = 0.01;
   const hasEnoughBalance = balance >= transactionFee;
 
   const [amount, setAmount] = useState("0.00");
@@ -13,9 +15,31 @@ const SupplyPopup = ({ asset, image, balance }) => {
     setAmount(e.target.value);
   };
 
-  const handleApprove = () => {
+  const {
+    principal,
+    createLedgerActor,
+  } = useAuth()
+  const ledgerActor = createLedgerActor("avqkn-guaaa-aaaaa-qaaea-cai");
+
+  const handleApprove = async () => {
     console.log("Approve function called for", asset);
-    setIsApproved(true); // Change to true after approval
+    console.log("Ledger Actor", ledgerActor);
+    console.log(principal);
+    // setIsApproved(true); // Change to true after approval
+    const approve = await ledgerActor.icrc2_approve({
+      spender: {
+        owner: Principal.fromText(principal),
+        subaccount: [],
+      },
+      amount: 100,
+      from_subaccount: [],
+      fee: [],
+      memo: [],
+      created_at_time: [],
+      expected_allowance: [],
+      expires_at: []
+    });
+    console.log("Approve", approve);
     console.log("isApproved state after approval:", isApproved);
   };
 
@@ -126,7 +150,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
             isApproved ? handleSupplyETH() : handleApprove();
           }}
           className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
-          disabled={!hasEnoughBalance} // Disable button if balance is not enough
+        // disabled={!hasEnoughBalance} // Disable button if balance is not enough
         >
           {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
         </button>

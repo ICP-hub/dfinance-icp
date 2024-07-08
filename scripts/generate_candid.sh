@@ -11,6 +11,10 @@ function generate_did() {
 }
 
 
+
+# List of canisters to generate candid files for 
+# (comma separated list of canister names)
+
 CANISTERS=dfinance_backend
 
 for canister in $(echo $CANISTERS | sed "s/,/ /g")

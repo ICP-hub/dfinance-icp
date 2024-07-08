@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
+import { idlFactory as ledgerId } from "../../../declarations/icrc1_ckETH_ledger_canister";
 // import { BifinityConnector, BifinityWallet } from "./BifinityConnector"; 
 // Create a React context for authentication state
 const AuthContext = createContext();
@@ -248,7 +249,7 @@ export const useAuthClient = (options = defaultOptions) => {
     // Function to create an actor for interacting with the ledger
     const createLedgerActor = (canisterId) => {
         const agent = new HttpAgent({ identity });
-        return Actor.createActor(idlFactory, { agent, canisterId });
+        return Actor.createActor(ledgerId, { agent, canisterId });
     };
 
     // Function to refresh login without user interaction

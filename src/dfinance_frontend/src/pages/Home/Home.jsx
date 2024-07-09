@@ -220,69 +220,74 @@ const Home = () => {
         </section>
 
         {/* FAQ */}
-        <section className="mt-[44px] md:mt-24 " id="faq">
-          <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-            <div className="w-full">
-              <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
-                Frequently Asked Questions
-              </h1>
-            </div>
-            <div
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-              className="w-full md:grid grid-cols-2"
-            >
-              <div className="w-full relative z-10 flex h-auto md:h-auto items-center my-[29px]">
-                <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow md:relative rounded-xl overflow-hidden cursor-pointer dark:bg-darkFAQBackground">
-                  {FAQ_QUESTION.map((item, index) => (
-                    <div key={index} className="w-full dark:text-darkText">
-                      <div
-                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${currentFAQ === index
-                          ? "bg-[#eef0f5] dark:bg-currentFAQBackground"
-                          : ""
-                          } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
-                        onClick={() => setCurrentFAQ(index)}
-                      >
-                        <div className="w-1/12">
-                          <div
-                            className={`w-4 h-4 rounded-full ${currentFAQ === index
-                              ? "bg-[#517687] dark:bg-darkText"
-                              : "bg-[#DBE8EE] dark:bg-[#192C35]"
-                              }`}
-                          ></div>
-                        </div>
-                        <div className="w-10/12">{item.question}</div>
-                        <div
-                          className={`w-1/12 ${currentFAQ === index
-                            ? "text-[#517687] dark:text-darkText rotate-90 md:rotate-0"
-                            : "text-[#DBE8EE] dark:text-[#192C35]"
-                            } flex justify-end`}
-                        >
-                          <ChevronRight />
-                        </div>
-                      </div>
-                      {currentFAQ === index && (
-                        <div
-                          className={`block animate-fade-down md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${currentFAQ === index ? "opacity-100" : "opacity-0"
-                            }`}
-                        >
-                          <p>{item.answer}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+       <section className="mt-[44px] md:mt-24 " id="faq">
+  <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+    <div className="w-full">
+      <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
+        Frequently Asked Questions
+      </h1>
+    </div>
+    <div
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className="w-full md:grid grid-cols-2"
+    >
+      <div className="w-full relative z-10 flex h-auto md:h-auto items-center my-[29px]">
+        <div className="w-full text-[12px] md:text-[15px] md:w-[115%] bg-white shadow md:relative rounded-xl overflow-hidden cursor-pointer dark:bg-darkFAQBackground">
+          {FAQ_QUESTION.map((item, index) => (
+            <div key={index} className="w-full dark:text-darkText">
+              <div
+                className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${
+                  currentFAQ === index
+                    ? "bg-[#eef0f5] dark:bg-currentFAQBackground"
+                    : ""
+                } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
+                onClick={() => setCurrentFAQ(index)}
+              >
+                <div className="w-1/12">
+                  <div
+                    className={`w-4 h-4 rounded-full ${
+                      currentFAQ === index
+                        ? "bg-[#517687] dark:bg-darkText"
+                        : "bg-[#DBE8EE] dark:bg-[#192C35]"
+                    }`}
+                  ></div>
+                </div>
+                <div className="w-10/12">{item.question}</div>
+                <div
+                  className={`w-1/12 ${
+                    currentFAQ === index
+                      ? "text-[#517687] dark:text-darkText rotate-90 md:rotate-0"
+                      : "text-[#DBE8EE] dark:text-[#192C35]"
+                  } flex justify-end`}
+                >
+                  <ChevronRight />
                 </div>
               </div>
-              {FAQ_QUESTION.filter(faq => faq.id === currentFAQ).map(faq => (
-                <div key={faq.id} className="hidden md:block animate-fadeInRight h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300">
-                  <h1 className="font-semibold mt-4">
-                    {faq.question}
-                  </h1>
-                  <p className="mt-8  ">
-                    {faq.answer}
-                  </p>
+              {currentFAQ === index && (
+                <div
+                  className={`block animate-fade-down md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
+                    currentFAQ === index ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  <p>{item.answer}</p>
                 </div>
-              ))}
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+      {FAQ_QUESTION.filter(faq => faq.id === currentFAQ).map(faq => (
+  <div key={faq.id} className="hidden md:block animate-fadeInLeft h-full text-[15px] ml-[-30px] bg-[#FAFBFF] rounded-xl text-black pl-[10%] p-6 dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300">
+    <h1 className="font-semibold mt-4">
+      {faq.question}
+    </h1>
+    <p className="mt-8">
+      {faq.answer}
+    </p>
+  </div>
+))}
+
 
 
 

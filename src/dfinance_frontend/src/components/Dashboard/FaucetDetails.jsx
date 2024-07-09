@@ -89,7 +89,7 @@ const FaucetDetails = () => {
                       <div className="w-full flex justify-end align-center">
                         <Button
                           title={"Faucet"}
-                          className="mb-7 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-3 py-1 shadow-xl shadow-black/20 font-semibold text-sm sxs3:px-6 font-inter"
+                          className="mb-7 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-3 py-1 shadow-md shadow-black/40 font-semibold text-sm sxs3:px-6 font-inter"
                           onClickHandler={() => handleFaucetClick(item.asset, item.image)}
                         />
                       </div>

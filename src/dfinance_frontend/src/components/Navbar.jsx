@@ -622,7 +622,7 @@ export default function Navbar({ isHomeNav }) {
                               <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4  dark:text-darkText">
                                 Transaction Overlay
                               </h2>
-                              <div className="border border-gray-300 rounded-lg shadow-md top-full left-0 mt-2 p-6">
+                              <div className="border border-gray-300 rounded-xl shadow-md top-full left-0 mt-2 p-6">
                                 <p>
                                   Min 1INCH Received:{" "}
                                   {selectedToken === "ETH"
@@ -671,7 +671,7 @@ export default function Navbar({ isHomeNav }) {
                         <div className="w-full flex justify-center mt-3">
                           <button
                             onClick={handleTransaction}
-                            className=" w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                            className=" w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           >
                             Switch
                           </button>
@@ -680,9 +680,9 @@ export default function Navbar({ isHomeNav }) {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 my-2 -mr-1 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-xl shadow-md shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 p-2 px-3 overflow-hidden"
+                    className="flex items-center gap-1 p-2 px-3  overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -694,7 +694,7 @@ export default function Navbar({ isHomeNav }) {
                   </div>
 
                   {switchWalletDrop && (
-                    <div className="absolute p-4 top-full -left-[212px] mt-8 md:mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
+                    <div className="absolute p-4 top-full -left-[207px] mt-8 md:mt-4 rounded-xl bg-white   mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
                       <div className="w-full flex items-center gap-3 mt-2">
                         <img src={loader} alt="square" className="w-10 h-10" />
                         <h1 className="font-semibold text-2xl text-blue-800 dark:text-darkText">
@@ -705,12 +705,12 @@ export default function Navbar({ isHomeNav }) {
                       <div className="w-full flex justify-center mt-3 gap-3">
                         <Button
                           title="Switch Wallet"
-                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           onClickHandler={handleSwitchWallet}
                         />
                         <Button
                           title="Disconnect"
-                          className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           onClickHandler={handleLogout}
                         />
                       </div>
@@ -719,7 +719,7 @@ export default function Navbar({ isHomeNav }) {
                         {/* First Container */}
                         <div className="flex justify-center">
                           <div
-                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative dark:border-currentFAQBackground"
+                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                             style={{ height: "70px", width: "160px" }}
                           >
                             <span
@@ -744,7 +744,7 @@ export default function Navbar({ isHomeNav }) {
                         {/* Second Container */}
                         <div className="flex justify-center">
                           <div
-                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative dark:border-currentFAQBackground"
+                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                             style={{ height: "70px", width: "160px" }}
                           >
                             <button

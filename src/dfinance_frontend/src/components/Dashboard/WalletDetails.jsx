@@ -173,7 +173,7 @@ const WalletDetails = () => {
                 {currentItems.map((item, index) => (
                   <tr
                     key={index}
-                    className={`w-full font-bold hover:bg-[#ddf5ff8f] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
+                    className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
                     <td className="p-3 align-top">
                       <div className="w-full flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mr-1 mt-2">

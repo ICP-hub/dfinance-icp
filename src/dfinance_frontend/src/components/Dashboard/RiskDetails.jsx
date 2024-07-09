@@ -8,7 +8,7 @@ import {
     currentLTVThreshold, 
     liquidationThresholdLabel 
 } from '../../utils/constants';
-
+import { X } from 'lucide-react';
 const RiskPopup = ({ onClose }) => {
     const popupRef = useRef(null);
 
@@ -30,12 +30,12 @@ const RiskPopup = ({ onClose }) => {
             <div className="absolute inset-0 bg-black opacity-50"></div>
             <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg max-w-3xl mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
                 {/* Close button */}
-                <button
-                    className="text-gray-600 hover:text-gray-900 absolute top-4 right-4"
+                <div
+      className="w-11 h-11   text-gray-600 hover:text-gray-900 absolute top-4 right-4"
                     onClick={onClose}
-                >
-                    &times;
-                </button>
+    >
+      <X className="text-white w-6 h-6" />
+    </div>
                 <div className="px-6 py-4">
                     <div className="flex justify-between items-center pb-3">
                         <h3 className="text-lg font-semibold text-center w-full text-[#4659CF] dark:text-darkText">Liquidation Risk Parameters</h3>

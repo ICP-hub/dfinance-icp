@@ -11,7 +11,7 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
-
+import CustomizedSwitches from "../MaterialUISwitch";
 import EModeButton from "./Emode";
 import Button from "../Button";
 import { Switch } from "@mui/material";
@@ -263,21 +263,8 @@ const MySupply = () => {
                               <p className="dark:text-darkTextSecondary">
                                 Can Be Collateral
                               </p>
-                              <Switch
-                                sx={{
-                                  "& .MuiSwitch-switchBase.Mui-checked": {
-                                    color: "#fff",
-                                  },
-                                  "& .MuiSwitch-track": {
-                                    backgroundColor: "#fff",
-                                    boxShadow: "0 0 10px black",
-                                  },
-                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                    {
-                                      backgroundColor: "#1939ea",
-                                    },
-                                }}
-                              />
+                              <CustomizedSwitches 
+                               />
                             </div>
                             <div className="flex justify-center gap-2 mt-2 mb-2">
                               <Button
@@ -339,7 +326,7 @@ const MySupply = () => {
                             (item, index) => (
                               <tr
                                 key={index}
-                                className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                                className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                               >
                                 <td className="p-3 align-top">
                                   <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
@@ -364,21 +351,9 @@ const MySupply = () => {
                                 </td>
                                 <td className="p-3 align-top">
                                   <div className="w-full flex items-center justify-center">
-                                    <Switch
-                                      sx={{
-                                        "& .MuiSwitch-switchBase.Mui-checked": {
-                                          color: "#fff",
-                                        },
-                                        "& .MuiSwitch-track": {
-                                          backgroundColor: "#fff",
-                                          boxShadow: "0 0 10px black",
-                                        },
-                                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                          {
-                                            backgroundColor: "#1939ea",
-                                          },
-                                      }}
-                                    />
+                                    
+                                    <CustomizedSwitches 
+                               />
                                   </div>
                                 </td>
                                 <td className="p-3 align-top">
@@ -403,7 +378,7 @@ const MySupply = () => {
                                           item.image
                                         )
                                       }
-                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D]  rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                        />
                                   </div>
                                 </td>
@@ -551,7 +526,7 @@ const MySupply = () => {
                           (item, index) => (
                             <tr
                               key={index}
-                              className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                              className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                             >
                               <td className="p-3 align-top">
                                 <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
@@ -578,7 +553,7 @@ const MySupply = () => {
                                 </div>
                               </td>
                               <td className="p-3 align-top">
-                                <div className="w-full flex gap-2 ">
+                                <div className="w-full flex gap-2  ">
                                   <Button
                                     title={"Supply"}
                                     onClickHandler={() =>
@@ -597,7 +572,7 @@ const MySupply = () => {
                                     onClickHandler={() =>
                                       navigate("/dashboard/asset-details")
                                     }
-                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D]  rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                       
                                   />
                                 </div>
@@ -773,9 +748,9 @@ const MySupply = () => {
                             (item, index) => (
                               <tr
                                 key={index}
-                                className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                                className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                               >
-                                <td className="p-3 align-top">
+                                <td className="p-3 align-top mb-1">
                                   <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
                                     <img
                                       src={item.image}
@@ -793,16 +768,16 @@ const MySupply = () => {
                                     </p>
                                   </div>
                                 </td>
-                                <td className="p-3 align-top mb-3">
+                                <td className="p-3 align-top ">
                                   {item.apy}
                                 </td>
                                 <td className="p-3 align-top">
-                                  <div className="w-full flex mt-2.5  ">
+                                  <div className="w-full flex mt-2.5 ">
                                     {item.apy_type}
                                   </div>
                                 </td>
                                 <td className="p-3 align-top">
-                                  <div className="w-full flex gap-2">
+                                  <div className="w-full flex gap-2 pt-2.5">
                                     <Button
                                       title={"Borrow"}
                                       onClickHandler={() =>
@@ -824,7 +799,7 @@ const MySupply = () => {
                                           item.image
                                         )
                                       }
-                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D]  rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                       />
                                   </div>
                                 </td>
@@ -946,8 +921,8 @@ const MySupply = () => {
             <div className="hidden lg:block">
               {isBorrowVisible && (
                 <>
-                  <div className="bg-[#AEADCB] mt-2 px-2 py-2 rounded-lg flex items-center mb-2">
-                    <span className="text-white ms-4 text-sm">
+                  <div className="bg-[#AEADCB] opacity-80 mt-2 px-2 py-2 rounded-lg flex items-center mb-2">
+                    <span className="text-white dark:text-darkText ms-4 text-sm">
                       To borrow you need to supply any asset to be used as
                       collateral.
                     </span>
@@ -972,7 +947,7 @@ const MySupply = () => {
                             (item, index) => (
                               <tr
                                 key={index}
-                                className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                                className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                               >
                                 <td className="p-3 align-top">
                                   <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
@@ -1024,7 +999,7 @@ const MySupply = () => {
                                       onClickHandler={() =>
                                         handleModalOpen("payment")
                                       }
-                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D]  rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                       
                                     />
                                   </div>
@@ -1053,7 +1028,7 @@ const MySupply = () => {
                             (item, index) => (
                               <tr
                                 key={index}
-                                className="w-full font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs"
+                                className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                               >
                                 <td className="p-3 align-top">
                                   <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
@@ -1094,7 +1069,7 @@ const MySupply = () => {
                                       onClickHandler={() =>
                                         handleModalOpen("payment")
                                       }
-                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] opacity-60 rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D]  rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                       
                                     />
                                   </div>

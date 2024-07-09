@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { X } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -9,18 +9,18 @@ const TestnetModePopup = ({ onClose, setIsTestnetMode }) => {
     setIsTestnetMode(false); // Update state to disable Testnet mode
     localStorage.removeItem("isTestnetMode"); // Remove Testnet mode from localStorage
     onClose(); // Close the popup after disabling Testnet mode
-    toast.success('Testnet mode disabled successfully!');
+    toast.info('Testnet mode disabled successfully!');
   };
 
   return (
-    <div className="absolute left-[45px] top-[120px] mt-2 w-80 flex items-center justify-center z-50">
+    <div className="absolute left-[48px] top-[100px] mt-2 w-80 flex items-center justify-center z-50">
       <div className="bg-white border rounded-lg shadow-lg p-6 relative w-full flex flex-col justify-between dark:bg-darkBackground dark:text-darkText">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-        >
-          &times;
-        </button>
+      <div
+      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+      onClick={onClose}
+    >
+      <X className="text-black w-6 h-6" />
+    </div>
         <div className='dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd dark:text-darkText'>
           <h2 className="text-xl font-semibold mb-4 dark:text-darkText">Testnet Mode is ON</h2>
           <p className="text-gray-700 mb-4 dark:text-darkText">

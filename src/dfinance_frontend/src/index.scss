@@ -174,11 +174,11 @@ body{
 .bouncing-div > div:nth-child(3) {
   animation-delay: 0.3s;
 }
-
-@keyframes fadeInRight {
+/* styles.css or your custom CSS file */
+@keyframes fadeInLeft {
   0% {
     opacity: 0;
-    transform: translateX(20px); /* Start slightly off-screen to the right */
+    transform: translateX(-20px); /* Start slightly off-screen to the left */
   }
   100% {
     opacity: 1;
@@ -186,6 +186,7 @@ body{
   }
 }
 
-.animate-fade-in-right {
-  animation: fadeInRight 0.5s ease forwards; /* Adjust duration (0.5s) and timing function (ease) as needed */
+.animate-fade-in-left {
+  animation: fadeInLeft 0.5s ease forwards; /* Adjust duration (0.5s) and timing function (ease) as needed */
 }
+

@@ -11,6 +11,7 @@ import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "./Button";
+
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -42,6 +43,7 @@ import Vector from "../../public/Vector.svg";
 import Group216 from "../../public/Group216.svg";
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 import Popup from "./Dashboard/Morepopup";
+
 export default function Navbar({ isHomeNav }) {
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
   const renderThemeToggle = !isMobile;
@@ -53,9 +55,40 @@ export default function Navbar({ isHomeNav }) {
   );
   const theme = useSelector((state) => state.theme.theme);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
+  
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const handleCloseDropdownOnScroll = () => {
+    setSwitchTokenDrop(false);
+    setSwitchWalletDrop(false);
+    setIsPopupVisible(false);
+    setDropdownVisible(false);
+    // You can add similar logic for other dropdowns if needed
+  };
+
+  useEffect(() => {
+    // Add event listener for scroll to window or container
+    window.addEventListener('scroll', handleCloseDropdownOnScroll);
+
+    // Clean up the event listener on unmount
+    return () => {
+      window.removeEventListener('scroll', handleCloseDropdownOnScroll);
+    };
+  }, []);
+  
+const navigate = useNavigate();
+const location = useLocation();
+
+useEffect(() => {
+  // Close the switchWalletDrop dropdown when location changes
+  setSwitchWalletDrop(false);
+  setSwitchTokenDrop(false);
+  setShowTestnetPopup(false);
+    setIsPopupVisible(false);
+    setDropdownVisible(false);
+}, [location]);
+
+  
+;
   const [ethValue, setEthValue] = useState("0.00");
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -130,6 +163,11 @@ export default function Navbar({ isHomeNav }) {
   const handleButtonClick = () => {
     setShowTestnetPopup(true);
     console.log("kjfsh");
+    setDropdownVisible(false);
+    setSwitchTokenDrop(false);
+    setSwitchWalletDrop(false);
+    
+    setIsPopupVisible(false);
   };
 
   const handleClosePopup = () => {
@@ -140,6 +178,7 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
+    setShowTestnetPopup(false);
   };
 
   const handleSwitchWallet = () => {
@@ -150,6 +189,7 @@ export default function Navbar({ isHomeNav }) {
       setSwitchTokenDrop(false);
       setDropdownVisible(false);
       setIsPopupVisible(false);
+      setShowTestnetPopup(false);
     }
   };
 
@@ -229,8 +269,9 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible((prevVisible) => !prevVisible);
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
-
+    setShowTestnetPopup(false);
     setIsPopupVisible(false);
+    
   };
 
   const handleTestnetModeToggle = () => {
@@ -238,6 +279,7 @@ export default function Navbar({ isHomeNav }) {
     if (isTestnetMode) {
       navigate("/dashboard");
     }
+    
   };
 
   const hash = window.location.hash;
@@ -344,7 +386,7 @@ export default function Navbar({ isHomeNav }) {
                 transition:Bounce
                 pauseOnHover
                 theme={isDarkMode ? "dark" : "light"} 
-                className="z-50 mt-20"
+                className="z-50 mt-6 -ml-6"
               />
             </div>
             {!isMobile && <>
@@ -735,7 +777,7 @@ export default function Navbar({ isHomeNav }) {
                             style={{ height: "70px", width: "160px" }}
                           >
                             <button
-                              className="text-blue-800 hover:text-gray-800 flex items-center -ml-2 dark:text-darkTextSecondary"
+                              className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
                               onClick={handleCopyAddress}
                             >
                               <GrCopy className="h-5 w-4" />
@@ -765,7 +807,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={handleDropdownToggle}
                     />}
                     {dropdownVisible && (
-                      <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-4 bg-white text-[#2A1F9D]   rounded-xl shadow-md shadow-[#00000040] z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                      <div className="absolute w-[280px] top-[50px] right-0 mt-2 p-4 bg-white text-[#2A1F9D]   rounded-xl shadow-md shadow-[#00000040] z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-[16px] text-[#2A1F9D] font-poppins mb-2 ml-1.5 dark:text-darkText">
                           {" "}
                           Settings

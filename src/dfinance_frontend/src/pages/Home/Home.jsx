@@ -12,27 +12,13 @@ import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
 import Loading from "../../components/Loading";
 import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA } from "../../utils/constants"; // Assuming TAB_CARD_DATA is imported from the same place as other constants
+import { usePageLoading } from "../../components/useLoading";
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const theme = useSelector((state) => state.theme.theme);
-  const [isLoading, setIsLoading] = useState(true);
+  const isLoading = usePageLoading();
 
-  useEffect(() => {
-    const handleDOMContentLoaded = () => {
-      setIsLoading(false);
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
-    } else {
-      handleDOMContentLoaded();
-    }
-    
-    return () => {
-      document.removeEventListener('DOMContentLoaded', handleDOMContentLoaded);
-    };
-  }, []);
 
   const [currentFAQ, setCurrentFAQ] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -91,9 +77,13 @@ const Home = () => {
 
   const visibleCards = isMobile ? TAB_CARD_DATA.slice(0, 4) : TAB_CARD_DATA;
 
+  if (isLoading) {
+    return <Loading isLoading={isLoading} />
+  }
+  
   return (
     <>
-    <Loading isLoading={isLoading} />
+
       {/* Main Home Page */}
       <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden font-poppins">
         {/* Background Overlay Ellipse */}
@@ -299,11 +289,11 @@ const Home = () => {
 ))}
 
 
-        
-      
-    </div>
-  </div>
-</section>
+
+
+            </div>
+          </div>
+        </section>
 
 
         {/* Background Overlay Ellipse */}

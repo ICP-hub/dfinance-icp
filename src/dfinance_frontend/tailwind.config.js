@@ -55,11 +55,7 @@ export default {
         "tableHeading": '#233D63',
 
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
+     
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -107,7 +103,7 @@ export default {
       },
       placeholderColor: ['responsive', 'focus', 'hover'], 
       keyframes: {
-        fadeInRight: {
+        fadeInLeft: {
           '0%': {
             opacity: '0',
             transform: 'translateX(60px)',
@@ -119,7 +115,7 @@ export default {
         },
       },
       animation: {
-        fadeInRight: 'fadeInRight 2s ease forwards',
+        fadeInLeft: 'fadeInLeft 2s ease-out',
       },
       screens: {
         sxxs: "255px",

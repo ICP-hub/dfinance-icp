@@ -11,7 +11,7 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
-
+import CustomizedSwitches from "../MaterialUISwitch";
 import EModeButton from "./Emode";
 import Button from "../Button";
 import { Switch } from "@mui/material";
@@ -263,21 +263,8 @@ const MySupply = () => {
                               <p className="dark:text-darkTextSecondary">
                                 Can Be Collateral
                               </p>
-                              <Switch
-                                sx={{
-                                  "& .MuiSwitch-switchBase.Mui-checked": {
-                                    color: "#fff",
-                                  },
-                                  "& .MuiSwitch-track": {
-                                    backgroundColor: "#fff",
-                                    boxShadow: "0 0 10px black",
-                                  },
-                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                    {
-                                      backgroundColor: "#1939ea",
-                                    },
-                                }}
-                              />
+                              <CustomizedSwitches 
+                               />
                             </div>
                             <div className="flex justify-center gap-2 mt-2 mb-2">
                               <Button
@@ -364,21 +351,9 @@ const MySupply = () => {
                                 </td>
                                 <td className="p-3 align-top">
                                   <div className="w-full flex items-center justify-center">
-                                    <Switch
-                                      sx={{
-                                        "& .MuiSwitch-switchBase.Mui-checked": {
-                                          color: "#fff",
-                                        },
-                                        "& .MuiSwitch-track": {
-                                          backgroundColor: "#fff",
-                                          boxShadow: "0 0 10px black",
-                                        },
-                                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                          {
-                                            backgroundColor: "#1939ea",
-                                          },
-                                      }}
-                                    />
+                                    
+                                    <CustomizedSwitches 
+                               />
                                   </div>
                                 </td>
                                 <td className="p-3 align-top">

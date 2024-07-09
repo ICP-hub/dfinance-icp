@@ -11,9 +11,9 @@
     "start": "npm start --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
     "generate": "scripts/generate_did.sh && dfx generate dfinance_backend",
-    "deployToken" : "./deployments/deployckETH.sh",
-    "deployDtoken" : "deployments/deployLpToken.sh",
-    "allow" : "chmod +x ./deployments/deployckETH.sh && chmod +x ./deployments/deployLpToken.sh"
+    "deployToken": "./deployments/deployckETH.sh",
+    "deployDtoken": "deployments/deployLpToken.sh",
+    "allow": "chmod +x ./deployments/deployckETH.sh && chmod +x ./deployments/deployLpToken.sh"
   },
   "type": "module",
   "workspaces": [
@@ -32,6 +32,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "aos": "^2.3.4",
     "chart.js": "^4.4.2",
+    "ic-auth": "^0.9.1",
     "lucide-react": "^0.367.0",
     "react-chartjs-2": "^5.2.0",
     "react-icons": "^5.2.1",

@@ -4,25 +4,23 @@ import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
 import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
+// import { Artemis } from 'artemis-web3-adapter';
+
+// const connectObj = { whitelist: ['ryjl3-tyaaa-aaaaa-aaaba-cai'], host: 'https://icp0.io/' }
+
+// const artemisWalletAdapter = new Artemis(connectObj);
+
 
 // Create a React context for authentication state
 const AuthContext = createContext();
 
-
-
 const defaultOptions = {
-    /**
-     *  @type {import("@dfinity/auth-client").AuthClientCreateOptions}
-     */
     createOptions: {
         idleOptions: {
-            idleTimeout: 1000 * 60 * 30, // set to 30 minutes
-            disableDefaultIdleCallback: true, // disable the default reload behavior
+            idleTimeout: 1000 * 60 * 30,
+            disableDefaultIdleCallback: true,
         },
     },
-    /**
-     * @type {import("@dfinity/auth-client").AuthClientLoginOptions}
-     */
     loginOptionsii: {
         identityProvider:
             process.env.DFX_NETWORK === "ic"
@@ -35,13 +33,12 @@ const defaultOptions = {
                 ? `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
                 : `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
     },
-
     loginOptionsbifinity: {
         // identityProvider: `https://bifinity.com/authenticate/?applicationName=my-ic-app#authorize`,
     },
 };
 
-// Custom hook to manage authentication with Internet Identity
+// Custom hook to manage authentication with Internet Identity and wallet connection
 export const useAuthClient = (options = defaultOptions) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [accountIdString, setAccountIdString] = useState("");
@@ -50,9 +47,9 @@ export const useAuthClient = (options = defaultOptions) => {
     const [principal, setPrincipal] = useState(null);
     const [backendActor, setBackendActor] = useState(null);
     const [accountId, setAccountId] = useState(null);
+    const [walletConnected, setWalletConnected] = useState(false);
 
     useEffect(() => {
-        // On component mount, create an authentication client
         AuthClient.create(options.createOptions).then((client) => {
             setAuthClient(client);
         });
@@ -64,7 +61,6 @@ export const useAuthClient = (options = defaultOptions) => {
         }
     }, [authClient]);
 
-    // Helper function to convert binary data to a hex string
     const toHexString = (byteArray) => {
         return Array.from(byteArray, (byte) => ("0" + (byte & 0xff).toString(16)).slice(-2)).join("");
     };
@@ -106,7 +102,6 @@ export const useAuthClient = (options = defaultOptions) => {
         }
     };
 
-    // Function to handle logout
     const logout = async () => {
         try {
             await authClient.logout();
@@ -115,6 +110,7 @@ export const useAuthClient = (options = defaultOptions) => {
             setPrincipal(null);
             setBackendActor(null);
             setAccountId(null);
+            setWalletConnected(false);
 
             window.location.reload();
         } catch (error) {
@@ -122,7 +118,6 @@ export const useAuthClient = (options = defaultOptions) => {
         }
     };
 
-    // Update client state after authentication
     const updateClient = async (client) => {
         try {
             const isAuthenticated = await client.isAuthenticated();
@@ -141,18 +136,21 @@ export const useAuthClient = (options = defaultOptions) => {
             const agent = new HttpAgent({ identity });
             const backendActor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, { agent });
             setBackendActor(backendActor);
+
+            // Connect to wallet using Artemis
+            // const wallet = await Artemis(connectC);
+            // setWalletConnected(wallet.isConnected());
+
         } catch (error) {
             console.error("Authentication update error:", error);
         }
     };
 
-    // Function to create an actor for interacting with the ledger
     const createLedgerActor = (canisterId) => {
         const agent = new HttpAgent({ identity });
         return Actor.createActor(ledgerIdlFactory, { agent, canisterId });
     };
 
-    // Function to refresh login without user interaction
     const reloadLogin = async () => {
         try {
             if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
@@ -177,6 +175,7 @@ export const useAuthClient = (options = defaultOptions) => {
         createLedgerActor,
         reloadLogin,
         accountIdString,
+        walletConnected,
     };
 };
 

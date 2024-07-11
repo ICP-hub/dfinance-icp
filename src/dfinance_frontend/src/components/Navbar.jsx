@@ -43,6 +43,7 @@ import Vector from "../../public/Vector.svg";
 import Group216 from "../../public/Group216.svg";
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 import Popup from "./Dashboard/Morepopup";
+import { Artemis } from 'artemis-web3-adapter';
 
 import CustomizedSwitches from "./MaterialUISwitch";
 export default function Navbar({ isHomeNav }) {
@@ -56,7 +57,13 @@ export default function Navbar({ isHomeNav }) {
   );
   const theme = useSelector((state) => state.theme.theme);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
-  
+
+  const connectObj = { whitelist: ['ryjl3-tyaaa-aaaaa-aaaba-cai'], host: 'https://icp0.io/' }
+
+  const artemisWalletAdapter = new Artemis(connectObj);
+
+  // console.log(artemisWalletAdapter.connect("metamask"))
+
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const handleCloseDropdownOnScroll = () => {
     setSwitchTokenDrop(false);
@@ -75,21 +82,21 @@ export default function Navbar({ isHomeNav }) {
       window.removeEventListener('scroll', handleCloseDropdownOnScroll);
     };
   }, []);
-  
-const navigate = useNavigate();
-const location = useLocation();
 
-useEffect(() => {
-  // Close the switchWalletDrop dropdown when location changes
-  setSwitchWalletDrop(false);
-  setSwitchTokenDrop(false);
-  setShowTestnetPopup(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Close the switchWalletDrop dropdown when location changes
+    setSwitchWalletDrop(false);
+    setSwitchTokenDrop(false);
+    setShowTestnetPopup(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
-}, [location]);
+  }, [location]);
 
-  
-;
+
+  ;
   const [ethValue, setEthValue] = useState("0.00");
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -166,7 +173,7 @@ useEffect(() => {
     setDropdownVisible(false);
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
-    
+
     setIsPopupVisible(false);
   };
 
@@ -271,7 +278,7 @@ useEffect(() => {
     setSwitchWalletDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
-    
+
   };
 
   const handleTestnetModeToggle = () => {
@@ -279,7 +286,7 @@ useEffect(() => {
     if (isTestnetMode) {
       navigate("/dashboard");
     }
-    
+
   };
 
   const hash = window.location.hash;
@@ -347,6 +354,12 @@ useEffect(() => {
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
         <div className="w-full">
+
+          <Button
+            title="Disconnect"
+            className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
+            onClick={artemisWalletAdapter.disconnect()}
+          />
           <nav className="w-full py-4 lg:py-10  flex items-center justify-between">
             <div className="lg:block lgx:block dxl:flex justify-center items-center sxs3:block sxs3:mt-3">
               <img
@@ -385,7 +398,7 @@ useEffect(() => {
                 draggable
                 transition:Bounce
                 pauseOnHover
-                theme={isDarkMode ? "dark" : "light"} 
+                theme={isDarkMode ? "dark" : "light"}
                 className="z-50 mt-6 -ml-6"
               />
             </div>
@@ -820,48 +833,48 @@ useEffect(() => {
                       onClick={handleDropdownToggle}
                     />}
                     {dropdownVisible && (
-                    <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                    <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
-                      Settings
-                    </h2>
-                  
-                    {/* Dark Mode Setting */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor="darkMode"
-                          className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
-                        >
-                          Dark Mode
-                        </label>
-                        <span className="ml-2 text-[13px]">
-                          {isDarkMode ? "ON" : "OFF"}
-                        </span>
+                      <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                        <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
+                          Settings
+                        </h2>
+
+                        {/* Dark Mode Setting */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex flex-col">
+                            <label
+                              htmlFor="darkMode"
+                              className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                            >
+                              Dark Mode
+                            </label>
+                            <span className="ml-2 text-[13px]">
+                              {isDarkMode ? "ON" : "OFF"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-center ml-3">
+                            <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
+                          </div>
+                        </div>
+
+                        {/* Testnet Mode Setting */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <label
+                              htmlFor="testnetMode"
+                              className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                            >
+                              Testnet Mode
+                            </label>
+                            <span className="ml-2 text-[13px]">
+                              {isTestnetMode ? "ON" : "OFF"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-center ml-3">
+                            <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-center ml-3">
-                        <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
-                      </div>
-                    </div>
-                  
-                    {/* Testnet Mode Setting */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor="testnetMode"
-                          className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
-                        >
-                          Testnet Mode
-                        </label>
-                        <span className="ml-2 text-[13px]">
-                          {isTestnetMode ? "ON" : "OFF"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-center ml-3">
-                        <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
-                      </div>
-                    </div>
-                  </div>
-                  
+
                     )}
                   </div>
                 </div>

@@ -12,6 +12,7 @@ import { elements } from "chart.js"
 import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
 import StakeDetails from "../components/Dashboard/StakeDetails"
 import Faucet from "../components/Dashboard/faucet"
+import WalletStatus from "../components/WalltetStatus"
 
 export default [
   {
@@ -91,6 +92,15 @@ export default [
     element: (
       <MainDashboard includeDashboardNav={false}>
         <Faucet/>
+      </MainDashboard>
+    ),
+  },
+
+  {
+    path: "/WalletStatus",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <WalletStatus />
       </MainDashboard>
     ),
   },

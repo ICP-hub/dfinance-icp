@@ -30,7 +30,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
       memo: [],
       from_subaccount: [],
       created_at_time: [],
-      amount: 0,
+      amount: 100000,
       expected_allowance: [],
       expires_at: [],
       spender: { owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND), subaccount: [] },

@@ -4,7 +4,7 @@ mod constants;
 mod declarations;
 mod guards;
 mod implementations;
-mod logic;
+mod protocol;
 mod memory;
 mod state;
 mod tests;

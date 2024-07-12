@@ -7,61 +7,66 @@ use ic_cdk::api::management_canister::main::{
     UpdateSettingsArgument,
 };
 use ic_cdk_macros::update;
-use icrc_ledger_types::icrc1::account::Account;
+
 use serde::Deserialize;
 use std::borrow::Cow;
-#[derive(CandidType, Deserialize)]
-struct InitArgs {
-    decimals: Option<u8>,
-    token_symbol: String,
-    transfer_fee: u64,
-    metadata: Vec<MetadataRecord>,
-    minting_account: Account,
-    initial_balances: Vec<InitialBalanceRecord>,
-    maximum_number_of_accounts: Option<u64>,
-    accounts_overflow_trim_quantity: Option<u64>,
-    fee_collector_account: Option<Account>,
-    archive_options: ArchiveOptions,
-    max_memo_length: Option<u16>,
-    token_name: String,
-    feature_flags: Option<FeatureFlags>,
+
+use icrc_ledger_types::icrc::generic_metadata_value::MetadataValue;
+
+use icrc_ledger_types::icrc::generic_value::Value;
+use icrc_ledger_types::icrc1::account::{Account, Subaccount};
+
+#[derive(Debug, CandidType, Deserialize)]
+pub struct InitArgs {
+    pub minting_account: Account,
+    pub fee_collector_account: Option<Account>,
+    pub initial_balances: Vec<(Account, Nat)>,
+    pub transfer_fee: Nat,
+    pub decimals: Option<u8>,
+    pub token_name: String,
+    pub token_symbol: String,
+    pub metadata: Vec<(String, Value)>,
+    pub archive_options: ArchiveOptions,
+    pub max_memo_length: Option<u16>,
+    pub feature_flags: Option<FeatureFlags>,
+    pub maximum_number_of_accounts: Option<u64>,
+    pub accounts_overflow_trim_quantity: Option<u64>,
 }
 
-#[derive(CandidType, Deserialize)]
-struct InitialBalanceRecord {
-    account: Account,
-    balance: u64,
+#[derive(Debug, CandidType, Deserialize)]
+pub struct ArchiveOptions {
+    /// The number of blocks which, when exceeded, will trigger an archiving
+    /// operation.
+    pub trigger_threshold: usize,
+    /// The number of blocks to archive when trigger threshold is exceeded.
+    pub num_blocks_to_archive: usize,
+    pub node_max_memory_size_bytes: Option<u64>,
+    pub max_message_size_bytes: Option<u64>,
+    pub controller_id: Principal,
+    // More principals to add as controller of the archive.
+    #[serde(default)]
+    pub more_controller_ids: Option<Vec<Principal>>,
+    // cycles to use for the call to create a new archive canister.
+    #[serde(default)]
+    pub cycles_for_archive_creation: Option<u64>,
+    // Max transactions returned by the [get_transactions] endpoint.
+    #[serde(default)]
+    pub max_transactions_per_response: Option<u64>,
 }
 
-#[derive(CandidType, Deserialize)]
-struct MetadataRecord {
-    key: String,
-    value: MetadataValue,
+#[derive(Debug, Deserialize, CandidType)]
+
+pub struct UpgradeArgs {}
+
+#[derive(Debug, Deserialize, CandidType)]
+pub enum LedgerArg {
+    Init(InitArgs),
+    Upgrade(Option<UpgradeArgs>),
 }
 
-#[derive(CandidType, Deserialize)]
-enum MetadataValue {
-    Int(i64),
-    Nat(u64),
-    Blob(Vec<u8>),
-    Text(String),
-}
-
-#[derive(CandidType, Deserialize)]
-struct FeatureFlags {
+#[derive(Debug, CandidType, Deserialize)]
+pub struct FeatureFlags {
     icrc2: bool,
-}
-
-#[derive(CandidType, Deserialize)]
-struct ArchiveOptions {
-    num_blocks_to_archive: u64,
-    max_transactions_per_response: Option<u64>,
-    trigger_threshold: u64,
-    more_controller_ids: Option<Vec<Principal>>,
-    max_message_size_bytes: Option<u64>,
-    cycles_for_archive_creation: Option<u64>,
-    node_max_memory_size_bytes: Option<u64>,
-    controller_id: Principal,
 }
 
 fn ledger_wasm() -> Cow<'static, [u8]> {
@@ -90,56 +95,75 @@ async fn new_canister() -> Principal {
         }),
     };
 
-    let archives = ArchiveOptions {
-        num_blocks_to_archive: 1000,
-        max_transactions_per_response: None,
-        trigger_threshold: 2000,
-        more_controller_ids: Some(vec![
-            Principal::from_text("uj6by-mtpxf-dwssj-ai4xh-32ka3-hiuu7-cquzy-eszdh-k4apf-fq6wj-iae")
-                .unwrap(),
-            Principal::from_text("cinef-v4aaa-aaaaa-qaalq-cai").unwrap(),
-        ]),
-        max_message_size_bytes: None,
-        cycles_for_archive_creation: Some(10000000000000),
-        node_max_memory_size_bytes: None,
-        controller_id: Principal::from_text("cinef-v4aaa-aaaaa-qaalq-cai").unwrap(),
+    let minting_account = Account {
+        owner: Principal::from_text(
+            "uj6by-mtpxf-dwssj-ai4xh-32ka3-hiuu7-cquzy-eszdh-k4apf-fq6wj-iae",
+        )
+        .unwrap(),
+        subaccount: None,
     };
 
-    let init_args = InitArgs {
-        decimals: Some(8),
-        token_symbol: "LICP".to_string(),
-        transfer_fee: 10_000, // Transfer fee example
-        metadata: vec![MetadataRecord {
-            key: "key".to_string(),
-            value: MetadataValue::Text("value".to_string()),
-        }],
-        minting_account: Account {
+    let fee_collector_account = Some(Account {
+        owner: Principal::from_text(
+            "uj6by-mtpxf-dwssj-ai4xh-32ka3-hiuu7-cquzy-eszdh-k4apf-fq6wj-iae",
+        )
+        .unwrap(),
+        subaccount: None,
+    });
+
+    let transfer_fee = Nat::from(1000u64);
+    let decimals = Some(8);
+    let max_memo_length = Some(256);
+    let token_symbol = "REO".to_string();
+    let token_name = "Reorg".to_string();
+    let metadata = vec![("icrc1_name".to_string(), Value::Text("REORG".to_string()))];
+
+    let initial_balances = vec![(
+        Account {
             owner: Principal::from_text(
                 "uj6by-mtpxf-dwssj-ai4xh-32ka3-hiuu7-cquzy-eszdh-k4apf-fq6wj-iae",
             )
             .unwrap(),
             subaccount: None,
+            // Initialize the Account fields as needed
         },
-        initial_balances: vec![InitialBalanceRecord {
-            account: Account {
-                owner: Principal::from_text(
-                    "uj6by-mtpxf-dwssj-ai4xh-32ka3-hiuu7-cquzy-eszdh-k4apf-fq6wj-iae",
-                )
-                .unwrap(),
-                subaccount: None,
-            },
-            balance: 10_000_000_000,
-        }],
-        maximum_number_of_accounts: None,
-        accounts_overflow_trim_quantity: None,
-        fee_collector_account: None,
-        archive_options: archives,
-        max_memo_length: None,
-        token_name: "Local ICP".to_string(),
-        feature_flags: Some(FeatureFlags { icrc2: false }),
+        Nat::from(1000u64),
+    )];
+
+    let feature_flags = Some(FeatureFlags { icrc2: true });
+    let maximum_number_of_accounts = Some(1000);
+    let accounts_overflow_trim_quantity = Some(100);
+
+    let archive_options = ArchiveOptions {
+        num_blocks_to_archive: 500,
+        max_transactions_per_response: Some(200),
+        trigger_threshold: 1000,
+        max_message_size_bytes: Some(1024),
+        cycles_for_archive_creation: Some(10),
+        node_max_memory_size_bytes: Some(2000),
+        controller_id: Principal::anonymous(),
+        more_controller_ids: Some(vec![Principal::anonymous()]),
     };
 
-    let args = match Encode!(&(init_args)) {
+    let init_args = InitArgs {
+        minting_account,
+        fee_collector_account,
+        transfer_fee,
+        decimals,
+        max_memo_length,
+        token_symbol,
+        token_name,
+        metadata,
+        initial_balances,
+        feature_flags,
+        maximum_number_of_accounts,
+        accounts_overflow_trim_quantity,
+        archive_options,
+    };
+
+    let token = LedgerArg::Init(init_args);
+
+    let args = match Encode!(&(token)) {
         Ok(args) => args,
         Err(e) => {
             ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));

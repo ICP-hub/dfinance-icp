@@ -41,13 +41,11 @@ import ThemeToggle from "./ThemeToggle";
 import settingsIcon from "../../public/Settings.svg";
 import Vector from "../../public/Vector.svg";
 import Group216 from "../../public/Group216.svg";
-// import SwitchTokensPopup from './Dashboard/SwitchToken';
 import Popup from "./Dashboard/Morepopup";
-import { Artemis } from 'artemis-web3-adapter';
-
 import CustomizedSwitches from "./MaterialUISwitch";
+
 export default function Navbar({ isHomeNav }) {
-  const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
+  const isMobile = window.innerWidth <= 1115;
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
   const dispatch = useDispatch();
@@ -58,19 +56,12 @@ export default function Navbar({ isHomeNav }) {
   const theme = useSelector((state) => state.theme.theme);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
 
-  const connectObj = { whitelist: ['ryjl3-tyaaa-aaaaa-aaaba-cai'], host: 'https://icp0.io/' }
-
-  const artemisWalletAdapter = new Artemis(connectObj);
-
-  // console.log(artemisWalletAdapter.connect("metamask"))
-
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const handleCloseDropdownOnScroll = () => {
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
-    // You can add similar logic for other dropdowns if needed
   };
 
   useEffect(() => {
@@ -354,12 +345,6 @@ export default function Navbar({ isHomeNav }) {
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
         <div className="w-full">
-
-          <Button
-            title="Disconnect"
-            className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
-            onClick={artemisWalletAdapter.disconnect()}
-          />
           <nav className="w-full py-4 lg:py-10  flex items-center justify-between">
             <div className="lg:block lgx:block dxl:flex justify-center items-center sxs3:block sxs3:mt-3">
               <img

@@ -4,12 +4,6 @@ import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
 import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
-// import { Artemis } from 'artemis-web3-adapter';
-
-// const connectObj = { whitelist: ['ryjl3-tyaaa-aaaaa-aaaba-cai'], host: 'https://icp0.io/' }
-
-// const artemisWalletAdapter = new Artemis(connectObj);
-
 
 // Create a React context for authentication state
 const AuthContext = createContext();
@@ -135,12 +129,8 @@ export const useAuthClient = (options = defaultOptions) => {
 
             const agent = new HttpAgent({ identity });
             const backendActor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, { agent });
-            setBackendActor(backendActor);
-
-            // Connect to wallet using Artemis
-            // const wallet = await Artemis(connectC);
-            // setWalletConnected(wallet.isConnected());
-
+            setBackendActor(backendActor); 
+      
         } catch (error) {
             console.error("Authentication update error:", error);
         }

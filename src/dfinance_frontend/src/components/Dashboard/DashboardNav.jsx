@@ -10,6 +10,8 @@ import { useSelector } from "react-redux";
 import RiskPopup from "./RiskDetails";
 import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
+import { ChevronLeft } from 'lucide-react';
+
 const DashboardNav = () => {
   const { isAuthenticated } = useAuth();
 
@@ -100,30 +102,16 @@ const DashboardNav = () => {
 
   return (
     <div className="w-full ">
-      <div className="w-full">
-        <span
-          className="w-fit bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] p-2 mb-6 mt-2 whitespace-nowrap rounded-lg text-xs flex items-center gap-2 text-white px-6 cursor-pointer hover:from-[#6575dd]"
-          onClick={() => navigate(-1)}
-        >
-          <svg
-            className="w-4 h-4 transform rotate-y-180"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M15 19l-7-7 7-7"
-            ></path>
-          </svg>
-        </span>
+
+      <div className="flex h-[60px] gap-7 -ml-3">
+        <div className="-mt-1">
+        <ChevronLeft size={40} color={chevronColor} />
+        </div>
+
+        <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4 dark:text-darkText">
+          {dashboardTitle}
+        </h1>
       </div>
-      <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4 dark:text-darkText">
-        {dashboardTitle}
-      </h1>
 
       <div className="w-full flex flex-wrap justify-start items-center gap-2">
         <div className="flex">
@@ -156,9 +144,8 @@ const DashboardNav = () => {
                   {TAB_CARD_DATA.map((data, index) => (
                     <div
                       key={index}
-                      className={`flex whitespace-nowrap hover:bg-[#2a6980] ${
-                        currentValueIndex === index ? "bg-[#347c96]" : ""
-                      } items-center text-white p-3 px-4 gap-3`}
+                      className={`flex whitespace-nowrap hover:bg-[#2a6980] ${currentValueIndex === index ? "bg-[#347c96]" : ""
+                        } items-center text-white p-3 px-4 gap-3`}
                       onClick={() => {
                         setCurrentValueIndex(index);
                         setIsDrop(false);
@@ -203,9 +190,8 @@ const DashboardNav = () => {
 
             {/* Menu Items */}
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div
                 className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1

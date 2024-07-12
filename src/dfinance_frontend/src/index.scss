@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+/* Example of importing Google Fonts in CSS */
+@import url('https://fonts.googleapis.com/css2?family=Vampiro+One&display=swap');
+
+body{
+    background: rgba(255, 255, 255, 1);
+}
+
+.d_color{
+    color: #517688 !important;
+    font-style: normal !important;
+}
+
+@keyframes subtle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    transform: translateY(-20px); /* Adjust the bounce height as needed */
+    animation-timing-function: ease-in-out;
+  }
+}
+
+.subtle-bounce {
+  animation: subtle-bounce 4s infinite; /* Adjust duration as needed */
+}
+// learn more buton
+.button_gradient{
+    background: radial-gradient(circle at 111.51% -1.56%,  #FCBD78 10%, #4659CF 90%, );
+}
+// search and all buttons in dark mode for dashboard 
+  .box {
+    border-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='none'%3e%3cpath stroke='url(%23a)' stroke-width='2' d='M8 1h84a7 7 0 0 1 7 7v84a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7Z'/%3e%3cdefs%3e%3clinearGradient id='a' x1='20.27' x2='120.715' y1='125' y2='113.589' gradientUnits='userSpaceOnUse'%3e%3cstop stop-color='%23EFAF68'/%3e%3cstop offset='.367' stop-color='%23CC69A0'/%3e%3cstop offset='.682' stop-color='%23C15CB9'/%3e%3cstop offset='1' stop-color='%235B6BCC'/%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e") 8 / 10px stretch;
+  }
+  
+
+  .nav-link {
+    position: relative;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 800;
+  }
+  .nav-link:active,
+.nav-link.active {
+  color: transparent; /* Hide the actual text color on hover */
+    background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
+    background-clip: text;
+    -webkit-background-clip: text; /* For Safari/older browsers */
+    -webkit-text-fill-color: transparent; /* Hide the actual text color */
+    transition: none; /* Disable transition for the gradient effect */
+    font-weight: 800;
+}
+  .nav-link:hover {
+    color: transparent; /* Hide the actual text color on hover */
+    background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
+    background-clip: text;
+    -webkit-background-clip: text; /* For Safari/older browsers */
+    -webkit-text-fill-color: transparent; /* Hide the actual text color */
+    transition: none; /* Disable transition for the gradient effect */
+    font-weight: 800;
+  }
+  
+  /* Add this in your CSS file */
+/* Add this in your CSS file */
+.gradient-line-bottom {
+    position: relative;
+  }
+  
+  .gradient-line-bottom::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-left: 0.5rem; /* Adjust margin as needed */
+    width: calc(100% - 1.5rem); /* Adjust padding if needed */
+    height: 1px;
+    background: linear-gradient(to right, #4659CF, #FCBD78);
+    transition: background 0.3s ease-in-out;
+    z-index: 4; /* Ensure the line is on top of other content */
+  }
+  
+  .gradient-line-bottom:hover::after {
+    background: #5B62FE; /* Light blue color */
+  }
+  
+  /* This rule removes any other border styles */
+  .gradient-line-bottom > * {
+    border: none !important;
+  }
+  
+.stack_card_single{
+    @apply w-fit bg-[#DBE8EE] border-[3px] border-[#233D6324] rounded-[40px] flex justify-center items-center p-4 ease-in-out duration-500
+}
+.no-scroll {
+  overflow: hidden;
+}
+.bouncing-loader {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* Dim background */
+  backdrop-filter: blur(5px); /* Blur effect */
+  z-index: 1000;
+}
+
+.bouncing-div{
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.bouncing-loader > .loader-element {
+  width: 20px;
+  height: 20px;
+  margin: 1px 3px;
+  margin-bottom: 35px;
+ 
+  animation: bouncing-loader 0.6s infinite alternate;
+}
+
+.bouncing-div  div {
+  width: 4px;
+  height: 4px;
+  margin: 3px 1px;
+  border-radius: 50%;
+  background-color: white;
+  animation: bouncing-div 0.7s infinite alternate;
+}
+
+@keyframes bouncing-loader {
+  to {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bouncing-div {
+  to {
+    transform: translateY(-6px);
+  }
+}
+
+.bouncing-loader > div:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bouncing-loader > div:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.bouncing-loader > div:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+
+.bouncing-div > div:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+
+.bouncing-div > div:nth-child(3) {
+  animation-delay: 0.3s;
+}
+/* styles.css or your custom CSS file */
+@keyframes fadeInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px); /* Start slightly off-screen to the left */
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0); /* Fade in to its original position */
+  }
+}
+
+.animate-fade-in-left {
+  animation: fadeInLeft 0.5s ease forwards; /* Adjust duration (0.5s) and timing function (ease) as needed */
+}
+

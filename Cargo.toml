@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "src/icrc1_ledger_canister_backend"
+    "src/dfinance_backend"
 ]
 resolver = "2"

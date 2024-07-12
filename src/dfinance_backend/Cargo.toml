@@ -1,0 +1,20 @@
+[package]
+name = "dfinance_backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+canbench-rs = { version = "0.1.4", optional = true }
+
+candid = "0.10"
+candid-extractor = "0.1.4"
+ic-cdk = "0.13"
+ic-cdk-macros = "0.14.0"
+ic-cdk-timers = "0.7"          # Feel free to remove this dependency if you don't need timers
+ic-stable-structures = "0.6.5"
+serde = "1.0.203"

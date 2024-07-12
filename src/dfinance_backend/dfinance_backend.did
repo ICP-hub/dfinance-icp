@@ -1,0 +1,2 @@
+type Result = variant { Ok : nat; Err : text };
+service : { deposit_ckbtc : (nat64) -> (Result) }

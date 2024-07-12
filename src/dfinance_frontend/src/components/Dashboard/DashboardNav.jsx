@@ -104,8 +104,8 @@ const DashboardNav = () => {
     <div className="w-full ">
 
       <div className="flex h-[60px] gap-7 -ml-3">
-        <div className="-mt-1">
-        <ChevronLeft size={40} color={chevronColor} />
+        <div className="-mt-1 cursor-pointer" onClick={() => navigate(-1)}>
+        <ChevronLeft size={40} color={chevronColor}/>
         </div>
 
         <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4 dark:text-darkText">

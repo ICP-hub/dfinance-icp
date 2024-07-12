@@ -750,7 +750,7 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
 export const transactionHistory = [
  
     {
-      hash: "0x65.125ef1d507...",
+      hash: "0x65.125ef1d507468968590909400...",
       block: "6235698",
       method: "Lend",
       age: "2 hrs ago",
@@ -765,7 +765,7 @@ export const transactionHistory = [
       method: "Stake",
       age: "2 hrs ago",
       from: "0x65.125ef1d507...",
-      to: "0x65.125ef1d507...",
+      to: "0x65.125ef1d5078739279e037939y709...",
       value: "0.01256321 ETH",
       fee: "0.00000012",
     },

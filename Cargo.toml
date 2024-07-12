@@ -1,5 +1,3 @@
 [workspace]
-members = [
-    "src/dfinance_backend"
-]
+members = ["src/dfinance_backend", "src/atoken"]
 resolver = "2"

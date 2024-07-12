@@ -42,8 +42,8 @@ const FaucetDetails = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   return (
-    <div className="w-full mt-10">
-      <div className="w-full md:h-[40px] flex items-center px-6 mt-8 md:px-12">
+    <div className="w-full">
+      <div className="w-full md:h-[40px] flex items-center px-6 mt-4 md:px-12">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Test Assets</h1>
       </div>
 
@@ -89,7 +89,7 @@ const FaucetDetails = () => {
                       <div className="w-full flex justify-end align-center">
                         <Button
                           title={"Faucet"}
-                          className="mb-7 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-3 py-1 shadow-xl shadow-black/40 font-semibold text-sm sxs3:px-6 font-inter"
+                          className="mb-7 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-3 py-1 shadow-md shadow-black/40 font-semibold text-sm sxs3:px-6 font-inter"
                           onClickHandler={() => handleFaucetClick(item.asset, item.image)}
                         />
                       </div>

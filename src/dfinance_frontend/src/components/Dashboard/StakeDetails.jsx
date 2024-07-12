@@ -58,26 +58,26 @@ const StakeDetails = () => {
 
     return (
         <>
-            <div className="w-full mt-6">
-                <h1 className="text-[#5B62FE] text-sm inline-flex items-center ml-6">
+            <div className="w-full">
+                <h1 className="text-[#5B62FE] text-sm inline-flex items-center ">
                     Available on
                     <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
                     ICP Mainnet
                 </h1>
-                <div className="w-full flex flex-col  md2:flex-row mt-2">
-                    <div className="w-full md2:w-8/12 dxl:w-9/12 p-6">
+                <div className="w-full flex flex-col  md2:flex-row mt-6">
+                    <div className="w-full md2:w-8/12 dxl:w-9/12">
                         <h1 className="text-[#2A1F9D] font-bold text-xl dark:text-darkText">
                             Staking
                         </h1>
                         <p className="text-[#5B62FE] text-sm text-justify mt-3 dark:text-darkTextSecondary">
-                            Dfinance, GHO, and ABPT holders (ICP network only) can stake their assets in the Safety Module to add more security to the protocol and earn Safety Incentives. In the case of a shortfall event, your stake can be slashed to cover the deficit, providing an additional layer of protection for the protocol. Learn more about risks involved
+                            Dfinance, GHO, and ABPT holders (ICP network only) can stake their assets in the Safety Module to add more security to the protocol and earn Safety Incentives. In the case of a shortfall event, your stake can be slashed to cover the deficit, providing an additional layer of protection for the protocol. <a href="#" className='underline'>Learn more about risks involved</a>
                         </p>
                     </div>
 
                 </div>
-                <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
+                <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-bold gap-6 dark:text-darkText">
                     {(STACK_DETAILS_TABS).map((data, index) => (
-                        <div key={index} className="relative group ml-5 mb-5">
+                        <div key={index} className="relative group mb-11 mt-5">
                             <button className="relative">
                                 {data.title}
                                 <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />

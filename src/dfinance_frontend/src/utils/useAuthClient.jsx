@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
-import { idlFactory as ledgerIdlFactory } from "../../../declarations/icrc1_ckETH_ledger_canister";
+import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
 
 // Create a React context for authentication state
 const AuthContext = createContext();

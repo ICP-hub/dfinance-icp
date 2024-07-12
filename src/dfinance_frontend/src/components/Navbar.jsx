@@ -11,6 +11,7 @@ import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "./Button";
+
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -42,6 +43,8 @@ import Vector from "../../public/Vector.svg";
 import Group216 from "../../public/Group216.svg";
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 import Popup from "./Dashboard/Morepopup";
+
+import CustomizedSwitches from "./MaterialUISwitch";
 export default function Navbar({ isHomeNav }) {
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
   const renderThemeToggle = !isMobile;
@@ -53,9 +56,40 @@ export default function Navbar({ isHomeNav }) {
   );
   const theme = useSelector((state) => state.theme.theme);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
+  
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const handleCloseDropdownOnScroll = () => {
+    setSwitchTokenDrop(false);
+    setSwitchWalletDrop(false);
+    setIsPopupVisible(false);
+    setDropdownVisible(false);
+    // You can add similar logic for other dropdowns if needed
+  };
+
+  useEffect(() => {
+    // Add event listener for scroll to window or container
+    window.addEventListener('scroll', handleCloseDropdownOnScroll);
+
+    // Clean up the event listener on unmount
+    return () => {
+      window.removeEventListener('scroll', handleCloseDropdownOnScroll);
+    };
+  }, []);
+  
+const navigate = useNavigate();
+const location = useLocation();
+
+useEffect(() => {
+  // Close the switchWalletDrop dropdown when location changes
+  setSwitchWalletDrop(false);
+  setSwitchTokenDrop(false);
+  setShowTestnetPopup(false);
+    setIsPopupVisible(false);
+    setDropdownVisible(false);
+}, [location]);
+
+  
+;
   const [ethValue, setEthValue] = useState("0.00");
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -94,8 +128,7 @@ export default function Navbar({ isHomeNav }) {
     } else {
       // Perform transaction
       console.log(
-        `Transaction initiated with ${selectedToken} and amount ${
-          selectedToken === "ETH" ? ethValue : oneInchValue
+        `Transaction initiated with ${selectedToken} and amount ${selectedToken === "ETH" ? ethValue : oneInchValue
         }`
       );
     }
@@ -130,6 +163,11 @@ export default function Navbar({ isHomeNav }) {
   const handleButtonClick = () => {
     setShowTestnetPopup(true);
     console.log("kjfsh");
+    setDropdownVisible(false);
+    setSwitchTokenDrop(false);
+    setSwitchWalletDrop(false);
+    
+    setIsPopupVisible(false);
   };
 
   const handleClosePopup = () => {
@@ -140,6 +178,7 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
+    setShowTestnetPopup(false);
   };
 
   const handleSwitchWallet = () => {
@@ -150,6 +189,7 @@ export default function Navbar({ isHomeNav }) {
       setSwitchTokenDrop(false);
       setDropdownVisible(false);
       setIsPopupVisible(false);
+      setShowTestnetPopup(false);
     }
   };
 
@@ -229,8 +269,9 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible((prevVisible) => !prevVisible);
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
-
+    setShowTestnetPopup(false);
     setIsPopupVisible(false);
+    
   };
 
   const handleTestnetModeToggle = () => {
@@ -238,6 +279,7 @@ export default function Navbar({ isHomeNav }) {
     if (isTestnetMode) {
       navigate("/dashboard");
     }
+    
   };
 
   const hash = window.location.hash;
@@ -344,13 +386,13 @@ export default function Navbar({ isHomeNav }) {
                 transition:Bounce
                 pauseOnHover
                 theme={isDarkMode ? "dark" : "light"} 
-                className="z-50 mt-20"
+                className="z-50 mt-6 -ml-6"
               />
             </div>
             {!isMobile && <>
               <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
-              {!isHomeNav
-                ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
+                {!isHomeNav
+                  ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
                     if (link.alwaysPresent) {
                       return (
                         <NavLink
@@ -401,7 +443,7 @@ export default function Navbar({ isHomeNav }) {
                     }
                     return null;
                   })
-                : HOME_TOP_NAV_LINK.map((link, index) => (
+                  : HOME_TOP_NAV_LINK.map((link, index) => (
                     <NavLink
                       key={index}
                       to={link.route}
@@ -410,12 +452,12 @@ export default function Navbar({ isHomeNav }) {
                       {link.title}
                     </NavLink>
                   ))}
-            </div>
+              </div>
             </>}
 
             {isHomeNav ? (
               <div className="flex gap-2">
-                <div className="sxs3:ml-7 md:ml-20rem lg:ml-[30rem] text-nowrap lg1:ml-0 sm4:ml-[180px] sm:ml-[280px]">
+                <div className=" text-nowrap">
                   <Button
                     title={"Launch App"}
                     onClickHandler={handleLaunchApp}
@@ -424,9 +466,22 @@ export default function Navbar({ isHomeNav }) {
                 <div className="flex align-center justify-center">
                   {renderThemeToggle && <ThemeToggle />}
                 </div>
+
+                {isMobile && (
+                  <div className="flex justify-center align-center items-center">
+                    <div
+                      onClick={() => setIsMobileNav(!isMobileNav)}
+                      className="cursor-pointer"
+                    >
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
+                      {/* Toggle between Menu and X icons */}
+                    </div>
+                  </div>
+                )}
+
               </div>
             ) : isAuthenticated ? (
-              <div className="hidden lg:flex gap-3 sxs3:flex sxs3:ml-6 sm:ml-[280px] md:flex md:ml-[335px] sm4:ml-[180px] lg:ml-[540px]  dlg:ml-81 lg1:ml-0">
+              <div className="hidden lg:flex gap-2 sxs3:flex  md:flex ">
                 <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-lg shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
                     className="flex items-center gap-2 p-2 px-3"
@@ -437,6 +492,7 @@ export default function Navbar({ isHomeNav }) {
                     </span>
                     <ArrowDownUp />
                   </div>
+
                   <div className="relative">
                     {switchTokenDrop && (
                       <div className="w-[380px] absolute -left-[160px] mt-6 rounded-xl bg-white shadow-xl  border p-4 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
@@ -608,7 +664,7 @@ export default function Navbar({ isHomeNav }) {
                               <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4  dark:text-darkText">
                                 Transaction Overlay
                               </h2>
-                              <div className="border border-gray-300 rounded-lg shadow-md top-full left-0 mt-2 p-6">
+                              <div className="border border-gray-300 rounded-xl shadow-md top-full left-0 mt-2 p-6">
                                 <p>
                                   Min 1INCH Received:{" "}
                                   {selectedToken === "ETH"
@@ -629,9 +685,8 @@ export default function Navbar({ isHomeNav }) {
                         </div>
 
                         <div
-                          className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${
-                            isInputFocused ? "block" : "hidden"
-                          }`}
+                          className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? "block" : "hidden"
+                            }`}
                           style={{ maxWidth: "380px" }}
                         >
                           <div className="flex items-center">
@@ -658,7 +713,7 @@ export default function Navbar({ isHomeNav }) {
                         <div className="w-full flex justify-center mt-3">
                           <button
                             onClick={handleTransaction}
-                            className=" w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                            className=" w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           >
                             Switch
                           </button>
@@ -667,9 +722,9 @@ export default function Navbar({ isHomeNav }) {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-lg shadow-xl shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-xl shadow-md shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 p-2 px-3 overflow-hidden"
+                    className="flex items-center gap-1 p-2 px-3  overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -677,11 +732,11 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5"
                     />
-                    <span className=" sxxs:text-[10px] lg:text-[10px] lg1:text-[12px]">0x65.125s</span>
+                    <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px]">0x65.125s</span>
                   </div>
 
                   {switchWalletDrop && (
-                    <div className="absolute p-4 top-full -left-[212px] mt-8 md:mt-4 rounded-lg bg-gray-100 shadow-xl border mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
+                    <div className="absolute p-4 top-full -left-[207px] mt-8 md:mt-4 rounded-xl bg-white   mb-4 z-10 dark:bg-darkOverlayBackground dark:border-none">
                       <div className="w-full flex items-center gap-3 mt-2">
                         <img src={loader} alt="square" className="w-10 h-10" />
                         <h1 className="font-semibold text-2xl text-blue-800 dark:text-darkText">
@@ -692,12 +747,12 @@ export default function Navbar({ isHomeNav }) {
                       <div className="w-full flex justify-center mt-3 gap-3">
                         <Button
                           title="Switch Wallet"
-                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          className="my-2 whitespace-nowrap bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           onClickHandler={handleSwitchWallet}
                         />
                         <Button
                           title="Disconnect"
-                          className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-lg font-semibold text-sm"
+                          className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
                           onClickHandler={handleLogout}
                         />
                       </div>
@@ -706,7 +761,7 @@ export default function Navbar({ isHomeNav }) {
                         {/* First Container */}
                         <div className="flex justify-center">
                           <div
-                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative dark:border-currentFAQBackground"
+                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                             style={{ height: "70px", width: "160px" }}
                           >
                             <span
@@ -731,11 +786,11 @@ export default function Navbar({ isHomeNav }) {
                         {/* Second Container */}
                         <div className="flex justify-center">
                           <div
-                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-lg text-sm relative dark:border-currentFAQBackground"
+                            className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                             style={{ height: "70px", width: "160px" }}
                           >
                             <button
-                              className="text-blue-800 hover:text-gray-800 flex items-center -ml-2 dark:text-darkTextSecondary"
+                              className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
                               onClick={handleCopyAddress}
                             >
                               <GrCopy className="h-5 w-4" />
@@ -761,180 +816,144 @@ export default function Navbar({ isHomeNav }) {
                     {!isMobile && <img
                       src={settingsIcon}
                       alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block"
+                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
                       onClick={handleDropdownToggle}
                     />}
                     {dropdownVisible && (
-                      <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                        <h2 className="text-[12px] text-[#2A1F9D] font-light mb-4 dark:text-darkText">
-                          {" "}
-                          Settings
-                        </h2>
-                        {/* Dropdown content for dark mode and testnet mode */}
-                        <div className="flex items-center mb-4">
-                          <label
-                            htmlFor="darkMode"
-                            className="ml-2 text-lg font-bold text-nowrap text-[#2A1F9D] dark:text-darkText"
-                          >
-                            Dark Mode
-                          </label>
-                          <span className="ml-14">
-                            {isDarkMode ? "ON" : "OFF"}
-                          </span>
-                          <Switch
-                            checked={isDarkMode}
-                            onChange={handleDarkModeToggle}
-                            sx={{
-                              "& .MuiSwitch-switchBase.Mui-checked": {
-                                color: "#fff",
-                              },
-                              "& .MuiSwitch-track": {
-                                backgroundColor: "#fff",
-
-                                boxShadow: "0 0 10px black",
-                              },
-                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                {
-                                  backgroundColor: "#1939ea",
-                                },
-                            }}
-                          />
-                        </div>
-
-                        <div className="flex items-center">
-                          <label
-                            htmlFor="testnetMode"
-                            className="ml-2 text-lg font-bold text-[#2A1F9D] text-nowrap dark:text-darkText"
-                          >
-                            Testnet Mode
-                          </label>
-                          <span className="ml-8">
-                            {isTestnetMode ? "ON" : "OFF"}
-                          </span>
-                          <Switch
-                            checked={isTestnetMode}
-                            onChange={handleTestnetModeToggle}
-                            sx={{
-                              "& .MuiSwitch-switchBase.Mui-checked": {
-                                color: "#fff",
-                              },
-                              "& .MuiSwitch-track": {
-                                backgroundColor: "#fff",
-
-                                boxShadow: "0 0 10px black",
-                              },
-                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                {
-                                  backgroundColor: "#1939ea",
-                                },
-                            }}
-                          />
-                        </div>
+                    <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                    <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
+                      Settings
+                    </h2>
+                  
+                    {/* Dark Mode Setting */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor="darkMode"
+                          className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                        >
+                          Dark Mode
+                        </label>
+                        <span className="ml-2 text-[13px]">
+                          {isDarkMode ? "ON" : "OFF"}
+                        </span>
                       </div>
+                      <div className="flex items-center justify-center ml-3">
+                        <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
+                      </div>
+                    </div>
+                  
+                    {/* Testnet Mode Setting */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor="testnetMode"
+                          className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                        >
+                          Testnet Mode
+                        </label>
+                        <span className="ml-2 text-[13px]">
+                          {isTestnetMode ? "ON" : "OFF"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-center ml-3">
+                        <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
+                      </div>
+                    </div>
+                  </div>
+                  
                     )}
                   </div>
                 </div>
+
+                {isMobile && (
+                  <div className="flex justify-center align-center items-center">
+                    <div
+                      onClick={() => setIsMobileNav(!isMobileNav)}
+                      className="cursor-pointer"
+                    >
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
+                      {/* Toggle between Menu and X icons */}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
-              <div className="flex md:gap-3 lg:gap-3 sxs3:gap-0 sxs3:flex sxs3:ml-0 sm:ml-[230px] md:flex md:ml-[290px] sm4:ml-[180px] lg:ml-[480px]  dlg:ml-81 lg1:ml-0">
+              <div className="flex gap-3">
                 <Button
                   title={"Connect Wallet"}
                   onClickHandler={handleWalletConnect}
-                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] px-8 shadow-xl shadow-[#00000040] font-semibold text-sm sxs3:px-8 sxs3:text-[11px] md:text-[12px]"}
+                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-xl shadow-[#00000040] font-semibold text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"}
                 />
                 <div className="flex items-center justify-center">
                   <div className="relative">
-                  {!isMobile &&  <img
+                    {!isMobile && <img
                       src={settingsIcon}
                       alt="settings_icon"
                       className="object-contain w-[43px] h-[43px] cursor-pointer hidden lg:block md:block"
                       onClick={handleDropdownToggle}
                     />}
+                    {isMobile && (
+                      <div>
+                        <div
+                          onClick={() => setIsMobileNav(!isMobileNav)}
+                          className="cursor-pointer"
+                        >
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
+                          {/* Toggle between Menu and X icons */}
+                        </div>
+                      </div>
+                    )}
                     {dropdownVisible && (
-                      <div className="absolute w-[280px] top-12 right-0 mt-2 p-4 bg-gray-100 text-[#2A1F9D] border border-gray-300 rounded-md shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                        <h2 className="text-lg text-[#2A1F9D] font-semibold mb-4 dark:text-darkText">
+                      <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                        <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
                           {" "}
                           Settings
                         </h2>
                         {/* Dropdown content for dark mode and testnet mode */}
-                        <div className="flex items-center mb-4">
+                        <div className="flex items-center mb-1">
                           <label
                             htmlFor="darkMode"
-                            className="ml-2 text-lg font-bold text-[#2A1F9D] text-nowrap dark:text-darkText"
+                            className="ml-2 text-lg font-semibold text-nowrap text-[#2A1F9D] dark:text-darkText"
                           >
                             Dark Mode
                           </label>
-                          <span className="ml-14">
+                          <span className="ml-[70px] text-[13px]">
                             {isDarkMode ? "ON" : "OFF"}
                           </span>
-                          <Switch
-                            checked={isDarkMode}
-                            onChange={handleDarkModeToggle}
-                            id="darkMode"
-                            sx={{
-                              "& .MuiSwitch-switchBase.Mui-checked": {
-                                color: "#fff",
-                              },
-                              "& .MuiSwitch-track": {
-                                backgroundColor: "#fff",
-
-                                boxShadow: "0 0 10px black",
-                              },
-                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                {
-                                  backgroundColor: "#1939ea",
-                                },
-                            }}
-                          />
+                          <div className="flex align-center justify-center ml-3">
+                            <CustomizedSwitches checked={isDarkMode}
+                              onChange={handleDarkModeToggle} />
+                          </div>
                         </div>
+
                         <div className="flex items-center">
                           <label
                             htmlFor="testnetMode"
-                            className="ml-2 text-lg font-bold text-[#2A1F9D] text-nowrap dark:text-darkText"
+                            className="ml-2 text-lg font-semibold text-[#2A1F9D] text-nowrap dark:text-darkText"
                           >
                             Testnet Mode
                           </label>
-                          <span className="ml-8">
+                          <span className="ml-[45px] text-[13px]">
                             {isTestnetMode ? "ON" : "OFF"}
                           </span>
-                          <Switch
-                            checked={isTestnetMode}
-                            onChange={handleTestnetModeToggle}
-                            sx={{
-                              "& .MuiSwitch-switchBase.Mui-checked": {
-                                color: "#fff",
-                              },
-                              "& .MuiSwitch-track": {
-                                backgroundColor: "#fff",
-
-                                boxShadow: "0 0 10px black",
-                              },
-                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                {
-                                  backgroundColor: "#1939ea",
-                                },
-                            }}
-                          />
+                          <div className="flex align-center justify-center ml-3">
+                            <CustomizedSwitches checked={isTestnetMode}
+                              onChange={handleTestnetModeToggle} />
+                          </div>
                         </div>
                       </div>
                     )}
+
                   </div>
+
                 </div>
+
               </div>
             )}
 
-            {isMobile && (
-              <div>
-                <div
-                  onClick={() => setIsMobileNav(!isMobileNav)}
-                  className="cursor-pointer"
-                >
-                  {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                  {/* Toggle between Menu and X icons */}
-                </div>
-              </div>
-            )}
+
           </nav>
         </div>
       </ClickAwayListener>

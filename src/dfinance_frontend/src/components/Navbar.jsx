@@ -350,6 +350,16 @@ export default function Navbar({ isHomeNav }) {
     }
   }, [theme, isDarkMode]);
 
+ 
+
+  const handleDisconnectWallet = async () => {
+    try {
+      await artemisWalletAdapter.disconnect();
+    } catch (error) {
+      console.error('Failed to disconnect wallet:', error);
+    }
+  };
+
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
@@ -358,7 +368,7 @@ export default function Navbar({ isHomeNav }) {
           <Button
             title="Disconnect"
             className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
-            onClick={artemisWalletAdapter.disconnect()}
+            onClick={handleDisconnectWallet}
           />
           <nav className="w-full py-4 lg:py-10  flex items-center justify-between">
             <div className="lg:block lgx:block dxl:flex justify-center items-center sxs3:block sxs3:mt-3">

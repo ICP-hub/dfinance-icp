@@ -21,8 +21,8 @@ import { Artemis } from 'artemis-web3-adapter';
 const CreateWallet = () => {
 
     const connectObj = { whitelist: ['ryjl3-tyaaa-aaaaa-aaaba-cai'], host: 'https://icp0.io/' }
-
     const artemisWalletAdapter = new Artemis(connectObj);
+
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
@@ -74,6 +74,15 @@ const CreateWallet = () => {
         setInputValue(event.target.value);
     };
 
+    const handleConnectWallet = async (wallet) => {
+        try {
+              artemisWalletAdapter.connect(wallet);
+              console.log(artemisWalletAdapter.connect(wallet))
+        } catch (error) {
+            console.error('Failed to connect wallet:', error);
+        }
+    };
+
     return (
         <>
             {isAuthenticated ? <MySupply /> : <div className="relative w-full md:w-11/12 mx-auto my-6 min-h-[450px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
@@ -98,25 +107,25 @@ const CreateWallet = () => {
                     <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                         <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
                         <div className='flex flex-col gap-2 mt-3 text-sm'>
-                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() =>{artemisWalletAdapter.connect("dfinity"); console.log(artemisWalletAdapter.connect("dfinity"))}}>
+                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() =>handleConnectWallet("ii")}>
                                 Internet Identity
                                 <div className='w-8 h-8'>
                                     <img src={"https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
-                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"onClick={() =>{artemisWalletAdapter.connect("metamask"); console.log(artemisWalletAdapter.connect("metamask"))}}>
+                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"  onClick={() =>handleConnectWallet("metamask")}>
                                 Plug
                                 <div className='w-8 h-8'>
                                     <img src={"/plug.png.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
-                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
+                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"  onClick={() =>handleConnectWallet("bfinity")}>
                                 Bifinity
                                 <div className='w-8 h-8'>
                                     <img src={"/bifinity.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
-                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => artemisWalletAdapter.connect("nfid")}>
+                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"  onClick={() =>handleConnectWallet("nfid")}>
                                 NFID
                                 <div className='w-8 h-8'>
                                     <img src={"/nfid.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />

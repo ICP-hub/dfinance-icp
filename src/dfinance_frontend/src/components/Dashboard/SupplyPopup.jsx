@@ -29,7 +29,7 @@ const SupplyPopup = ({ asset, image, balance }) => {
     createLedgerActor,
   } = useAuth()
 
-  const ledgerActor = createLedgerActor("aax3a-h4aaa-aaaaa-qaahq-cai");
+  const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);

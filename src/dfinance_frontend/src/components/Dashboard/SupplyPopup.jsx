@@ -26,30 +26,28 @@ const SupplyPopup = ({ asset, image, balance }) => {
        // Hide the component when isVisible is false
   }
   const {
-    principal,
     createLedgerActor,
   } = useAuth()
-  const ledgerActor = createLedgerActor("avqkn-guaaa-aaaaa-qaaea-cai");
+
+  const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);
     console.log("Ledger Actor", ledgerActor);
-    console.log(principal);
-    // setIsApproved(true); // Change to true after approval
-    const approve = await ledgerActor.icrc2_approve({
-      spender: {
-        owner: Principal.fromText(principal),
-        subaccount: [],
-      },
-      amount: 100,
-      from_subaccount: [],
+
+    const approval = await ledgerActor.icrc2_approve({
       fee: [],
       memo: [],
+      from_subaccount: [],
       created_at_time: [],
+      amount: 100000,
       expected_allowance: [],
-      expires_at: []
+      expires_at: [],
+      spender: { owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND), subaccount: [] },
     });
-    console.log("Approve", approve);
+
+    console.log("Approve", approval);
+    setIsApproved(true);
     console.log("isApproved state after approval:", isApproved);
   };
 

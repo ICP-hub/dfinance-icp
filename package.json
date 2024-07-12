@@ -32,6 +32,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "aos": "^2.3.4",
     "chart.js": "^4.4.2",
+    "ic-auth": "^0.9.1",
     "lucide-react": "^0.367.0",
     "next": "^14.2.4",
     "react": "^18.3.1",

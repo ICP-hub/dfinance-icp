@@ -18,11 +18,10 @@ mod declarations;
 mod dynamic_canister;
 mod guards;
 mod implementations;
-mod protocol;
 mod memory;
+mod protocol;
 mod state;
 mod tests;
-mod types;
 mod utils;
 
 use candid::{Nat, Principal};

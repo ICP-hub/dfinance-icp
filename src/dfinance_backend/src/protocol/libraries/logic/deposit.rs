@@ -8,9 +8,9 @@ async fn deposit_ckbtc(amount: u64) -> Result<Nat, String> {
         Principal::from_text(CKBTC_LEDGER_ADDRESS).map_err(|e| e.to_string())?;
 
     ic_cdk::println!("ckbtc canister principal {}", ledger_canister_id);
-    let user_principal = ic_cdk::api::caller();
+    let user_principal = Principal::from_text("q7fxq-ursdr-56tib-ppy6j-e4kee-h66pb-jbj52-l2dzo-36xxr-hnoe3-jqe").map_err(|e| e.to_string())?;
     let platform_principal =
-        Principal::from_text("cinef-v4aaa-aaaaa-qaalq-cai").map_err(|e| e.to_string())?;
+        Principal::from_text("bd3sg-teaaa-aaaaa-qaaba-cai").map_err(|e| e.to_string())?;
     ic_cdk::println!("platform canister principal {}", platform_principal);
 
     let amount_nat = Nat::from(amount);

@@ -66,12 +66,9 @@ const WalletDetails = () => {
   const dispatch = useDispatch()
   const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
 
-
-
   const handleWalletConnect = () => {
-    console.log("connrcterd");
+    console.log("connected");
     dispatch(setWalletModalOpen(!isWalletModalOpen))
-    // dispatch(setIsWalletCreated(true))
   }
 
   const handleWallet = () => {
@@ -86,13 +83,8 @@ const WalletDetails = () => {
     }
   }, [isWalletCreated]);
 
-
-
   const loginHandler = async (val) => {
     await login(val);
-    // navigate("/");
-
-    // await existingUserHandler();
   };
 
   const [inputValue, setInputValue] = useState('');
@@ -100,8 +92,6 @@ const WalletDetails = () => {
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
-
-
 
   return (
     <div className="w-full mt-20">
@@ -345,9 +335,6 @@ const WalletDetails = () => {
 
 
         </div>
-        {/* <div className="w-full h-full flex items-center justify-center">
-          <h1 className='text-[#7EA0B0] text-lg'>No Assets Found</h1>
-        </div> */}
       </div>
     </div >
   )

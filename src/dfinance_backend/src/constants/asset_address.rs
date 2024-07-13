@@ -1,1 +1,1 @@
-pub const CKBTC_LEDGER_ADDRESS: &str = "cgpjn-omaaa-aaaaa-qaakq-cai";
+pub const CKBTC_LEDGER_ADDRESS: &str = "aax3a-h4aaa-aaaaa-qaahq-cai";

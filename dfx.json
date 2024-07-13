@@ -15,6 +15,11 @@
       "package": "dfinance_backend",
       "type": "rust"
     },
+    "atoken": {
+      "candid": "src/atoken/atoken.did",
+      "package": "atoken",
+      "type": "rust"
+    },
     "dfinance_frontend": {
       "dependencies": [
         "dfinance_backend"

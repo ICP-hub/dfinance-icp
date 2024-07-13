@@ -94,8 +94,7 @@ const WalletDetails = () => {
   };
 
   return (
-    <div className="w-full mt-10">
-
+    <div className="w-full mt-20">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">ICP Assets</h1>
         <div className="ml-auto   ">
@@ -280,7 +279,7 @@ const WalletDetails = () => {
           )}
 
 
-         {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+          {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
             <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
               <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
               <div className='flex flex-col gap-2 mt-3 text-sm'>

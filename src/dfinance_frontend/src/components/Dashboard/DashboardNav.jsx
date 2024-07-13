@@ -10,6 +10,8 @@ import { useSelector } from "react-redux";
 import RiskPopup from "./RiskDetails";
 import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
+import { ChevronLeft } from 'lucide-react';
+
 const DashboardNav = () => {
   const { isAuthenticated } = useAuth();
 
@@ -100,34 +102,27 @@ const DashboardNav = () => {
 
   return (
     <div className="w-full ">
-      <div className="w-full">
-        <span
-          className="w-fit bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] p-2 mb-6 mt-2 whitespace-nowrap rounded-lg text-xs flex items-center gap-2 text-white px-6 cursor-pointer hover:from-[#6575dd]"
-          onClick={() => navigate(-1)}
-        >
-          <svg
-            className="w-4 h-4 transform rotate-y-180"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M15 19l-7-7 7-7"
-            ></path>
-          </svg>
-        </span>
-      </div>
-      <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4 dark:text-darkText">
-        {dashboardTitle}
-      </h1>
+      {['/dashboard', '/market', '/governance'].includes(pathname) && (
+        <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-8 dark:text-darkText">
+          {dashboardTitle}
+        </h1>
+      )}
 
-      <div className="w-full flex flex-wrap justify-start items-center gap-2">
+      <div className="flex h-[60px] gap-5 -ml-3">
+        {!['/dashboard', '/market', '/governance'].includes(pathname) && (
+          <div className="-mt-1 cursor-pointer" onClick={() => navigate(-1)}>
+            <ChevronLeft size={40} color={chevronColor} />
+          </div>
+        )}
+        <h1 className="text-[#2A1F9D] text-2xl inline-flex items-center mb-8">
+          <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-9 h-9 mr-3" />
+          ICP Market
+        </h1>
+      </div>
+
+      <div className="w-full flex flex-wrap justify-start items-center gap-2 md:mb-20 lg:mb-2">
         <div className="flex">
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <div className="rounded-full border overflow-hidden shrink-0">
               <img
                 src={currentValueData ? currentValueData.image : ""}
@@ -156,9 +151,8 @@ const DashboardNav = () => {
                   {TAB_CARD_DATA.map((data, index) => (
                     <div
                       key={index}
-                      className={`flex whitespace-nowrap hover:bg-[#2a6980] ${
-                        currentValueIndex === index ? "bg-[#347c96]" : ""
-                      } items-center text-white p-3 px-4 gap-3`}
+                      className={`flex whitespace-nowrap hover:bg-[#2a6980] ${currentValueIndex === index ? "bg-[#347c96]" : ""
+                        } items-center text-white p-3 px-4 gap-3`}
                       onClick={() => {
                         setCurrentValueIndex(index);
                         setIsDrop(false);
@@ -183,7 +177,7 @@ const DashboardNav = () => {
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
           {/* Menu button for small screens */}
           <div className="relative">
             {/* Menu Button */}
@@ -203,9 +197,8 @@ const DashboardNav = () => {
 
             {/* Menu Items */}
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div
                 className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
@@ -251,17 +244,17 @@ const DashboardNav = () => {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
+          <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-8 dark:text-darkText">
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
                 ? WALLET_DETAIL_TAB
                 : WALLET_DETAILS_TABS
               ).map((data, index) => (
-                <div key={index} className="relative group ml-10">
-                  <button className="relative">
+                <div key={index} className="relative group">
+                  <button className="relative font-light text-sm min-w-[70px]">
                     {data.title}
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                    <span className="absolute top-full left-0 font-light py-2 opacity-100 transition-opacity">
+                    <span className="absolute top-full left-0 font-bold py-2 opacity-100 transition-opacity text-lg">
                       {data.count}
                     </span>
                   </button>
@@ -269,7 +262,7 @@ const DashboardNav = () => {
               ))}
             {isAuthenticated && shouldRenderRiskDetailsButton && (
               <button
-                className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
+                className="ml-2 -mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
                 onClick={handleOpenPopup}
               >
                 Risk Details
@@ -277,15 +270,16 @@ const DashboardNav = () => {
             )}
           </div>
           {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
-          <div className="sxs3:mt-16 -mb-6 -ml-40  mr-2 md:mt-0 lg:ml-[465px] sxs3:flex sxs3:justify-end sxs3:w-full md:w-auto md:ml-auto">
-            {isAuthenticated && shouldRenderTransactionHistoryButton && (
-              <a href="/dashboard/transaction-history" className="block">
-                <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
-                  Transaction History
-                </button>
-              </a>
-            )}
-          </div>
+
+        </div>
+        <div className="ml-auto">
+          {isAuthenticated && shouldRenderTransactionHistoryButton && (
+            <a href="/dashboard/transaction-history" className="block">
+              <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
+                Transaction History
+              </button>
+            </a>
+          )}
         </div>
       </div>
     </div>

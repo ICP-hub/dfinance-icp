@@ -56,7 +56,7 @@ export default function Navbar({ isHomeNav }) {
   );
   const theme = useSelector((state) => state.theme.theme);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
-  
+
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const handleCloseDropdownOnScroll = () => {
     setSwitchTokenDrop(false);
@@ -75,21 +75,21 @@ export default function Navbar({ isHomeNav }) {
       window.removeEventListener('scroll', handleCloseDropdownOnScroll);
     };
   }, []);
-  
-const navigate = useNavigate();
-const location = useLocation();
 
-useEffect(() => {
-  // Close the switchWalletDrop dropdown when location changes
-  setSwitchWalletDrop(false);
-  setSwitchTokenDrop(false);
-  setShowTestnetPopup(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Close the switchWalletDrop dropdown when location changes
+    setSwitchWalletDrop(false);
+    setSwitchTokenDrop(false);
+    setShowTestnetPopup(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
-}, [location]);
+  }, [location]);
 
-  
-;
+
+  ;
   const [ethValue, setEthValue] = useState("0.00");
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -166,7 +166,7 @@ useEffect(() => {
     setDropdownVisible(false);
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
-    
+
     setIsPopupVisible(false);
   };
 
@@ -271,7 +271,7 @@ useEffect(() => {
     setSwitchWalletDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
-    
+
   };
 
   const handleTestnetModeToggle = () => {
@@ -279,7 +279,7 @@ useEffect(() => {
     if (isTestnetMode) {
       navigate("/dashboard");
     }
-    
+
   };
 
   const hash = window.location.hash;
@@ -385,7 +385,7 @@ useEffect(() => {
                 draggable
                 transition:Bounce
                 pauseOnHover
-                theme={isDarkMode ? "dark" : "light"} 
+                theme={isDarkMode ? "dark" : "light"}
                 className="z-50 mt-6 -ml-6"
               />
             </div>
@@ -820,48 +820,50 @@ useEffect(() => {
                       onClick={handleDropdownToggle}
                     />}
                     {dropdownVisible && (
-                    <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                    <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
-                      Settings
-                    </h2>
-                  
-                    {/* Dark Mode Setting */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor="darkMode"
-                          className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
-                        >
-                          Dark Mode
-                        </label>
-                        <span className="ml-2 text-[13px]">
-                          {isDarkMode ? "ON" : "OFF"}
-                        </span>
+                      <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
+                        <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
+                          Settings
+                        </h2>
+
+                        {/* Dark Mode Setting */}
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex flex-row items-center justify-around">
+                            <label
+                              htmlFor="darkMode"
+                              className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                            >
+                              Dark Mode
+                            </label>
+
+                          </div>
+                          <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                            <span className="text-[13px] mr-2">
+                              {isDarkMode ? "ON" : "OFF"}
+                            </span>
+                            <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
+                          </div>
+                        </div>
+
+                        {/* Testnet Mode Setting */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <label
+                              htmlFor="testnetMode"
+                              className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                            >
+                              Testnet Mode
+                            </label>
+
+                          </div>
+                          <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                            <span className="text-[13px] mr-2">
+                              {isTestnetMode ? "ON" : "OFF"}
+                            </span>
+                            <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-center ml-3">
-                        <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
-                      </div>
-                    </div>
-                  
-                    {/* Testnet Mode Setting */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor="testnetMode"
-                          className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
-                        >
-                          Testnet Mode
-                        </label>
-                        <span className="ml-2 text-[13px]">
-                          {isTestnetMode ? "ON" : "OFF"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-center ml-3">
-                        <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
-                      </div>
-                    </div>
-                  </div>
-                  
+
                     )}
                   </div>
                 </div>
@@ -891,63 +893,56 @@ useEffect(() => {
                     {!isMobile && <img
                       src={settingsIcon}
                       alt="settings_icon"
-                      className="object-contain w-[43px] h-[43px] cursor-pointer hidden lg:block md:block"
+                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
                       onClick={handleDropdownToggle}
                     />}
-                    {isMobile && (
-                      <div>
-                        <div
-                          onClick={() => setIsMobileNav(!isMobileNav)}
-                          className="cursor-pointer"
-                        >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                          {/* Toggle between Menu and X icons */}
-                        </div>
-                      </div>
-                    )}
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
-                          {" "}
                           Settings
                         </h2>
-                        {/* Dropdown content for dark mode and testnet mode */}
-                        <div className="flex items-center mb-1">
-                          <label
-                            htmlFor="darkMode"
-                            className="ml-2 text-lg font-semibold text-nowrap text-[#2A1F9D] dark:text-darkText"
-                          >
-                            Dark Mode
-                          </label>
-                          <span className="ml-[70px] text-[13px]">
-                            {isDarkMode ? "ON" : "OFF"}
-                          </span>
-                          <div className="flex align-center justify-center ml-3">
-                            <CustomizedSwitches checked={isDarkMode}
-                              onChange={handleDarkModeToggle} />
+
+                        {/* Dark Mode Setting */}
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex flex-row items-center justify-around">
+                            <label
+                              htmlFor="darkMode"
+                              className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                            >
+                              Dark Mode
+                            </label>
+
+                          </div>
+                          <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                            <span className="text-[13px] mr-2">
+                              {isDarkMode ? "ON" : "OFF"}
+                            </span>
+                            <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
                           </div>
                         </div>
 
-                        <div className="flex items-center">
-                          <label
-                            htmlFor="testnetMode"
-                            className="ml-2 text-lg font-semibold text-[#2A1F9D] text-nowrap dark:text-darkText"
-                          >
-                            Testnet Mode
-                          </label>
-                          <span className="ml-[45px] text-[13px]">
-                            {isTestnetMode ? "ON" : "OFF"}
-                          </span>
-                          <div className="flex align-center justify-center ml-3">
-                            <CustomizedSwitches checked={isTestnetMode}
-                              onChange={handleTestnetModeToggle} />
+                        {/* Testnet Mode Setting */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <label
+                              htmlFor="testnetMode"
+                              className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                            >
+                              Testnet Mode
+                            </label>
+
+                          </div>
+                          <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                            <span className="text-[13px] mr-2">
+                              {isTestnetMode ? "ON" : "OFF"}
+                            </span>
+                            <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
                           </div>
                         </div>
                       </div>
+
                     )}
-
                   </div>
-
                 </div>
 
               </div>

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import loader from "../../public/loader1.svg"
+import loader from "../../public/loader.svg"
 
 
 const Loading = ({ isLoading }) => {

@@ -1,16 +1,3 @@
-// use ic_cdk_macros::export_candid;
-// mod api;
-// mod constants;
-// mod declarations;
-// mod guards;
-// mod implementations;
-// mod logic;
-// mod memory;
-// mod state;
-// mod tests;
-// mod types;
-// mod utils;
-
 use ic_cdk_macros::export_candid;
 mod api;
 mod constants;
@@ -21,7 +8,6 @@ mod protocol;
 mod memory;
 mod state;
 mod tests;
-mod types;
 mod utils;
 
 use candid::Nat;

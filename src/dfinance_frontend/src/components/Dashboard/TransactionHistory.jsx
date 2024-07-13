@@ -82,8 +82,11 @@ const TransactionHistory = () => {
             Transaction History
           </h1>
           {transactionHistory.length === 0 ? (
-            <div className="text-center mt-40">
-              <p className="text-[#2A1F9D] text-sm font-semibold dark:text-darkText">
+            <div className="mt-[120px] flex flex-col justify-center align-center place-items-center">
+              <div className="w-20 h-15">
+              <img src="/empty file.gif" alt="empty" className="w-30"/>
+              </div>
+              <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
                 Transaction History is not currently available for this market.
               </p>
             </div>

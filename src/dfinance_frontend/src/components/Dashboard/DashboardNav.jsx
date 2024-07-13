@@ -102,20 +102,27 @@ const DashboardNav = () => {
 
   return (
     <div className="w-full ">
-
-      <div className="flex h-[60px] gap-7 -ml-3">
-        <div className="-mt-1 cursor-pointer" onClick={() => navigate(-1)}>
-        <ChevronLeft size={40} color={chevronColor}/>
-        </div>
-
-        <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-4 dark:text-darkText">
+      {['/dashboard', '/market', '/governance'].includes(pathname) && (
+        <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-8 dark:text-darkText">
           {dashboardTitle}
+        </h1>
+      )}
+
+      <div className="flex h-[60px] gap-5 -ml-3">
+        {!['/dashboard', '/market', '/governance'].includes(pathname) && (
+          <div className="-mt-1 cursor-pointer" onClick={() => navigate(-1)}>
+            <ChevronLeft size={40} color={chevronColor} />
+          </div>
+        )}
+        <h1 className="text-[#2A1F9D] text-2xl inline-flex items-center mb-8">
+          <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-9 h-9 mr-3" />
+          ICP Market
         </h1>
       </div>
 
-      <div className="w-full flex flex-wrap justify-start items-center gap-2">
+      <div className="w-full flex flex-wrap justify-start items-center gap-2 md:mb-20 lg:mb-2">
         <div className="flex">
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <div className="rounded-full border overflow-hidden shrink-0">
               <img
                 src={currentValueData ? currentValueData.image : ""}
@@ -170,7 +177,7 @@ const DashboardNav = () => {
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
           {/* Menu button for small screens */}
           <div className="relative">
             {/* Menu Button */}
@@ -237,17 +244,17 @@ const DashboardNav = () => {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-6 dark:text-darkText">
+          <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-8 dark:text-darkText">
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
                 ? WALLET_DETAIL_TAB
                 : WALLET_DETAILS_TABS
               ).map((data, index) => (
-                <div key={index} className="relative group ml-10">
-                  <button className="relative">
+                <div key={index} className="relative group">
+                  <button className="relative font-light text-sm min-w-[70px]">
                     {data.title}
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                    <span className="absolute top-full left-0 font-light py-2 opacity-100 transition-opacity">
+                    <span className="absolute top-full left-0 font-bold py-2 opacity-100 transition-opacity text-lg">
                       {data.count}
                     </span>
                   </button>
@@ -255,7 +262,7 @@ const DashboardNav = () => {
               ))}
             {isAuthenticated && shouldRenderRiskDetailsButton && (
               <button
-                className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
+                className="ml-2 -mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-xs rounded-lg dark:text-darkTextSecondary"
                 onClick={handleOpenPopup}
               >
                 Risk Details
@@ -263,15 +270,16 @@ const DashboardNav = () => {
             )}
           </div>
           {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
-          <div className="sxs3:mt-16 -mb-6 -ml-40  mr-2 md:mt-0 lg:ml-[465px] sxs3:flex sxs3:justify-end sxs3:w-full md:w-auto md:ml-auto">
-            {isAuthenticated && shouldRenderTransactionHistoryButton && (
-              <a href="/dashboard/transaction-history" className="block">
-                <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
-                  Transaction History
-                </button>
-              </a>
-            )}
-          </div>
+
+        </div>
+        <div className="ml-auto">
+          {isAuthenticated && shouldRenderTransactionHistoryButton && (
+            <a href="/dashboard/transaction-history" className="block">
+              <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
+                Transaction History
+              </button>
+            </a>
+          )}
         </div>
       </div>
     </div>

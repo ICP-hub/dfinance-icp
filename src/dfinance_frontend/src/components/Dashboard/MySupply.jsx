@@ -238,7 +238,7 @@ const MySupply = () => {
                                 {item.asset}
                               </span>
                             </div>
-                            <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
+                            <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-4">
                               <p className="dark:text-darkTextSecondary">
                                 Wallet Balance:
                               </p>
@@ -246,25 +246,27 @@ const MySupply = () => {
                                 ${item.wallet_balance_count}M
                               </p>
                             </div>
-                            <div className="flex justify-end text-xs mb-2 dark:text-darkText">
+                            <div className="flex justify-end text-xs  dark:text-darkText">
                               <p className="text-right text-[#2A1F9D] dark:text-darkText">
                                 ${item.wallet_balance}M
                               </p>
                             </div>
-                            <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
+                            <div className="flex justify-between text-xs text-[#233D63] font-semibold mt-6 mb-1">
                               <p className="dark:text-darkTextSecondary">
                                 APY:
                               </p>
-                              <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                              <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2 mb-2">
                                 {item.apy}%
                               </p>
                             </div>
-                            <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-2">
+                            <div className="flex justify-between text-xs  text-[#233D63] font-semibold mt-3 mb-4">
                               <p className="dark:text-darkTextSecondary">
                                 Can Be Collateral
                               </p>
+                              <div className="-mr-6 -mt-4 mb-4" >
                               <CustomizedSwitches 
                                />
+                               </div>
                             </div>
                             <div className="flex justify-center gap-2 mt-2 mb-2">
                               <Button
@@ -378,7 +380,7 @@ const MySupply = () => {
                                           item.image
                                         )
                                       }
-                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D]  rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D]  rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs  "
                                        />
                                   </div>
                                 </td>
@@ -427,7 +429,7 @@ const MySupply = () => {
                         (item, index) => (
                           <div
                             key={index}
-                            className="p-3 rounded-lg  dark:bg-darkSurface mb-4 dark:text-darkText"
+                            className="p-3 rounded-lg  dark:bg-darkSurface mb-4 dark:text-darkText "
                           >
                             <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                               <img
@@ -452,7 +454,7 @@ const MySupply = () => {
                                 ${item.wallet_balance}M
                               </p>
                             </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
+                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
                               <p className="dark:text-darkTextSecondary ">
                                 APY:
                               </p>
@@ -460,13 +462,13 @@ const MySupply = () => {
                                 {item.apy}%
                               </p>
                             </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
+                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
                               <p className="text-nowrap  dark:text-darkTextSecondary ">
                                 Can Be Coletral
                               </p>
-                              <div className="w-full flex items-center justify-end mb-2 dark:text-darkText">
-                                <Check color="#2A1F9D" size={16} />
-                              </div>
+                              <div className="w-full flex items-center justify-end dark:text-darkText">
+                                  <Check color={checkColor} size={16} />
+                                </div>
                             </div>
                             <div className="flex  justify-center gap-2 mt-2">
                               <Button
@@ -678,7 +680,7 @@ const MySupply = () => {
                                 {item.apy}
                               </p>
                             </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
+                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
                               <p className="dark:text-darkTextSecondary ">
                                 APY Type:
                               </p>
@@ -872,7 +874,7 @@ const MySupply = () => {
                                 {item.wallet_balance_count}
                               </p>
                             </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
+                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-6 mt-6">
                               <p className="dark:text-darkTextSecondary text-nowrap flex items-center">
                                 APY, Variable <Info size={16} />
                               </p>
@@ -918,7 +920,7 @@ const MySupply = () => {
             )}
 
             {/* DESKTOP  */}
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
               {isBorrowVisible && (
                 <>
                   <div className="bg-[#AEADCB] opacity-80 mt-2 px-2 py-2 rounded-lg flex items-center mb-2">

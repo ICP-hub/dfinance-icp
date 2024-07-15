@@ -757,12 +757,12 @@ export default function Navbar({ isHomeNav }) {
                         <div className="w-full flex justify-center mt-3 gap-3">
                           <Button
                             title="Switch Wallet"
-                            className="my-2 bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                            className=" z-20 py-2 px-9 focus:outline-none box bg-transparent bg-gradient-to-r from-[#EB8863]  via-[#81198E] to-transparent bg-clip-text text-transparent shadow-lg  text-sm font-light  rounded-lg"
                             onClickHandler={handleSwitchWallet}
                           />
                           <Button
                             title="Disconnect"
-                            className="my-2 bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                            className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
                             onClickHandler={handleLogout}
                           />
                         </div>

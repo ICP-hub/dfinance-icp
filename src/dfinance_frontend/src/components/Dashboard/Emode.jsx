@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { FaCog } from "react-icons/fa";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
-import { Info } from "lucide-react";
+import { Info ,Fuel , X, TriangleAlert} from "lucide-react";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -19,7 +20,8 @@ const EModeButton = () => {
     setShowFinalPopup(true);
     setShowInitialPopup(false);
   };
-
+  const theme = useSelector((state) => state.theme.theme);
+  const fuelcolor = theme === "dark" ? "#8CC0D7" : "#233D63";
   const handleFinalEnableClick = () => {
     setIsEnabled(true);
     setShowFinalPopup(false);
@@ -65,29 +67,26 @@ const EModeButton = () => {
         </button>
 
         {showInitialPopup && (
-          <div className="absolute mt-2 w-80 flex items-center justify-center md:right-0 md:top-auto md:bottom-auto md:left-auto md:translate-x-0 left-0 translate-x-full">
-            <div className="bg-white border rounded-lg shadow-lg p-6 relative w-full flex flex-col justify-between dark:bg-darkBackground dark:text-darkText z-60">
-              <button
-                onClick={handleClickAway}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              >
-                &times;
-              </button>
+          <>
+          <div className="fixed inset-0 bg-black opacity-40 z-40" onClick={handleClickAway}></div>
+          <div className="absolute mt-2 w-80 flex items-center justify-center sm:-ml-72   md:right-0 md:top-auto md:bottom-auto md:left-auto md:translate-x-0 left-0 translate-x-full z-50">
+            <div className="bg-white border rounded-lg shadow-lg p-6 relative w-full flex flex-col justify-between dark:border-none dark:bg-darkOverlayBackground dark:text-darkText">
+            <div
+      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+      onClick={handleClickAway}
+    >
+      <X className="text-black dark:text-darkText w-6 h-6" />
+    </div>
               <div className="dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd dark:text-darkText">
-                <h2 className="text-xl font-semibold mb-4 dark:text-darkText">
+                <h2 className="text-xl font-semibold mb-4 text-[#2A1F9D] dark:text-darkText">
                   Efficiency mode (E-Mode)
                 </h2>
-                <p className="text-gray-700 mb-4 dark:text-darkText">
-                  E-Mode increases your LTV for a selected category of assets up to 97%.{" "}
-                  <a
-                    href="https://docs.aave.com/faq/aave-v3-features#high-efficiency-mode-e-mode"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
-                  >
-                    Learn more
-                  </a>
-                </p>
+                <p className="text-[#2A1F9D] mb-4 dark:text-darkText">
+  E-Mode increases your LTV for a selected category of assets up to 97%.{" "}
+  <span className="text-[#2A1F9D] underline dark:text-darkText">Learn more</span>
+</p>
+
+                
               </div>
               <button
                 onClick={handleEnableClick}
@@ -97,49 +96,37 @@ const EModeButton = () => {
               </button>
             </div>
           </div>
+          </>
         )}
 
         {showFinalPopup && (
           <ClickAwayListener onClickAway={handleClickAway}>
             <div className="fixed inset-0 flex items-center justify-center z-50">
               <div className="absolute inset-0 bg-gray-800 opacity-50" />
-              <div className="bg-white dark:bg-gradient dark:bg-darkBackground rounded-lg shadow-lg p-6 relative w-96 flex flex-col">
+              <div className="bg-white dark:bg-gradient dark:bg-darkOverlayBackground rounded-lg shadow-lg p-6 relative w-96 flex flex-col">
                 <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
                   Enable E-Mode
                 </h1>
-                <button
-                  onClick={handleClickAway}
-                  className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-300"
-                >
-                  &times;
-                </button>
+                <div
+      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+      onClick={handleClickAway}
+    >
+      <X className="text-black w-6 h-6 dark:text-darkText" />
+    </div>
                 <div className="flex flex-col gap-2 mt-5 text-sm dark:text-darkText">
                   <div className="w-full">
-                    <div className="w-full flex bg-[#96d6f1] dark:bg-[#59588C] p-1 rounded">
+                    <div className="w-full flex bg-[#D7F1FC] dark:bg-[#59588C] p-1 rounded">
                       <div className="w-1/12 flex items-center justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          className="w-4 h-4 mr-1 text-blue dark:text-[#96d6f1]"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4m0 4h.01m-6.938 4h13.856c.72 0 1.392-.386 1.732-1l6.939-12a2 2 0 00-1.732-3H4.134a2 2 0 00-1.732 3l6.939 12c.34.614 1.012 1 1.732 1z"
-                          />
-                        </svg>
+                      <TriangleAlert />
                       </div>
-                      <div className="w-11/12 text-xs text-[#2A1F9D] dark:text-darkText flex items-center ml-1">
+                      <div className="w-11/12 text-xs text-[#2A1F9D] dark:text-darkText flex items-center ml-1 ">
                         Enabling E-Mode only allows you to borrow assets belonging to the selected category. Please visit our FAQ guide to learn more about how it works and the applied restrictions.
                       </div>
                     </div>
                     <div className="w-full text-[#2A1F9D] dark:text-darkText flex justify-between my-2">
                       <h1>Transaction overview</h1>
                     </div>
-                    <div className="w-full bg-gray-100 dark:bg-[#1D1B40] hover:bg-gray-200 dark:hover:bg-[#3a3772] cursor-pointer p-3 rounded-md text-sm">
+                    <div className="w-full bg-[#F6F6F6] dark:bg-[#1D1B40] hover:bg-gray-200 dark:hover:bg-[#3a3772] cursor-pointer p-3 rounded-md text-sm">
                       <div className="w-full flex flex-col my-1">
                         <div className="w-full flex justify-between items-center">
                           <p className="text-nowrap text-[#2A1F9D] dark:text-darkText">
@@ -179,16 +166,12 @@ const EModeButton = () => {
                     </div>
                     <div className="w-full mt-3">
                       <div className="flex items-center">
-                        <img
-                          src="/Vector.png"
-                          alt="Vector Image"
-                          className="w-4 h-4 mr-1 dark:text-darkText"
-                        />
-                        <h1 className="">&lt;$1.23</h1>
+                      <Fuel className="mt-[-4px] mr-2" size={18}  color={fuelcolor}  />
+                        <h1 className="text-[#233D63] dark:text-darkTextSecondary1">&lt;$1.23</h1>
                         <div className="warning-icon-container">
                           <Info
                             size={16}
-                            className="text-[#120f34] dark:text-darkText ml-1"
+                            className="text-[#120f34] dark:text-darkTextSecondary1 ml-1"
                           />
                         </div>
                       </div>

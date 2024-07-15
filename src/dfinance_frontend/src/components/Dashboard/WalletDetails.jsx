@@ -114,8 +114,8 @@ const WalletDetails = () => {
           )}
         </div>
         <svg onClick={showSearchBar} className="cursor-pointer" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           <defs>
             <linearGradient id="paint0_linear_293_865" x1="3.5" y1="3.5" x2="13.5" y2="14" gradientUnits="userSpaceOnUse">
               <stop stop-color="#2E28A5" />
@@ -203,7 +203,7 @@ const WalletDetails = () => {
             <div id="pagination" className="flex gap-2">
               <button
                 type="button"
-                className="border rounded-full p-1 border-[#c8ced5] bg-[#c8ced5] text-white hover:bg-[#b0b5bb] hover:border-[#b0b5bb] hover:text-white"
+                className="border rounded-full p-1 border-[#c8ced5] bg-[#c8ced5] dark:bg-[#919EAB] text-white hover:bg-[#b0b5bb] hover:border-[#b0b5bb] hover:text-white"
                 onClick={handlePreviousPage}
               >
                 <ChevronLeft />
@@ -211,7 +211,7 @@ const WalletDetails = () => {
 
               <button
                 type="button"
-                className="border rounded-full p-1 border-[#c8ced5] hover:border-[#c8ced5] hover:text-[#b0b5bb] text-[#c8ced5]"
+                className="border rounded-full p-1 border-[#c8ced5] bg-white hover:border-[#c8ced5] hover:text-[#b0b5bb] text-[#c8ced5] dark:text-[#2A1F9D]"
                 onClick={handleNextPage}
               >
                 <ChevronRight />
@@ -289,19 +289,19 @@ const WalletDetails = () => {
                     <img src={"https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                   </div>
                 </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#b7b4b4] dark:text-darkText">
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
                   Plug
                   <div className='w-8 h-8'>
                     <img src={"/plug.png.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                   </div>
                 </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#b7b4b4] dark:text-darkText">
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
                   Bifinity
                   <div className='w-8 h-8'>
                     <img src={"/bifinity.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                   </div>
                 </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#b7b4b4] dark:text-darkText" onClick={() => loginHandler("nfid")}>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
                   NFID
                   <div className='w-8 h-8'>
                     <img src={"/nfid.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />

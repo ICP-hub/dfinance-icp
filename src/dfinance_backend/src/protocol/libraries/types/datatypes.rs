@@ -1,5 +1,6 @@
-use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
+use candid::{Deserialize, Principal};
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InitReserveInput {
     pub a_token_impl: Principal,
@@ -17,4 +18,9 @@ pub struct InitReserveInput {
     pub stable_debt_token_name: String,
     pub stable_debt_token_symbol: String,
     pub params: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct UserConfigurationMap{
+
 }

@@ -75,13 +75,13 @@ const StakeDetails = () => {
                     </div>
 
                 </div>
-                <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-bold gap-6 dark:text-darkText">
+                <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] gap-6 dark:text-darkText">
                     {(STACK_DETAILS_TABS).map((data, index) => (
                         <div key={index} className="relative group mb-11 mt-5">
-                            <button className="relative">
+                            <button className="relative font-light text-sm">
                                 {data.title}
                                 <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                                <span className="absolute top-full left-0 font-light py-2 opacity-100  transition-opacity">
+                                <span className="absolute top-full left-0 font-bold opacity-100  transition-opacity text-lg">
                                     {data.count}
                                 </span>
                             </button>

@@ -114,10 +114,10 @@ const DashboardNav = () => {
             <ChevronLeft size={40} color={chevronColor} />
           </div>
         )}
-        <h1 className="text-[#2A1F9D] text-2xl inline-flex items-center mb-8 dark:text-darkText">
-          <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-9 h-9 mr-3" />
-          ICP Market
-        </h1>
+       <h1 className="text-[#2A1F9D] text-xl inline-flex items-center mb-8 dark:text-darkText">
+  <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]" />
+  ICP Market
+</h1>
 
         {/* Menu Button */}
         <div className="md:hidden flex ml-auto -mt-10">
@@ -246,17 +246,17 @@ const DashboardNav = () => {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-8 dark:text-darkText">
+         {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#2A1F9D] font-semibold gap-8 dark:text-darkText mb-5">
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
                 ? WALLET_DETAIL_TAB
                 : WALLET_DETAILS_TABS
               ).map((data, index) => (
                 <div key={index} className="relative group">
-                  <button className="relative font-light text-sm min-w-[70px]">
+                  <button className="relative font-light text-sm text-left min-w-[70px]">
                     {data.title}
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                    <span className="absolute top-full left-0 font-bold py-2 opacity-100 transition-opacity text-lg">
+                    <span className="absolute top-full left-0 font-bold py-1 opacity-100 transition-opacity text-lg">
                       {data.count}
                     </span>
                   </button>
@@ -270,7 +270,7 @@ const DashboardNav = () => {
                 Risk Details
               </button>
             )}
-          </div>
+          </div>}
           {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
 
         </div>

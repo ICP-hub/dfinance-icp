@@ -94,7 +94,7 @@ const WalletDetails = () => {
   };
 
   return (
-    <div className="w-full mt-20">
+    <div className="w-full mt-0 lg:mt-20">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">ICP Assets</h1>
         <div className="ml-auto   ">

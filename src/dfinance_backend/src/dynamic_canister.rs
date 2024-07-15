@@ -1,20 +1,12 @@
-use candid::{encode_one, CandidType, Encode, Nat, Principal};
-use ic_cdk::api::call::call;
-use ic_cdk::api::management_canister::main::CreateCanisterArgument;
-use ic_cdk::api::management_canister::main::LogVisibility;
-use ic_cdk::api::management_canister::main::{
-    CanisterIdRecord, CanisterInstallMode, CanisterSettings, InstallCodeArgument,
-    UpdateSettingsArgument,
-};
+use candid::{CandidType, Encode, Nat, Principal};
+use ic_cdk::api::management_canister::main::{CanisterInstallMode, CanisterSettings};
 use ic_cdk_macros::update;
 
 use serde::Deserialize;
 use std::borrow::Cow;
 
-use icrc_ledger_types::icrc::generic_metadata_value::MetadataValue;
-
 use icrc_ledger_types::icrc::generic_value::Value;
-use icrc_ledger_types::icrc1::account::{Account, Subaccount};
+use icrc_ledger_types::icrc1::account::Account;
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct InitArgs {

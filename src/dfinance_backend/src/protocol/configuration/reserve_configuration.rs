@@ -1,5 +1,3 @@
 pub struct ReserveConfiguration;
 
-impl ReserveConfiguration{
-    
-}
+impl ReserveConfiguration {}

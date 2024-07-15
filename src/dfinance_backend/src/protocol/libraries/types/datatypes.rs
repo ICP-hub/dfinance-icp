@@ -1,5 +1,26 @@
+use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
-use candid::{Deserialize, Principal};
+
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
+pub struct Transaction {
+    pub transaction_hash: String,
+    pub block: u64,
+    pub method: String,
+    pub age: u32,
+    pub from: String,
+    pub to: String,
+    pub value: f64,
+    pub transaction_fee: f64,
+}
+
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
+pub struct UserData {
+    pub net_worth: f64,
+    pub net_apy: f64,
+    pub health_factor: f64,
+    pub transaction_history: Vec<Transaction>,
+    pub faucet: Option<Vec<(String, u64)>>,
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InitReserveInput {
@@ -18,9 +39,4 @@ pub struct InitReserveInput {
     pub stable_debt_token_name: String,
     pub stable_debt_token_symbol: String,
     pub params: Vec<u8>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct UserConfigurationMap{
-
 }

@@ -3,7 +3,7 @@ pub enum Error {
     InvalidAmount,
     ReserveInactive,
     ReservePaused,
-    ReserveFrozen
+    ReserveFrozen,
 }
 
 impl Error {
@@ -12,7 +12,7 @@ impl Error {
             Error::InvalidAmount => "Amount must be greater than 0",
             Error::ReserveInactive => "Action requires an active reserve",
             Error::ReservePaused => "Action cannot be performed because the reserve is paused",
-            Error::ReserveFrozen => "Action cannot be performed because the reserve is frozen"
+            Error::ReserveFrozen => "Action cannot be performed because the reserve is frozen",
         }
     }
 }

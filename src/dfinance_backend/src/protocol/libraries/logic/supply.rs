@@ -3,7 +3,7 @@ use ic_cdk::api::call::{call, CallResult};
 use ic_cdk::caller;
 use std::env;
 
-use crate::api::deposit::transfer_from_ckbtc;
+use crate::api::deposit::asset_transfer_from;
 use crate::api::state_handler::*;
 use crate::declarations::assets::ExecuteSupplyParams;
 use crate::protocol::libraries::logic::{reserve::ReserveLogic, validation::ValidationLogic};
@@ -55,7 +55,7 @@ impl SupplyLogic {
         );
 
         // Transfers the asset from the user to our backend cansiter
-        transfer_from_ckbtc(
+        asset_transfer_from(
             ledger_canister_id,
             user_principal,
             platform_principal,

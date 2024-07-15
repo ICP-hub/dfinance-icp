@@ -6,11 +6,10 @@ pub struct ReserveConfigurationMap {
 }
 
 #[derive(CandidType, Deserialize, Clone, Default)]
-pub struct  ReserveData {
-    pub configuration: Option<ReserveConfigurationMap>,
-    pub a_token_address: Option<Principal>,
-    pub stable_debt_token_address: Option<Principal>,
-    pub variable_debt_token_address: Option<Principal>,
+pub struct ReserveData {
+    pub d_token_canister: Option<String>,
+    pub stable_debt_token_canister: Option<String>,
+    pub variable_debt_token_canister: Option<String>,
     pub interest_rate_strategy_address: Option<Principal>,
     pub liquidity_index: Option<u128>,
     pub variable_borrow_index: Option<u128>,
@@ -19,12 +18,6 @@ pub struct  ReserveData {
     pub current_stable_borrow_rate: Option<u128>,
     pub last_update_timestamp: Option<u64>,
     pub id: u16,
-    pub accrued_to_treasury: Option<u128>,
-    pub unbacked: u128,
-    pub isolation_mode_total_debt: u128,
-    // pub total_stable_debt: Option<u128>,
-    // pub total_variable_debt: Option<u128>,
-    // pub reserve_factor: Option<u128>,
 }
 
 #[derive(CandidType, Deserialize, Clone, Default)]
@@ -82,7 +75,3 @@ pub struct InitReserveParams {
     pub reserves_count: u64,
     pub max_number_reserves: u64,
 }
-
-
-
-

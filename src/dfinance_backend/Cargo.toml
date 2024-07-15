@@ -22,4 +22,4 @@ ciborium = { git = "https://github.com/enarx/ciborium", rev = "e719537c99b564c36
 serde_bytes = "0.11.14"
 time = "0.3.36"
 once_cell = "1.19.0"
-ethnum = "0.2"
+ethnum = "1.5.0"

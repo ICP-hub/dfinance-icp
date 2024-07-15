@@ -757,7 +757,7 @@ export default function Navbar({ isHomeNav }) {
                         <div className="w-full flex justify-center mt-3 gap-3">
                           <Button
                             title="Switch Wallet"
-                            className=" z-20 py-2 px-9 focus:outline-none box bg-transparent bg-gradient-to-r from-[#EB8863]  via-[#81198E] to-transparent bg-clip-text text-transparent shadow-lg  text-sm font-light  rounded-lg"
+                            className=" z-20 py-2 px-9 focus:outline-none box bg-transparent bg-gradient-to-r from-[#EB8863]  via-[#81198E] to-transparent bg-clip-text text-gray-700 dark:text-darkText shadow-lg  text-sm font-light  rounded-lg"
                             onClickHandler={handleSwitchWallet}
                           />
                           <Button

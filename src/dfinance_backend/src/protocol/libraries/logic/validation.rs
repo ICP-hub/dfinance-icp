@@ -5,7 +5,7 @@ use std::env;
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
 
-pub struct ValidationLogic;
+// pub struct ValidationLogic;
 
 impl ValidationLogic {
     pub async fn validate_supply(
@@ -19,15 +19,15 @@ impl ValidationLogic {
         let (is_active, is_frozen, _, _, is_paused) =
             reserve_cache.reserve_configuration.get_flags(); // TODO
 
-        if !is_active {
-            panic!("{:?}", Error::ReserveInactive);
-        }
-        if is_paused {
-            panic!("{:?}", Error::ReservePaused);
-        }
-        if is_frozen {
-            panic!("{:?}", Error::ReserveFrozen);
-        }
+//         if !is_active {
+//             panic!("{:?}", Error::ReserveInactive);
+//         }
+//         if is_paused {
+//             panic!("{:?}", Error::ReservePaused);
+//         }
+//         if is_frozen {
+//             panic!("{:?}", Error::ReserveFrozen);
+//         }
 
         // Supply cap limit 10 million
         let supply_cap = Nat::from(10000000);

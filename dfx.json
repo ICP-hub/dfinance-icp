@@ -15,9 +15,14 @@
       "package": "dfinance_backend",
       "type": "rust"
     },
-    "atoken": {
-      "candid": "src/atoken/atoken.did",
-      "package": "atoken",
+    "dtoken": {
+      "candid": "src/dtoken/dtoken.did",
+      "package": "dtoken",
+      "type": "rust"
+    },
+    "debttoken": {
+      "candid": "src/debttoken/debttoken.did",
+      "package": "debttoken",
       "type": "rust"
     },
     "dfinance_frontend": {
@@ -30,7 +35,7 @@
       "type": "assets",
       "workspace": "dfinance_frontend"
     },
-    "internet_identity" : {
+    "internet_identity": {
       "type": "pull",
       "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
     }

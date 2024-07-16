@@ -15,7 +15,7 @@ function generate_did() {
 # List of canisters to generate candid files for 
 # (comma separated list of canister names)
 
-CANISTERS=atoken,dfinance_backend
+CANISTERS=dtoken,dfinance_backend,debttoken
 
 for canister in $(echo $CANISTERS | sed "s/,/ /g")
 do

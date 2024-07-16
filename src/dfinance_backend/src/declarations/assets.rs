@@ -7,9 +7,9 @@ pub struct ReserveConfigurationMap {
 
 #[derive(CandidType, Deserialize, Clone, Default)]
 pub struct ReserveData {
-    pub d_token_canister: Option<String>,
-    pub stable_debt_token_canister: Option<String>,
-    pub variable_debt_token_canister: Option<String>,
+    pub d_token_canister: Option<Principal>,
+    pub stable_debt_token_canister: Option<Principal>,
+    pub variable_debt_token_canister: Option<Principal>,
     pub interest_rate_strategy_address: Option<Principal>,
     pub liquidity_index: Option<u128>,
     pub variable_borrow_index: Option<u128>,

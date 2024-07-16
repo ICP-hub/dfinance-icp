@@ -356,7 +356,7 @@ export default function Navbar({ isHomeNav }) {
                     : "/DFinance-Light.svg"
                 }
                 alt="DFinance"
-                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]  sxs3:mb-3"
+                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px]  sxs3:mb-3 md:mb-1"
               />
               {!isHomeNav && isTestnetMode && (
                 <button
@@ -484,7 +484,7 @@ export default function Navbar({ isHomeNav }) {
               <div className="hidden lg:flex gap-2 sxs3:flex  md:flex ">
                 <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-[10px] shadow-md border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-2 p-[10px] px-3"
+                    className="flex items-center gap-2 py-[10px] px-3"
                     onClick={handleSwitchToken}
                   >
                     <span className="hidden lg1:flex">
@@ -726,7 +726,7 @@ export default function Navbar({ isHomeNav }) {
                 </div>
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-md border-b-[1px] border-white/40 dark:border-white/20">
                   <div
-                    className="flex items-center gap-1 p-2 px-3  overflow-hidden"
+                    className="flex items-center gap-1 py-[9px] px-3  overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -734,7 +734,7 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5"
                     />
-                    <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px]">0x65.125s</span>
+                    <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold">0x65.125s</span>
                   </div>
 
                   {switchWalletDrop && (
@@ -757,12 +757,12 @@ export default function Navbar({ isHomeNav }) {
                         <div className="w-full flex justify-center mt-3 gap-3">
                           <Button
                             title="Switch Wallet"
-                            className="my-2 bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                            className=" z-20 py-2 px-9 focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg"
                             onClickHandler={handleSwitchWallet}
                           />
                           <Button
                             title="Disconnect"
-                            className="my-2 bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                            className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
                             onClickHandler={handleLogout}
                           />
                         </div>
@@ -905,16 +905,16 @@ export default function Navbar({ isHomeNav }) {
                 <Button
                   title={"Connect Wallet"}
                   onClickHandler={handleWalletConnect}
-                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-xl shadow-[#00000040] font-semibold text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"}
+                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-md shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"}
                 />
                 <div className="flex items-center justify-center">
                   <div className="relative">
-                    {!isMobile && <img
+                    {!isMobile ? <img
                       src={settingsIcon}
                       alt="settings_icon"
                       className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
                       onClick={handleDropdownToggle}
-                    />}
+                    /> :  <MenuIcon />}
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">

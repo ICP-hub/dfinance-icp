@@ -1,7 +1,8 @@
-import { Check, Wallet } from 'lucide-react';
+import { Check, Wallet , X  } from 'lucide-react';
+
 import React, { useState } from 'react';
 
-const PaymentDone = () => {
+const PaymentDone = ({ asset }) => {
     const [isVisible, setIsVisible] = useState(true);
 
     const handleClose = () => {
@@ -15,7 +16,7 @@ const PaymentDone = () => {
     }
 
     return (
-        <div className="w-[400px] h-[340px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[400px] h-[380px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
             <div className="w-full flex flex-col items-center">
                 <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 focus:outline-none self-end">
                     <X size={24} />

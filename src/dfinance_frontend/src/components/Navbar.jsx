@@ -11,6 +11,7 @@ import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "./Button";
+import { useRef } from "react";
 
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
@@ -43,8 +44,9 @@ import Vector from "../../public/Vector.svg";
 import Group216 from "../../public/Group216.svg";
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 import Popup from "./Dashboard/Morepopup";
-
 import CustomizedSwitches from "./MaterialUISwitch";
+import { toggleTestnetMode } from "../redux/reducers/testnetReducer"
+
 export default function Navbar({ isHomeNav }) {
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
   const renderThemeToggle = !isMobile;
@@ -242,28 +244,25 @@ export default function Navbar({ isHomeNav }) {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
-  const [isTestnetMode, setIsTestnetMode] = useState(() => {
-    const savedTestnetMode = localStorage.getItem("isTestnetMode");
-    return savedTestnetMode ? JSON.parse(savedTestnetMode) : false;
-  });
+
+  const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
+
+  const previousIsTestnetMode = useRef(isTestnetMode);
+
+  const handleTestnetModeToggle = () => {
+    dispatch(toggleTestnetMode());
+  };
 
   useEffect(() => {
-    const storedIsTestnetMode = JSON.parse(
-      localStorage.getItem("isTestnetMode")
-    );
-
-    if (isTestnetMode !== storedIsTestnetMode) {
-      localStorage.setItem("isTestnetMode", JSON.stringify(isTestnetMode));
-
-      // Dismiss previous toast notifications
-      toast.dismiss();
-
-      // Show the new toast notification
-      toast.success(
-        `Testnet mode ${!isTestnetMode ? "disabled" : "enabled"} successfully!`
-      );
+    if (previousIsTestnetMode.current !== isTestnetMode) {
+      if (previousIsTestnetMode.current !== undefined) {
+        toast.dismiss(); // Dismiss any existing toasts
+      }
+      toast.success(`Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`);
+      previousIsTestnetMode.current = isTestnetMode;
     }
   }, [isTestnetMode]);
+
 
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
@@ -274,13 +273,7 @@ export default function Navbar({ isHomeNav }) {
 
   };
 
-  const handleTestnetModeToggle = () => {
-    setIsTestnetMode((prevMode) => !prevMode);
-    if (isTestnetMode) {
-      navigate("/dashboard");
-    }
 
-  };
 
   const hash = window.location.hash;
 
@@ -914,7 +907,7 @@ export default function Navbar({ isHomeNav }) {
                       alt="settings_icon"
                       className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
                       onClick={handleDropdownToggle}
-                    /> :  <MenuIcon />}
+                    /> : <MenuIcon />}
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">

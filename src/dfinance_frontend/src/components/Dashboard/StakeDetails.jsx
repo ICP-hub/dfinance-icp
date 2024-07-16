@@ -59,9 +59,9 @@ const StakeDetails = () => {
     return (
         <>
             <div className="w-full">
-                <h1 className="text-[#5B62FE] text-sm inline-flex items-center ">
+                <h1 className="text-[#2A1F9D] text-xl inline-flex items-center  dark:text-darkText ml-1">
                     Available on
-                    <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+                    <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-9 h-9 mr-3" />
                     ICP Mainnet
                 </h1>
                 <div className="w-full flex flex-col  md2:flex-row mt-6">
@@ -78,10 +78,10 @@ const StakeDetails = () => {
                 <div className="hidden md:flex items-center flex-wrap text-[#4659CF] gap-6 dark:text-darkText">
                     {(STACK_DETAILS_TABS).map((data, index) => (
                         <div key={index} className="relative group mb-11 mt-5">
-                            <button className="relative font-light text-sm dark:text-darkText dark:opacity-40">
+                            <button className="relative font-light text-sm dark:text-darkText dark:opacity-80">
                                 {data.title}
                                 <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                                <span className="mt-1 absolute top-full left-0 font-bold opacity-100  transition-opacity text-[20px] text-[#2A1F9D] dark:text-darkBlue">
+                                <span className="mt-1 absolute top-full left-0 font-bold opacity-100 dark:opacity-100 transition-opacity text-[20px] text-[#2A1F9D] dark:text-darkBlue">
                                     {data.count}
                                 </span>
                             </button>

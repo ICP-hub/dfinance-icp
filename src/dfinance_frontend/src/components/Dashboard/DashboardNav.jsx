@@ -203,17 +203,17 @@ const DashboardNav = () => {
                 } md:hidden`}
             >
               <div
-                className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
-                         bg-white px-3 py-7 rounded-lg w-11/12 max-w-md dark:bg-darkOverlayBackground dark:text-darkText"
+                className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkOverlayBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
+                         bg-white px-3 py-7 rounded-lg w-11/12 max-w-md  dark:text-darkText"
                 ref={menuRef}
               >
                 <div className="flex justify-between items-center mb-4">
-                  <span
-                    className="absolute top-2 right-3 text-[#5C5C5C] cursor-pointer"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <X size={30} />
-                  </span>
+                   <div
+      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+      onClick={() => setIsMenuOpen(false)}
+    >
+      <X className="text-black dark:text-darkText w-6 h-6" />
+    </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
                   {(isDashboardSupplyOrMain
@@ -222,12 +222,12 @@ const DashboardNav = () => {
                   ).map((data, index) => (
                     <div
                       key={index}
-                      className="relative group text-[#2A1F9D] p-3 font-bold dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+                      className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                       style={{ minWidth: "220px", flex: "1 0 220px" }} // Adjust minWidth and flex properties
                     >
                       <button className="relative w-full text-left flex justify-between items-center">
                         <span>{data.title}</span>
-                        <span className="font-light">{data.count}</span>
+                        <span className="font-bold">{data.count}</span>
                         <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                       </button>
                     </div>
@@ -235,7 +235,7 @@ const DashboardNav = () => {
                 </div>
                 <div className="flex justify-end mt-14 md:mt-0">
                   <button
-                    className=" w-full py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-md dark:text-darkText"
+                    className=" w-full py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
                     onClick={handleOpenPopup}
                     style={{ minWidth: "220px" }} // Ensure button has consistent width
                   >
@@ -246,7 +246,7 @@ const DashboardNav = () => {
             </div>
           </div>
 
-          {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText mb-5">
+          {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText dark:opacity-50 mb-5">
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
                 ? WALLET_DETAIL_TAB
@@ -264,7 +264,7 @@ const DashboardNav = () => {
               ))}
             {isAuthenticated && shouldRenderRiskDetailsButton && (
               <button
-                className="-mt-2 py-1 px-2 border border-blue-500 text-blue-900 text-[11px] rounded-md font-normal dark:text-darkTextSecondary"
+                className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md font-normal dark:text-darkTextSecondary"
                 onClick={handleOpenPopup}
               >
                 Risk Details

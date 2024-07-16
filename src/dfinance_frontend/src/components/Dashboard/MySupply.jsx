@@ -20,10 +20,10 @@ import { Check, Eye, EyeOff, Info } from "lucide-react";
 import MySupplyModal from "./MySupplyModal";
 import WithdrawPopup from "./WithdrawPopup";
 import SupplyPopup from "./SupplyPopup";
-import BorrowPopup from "./BorrowPopup";
+import BorrowPopup from "./BorrowwPopup";
 import PaymentDone from "./PaymentDone";
 import { useNavigate } from "react-router-dom";
-import Borrow from "./BorrowwPopup";
+import Borrow from "./BorrowPopup";
 import Repay from "./Repay";
 import { useAuth } from "../../utils/useAuthClient";
 

@@ -17,7 +17,7 @@ impl SupplyLogic {
             .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
         let canister_id_dfinance_backend = env::var("CANISTER_ID_DFINANCE_BACKEND")
             .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
-        let atoken_canister_id = env::var("CANISTER_ID_ATOKEN")
+        let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
             .expect("CANISTER_ID_ATOKEN environment variable not set");
 
         let ledger_canister_id =
@@ -75,7 +75,7 @@ impl SupplyLogic {
             ),
             (),
         >(
-            Principal::from_text(atoken_canister_id).expect("Invalid principal"),
+            Principal::from_text(dtoken_canister_id).expect("Invalid principal"),
             "execute_transfer",
             (
                 platform_principal,

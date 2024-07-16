@@ -22,11 +22,9 @@ const utilitySlice = createSlice({
     setWalletModalOpen: (state, action) => {
       state.isWalletModalOpen = action.payload
     },
-    toggleTestnetMode: (state) => {
-      state.isTestnetMode = !state.isTestnetMode
-    },
+
   },
 })
 
-export const { setIsWalletConnected, setAssetDetailFilter, setWalletModalOpen, toggleTestnetMode } = utilitySlice.actions
+export const { setIsWalletConnected, setAssetDetailFilter, setWalletModalOpen } = utilitySlice.actions
 export default utilitySlice.reducer

@@ -26,13 +26,6 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
 
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
 
-  useEffect(() => {
-    toast.dismiss();
-    toast.success(`Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`);
-    if (isTestnetMode) {
-      navigate("/dashboard");
-    }
-  }, [isTestnetMode]);
 
   const handleTestnetModeToggle = () => {
     dispatch(toggleTestnetMode());

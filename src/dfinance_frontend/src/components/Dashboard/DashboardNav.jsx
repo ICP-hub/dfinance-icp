@@ -208,12 +208,12 @@ const DashboardNav = () => {
                 ref={menuRef}
               >
                 <div className="flex justify-between items-center mb-4">
-                   <div
-      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
-      onClick={() => setIsMenuOpen(false)}
-    >
-      <X className="text-black dark:text-darkText w-6 h-6" />
-    </div>
+                  <div
+                    className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <X className="text-black dark:text-darkText w-6 h-6" />
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
                   {(isDashboardSupplyOrMain
@@ -246,17 +246,17 @@ const DashboardNav = () => {
             </div>
           </div>
 
-          {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText dark:opacity-50 mb-5">
+          {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText mb-5">
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
                 ? WALLET_DETAIL_TAB
                 : WALLET_DETAILS_TABS
               ).map((data, index) => (
                 <div key={index} className="relative group">
-                  <button className="relative font-light text-sm text-left min-w-[80px]">
+                  <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80">
                     {data.title}
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                    <span className="absolute top-full mt-1 left-0 font-bold py-1 opacity-100 transition-opacity text-[20px] text-[#2A1F9D] dark:text-darkBlue">
+                    <span className="absolute top-full mt-1 left-0 font-bold py-1 opacity-100 transition-opacity text-[20px] text-[#2A1F9D] dark:text-darkBlue dark:opacity-100">
                       {data.count}
                     </span>
                   </button>

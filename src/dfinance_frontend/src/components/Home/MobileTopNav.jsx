@@ -8,18 +8,37 @@ import { useAuth } from "../../utils/useAuthClient";
 import { Switch } from "@mui/material";
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from "../../redux/reducers/themeReducer";
-import CustomizedSwitches from "../../components/MaterialUISwitch"
+import CustomizedSwitches from "../../components/MaterialUISwitch";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { toggleTestnetMode } from "../../redux/reducers/testnetReducer"
+
 const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInternetIdentity, handleLogout }) => {
   const { isAuthenticated } = useAuth();
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('isDarkMode');
     return savedTheme ? JSON.parse(savedTheme) : theme === 'dark';
   });
+
+  const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
+
+  useEffect(() => {
+    toast.dismiss();
+    toast.success(`Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`);
+    if (isTestnetMode) {
+      navigate("/dashboard");
+    }
+  }, [isTestnetMode]);
+
+  const handleTestnetModeToggle = () => {
+    dispatch(toggleTestnetMode());
+  };
+
+
 
   const handleDarkModeToggle = () => {
     dispatch(toggleTheme());
@@ -46,38 +65,6 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
     }
   }, [theme]);
 
-  const [isTestnetMode, setIsTestnetMode] = useState(() => {
-
-    const savedTestnetMode = localStorage.getItem("isTestnetMode");
-    return savedTestnetMode ? JSON.parse(savedTestnetMode) : false;
-  });
-
-  useEffect(() => {
-    const storedIsTestnetMode = JSON.parse(
-      localStorage.getItem("isTestnetMode")
-    );
-
-    if (isTestnetMode !== storedIsTestnetMode) {
-      localStorage.setItem("isTestnetMode", JSON.stringify(isTestnetMode));
-
-      // Dismiss previous toast notifications
-      toast.dismiss();
-
-      // Show the new toast notification
-      toast.success(
-        `Testnet mode ${!isTestnetMode ? "disabled" : "enabled"} successfully!`
-      );
-    }
-  }, [isTestnetMode]);
-  const navigate = useNavigate();
-  const handleTestnetModeToggle = () => {
-    setIsTestnetMode((prevMode) => !prevMode);
-    console.log(setIsTestnetMode , isTestnetMode)
-    if (isTestnetMode) {
-      navigate("/dashboard");
-    }
-
-  };
   // Check screen size and conditionally render Drawer for mobile view
   const isLargeScreen = useMediaQuery('(min-width: 1134px)');
 
@@ -106,7 +93,7 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
             <NavLink
               key={index}
               to={link.route}
-              className="text-[#2A1F9D] mt-3 p-3 font-bold dark:text-darkTextSecondary rounded-md  shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+              className="text-[#2A1F9D] mt-3 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
             >
               {link.title}
             </NavLink>
@@ -116,30 +103,30 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
             <NavLink
               key={index}
               to={link.route}
-              className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md  shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+              className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
             >
               {link.title}
             </NavLink>
           ))
         )}
 
-        <h2 className="text-sm my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2 mt-8"> Setting</h2>
-        <div className="p-2 dark:text-darkTextSecondary rounded-md  shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40  transition-colors duration-300 ease-in-out mx-2 my-1">
+        <h2 className="text-sm my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2 mt-8">Settings</h2>
+        <div className="p-2 dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 transition-colors duration-300 ease-in-out mx-2 my-1">
           <div className="flex items-center">
             <label htmlFor="darkMode" className="ml-2 text-lg text-[#2A1F9D] dark:text-darkTextSecondary">Dark Mode</label>
-            <span className="ml-8 text-[#2A1F9D] dark:text-darkTextSecondary">{isDarkMode ? 'On' : 'Off'}</span>
+            <span className="ml-auto text-[#2A1F9D] dark:text-darkTextSecondary">{isDarkMode ? 'On' : 'Off'}</span>
             <div className="flex align-center justify-center ml-3">
-              <CustomizedSwitches checked={isDarkMode}
-                onChange={handleDarkModeToggle} />
+              <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
             </div>
-            
           </div>
+        </div>
+
+        <div className="p-2 dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 transition-colors duration-300 ease-in-out mx-2 my-1">
           <div className="flex items-center">
-          <label htmlFor="testnetMode" className="ml-2 text-lg text-[#2A1F9D] dark:text-darkTextSecondary">TestNet Mode</label>
-            <span className="ml-8 text-[#2A1F9D] dark:text-darkTextSecondary">{isTestnetMode ? "ON" : "OFF"}</span>
+            <label htmlFor="testnetMode" className="ml-2 text-lg text-[#2A1F9D] dark:text-darkTextSecondary">Testnet Mode</label>
+            <span className="ml-8 text-[#2A1F9D] dark:text-darkTextSecondary">{isTestnetMode ? 'On' : 'Off'}</span>
             <div className="flex align-center justify-center ml-3">
-            <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
-                            
+              <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
             </div>
           </div>
         </div>

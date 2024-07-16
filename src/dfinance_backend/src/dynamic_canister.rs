@@ -63,7 +63,7 @@ pub struct FeatureFlags {
 
 fn ledger_wasm() -> Cow<'static, [u8]> {
     Cow::Borrowed(include_bytes!(
-        "../../../target/wasm32-unknown-unknown/release/atoken.wasm"
+        "../../../target/wasm32-unknown-unknown/release/dtoken.wasm"
     ))
 }
 

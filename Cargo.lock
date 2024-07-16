@@ -266,43 +266,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "atoken"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "candid",
- "candid-extractor",
- "candid_parser",
- "cddl",
- "ciborium 0.2.2",
- "hex",
- "ic-base-types",
- "ic-canister-log",
- "ic-canisters-http-types",
- "ic-cdk 0.15.0",
- "ic-cdk-macros 0.15.0",
- "ic-crypto-tree-hash",
- "ic-icrc1",
- "ic-icrc1-ledger",
- "ic-icrc1-ledger-sm-tests",
- "ic-icrc1-tokens-u256",
- "ic-icrc1-tokens-u64",
- "ic-ledger-canister-core",
- "ic-ledger-core",
- "ic-ledger-hash-of",
- "ic-metrics-encoder",
- "ic-state-machine-tests",
- "ic-test-utilities-load-wasm",
- "icrc-ledger-client",
- "icrc-ledger-types",
- "leb128",
- "num-traits",
- "proptest",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1519,6 +1482,43 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
 
 [[package]]
+name = "debttoken"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "candid",
+ "candid-extractor",
+ "candid_parser",
+ "cddl",
+ "ciborium 0.2.2",
+ "hex",
+ "ic-base-types",
+ "ic-canister-log",
+ "ic-canisters-http-types",
+ "ic-cdk 0.15.0",
+ "ic-cdk-macros 0.15.0",
+ "ic-crypto-tree-hash",
+ "ic-icrc1",
+ "ic-icrc1-ledger",
+ "ic-icrc1-ledger-sm-tests",
+ "ic-icrc1-tokens-u256",
+ "ic-icrc1-tokens-u64",
+ "ic-ledger-canister-core",
+ "ic-ledger-core",
+ "ic-ledger-hash-of",
+ "ic-metrics-encoder",
+ "ic-state-machine-tests",
+ "ic-test-utilities-load-wasm",
+ "icrc-ledger-client",
+ "icrc-ledger-types",
+ "leb128",
+ "num-traits",
+ "proptest",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
 name = "debugid"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1655,6 +1655,43 @@ name = "downcast"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
+
+[[package]]
+name = "dtoken"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "candid",
+ "candid-extractor",
+ "candid_parser",
+ "cddl",
+ "ciborium 0.2.2",
+ "hex",
+ "ic-base-types",
+ "ic-canister-log",
+ "ic-canisters-http-types",
+ "ic-cdk 0.15.0",
+ "ic-cdk-macros 0.15.0",
+ "ic-crypto-tree-hash",
+ "ic-icrc1",
+ "ic-icrc1-ledger",
+ "ic-icrc1-ledger-sm-tests",
+ "ic-icrc1-tokens-u256",
+ "ic-icrc1-tokens-u64",
+ "ic-ledger-canister-core",
+ "ic-ledger-core",
+ "ic-ledger-hash-of",
+ "ic-metrics-encoder",
+ "ic-state-machine-tests",
+ "ic-test-utilities-load-wasm",
+ "icrc-ledger-client",
+ "icrc-ledger-types",
+ "leb128",
+ "num-traits",
+ "proptest",
+ "serde",
+ "serde_bytes",
+]
 
 [[package]]
 name = "ecdsa"

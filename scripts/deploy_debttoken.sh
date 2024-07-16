@@ -9,10 +9,10 @@ dfx identity use minter
 export MINTER=$(dfx identity get-principal)
 echo $MINTER
 
-export TOKEN_NAME="AckBTC";
+export TOKEN_NAME="debtckBTC";
 echo "token_name : $TOKEN_NAME"
 
-export TOKEN_SYMBOL="AckBTC"
+export TOKEN_SYMBOL="debtckBTC"
 
 
 
@@ -39,7 +39,7 @@ export FEATURE_FLAGS=false
 
 
 
-dfx deploy atoken --argument "(variant {Init =
+dfx deploy debttoken --argument "(variant {Init =
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
@@ -57,4 +57,4 @@ record {
  }
 })"
 
-echo "Ackbtc got deployed"
+echo "debtckbtc got deployed"

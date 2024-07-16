@@ -120,7 +120,7 @@ const TransactionHistory = () => {
                       <tr key={tx.id} className="w-full text-[#4659CF]  hover:bg-[#ddf5ff8f] dark:hover:bg-[#5d59b0] rounded-lg h-[50px]">
                         <td className="py-2 px-4">
                           <div className="flex items-center dark:text-darkTextSecondary1">
-                            <span>{`${tx.hash.slice(0, 15)}...`}</span>
+                            <span>{`${tx.hash.slice(0, 14)}...`}</span>
                             <button
                               className="ml-2 focus:outline-none"
                               onClick={() => copyToClipboard(tx.hash)}
@@ -138,7 +138,7 @@ const TransactionHistory = () => {
                         <td className="py-2 px-4 dark:text-darkTextSecondary">{tx.age}</td>
                         <td className="py-2 px-4">
                           <div className="flex items-center dark:text-darkTextSecondary1">
-                            <span>{`${tx.from.slice(0, 15)}...`}</span>
+                            <span>{`${tx.from.slice(0, 14)}...`}</span>
                             <button
                               className="ml-2 focus:outline-none"
                               onClick={() => copyToClipboard(tx.from)}
@@ -149,7 +149,7 @@ const TransactionHistory = () => {
                         </td>
                         <td className="py-2 px-4">
                           <div className="flex items-center dark:text-darkTextSecondary1">
-                            <span>{`${tx.to.slice(0, 15)}...`}</span>
+                            <span>{`${tx.to.slice(0, 14)}...`}</span>
                             <button
                               className="ml-2 focus:outline-none"
                               onClick={() => copyToClipboard(tx.to)}

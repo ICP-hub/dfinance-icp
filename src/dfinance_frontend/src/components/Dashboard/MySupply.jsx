@@ -166,8 +166,8 @@ const MySupply = () => {
     </p>
   );
   return (
-    <div className="w-full flex-col lg:flex-row flex gap-6 mb-20">
-      <div className="flex justify-center -mb-30 lg:hidden">
+    <div className="w-full flex-col lg:flex-row flex gap-6">
+      <div className="flex justify-center -mb-38 lg:hidden">
         <button
           className={`w-1/2 py-2  ${activeSection === "supply"
               ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
@@ -198,7 +198,7 @@ const MySupply = () => {
         </div>
       </div>
 
-      <div className="w-full lg:w-6/12 mt-6 md:mt-20">
+      <div className="w-full lg:w-6/12 mt-6 md:mt-4 lg:mt-20">
         <div
           className={`${activeSection === "supply" ? "block" : "hidden"
             } lg:block`}
@@ -245,7 +245,7 @@ const MySupply = () => {
                                 alt={item.asset}
                                 className="w-8 h-8 rounded-full dark:text-darkText"
                               />
-                              <span className="text-sm font-semibold text-[#2A1F9D]">
+                              <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
                                 {item.asset}
                               </span>
                             </div>
@@ -447,7 +447,7 @@ const MySupply = () => {
                                 alt={item.asset}
                                 className="w-8 h-8 rounded-full"
                               />
-                              <span className="text-sm font-semibold  text-[#2A1F9D]">
+                              <span className="text-sm font-semibold  text-[#2A1F9D] dark:text-darkText">
                                 {item.asset}
                               </span>
                             </div>
@@ -478,7 +478,7 @@ const MySupply = () => {
                               </p>
                               <div className="w-full flex items-center justify-end dark:text-darkText">
                                   <Check color={checkColor} size={16} />
-                                </div>Check
+                                </div>
                             </div>
                             <div className="flex  justify-center gap-2 mt-2">
                               <Button

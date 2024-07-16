@@ -10,15 +10,15 @@
 
 // struct SupplyLogic;
 
-impl SupplyLogic {
-    pub async fn execute_supply(params: ExecuteSupplyParams) {
-        // Fetches the canister ids, user principal and amount from env
-        let canister_id_ckbtc_ledger = env::var("CANISTER_ID_CKBTC_LEDGER")
-            .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
-        let canister_id_dfinance_backend = env::var("CANISTER_ID_DFINANCE_BACKEND")
-            .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
-        let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
-            .expect("CANISTER_ID_ATOKEN environment variable not set");
+// impl SupplyLogic {
+//     pub async fn execute_supply(params: ExecuteSupplyParams) {
+//         // Fetches the canister ids, user principal and amount from env
+//         let canister_id_ckbtc_ledger = env::var("CANISTER_ID_CKBTC_LEDGER")
+//             .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
+//         let canister_id_dfinance_backend = env::var("CANISTER_ID_DFINANCE_BACKEND")
+//             .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
+//         let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
+//             .expect("CANISTER_ID_ATOKEN environment variable not set");
 
 //         let ledger_canister_id =
 //             Principal::from_text(canister_id_ckbtc_ledger).expect("Invalid ledger canister ID");
@@ -63,30 +63,30 @@ impl SupplyLogic {
 //         )
 //         .await;
 
-        // Inter canister call to execute dtoken transfer
-        let mint: CallResult<()> = call::<
-            (
-                Principal,
-                Principal,
-                Option<Vec<u8>>,
-                Option<Vec<u8>>,
-                Nat,
-                Option<Vec<u8>>,
-            ),
-            (),
-        >(
-            Principal::from_text(dtoken_canister_id).expect("Invalid principal"),
-            "execute_transfer",
-            (
-                platform_principal,
-                user_principal,
-                None,
-                None,
-                amount_nat,
-                None,
-            ),
-        )
-        .await;
+//         // Inter canister call to execute dtoken transfer
+//         let mint: CallResult<()> = call::<
+//             (
+//                 Principal,
+//                 Principal,
+//                 Option<Vec<u8>>,
+//                 Option<Vec<u8>>,
+//                 Nat,
+//                 Option<Vec<u8>>,
+//             ),
+//             (),
+//         >(
+//             Principal::from_text(dtoken_canister_id).expect("Invalid principal"),
+//             "execute_transfer",
+//             (
+//                 platform_principal,
+//                 user_principal,
+//                 None,
+//                 None,
+//                 amount_nat,
+//                 None,
+//             ),
+//         )
+//         .await;
 
 //         print!("Mint function {:?}", mint);
 

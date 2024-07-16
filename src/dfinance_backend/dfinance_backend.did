@@ -14,4 +14,4 @@ type ReserveData = record {
 service : () -> {
   get_asset_data : () -> (ReserveData) query;
   new_canister : () -> (principal);
-}
+};

@@ -9,7 +9,7 @@ dfx identity use minter
 export MINTER=$(dfx identity get-principal)
 echo $MINTER
 
-export TOKEN_NAME="ckBTC";
+export TOKEN_NAME="ckBTC"
 echo "token_name : $TOKEN_NAME"
 
 export TOKEN_SYMBOL="ckBTC"
@@ -19,7 +19,7 @@ export DEFAULT="2vxsx-fae"
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=10_000
 
-dfx identity use default 
+dfx identity use default
 
 export ARCHIVE_CONTROLLER=$(dfx identity get-principal)
 

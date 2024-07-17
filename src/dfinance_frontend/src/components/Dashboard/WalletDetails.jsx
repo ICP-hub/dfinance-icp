@@ -163,13 +163,13 @@ const WalletDetails = () => {
                     key={index}
                     className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
-                    <td className="p-3 align-top">
-                      <div className="w-full flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mr-1 mt-2">
+                    <td className="p-2 align-top py-4">
+                      <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
                         <img src={item.image} alt={item.asset} className="w-8 h-8 rounded-full" />
                         {item.asset}
                       </div>
                     </td>
-                    <td className="p-3 align-top">
+                    <td className="p-2 align-top py-4">
                       <div className="flex flex-row ml-2 mt-2">
                         <div>
                           <p>{item.total_supply_count}</p>

@@ -127,8 +127,7 @@ export default function Navbar({ isHomeNav }) {
     } else {
       // Perform transaction
       console.log(
-        `Transaction initiated with ${selectedToken} and amount ${
-          selectedToken === "ETH" ? ethValue : oneInchValue
+        `Transaction initiated with ${selectedToken} and amount ${selectedToken === "ETH" ? ethValue : oneInchValue
         }`
       );
     }
@@ -384,65 +383,65 @@ export default function Navbar({ isHomeNav }) {
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                        if (link.alwaysPresent) {
-                          return (
+                      if (link.alwaysPresent) {
+                        return (
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      } else if (isTestnetMode && link.testnet) {
+                        return (
+                          <React.Fragment key={index}>
                             <NavLink
-                              key={index}
-                              to={link.route}
-                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                            >
-                              {link.title}
-                            </NavLink>
-                          );
-                        } else if (isTestnetMode && link.testnet) {
-                          return (
-                            <React.Fragment key={index}>
-                              <NavLink
-                                to={link.route}
-                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                              >
-                                {link.title}
-                              </NavLink>
-                              {link.title === "Faucet" && (
-                                <>
-                                  <span
-                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
-                                    onClick={handlePopupToggle}
-                                  >
-                                    •••
-                                  </span>
-                                  {isPopupVisible && (
-                                    <Popup
-                                      position={popupPosition}
-                                      onClose={() => setIsPopupVisible(false)}
-                                    />
-                                  )}
-                                </>
-                              )}
-                            </React.Fragment>
-                          );
-                        } else if (!isTestnetMode && !link.testnet) {
-                          return (
-                            <NavLink
-                              key={index}
                               to={link.route}
                               className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                             >
                               {link.title}
                             </NavLink>
-                          );
-                        }
-                        return null;
-                      })
+                            {link.title === "Faucet" && (
+                              <>
+                                <span
+                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
+                                  onClick={handlePopupToggle}
+                                >
+                                  •••
+                                </span>
+                                {isPopupVisible && (
+                                  <Popup
+                                    position={popupPosition}
+                                    onClose={() => setIsPopupVisible(false)}
+                                  />
+                                )}
+                              </>
+                            )}
+                          </React.Fragment>
+                        );
+                      } else if (!isTestnetMode && !link.testnet) {
+                        return (
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      }
+                      return null;
+                    })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                        <NavLink
-                          key={index}
-                          to={link.route}
-                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                        >
-                          {link.title}
-                        </NavLink>
-                      ))}
+                      <NavLink
+                        key={index}
+                        to={link.route}
+                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                      >
+                        {link.title}
+                      </NavLink>
+                    ))}
                 </div>
               </>
             )}
@@ -680,9 +679,8 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div
-                            className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${
-                              isInputFocused ? "block" : "hidden"
-                            }`}
+                            className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? "block" : "hidden"
+                              }`}
                             style={{ maxWidth: "380px" }}
                           >
                             <div className="flex items-center">
@@ -741,7 +739,7 @@ export default function Navbar({ isHomeNav }) {
                         onClick={() => setSwitchWalletDrop(false)}
                       ></div>
                       <div
-                        className="absolute  md:px-5 md:py-6 px-5 py-6 top-full -left-[207px] lg1:ml-0 md:ml-24 mt-8 md:mt-4 rounded-xl  bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
+                        className="absolute min-w-[300px] md:px-5 md:py-6 px-5 py-6 top-full -left-[207px] lg1:ml-0 md:ml-24 mt-8 md:mt-4 rounded-xl  bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="w-full flex items-center gap-2">
@@ -766,7 +764,7 @@ export default function Navbar({ isHomeNav }) {
 
                           <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
                             {/* First Container */}
-                            <div className="flex justify-center">
+                            <div className="hidden lg1:flex justify-center">
                               <div
                                 className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
                                 style={{ height: "70px", width: "160px" }}
@@ -789,17 +787,41 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
+
+                            <div className="lg1:hidden lg:flex justify-center">
+                              <div
+                                className="flex-1 flex flex-col  justify-center border border-gray-200 p-3 rounded-xl text-sm  dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
+                              >
+                                <div className="flex gap-5">
+                                  <div className="flex items-center justify-center">
+                                    <p className="text-blue-800 dark:text-darkText">Network</p>
+                                  </div>
+
+                                  <div className="flex items-center ml-auto">
+                                    <img
+                                      src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"
+                                      alt="Icp Logo"
+                                      className="w-6 h-6"
+                                    />
+                                    <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
+                                      ICP
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
                             {/* Second Container */}
                             <div className=" w-full flex justify-center">
                               <div
-                                className=" flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                                className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                                 style={{ height: "70px", width: "160px" }}
                               >
                                 <button
                                   className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
                                   onClick={handleCopyAddress}
                                 >
-                                  <GrCopy className="h-5 w-4" />
+                                  <GrCopy className="h-5 w-4 ml-4 lg1:ml-0" />
                                   <span className="ml-1">Copy Address</span>
                                 </button>
                                 <button

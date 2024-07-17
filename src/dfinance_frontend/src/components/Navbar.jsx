@@ -47,7 +47,14 @@ import Popup from "./Dashboard/Morepopup";
 import CustomizedSwitches from "./MaterialUISwitch";
 import { toggleTestnetMode } from "../redux/reducers/testnetReducer"
 
+import { Artemis } from 'artemis-web3-adapter';
+
 export default function Navbar({ isHomeNav }) {
+
+  
+  const connectObj = { whitelist: ['ryjl3-tyaaa-aaaaa-aaaba-cai'], host: 'https://icp0.io/' }
+  const artemisWalletAdapter = new Artemis(connectObj);
+
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -250,6 +257,7 @@ export default function Navbar({ isHomeNav }) {
   const previousIsTestnetMode = useRef(isTestnetMode);
 
   const handleTestnetModeToggle = () => {
+    navigate("/dashboard")
     dispatch(toggleTestnetMode());
   };
 
@@ -338,13 +346,17 @@ export default function Navbar({ isHomeNav }) {
 
  
 
-  const handleDisconnectWallet = async () => {
+  const handleDisconnectWallet = () => {
     try {
-      await artemisWalletAdapter.disconnect();
+        // Assuming artemis is an instance of Artemis properly initialized
+        // const artemis = new Artemis(/* pass necessary parameters */);
+        artemisWalletAdapter.disconnect(); // Assuming disconnect is a method of Artemis instance
+        console.log('Disconnected successfully');
     } catch (error) {
-      console.error('Failed to disconnect wallet:', error);
+        console.error('Error disconnecting:', error);
     }
-  };
+};
+
 
   return (
     <>
@@ -354,7 +366,7 @@ export default function Navbar({ isHomeNav }) {
           <Button
             title="Disconnect"
             className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-md p-3 px-8 shadow-md font-semibold text-sm"
-            onClick={handleDisconnectWallet}
+            onClickHandler={handleDisconnectWallet}
           />
           <nav className="w-full py-4 lg:py-10  flex items-center justify-between">
             <div className="lg:block lgx:block dxl:flex justify-center items-center sxs3:block sxs3:mt-3">

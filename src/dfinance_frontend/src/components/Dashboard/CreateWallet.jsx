@@ -74,13 +74,12 @@ const CreateWallet = () => {
         setInputValue(event.target.value);
     };
 
-    const handleConnectWallet = async (wallet) => {
-        try {
-              artemisWalletAdapter.connect(wallet);
-              console.log(artemisWalletAdapter.connect(wallet))
-        } catch (error) {
-            console.error('Failed to connect wallet:', error);
-        }
+    const handleConnectWallet =  (wallet) => {
+        artemisWalletAdapter.connect(wallet);
+        console.log(artemisWalletAdapter.connect(wallet))
+        console.log('Is loaded:', artemisWalletAdapter.isLoaded());
+        console.log('Wallet balance:', artemisWalletAdapter.getWalletBalance(wallet));
+
     };
 
     return (

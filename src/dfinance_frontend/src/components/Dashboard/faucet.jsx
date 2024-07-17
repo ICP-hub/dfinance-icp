@@ -29,12 +29,12 @@ const Faucet = () => {
     const handleWallet = () => {
         dispatch(setWalletModalOpen(!isWalletModalOpen))
         dispatch(setIsWalletConnected(true))
-        navigate('/dashboard/my-supply')
+        navigate('/dashboard')
     }
 
     useEffect(() => {
         if (isWalletCreated) {
-            navigate('/dashboard/wallet-details')
+            navigate('/dashboard/faucet-details')
         }
     }, [isWalletCreated]);
 

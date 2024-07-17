@@ -45,7 +45,7 @@ import Group216 from "../../public/Group216.svg";
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 import Popup from "./Dashboard/Morepopup";
 import CustomizedSwitches from "./MaterialUISwitch";
-import { toggleTestnetMode } from "../redux/reducers/testnetReducer"
+import { toggleTestnetMode } from "../redux/reducers/testnetReducer";
 
 export default function Navbar({ isHomeNav }) {
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
@@ -61,7 +61,6 @@ export default function Navbar({ isHomeNav }) {
 
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const handleCloseDropdownOnScroll = () => {
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
@@ -70,11 +69,11 @@ export default function Navbar({ isHomeNav }) {
 
   useEffect(() => {
     // Add event listener for scroll to window or container
-    window.addEventListener('scroll', handleCloseDropdownOnScroll);
+    window.addEventListener("scroll", handleCloseDropdownOnScroll);
 
     // Clean up the event listener on unmount
     return () => {
-      window.removeEventListener('scroll', handleCloseDropdownOnScroll);
+      window.removeEventListener("scroll", handleCloseDropdownOnScroll);
     };
   }, []);
 
@@ -90,8 +89,6 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
   }, [location]);
 
-
-  ;
   const [ethValue, setEthValue] = useState("0.00");
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -130,7 +127,8 @@ export default function Navbar({ isHomeNav }) {
     } else {
       // Perform transaction
       console.log(
-        `Transaction initiated with ${selectedToken} and amount ${selectedToken === "ETH" ? ethValue : oneInchValue
+        `Transaction initiated with ${selectedToken} and amount ${
+          selectedToken === "ETH" ? ethValue : oneInchValue
         }`
       );
     }
@@ -250,6 +248,7 @@ export default function Navbar({ isHomeNav }) {
   const previousIsTestnetMode = useRef(isTestnetMode);
 
   const handleTestnetModeToggle = () => {
+    navigate("/dashboard");
     dispatch(toggleTestnetMode());
   };
 
@@ -258,11 +257,12 @@ export default function Navbar({ isHomeNav }) {
       if (previousIsTestnetMode.current !== undefined) {
         toast.dismiss(); // Dismiss any existing toasts
       }
-      toast.success(`Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`);
+      toast.success(
+        `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`
+      );
       previousIsTestnetMode.current = isTestnetMode;
     }
   }, [isTestnetMode]);
-
 
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
@@ -270,10 +270,7 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
-
   };
-
-
 
   const hash = window.location.hash;
 
@@ -382,71 +379,73 @@ export default function Navbar({ isHomeNav }) {
                 className="z-50 mt-6 -ml-6"
               />
             </div>
-            {!isMobile && <>
-              <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
-                {!isHomeNav
-                  ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                    if (link.alwaysPresent) {
-                      return (
-                        <NavLink
-                          key={index}
-                          to={link.route}
-                          className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                        >
-                          {link.title}
-                        </NavLink>
-                      );
-                    } else if (isTestnetMode && link.testnet) {
-                      return (
-                        <React.Fragment key={index}>
-                          <NavLink
-                            to={link.route}
-                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                          >
-                            {link.title}
-                          </NavLink>
-                          {link.title === "Faucet" && (
-                            <>
-                              <span
-                                className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
-                                onClick={handlePopupToggle}
+            {!isMobile && (
+              <>
+                <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
+                  {!isHomeNav
+                    ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
+                        if (link.alwaysPresent) {
+                          return (
+                            <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        } else if (isTestnetMode && link.testnet) {
+                          return (
+                            <React.Fragment key={index}>
+                              <NavLink
+                                to={link.route}
+                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                               >
-                                •••
-                              </span>
-                              {isPopupVisible && (
-                                <Popup
-                                  position={popupPosition}
-                                  onClose={() => setIsPopupVisible(false)}
-                                />
+                                {link.title}
+                              </NavLink>
+                              {link.title === "Faucet" && (
+                                <>
+                                  <span
+                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
+                                    onClick={handlePopupToggle}
+                                  >
+                                    •••
+                                  </span>
+                                  {isPopupVisible && (
+                                    <Popup
+                                      position={popupPosition}
+                                      onClose={() => setIsPopupVisible(false)}
+                                    />
+                                  )}
+                                </>
                               )}
-                            </>
-                          )}
-                        </React.Fragment>
-                      );
-                    } else if (!isTestnetMode && !link.testnet) {
-                      return (
+                            </React.Fragment>
+                          );
+                        } else if (!isTestnetMode && !link.testnet) {
+                          return (
+                            <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        }
+                        return null;
+                      })
+                    : HOME_TOP_NAV_LINK.map((link, index) => (
                         <NavLink
                           key={index}
                           to={link.route}
-                          className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                         >
                           {link.title}
                         </NavLink>
-                      );
-                    }
-                    return null;
-                  })
-                  : HOME_TOP_NAV_LINK.map((link, index) => (
-                    <NavLink
-                      key={index}
-                      to={link.route}
-                      className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                    >
-                      {link.title}
-                    </NavLink>
-                  ))}
-              </div>
-            </>}
+                      ))}
+                </div>
+              </>
+            )}
 
             {isHomeNav ? (
               <div className="flex gap-2">
@@ -471,7 +470,6 @@ export default function Navbar({ isHomeNav }) {
                     </div>
                   </div>
                 )}
-
               </div>
             ) : isAuthenticated ? (
               <div className="hidden lg:flex gap-2 sxs3:flex  md:flex ">
@@ -480,15 +478,18 @@ export default function Navbar({ isHomeNav }) {
                     className="flex items-center gap-2 py-[10px] px-3"
                     onClick={handleSwitchToken}
                   >
-                    <span className="hidden lg1:flex">
-                      Switch Token
-                    </span>
+                    <span className="hidden lg1:flex">Switch Token</span>
                     <ArrowDownUp size={15} />
                   </div>
 
                   <div className="relative">
                     {switchTokenDrop && (
-                      <> <div className="fixed inset-0 bg-black opacity-40 z-40" onClick={() => setSwitchTokenDrop(false)}></div>
+                      <>
+                        {" "}
+                        <div
+                          className="fixed inset-0 bg-black opacity-40 z-40"
+                          onClick={() => setSwitchTokenDrop(false)}
+                        ></div>
                         <div className="w-[380px] absolute -left-[160px] mt-6 rounded-xl bg-white shadow-xl  border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
                           <h1 className="font-bold text-xl text-[#2A1F9D] dark:text-darkText text-nowrap">
                             Switch Tokens
@@ -679,8 +680,9 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div
-                            className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? "block" : "hidden"
-                              }`}
+                            className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${
+                              isInputFocused ? "block" : "hidden"
+                            }`}
                             style={{ maxWidth: "380px" }}
                           >
                             <div className="flex items-center">
@@ -727,7 +729,9 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5"
                     />
-                    <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold">0x65.125s</span>
+                    <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold">
+                      0x65.125s
+                    </span>
                   </div>
 
                   {switchWalletDrop && (
@@ -737,7 +741,7 @@ export default function Navbar({ isHomeNav }) {
                         onClick={() => setSwitchWalletDrop(false)}
                       ></div>
                       <div
-                        className="absolute px-5 py-6 top-full -left-[207px] mt-8 md:mt-4 rounded-xl bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
+                        className="absolute  md:px-5 md:py-6 px-5 py-6 top-full -left-[207px] lg1:ml-0 md:ml-24 mt-8 md:mt-4 rounded-xl  bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="w-full flex items-center gap-2">
@@ -746,84 +750,85 @@ export default function Navbar({ isHomeNav }) {
                             0x65.125ssdf
                           </h1>
                         </div>
-
-                        <div className="w-full flex justify-center mt-3 gap-3">
-                          <Button
-                            title="Switch Wallet"
-                            className=" z-20 py-2 px-9 focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white"
-                            onClickHandler={handleSwitchWallet}
-                          />
-                          <Button
-                            title="Disconnect"
-                            className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
-                            onClickHandler={handleLogout}
-                          />
-                        </div>
-
-                        <div className="flex mt-3 gap-3 ">
-                          {/* First Container */}
-                          <div className="flex justify-center">
-                            <div
-                              className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
-                              style={{ height: "70px", width: "160px" }}
-                            >
-                              <span
-                                className="absolute top-1/4 transform -translate-y-1/2 text-blue-800 dark:text-darkTextSecondary"
-                                style={{ right: "55%" }}
-                              >
-                                Network
-                              </span>
-                              <div className="absolute bottom-2 left-2 mt-4 flex items-center">
-                                <img
-                                  src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"
-                                  alt="Icp Logo"
-                                  className="w-6 h-6"
-                                />
-                                <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
-                                  ICP
-                                </span>
-                              </div>
-                            </div>
+                        <div className="flex flex-col-reverse   lg:block">
+                          <div className="w-full flex flex-col lg1:flex-row justify-center mt-3  gap-3">
+                            <Button
+                              title="Switch Wallet"
+                              className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
+                              onClickHandler={handleSwitchWallet}
+                            />
+                            <Button
+                              title="Disconnect"
+                              className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                              onClickHandler={handleLogout}
+                            />
                           </div>
 
-                          {/* Second Container */}
-                          <div className="flex justify-center">
-                            <div
-                              className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
-                              style={{ height: "70px", width: "160px" }}
-                            >
-                              <button
-                                className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
-                                onClick={handleCopyAddress}
+                          <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
+                            {/* First Container */}
+                            <div className="flex justify-center">
+                              <div
+                                className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
+                                style={{ height: "70px", width: "160px" }}
                               >
-                                <GrCopy className="h-5 w-4" />
-                                <span className="ml-1">Copy Address</span>
-                              </button>
-                              <button
-                                className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday"
-                                onClick={handleViewOnExplorerClick}
-                              >
-                                <CiShare1 className="h-5 w-4" />
-                                <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
-                                  View On Explorer
+                                <span
+                                  className="absolute top-1/4 transform -translate-y-1/2 text-blue-800 dark:text-darkTextSecondary"
+                                  style={{ right: "55%" }}
+                                >
+                                  Network
                                 </span>
-                              </button>
+                                <div className="absolute bottom-2 left-2 mt-4 flex items-center">
+                                  <img
+                                    src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"
+                                    alt="Icp Logo"
+                                    className="w-6 h-6"
+                                  />
+                                  <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
+                                    ICP
+                                  </span>
+                                </div>
+                              </div>
                             </div>
+                            {/* Second Container */}
+                            <div className=" w-full flex justify-center">
+                              <div
+                                className=" flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                                style={{ height: "70px", width: "160px" }}
+                              >
+                                <button
+                                  className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
+                                  onClick={handleCopyAddress}
+                                >
+                                  <GrCopy className="h-5 w-4" />
+                                  <span className="ml-1">Copy Address</span>
+                                </button>
+                                <button
+                                  className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday"
+                                  onClick={handleViewOnExplorerClick}
+                                >
+                                  <CiShare1 className="h-5 w-4  dark:text-darkText " />
+                                  <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
+                                    View On Explorer
+                                  </span>
+                                </button>
+                              </div>
+                            </div>{" "}
                           </div>
                         </div>
                       </div>
                     </>
                   )}
-
                 </div>
                 <div className="flex items-center justify-center">
                   <div className="relative">
-                    {!isMobile && <img
-                      src={settingsIcon}
-                      alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
-                      onClick={handleDropdownToggle}
-                    />}
+                    {!isMobile && (
+                      <img
+                        src={settingsIcon}
+                        alt="settings_icon"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
+                        onClick={handleDropdownToggle}
+                      />
+                    )}
                     {dropdownVisible && (
                       <>
                         <div
@@ -852,7 +857,10 @@ export default function Navbar({ isHomeNav }) {
                               <span className="text-[13px] mr-2">
                                 {isDarkMode ? "ON" : "OFF"}
                               </span>
-                              <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
+                              <CustomizedSwitches
+                                checked={isDarkMode}
+                                onChange={handleDarkModeToggle}
+                              />
                             </div>
                           </div>
 
@@ -870,13 +878,15 @@ export default function Navbar({ isHomeNav }) {
                               <span className="text-[13px] mr-2">
                                 {isTestnetMode ? "ON" : "OFF"}
                               </span>
-                              <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
+                              <CustomizedSwitches
+                                checked={isTestnetMode}
+                                onChange={handleTestnetModeToggle}
+                              />
                             </div>
                           </div>
                         </div>
                       </>
                     )}
-
                   </div>
                 </div>
 
@@ -898,16 +908,22 @@ export default function Navbar({ isHomeNav }) {
                 <Button
                   title={"Connect Wallet"}
                   onClickHandler={handleWalletConnect}
-                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-md shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"}
+                  className={
+                    "my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-md shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"
+                  }
                 />
                 <div className="flex items-center justify-center">
                   <div className="relative">
-                    {!isMobile ? <img
-                      src={settingsIcon}
-                      alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
-                      onClick={handleDropdownToggle}
-                    /> : <MenuIcon />}
+                    {!isMobile ? (
+                      <img
+                        src={settingsIcon}
+                        alt="settings_icon"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
+                        onClick={handleDropdownToggle}
+                      />
+                    ) : (
+                      <MenuIcon />
+                    )}
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
@@ -923,13 +939,15 @@ export default function Navbar({ isHomeNav }) {
                             >
                               Dark Mode
                             </label>
-
                           </div>
                           <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
                             <span className="text-[13px] mr-2">
                               {isDarkMode ? "ON" : "OFF"}
                             </span>
-                            <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
+                            <CustomizedSwitches
+                              checked={isDarkMode}
+                              onChange={handleDarkModeToggle}
+                            />
                           </div>
                         </div>
 
@@ -942,25 +960,23 @@ export default function Navbar({ isHomeNav }) {
                             >
                               Testnet Mode
                             </label>
-
                           </div>
                           <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
                             <span className="text-[13px] mr-2">
                               {isTestnetMode ? "ON" : "OFF"}
                             </span>
-                            <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
+                            <CustomizedSwitches
+                              checked={isTestnetMode}
+                              onChange={handleTestnetModeToggle}
+                            />
                           </div>
                         </div>
                       </div>
-
                     )}
                   </div>
                 </div>
-
               </div>
             )}
-
-
           </nav>
         </div>
       </ClickAwayListener>

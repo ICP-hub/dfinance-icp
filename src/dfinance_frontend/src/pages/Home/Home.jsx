@@ -188,7 +188,7 @@ const Home = () => {
             </p>
 
             <div className="w-full flex justify-center mt-3"> {/* Center align the button on all screens */}
-              <Button className="button_gradient text-white rounded-xl p-3 px-8 shadow-2xl shadow-gray-500/50 font-semibold text-sm" title="LEARN MORE" />
+              <Button className="button_gradient text-white rounded-xl p-3 px-8 shadow-md shadow-[#00000040] font-semibold text-sm" title="LEARN MORE" />
             </div>
 
 

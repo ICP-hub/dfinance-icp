@@ -4,9 +4,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Popup Component
-const TestnetModePopup = ({ onClose, setIsTestnetMode }) => {
+const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
   const handleDisableTestnetClick = () => {
-    setIsTestnetMode(false); // Update state to disable Testnet mode
+    handleTestnetModeToggle(false); // Update state to disable Testnet mode
     localStorage.removeItem("isTestnetMode"); // Remove Testnet mode from localStorage
     onClose(); // Close the popup after disabling Testnet mode
     toast.info('Testnet mode disabled successfully!');

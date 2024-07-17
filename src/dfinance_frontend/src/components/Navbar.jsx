@@ -360,7 +360,7 @@ export default function Navbar({ isHomeNav }) {
               {showTestnetPopup && (
                 <TestnetModePopup
                   onClose={handleClosePopup}
-                  setIsTestnetMode={setIsTestnetMode}
+                  handleTestnetModeToggle={handleTestnetModeToggle}
                 />
               )}
               <ToastContainer
@@ -375,7 +375,7 @@ export default function Navbar({ isHomeNav }) {
                 transition:Bounce
                 pauseOnHover
                 theme={isDarkMode ? "dark" : "light"}
-                className="z-50 mt-6 -ml-6"
+                className="z-50 mt-6 "
               />
             </div>
             {!isMobile && (
@@ -489,7 +489,7 @@ export default function Navbar({ isHomeNav }) {
                           className="fixed inset-0 bg-black opacity-40 z-40"
                           onClick={() => setSwitchTokenDrop(false)}
                         ></div>
-                        <div className="w-[380px] absolute -left-[160px] mt-6 rounded-xl bg-white shadow-xl  border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
+                        <div className="lg1:w-[380px] w-[320px] -left-[130px] absolute lg1:-left-[160px]  mt-8 lg1:mt-6 rounded-xl bg-white shadow-xl  border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
                           <h1 className="font-bold text-xl text-[#2A1F9D] dark:text-darkText text-nowrap">
                             Switch Tokens
                           </h1>
@@ -635,27 +635,27 @@ export default function Navbar({ isHomeNav }) {
                               </div>
                             </div>
                             {isInputFocused && (
-                              <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between dark:text-darkText ">
+                              <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2  flex items-center justify-between text-nowrap dark:text-darkText ">
                                 <p>1 ETH = 32.569 1INCH</p>
                                 <p>
                                   <img
                                     src={Vector}
                                     alt=""
-                                    className="inline w-4 h-4 mr-1 text-[#2A1F9D] ml-[90px] dark:text-darkText"
+                                    className="inline w-4 h-4 mr-1  text-[#2A1F9D] ml-[40px] dark:text-darkText"
                                   />
                                   $18.75
                                 </p>
                                 <img
                                   src={Group216}
                                   alt=""
-                                  className="inline w-4 h-4 text-[#2A1F9D]"
+                                  className="inline w-4 h-4 ml-6 text-[#2A1F9D]"
                                 />
                               </div>
                             )}
 
                             {showTransactionOverlay && (
                               <div className="top-full left-0 mt-2 p-4 bg-white text-[#2A1F9D] dark:bg-darkBackground/5 dark:text-darkText ">
-                                <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4  dark:text-darkText">
+                                <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4  dark:text-darkText text-nowrap">
                                   Transaction Overlay
                                 </h2>
                                 <div className="border border-gray-300 rounded-xl shadow-md top-full left-0 mt-2 p-6">

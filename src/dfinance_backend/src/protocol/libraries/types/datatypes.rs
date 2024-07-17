@@ -1,6 +1,26 @@
 use candid::{CandidType, Nat, Deserialize, Principal};
 use serde::Serialize;
-use crate::declarations::assets::ReserveConfigurationMap;
+
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
+pub struct Transaction {
+    pub transaction_hash: String,
+    pub block: u64,
+    pub method: String,
+    pub age: u32,
+    pub from: String,
+    pub to: String,
+    pub value: f64,
+    pub transaction_fee: f64,
+}
+
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
+pub struct UserData {
+    pub net_worth: f64,
+    pub net_apy: f64,
+    pub health_factor: f64,
+    pub transaction_history: Vec<Transaction>,
+    pub faucet: Option<Vec<(String, u64)>>,
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InitReserveInput {
@@ -19,20 +39,4 @@ pub struct InitReserveInput {
     pub stable_debt_token_name: String,
     pub stable_debt_token_symbol: String,
     pub params: Vec<u8>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct ReserveData {
-    pub last_update_timestamp: u64,
-    pub liquidity_index: Nat,
-    pub current_liquidity_rate: Nat,
-    pub variable_borrow_index: Nat,
-    pub current_variable_borrow_rate: Nat,
-    pub a_token_address: Principal,
-    pub stable_debt_token_address: Principal,
-    pub variable_debt_token_address: Principal,
-    pub interest_rate_strategy_address: Principal,
-    pub unbacked: Nat,
-    pub accrued_to_treasury: Nat,
-    pub configuration: ReserveConfigurationMap,
 }

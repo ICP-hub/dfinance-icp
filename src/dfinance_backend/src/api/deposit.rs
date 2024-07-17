@@ -2,7 +2,7 @@ use crate::declarations::transfer::*;
 use candid::{Nat, Principal};
 use ic_cdk::call;
 
-pub async fn transfer_from_ckbtc(
+pub async fn asset_transfer_from(
     ledger_canister_id: Principal,
     from: Principal,
     to: Principal,

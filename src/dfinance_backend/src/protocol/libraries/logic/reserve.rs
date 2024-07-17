@@ -1,12 +1,9 @@
-// use crate::protocol::libraries::types::datatypes::ReserveData;
+// use crate::declarations::assets::*;
 
 // pub struct ReserveLogic;
 
 // impl ReserveLogic {
-//     pub fn update_state(
-//         reserve: &mut ReserveData,
-//         reserve_cache: ReserveCache,
-//     ) {
+//     pub fn update_state(reserve: &ReserveData, reserve_cache: &ReserveCache) {
 //         if reserve.last_update_timestamp == current_timestamp() {
 //             return;
 //         }
@@ -18,8 +15,8 @@
 //     }
 
 //     pub fn update_interest_rates(
-//         reserve: &mut ReserveData,
-//         reserve_cache: &mut ReserveCache,
+//         reserve: &ReserveData,
+//         reserve_cache: &ReserveCache,
 //         reserve_address: String,
 //         liquidity_added: u128,
 //         liquidity_taken: u128,
@@ -68,5 +65,43 @@
 //         };
 
 //         println!("{:?}", event);
+//     }
+
+//     pub fn cache(reserve: ReserveData) -> ReserveCache {
+//         let mut reserve_cache = ReserveCache {
+//             reserve_configuration: reserve.configuration.clone(),
+//             reserve_factor: reserve.configuration.get_reserve_factor(),
+//             curr_liquidity_index: reserve.liquidity_index,
+//             next_liquidity_index: reserve.liquidity_index,
+//             curr_variable_borrow_index: reserve.variable_borrow_index,
+//             next_variable_borrow_index: reserve.variable_borrow_index,
+//             curr_liquidity_rate: reserve.current_liquidity_rate,
+//             curr_variable_borrow_rate: reserve.current_variable_borrow_rate,
+//             a_token_address: reserve.a_token_address.clone(),
+//             stable_debt_token_address: reserve.stable_debt_token_address.clone(),
+//             variable_debt_token_address: reserve.variable_debt_token_address.clone(),
+//             reserve_last_update_timestamp: reserve.last_update_timestamp,
+//             curr_scaled_variable_debt: IVariableDebtToken::scaled_total_supply(
+//                 &reserve.variable_debt_token_address,
+//             ),
+//             next_scaled_variable_debt: 0,
+//             curr_principal_stable_debt: 0,
+//             curr_total_stable_debt: 0,
+//             curr_avg_stable_borrow_rate: 0,
+//             stable_debt_last_update_timestamp: 0,
+//             next_total_stable_debt: 0,
+//             next_avg_stable_borrow_rate: 0,
+//         };
+
+//         let stable_debt_data =
+//             IStableDebtToken::get_supply_data(&reserve_cache.stable_debt_token_address);
+//         reserve_cache.curr_principal_stable_debt = stable_debt_data.0;
+//         reserve_cache.curr_total_stable_debt = stable_debt_data.1;
+//         reserve_cache.curr_avg_stable_borrow_rate = stable_debt_data.2;
+//         reserve_cache.stable_debt_last_update_timestamp = stable_debt_data.3;
+//         reserve_cache.next_total_stable_debt = stable_debt_data.1;
+//         reserve_cache.next_avg_stable_borrow_rate = stable_debt_data.2;
+
+//         reserve_cache
 //     }
 // }

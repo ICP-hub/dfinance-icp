@@ -1,7 +1,8 @@
-import { Check, Wallet } from 'lucide-react';
+import { Check, Wallet , X  } from 'lucide-react';
+
 import React, { useState } from 'react';
 
-const PaymentDone = () => {
+const PaymentDone = ({ asset }) => {
     const [isVisible, setIsVisible] = useState(true);
 
     const handleClose = () => {
@@ -15,7 +16,7 @@ const PaymentDone = () => {
     }
 
     return (
-        <div className="w-[400px] h-[340px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[400px] h-[380px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
             <div className="w-full flex flex-col items-center">
                 <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 focus:outline-none self-end">
                     <X size={24} />
@@ -28,7 +29,7 @@ const PaymentDone = () => {
 
                 <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="flex items-center gap-3 text-nowrap">
-                <span>Add aToken to wallet to track your balance.</span>
+                <span>Add dToken to wallet to track your balance.</span>
               </div>
                     <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2">
                     <Wallet />

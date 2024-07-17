@@ -3,12 +3,14 @@ import { Drawer, useMediaQuery } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { DASHBOARD_TOP_NAV_LINK, HOME_TOP_NAV_LINK } from "../../utils/constants";
 import { X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import { Switch } from "@mui/material";
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../../components/MaterialUISwitch"
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInternetIdentity, handleLogout }) => {
   const { isAuthenticated } = useAuth();
   const theme = useSelector((state) => state.theme.theme);
@@ -44,6 +46,38 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
     }
   }, [theme]);
 
+  const [isTestnetMode, setIsTestnetMode] = useState(() => {
+
+    const savedTestnetMode = localStorage.getItem("isTestnetMode");
+    return savedTestnetMode ? JSON.parse(savedTestnetMode) : false;
+  });
+
+  useEffect(() => {
+    const storedIsTestnetMode = JSON.parse(
+      localStorage.getItem("isTestnetMode")
+    );
+
+    if (isTestnetMode !== storedIsTestnetMode) {
+      localStorage.setItem("isTestnetMode", JSON.stringify(isTestnetMode));
+
+      // Dismiss previous toast notifications
+      toast.dismiss();
+
+      // Show the new toast notification
+      toast.success(
+        `Testnet mode ${!isTestnetMode ? "disabled" : "enabled"} successfully!`
+      );
+    }
+  }, [isTestnetMode]);
+  const navigate = useNavigate();
+  const handleTestnetModeToggle = () => {
+    setIsTestnetMode((prevMode) => !prevMode);
+    console.log(setIsTestnetMode , isTestnetMode)
+    if (isTestnetMode) {
+      navigate("/dashboard");
+    }
+
+  };
   // Check screen size and conditionally render Drawer for mobile view
   const isLargeScreen = useMediaQuery('(min-width: 1134px)');
 
@@ -97,6 +131,15 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
             <div className="flex align-center justify-center ml-3">
               <CustomizedSwitches checked={isDarkMode}
                 onChange={handleDarkModeToggle} />
+            </div>
+            
+          </div>
+          <div className="flex items-center">
+          <label htmlFor="testnetMode" className="ml-2 text-lg text-[#2A1F9D] dark:text-darkTextSecondary">TestNet Mode</label>
+            <span className="ml-8 text-[#2A1F9D] dark:text-darkTextSecondary">{isTestnetMode ? "ON" : "OFF"}</span>
+            <div className="flex align-center justify-center ml-3">
+            <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
+                            
             </div>
           </div>
         </div>

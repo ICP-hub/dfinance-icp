@@ -1,2 +1,17 @@
-type Result = variant { Ok : nat; Err : text };
-service : { deposit_ckbtc : (nat64) -> (Result) }
+type ReserveData = record {
+  id : nat16;
+  variable_debt_token_canister : opt principal;
+  last_update_timestamp : opt nat64;
+  liquidity_index : opt nat;
+  variable_borrow_index : opt nat;
+  d_token_canister : opt principal;
+  stable_debt_token_canister : opt principal;
+  interest_rate_strategy_address : opt principal;
+  current_liquidity_rate : opt nat;
+  current_variable_borrow_rate : opt nat;
+  current_stable_borrow_rate : opt nat;
+};
+service : () -> {
+  get_asset_data : () -> (ReserveData) query;
+  new_canister : () -> (principal);
+};

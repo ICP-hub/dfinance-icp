@@ -1,71 +1,97 @@
-// use std::collections::HashMap;
-// use crate::declarations::assets::ExecuteSupplyParams;
+// use candid::{Nat, Principal};
+// use ic_cdk::api::call::{call, CallResult};
+// use ic_cdk::caller;
+// use std::env;
 
-// use crate::protocol::libraries::{
-//     logic::validation::*,
-//     types::datatypes::{ExecuteSupplyParams, ReserveData, UserConfigurationMap},
-// };
+// use crate::api::deposit::asset_transfer_from;
+// use crate::api::state_handler::*;
+// use crate::declarations::assets::ExecuteSupplyParams;
+// use crate::protocol::libraries::logic::{reserve::ReserveLogic, validation::ValidationLogic};
 
 // struct SupplyLogic;
 
 // impl SupplyLogic {
-//     pub fn execute_supply(
-//         reserves_data: &mut HashMap<String, ReserveData>,
-//         reserves_list: &mut HashMap<u64, String>,
-//         user_config: &mut UserConfigurationMap,
-//         params: ExecuteSupplyParams,
-//     ) {
-//         let reserve = reserves_data.get_mut(&params.asset).unwrap();
-//         let reserve_cache = reserve.cache();
+//     pub async fn execute_supply(params: ExecuteSupplyParams) {
+//         // Fetches the canister ids, user principal and amount from env
+//         let canister_id_ckbtc_ledger = env::var("CANISTER_ID_CKBTC_LEDGER")
+//             .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
+//         let canister_id_dfinance_backend = env::var("CANISTER_ID_DFINANCE_BACKEND")
+//             .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
+//         let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
+//             .expect("CANISTER_ID_ATOKEN environment variable not set");
 
-//         reserve.update_state(&reserve_cache);
+//         let ledger_canister_id =
+//             Principal::from_text(canister_id_ckbtc_ledger).expect("Invalid ledger canister ID");
+//         let user_principal = caller();
+//         let platform_principal =
+//             Principal::from_text(canister_id_dfinance_backend).expect("Invalid platform principal");
+//         let amount_nat = Nat::from(params.amount);
 
-//         ValidationLogic::validate_supply(&reserve_cache, reserve, params.amount);
+//         // Reads the reserve_data from the ASSET_INDEX using the asset key
+//         let reserve_data = mutate_state(|state| {
+//             let asset_index = &mut state.asset_index;
+//             asset_index
+//                 .get(&params.asset)
+//                 .expect("Reserve not found")
+//                 .clone()
+//         });
 
-//         reserve.update_interest_rates(&reserve_cache, &params.asset, params.amount, 0);
+//         // Fetches the reserve logic cache having the current values
+//         let reserve_cache = ReserveLogic::cache(reserve_data.clone());
 
-//         safe_icrc2::gpv2_safe_icrc2::safe_transfer_from(
-//             &params.asset,
-//             &reserve_cache.a_token_address,
+//         // Updates the liquidity and borrow index
+//         ReserveLogic::update_state(&reserve_data, &reserve_cache);
+
+//         // Validates supply using the reserve_data
+//         ValidationLogic::validate_supply(&reserve_cache, &reserve_data, params.amount);
+
+//         // Updates inetrest rates with the assets and the amount
+//         ReserveLogic::update_interest_rates(
+//             &reserve_data,
+//             &reserve_cache,
+//             params.asset,
 //             params.amount,
+//             0,
 //         );
 
-//         let is_first_supply = d_token::mint(
-//             &reserve_cache.a_token_address,
-//             &params.user,
-//             &params.on_behalf_of,
-//             params.amount,
-//             reserve_cache.next_liquidity_index,
-//         );
+//         // Transfers the asset from the user to our backend cansiter
+//         asset_transfer_from(
+//             ledger_canister_id,
+//             user_principal,
+//             platform_principal,
+//             amount_nat.clone(),
+//         )
+//         .await;
 
-//         if is_first_supply {
-//             if ValidationLogic::validate_automatic_use_as_collateral(
-//                 reserves_data,
-//                 reserves_list,
-//                 user_config,
-//                 &reserve_cache.reserve_configuration,
-//                 &reserve_cache.a_token_address,
-//             ) {
-//                 user_config.set_using_as_collateral(reserve.id, true);
-//                 println!(
-//                     "{:?}",
-//                     ReserveUsedAsCollateralEnabled {
-//                         reserve: params.asset.clone(),
-//                         user: params.on_behalf_of.clone(),
-//                     }
-//                 );
-//             }
-//         }
+//         // Inter canister call to execute dtoken transfer
+//         let mint: CallResult<()> = call::<
+//             (
+//                 Principal,
+//                 Principal,
+//                 Option<Vec<u8>>,
+//                 Option<Vec<u8>>,
+//                 Nat,
+//                 Option<Vec<u8>>,
+//             ),
+//             (),
+//         >(
+//             Principal::from_text(dtoken_canister_id).expect("Invalid principal"),
+//             "execute_transfer",
+//             (
+//                 platform_principal,
+//                 user_principal,
+//                 None,
+//                 None,
+//                 amount_nat,
+//                 None,
+//             ),
+//         )
+//         .await;
 
-//         println!(
-//             "{:?}",
-//             Supply {
-//                 reserve: params.asset.clone(),
-//                 user: params.user.clone(),
-//                 on_behalf_of: params.on_behalf_of.clone(),
-//                 amount: params.amount,
-//                 referral_code: params.referral_code,
-//             }
-//         );
+//         print!("Mint function {:?}", mint);
+
+//         // --------- Isolation mode logic (TODO) ---------
+//         // If first_supply == true : Validate automatic use as collateral
+//         // If first_supply == false : Set using as collateral
 //     }
 // }

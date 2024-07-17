@@ -5,6 +5,7 @@ pub enum Error {
     ReservePaused,
     ReserveFrozen,
     SupplyCapExceeded,
+    NotEnoughAvailableUserBalance,
 }
 
 impl Error {
@@ -15,6 +16,9 @@ impl Error {
             Error::ReservePaused => "Action cannot be performed because the reserve is paused",
             Error::ReserveFrozen => "Action cannot be performed because the reserve is frozen",
             Error::SupplyCapExceeded => "Supply cap is exceeded",
+            Error::NotEnoughAvailableUserBalance => {
+                "User cannot withdraw more than the available balance"
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Drawer, useMediaQuery } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { DASHBOARD_TOP_NAV_LINK, HOME_TOP_NAV_LINK } from "../../utils/constants";
@@ -11,7 +11,7 @@ import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../../components/MaterialUISwitch";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { toggleTestnetMode } from "../../redux/reducers/testnetReducer"
+import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 
 const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInternetIdentity, handleLogout }) => {
   const { isAuthenticated } = useAuth();
@@ -25,14 +25,24 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
   });
 
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
-
+  const previousIsTestnetMode = useRef(isTestnetMode);
 
   const handleTestnetModeToggle = () => {
     navigate("/dashboard");
     dispatch(toggleTestnetMode());
   };
 
-
+  useEffect(() => {
+    if (previousIsTestnetMode.current !== isTestnetMode) {
+      if (previousIsTestnetMode.current !== undefined) {
+        toast.dismiss(); // Dismiss any existing toasts
+      }
+      toast.success(
+        `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`
+      );
+      previousIsTestnetMode.current = isTestnetMode;
+    }
+  }, [isTestnetMode]);
 
   const handleDarkModeToggle = () => {
     dispatch(toggleTheme());
@@ -66,11 +76,15 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
     return null; // Return null if it's a large screen
   }
 
+  const handleClose = () => {
+    setIsMobileNav(false);
+  };
+
   return (
     <Drawer
       anchor={"right"}
       open={isMobileNav}
-      onClose={() => setIsMobileNav(false)}
+      onClose={handleClose}
       PaperProps={{
         style: {
           marginTop: "88px", // Adjust the margin as needed
@@ -83,21 +97,56 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
         <h2 className="text-sm font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">Menu</h2>
 
         {!isHomeNav ? (
-          DASHBOARD_TOP_NAV_LINK.map((link, index) => (
-            <NavLink
-              key={index}
-              to={link.route}
-              className="text-[#2A1F9D] mt-3 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
-            >
-              {link.title}
-            </NavLink>
-          ))
+          DASHBOARD_TOP_NAV_LINK.map((link, index) => {
+            if (link.alwaysPresent) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            } else if (isTestnetMode && link.testnet) {
+              return (
+                <React.Fragment key={index}>
+                  <NavLink
+                    to={link.route}
+                    className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                    onClick={handleClose}
+                  >
+                    {link.title}
+                  </NavLink>
+                  {link.title === "Faucet" && (
+                    <>
+                      {/* Additional content for Faucet */}
+                    </>
+                  )}
+                </React.Fragment>
+              );
+            } else if (!isTestnetMode && !link.testnet) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            }
+            return null;
+          })
         ) : (
           HOME_TOP_NAV_LINK.map((link, index) => (
             <NavLink
               key={index}
               to={link.route}
               className="text-[#2A1F9D] mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1"
+              onClick={handleClose}
             >
               {link.title}
             </NavLink>

@@ -1,4 +1,3 @@
-
 use crate::declarations::transfer::*;
 use candid::{Nat, Principal};
 use ic_cdk::call;

@@ -28,13 +28,14 @@ const RiskPopup = ({ onClose }) => {
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black opacity-50"></div>
+            
             <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg max-w-3xl mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
                 {/* Close button */}
                 <div
-      className="w-11 h-11   text-gray-600 hover:text-gray-900 absolute top-4 right-4"
-                    onClick={onClose}
+      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+      onClick={onClose}
     >
-      <X className="text-white w-6 h-6" />
+      <X className="text-black dark:text-darkText w-6 h-6" />
     </div>
                 <div className="px-6 py-4">
                     <div className="flex justify-between items-center pb-3">

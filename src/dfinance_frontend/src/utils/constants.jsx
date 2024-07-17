@@ -421,7 +421,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 3,
-    asset: "Internet computer",
+    asset: "ICP",
     image: "https://i.ibb.co/RzQNb5F/image98.png",
     total_supply_count: 3.19,
     total_supply: 156.51,
@@ -870,7 +870,7 @@ export const FAUCET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 3,
-    asset: "Internet computer",
+    asset: "ICP",
     image: "https://i.ibb.co/RzQNb5F/image98.png",
     WalletBalance: 0,
   },

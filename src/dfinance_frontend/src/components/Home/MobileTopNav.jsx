@@ -28,6 +28,7 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
 
 
   const handleTestnetModeToggle = () => {
+    navigate("/dashboard");
     dispatch(toggleTestnetMode());
   };
 

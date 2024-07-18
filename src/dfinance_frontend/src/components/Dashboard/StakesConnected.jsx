@@ -25,7 +25,7 @@ const StakesConnected = () => {
                         <div className="flex flex-col gap-3">
                             <div className="border rounded-2xl mt-6 p-3">
                                 <div className="flex justify-between align-center items-center">
-                                    <div className="flex"><img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
+                                    <div className="flex"><img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
                                         <p className="font-bold text-[16px]">Dfinance</p>
                                     </div>
                                     <Button
@@ -112,7 +112,7 @@ const StakesConnected = () => {
                         <div className="flex flex-col gap-3">
                             <div className="border rounded-2xl mt-6 p-3">
                                 <div className="flex justify-between align-center items-center">
-                                    <div className="flex"><img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
+                                    <div className="flex"><img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
                                         <p className="font-bold text-[16px]">Dfinance</p>
                                     </div>
                                     <Button
@@ -201,7 +201,7 @@ const StakesConnected = () => {
                         <div className="flex flex-col gap-3">
                             <div className="border rounded-2xl mt-6 p-3">
                                 <div className="flex justify-between align-center items-center">
-                                    <div className="flex"><img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
+                                    <div className="flex"><img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
                                         <p className="font-bold text-[16px]">Dfinance</p>
                                     </div>
                                     <Button

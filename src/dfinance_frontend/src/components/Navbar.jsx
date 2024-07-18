@@ -46,6 +46,7 @@ import Group216 from "../../public/Group216.svg";
 import Popup from "./Dashboard/Morepopup";
 import CustomizedSwitches from "./MaterialUISwitch";
 import { toggleTestnetMode } from "../redux/reducers/testnetReducer";
+import icplogo from '../../public/icp.png'
 
 export default function Navbar({ isHomeNav }) {
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
@@ -777,7 +778,7 @@ export default function Navbar({ isHomeNav }) {
                                 </span>
                                 <div className="absolute bottom-2 left-2 mt-4 flex items-center">
                                   <img
-                                    src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"
+                                    src={icplogo}
                                     alt="Icp Logo"
                                     className="w-6 h-6"
                                   />
@@ -799,7 +800,7 @@ export default function Navbar({ isHomeNav }) {
 
                                   <div className="flex items-center ml-auto">
                                     <img
-                                      src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"
+                                        src={icplogo}
                                       alt="Icp Logo"
                                       className="w-6 h-6"
                                     />

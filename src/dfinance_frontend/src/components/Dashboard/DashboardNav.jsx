@@ -12,6 +12,7 @@ import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
 import icplogo from '../../../public/icp.png'
+import { EllipsisVertical } from 'lucide-react';
 
 const DashboardNav = () => {
   const { isAuthenticated } = useAuth();
@@ -19,7 +20,7 @@ const DashboardNav = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { isWalletConnected } = useSelector((state) => state.utility);
-  const theme = useSelector((state) => state.theme.theme);
+  
 
   const [isDrop, setIsDrop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -30,6 +31,8 @@ const DashboardNav = () => {
   const dropdownRef = useRef(null);
   const menuRef = useRef(null);
 
+  const theme = useSelector((state) => state.theme.theme);
+  const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
       setIsDrop(false);
@@ -123,15 +126,7 @@ const DashboardNav = () => {
         {/* Menu Button */}
         <div className="md:hidden flex ml-auto -mt-10">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
-            <img
-              src={
-                theme === "dark"
-                  ? "/wallet-details-menu-dark.svg"
-                  : "/wallet-details-menu-light.svg"
-              }
-              className="w-7 h-7"
-              alt="toggle"
-            />
+          <EllipsisVertical color={checkColor} size={18} />
           </button>
         </div>
       </div>

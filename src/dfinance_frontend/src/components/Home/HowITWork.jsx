@@ -2,7 +2,9 @@ import React, { useEffect } from 'react'
 import { GoArrowRight } from "react-icons/go";
 import Aos from 'aos'
 import 'aos/dist/aos.css'
-
+import ICPRequest from '../../../public/howitworks/ICP-request.png'
+import Calculator from '../../../public/howitworks/calculator.png'
+import SubmitICPRequest from '../../../public/howitworks/Submit-ICPRequest.png'
 const HowITWork = () => {
 
     useEffect(() => {
@@ -28,7 +30,7 @@ const HowITWork = () => {
               <p className='text-[#233D63] flex gap-3 text-[12px] mt-[14px] items-center font-[700] dark:text-darkText'>Visit Docs <GoArrowRight size={20} /></p>
               </div>
               </div>
-              <img className='mx-auto mt-[16px] mb-[21px] w-[120px] ' src="https://i.ibb.co/bb4YGbN/ICP-request.png" draggable="false" />
+              <img className='mx-auto mt-[16px] mb-[21px] w-[120px] ' src={ICPRequest} draggable="false" />
             </div>
 
             <div className='mx-auto w-[309px] rounded-3xl border p-[15px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]'>
@@ -40,7 +42,7 @@ const HowITWork = () => {
               <p className='text-[#233D63] flex gap-3 text-[12px] mt-[14px] items-center font-[700] dark:text-darkText'>How to create Snapshot <GoArrowRight size={20} /></p>
               </div>
               </div>
-              <img className='mx-auto mt-[36px] mb-[21px] w-[157px]  ' src="https://i.ibb.co/j8jGcgd/calculator.png" draggable="false" />
+              <img className='mx-auto mt-[36px] mb-[21px] w-[157px]  ' src={Calculator} draggable="false" />
             </div>
          
 
@@ -52,7 +54,7 @@ const HowITWork = () => {
               <p className='text-[#737373] font-[400] mt-2 dark:text-darkText'>The proposal is submitted through a GitHub pull request, & community votes on approvals</p>
               </div>
               </div>
-              <img className='mx-auto mt-[16px] mb-[21px] w-[153px]  ' src="https://i.ibb.co/Bw2dGRz/Submit-ICPRequest.png" draggable="false" />
+              <img className='mx-auto mt-[16px] mb-[21px] w-[153px]  ' src={SubmitICPRequest} draggable="false" />
             </div>
             </div> 
         </section>

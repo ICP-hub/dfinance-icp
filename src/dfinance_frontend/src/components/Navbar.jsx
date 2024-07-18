@@ -777,7 +777,7 @@ export default function Navbar({ isHomeNav }) {
                                 </span>
                                 <div className="absolute bottom-2 left-2 mt-4 flex items-center">
                                   <img
-                                    src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"
+                                    src="../../public/assests-icon/ICPMARKET.png"
                                     alt="Icp Logo"
                                     className="w-6 h-6"
                                   />
@@ -799,7 +799,7 @@ export default function Navbar({ isHomeNav }) {
 
                                   <div className="flex items-center ml-auto">
                                     <img
-                                      src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"
+                                        src="../../public/assests-icon/ICPMARKET.png"
                                       alt="Icp Logo"
                                       className="w-6 h-6"
                                     />

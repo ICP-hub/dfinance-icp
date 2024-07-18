@@ -1,4 +1,23 @@
-import ckBTC from "../../public/assests-icon/ckBTC.svg"
+import ckBTC from '../../public/assests-icon/ckBTC.png';
+import cekTH from '../../public/assests-icon/cekTH.png';
+import Dragginz from "../../public/assests-icon/Dragginz.png"
+import icp from '../../public/assests-icon/ICP.png';
+import openChat from '../../public/assests-icon/openChat.png';
+import Kinic from '../../public/assests-icon/Kinic.png';
+import HotOrNot from '../../public/assests-icon/HotOrNot.png';
+import icx from '../../public/assests-icon/ICX.png';
+import ICGGhost from '../../public/assests-icon/ICGGhost.png';
+import Modclub from '../../public/assests-icon/Modclub.png';
+import BooMDao from '../../public/assests-icon/BooMDao.png';
+import catalyze from '../../public/assests-icon/catalyze.png';
+
+import trailofbits from '../../public/assests-icon/trail-Of-Bits-svg-fill.png'
+import certora from '../../public/assests-icon/certora-svg-fill.png'
+import openZeppelinsvg from '../../public/assests-icon/open-Zeppelin-svg.png'
+import sigmaprime from '../../public/assests-icon/sigma-Prime-svg-fill.png'
+import Peckshield from '../../public/assests-icon/peckshield-logo-svg.png'
+import abdk from '../../public/assests-icon/abdk-svg.png'
+
 
 const TabPanel = ({ items }) => {
   return (
@@ -157,84 +176,84 @@ export const TAB_CARD_DATA = [
   {
     id: 0,
     title: "ckBTC",
-    image: "../../public/assests-icon/ckBTC.svg",
+    image: ckBTC,
     description:
       "Bitcoin is the first decentralized digital currency. It was invented in 2008 by an unknown person or group of people using the name Satoshi Nakamoto and started in 2009 when its source code was released as open-source software.",
   },
   {
     id: 1,
     title: "ckETH",
-    image: "../../public/assests-icon/cekTH.svg",
+    image: cekTH,
     description:
       "Ethereum is a decentralized, open-source blockchain system that features smart contract functionality. It is the second-largest cryptocurrency by market capitalization, after Bitcoin.",
   },
   {
     id: 2,
     title: "Dragginz",
-    image: "../../public/assests-icon/Dragginz.svg",
+    image: Dragginz,
     description:
       "Ripple is a digital payment protocol that operates as both a cryptocurrency and a payment network for financial transactions. It is known for its digital payment protocol and native cryptocurrency, XRP.",
   },
   {
     id: 3,
     title: "Internet computer",
-    image: "../../public/assests-icon/ICP.svg",
+    image: icp,
     description:
       "Litecoin is a peer-to-peer cryptocurrency and open-source software project released under the MIT/X11 license. Creation and transfer of coins are based on an open-source cryptographic protocol and is not managed by any central authority.",
   },
   {
     id: 4,
     title: "OpenChat",
-    image: "../../public/assests-icon/openChat.svg",
+    image: openChat,
     description:
       "Cardano is a blockchain platform for changemakers, innovators, and visionaries, with the tools and technologies required to create possibility for the many, as well as the few, and bring about positive global change.",
   },
   {
     id: 5,
     title: "Kinic",
-    image: "../../public/assests-icon/Kinic.svg",
+    image: Kinic,
     description:
       "Polkadot is a next-generation blockchain protocol connecting multiple specialized blockchains into one unified network. It aims to enable seamless communication and interoperability between different blockchains.",
   },
   {
     id: 6,
     title: "Hot or Not",
-    image: "../../public/assests-icon/HotOrNot.svg",
+    image: HotOrNot,
     description:
       "Chainlink is a decentralized oracle network that enables smart contracts to securely interact with real-world data, events, and payments. It aims to bridge the gap between blockchain-based smart contracts and external data sources.",
   },
   {
     id: 7,
     title: "ICX",
-    image: "../../public/assests-icon/ICX.svg",
+    image: icx,
     description:
       "Stellar is an open-source, decentralized protocol for digital currency to fiat currency transfers which allows cross-border transactions between any pair of currencies. It aims to provide low-cost financial services to people in underserved regions.",
   },
   {
     id: 8,
     title: "ICGhost",
-    image: "../../public/assests-icon/ICGGhost.svg",
+    image: ICGGhost,
     description:
       "Dogecoin is a cryptocurrency that started as a joke based on the popular 'Doge' meme. Despite its origins, Dogecoin has developed a strong community and is used by some as a tipping system on social media platforms.",
   },
   {
     id: 9,
     title: "Modclub",
-    image: "../../public/assests-icon/Modclub.svg",
+    image: Modclub,
     description:
       "Binance Coin is the native cryptocurrency of the Binance exchange, one of the largest cryptocurrency exchanges in the world. It is used to pay for transaction fees on the Binance exchange and can also be used for various other purposes within the Binance ecosystem.",
   },
   {
     id: 10,
     title: "BOOM DAO",
-    image: "../../public/assests-icon/BooMDao.svg",
+    image: BooMDao,
     description:
       "Uniswap is a decentralized finance (DeFi) protocol that enables automated trading of decentralized finance tokens on the Ethereum blockchain. It allows users to swap various Ethereum-based tokens without the need for an intermediary.",
   },
   {
     id: 11,
     title: "Catalyze",
-    image: "../../public/assests-icon/catalyze.svg",
+    image: catalyze,
     description:
       "Solana is a high-performance blockchain platform designed for decentralized applications and crypto-currencies. It aims to provide fast, secure, and scalable infrastructure for decentralized applications and crypto-currencies.",
   },
@@ -245,32 +264,32 @@ export const SECURITY_CONTRIBUTORS_DATA = [
   {
     id: 0,
     title: "Trail of bits",
-    image: "../../public/assests-icon/trail-Of-Bits-svg-fill.png",
+    image: trailofbits,
   },
   {
     id: 1,
     title: "Certora",
-    image: "../../public/assests-icon/certora-svg-fill.png",
+    image: certora,
   },
   {
     id: 2,
     title: "OpenZeppellin",
-    image: "../../public/assests-icon/open-Zeppelin-svg.png",
+    image: openZeppelinsvg,
   },
   {
     id: 3,
     title: "Sigma Prime",
-    image: "../../public/assests-icon/sigma-Prime-svg-fill.png",
+    image: sigmaprime,
   },
   {
     id: 4,
     title: "Peckshield",
-    image: "../../public/assests-icon/peckshield-logo-svg.png",
+    image: Peckshield,
   },
   {
     id: 5,
     title: "ABDK",
-    image: "../../public/assests-icon/abdk-svg.png",
+    image: abdk,
   }
   
 ]
@@ -391,7 +410,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 0,
     asset: "ckBTC",
-    image: "../../public/assests-icon/ckBTC.svg",
+    image: ckBTC,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -402,7 +421,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 1,
     asset: "ckETH",
-    image: "../../public/assests-icon/cekTH.svg",
+    image: cekTH,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -413,7 +432,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 2,
     asset: "Dragginz",
-    image: "../../public/assests-icon/Dragginz.svg",
+    image: Dragginz,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -424,7 +443,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 3,
     asset: "ICP",
-    image: "../../public/assests-icon/ICP.svg",
+    image: icp,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -435,7 +454,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 4,
     asset: "OpenChat",
-    image: "../../public/assests-icon/openChat.svg",
+    image: openChat,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -446,7 +465,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 5,
     asset: "Kinic",
-    image: "../../public/assests-icon/Kinic.svg",
+    image: Kinic,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -456,7 +475,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 6,
-    image: "../../public/assests-icon/HotOrNot.svg",
+    image: HotOrNot,
     asset: "Hot or Not",
     total_supply_count: 3.19,
     total_supply: 156.51,
@@ -467,7 +486,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 7,
-    image: "../../public/assests-icon/ICX.svg",
+    image: icx,
     asset: "ICX",
     total_supply_count: 3.19,
     total_supply: 156.51,
@@ -479,7 +498,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 8,
     asset: "ICGhost",
-    image: "../../public/assests-icon/ICGGhost.svg",
+    image: ICGGhost,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -490,7 +509,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 9,
     asset: "Modclub",
-    image: "../../public/assests-icon/Modclub.svg",
+    image: Modclub,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -501,7 +520,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   {
     row_id: 10,
     asset: "BOOM DAO",
-    image: "../../public/assests-icon/BooMDao.svg",
+    image: BooMDao,
     total_supply_count: 3.19,
     total_supply: 156.51,
     supply_apy: 3.19,
@@ -511,7 +530,7 @@ export const WALLET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 11,
-    image: "../../public/assests-icon/catalyze.svg",
+    image: catalyze,
     asset: "Catalyze",
     total_supply_count: 3.19,
     total_supply: 156.51,
@@ -588,7 +607,7 @@ export const MY_SUPPLY_ASSET_TABLE_ROWS = [
   {
     row_id: 0,
     asset: "ckETH",
-    image: "../../public/assests-icon/cekTH.svg",
+    image: cekTH,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -597,7 +616,7 @@ export const MY_SUPPLY_ASSET_TABLE_ROWS = [
   {
     row_id: 1,
     asset: "ckBTC",
-    image: "../../public/assests-icon/ckBTC.svg",
+    image: ckBTC,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -607,7 +626,7 @@ export const MY_SUPPLY_ASSET_TABLE_ROWS = [
   {
     row_id: 3,
     asset: "Dragginz",
-    image: "../../public/assests-icon/Dragginz.svg",
+    image: Dragginz,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -649,7 +668,7 @@ export const MY_ASSET_TO_SUPPLY_TABLE_ROW = [
   {
     row_id: 0,
     asset: "ckETH",
-    image: "../../public/assests-icon/cekTH.svg",
+    image: cekTH,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -658,7 +677,7 @@ export const MY_ASSET_TO_SUPPLY_TABLE_ROW = [
   {
     row_id: 1,
     asset: "ckBTC",
-    image: "../../public/assests-icon/ckBTC.svg",
+    image: ckBTC,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -668,7 +687,7 @@ export const MY_ASSET_TO_SUPPLY_TABLE_ROW = [
   {
     row_id: 3,
     asset: "Dragginz",
-    image: "../../public/assests-icon/Dragginz.svg",
+    image: Dragginz,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -677,7 +696,7 @@ export const MY_ASSET_TO_SUPPLY_TABLE_ROW = [
   {
     row_id: 4,
     asset: "OpenChat",
-    image: "../../public/assests-icon/openChat.svg",
+    image: openChat,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -689,7 +708,7 @@ export const MY_ASSET_TO_BORROW_TABLE_ROW = [
   {
     row_id: 0,
     asset: "ckETH",
-    image: "../../public/assests-icon/cekTH.svg",
+    image: cekTH,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy:" 1.50-2.02%",
@@ -718,7 +737,7 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
   {
     row_id: 0,
     asset: "ckETH",
-    image: "../../public/assests-icon/cekTH.svg",
+    image: cekTH,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -728,7 +747,7 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
   {
     row_id: 1,
     asset: "ckBTC",
-    image: "../../public/assests-icon/ckBTC.svg",
+    image: ckBTC,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -739,7 +758,7 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
   {
     row_id: 3,
     asset: "Dragginz",
-    image: "../../public/assests-icon/Dragginz.svg",
+    image: Dragginz,
     wallet_balance_count: 3.19,
     wallet_balance: 156.51,
     apy: 1.50,
@@ -855,72 +874,72 @@ export const FAUCET_ASSETS_TABLE_ROW = [
   {
     row_id: 0,
     asset: "ckBTC",
-    image: "../../public/assests-icon/ckBTC.svg",
+    image: ckBTC,
     WalletBalance: 0,
   },
   {
     row_id: 1,
     asset: "ckETH",
-    image: "../../public/assests-icon/cekTH.svg",
+    image: cekTH,
     WalletBalance: 0,
   },
   {
     row_id: 2,
     asset: "Dragginz",
-    image: "../../public/assests-icon/Dragginz.svg",
+    image: Dragginz,
     WalletBalance: 0,
   },
   {
     row_id: 3,
     asset: "ICP",
-    image: "../../public/assests-icon/ICP.svg",
+    image: icp,
     WalletBalance: 0,
   },
   {
     row_id: 4,
     asset: "OpenChat",
-    image: "../../public/assests-icon/openChat.svg",
+    image: openChat,
     WalletBalance: 0,
   },
   {
     row_id: 5,
     asset: "Kinic",
-    image: "../../public/assests-icon/Kinic.svg",
+    image: Kinic,
     WalletBalance: 0,
   },
   {
     row_id: 6,
-    image: "../../public/assests-icon/HotOrNot.svg",
+    image: HotOrNot,
     asset: "Hot or Not",
     WalletBalance: 0,
   },
   {
     row_id: 7,
-    image: "../../public/assests-icon/ICX.svg",
+    image: icx,
     asset: "ICX",
     WalletBalance: 0,
   },
   {
     row_id: 8,
     asset: "ICGhost",
-    image: "../../public/assests-icon/ICGGhost.svg",
+    image: ICGGhost,
     WalletBalance: 0,
   },
   {
     row_id: 9,
     asset: "Modclub",
-    image: "../../public/assests-icon/Modclub.svg",
+    image: Modclub,
     WalletBalance: 0,
   },
   {
     row_id: 10,
     asset: "BOOM DAO",
-    image: "../../public/assests-icon/BooMDao.svg",
+    image: BooMDao,
     WalletBalance: 0,
   },
   {
     row_id: 11,
-    image: "../../public/assests-icon/catalyze.svg",
+    image: catalyze,
     asset: "Catalyze",
     WalletBalance: 0,
   },

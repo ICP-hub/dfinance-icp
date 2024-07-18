@@ -428,7 +428,7 @@ const DFinanceGov = () => {
 //                 <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
 //                   Internet Identity
 //                   <div className='w-8 h-8'>
-//                     <img src={"  ../../public/assests-icon/ICPMARKET.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+//                     <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
 //                   </div>
 //                 </div>
 //                 <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#b7b4b4] dark:text-darkText">

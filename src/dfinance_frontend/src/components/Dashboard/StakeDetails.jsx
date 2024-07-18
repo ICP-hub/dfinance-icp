@@ -8,6 +8,7 @@ import {
 } from '../../redux/reducers/utilityReducer'
 import { STACK_DETAILS_TABS } from "../../utils/constants";
 
+
 import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/Elements.svg"
@@ -15,6 +16,11 @@ import MySupply from './MySupply'
 import Error from '../../pages/Error/Error'
 import StakesConnected from './StakesConnected'
 import Loading from "../Loading"
+
+import icplogo from '../../../public/icp.png'
+import plug from "../../../public/plug.png"
+import bifinity from "../../../public/bifinity.png"
+import nfid from "../../../public/nfid.png"
 
 const StakeDetails = () => {
     const navigate = useNavigate()
@@ -61,7 +67,7 @@ const StakeDetails = () => {
             <div className="w-full">
                 <h1 className="text-[#2A1F9D] text-xl inline-flex items-center  dark:text-darkText ml-1">
                     Available on
-                    <img src="../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-9 h-9 mr-3" />
+                    <img src={icplogo} alt="Icp Logo" className="mx-2 w-9 h-9 mr-3" />
                     ICP Mainnet
                 </h1>
                 <div className="w-full flex flex-col  md2:flex-row mt-6">
@@ -94,13 +100,13 @@ const StakeDetails = () => {
             {/* isAuthenticated */}
             {isAuthenticated ? <StakesConnected /> : <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
                 <div className="absolute right-0 top-0 h-full w-full md:w-1/2 pointer-events-none">
-                <img
-                    src={Element}
-                    alt="Elements"
-                    className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
-                // Ensure image scales properly
-                />
-            </div>
+                    <img
+                        src={Element}
+                        alt="Elements"
+                        className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
+                    // Ensure image scales properly
+                    />
+                </div>
                 <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg dark:text-darkText">
                     Please, connect your wallet
                 </h1>
@@ -113,7 +119,7 @@ const StakeDetails = () => {
                 <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap justify-center align-center">
                     <div className="flex relative text-white p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText  min-w-[250px]">
                         <div className='flex w-full align-center items-center'>
-                            <img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+                            <img src={icplogo} alt="Icp Logo" className="mx-2 w-6 h-6" />
                             <h1 className='font-bold'>XYZ</h1>
                         </div>
                         <div className='flex flex-col justify-center items-center'>
@@ -123,7 +129,7 @@ const StakeDetails = () => {
                     </div>
                     <div className="flex relative text-white p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText  min-w-[250px]">
                         <div className='flex w-full align-center items-center'>
-                            <img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+                            <img src={icplogo} alt="Icp Logo" className="mx-2 w-6 h-6" />
                             <h1 className='font-bold'>XYZ</h1>
                         </div>
                         <div className='flex flex-col justify-center items-center'>
@@ -133,7 +139,7 @@ const StakeDetails = () => {
                     </div>
                     <div className="flex relative text-white p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText  min-w-[250px]">
                         <div className='flex w-full align-center items-center'>
-                            <img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+                            <img src={icplogo} alt="Icp Logo" className="mx-2 w-6 h-6" />
                             <h1 className='font-bold'>XYZ</h1>
                         </div>
                         <div className='flex flex-col justify-center items-center'>
@@ -150,25 +156,25 @@ const StakeDetails = () => {
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
                                 Internet Identity
                                 <div className='w-8 h-8'>
-                                    <img src={"  ../../public/assests-icon/ICPMARKET.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
                                 Plug
                                 <div className='w-8 h-8'>
-                                    <img src={"/plug.png.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={plug} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
                                 Bifinity
                                 <div className='w-8 h-8'>
-                                    <img src={"/bifinity.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
                                 NFID
                                 <div className='w-8 h-8'>
-                                    <img src={"/nfid.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={nfid} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                         </div>

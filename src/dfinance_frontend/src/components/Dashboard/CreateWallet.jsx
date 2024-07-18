@@ -11,6 +11,10 @@ import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/Elements.svg"
 import MySupply from './MySupply'
+import icplogo from '../../../public/icp.png'
+import plug from "../../../public/plug.png"
+import bifinity from "../../../public/bifinity.png"
+import nfid from "../../../public/nfid.png"
 
 const CreateWallet = () => {
     const navigate = useNavigate()
@@ -92,25 +96,25 @@ const CreateWallet = () => {
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
                                 Internet Identity
                                 <div className='w-8 h-8'>
-                                    <img src={"  ../../public/assests-icon/ICPMARKET.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
                                 Plug
                                 <div className='w-8 h-8'>
-                                    <img src={"/plug.png.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={plug} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
                                 Bifinity
                                 <div className='w-8 h-8'>
-                                    <img src={"/bifinity.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
                                 NFID
                                 <div className='w-8 h-8'>
-                                    <img src={"/nfid.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={nfid} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                         </div>

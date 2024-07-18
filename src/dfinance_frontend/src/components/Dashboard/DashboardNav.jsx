@@ -11,6 +11,7 @@ import RiskPopup from "./RiskDetails";
 import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
+import icplogo from '../../../public/icp.png'
 
 const DashboardNav = () => {
   const { isAuthenticated } = useAuth();
@@ -115,7 +116,7 @@ const DashboardNav = () => {
           </div>
         )}
         <h1 className="text-[#2A1F9D] text-xl inline-flex items-center mb-8 dark:text-darkText ml-1">
-          <img src="../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]" />
+          <img src={icplogo} alt="Icp Logo" className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]" />
           ICP Market
         </h1>
 

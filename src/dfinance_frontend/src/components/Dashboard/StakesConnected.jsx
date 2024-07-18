@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 import Button from "../Button"
+import icplogo from '../../../public/icp.png'
 
 const StakesConnected = () => {
     const [isTestnetMode, setIsTestnetMode] = useState(""); // Add state for testnet mode
@@ -25,7 +26,7 @@ const StakesConnected = () => {
                         <div className="flex flex-col gap-3">
                             <div className="border rounded-2xl mt-6 p-3">
                                 <div className="flex justify-between align-center items-center">
-                                    <div className="flex"><img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
+                                    <div className="flex"><img src={icplogo} alt="Icp Logo" className="mx-2 w-7 h-7" />
                                         <p className="font-bold text-[16px]">Dfinance</p>
                                     </div>
                                     <Button
@@ -112,7 +113,7 @@ const StakesConnected = () => {
                         <div className="flex flex-col gap-3">
                             <div className="border rounded-2xl mt-6 p-3">
                                 <div className="flex justify-between align-center items-center">
-                                    <div className="flex"><img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
+                                    <div className="flex"><img src={icplogo} alt="Icp Logo" className="mx-2 w-7 h-7" />
                                         <p className="font-bold text-[16px]">Dfinance</p>
                                     </div>
                                     <Button
@@ -201,7 +202,7 @@ const StakesConnected = () => {
                         <div className="flex flex-col gap-3">
                             <div className="border rounded-2xl mt-6 p-3">
                                 <div className="flex justify-between align-center items-center">
-                                    <div className="flex"><img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-7 h-7" />
+                                    <div className="flex"><img src={icplogo} alt="Icp Logo" className="mx-2 w-7 h-7" />
                                         <p className="font-bold text-[16px]">Dfinance</p>
                                     </div>
                                     <Button

@@ -171,9 +171,9 @@ const TransactionHistory = () => {
                     <p className="text-[#5B62FE] text-[14px] mb-3 dark:text-darkTextSecondary">{tx.age}</p>
                     <div key={tx.id} className="w-full border border-[#2A1F9D] dark:border-darkTextSecondary rounded-lg shadow-lg mb-6 p-4 dark:[#FEFEFE] dark:bg-[#2b2c4a]">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[#2A1F9D] font-semibold text-base text-nowrap dark:text-darkText">Transaction Hash:</span>
+                        <span className="text-[#2A1F9D] font-semibold text-base text-nowrap dark:text-darkText">Transaction</span>
                         <div className="flex items-center">
-                          <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.hash}</span>
+                          <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{`${tx.hash.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
                             onClick={() => copyToClipboard(tx.hash)}
@@ -195,7 +195,7 @@ const TransactionHistory = () => {
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[#2A1F9D] font-semibold text-base text-nowrap dark:text-darkText">From:</span>
                         <div className="flex items-center">
-                          <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.from}</span>
+                          <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1"> {`${tx.from.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
                             onClick={() => copyToClipboard(tx.from)}
@@ -207,7 +207,7 @@ const TransactionHistory = () => {
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[#2A1F9D] font-semibold text-base text-nowrap dark:text-darkText">To:</span>
                         <div className="flex items-center">
-                          <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{tx.to}</span>
+                          <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{`${tx.from.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
                             onClick={() => copyToClipboard(tx.to)}

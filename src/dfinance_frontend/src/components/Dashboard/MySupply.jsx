@@ -37,7 +37,7 @@ const MySupply = () => {
     type: "",
     asset: "",
     image: "",
-  });
+  });console.log("hello",isModalOpen);
   const handleModalOpen = (type, asset, image) => {
     console.log("Handle modal opened");
     setIsModalOpen({
@@ -124,6 +124,8 @@ const MySupply = () => {
             handleModalOpen={handleModalOpen}
             children={
               <PaymentDone
+              isModalOpen={isModalOpen.isOpen}
+              handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
               />

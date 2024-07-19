@@ -110,7 +110,7 @@ const WalletDetails = () => {
               id="search"
               placeholder="Search for proposals"
               style={{ fontSize: '0.75rem' }}
-              className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent ${Showsearch
+              className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                 ? "animate-fade-left flex"
                 : "animate-fade-right hidden"
                 }`}
@@ -133,17 +133,18 @@ const WalletDetails = () => {
         </svg>
       </div>
       {Showsearch &&
-        <input
-          type="text"
-          name="search"
-          id="search"
-          placeholder="Search for products"
-          className={`placeholder-gray-500 w-[300px] block  md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent ${Showsearch
-            ? "animate-fade-left flex"
-            : "animate-fade-right hidden"
-            }`}
-        />
-      }
+  <input
+    type="text"
+    name="search"
+    id="search"
+    placeholder="Search for products"
+    className={`placeholder-gray-500 w-[300px] block md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
+      ? "animate-fade-left flex"
+      : "animate-fade-right hidden"
+      }`}
+  />
+}
+
 
       <div className="w-full min-h-[400px] mt-6 lg:px-10 mb-20">
         <div className="w-full">

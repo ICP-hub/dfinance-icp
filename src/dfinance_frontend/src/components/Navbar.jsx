@@ -316,7 +316,20 @@ export default function Navbar({ isHomeNav }) {
       return newMode;
     });
   };
-
+  const copyToClipboard = () => {
+    if (principal) {
+      navigator.clipboard.writeText(principal)
+        .then(() => {
+          alert('Address copied to clipboard');
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+        });
+    }
+  };
+  const truncateString = (str, maxLength) => {
+    return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+  };
   React.useEffect(() => {
     const htmlElement = document.documentElement;
     const bodyElement = document.body;
@@ -729,8 +742,8 @@ export default function Navbar({ isHomeNav }) {
                       className="object-contain w-5 h-5"
                     />
                     <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold">
-                      0x65.125s
-                    </span>
+              {truncateString(principal, 10)}
+            </span>
                   </div>
 
                   {switchWalletDrop && (
@@ -746,7 +759,7 @@ export default function Navbar({ isHomeNav }) {
                         <div className="w-full flex items-center gap-2">
                           <img src={loader} alt="square" className="w-8 h-8" />
                           <h1 className="font-bold text-xl text-blue-800 dark:text-darkText">
-                            0x65.125ssdf
+                          {truncateString(principal, 20)}
                           </h1>
                         </div>
                         <div className="flex flex-col-reverse   lg:block">
@@ -754,7 +767,7 @@ export default function Navbar({ isHomeNav }) {
                             <Button
                               title="Switch Wallet"
                               className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
-                              onClickHandler={handleSwitchWallet}
+                             
                             />
                             <Button
                               title="Disconnect"
@@ -818,10 +831,10 @@ export default function Navbar({ isHomeNav }) {
                                 className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                                 style={{ height: "70px", width: "160px" }}
                               >
-                                <button
-                                  className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
-                                  onClick={handleCopyAddress}
-                                >
+                               <button
+      className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
+      onClick={copyToClipboard}
+    >
                                   <GrCopy className="h-5 w-4 ml-4 lg1:ml-0" />
                                   <span className="ml-1">Copy Address</span>
                                 </button>

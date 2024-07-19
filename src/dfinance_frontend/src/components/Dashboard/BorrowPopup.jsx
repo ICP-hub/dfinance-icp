@@ -124,9 +124,12 @@ const Borrow = ({ asset, image }) => {
         </div>
 
         <div className="w-full">
-          <button
+        <button
             onClick={handleBorrowETH}
-            className="bg-gradient-to-tr from-[#ffaf5a]  to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
+            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
+              !isAcknowledged ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={!isAcknowledged}
           >
             Borrow {asset}
           </button>

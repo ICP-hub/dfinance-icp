@@ -75,6 +75,8 @@ const MySupply = () => {
             handleModalOpen={handleModalOpen}
             children={
               <BorrowPopup
+              isModalOpen={isModalOpen.isOpen}
+              handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
               />
@@ -87,7 +89,9 @@ const MySupply = () => {
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
             children={
-              <Borrow asset={isModalOpen.asset} image={isModalOpen.image} />
+              <Borrow   isModalOpen={isModalOpen.isOpen}
+              handleModalOpen={handleModalOpen}
+              asset={isModalOpen.asset} image={isModalOpen.image} />
             }
           />
         );
@@ -98,6 +102,8 @@ const MySupply = () => {
             handleModalOpen={handleModalOpen}
             children={
               <SupplyPopup
+              isModalOpen={isModalOpen.isOpen}
+              setIsModalOpen={setIsModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
               />
@@ -111,6 +117,8 @@ const MySupply = () => {
             handleModalOpen={handleModalOpen}
             children={
               <WithdrawPopup
+              isModalOpen={isModalOpen.isOpen}
+              handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
               />
@@ -138,7 +146,9 @@ const MySupply = () => {
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
             children={
-              <Repay asset={isModalOpen.asset} image={isModalOpen.image} />
+              <Repay   isModalOpen={isModalOpen.isOpen}
+              handleModalOpen={handleModalOpen}
+              asset={isModalOpen.asset} image={isModalOpen.image} />
             }
           />
         );
@@ -719,7 +729,7 @@ const MySupply = () => {
                                     item.image
                                   )
                                 }
-                                className={` w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] shadow-md shadow-[#00000040] focus:outline-none box bg-transparent font-inter
+                                className={` w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter
                                   
                                 }`}
                               />

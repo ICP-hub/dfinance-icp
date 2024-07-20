@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaCog } from "react-icons/fa";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
-import { Info ,Fuel , X, TriangleAlert} from "lucide-react";
+import { Info, Fuel, X, TriangleAlert } from "lucide-react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -68,34 +68,34 @@ const EModeButton = () => {
 
         {showInitialPopup && (
           <>
-          <div className="fixed inset-0 bg-black opacity-40 z-40" onClick={handleClickAway}></div>
-          <div className="absolute mt-2 w-80 flex items-center justify-center sm:-ml-72   md:right-0 md:top-auto md:bottom-auto md:left-auto md:translate-x-0 left-0 translate-x-full z-50">
-            <div className="bg-white border rounded-lg shadow-lg p-6 relative w-full flex flex-col justify-between dark:border-none dark:bg-darkOverlayBackground dark:text-darkText">
-            <div
-      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
-      onClick={handleClickAway}
-    >
-      <X className="text-black dark:text-darkText w-6 h-6" />
-    </div>
-              <div className="dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd dark:text-darkText">
-                <h2 className="text-xl font-semibold mb-4 text-[#2A1F9D] dark:text-darkText">
-                  Efficiency mode (E-Mode)
-                </h2>
-                <p className="text-[#2A1F9D] mb-4 dark:text-darkText">
-  E-Mode increases your LTV for a selected category of assets up to 97%.{" "}
-  <span className="text-[#2A1F9D] underline dark:text-darkText">Learn more</span>
-</p>
+            <div className="fixed inset-0 bg-black opacity-40 z-40" onClick={handleClickAway}></div>
+            <div className="fixed inset-0 flex items-center justify-center z-50">
+              <div className="bg-white border rounded-lg shadow-lg p-6 relative w-80 flex flex-col justify-between dark:border-none dark:bg-darkOverlayBackground dark:text-darkText">
+              <div
+          className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6"
+          onClick={handleClickAway}
+        >
+                  <X className="text-black dark:text-darkText w-6 h-6" />
+                </div>
+                <div className="dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd dark:text-darkText">
+                  <h2 className="text-xl font-semibold mb-4 text-[#2A1F9D] dark:text-darkText">
+                    Efficiency mode (E-Mode)
+                  </h2>
+                  <p className="text-[#2A1F9D] mb-4 dark:text-darkText">
+                    E-Mode increases your LTV for a selected category of assets up to 97%.{" "}
+                    <span className="text-[#2A1F9D] underline dark:text-darkText">Learn more</span>
+                  </p>
 
-                
+
+                </div>
+                <button
+                  onClick={handleEnableClick}
+                  className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 shadow-lg font-semibold text-sm"
+                >
+                  Enable E-Mode
+                </button>
               </div>
-              <button
-                onClick={handleEnableClick}
-                className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 shadow-lg font-semibold text-sm"
-              >
-                Enable E-Mode
-              </button>
             </div>
-          </div>
           </>
         )}
 
@@ -103,21 +103,21 @@ const EModeButton = () => {
           <ClickAwayListener onClickAway={handleClickAway}>
             <div className="fixed inset-0 flex items-center justify-center z-50">
               <div className="absolute inset-0 bg-gray-800 opacity-50" />
-              <div className="bg-white dark:bg-gradient dark:bg-darkOverlayBackground rounded-lg shadow-lg p-6 relative w-96 flex flex-col">
+              <div className="bg-white dark:bg-gradient dark:bg-darkOverlayBackground rounded-lg shadow-lg p-6 relative w-80 lg1:w-96 flex flex-col ">
                 <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
                   Enable E-Mode
                 </h1>
                 <div
-      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
-      onClick={handleClickAway}
-    >
-      <X className="text-black w-6 h-6 dark:text-darkText" />
-    </div>
+                  className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+                  onClick={handleClickAway}
+                >
+                  <X className="text-black w-6 h-6 dark:text-darkText" />
+                </div>
                 <div className="flex flex-col gap-2 mt-5 text-sm dark:text-darkText">
                   <div className="w-full">
                     <div className="w-full flex bg-[#D7F1FC] dark:bg-[#59588C] p-1 rounded">
                       <div className="w-1/12 flex items-center justify-center">
-                      <TriangleAlert />
+                        <TriangleAlert />
                       </div>
                       <div className="w-11/12 text-xs text-[#2A1F9D] dark:text-darkText flex items-center ml-1 ">
                         Enabling E-Mode only allows you to borrow assets belonging to the selected category. Please visit our FAQ guide to learn more about how it works and the applied restrictions.
@@ -166,7 +166,7 @@ const EModeButton = () => {
                     </div>
                     <div className="w-full mt-3">
                       <div className="flex items-center">
-                      <Fuel className="mt-[-4px] mr-2" size={18}  color={fuelcolor}  />
+                        <Fuel className="mt-[-4px] mr-2" size={18} color={fuelcolor} />
                         <h1 className="text-[#233D63] dark:text-darkTextSecondary1">&lt;$1.23</h1>
                         <div className="warning-icon-container">
                           <Info

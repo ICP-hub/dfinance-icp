@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { 
-    healthFactorValue, 
-    healthFactorCutOutPositions, 
-    currentLTVValue, 
-    currentLTVCutOutPositions, 
-    healthFactorMinValue, 
-    currentLTVThreshold, 
-    liquidationThresholdLabel 
+import {
+    healthFactorValue,
+    healthFactorCutOutPositions,
+    currentLTVValue,
+    currentLTVCutOutPositions,
+    healthFactorMinValue,
+    currentLTVThreshold,
+    liquidationThresholdLabel
 } from '../../utils/constants';
 import { X } from 'lucide-react';
 const RiskPopup = ({ onClose }) => {
@@ -28,15 +28,15 @@ const RiskPopup = ({ onClose }) => {
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black opacity-50"></div>
-            
-            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg max-w-3xl mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
+
+            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg w-[380px] sm:w-auto max-w-3xl mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
                 {/* Close button */}
                 <div
-      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
-      onClick={onClose}
-    >
-      <X className="text-black dark:text-darkText w-6 h-6" />
-    </div>
+                    className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+                    onClick={onClose}
+                >
+                    <X className="text-black dark:text-darkText w-6 h-6" />
+                </div>
                 <div className="px-6 py-4">
                     <div className="flex justify-between items-center pb-3">
                         <h3 className="text-lg font-semibold text-center w-full text-[#4659CF] dark:text-darkText">Liquidation Risk Parameters</h3>

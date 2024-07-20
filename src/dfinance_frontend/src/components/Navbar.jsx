@@ -47,9 +47,12 @@ import Popup from "./Dashboard/Morepopup";
 import CustomizedSwitches from "./MaterialUISwitch";
 import { toggleTestnetMode } from "../redux/reducers/testnetReducer";
 import icplogo from '../../public/icp.png'
+import { IoIosRocket } from "react-icons/io";
+import { ArrowUpDown } from 'lucide-react';
 
 export default function Navbar({ isHomeNav }) {
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
+  const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
   const dispatch = useDispatch();
@@ -62,6 +65,7 @@ export default function Navbar({ isHomeNav }) {
 
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const handleCloseDropdownOnScroll = () => {
+    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
@@ -463,11 +467,21 @@ export default function Navbar({ isHomeNav }) {
             {isHomeNav ? (
               <div className="flex gap-2">
                 <div className=" text-nowrap">
-                  <Button
-                    title={"Launch App"}
-                    onClickHandler={handleLaunchApp}
-                  />
+                  {isMobile2 ? (
+                    <div
+                      className="w-10 h-10 border-b-[0.3px] border-gray-400 dark:border-gray-600 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/90 dark:to-[#81198E]/90 flex items-center justify-center rounded-lg shadow-[#00000040] shadow-sm cursor-pointer mr-1"
+                      onClick={handleLaunchApp}
+                    >
+                      <IoIosRocket color="white" size={28} />
+                    </div>
+                  ) : (
+                    <Button
+                      title="Launch App"
+                      onClick={handleLaunchApp}
+                    />
+                  )}
                 </div>
+
                 <div className="flex align-center justify-center">
                   {renderThemeToggle && <ThemeToggle />}
                 </div>
@@ -486,13 +500,13 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : isAuthenticated ? (
               <div className="hidden lg:flex gap-2 sxs3:flex  md:flex ">
-                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-[10px] shadow-md border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-2 py-[10px] px-3"
+                    className="flex items-center gap-1 py-[10px] px-3"
                     onClick={handleSwitchToken}
                   >
                     <span className="hidden lg1:flex">Switch Token</span>
-                    <ArrowDownUp size={15} />
+                    <ArrowUpDown size={17} strokeWidth={1.4} />
                   </div>
 
                   <div className="relative">
@@ -503,7 +517,10 @@ export default function Navbar({ isHomeNav }) {
                           className="fixed inset-0 bg-black opacity-40 z-40"
                           onClick={() => setSwitchTokenDrop(false)}
                         ></div>
-                        <div className="lg1:w-[380px] w-[320px] -left-[130px] absolute lg1:-left-[160px]  mt-8 lg1:mt-6 rounded-xl bg-white shadow-xl  border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
+                        <div
+                          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[200px] lg1:transform lg1:-translate-x-1/2 lg1:w-[380px] w-[320px] lg1:left-[85px] mt-8 lg1:mt-6 rounded-xl bg-white shadow-xl border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <h1 className="font-bold text-xl text-[#2A1F9D] dark:text-darkText text-nowrap">
                             Switch Tokens
                           </h1>
@@ -731,19 +748,21 @@ export default function Navbar({ isHomeNav }) {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-md border-b-[1px] border-white/40 dark:border-white/20">
+                <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                   <div
-                    className="flex items-center gap-1 py-[9px] px-3  overflow-hidden"
+                    className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
                     <img
                       src={loader}
                       alt="square"
-                      className="object-contain w-5 h-5"
+                      className="object-contain w-5 h-5 -mr-[3px]"
                     />
-                    <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold">
-              {truncateString(principal, 10)}
-            </span>
+                    {!isMobile2 &&
+                      <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold ml-1">
+                        {truncateString(principal, 6)}
+                      </span>
+                    }
                   </div>
 
                   {switchWalletDrop && (
@@ -753,13 +772,13 @@ export default function Navbar({ isHomeNav }) {
                         onClick={() => setSwitchWalletDrop(false)}
                       ></div>
                       <div
-                        className="absolute min-w-[300px] md:px-5 md:py-6 px-5 py-6 top-full -left-[207px] lg1:ml-0 md:ml-24 mt-8 md:mt-4 rounded-xl  bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
+                        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[160px] lg1:-left-[60px] lg1:transform lg1:-translate-x-1/2 lg1:mt-2 min-w-[300px] md:px-5 md:py-6 px-5 py-6 rounded-xl bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="w-full flex items-center gap-2">
                           <img src={loader} alt="square" className="w-8 h-8" />
-                          <h1 className="font-bold text-xl text-blue-800 dark:text-darkText">
-                          {truncateString(principal, 20)}
+                          <h1 className="font-bold md:text-xl text-[17px] text-blue-800 dark:text-darkText">
+                            {truncateString(principal, 20)}
                           </h1>
                         </div>
                         <div className="flex flex-col-reverse   lg:block">
@@ -767,7 +786,7 @@ export default function Navbar({ isHomeNav }) {
                             <Button
                               title="Switch Wallet"
                               className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
-                             
+
                             />
                             <Button
                               title="Disconnect"
@@ -813,7 +832,7 @@ export default function Navbar({ isHomeNav }) {
 
                                   <div className="flex items-center ml-auto">
                                     <img
-                                        src={icplogo}
+                                      src={icplogo}
                                       alt="Icp Logo"
                                       className="w-6 h-6"
                                     />
@@ -831,10 +850,10 @@ export default function Navbar({ isHomeNav }) {
                                 className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                                 style={{ height: "70px", width: "160px" }}
                               >
-                               <button
-      className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
-      onClick={copyToClipboard}
-    >
+                                <button
+                                  className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
+                                  onClick={copyToClipboard}
+                                >
                                   <GrCopy className="h-5 w-4 ml-4 lg1:ml-0" />
                                   <span className="ml-1">Copy Address</span>
                                 </button>
@@ -872,7 +891,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setDropdownVisible(false)}
                         ></div>
                         <div
-                          className="absolute w-[280px] top-[60px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none"
+                          className="absolute w-[280px] top-[55px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
@@ -945,7 +964,7 @@ export default function Navbar({ isHomeNav }) {
                   title={"Connect Wallet"}
                   onClickHandler={handleWalletConnect}
                   className={
-                    "my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-md shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"
+                    "broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"
                   }
                 />
                 <div className="flex items-center justify-center">
@@ -958,7 +977,17 @@ export default function Navbar({ isHomeNav }) {
                         onClick={handleDropdownToggle}
                       />
                     ) : (
-                      <MenuIcon />
+
+                      <div className="flex justify-center align-center items-center ml-1">
+                        <div
+                          onClick={() => setIsMobileNav(!isMobileNav)}
+                          className="cursor-pointer"
+                        >
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
+                          {/* Toggle between Menu and X icons */}
+                        </div>
+                      </div>
+
                     )}
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">

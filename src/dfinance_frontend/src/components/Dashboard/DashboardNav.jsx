@@ -20,7 +20,7 @@ const DashboardNav = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { isWalletConnected } = useSelector((state) => state.utility);
-  
+
 
   const [isDrop, setIsDrop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,7 +44,7 @@ const DashboardNav = () => {
     }
   };
 
-  
+
   const toggleDropdown = () => {
     if (!isDrop) {
       document.addEventListener("mousedown", handleClickOutside);
@@ -127,7 +127,7 @@ const DashboardNav = () => {
         {/* Menu Button */}
         <div className="md:hidden flex ml-auto -mt-10">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
-          <EllipsisVertical color={checkColor} size={18} />
+            <EllipsisVertical color={checkColor} size={18} />
           </button>
         </div>
       </div>
@@ -200,7 +200,7 @@ const DashboardNav = () => {
                 } md:hidden`}
             >
               <div
-                className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkOverlayBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
+                className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkOverlayBackground mx-2 my-1
                          bg-white px-3 py-7 rounded-lg w-11/12 max-w-md  dark:text-darkText"
                 ref={menuRef}
               >

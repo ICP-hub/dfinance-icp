@@ -37,7 +37,9 @@ const MySupply = () => {
     type: "",
     asset: "",
     image: "",
-  });console.log("hello",isModalOpen);
+  });
+  console.log("hello",isModalOpen);
+  
   const handleModalOpen = (type, asset, image) => {
     console.log("Handle modal opened");
     setIsModalOpen({
@@ -101,11 +103,13 @@ const MySupply = () => {
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
             children={
-              <SupplyPopup
-              isModalOpen={isModalOpen.isOpen}
-              setIsModalOpen={setIsModalOpen}
+              <SupplyPopup //asset, image, balance, isModalOpen, handleModalOpen, setIsModalOpen
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
+                balance={0}
+                isModalOpen={isModalOpen.isOpen}
+                handleModalOpen={handleModalOpen}
+                setIsModalOpen={setIsModalOpen}
               />
             }
           />

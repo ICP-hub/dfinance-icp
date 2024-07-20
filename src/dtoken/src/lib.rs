@@ -283,7 +283,7 @@ fn icrc1_minting_account() -> Option<Account> {
 #[query(name = "icrc1_balance_of")]
 #[candid_method(query, rename = "icrc1_balance_of")]
 fn icrc1_balance_of(account: Account) -> Nat {
-    Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into())
+    Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into()) 
     //we can add the total interest accrued to this
 }
 

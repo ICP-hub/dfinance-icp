@@ -58,3 +58,5 @@ record {
 })"
 
 echo "dckbtc got deployed"
+
+

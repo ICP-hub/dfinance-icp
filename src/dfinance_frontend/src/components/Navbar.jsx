@@ -477,7 +477,7 @@ export default function Navbar({ isHomeNav }) {
                   ) : (
                     <Button
                       title="Launch App"
-                      onClick={handleLaunchApp}
+                      onClickHandler={handleLaunchApp}
                     />
                   )}
                 </div>

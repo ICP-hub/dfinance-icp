@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Tab, Tabs } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -61,17 +61,44 @@ const Home = () => {
   };
   const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id); // Start with the first item
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
+
+  // Ref to store the interval ID
+  const intervalRef = useRef();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Calculate the index of the next item
+    // Function to start the interval
+    const startInterval = () => {
+      const id = setInterval(() => {
+        const nextIndex = (currentIndex + 1) % MAIN_NAV_LINK.length;
+        setCurrentIndex(nextIndex);
+        setCurrentTab(MAIN_NAV_LINK[nextIndex].id);
+      }, 3000); // Switch tabs every 3 seconds
+      intervalRef.current = id;
+    };
+
+    startInterval(); // Start the interval when the component mounts
+
+    return () => {
+      clearInterval(intervalRef.current); // Cleanup function to clear interval on component unmount
+    };
+  }, [currentIndex]);
+
+  // Handle mouse enter event
+  const handleMouseEnter = () => {
+    clearInterval(intervalRef.current); // Stop the interval on mouse enter
+  };
+
+  // Handle mouse leave event
+  const handleMouseLeave = () => {
+    // Restart the interval on mouse leave
+    const id = setInterval(() => {
       const nextIndex = (currentIndex + 1) % MAIN_NAV_LINK.length;
       setCurrentIndex(nextIndex);
       setCurrentTab(MAIN_NAV_LINK[nextIndex].id);
-    }, 3000); // 3000 milliseconds = 3 seconds
-
-    return () => clearInterval(interval); // Cleanup function to clear interval on component unmount
-  }, [currentIndex]); // Run effect whenever currentIndex changes
+    }, 3000);
+    intervalRef.current = id;
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -104,62 +131,62 @@ const Home = () => {
         <HeroSection />
 
         {/* Tab based section */}
-        <section className="mt-16">
-          <div className="w-full">
-            <nav className="flex justify-center not-italic">
-              <Tabs
-                value={currentTab}
-                onChange={(e, newTab) => setCurrentTab(newTab)}
+       <section className="mt-16">
+      <div className="w-full" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+        <nav className="flex justify-center not-italic">
+          <Tabs
+            value={currentTab}
+            onChange={(e, newTab) => setCurrentTab(newTab)}
+            sx={{
+              "& .MuiTabs-indicator": {
+                backgroundImage:
+                  "linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7))",
+              },
+            }}
+          >
+            {MAIN_NAV_LINK.map((item, index) => (
+              <Tab
+                key={index}
+                label={item.title}
+                disableRipple={true}
+                disableFocusRipple={true}
                 sx={{
-                  "& .MuiTabs-indicator": {
+                  textTransform: "capitalize",
+                  fontStyle: "normal",
+                  fontFamily: "Poppins",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  color: theme === "dark" ? "white" : "#2A1F9D",
+                  "&.Mui-selected": {
+                    color: "transparent",
                     backgroundImage:
                       "linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7))",
+                    backgroundClip: "text",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
                   },
                 }}
-              >
-                {MAIN_NAV_LINK.map((item, index) => (
-                  <Tab
-                    key={index}
-                    label={item.title}
-                    disableRipple={true}
-                    disableFocusRipple={true}
-                    sx={{
-                      textTransform: "capitalize",
-                      fontStyle: "normal",
-                      fontFamily: "Poppins",
-                      fontWeight: "600",
-                      fontSize: "14px",
-                      color: theme === "dark" ? "white" : "#2A1F9D",
-                      "&.Mui-selected": {
-                        color: "transparent",
-                        backgroundImage:
-                          "linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7))",
-                        backgroundClip: "text",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                      },
-                    }}
-                  />
-                ))}
-              </Tabs>
-            </nav>
-            {MAIN_NAV_LINK.map((item) => (
-              <React.Fragment key={item.id}>
-                {currentTab === item.id && (
-                  <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
-                    {item.content}
-                  </p>
-                )}
-              </React.Fragment>
+              />
             ))}
-          </div>
-          <div className="w-full mt-10">
-            <h1 className="font-semibold bg-gradient-to-r from-[#4659CF] via-[#C562BD] to-transparent h-12 w-48 bg-clip-text text-transparent text-[36px] mb-2">
-              Markets
-            </h1>
-            <TabPanel />
-          </div>
-        </section>
+          </Tabs>
+        </nav>
+        {MAIN_NAV_LINK.map((item) => (
+          <React.Fragment key={item.id}>
+            {currentTab === item.id && (
+              <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
+                {item.content}
+              </p>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="w-full mt-10">
+        <h1 className="font-semibold bg-gradient-to-r from-[#4659CF] via-[#C562BD] to-transparent h-12 w-48 bg-clip-text text-transparent text-[36px] mb-2">
+          Markets
+        </h1>
+        <TabPanel />
+      </div>
+    </section>
 
         {/* Info section */}
         <section className="mt-2 md:mt-8">

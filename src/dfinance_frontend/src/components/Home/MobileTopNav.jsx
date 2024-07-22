@@ -1,20 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Drawer, useMediaQuery } from "@mui/material";
 import { NavLink } from "react-router-dom";
-import { DASHBOARD_TOP_NAV_LINK, HOME_TOP_NAV_LINK } from "../../utils/constants";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
-import { Switch } from "@mui/material";
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../../components/MaterialUISwitch";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
+import loader from "../../../public/loader.svg";
+import { setUserData } from "../../redux/reducers/userReducer";
+import {
+  DASHBOARD_TOP_NAV_LINK,
+  HOME_TOP_NAV_LINK,
+  generateRandomUsername,
+} from "../../utils/constants";
+import {
+  setIsWalletConnected,
+  setWalletModalOpen,
+} from "../../redux/reducers/utilityReducer";
+import Button from "../Button"
+import icplogo from "../../../public/icp.png"
+import { ArrowUpDown } from 'lucide-react';
+import { GrCopy } from "react-icons/gr";
+import { CiShare1 } from "react-icons/ci";
 
 const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInternetIdentity, handleLogout }) => {
-  const { isAuthenticated } = useAuth();
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -71,14 +84,75 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
 
   // Check screen size and conditionally render Drawer for mobile view
   const isLargeScreen = useMediaQuery('(min-width: 1134px)');
+  const isMobile2 = window.innerWidth <= 640;
+
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    principal,
+    reloadLogin,
+    accountIdString,
+  } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated === true) {
+      dispatch(
+        setUserData({
+          name: generateRandomUsername(),
+          isAuth: isAuthenticated,
+          principal,
+          imageUrl:
+            "https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg",
+        })
+      );
+    } else {
+      dispatch(setUserData(null));
+    }
+  }, [isAuthenticated]);
+
+  // Unconditionally call all hooks, but only render Drawer for small screens
+  const handleClose = () => {
+    setIsMobileNav(false);
+  };
+
+  const copyToClipboard = () => {
+    if (principal) {
+      navigator.clipboard.writeText(principal)
+        .then(() => {
+          alert('Address copied to clipboard');
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+        });
+    }
+  };
+
+  const truncateString = (str, maxLength) => {
+    return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+  };
+
+  const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
+  useEffect(() => {
+    // Close the switchWalletDrop dropdown when location changes
+    setSwitchWalletDrop(false);
+  }, [location]);
+
+  const handleSwitchWallet = () => {
+    if (switchWalletDrop) {
+      logout(); // Logout when disconnecting
+    } else {
+      setSwitchWalletDrop(!switchWalletDrop);
+    }
+  };
+
+  const handleViewOnExplorerClick = () => {
+    console.log("View on Explorer clicked");
+  };
 
   if (isLargeScreen) {
     return null; // Return null if it's a large screen
   }
-
-  const handleClose = () => {
-    setIsMobileNav(false);
-  };
 
   return (
     <Drawer
@@ -87,14 +161,146 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
       onClose={handleClose}
       PaperProps={{
         style: {
-          marginTop: "88px", // Adjust the margin as needed
-          borderRadius: "12px",
-          className: "drawer-right-to-left",
-        },
+      width: '80vw', // Adjust the width as needed
+      maxWidth: '440px', // Maximum width for the Drawer
+      height: '80vh', // Maximum height of the Drawer
+      maxHeight: 'calc(100vh - 60px)', // Ensures it doesn't cover the whole screen
+      marginTop: "80px", // Adjust the margin as needed
+      marginBottom: "20px", // Space from the bottom
+      borderRadius: "12px",
+      position: 'right', // To ensure proper positioning
+      className: "drawer-right-to-left",
+    },
       }}
     >
       <div className="flex flex-col pt-6 p-4 dark:bg-darkOverlayBackground font-poppins w-full h-full">
         <h2 className="text-sm font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2">Menu</h2>
+
+
+      { isAuthenticated && isMobile2 && <div className="flex items-center gap-1 my-2 mx-2 p-1 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 ">
+          <div
+            className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
+            onClick={() => { handleSwitchWallet(); }}
+          >
+            <img
+              src={loader}
+              alt="square"
+              className="object-contain w-5 h-5 -mr-[3px]"
+            />
+            <span className=" font-bold ml-3">
+              {truncateString(principal, 25)}
+            </span>
+          </div>
+
+          {switchWalletDrop && (
+            <>
+              <div
+                className="fixed inset-0 bg-black opacity-40 z-40"
+                onClick={() => setSwitchWalletDrop(false)}
+              ></div>
+              <div
+                className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[160px] lg1:-left-[60px] lg1:transform lg1:-translate-x-1/2 lg1:mt-2 min-w-[300px] md:px-5 md:py-6 px-5 py-6 rounded-xl bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-full flex items-center gap-2">
+                  <img src={loader} alt="square" className="w-8 h-8" />
+                  <h1 className="font-bold md:text-xl text-[17px] text-blue-800 dark:text-darkText">
+                    {truncateString(principal, 20)}
+                  </h1>
+                </div>
+                <div className="flex flex-col-reverse   lg:block">
+                  <div className="w-full flex flex-col lg1:flex-row justify-center mt-3  gap-3">
+                    <Button
+                      title="Switch Wallet"
+                      className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
+
+                    />
+                    <Button
+                      title="Disconnect"
+                      className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                      onClickHandler={handleLogout}
+                    />
+                  </div>
+
+                  <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
+                    {/* First Container */}
+                    <div className="hidden lg1:flex justify-center">
+                      <div
+                        className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
+                        style={{ height: "70px", width: "160px" }}
+                      >
+                        <span
+                          className="absolute top-1/4 transform -translate-y-1/2 text-blue-800 dark:text-darkTextSecondary"
+                          style={{ right: "55%" }}
+                        >
+                          Network
+                        </span>
+                        <div className="absolute bottom-2 left-2 mt-4 flex items-center">
+                          <img
+                            src={icplogo}
+                            alt="Icp Logo"
+                            className="w-6 h-6"
+                          />
+                          <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
+                            ICP
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="lg1:hidden lg:flex justify-center">
+                      <div
+                        className="flex-1 flex flex-col  justify-center border border-gray-200 p-3 rounded-xl text-sm  dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
+                      >
+                        <div className="flex gap-5">
+                          <div className="flex items-center justify-center">
+                            <p className="text-blue-800 dark:text-darkText">Network</p>
+                          </div>
+
+                          <div className="flex items-center ml-auto">
+                            <img
+                              src={icplogo}
+                              alt="Icp Logo"
+                              className="w-6 h-6"
+                            />
+                            <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
+                              ICP
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Second Container */}
+                    <div className=" w-full flex justify-center">
+                      <div
+                        className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                        style={{ height: "70px", width: "160px" }}
+                      >
+                        <button
+                          className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
+                          onClick={copyToClipboard}
+                        >
+                          <GrCopy className="h-5 w-4 ml-4 lg1:ml-0" />
+                          <span className="ml-1">Copy Address</span>
+                        </button>
+                        <button
+                          className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday"
+                          onClick={handleViewOnExplorerClick}
+                        >
+                          <CiShare1 className="h-5 w-4  dark:text-darkText " />
+                          <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
+                            View On Explorer
+                          </span>
+                        </button>
+                      </div>
+                    </div>{" "}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>}
 
         {!isHomeNav ? (
           DASHBOARD_TOP_NAV_LINK.map((link, index) => {
@@ -158,7 +364,7 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
           <div className="flex items-center">
             <label htmlFor="darkMode" className="ml-2 text-lg text-[#2A1F9D] dark:text-darkTextSecondary">Dark Mode</label>
             <span className="ml-auto text-[#2A1F9D] dark:text-darkTextSecondary">{isDarkMode ? 'On' : 'Off'}</span>
-            <div className="flex align-center justify-center ml-3">
+            <div className="flex align-center justify-center ml-4">
               <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
             </div>
           </div>

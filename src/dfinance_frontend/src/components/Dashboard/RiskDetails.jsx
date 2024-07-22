@@ -19,9 +19,14 @@ const RiskPopup = ({ onClose }) => {
     };
 
     useEffect(() => {
+        // Add inline styles to body to prevent scrolling
+        document.body.style.overflow = 'hidden';
+
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            // Remove inline styles from body to allow scrolling again
+            document.body.style.overflow = '';
         };
     }, []);
 
@@ -29,10 +34,10 @@ const RiskPopup = ({ onClose }) => {
         <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black opacity-50"></div>
 
-            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg w-[380px] sm:w-auto max-w-3xl mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
+            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg w-[380px] sm:w-[325px] max-w-3xl mx-4 sm:mx-autoz-10 p-4 relative dark:bg-darkOverlayBackground">
                 {/* Close button */}
                 <div
-                    className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+                    className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer "
                     onClick={onClose}
                 >
                     <X className="text-black dark:text-darkText w-6 h-6" />
@@ -104,7 +109,7 @@ const RiskPopup = ({ onClose }) => {
                                     <text x={`${currentLTVCutOutPositions.red}%`} y="10" fill="red" fontSize="12" textAnchor="middle">{currentLTVThreshold}</text>
                                     <text x={`${currentLTVCutOutPositions.red}%`} y="40" fill="red" fontSize="12" textAnchor="middle">{liquidationThresholdLabel}</text>
                                 </svg>
-                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{currentLTVValue}</span>
+                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded cursor-pointer">{currentLTVValue}</span>
                             </div>
                             <p className="text-xs text-gray-400 mt-6 dark:text-darkTextSecondary">If your loan to value goes above {currentLTVThreshold}, your collateral may be liquidated.</p>
                         </div>

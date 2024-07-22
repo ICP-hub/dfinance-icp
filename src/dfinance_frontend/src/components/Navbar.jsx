@@ -502,7 +502,7 @@ export default function Navbar({ isHomeNav }) {
               <div className="hidden lg:flex gap-2 sxs3:flex  md:flex ">
                 <div className="my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 py-[10px] px-3"
+                    className="flex items-center gap-1 py-[11px] px-3 md:py-[10px]"
                     onClick={handleSwitchToken}
                   >
                     <span className="hidden lg1:flex">Switch Token</span>
@@ -510,246 +510,247 @@ export default function Navbar({ isHomeNav }) {
                   </div>
 
                   <div className="relative">
-                    {switchTokenDrop && (
-                      <>
-                        {" "}
-                        <div
-                          className="fixed inset-0 bg-black opacity-40 z-40"
-                          onClick={() => setSwitchTokenDrop(false)}
-                        ></div>
-                        <div
-                          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[200px] lg1:transform lg1:-translate-x-1/2 lg1:w-[380px] w-[320px] lg1:left-[85px] mt-8 lg1:mt-6 rounded-xl bg-white shadow-xl border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl"
-                          onClick={(e) => e.stopPropagation()}
+                  {switchTokenDrop && (
+    <>
+        <div
+            className="fixed inset-0 bg-black opacity-40 z-40 cursor-default"
+            onClick={() => setSwitchTokenDrop(false)}
+            style={{ pointerEvents: 'none' }} // Prevent pointer events on the overlay
+        ></div>
+        <div
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[200px] lg1:transform lg1:-translate-x-1/2 lg1:w-[380px] w-[320px] lg1:left-[85px] mt-8 lg1:mt-6 rounded-xl bg-white shadow-xl border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            style={{ pointerEvents: 'auto' }} // Allow pointer events on the popup
+        >
+            <h1 className="font-bold text-xl text-[#2A1F9D] dark:text-darkText text-nowrap">
+                Switch Tokens
+            </h1>
+
+            <div className="w-full mb-5 my-2 bg-gradient-to-r from-[#e9ebfa] to-[#e5ddd4] text-center py-2 rounded-md dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd">
+                <p className="text-[12px] text-[#EB8863] text-left px-4">
+                    Please switch to Ethereum.
+                    <span className="text-xs text-[#EB8863] underline cursor-pointer ml-2 italic">
+                        Switch Network
+                    </span>
+                </p>
+            </div>
+
+            <div className="flex justify-between items-center my-2 mt-4 mb-3">
+                <div className="flex justify-center items-center gap-x-1">
+                    <img
+                        src={loader}
+                        alt="Connect Wallet"
+                        className="w-4 h-4"
+                    />
+                    <label className="text-sm font-light text-[#2A1F9D] justify-start dark:text-darkText">
+                        Token
+                    </label>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <label className="text-[12px] text-[#2A1F9D] dark:text-darkText">
+                        Slippage <b>0.10%</b>
+                    </label>
+
+                    <img
+                        src="/settings.png"
+                        alt="settings_icon"
+                        className="object-contain w-[20px] h-[20px]"
+                    />
+                </div>
+            </div>
+            <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 px-4 py-1 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+                <div className="w-3/12">
+                    <input
+                        value={
+                            selectedToken === "ETH"
+                                ? ethValue
+                                : oneInchValue
+                        }
+                        onChange={
+                            selectedToken === "ETH"
+                                ? handleEthChange
+                                : handleOneInchChange
+                        }
+                        onFocus={handleInputFocus}
+                        onBlur={handleInputBlur}
+                        className="focus:outline-none bg-transparent w-full placeholder:text-sm text-gray-500 dark:bg-darkBackground/5 dark:text-darkText text-center cursor-pointer"
+                        placeholder="0.00"
+                    />
+                    <p className="text-sm text-gray-500 ml-6">$0</p>
+                </div>
+                <div className="w-9/12 flex flex-col items-end">
+                    <div className="w-auto flex items-center gap-2">
+                        <img
+                            src={loader}
+                            alt="connect_wallet_icon"
+                            className="w-6 h-6"
+                        />
+                        <span className="text-lg text-[#2A1F9D] dark:text-darkText">
+                            ETH
+                        </span>
+                        <svg
+                            className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
                         >
-                          <h1 className="font-bold text-xl text-[#2A1F9D] dark:text-darkText text-nowrap">
-                            Switch Tokens
-                          </h1>
+                            <path
+                                fillRule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+                    </div>
+                    <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
+                        Balance: {balance} Max
+                    </p>
+                </div>
+            </div>
+            <div className="flex justify-center my-1">
+                <img
+                    src={ARROW}
+                    alt="Switch Icon"
+                    className="w-6 h-6 cursor-pointer dark:text-darkText"
+                    onClick={handleSwitchClick}
+                />
+            </div>
 
-                          <div className="w-full mb-5 my-2 bg-gradient-to-r from-[#e9ebfa] to-[#e5ddd4] text-center py-2 rounded-md dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ">
-                            <p className="text-[12px] text-[#EB8863] text-left px-4">
-                              Please switch to Ethereum.
-                              <span className=" text-xs text-[#EB8863] underline cursor-pointer ml-2 italic">
-                                Switch Network
-                              </span>
-                            </p>
-                          </div>
-
-                          <div className="flex justify-between items-center my-2 mt-4 mb-3">
-                            <div className="flex justify-center items-center  gap-x-1">
-                              <img
-                                src={loader}
-                                alt="Connect Wallet"
-                                className="w-4 h-4"
-                              />
-                              <label className="text-sm font-light text-[#2A1F9D]  justify-start dark:text-darkText">
-                                Token
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <span className="text-[12px] text-[#2A1F9D] dark:text-darkText">
-                                Slippage <b>0.10%</b>
-                              </span>
-
-                              <img
-                                src="/settings.png"
-                                alt="settings_icon"
-                                className="object-contain w-[20px] h-[20px]"
-                              />
-                            </div>
-                          </div>
-                          <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer px-4 py-1 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                            <div className="w-3/12">
-                              <input
-                                value={
-                                  selectedToken === "ETH"
+            <div>
+                <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 px-4 py-1 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+                    <div className="w-3/12">
+                        <input
+                            value={
+                                selectedToken === "ETH"
                                     ? ethValue
                                     : oneInchValue
-                                }
-                                onChange={
-                                  selectedToken === "ETH"
+                            }
+                            onChange={
+                                selectedToken === "ETH"
                                     ? handleEthChange
                                     : handleOneInchChange
-                                }
-                                onFocus={handleInputFocus}
-                                onBlur={handleInputBlur}
-                                className="focus:outline-none bg-transparent w-full placeholder:text-sm text-gray-500 dark:bg-darkBackground/5 dark:text-darkText text-center"
-                                placeholder="0.00"
-                              />
-                              <p className="text-sm text-gray-500 ml-6">$0</p>
-                            </div>
-                            <div className="w-9/12 flex flex-col items-end">
-                              <div className="w-auto flex items-center gap-2">
-                                <img
-                                  src={loader}
-                                  alt="connect_wallet_icon"
-                                  className="w-6 h-6"
-                                />
-                                <span className="text-lg text-[#2A1F9D] dark:text-darkText">
-                                  ETH
-                                </span>
-                                <svg
-                                  className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
+                            }
+                            onFocus={handleInputFocus}
+                            onBlur={handleInputBlur}
+                            className="text-center text-sm focus:outline-none bg-transparent w-full placeholder:text-sm text-gray-500 dark:bg-darkBackground/5 dark:text-darkText cursor-pointer"
+                            placeholder="0.00"
+                        />
+                        <p className="text-sm text-gray-500 ml-6">$0</p>
+                    </div>
+                    <div className="w-9/12 flex flex-col items-end">
+                        <div className="w-auto flex items-center gap-2">
+                            <img
+                                src={loader}
+                                alt="connect_wallet_icon"
+                                className="w-6 h-6"
+                            />
+                            <span className="text-lg text-[#2A1F9D] dark:text-darkText">
+                                1 INCH
+                            </span>
+                            <svg
+                                className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
                                     fillRule="evenodd"
                                     d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z"
                                     clipRule="evenodd"
-                                  />
-                                </svg>
-                              </div>
-                              <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
-                                {" "}
-                                Balance: {balance} Max
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex justify-center my-1">
-                            <img
-                              src={ARROW}
-                              alt="Switch Icon"
-                              className="w-6 h-6 cursor-pointer dark:text-darkText"
-                              onClickHandler={handleSwitchClick}
-                            />
-                          </div>
-
-                          <div>
-                            <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer px-4 py-1 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                              <div className="w-3/12">
-                                <input
-                                  value={
-                                    selectedToken === "ETH"
-                                      ? ethValue
-                                      : oneInchValue
-                                  }
-                                  onChange={
-                                    selectedToken === "ETH"
-                                      ? handleEthChange
-                                      : handleOneInchChange
-                                  }
-                                  onFocus={handleInputFocus}
-                                  onBlur={handleInputBlur}
-                                  className="text-center text-sm focus:outline-none bg-transparent w-full placeholder:text-sm text-gray-500 dark:bg-darkBackground/5 dark:text-darkText"
-                                  placeholder="0.00"
                                 />
-                                <p className="text-sm text-gray-500 ml-6">$0</p>
-                              </div>
-                              <div className="w-9/12 flex flex-col items-end">
-                                <div className="w-auto flex items-center gap-2">
-                                  <img
-                                    src={loader}
-                                    alt="connect_wallet_icon"
-                                    className=" w-6 h-6"
-                                  />
-                                  <span className="text-lg text-[#2A1F9D] dark:text-darkText">
-                                    1 INCH
-                                  </span>
-                                  <svg
-                                    className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                </div>
-                                <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
-                                  {" "}
-                                  Balance: {balance} Max
-                                </p>
-                              </div>
-                            </div>
-                            {isInputFocused && (
-                              <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2  flex items-center justify-between text-nowrap dark:text-darkText ">
-                                <p>1 ETH = 32.569 1INCH</p>
-                                <p>
-                                  <img
-                                    src={Vector}
-                                    alt=""
-                                    className="inline w-4 h-4 mr-1  text-[#2A1F9D] ml-[40px] dark:text-darkText"
-                                  />
-                                  $18.75
-                                </p>
-                                <img
-                                  src={Group216}
-                                  alt=""
-                                  className="inline w-4 h-4 ml-6 text-[#2A1F9D]"
-                                />
-                              </div>
-                            )}
-
-                            {showTransactionOverlay && (
-                              <div className="top-full left-0 mt-2 p-4 bg-white text-[#2A1F9D] dark:bg-darkBackground/5 dark:text-darkText ">
-                                <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4  dark:text-darkText text-nowrap">
-                                  Transaction Overlay
-                                </h2>
-                                <div className="border border-gray-300 rounded-xl shadow-md top-full left-0 mt-2 p-6">
-                                  <p>
-                                    Min 1INCH Received:{" "}
-                                    {selectedToken === "ETH"
-                                      ? (ethValue * 32.569).toFixed(2)
-                                      : oneInchValue}{" "}
-                                    1INCH
-                                  </p>
-                                  <p>
-                                    Min USD Received:{" "}
-                                    {selectedToken === "ETH"
-                                      ? (ethValue * 32.569 * 100).toFixed(2)
-                                      : (oneInchValue * 100).toFixed(2)}{" "}
-                                    USD
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div
-                            className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? "block" : "hidden"
-                              }`}
-                            style={{ maxWidth: "380px" }}
-                          >
-                            <div className="flex items-center">
-                              <img
-                                src="./Group 216.png"
-                                alt=""
-                                className="w-4 h-4 mr-2"
-                                style={{ filter: "invert(1)" }}
-                              />
-                              <span className="text-left">
-                                You don't have enough ETH in your account to pay
-                                for transaction fees on the Ethereum network.
-                                Please deposit ETH from another account.
-                              </span>
-                            </div>
-                          </div>
-
-                          {balance < ethValue && (
-                            <div className="w-full  p-2 rounded-md ps-3 bg-[#BA5858] text-[#E92626] dark:text-darkText">
-                              Not enough balance
-                            </div>
-                          )}
-                          {/* Button */}
-                          <div className="w-full flex justify-center mt-3">
-                            <button
-                              onClick={handleTransaction}
-                              className=" w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-xl border-b-2 dark:border-darkBackground/50 p-3 px-8 shadow-lg font-semibold text-[16px]"
-                            >
-                              Switch
-                            </button>
-                          </div>
+                            </svg>
                         </div>
-                      </>
-                    )}
+                        <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
+                            Balance: {balance} Max
+                        </p>
+                    </div>
+                </div>
+                {isInputFocused && (
+                    <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between text-nowrap dark:text-darkText">
+                        <p>1 ETH = 32.569 1INCH</p>
+                        <p>
+                            <img
+                                src={Vector}
+                                alt=""
+                                className="inline w-4 h-4 mr-1 text-[#2A1F9D] ml-[40px] dark:text-darkText"
+                            />
+                            $18.75
+                        </p>
+                        <img
+                            src={Group216}
+                            alt=""
+                            className="inline w-4 h-4 ml-6 text-[#2A1F9D]"
+                        />
+                    </div>
+                )}
+
+                {showTransactionOverlay && (
+                    <div className="top-full left-0 mt-2 p-4 bg-white text-[#2A1F9D] dark:bg-darkBackground/5 dark:text-darkText">
+                        <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4 dark:text-darkText text-nowrap">
+                            Transaction Overlay
+                        </h2>
+                        <div className="border border-gray-300 rounded-xl shadow-md top-full left-0 mt-2 p-6">
+                            <p>
+                                Min 1INCH Received:{" "}
+                                {selectedToken === "ETH"
+                                    ? (ethValue * 32.569).toFixed(2)
+                                    : oneInchValue}{" "}
+                                1INCH
+                            </p>
+                            <p>
+                                Min USD Received:{" "}
+                                {selectedToken === "ETH"
+                                    ? (ethValue * 32.569 * 100).toFixed(2)
+                                    : (oneInchValue * 100).toFixed(2)}{" "}
+                                USD
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div
+                className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? "block" : "hidden"
+                    }`}
+                style={{ maxWidth: "380px" }}
+            >
+                <div className="flex items-center">
+                    <img
+                        src="./Group 216.png"
+                        alt=""
+                        className="w-4 h-4 mr-2"
+                        style={{ filter: "invert(1)" }}
+                    />
+                    <span className="text-left">
+                        You don't have enough ETH in your account to pay
+                        for transaction fees on the Ethereum network.
+                        Please deposit ETH from another account.
+                    </span>
+                </div>
+            </div>
+
+            {balance < ethValue && (
+                <div className="w-full p-2 rounded-md ps-3 bg-[#BA5858] text-[#E92626] dark:text-darkText">
+                    Not enough balance
+                </div>
+            )}
+            {/* Button */}
+            <div className="w-full flex justify-center mt-3">
+                <button
+                    onClick={handleTransaction}
+                    className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-xl border-b-2 dark:border-darkBackground/50 p-3 px-8 shadow-lg font-semibold text-[16px] cursor-pointer"
+                >
+                    Switch
+                </button>
+            </div>
+        </div>
+    </>
+)}
+
+
                   </div>
                 </div>
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
-                  <div
+                  {!isMobile2 && <div
                     className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
@@ -758,22 +759,24 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5 -mr-[3px]"
                     />
-                    {!isMobile2 &&
+                    
                       <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold ml-1">
                         {truncateString(principal, 6)}
                       </span>
-                    }
-                  </div>
+                    
+                  </div>}
 
                   {switchWalletDrop && (
                     <>
                       <div
                         className="fixed inset-0 bg-black opacity-40 z-40"
                         onClick={() => setSwitchWalletDrop(false)}
+                        style={{ pointerEvents: 'none' }} 
                       ></div>
                       <div
                         className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[160px] lg1:-left-[60px] lg1:transform lg1:-translate-x-1/2 lg1:mt-2 min-w-[300px] md:px-5 md:py-6 px-5 py-6 rounded-xl bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
                         onClick={(e) => e.stopPropagation()}
+                        style={{ pointerEvents: 'auto' }} 
                       >
                         <div className="w-full flex items-center gap-2">
                           <img src={loader} alt="square" className="w-8 h-8" />
@@ -790,7 +793,7 @@ export default function Navbar({ isHomeNav }) {
                             />
                             <Button
                               title="Disconnect"
-                              className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                              className="bg-[#FFC1C1] l text-red-600  dark:text-darkText dark:bg-[#BA5858] border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
                               onClickHandler={handleLogout}
                             />
                           </div>

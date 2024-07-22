@@ -19,7 +19,8 @@ import icplogo from '../../../public/icp.png'
 import plug from "../../../public/plug.png"
 import bifinity from "../../../public/bifinity.png"
 import nfid from "../../../public/nfid.png"
-
+import Pagination from "./pagination";
+const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
 
   const [Showsearch, setShowSearch] = useState(false);
@@ -30,25 +31,20 @@ const WalletDetails = () => {
     setShowSearch(!Showsearch);
   }
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeChevron, setActiveChevron] = useState(null);
   const itemsPerPage = 8; // Number of items per page
   const navigate = useNavigate();
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
-
+ 
   const {
     isAuthenticated,
     login,
   } = useAuth();
 
-  const handleNextPage = () => {
-    if (currentPage < Math.ceil(WALLET_ASSETS_TABLE_ROW.length / itemsPerPage)) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+ 
+  
   const handleDetailsClick = (asset) => {
     setSelectedAsset(asset); // Update selectedAsset with the clicked asset
     console.log("Selected Asset:", asset); // Optional: Log selected asset for debugging
@@ -103,7 +99,7 @@ const WalletDetails = () => {
     setCurrentPage(1);
   };
 
-
+  const totalPages = Math.ceil( WALLET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE);
   const filteredItems = WALLET_ASSETS_TABLE_ROW.filter(item =>
     item.asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.total_supply_count.toString().includes(searchQuery)
@@ -243,24 +239,15 @@ const WalletDetails = () => {
             </table>
           </div>
           <div className="w-full flex justify-center mt-6">
-            <div id="pagination" className="flex gap-2">
-              <button
-                type="button"
-                className="border rounded-full p-1 border-[#c8ced5] bg-[#c8ced5] dark:bg-[#919EAB] text-white hover:bg-[#b0b5bb] hover:border-[#b0b5bb] hover:text-white"
-                onClick={handlePreviousPage}
-              >
-                <ChevronLeft />
-              </button>
+  <div id="pagination" className="flex gap-2">
+  <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+  </div>
+</div>
 
-              <button
-                type="button"
-                className="border rounded-full p-1 border-[#c8ced5] bg-white hover:border-[#c8ced5] hover:text-[#b0b5bb] text-[#c8ced5] dark:text-[#2A1F9D]"
-                onClick={handleNextPage}
-              >
-                <ChevronRight />
-              </button>
-            </div>
-          </div>
 
 
           {showPopup && (

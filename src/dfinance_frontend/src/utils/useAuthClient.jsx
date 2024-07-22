@@ -4,6 +4,7 @@ import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
 import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
+import { dfinance_backend } from "../../../declarations/dfinance_backend";
 
 // Create a React context for authentication state
 const AuthContext = createContext();
@@ -46,7 +47,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const [authClient, setAuthClient] = useState(null);
   const [identity, setIdentity] = useState(null);
   const [principal, setPrincipal] = useState(null);
-  const [backendActor, setBackendActor] = useState(null);
+  const [backendActor, setBackendActor] = useState(dfinance_backend);
   const [accountId, setAccountId] = useState(null);
 
   useEffect(() => {

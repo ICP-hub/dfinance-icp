@@ -11,6 +11,10 @@ import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/Elements.svg"
 import MySupply from './MySupply'
+import icplogo from '../../../public/icp.png'
+import plug from "../../../public/plug.png"
+import bifinity from "../../../public/bifinity.png"
+import nfid from "../../../public/nfid.png"
 
 const CreateWallet = () => {
     const navigate = useNavigate()
@@ -67,13 +71,14 @@ const CreateWallet = () => {
     return (
         <>
             {isAuthenticated ? <MySupply /> : <div className="relative w-full md:w-11/12 mx-auto my-6 min-h-[450px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
-                <div className="absolute right-0 top-0 h-full md:w-1/2 pointer-events-none sxs3:w-[65%] z-[-1]">
-                    <img
-                        src={Element}
-                        alt="Elements"
-                        className="h-full w-full object-cover rounded-r-3xl opacity-70 filter drop-shadow-[0_0_0_#fffff] dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
-                    />
-                </div>
+                <div className="absolute right-0 top-0 h-full w-full md:w-1/2 pointer-events-none">
+                <img
+                    src={Element}
+                    alt="Elements"
+                    className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
+                // Ensure image scales properly
+                />
+            </div>
                 <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg dark:text-darkText">
                     Please, connect your wallet
                 </h1>
@@ -91,25 +96,25 @@ const CreateWallet = () => {
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
                                 Internet Identity
                                 <div className='w-8 h-8'>
-                                    <img src={"https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
                                 Plug
                                 <div className='w-8 h-8'>
-                                    <img src={"/plug.png.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={plug} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
                                 Bifinity
                                 <div className='w-8 h-8'>
-                                    <img src={"/bifinity.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                             <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
                                 NFID
                                 <div className='w-8 h-8'>
-                                    <img src={"/nfid.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                                    <img src={nfid} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
                                 </div>
                             </div>
                         </div>

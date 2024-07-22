@@ -11,6 +11,8 @@ import RiskPopup from "./RiskDetails";
 import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
+import icplogo from '../../../public/icp.png'
+import { EllipsisVertical } from 'lucide-react';
 
 const DashboardNav = () => {
   const { isAuthenticated } = useAuth();
@@ -18,7 +20,7 @@ const DashboardNav = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { isWalletConnected } = useSelector((state) => state.utility);
-  const theme = useSelector((state) => state.theme.theme);
+
 
   const [isDrop, setIsDrop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -29,6 +31,8 @@ const DashboardNav = () => {
   const dropdownRef = useRef(null);
   const menuRef = useRef(null);
 
+  const theme = useSelector((state) => state.theme.theme);
+  const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
       setIsDrop(false);
@@ -39,6 +43,7 @@ const DashboardNav = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     }
   };
+
 
   const toggleDropdown = () => {
     if (!isDrop) {
@@ -115,22 +120,14 @@ const DashboardNav = () => {
           </div>
         )}
         <h1 className="text-[#2A1F9D] text-xl inline-flex items-center mb-8 dark:text-darkText ml-1">
-          <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]" />
+          <img src={icplogo} alt="Icp Logo" className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]" />
           ICP Market
         </h1>
 
         {/* Menu Button */}
         <div className="md:hidden flex ml-auto -mt-10">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
-            <img
-              src={
-                theme === "dark"
-                  ? "/wallet-details-menu-dark.svg"
-                  : "/wallet-details-menu-light.svg"
-              }
-              className="w-7 h-7"
-              alt="toggle"
-            />
+            <EllipsisVertical color={checkColor} size={18} />
           </button>
         </div>
       </div>
@@ -203,17 +200,17 @@ const DashboardNav = () => {
                 } md:hidden`}
             >
               <div
-                className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkOverlayBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2 my-1
+                className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkOverlayBackground mx-2 my-1
                          bg-white px-3 py-7 rounded-lg w-11/12 max-w-md  dark:text-darkText"
                 ref={menuRef}
               >
                 <div className="flex justify-between items-center mb-4">
-                   <div
-      className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
-      onClick={() => setIsMenuOpen(false)}
-    >
-      <X className="text-black dark:text-darkText w-6 h-6" />
-    </div>
+                  <div
+                    className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <X className="text-black dark:text-darkText w-6 h-6" />
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
                   {(isDashboardSupplyOrMain
@@ -246,17 +243,17 @@ const DashboardNav = () => {
             </div>
           </div>
 
-          {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText dark:opacity-50 mb-5">
+          {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText mb-5">
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
                 ? WALLET_DETAIL_TAB
                 : WALLET_DETAILS_TABS
               ).map((data, index) => (
                 <div key={index} className="relative group">
-                  <button className="relative font-light text-sm text-left min-w-[80px]">
+                  <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80">
                     {data.title}
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                    <span className="absolute top-full mt-1 left-0 font-bold py-1 opacity-100 transition-opacity text-[20px] text-[#2A1F9D] dark:text-darkBlue">
+                    <span className="absolute top-full mt-1 left-0 font-bold py-1 opacity-100 transition-opacity text-[20px] text-[#2A1F9D] dark:text-darkBlue dark:opacity-100">
                       {data.count}
                     </span>
                   </button>

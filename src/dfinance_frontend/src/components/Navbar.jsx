@@ -11,6 +11,7 @@ import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "./Button";
+import { useRef } from "react";
 
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
@@ -43,10 +44,15 @@ import Vector from "../../public/Vector.svg";
 import Group216 from "../../public/Group216.svg";
 // import SwitchTokensPopup from './Dashboard/SwitchToken';
 import Popup from "./Dashboard/Morepopup";
-
 import CustomizedSwitches from "./MaterialUISwitch";
+import { toggleTestnetMode } from "../redux/reducers/testnetReducer";
+import icplogo from '../../public/icp.png'
+import { IoIosRocket } from "react-icons/io";
+import { ArrowUpDown } from 'lucide-react';
+
 export default function Navbar({ isHomeNav }) {
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
+  const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
   const dispatch = useDispatch();
@@ -68,11 +74,11 @@ export default function Navbar({ isHomeNav }) {
 
   useEffect(() => {
     // Add event listener for scroll to window or container
-    window.addEventListener('scroll', handleCloseDropdownOnScroll);
+    window.addEventListener("scroll", handleCloseDropdownOnScroll);
 
     // Clean up the event listener on unmount
     return () => {
-      window.removeEventListener('scroll', handleCloseDropdownOnScroll);
+      window.removeEventListener("scroll", handleCloseDropdownOnScroll);
     };
   }, []);
 
@@ -88,8 +94,6 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
   }, [location]);
 
-
-  ;
   const [ethValue, setEthValue] = useState("0.00");
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -242,26 +246,25 @@ export default function Navbar({ isHomeNav }) {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
-  const [isTestnetMode, setIsTestnetMode] = useState(() => {
-    const savedTestnetMode = localStorage.getItem("isTestnetMode");
-    return savedTestnetMode ? JSON.parse(savedTestnetMode) : false;
-  });
+
+  const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
+
+  const previousIsTestnetMode = useRef(isTestnetMode);
+
+  const handleTestnetModeToggle = () => {
+    navigate("/dashboard");
+    dispatch(toggleTestnetMode());
+  };
 
   useEffect(() => {
-    const storedIsTestnetMode = JSON.parse(
-      localStorage.getItem("isTestnetMode")
-    );
-
-    if (isTestnetMode !== storedIsTestnetMode) {
-      localStorage.setItem("isTestnetMode", JSON.stringify(isTestnetMode));
-
-      // Dismiss previous toast notifications
-      toast.dismiss();
-
-      // Show the new toast notification
+    if (previousIsTestnetMode.current !== isTestnetMode) {
+      if (previousIsTestnetMode.current !== undefined) {
+        toast.dismiss(); // Dismiss any existing toasts
+      }
       toast.success(
-        `Testnet mode ${!isTestnetMode ? "disabled" : "enabled"} successfully!`
+        `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`
       );
+      previousIsTestnetMode.current = isTestnetMode;
     }
   }, [isTestnetMode]);
 
@@ -271,15 +274,6 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
-
-  };
-
-  const handleTestnetModeToggle = () => {
-    setIsTestnetMode((prevMode) => !prevMode);
-    if (isTestnetMode) {
-      navigate("/dashboard");
-    }
-
   };
 
   const hash = window.location.hash;
@@ -326,7 +320,20 @@ export default function Navbar({ isHomeNav }) {
       return newMode;
     });
   };
-
+  const copyToClipboard = () => {
+    if (principal) {
+      navigator.clipboard.writeText(principal)
+        .then(() => {
+          alert('Address copied to clipboard');
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+        });
+    }
+  };
+  const truncateString = (str, maxLength) => {
+    return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+  };
   React.useEffect(() => {
     const htmlElement = document.documentElement;
     const bodyElement = document.body;
@@ -371,7 +378,7 @@ export default function Navbar({ isHomeNav }) {
               {showTestnetPopup && (
                 <TestnetModePopup
                   onClose={handleClosePopup}
-                  setIsTestnetMode={setIsTestnetMode}
+                  handleTestnetModeToggle={handleTestnetModeToggle}
                 />
               )}
               <ToastContainer
@@ -386,83 +393,95 @@ export default function Navbar({ isHomeNav }) {
                 transition:Bounce
                 pauseOnHover
                 theme={isDarkMode ? "dark" : "light"}
-                className="z-50 mt-6 -ml-6"
+                className="z-50 mt-6 "
               />
             </div>
-            {!isMobile && <>
-              <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
-                {!isHomeNav
-                  ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                    if (link.alwaysPresent) {
-                      return (
-                        <NavLink
-                          key={index}
-                          to={link.route}
-                          className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                        >
-                          {link.title}
-                        </NavLink>
-                      );
-                    } else if (isTestnetMode && link.testnet) {
-                      return (
-                        <React.Fragment key={index}>
+            {!isMobile && (
+              <>
+                <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
+                  {!isHomeNav
+                    ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
+                      if (link.alwaysPresent) {
+                        return (
                           <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      } else if (isTestnetMode && link.testnet) {
+                        return (
+                          <React.Fragment key={index}>
+                            <NavLink
+                              to={link.route}
+                              className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                            >
+                              {link.title}
+                            </NavLink>
+                            {link.title === "Faucet" && (
+                              <>
+                                <span
+                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
+                                  onClick={handlePopupToggle}
+                                >
+                                  •••
+                                </span>
+                                {isPopupVisible && (
+                                  <Popup
+                                    position={popupPosition}
+                                    onClose={() => setIsPopupVisible(false)}
+                                  />
+                                )}
+                              </>
+                            )}
+                          </React.Fragment>
+                        );
+                      } else if (!isTestnetMode && !link.testnet) {
+                        return (
+                          <NavLink
+                            key={index}
                             to={link.route}
                             className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                           >
                             {link.title}
                           </NavLink>
-                          {link.title === "Faucet" && (
-                            <>
-                              <span
-                                className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
-                                onClick={handlePopupToggle}
-                              >
-                                •••
-                              </span>
-                              {isPopupVisible && (
-                                <Popup
-                                  position={popupPosition}
-                                  onClose={() => setIsPopupVisible(false)}
-                                />
-                              )}
-                            </>
-                          )}
-                        </React.Fragment>
-                      );
-                    } else if (!isTestnetMode && !link.testnet) {
-                      return (
-                        <NavLink
-                          key={index}
-                          to={link.route}
-                          className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                        >
-                          {link.title}
-                        </NavLink>
-                      );
-                    }
-                    return null;
-                  })
-                  : HOME_TOP_NAV_LINK.map((link, index) => (
-                    <NavLink
-                      key={index}
-                      to={link.route}
-                      className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                    >
-                      {link.title}
-                    </NavLink>
-                  ))}
-              </div>
-            </>}
+                        );
+                      }
+                      return null;
+                    })
+                    : HOME_TOP_NAV_LINK.map((link, index) => (
+                      <NavLink
+                        key={index}
+                        to={link.route}
+                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                      >
+                        {link.title}
+                      </NavLink>
+                    ))}
+                </div>
+              </>
+            )}
 
             {isHomeNav ? (
               <div className="flex gap-2">
                 <div className=" text-nowrap">
-                  <Button
-                    title={"Launch App"}
-                    onClickHandler={handleLaunchApp}
-                  />
+                  {isMobile2 ? (
+                    <div
+                      className="w-10 h-10 border-b-[0.3px] border-gray-400 dark:border-gray-600 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/90 dark:to-[#81198E]/90 flex items-center justify-center rounded-lg shadow-[#00000040] shadow-sm cursor-pointer mr-1"
+                      onClick={handleLaunchApp}
+                    >
+                      <IoIosRocket color="white" size={28} />
+                    </div>
+                  ) : (
+                    <Button
+                      title="Launch App"
+                      onClickHandler={handleLaunchApp}
+                    />
+                  )}
                 </div>
+
                 <div className="flex align-center justify-center">
                   {renderThemeToggle && <ThemeToggle />}
                 </div>
@@ -478,25 +497,30 @@ export default function Navbar({ isHomeNav }) {
                     </div>
                   </div>
                 )}
-
               </div>
             ) : isAuthenticated ? (
               <div className="hidden lg:flex gap-2 sxs3:flex  md:flex ">
-                <div className="my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] rounded-[10px] shadow-md border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
+                <div className="my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-2 py-[10px] px-3"
+                    className="flex items-center gap-1 py-[11px] px-3 md:py-[10px]"
                     onClick={handleSwitchToken}
                   >
-                    <span className="hidden lg1:flex">
-                      Switch Token
-                    </span>
-                    <ArrowDownUp size={15} />
+                    <span className="hidden lg1:flex">Switch Token</span>
+                    <ArrowUpDown size={17} strokeWidth={1.4} />
                   </div>
 
                   <div className="relative">
                     {switchTokenDrop && (
-                      <> <div className="fixed inset-0 bg-black opacity-40 z-40" onClick={() => setSwitchTokenDrop(false)}></div>
-                        <div className="w-[380px] absolute -left-[160px] mt-6 rounded-xl bg-white shadow-xl  border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl">
+                      <>
+                        {" "}
+                        <div
+                          className="fixed inset-0 bg-black opacity-40 z-40"
+                          onClick={() => setSwitchTokenDrop(false)}
+                        ></div>
+                        <div
+                          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[200px] lg1:transform lg1:-translate-x-1/2 lg1:w-[380px] w-[320px] lg1:left-[85px] mt-8 lg1:mt-6 rounded-xl bg-white shadow-xl border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <h1 className="font-bold text-xl text-[#2A1F9D] dark:text-darkText text-nowrap">
                             Switch Tokens
                           </h1>
@@ -642,27 +666,27 @@ export default function Navbar({ isHomeNav }) {
                               </div>
                             </div>
                             {isInputFocused && (
-                              <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between dark:text-darkText ">
+                              <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2  flex items-center justify-between text-nowrap dark:text-darkText ">
                                 <p>1 ETH = 32.569 1INCH</p>
                                 <p>
                                   <img
                                     src={Vector}
                                     alt=""
-                                    className="inline w-4 h-4 mr-1 text-[#2A1F9D] ml-[90px] dark:text-darkText"
+                                    className="inline w-4 h-4 mr-1  text-[#2A1F9D] ml-[40px] dark:text-darkText"
                                   />
                                   $18.75
                                 </p>
                                 <img
                                   src={Group216}
                                   alt=""
-                                  className="inline w-4 h-4 text-[#2A1F9D]"
+                                  className="inline w-4 h-4 ml-6 text-[#2A1F9D]"
                                 />
                               </div>
                             )}
 
                             {showTransactionOverlay && (
                               <div className="top-full left-0 mt-2 p-4 bg-white text-[#2A1F9D] dark:bg-darkBackground/5 dark:text-darkText ">
-                                <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4  dark:text-darkText">
+                                <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4  dark:text-darkText text-nowrap">
                                   Transaction Overlay
                                 </h2>
                                 <div className="border border-gray-300 rounded-xl shadow-md top-full left-0 mt-2 p-6">
@@ -724,18 +748,22 @@ export default function Navbar({ isHomeNav }) {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 my-2 bg-gradient-to-r text-white from-[#EB886399] to-[#81198E99] shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-md border-b-[1px] border-white/40 dark:border-white/20">
-                  <div
-                    className="flex items-center gap-1 py-[9px] px-3  overflow-hidden"
+                <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
+                  {!isMobile2 && <div
+                    className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
                     <img
                       src={loader}
                       alt="square"
-                      className="object-contain w-5 h-5"
+                      className="object-contain w-5 h-5 -mr-[3px]"
                     />
-                    <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold">0x65.125s</span>
-                  </div>
+                    
+                      <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold ml-1">
+                        {truncateString(principal, 6)}
+                      </span>
+                    
+                  </div>}
 
                   {switchWalletDrop && (
                     <>
@@ -744,93 +772,118 @@ export default function Navbar({ isHomeNav }) {
                         onClick={() => setSwitchWalletDrop(false)}
                       ></div>
                       <div
-                        className="absolute px-5 py-6 top-full -left-[207px] mt-8 md:mt-4 rounded-xl bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
+                        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[160px] lg1:-left-[60px] lg1:transform lg1:-translate-x-1/2 lg1:mt-2 min-w-[300px] md:px-5 md:py-6 px-5 py-6 rounded-xl bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="w-full flex items-center gap-2">
                           <img src={loader} alt="square" className="w-8 h-8" />
-                          <h1 className="font-bold text-xl text-blue-800 dark:text-darkText">
-                            0x65.125ssdf
+                          <h1 className="font-bold md:text-xl text-[17px] text-blue-800 dark:text-darkText">
+                            {truncateString(principal, 20)}
                           </h1>
                         </div>
+                        <div className="flex flex-col-reverse   lg:block">
+                          <div className="w-full flex flex-col lg1:flex-row justify-center mt-3  gap-3">
+                            <Button
+                              title="Switch Wallet"
+                              className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
 
-                        <div className="w-full flex justify-center mt-3 gap-3">
-                          <Button
-                            title="Switch Wallet"
-                            className=" z-20 py-2 px-9 focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg"
-                            onClickHandler={handleSwitchWallet}
-                          />
-                          <Button
-                            title="Disconnect"
-                            className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
-                            onClickHandler={handleLogout}
-                          />
-                        </div>
-
-                        <div className="flex mt-3 gap-3 ">
-                          {/* First Container */}
-                          <div className="flex justify-center">
-                            <div
-                              className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
-                              style={{ height: "70px", width: "160px" }}
-                            >
-                              <span
-                                className="absolute top-1/4 transform -translate-y-1/2 text-blue-800 dark:text-darkTextSecondary"
-                                style={{ right: "55%" }}
-                              >
-                                Network
-                              </span>
-                              <div className="absolute bottom-2 left-2 mt-4 flex items-center">
-                                <img
-                                  src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"
-                                  alt="Icp Logo"
-                                  className="w-6 h-6"
-                                />
-                                <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
-                                  ICP
-                                </span>
-                              </div>
-                            </div>
+                            />
+                            <Button
+                              title="Disconnect"
+                              className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                              onClickHandler={handleLogout}
+                            />
                           </div>
 
-                          {/* Second Container */}
-                          <div className="flex justify-center">
-                            <div
-                              className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
-                              style={{ height: "70px", width: "160px" }}
-                            >
-                              <button
-                                className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
-                                onClick={handleCopyAddress}
+                          <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
+                            {/* First Container */}
+                            <div className="hidden lg1:flex justify-center">
+                              <div
+                                className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
+                                style={{ height: "70px", width: "160px" }}
                               >
-                                <GrCopy className="h-5 w-4" />
-                                <span className="ml-1">Copy Address</span>
-                              </button>
-                              <button
-                                className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday"
-                                onClick={handleViewOnExplorerClick}
-                              >
-                                <CiShare1 className="h-5 w-4" />
-                                <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
-                                  View On Explorer
+                                <span
+                                  className="absolute top-1/4 transform -translate-y-1/2 text-blue-800 dark:text-darkTextSecondary"
+                                  style={{ right: "55%" }}
+                                >
+                                  Network
                                 </span>
-                              </button>
+                                <div className="absolute bottom-2 left-2 mt-4 flex items-center">
+                                  <img
+                                    src={icplogo}
+                                    alt="Icp Logo"
+                                    className="w-6 h-6"
+                                  />
+                                  <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
+                                    ICP
+                                  </span>
+                                </div>
+                              </div>
                             </div>
+
+                            <div className="lg1:hidden lg:flex justify-center">
+                              <div
+                                className="flex-1 flex flex-col  justify-center border border-gray-200 p-3 rounded-xl text-sm  dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
+                              >
+                                <div className="flex gap-5">
+                                  <div className="flex items-center justify-center">
+                                    <p className="text-blue-800 dark:text-darkText">Network</p>
+                                  </div>
+
+                                  <div className="flex items-center ml-auto">
+                                    <img
+                                      src={icplogo}
+                                      alt="Icp Logo"
+                                      className="w-6 h-6"
+                                    />
+                                    <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
+                                      ICP
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Second Container */}
+                            <div className=" w-full flex justify-center">
+                              <div
+                                className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                                style={{ height: "70px", width: "160px" }}
+                              >
+                                <button
+                                  className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
+                                  onClick={copyToClipboard}
+                                >
+                                  <GrCopy className="h-5 w-4 ml-4 lg1:ml-0" />
+                                  <span className="ml-1">Copy Address</span>
+                                </button>
+                                <button
+                                  className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday"
+                                  onClick={handleViewOnExplorerClick}
+                                >
+                                  <CiShare1 className="h-5 w-4  dark:text-darkText " />
+                                  <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
+                                    View On Explorer
+                                  </span>
+                                </button>
+                              </div>
+                            </div>{" "}
                           </div>
                         </div>
                       </div>
                     </>
                   )}
-
                 </div>
                 <div className="flex items-center justify-center">
                   <div className="relative">
-                    {!isMobile && <img
-                      src={settingsIcon}
-                      alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
-                      onClick={handleDropdownToggle}
-                    />}
+                    {!isMobile && (
+                      <img
+                        src={settingsIcon}
+                        alt="settings_icon"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
+                        onClick={handleDropdownToggle}
+                      />
+                    )}
                     {dropdownVisible && (
                       <>
                         <div
@@ -838,7 +891,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setDropdownVisible(false)}
                         ></div>
                         <div
-                          className="absolute w-[280px] top-[60px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none"
+                          className="absolute w-[280px] top-[55px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
@@ -859,7 +912,10 @@ export default function Navbar({ isHomeNav }) {
                               <span className="text-[13px] mr-2">
                                 {isDarkMode ? "ON" : "OFF"}
                               </span>
-                              <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
+                              <CustomizedSwitches
+                                checked={isDarkMode}
+                                onChange={handleDarkModeToggle}
+                              />
                             </div>
                           </div>
 
@@ -877,13 +933,15 @@ export default function Navbar({ isHomeNav }) {
                               <span className="text-[13px] mr-2">
                                 {isTestnetMode ? "ON" : "OFF"}
                               </span>
-                              <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
+                              <CustomizedSwitches
+                                checked={isTestnetMode}
+                                onChange={handleTestnetModeToggle}
+                              />
                             </div>
                           </div>
                         </div>
                       </>
                     )}
-
                   </div>
                 </div>
 
@@ -905,16 +963,32 @@ export default function Navbar({ isHomeNav }) {
                 <Button
                   title={"Connect Wallet"}
                   onClickHandler={handleWalletConnect}
-                  className={"my-2 bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-md shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"}
+                  className={
+                    "broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"
+                  }
                 />
                 <div className="flex items-center justify-center">
                   <div className="relative">
-                    {!isMobile ? <img
-                      src={settingsIcon}
-                      alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
-                      onClick={handleDropdownToggle}
-                    /> :  <MenuIcon />}
+                    {!isMobile ? (
+                      <img
+                        src={settingsIcon}
+                        alt="settings_icon"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
+                        onClick={handleDropdownToggle}
+                      />
+                    ) : (
+
+                      <div className="flex justify-center align-center items-center ml-1">
+                        <div
+                          onClick={() => setIsMobileNav(!isMobileNav)}
+                          className="cursor-pointer"
+                        >
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
+                          {/* Toggle between Menu and X icons */}
+                        </div>
+                      </div>
+
+                    )}
                     {dropdownVisible && (
                       <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
@@ -930,13 +1004,15 @@ export default function Navbar({ isHomeNav }) {
                             >
                               Dark Mode
                             </label>
-
                           </div>
                           <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
                             <span className="text-[13px] mr-2">
                               {isDarkMode ? "ON" : "OFF"}
                             </span>
-                            <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
+                            <CustomizedSwitches
+                              checked={isDarkMode}
+                              onChange={handleDarkModeToggle}
+                            />
                           </div>
                         </div>
 
@@ -949,25 +1025,23 @@ export default function Navbar({ isHomeNav }) {
                             >
                               Testnet Mode
                             </label>
-
                           </div>
                           <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
                             <span className="text-[13px] mr-2">
                               {isTestnetMode ? "ON" : "OFF"}
                             </span>
-                            <CustomizedSwitches checked={isTestnetMode} onChange={handleTestnetModeToggle} />
+                            <CustomizedSwitches
+                              checked={isTestnetMode}
+                              onChange={handleTestnetModeToggle}
+                            />
                           </div>
                         </div>
                       </div>
-
                     )}
                   </div>
                 </div>
-
               </div>
             )}
-
-
           </nav>
         </div>
       </ClickAwayListener>

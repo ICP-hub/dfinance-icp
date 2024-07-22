@@ -13,6 +13,7 @@ import {
   setWalletModalOpen
 } from '../../redux/reducers/utilityReducer'
 import { useAuth } from "../../utils/useAuthClient"
+import { useRef } from "react"
 
 import icplogo from '../../../public/icp.png'
 import plug from "../../../public/plug.png"
@@ -24,6 +25,7 @@ const WalletDetails = () => {
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   }
@@ -53,9 +55,7 @@ const WalletDetails = () => {
     navigate(`/dashboard/asset-details/${asset}`); // Navigate to asset details page
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = WALLET_ASSETS_TABLE_ROW.slice(indexOfFirstItem, indexOfLastItem);
+
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === 'dark' ? '#ffffff' : '#3739b4';
 
@@ -98,6 +98,41 @@ const WalletDetails = () => {
     setInputValue(event.target.value);
   };
 
+  const handleSearchInputChange = (event) => {
+    setSearchQuery(event.target.value);
+    setCurrentPage(1);
+  };
+
+
+  const filteredItems = WALLET_ASSETS_TABLE_ROW.filter(item =>
+    item.asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.total_supply_count.toString().includes(searchQuery)
+  );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
+
+  const popupRef = useRef(null); // Ref for the popup content
+
+
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      closePopup();
+    }
+  };
+
+  useEffect(() => {
+    if (showPopup) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      return () => {
+        document.removeEventListener('mousedown', handleOutsideClick);
+      };
+    }
+  }, [showPopup]);
+
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
@@ -110,12 +145,13 @@ const WalletDetails = () => {
               id="search"
               placeholder="Search for proposals"
               style={{ fontSize: '0.75rem' }}
-              className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent ${Showsearch
+              className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                 ? "animate-fade-left flex"
                 : "animate-fade-right hidden"
                 }`}
+              value={searchQuery}
+              onChange={handleSearchInputChange}
             />
-
           )}
         </div>
         <svg onClick={showSearchBar} className="cursor-pointer" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -138,10 +174,12 @@ const WalletDetails = () => {
           name="search"
           id="search"
           placeholder="Search for products"
-          className={`placeholder-gray-500 w-[300px] block  md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent ${Showsearch
+          className={`placeholder-gray-500 w-[300px] block md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
             ? "animate-fade-left flex"
             : "animate-fade-right hidden"
             }`}
+          value={searchQuery}
+          onChange={handleSearchInputChange}
         />
       }
 
@@ -227,17 +265,17 @@ const WalletDetails = () => {
 
           {showPopup && (
             <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-              <div className="bg-white dark:bg-darkOverlayBackground p-6 rounded-2xl shadow-lg w-80 relative">
+              <div ref={popupRef} className="bg-white dark:bg-darkOverlayBackground p-6 rounded-2xl shadow-lg w-80 relative">
                 <button
                   className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                   onClick={closePopup}
                 >
-                  <X size={45} />
+                  <X size={40} />
                 </button>
                 <div >
-                  <div className="flex gap-2 justify-start items-center w-10 h-10">
+                  <div className="flex gap-2 justify-start items-center ">
                     <img src={selectedAsset.image} alt={selectedAsset.asset} className="rounded-[50%]" />
-                    <p className="text-lg font-bold text-[#2A1F9D] dark:text-darkText">{selectedAsset.asset}</p>
+                    <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">{selectedAsset.asset}</p>
                   </div>
 
                   <div className="flex flex-col gap-5 mt-8">
@@ -273,7 +311,7 @@ const WalletDetails = () => {
                 </div>
                 <div className="flex w-full justify-center">
                   <button
-                    className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-3 font-semibold w-[100%] text-lg"
+                    className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-3 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
                     onClick={() => handleDetailsClick(selectedAsset.asset)}
                   >
                     Details
@@ -285,58 +323,58 @@ const WalletDetails = () => {
 
 
           {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
-                    <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
-                        <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
-                        <div className='flex flex-col gap-2 mt-3 text-sm'>
-                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
-                                Internet Identity
-                                <div className='w-8 h-8'>
-                                    <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                                </div>
-                            </div>
-                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
-                                Plug
-                                <div className='w-8 h-8'>
-                                    <img src={plug} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                                </div>
-                            </div>
-                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
-                                Bifinity
-                                <div className='w-8 h-8'>
-                                    <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                                </div>
-                            </div>
-                            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
-                                NFID
-                                <div className='w-8 h-8'>
-                                    <img src={nfid} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                                </div>
-                            </div>
-                        </div>
-                        <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
+            <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
+              <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
+              <div className='flex flex-col gap-2 mt-3 text-sm'>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
+                  Internet Identity
+                  <div className='w-8 h-8'>
+                    <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                  </div>
+                </div>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
+                  Plug
+                  <div className='w-8 h-8'>
+                    <img src={plug} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                  </div>
+                </div>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
+                  Bifinity
+                  <div className='w-8 h-8'>
+                    <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                  </div>
+                </div>
+                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
+                  NFID
+                  <div className='w-8 h-8'>
+                    <img src={nfid} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+                  </div>
+                </div>
+              </div>
+              <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
 
-                        <div className="w-full">
-                            <input
-                                type="text"
-                                value={inputValue}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-                                placeholder="Enter ethereum address or username"
-                            />
-                        </div>
+              <div className="w-full">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
+                  placeholder="Enter ethereum address or username"
+                />
+              </div>
 
-                        {inputValue && (
-                            <div className="w-full flex mt-3">
-                                <Button
-                                    title="Connect"
-                                    onClickHandler={handleWallet}
-                                    className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
-                                />
-                            </div>
-                        )}
+              {inputValue && (
+                <div className="w-full flex mt-3">
+                  <Button
+                    title="Connect"
+                    onClickHandler={handleWallet}
+                    className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                  />
+                </div>
+              )}
 
-                    </div>
-                </Modal>}
+            </div>
+          </Modal>}
 
 
         </div>

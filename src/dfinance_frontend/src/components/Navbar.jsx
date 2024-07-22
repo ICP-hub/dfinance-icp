@@ -502,7 +502,7 @@ export default function Navbar({ isHomeNav }) {
               <div className="hidden lg:flex gap-2 sxs3:flex  md:flex ">
                 <div className="my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 py-[10px] px-3"
+                    className="flex items-center gap-1 py-[11px] px-3 md:py-[10px]"
                     onClick={handleSwitchToken}
                   >
                     <span className="hidden lg1:flex">Switch Token</span>
@@ -749,7 +749,7 @@ export default function Navbar({ isHomeNav }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
-                  <div
+                  {!isMobile2 && <div
                     className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
                     onClick={handleSwitchWallet}
                   >
@@ -758,12 +758,12 @@ export default function Navbar({ isHomeNav }) {
                       alt="square"
                       className="object-contain w-5 h-5 -mr-[3px]"
                     />
-                    {!isMobile2 &&
+                    
                       <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold ml-1">
                         {truncateString(principal, 6)}
                       </span>
-                    }
-                  </div>
+                    
+                  </div>}
 
                   {switchWalletDrop && (
                     <>

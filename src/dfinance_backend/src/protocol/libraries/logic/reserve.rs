@@ -7,7 +7,7 @@ use crate::protocol::libraries::math::math_utils;
 // use crate::protocol::libraries::math::math_utils::mathUtils;
 use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_mul, ray_div};
 use crate::protocol::libraries::math::percentage_maths::percent_mul;
-// use crate::protocol::libraries::types::datatypes;
+use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
 use crate::declarations::assets::ReserveData;
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 use crate::protocol::libraries::logic::interface::ivariable_debt_token::VariableDebtToken;
@@ -65,11 +65,27 @@ pub mod reserve_logic {
         }
     }
 
+    #[derive(Default, Debug, CandidType, Deserialize, Serialize)]
+    struct UpdateInterestRatesLocalVars {
+        next_liquidity_rate: u128,
+        next_stable_rate: u128,
+        next_variable_rate: u128,
+        total_variable_debt: u128,
+    }
+
     pub trait ReserveLogic {
         fn cache(&self) -> ReserveCache;
         fn update_state(&mut self, reserve_cache: &mut ReserveCache);
         fn update_indexes(&mut self, reserve_cache: &mut ReserveCache);
         fn accrue_to_treasury(&mut self, reserve_cache: &ReserveCache);
+        fn update_interest_rates(
+            &mut self,
+            reserve_cache: &ReserveCache,
+            reserve_address: Principal,
+            liquidity_added: u128,
+            liquidity_taken: u128,
+            strategy: &dyn IReserveInterestRateStrategy,
+        );
     
     }
 
@@ -194,6 +210,57 @@ pub mod reserve_logic {
             reserve.accrued_to_treasury += ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
         }
     }
+
+    
+    
+
+    fn update_interest_rates(
+        &mut self,
+        reserve_cache: &ReserveCache,
+        reserve_address: Principal,
+        liquidity_added: u128,
+        liquidity_taken: u128,
+        strategy: &dyn IReserveInterestRateStrategy,
+    ) {
+        let mut vars = UpdateInterestRatesLocalVars::default();
+
+        vars.total_variable_debt = reserve_cache.next_scaled_variable_debt
+            * reserve_cache.next_variable_borrow_index / 1e27 as u128;
+
+        let (next_liquidity_rate, next_stable_rate, next_variable_rate) =
+            strategy.calculate_interest_rates(CalculateInterestRatesParams {
+                unbacked: self.unbacked,
+                liquidity_added,
+                liquidity_taken,
+                total_stable_debt: reserve_cache.next_total_stable_debt,
+                total_variable_debt: vars.total_variable_debt,
+                average_stable_borrow_rate: reserve_cache.next_avg_stable_borrow_rate,
+                reserve_factor: reserve_cache.reserve_factor,
+                reserve: reserve_address,
+                a_token: reserve_cache.a_token_address,
+            });
+
+        vars.next_liquidity_rate = next_liquidity_rate;
+        vars.next_stable_rate = next_stable_rate;
+        vars.next_variable_rate = next_variable_rate;
+
+        self.current_liquidity_rate = vars.next_liquidity_rate;
+        self.current_stable_borrow_rate = vars.next_stable_rate;
+        self.current_variable_borrow_rate = vars.next_variable_rate;
+
+        // Emit ReserveDataUpdated event (not available in Rust)
+        println!(
+            "ReserveDataUpdated: {}, {}, {}, {}, {}, {}",
+            reserve_address.to_text(),
+            vars.next_liquidity_rate,
+            vars.next_stable_rate,
+            vars.next_variable_rate,
+            reserve_cache.next_liquidity_index,
+            reserve_cache.next_variable_borrow_index
+        );
+    }
+
+
     }
 
     
@@ -210,6 +277,10 @@ pub trait IStableDebtToken {
         // Implement the logic to get supply data from the token address
         (Nat::from(0), Nat::from(0), Nat::from(0), 0)
     }
+}
+
+trait IReserveInterestRateStrategy {
+    fn calculate_interest_rates(&self, params: CalculateInterestRatesParams) -> (u128, u128, u128);
 }
 
 

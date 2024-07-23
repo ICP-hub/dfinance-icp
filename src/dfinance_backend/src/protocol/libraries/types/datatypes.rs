@@ -40,3 +40,16 @@ pub struct InitReserveInput {
     pub stable_debt_token_symbol: String,
     pub params: Vec<u8>,
 }
+
+#[derive(Debug, CandidType, Deserialize, Serialize)]
+pub struct CalculateInterestRatesParams {
+    pub unbacked: u128,
+    pub liquidity_added: u128,
+    pub liquidity_taken: u128,
+    pub total_stable_debt: u128,
+    pub total_variable_debt: u128,
+    pub average_stable_borrow_rate: u128,
+    pub reserve_factor: u128,
+    pub reserve: Principal,
+    pub a_token: Principal,
+}

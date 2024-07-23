@@ -22,8 +22,8 @@ pub struct VariableDebtToken {
 
 impl VariableDebtToken {
     // Function to get the scaled total supply of the variable debt token
-    pub async fn scaled_total_supply(debt_token_canister_id: CanisterId) -> Result<u128> {
-        let result: CallResult<(u128)> = call(Principal::from_text(debt_token_canister_id).expect("Invalid principal"), "icrc1_total_supply", ()).await;
+    pub async fn scaled_total_supply(debt_token_canister_id: Principal) -> Result<u128> {
+        let result: CallResult<(u128,)> = call(Principal::from_text(debt_token_canister_id).expect("Invalid principal"), "icrc1_total_supply", ()).await;
         // result.map(|(supply,)| supply).map_err(|e| format!("Call failed: {:?}", e))
     }
 }

@@ -1,8 +1,9 @@
-use std::usize;
+use candid::{CandidType, Deserialize, Nat, Principal};
 
-use candid::{CandidType, Deserialize, Principal};
+
+
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
-// use crate::protocol::libraries::types::assets::StoredReserveConfiguration;
+
 #[derive(Debug, CandidType, Deserialize)]
 pub struct ReserveData {
     pub configuration: ReserveConfiguration,
@@ -80,6 +81,38 @@ pub struct InitReserveParams {
     pub interest_rate_strategy_address: String,
     pub reserves_count: u64,
     pub max_number_reserves: u64,
+}
+
+#[derive(CandidType, Deserialize, Clone)]
+pub enum InterestRateMode {
+    None,
+    Stable,
+    Variable,
+}
+
+#[derive(CandidType, Deserialize, Clone)]
+struct ExecuteBorrowParams {
+    pub asset: String,
+    pub user: Principal,
+    pub on_behalf_of: Principal,
+    pub amount: Nat,
+    pub interest_rate_mode: InterestRateMode,
+    pub referral_code: u16,
+    pub release_underlying: bool,
+    pub max_stable_rate_borrow_size_percent: Nat,
+    pub reserves_count: Nat,
+    pub exchange_canister: Principal,
+    pub user_emode_category: u8,
+    pub price_oracle_sentinel: Principal,
+}
+
+#[derive(CandidType, Deserialize, Clone)]
+struct ExecuteRepayParams {
+    pub asset: String,
+    pub amount: Nat,
+    pub interest_rate_mode: InterestRateMode,
+    pub on_behalf_of: Principal,
+    use_dtokens: bool,
 }
 
 

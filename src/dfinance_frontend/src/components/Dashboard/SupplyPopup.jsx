@@ -177,7 +177,7 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
 
               <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="flex items-center gap-3 text-nowrap">
-                  <span>Add aToken to wallet to track your balance.</span>
+                  <span>Add dToken to wallet to track your balance.</span>
                 </div>
                 <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2">
                   <Wallet />

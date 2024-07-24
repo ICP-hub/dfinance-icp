@@ -1,46 +1,45 @@
-use candid::{CandidType, Nat, Principal};
+use candid::{variant, CandidType, Nat, Principal};
 use serde::{Deserialize, Serialize};
-// use ic_cdk_macros::{query, update};
-// use std::time::{SystemTime, UNIX_EPOCH};
+
 use ic_cdk::api::time;
 use crate::protocol::libraries::math::math_utils;
-// use crate::protocol::libraries::math::math_utils::mathUtils;
+
 use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_mul, ray_div};
 use crate::protocol::libraries::math::percentage_maths::percent_mul;
 use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
 use crate::declarations::assets::ReserveData;
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 use crate::protocol::libraries::logic::interface::ivariable_debt_token::VariableDebtToken;
-// Assume the necessary traits and modules are imported as needed
-//cache, update_state, update_interest_rates
+
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds
 }
+// type Result = variant {Ok : Nat; Err : String};
 pub mod reserve_logic {
     use super::*;
     
     #[derive(CandidType, Deserialize, Clone, Debug)]
     pub struct ReserveCache {
         pub reserve_configuration: ReserveConfiguration,
-        pub reserve_factor: u16,
+        pub reserve_factor: u128,
         pub curr_liquidity_index: u128,
         pub next_liquidity_index: u128,
         pub curr_variable_borrow_index: u128,
         pub next_variable_borrow_index: u128,
         pub curr_liquidity_rate: u128,
         pub curr_variable_borrow_rate: u128,
-        pub a_token_address: String,
-        pub stable_debt_token_address: String,
-        pub variable_debt_token_address: String,
+        pub a_token_address: Principal,
+        pub stable_debt_token_address: Principal,
+        pub variable_debt_token_address: Principal,
         pub reserve_last_update_timestamp: u64,
         pub curr_scaled_variable_debt: u128,
-        pub next_scaled_variable_debt: Nat,
-        pub curr_principal_stable_debt: Nat,
-        pub curr_total_stable_debt: Nat,
-        pub curr_avg_stable_borrow_rate: Nat,
+        pub next_scaled_variable_debt: u128,
+        pub curr_principal_stable_debt: u128,
+        pub curr_total_stable_debt: u128,
+        pub curr_avg_stable_borrow_rate: u128,
         pub stable_debt_last_update_timestamp: u64,
-        pub next_total_stable_debt: Nat,
-        pub next_avg_stable_borrow_rate: Nat,
+        pub next_total_stable_debt: u128,
+        pub next_avg_stable_borrow_rate: u128,
     }
 
     struct AccrueToTreasuryLocalVars {
@@ -93,6 +92,10 @@ pub mod reserve_logic {
         fn cache(&self) -> ReserveCache {
             // let debt_token_canister_id = env::var("CANISTER_ID_ATOKEN")
             // .expect("CANISTER_ID_ATOKEN environment variable not set");
+            let variable_debt_token_address = &self.variable_debt_token_address;
+        //     let curr_scaled_variable_debt = block_on(VariableDebtToken::scaled_total_supply(variable_debt_token_address.clone()))
+        //     .expect("Failed to get current scaled variable debt");
+        // let next_scaled_variable_debt = curr_scaled_variable_debt;
 
             let mut reserve_cache = ReserveCache {
                 reserve_configuration: self.configuration.clone(),
@@ -107,17 +110,20 @@ pub mod reserve_logic {
                 stable_debt_token_address: self.stable_debt_token_address.clone(),
                 variable_debt_token_address: self.variable_debt_token_address.clone(),
                 reserve_last_update_timestamp: self.last_update_timestamp,
-                curr_scaled_variable_debt: VariableDebtToken::scaled_total_supply(self.variable_debt_token_address),
-                next_scaled_variable_debt: VariableDebtToken::scaled_total_supply(self.variable_debt_token_address),
-                curr_principal_stable_debt: Nat::from(0),
-                curr_total_stable_debt: Nat::from(0),
-                curr_avg_stable_borrow_rate: Nat::from(0),
+                // curr_scaled_variable_debt: VariableDebtToken::scaled_total_supply(self.variable_debt_token_address),
+                // next_scaled_variable_debt: VariableDebtToken::scaled_total_supply(self.variable_debt_token_address),
+                curr_scaled_variable_debt: 0,
+                next_scaled_variable_debt: 0,
+                curr_principal_stable_debt: 0,
+                curr_total_stable_debt: 0,
+                curr_avg_stable_borrow_rate: 0,
                 stable_debt_last_update_timestamp: 0,
-                next_total_stable_debt: Nat::from(0),
-                next_avg_stable_borrow_rate: Nat::from(0),
+                next_total_stable_debt: 0,
+                next_avg_stable_borrow_rate: 0,
             };
+            let (principal_stable_debt, total_stable_debt, avg_stable_borrow_rate, stable_debt_last_update_timestamp) = <StableDebtTokenImpl as IStableDebtToken>::get_supply_data(self.stable_debt_token_address);
 
-            let (principal_stable_debt, total_stable_debt, avg_stable_borrow_rate, stable_debt_last_update_timestamp) = IStableDebtToken::get_supply_data(self.stable_debt_token_address);
+            // let (principal_stable_debt, total_stable_debt, avg_stable_borrow_rate, stable_debt_last_update_timestamp) = IStableDebtToken::get_supply_data(self.stable_debt_token_address);
             reserve_cache.curr_principal_stable_debt = principal_stable_debt;
             reserve_cache.curr_total_stable_debt = total_stable_debt;
             reserve_cache.curr_avg_stable_borrow_rate = avg_stable_borrow_rate;
@@ -167,7 +173,7 @@ pub mod reserve_logic {
     
     
     
-    fn accrue_to_treasury(reserve: &mut ReserveData, reserve_cache: &ReserveCache) {
+    fn accrue_to_treasury(&mut self, reserve_cache: &ReserveCache) {
         let mut vars = AccrueToTreasuryLocalVars::default();
     
         if reserve_cache.reserve_factor == 0 {
@@ -207,7 +213,7 @@ pub mod reserve_logic {
         vars.amount_to_mint = percent_mul(vars.total_debt_accrued, reserve_cache.reserve_factor);
     
         if vars.amount_to_mint != 0 {
-            reserve.accrued_to_treasury += ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
+            self.accrued_to_treasury += ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
         }
     }
 
@@ -270,14 +276,24 @@ pub mod reserve_logic {
 }
 
 
-
-//temp
 pub trait IStableDebtToken {
-    fn get_supply_data(token_address: Principal) -> (Nat, Nat, Nat, u64) {
+    fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64);
+}
+
+pub struct StableDebtTokenImpl;
+impl IStableDebtToken for StableDebtTokenImpl {
+    fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64) {
         // Implement the logic to get supply data from the token address
-        (Nat::from(0), Nat::from(0), Nat::from(0), 0)
+        (0, 0, 0, 0)
     }
 }
+//temp
+// pub trait IStableDebtToken {
+//     fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64) {
+//         // Implement the logic to get supply data from the token address
+//         (0, 0, 0, 0)
+//     }
+// }
 
 trait IReserveInterestRateStrategy {
     fn calculate_interest_rates(&self, params: CalculateInterestRatesParams) -> (u128, u128, u128);

@@ -21,7 +21,7 @@ pub struct ReserveConfiguration {
     borrowable_in_isolation: bool,
     siloed_borrowing: bool,
     flashloan_enabled: bool,
-    reserve_factor: u16,
+    reserve_factor: u128,
     borrow_cap: u64,
     supply_cap: u64,
     liquidation_protocol_fee: u16,
@@ -35,7 +35,7 @@ impl ReserveConfiguration {
     pub const MAX_VALID_LIQUIDATION_THRESHOLD: u16 = 65535;
     pub const MAX_VALID_LIQUIDATION_BONUS: u16 = 65535;
     pub const MAX_VALID_DECIMALS: u8 = 255;
-    pub const MAX_VALID_RESERVE_FACTOR: u16 = 65535;
+    pub const MAX_VALID_RESERVE_FACTOR: u128 = 65535;
     pub const MAX_VALID_BORROW_CAP: u64 = 68719476735;
     pub const MAX_VALID_SUPPLY_CAP: u64 = 68719476735;
     pub const MAX_VALID_LIQUIDATION_PROTOCOL_FEE: u16 = 65535;
@@ -155,7 +155,7 @@ impl ReserveConfiguration {
         self.flashloan_enabled
     }
 
-    pub fn set_reserve_factor(&mut self, factor: u16) {
+    pub fn set_reserve_factor(&mut self, factor: u128) {
         if factor <= Self::MAX_VALID_RESERVE_FACTOR {
             self.reserve_factor = factor;
         } else {
@@ -163,7 +163,7 @@ impl ReserveConfiguration {
         }
     }
 
-    pub fn get_reserve_factor(&self) -> u16 {
+    pub fn get_reserve_factor(&self) -> u128 {
         self.reserve_factor
     }
 
@@ -249,7 +249,7 @@ impl ReserveConfiguration {
         )
     }
 
-    pub fn get_params(&self) -> (u16, u16, u16, u8, u16, u8) {
+    pub fn get_params(&self) -> (u16, u16, u16, u8, u128, u8) {
         (
             self.ltv,
             self.liquidation_threshold,

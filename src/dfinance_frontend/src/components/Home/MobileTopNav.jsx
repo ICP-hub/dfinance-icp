@@ -161,10 +161,16 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
       onClose={handleClose}
       PaperProps={{
         style: {
-          marginTop: "88px", // Adjust the margin as needed
-          borderRadius: "12px",
-          className: "drawer-right-to-left",
-        },
+      width: '80vw', // Adjust the width as needed
+      maxWidth: '440px', // Maximum width for the Drawer
+      height: '80vh', // Maximum height of the Drawer
+      maxHeight: 'calc(100vh - 60px)', // Ensures it doesn't cover the whole screen
+      marginTop: "80px", // Adjust the margin as needed
+      marginBottom: "20px", // Space from the bottom
+      borderRadius: "12px",
+      position: 'right', // To ensure proper positioning
+      className: "drawer-right-to-left",
+    },
       }}
     >
       <div className="flex flex-col pt-6 p-4 dark:bg-darkOverlayBackground font-poppins w-full h-full">
@@ -358,7 +364,7 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleCreateInte
           <div className="flex items-center">
             <label htmlFor="darkMode" className="ml-2 text-lg text-[#2A1F9D] dark:text-darkTextSecondary">Dark Mode</label>
             <span className="ml-auto text-[#2A1F9D] dark:text-darkTextSecondary">{isDarkMode ? 'On' : 'Off'}</span>
-            <div className="flex align-center justify-center ml-3">
+            <div className="flex align-center justify-center ml-4">
               <CustomizedSwitches checked={isDarkMode} onChange={handleDarkModeToggle} />
             </div>
           </div>

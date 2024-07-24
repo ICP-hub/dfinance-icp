@@ -13,14 +13,17 @@ import {
   setIsWalletConnected,
   setWalletModalOpen
 } from '../../redux/reducers/utilityReducer'
+import Pagination from "./pagination";
 import {
   WALLET_ASSETS_TABLE_ROW,
   WALLET_ASSETS_TABLE_COL,
 } from "../../utils/constants"
-
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
+const ITEMS_PER_PAGE = 5;
 const TransactionHistory = () => {
   const [Showsearch, setShowSearch] = useState(false);
   const [filteredTransactionHistory, setFilteredTransactionHistory] = useState(transactionHistory);
+  const [currentPage, setCurrentPage] = useState(1);
   const location = useLocation();
   const {
     isAuthenticated,
@@ -97,11 +100,20 @@ const TransactionHistory = () => {
       progress: undefined,
     });
   };
+  const totalPages = Math.ceil(filteredTransactionHistory.length / ITEMS_PER_PAGE);
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const currentItems = filteredTransactionHistory.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
 
 
   return (
-    <div className="relative w-full lg:w-12/12 overflow-scroll lgx:overflow-none hide-scrollbar">
+    <div className="relative w-full lg:w-12/12">
       {transactionHistory.length === 0 && <div className="absolute right-0 top-0 h-full md:w-1/2 pointer-events-none sxs3:w-[65%] z-[-1]">
         <img
           src={Element}
@@ -174,14 +186,14 @@ const TransactionHistory = () => {
               </p>
             </div>
           ) : (
-            <div className="w-full h-[400px] overflow-auto  overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <div className="w-full overflow-auto  ">
               <div className="hidden md:block"> {/* Display table on medium screens and above */}
                 <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-[12px] lg:text-sm dark:text-darkText mt-2">
                   <thead>
                     <tr className="text-left text-[#2A1F9D] dark:text-darkText">
                       <th className="py-3 px-4">Transaction Hash</th>
                       {/* <th className="py-3 px-4">Block</th> */}
-                      <th className="py-3 px-4">Methods</th>
+                      <th className="py-3 ps-6">Methods</th>
                       <th className="py-3 px-8">Time</th>
                       <th className="py-3 px-4">From</th>
                       <th className="py-3 px-4">To</th>
@@ -190,7 +202,7 @@ const TransactionHistory = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTransactionHistory.map((tx, index) => (
+                    {currentItems.map((tx, index) => (
                       <tr key={tx.id} className="w-full text-[#4659CF]  hover:bg-[#ddf5ff8f] dark:hover:bg-[#5d59b0] rounded-lg h-[50px]">
                         <td className="py-2 px-4">
                           <div className="flex items-center dark:text-darkTextSecondary1">
@@ -205,7 +217,7 @@ const TransactionHistory = () => {
                         </td>
                         {/* <td className="py-2 px-4 dark:text-darkTextSecondary mr-7">{tx.block}</td> */}
                         <td className="py-2 px-4">
-                          <div className="bg-[#ADB0FF]  text-[#2A1F9D] rounded-full px-1 py-1 mr-5">
+                          <div className="bg-[#ADB0FF]  text-[#2A1F9D] rounded-full px-1 py-1 mr-10">
                             <center><span className="text-[12px] dark:text-darkText">{tx.method}</span></center>
                           </div>
                         </td>
@@ -239,8 +251,9 @@ const TransactionHistory = () => {
                   </tbody>
                 </table>
               </div>
+              
               <div className="md:hidden"> {/* Display mobile-friendly layout on small screens */}
-                {filteredTransactionHistory.map((tx, index) => (
+                {currentItems.map((tx, index) => (
                   <>
                     <p className="text-[#5B62FE] text-[14px] mb-3 dark:text-darkTextSecondary">{tx.age}</p>
                     <div key={tx.id} className="w-full border border-[#2A1F9D] dark:border-darkTextSecondary rounded-lg shadow-lg mb-6 p-4 dark:[#FEFEFE] dark:bg-[#2b2c4a]">
@@ -306,6 +319,14 @@ const TransactionHistory = () => {
           )}
         </div>
       )}
+      <div className="flex justify-center mt-4 gap-2">
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+              </div>
+              
     </div>
   )
 }

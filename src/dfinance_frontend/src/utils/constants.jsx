@@ -765,6 +765,8 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
     apy_desc: "Eligible for 2.9M$ GHO Community program",
     apy_type: "variable"
   },
+  
+ 
 ]
 // constants.jsx
 

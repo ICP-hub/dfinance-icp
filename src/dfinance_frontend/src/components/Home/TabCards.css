@@ -3,7 +3,7 @@
   }
   
   .flip-card-inner {
-    transition: transform 1s;
+    transition: transform 4s;
     transform-style: preserve-3d;
   }
   

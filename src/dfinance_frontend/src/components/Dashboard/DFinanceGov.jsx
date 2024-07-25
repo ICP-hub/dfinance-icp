@@ -119,7 +119,7 @@ const DFinanceGov = () => {
 //       <div className="w-full mt-6">
 //         <h1 className="text-[#5B62FE] text-sm inline-flex items-center ml-6">
 //           Available on
-//           <img src="https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
+//           <img src="  ../../public/assests-icon/ICPMARKET.png" alt="Icp Logo" className="mx-2 w-6 h-6" />
 //           ICP Mainnet
 //         </h1>
 //         <div className="w-full flex flex-col  md2:flex-row mt-2">
@@ -428,7 +428,7 @@ const DFinanceGov = () => {
 //                 <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
 //                   Internet Identity
 //                   <div className='w-8 h-8'>
-//                     <img src={"https://i.pinimg.com/originals/12/33/64/123364eb4e844960c2fd6ebffccba0a0.png"} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
+//                     <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
 //                   </div>
 //                 </div>
 //                 <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#b7b4b4] dark:text-darkText">

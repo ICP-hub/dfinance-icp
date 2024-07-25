@@ -5,9 +5,11 @@ import routesList from './routes/routes';
 import { useSelector } from 'react-redux';
 import Loading from "./components/Loading";
 import { usePageLoading } from "./components/useLoading";
+import ArtemisAutoConnect from "./integration/ArtemisAutoConnect"
 
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
+  ArtemisAutoConnect()
   const { reloadLogin } = useAuth();
 
   useEffect(() => {

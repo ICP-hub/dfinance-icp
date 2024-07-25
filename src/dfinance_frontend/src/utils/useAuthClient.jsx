@@ -4,59 +4,46 @@ import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
 import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
-// import { Artemis } from 'artemis-web3-adapter';
+import { dfinance_backend } from "../../../declarations/dfinance_backend";
+import { useDispatch, useSelector } from 'react-redux';
+import { setIsWalletConnected, setWalletModalOpen, setWalletDetails } from '../redux/reducers/walletsReducer';
 
-// const connectObj = { whitelist: ['ryjl3-tyaaa-aaaaa-aaaba-cai'], host: 'https://icp0.io/' }
-
-// const artemisWalletAdapter = new Artemis(connectObj);
-
-
-// Create a React context for authentication state
 const AuthContext = createContext();
 
 const defaultOptions = {
-  /**
-   *  @type {import("@dfinity/auth-client").AuthClientCreateOptions}
-   */
   createOptions: {
     idleOptions: {
-      idleTimeout: 1000 * 60 * 30, // set to 30 minutes
-      disableDefaultIdleCallback: true, // disable the default reload behavior
+      idleTimeout: 1000 * 60 * 30,
+      disableDefaultIdleCallback: true,
     },
   },
-  /**
-   * @type {import("@dfinity/auth-client").AuthClientLoginOptions}
-   */
   loginOptionsii: {
     identityProvider:
-      process.env.DFX_NETWORK === "ic"
+      process.env.DFX_NETWORK === "dfinity"
         ? "https://identity.ic0.app/#authorize"
         : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
   },
   loginOptionsnfid: {
     identityProvider:
-      process.env.DFX_NETWORK === "ic"
+      process.env.DFX_NETWORK === "nfid"
         ? `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
         : `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
   },
-
-  loginOptionsbifinity: {
-    // identityProvider: `https://bifinity.com/authenticate/?applicationName=my-ic-app#authorize`,
-  },
+  loginOptionsbifinity: {},
 };
 
-// Custom hook to manage authentication with Internet Identity and wallet connection
 export const useAuthClient = (options = defaultOptions) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accountIdString, setAccountIdString] = useState("");
   const [authClient, setAuthClient] = useState(null);
   const [identity, setIdentity] = useState(null);
   const [principal, setPrincipal] = useState(null);
-  const [backendActor, setBackendActor] = useState(null);
+  const [backendActor, setBackendActor] = useState(dfinance_backend);
   const [accountId, setAccountId] = useState(null);
+  const dispatch = useDispatch();
+  const { isWalletConnected, walletDetails } = useSelector(state => state.wallets);
 
   useEffect(() => {
-    // On component mount, create an authentication client
     AuthClient.create(options.createOptions).then((client) => {
       setAuthClient(client);
     });
@@ -68,19 +55,28 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   }, [authClient]);
 
-  // Helper function to convert binary data to a hex string
+  useEffect(() => {
+    if (authClient && isWalletConnected) {
+      login(walletDetails.provider.id);
+    }
+  }, [authClient, isWalletConnected]);
+
   const toHexString = (byteArray) => {
     return Array.from(byteArray, (byte) => ("0" + (byte & 0xff).toString(16)).slice(-2)).join("");
   };
 
-  const login = async (provider) => {
+  const login = async (providerId) => {
     return new Promise(async (resolve, reject) => {
       try {
         if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
           updateClient(authClient);
           resolve(authClient);
         } else {
-          const opt = getLoginOptions(provider);
+          const provider = walletDetails.wallets.find(wallet => wallet.id === providerId);
+          if (!provider) {
+            throw new Error(`Unsupported provider: ${providerId}`);
+          }
+          const opt = getLoginOptions(provider.id);
           authClient.login({
             ...opt,
             onError: (error) => reject(error),
@@ -97,8 +93,8 @@ export const useAuthClient = (options = defaultOptions) => {
     });
   };
 
-  const getLoginOptions = (provider) => {
-    switch (provider) {
+  const getLoginOptions = (providerId) => {
+    switch (providerId) {
       case "ii":
         return options.loginOptionsii;
       case "nfid":
@@ -106,11 +102,10 @@ export const useAuthClient = (options = defaultOptions) => {
       case "bifinity":
         return options.loginOptionsbifinity;
       default:
-        throw new Error(`Unsupported provider: ${provider}`);
+        throw new Error(`Unsupported provider: ${providerId}`);
     }
   };
 
-  // Function to handle logout
   const logout = async () => {
     try {
       await authClient.logout();
@@ -126,7 +121,6 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
-  // Update client state after authentication
   const updateClient = async (client) => {
     try {
       const isAuthenticated = await client.isAuthenticated();
@@ -137,7 +131,6 @@ export const useAuthClient = (options = defaultOptions) => {
 
       const principal = identity.getPrincipal();
       setPrincipal(principal.toString());
-      console.log('principal', principal.toString());
 
       const accountId = AccountIdentifier.fromPrincipal({ principal });
       setAccountId(toHexString(accountId.bytes));
@@ -153,7 +146,6 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
-  // Function to create an actor for interacting with the ledger
   const createLedgerActor = (canisterId) => {
     const agent = new HttpAgent({ identity });
 
@@ -166,11 +158,9 @@ export const useAuthClient = (options = defaultOptions) => {
     return Actor.createActor(ledgerIdlFactory, { agent, canisterId });
   };
 
-  // Function to refresh login without user interaction
   const reloadLogin = async () => {
     try {
       if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
-        console.log("Called");
         updateClient(authClient);
       }
     } catch (error) {
@@ -194,7 +184,6 @@ export const useAuthClient = (options = defaultOptions) => {
   };
 };
 
-// Authentication provider component
 export const AuthProvider = ({ children }) => {
   const auth = useAuthClient();
 
@@ -205,5 +194,4 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
-// Hook to access authentication context
 export const useAuth = () => useContext(AuthContext);

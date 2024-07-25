@@ -3,6 +3,7 @@ import utilityReducer from "./reducers/utilityReducer";
 import userReducer from "./reducers/userReducer";
 import themeReducer from "./reducers/themeReducer"
 import testnetReducer from "./reducers/testnetReducer";
+import walletsReducer from "./reducers/walletsReducer"
 
 
 export const store = configureStore({
@@ -10,6 +11,11 @@ export const store = configureStore({
         user: userReducer,
         utility:utilityReducer,
         theme: themeReducer,
-        testnetMode: testnetReducer
-    }
+        testnetMode: testnetReducer,
+        wallets: walletsReducer
+    },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            serializableCheck: false,
+        }),
 });

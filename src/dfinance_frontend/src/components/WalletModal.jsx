@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setWalletModalOpen, setWalletDetails, setIsWalletConnected } from '../redux/reducers/walletsReducer';
 import { idlFactory } from '../../../declarations/ckbtc_ledger';
 import { artemis } from '../integration/ArtemisAutoConnect';
-import Button from './Button'
+import Button from '../components/Common/Button'
 
 const connectObj = { whitelist: ['ryjl3-tyaaa-aaaaa-aaaba-cai'], host: 'https://icp0.io/' }
 

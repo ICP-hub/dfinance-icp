@@ -49,7 +49,7 @@ const TabCards = ({ data }) => {
                 {data.description.length > TAB_CARD_DESCRIPTION_LENGTH ? `${data.description.slice(0, TAB_CARD_DESCRIPTION_LENGTH)}...` : data.description}
               </p>
             </div>
-            <Link to={`/dashboard/main`} state={data} className='flex mt-2 items-center gap-2 text-sm'>
+            <Link to={`/market`} state={data} className='flex mt-2 items-center gap-2 text-sm'>
               Go to market <ArrowRight />
             </Link>
           </div>

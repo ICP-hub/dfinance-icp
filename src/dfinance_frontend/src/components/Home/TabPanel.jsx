@@ -29,7 +29,7 @@ const TabPanel = () => {
                 }}
                 spaceBetween={10}
                 autoplay={{
-                    delay: 2000,
+                    delay: 4000,
                     disableOnInteraction: true,
                     pauseOnMouseEnter: true,
                     resumeOnMouseLeave: true,

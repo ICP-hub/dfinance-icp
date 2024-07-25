@@ -8,18 +8,18 @@ import 'react-toastify/dist/ReactToastify.css'; // Import toast styles
 import { useAuth } from "../../utils/useAuthClient"
 import { Modal } from "@mui/material"
 import { useDispatch, useSelector } from 'react-redux'
-import Element from "../../../public/Elements.svg"
+import Element from "../../../public/element/Elements.svg"
 import {
   setIsWalletConnected,
   setWalletModalOpen
 } from '../../redux/reducers/utilityReducer'
-import Pagination from "./pagination";
+import Pagination from "../Common/pagination";
 import {
   WALLET_ASSETS_TABLE_ROW,
   WALLET_ASSETS_TABLE_COL,
 } from "../../utils/constants"
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 const TransactionHistory = () => {
   const [Showsearch, setShowSearch] = useState(false);
   const [filteredTransactionHistory, setFilteredTransactionHistory] = useState(transactionHistory);
@@ -91,6 +91,7 @@ const TransactionHistory = () => {
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success(`Copied ${text} to clipboard!`, {
+      className: 'custom-toast', // Add your custom class here
       position: "top-center",
       autoClose: 3000,
       hideProgressBar: false,
@@ -110,8 +111,10 @@ const TransactionHistory = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-
-
+  const handleRowClick = ( transaction) => {
+    navigate(`/dashboard/transaction/${transaction.id}`, { state: { transaction } });
+  };
+  
   return (
     <div className="relative w-full lg:w-12/12">
       {transactionHistory.length === 0 && <div className="absolute right-0 top-0 h-full md:w-1/2 pointer-events-none sxs3:w-[65%] z-[-1]">
@@ -203,8 +206,7 @@ const TransactionHistory = () => {
                   </thead>
                   <tbody>
                     {currentItems.map((tx, index) => (
-                      <tr key={tx.id} className="w-full text-[#4659CF]  hover:bg-[#ddf5ff8f] dark:hover:bg-[#5d59b0] rounded-lg h-[50px]">
-                        <td className="py-2 px-4">
+                      <tr key={tx.id} onClick={() => handleRowClick(tx)} className="w-full text-[#4659CF] hover:bg-[#ddf5ff8f] dark:hover:bg-[#5d59b0] rounded-lg h-[50px] cursor-pointer "><td className="py-2 px-4">
                           <div className="flex items-center dark:text-darkTextSecondary1">
                             <span>{`${tx.hash.slice(0, 14)}...`}</span>
                             <button

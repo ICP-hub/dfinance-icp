@@ -7,11 +7,11 @@ import {
   WALLET_DETAIL_TAB,
 } from "../../utils/constants";
 import { useSelector } from "react-redux";
-import RiskPopup from "./RiskDetails";
+import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
-import icplogo from '../../../public/icp.png'
+import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
 
 const DashboardNav = () => {
@@ -127,17 +127,17 @@ const DashboardNav = () => {
 
       <div className="flex h-[60px] gap-5 -ml-3">
         {!['/dashboard', '/market', '/governance'].includes(pathname) && (
-          <div className="-mt-1 cursor-pointer" onClick={() => navigate(-1)}>
+          <div className=" lg1:-mt-1 mt-[20px] cursor-pointer" onClick={() => navigate(-1)}>
             <ChevronLeft size={40} color={chevronColor} />
           </div>
         )}
-        <h1 className="text-[#2A1F9D] text-xl inline-flex items-center mb-8 dark:text-darkText ml-1">
+        <h1 className="text-[#2A1F9D] text-xl inline-flex items-center lg1:mt-0 mt-10 mb-8 dark:text-darkText ml-1">
           <img src={icplogo} alt="Icp Logo" className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]" />
           ICP Market
         </h1>
 
         {/* Menu Button */}
-        <div className="md:hidden flex ml-auto -mt-10">
+        <div className="md:hidden flex ml-auto -mt-1">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
             <EllipsisVertical color={checkColor} size={18} />
           </button>

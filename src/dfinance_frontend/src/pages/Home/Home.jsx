@@ -2,22 +2,23 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Tab, Tabs } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Button from "../../components/Button";
-import Ellipse from "../../components/Ellipse";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import Button from "../../components/Common/Button";
+import Buton from "../../components/Common/LearnMoreButton";
+import Ellipse from "../../components/Common/Ellipse";
+import Navbar from "../../components/Layout/Navbar";
+import Footer from "../../components/Layout/Footer";
 import HeroSection from "../../components/Home/HeroSection";
 import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
-import Loading from "../../components/Loading";
+import Loading from "../../components/Common/Loading";
 import {
   MAIN_NAV_LINK,
   FAQ_QUESTION,
   TAB_CARD_DATA,
   SECURITY_CONTRIBUTORS_DATA,
 } from "../../utils/constants"; // Assuming TAB_CARD_DATA is imported from the same place as other constants
-import { usePageLoading } from "../../components/useLoading";
+import { usePageLoading } from "../../components/Common/useLoading";
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -222,10 +223,11 @@ const Home = () => {
             <div className="w-full flex justify-center mt-3">
               {" "}
               {/* Center align the button on all screens */}
-              <Button
-                className="button_gradient text-white rounded-xl p-3 px-8 shadow-md shadow-[#00000040] font-semibold text-sm"
-                title="LEARN MORE"
-              />
+              <Buton
+  className=" text-white rounded-xl p-3 px-8 shadow-md shadow-[#00000040] font-semibold text-sm"
+  title="LEARN MORE"
+/>
+
             </div>
           </div>
         </section>
@@ -289,7 +291,7 @@ const Home = () => {
                             }`}
                           ></div>
                         </div>
-                        <div className="w-10/12">{item.question}</div>
+                        <div className="w-10/12 z-50">{item.question}</div>
                         <div
                           className={`w-1/12 ${
                             currentFAQ === index
@@ -302,7 +304,7 @@ const Home = () => {
                       </div>
                       {currentFAQ === index && (
                         <div
-                          className={`block animate-fade-down md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
+                          className={`block animate-fade-down mt-1  md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
                             currentFAQ === index ? "opacity-100" : "opacity-0"
                           }`}
                         >

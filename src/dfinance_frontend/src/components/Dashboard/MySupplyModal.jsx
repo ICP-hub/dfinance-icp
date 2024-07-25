@@ -1,6 +1,6 @@
 import { Modal } from '@mui/material';
 import React from 'react';
-import Button from '../Button';
+import Button from '../Common/Button';
 
 const MySupplyModal = ({ isModalOpen, handleModalOpen, children }) => {
   return (

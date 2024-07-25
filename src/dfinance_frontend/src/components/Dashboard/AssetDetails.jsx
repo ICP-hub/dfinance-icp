@@ -1,16 +1,16 @@
 import { useDispatch, useSelector } from "react-redux"
 import React from "react"
-import Button from "../Button"
+import Button from "../Common/Button"
 import { useAuth } from "../../utils/useAuthClient"
 import { SlidersHorizontal, SlidersVertical } from "lucide-react"
 import { ASSET_DETAILS } from "../../utils/constants"
 import { setAssetDetailFilter } from "../../redux/reducers/utilityReducer"
-import SupplyInfo from "../../components/Dashboard/SupplyInfo"
-import BorrowInfo from "./BorrowInfo"
-import EModeInfo from "./EModeInfo"
-import InterestRateModel from "./InterestRateModel"
-import LineGraph from "./LineGraph"
-import CircleProgess from "../CircleProgess"
+import SupplyInfo from "./DashboardPopup/SupplyInfo"
+import BorrowInfo from "./DashboardPopup/BorrowInfo"
+import EModeInfo from "./DashboardPopup/EModeInfo"
+import InterestRateModel from "./DashboardPopup/InterestRateModel"
+import LineGraph from "../Common/LineGraph"
+import CircleProgess from "../Common/CircleProgess"
 import { useParams } from "react-router-dom"
 import { Modal } from "@mui/material"
 import { useNavigate } from "react-router-dom"
@@ -22,10 +22,10 @@ import {
 import { WalletMinimal } from 'lucide-react';
 import { Info } from 'lucide-react';
 
-import icplogo from '../../../public/icp.png'
-import plug from "../../../public/plug.png"
-import bifinity from "../../../public/bifinity.png"
-import nfid from "../../../public/nfid.png"
+import icplogo from '../../../public/wallet/icp.png'
+import plug from "../../../public/wallet/plug.png"
+import bifinity from "../../../public/wallet/bifinity.png"
+import nfid from "../../../public/wallet/nfid.png"
 
 
 
@@ -113,9 +113,9 @@ const AssetDetails = () => {
         <h1 className="text-[#2A1F9D] font-bold my-2 dark:text-darkText">
           Reserve status & configuration
         </h1>
-        <div className="w-full mt-8 lg:flex">
+        <div className="w-full mt-8  lg:flex">
 
-          <div className="w-full mb-6 xl:hidden">
+          <div className="w-full mb-6 dxl1: block xl:hidden">
             <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%] dark:text-darkText">
               <span className="font-medium dark:text-darkText">{assetDetailFilter}</span>
               <span onClick={() => setIsFilter(!isFilter)}>

@@ -3,8 +3,8 @@ import { useRoutes } from "react-router-dom";
 import { useAuth } from "./utils/useAuthClient";
 import routesList from './routes/routes';
 import { useSelector } from 'react-redux';
-import Loading from "./components/Loading";
-import { usePageLoading } from "./components/useLoading";
+import Loading from "./components/Common/Loading";
+import { usePageLoading } from "./components/Common/useLoading";
 
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);

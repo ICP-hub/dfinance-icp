@@ -12,19 +12,19 @@ import {
   MY_BORROW_ASSET_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
-import CustomizedSwitches from "../MaterialUISwitch";
-import EModeButton from "./Emode";
-import Button from "../Button";
+import CustomizedSwitches from "../Common/MaterialUISwitch";
+import EModeButton from "./DashboardPopup/Emode";
+import Button from "../Common/Button";
 import { Switch } from "@mui/material";
 import { Check, Eye, EyeOff, Info } from "lucide-react";
 import MySupplyModal from "./MySupplyModal";
-import WithdrawPopup from "./WithdrawPopup";
-import SupplyPopup from "./SupplyPopup";
-import BorrowPopup from "./BorrowwPopup";
-import PaymentDone from "./PaymentDone";
+import WithdrawPopup from "./DashboardPopup/WithdrawPopup";
+import SupplyPopup from "./DashboardPopup/SupplyPopup";
+import BorrowPopup from "./DashboardPopup/BorrowwPopup";
+import PaymentDone from "./DashboardPopup/PaymentDone";
 import { useNavigate } from "react-router-dom";
-import Borrow from "./BorrowPopup";
-import Repay from "./Repay";
+import Borrow from "./DashboardPopup/BorrowPopup";
+import Repay from "./DashboardPopup/Repay";
 import { useAuth } from "../../utils/useAuthClient";
 
 const MySupply = () => {
@@ -368,7 +368,7 @@ const MySupply = () => {
                       </div>
 
                       {/* Scrollable Content Area */}
-                      <div className="w-full h-[calc(100%-40px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      <div className="w-full h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ">
                         <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                           <tbody>
                             {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map(
@@ -572,7 +572,7 @@ const MySupply = () => {
                 </thead>
               </table>
             </div>
-            <div className="w-full h-[calc(100%_-_40px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <div className="w-full h-[calc(100%_-_40px)] overflow-y-auto scrollbar-custom ">
               <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                 <tbody>
                   {MY_ASSET_TO_SUPPLY_TABLE_ROW.slice(0, 8).map((item, index) => (
@@ -739,7 +739,8 @@ const MySupply = () => {
                                 {item.apy_type}
                               </p>
                             </div>
-                            <div className="flex justify-center gap-2 mt-4">
+                            
+                            <div className="flex justify-center gap-2 mt-4 ">
                               <Button
                                 title={"Borrow"}
                                 onClickHandler={() =>
@@ -785,7 +786,7 @@ const MySupply = () => {
                   {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
                     noBorrowMessage
                   ) : (
-                    <div className="w-full md:mt-6 h-[250px]">
+                    <div className="w-full md:mt-6 h-[251px]">
                       {/* Container for the fixed header */}
                       <div className="sticky top-0 z-10 ">
                         <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
@@ -804,7 +805,7 @@ const MySupply = () => {
                         </table>
                       </div>
                       {/* Scrollable table body */}
-                      <div className="overflow-y-auto h-[calc(245px-40px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ">
+                      <div className="overflow-y-auto h-[calc(245px-40px)] scrollbar-custom  ">
                         <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                           <tbody>
                             {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map(
@@ -838,7 +839,7 @@ const MySupply = () => {
                                     </div>
                                   </td>
                                   <td className="p-3 align-top">
-                                    <div className="w-full flex gap-2 pt-3">
+                                    <div className="w-full flex gap-2 pt-4">
                                       <Button
                                         title={"Borrow"}
                                         onClickHandler={() =>
@@ -989,7 +990,7 @@ const MySupply = () => {
                   {MY_ASSET_TO_BORROW_TABLE_ROW.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
-                    <div className="w-full h-[220px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    <div className="w-full h-[220px] overflow-y-auto scrollbar-custom">
                       <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                         <thead>
                           <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">

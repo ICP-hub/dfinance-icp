@@ -1,6 +1,6 @@
 import { Info, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
-
+import Vector from "../../../../public/Helpers/Vector.png"
 const BorrowPopup = ({ asset, image }) => {
   const [amount, setAmount] = useState("0.00");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
@@ -92,7 +92,7 @@ const BorrowPopup = ({ asset, image }) => {
         <div className="w-full">
           <div className="flex items-center">
             <img
-              src="/Vector.png"
+              src={Vector}
               alt="Vector Image"
               className="w-4 h-4 mr-1"
             />

@@ -71,6 +71,7 @@ const MySupply = () => {
     setIsSupplyVisible(!isSupplyVisible);
   };
   const renderModalOpen = (type) => {
+    console.log(type)
     switch (type) {
       case "borrow":
         return (
@@ -445,7 +446,7 @@ const MySupply = () => {
           </div>
 
           <div
-            className={`w-full mt-8 overflow-scroll lgx:overflow-none hide-scrollbar ${
+            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${
               isVisible ? "min-h-[350px]" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
@@ -858,7 +859,7 @@ const MySupply = () => {
                                         onClickHandler={() =>
                                           handleModalOpen(
                                             "repay",
-                                            "repay",
+                                            
                                             item.asset,
                                             item.image
                                           )
@@ -881,7 +882,7 @@ const MySupply = () => {
           </div>
 
           <div
-            className={`w-full mt-8 overflow-scroll lgx:overflow-none hide-scrollbar ${
+            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${
              isBorrowVisible ? "min-h-[350px]" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >

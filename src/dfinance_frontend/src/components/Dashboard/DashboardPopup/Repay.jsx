@@ -1,6 +1,6 @@
 import { Info } from 'lucide-react';
 import React, { useState } from 'react';
-
+import Vector from "../../../../public/Helpers/Vector.png"
 const Repay = ({ asset, image }) => {
     const [amount, setAmount] = useState("0.00");
 
@@ -10,11 +10,13 @@ const Repay = ({ asset, image }) => {
 
     const handleRepayETH = () => {
         // Implement your supply ETH logic here
+       
         console.log("Repay", asset, "ETH:", amount);
     };
     return (
         <>
-            <h1 className='font-semibold text-xl'>Repay {asset}</h1>
+            <h1 className='font-semibold text-xl'>Repay {asset} </h1>
+          
             <div className='flex flex-col gap-2 mt-5 text-sm'>
                 <div className="w-full">
                     <div className="w-full flex justify-between my-2">
@@ -82,7 +84,7 @@ const Repay = ({ asset, image }) => {
             <div className="w-full mt-3">
                 <div className='w-full'>
                     <div className="flex items-center">
-                        <img src="/Vector.png" alt="Vector Image" className='w-4 h-4 mr-1 dark:text-[#8CC0D7]' />
+                        <img src={Vector} alt="Vector Image" className='w-4 h-4 mr-1 dark:text-[#8CC0D7]' />
                         <p className='dark:text-[#8CC0D7]'>$6.06</p>
                         <Info size={16} className="ml-2" />
                     </div>

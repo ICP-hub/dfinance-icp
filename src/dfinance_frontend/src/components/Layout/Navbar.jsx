@@ -800,7 +800,7 @@ export default function Navbar({ isHomeNav }) {
                             />
                             <Button
                               title="Disconnect"
-                              className="bg-[#FFC1C1] l text-red-600  dark:text-darkText dark:bg-[#BA5858] border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                              className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100%  dark:text-darkText dark:bg-[#BA5858] border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
                               onClickHandler={handleLogout}
                             />
                           </div>

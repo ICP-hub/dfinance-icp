@@ -442,7 +442,7 @@ const MobileTopNav = ({
                       />
                      <Button
   title="Disconnect"
-  className="bg-gradient-to-tr from-[#E46E6E] to-[#8F1843] border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+  className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-light"
   onClickHandler={handleLogout}
 />
 

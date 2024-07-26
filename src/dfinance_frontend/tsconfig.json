@@ -26,5 +26,5 @@
   },
   "include": [
     "src"
-  ]
+, "src/pages/Governance/DFinanceGov.jsx"  ]
 }

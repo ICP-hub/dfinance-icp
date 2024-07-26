@@ -206,43 +206,44 @@ const DashboardNav = () => {
           <div className="relative">
             {/* Menu Items */}
             <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}>
-                <div
-                    className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5 font-bold border shadow-sm border-gray-400 dark:border-none dark:bg-darkOverlayBackground mx-2 my-1 bg-white px-3 py-7 rounded-lg w-11/12 max-w-md dark:text-darkText"
-                    ref={menuRef}
-                >
-                    <div className="flex justify-between items-center mb-4">
-                        <div
-                            className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6"
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            <X className="text-black dark:text-darkText w-6 h-6" />
-                        </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-4">
-                        {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
-                            <div
-                                key={index}
-                                className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
-                                style={{ minWidth: "220px", flex: "1 0 220px" }} // Adjust minWidth and flex properties
-                            >
-                                <button className="relative w-full text-left flex justify-between items-center">
-                                    <span>{data.title}</span>
-                                    <span className="font-bold">{data.count}</span>
-                                    <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex justify-end mt-14 md:mt-0">
-                        <button
-                            className="w-full py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
-                            onClick={handleOpenPopup}
-                            style={{ minWidth: "220px" }} // Ensure button has consistent width
-                        >
-                            Risk Details
-                        </button>
-                    </div>
-                </div>
+            <div className="flex justify-center items-center min-h-screen">
+  <div
+    className="relative text-[#2A1F9D] mt-5 font-bold border shadow-sm border-gray-400 dark:border-none dark:bg-darkOverlayBackground mx-2 my-1 bg-white px-3 py-7 rounded-lg w-11/12 max-w-md dark:text-darkText"
+    ref={menuRef}
+  >
+    <div className="absolute top-2 right-2  text-gray-500 hover:text-gray-700 w-6 h-6" onClick={() => setIsMenuOpen(false)}>
+      <X className="text-black dark:text-darkText w-6 h-6" />
+    </div>
+
+    <div className="flex flex-wrap items-center gap-4 mt-2">
+      {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+        <div
+          key={index}
+          className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+          style={{ minWidth: "220px", flex: "1 0 220px" }}
+        >
+          <button className="relative w-full text-left flex justify-between items-center">
+            <span>{data.title}</span>
+            <span className="font-bold">{data.count}</span>
+            <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+          </button>
+        </div>
+      ))}
+    </div>
+
+    <div className="flex justify-end mt-10 md:mt-0">
+      <button
+        className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
+        onClick={handleOpenPopup}
+        style={{ minWidth: "220px" }}
+      >
+        Risk Details
+      </button>
+    </div>
+  </div>
+
+
+   </div>
             </div>
         </div>
 

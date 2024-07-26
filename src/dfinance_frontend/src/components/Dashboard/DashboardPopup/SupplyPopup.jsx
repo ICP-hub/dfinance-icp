@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Info, Check, Wallet, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
-
+import Vector from "../../../../public/Helpers/Vector.png"
+import Setting from "../../../../public/Helpers/settings.png"
 const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setIsModalOpen }) => {
   const transactionFee = 0.01;
   const hasEnoughBalance = balance >= transactionFee;
@@ -132,7 +133,7 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
 
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
-              <img src="/Vector.png" alt="Vector Image" className="w-4 h-4 mr-1" />
+              <img src={Vector} alt="Vector Image" className="w-4 h-4 mr-1" />
               <h1>$6.06</h1>
               <Info size={16} className="ml-2" />
             </div>
@@ -140,7 +141,7 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
             <div className="flex items-center ">
               <p className="text-xs text-nowrap ">Approved with signed message</p>
               <img
-                src="/settings.png"
+                src={Setting}
                 alt="settings_icon"
                 className="object-contain w-[20px] h-[20px]"
               />

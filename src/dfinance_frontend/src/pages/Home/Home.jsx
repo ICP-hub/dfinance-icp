@@ -291,7 +291,7 @@ const Home = () => {
                             }`}
                           ></div>
                         </div>
-                        <div className="w-10/12 z-50">{item.question}</div>
+                        <div className="w-10/12">{item.question}</div>
                         <div
                           className={`w-1/12 ${
                             currentFAQ === index
@@ -304,7 +304,7 @@ const Home = () => {
                       </div>
                       {currentFAQ === index && (
                         <div
-                          className={`block animate-fade-down mt-1  md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
+                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
                             currentFAQ === index ? "opacity-100" : "opacity-0"
                           }`}
                         >

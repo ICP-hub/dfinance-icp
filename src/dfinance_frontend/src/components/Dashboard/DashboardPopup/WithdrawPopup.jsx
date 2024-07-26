@@ -1,6 +1,7 @@
 import React from "react";
 import Button from "../../Common/Button";
 import { Info } from "lucide-react";
+import Vector from "../../../../public/Helpers/Vector.png"
 const WithdrawPopup = ({ asset, image }) => {
   return (
     <>
@@ -46,7 +47,7 @@ const WithdrawPopup = ({ asset, image }) => {
 
       <div className="w-full flex  mt-3">
         <div className="flex items-center">
-          <img src="/Vector.png" alt="Vector Image" className="w-4 h-4 mr-1" />
+          <img src={Vector} alt="Vector Image" className="w-4 h-4 mr-1" />
           <h1>$6.06</h1>
           <Info size={16} className="ml-2" />
         </div>

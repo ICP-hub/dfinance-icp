@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Info, X } from 'lucide-react';
 import FaucetPayment from "./FaucetPayment"; // Import FaucetPayment component
-
+import Vector from "../../../public/Helpers/Vector.png"
 const FaucetPopup = ({ asset, image, onClose }) => {
   const [amount, setAmount] = useState("");
   const [showFaucetPayment, setShowFaucetPayment] = useState(false); // State for showing/hiding FaucetPayment popup
@@ -23,7 +23,7 @@ const FaucetPopup = ({ asset, image, onClose }) => {
   return (
     <>
       {!showFaucetPayment && (
-        <div className="w-[400px] h-[290px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] h-[290px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="flex justify-between items-center mb-4">
             <h1 className="font-semibold text-xl">Faucet {asset}</h1>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none">
@@ -62,7 +62,7 @@ const FaucetPopup = ({ asset, image, onClose }) => {
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center">
               <img
-                src="/Vector.png"
+                src={Vector}
                 alt="Vector Image"
                 className="w-4 h-4 mr-1"
               />

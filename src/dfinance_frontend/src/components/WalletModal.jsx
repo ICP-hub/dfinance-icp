@@ -13,6 +13,7 @@ export const WalletModal = () => {
     const dispatch = useDispatch();
     const isWalletModalOpen = useSelector(state => state.wallets.isWalletModalOpen);
     const [inputValue, setInputValue] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleWalletConnect = () => {
         dispatch(setWalletModalOpen(false));
@@ -70,8 +71,8 @@ export const WalletModal = () => {
                             onClick={() => WalletConnect(item?.id, item?.name)}
                         >
                             {item.name}
-                            <div className='w-8 h-8'>
-                                <img src={item?.icon} alt="connect_wallet_icon" className='object-fill w-8 h-8 rounded-md' />
+                            <div className='w-9 h-9'>
+                                <img src={item?.icon} alt="connect_wallet_icon" className='object-fill min-w-9 h-9 bg-white  rounded-lg p-1' />
                             </div>
                         </div>))}
 
@@ -107,11 +108,11 @@ export const WalletModal = () => {
                 </div> */}
                 </div>
                 <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
-                <Button
+                {/* <Button
                     title="Disconnect"
                     className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
                     onClickHandler={handleDisconnect}
-                />
+                /> */}
                 <div className="w-full">
                     <input
                         type="text"

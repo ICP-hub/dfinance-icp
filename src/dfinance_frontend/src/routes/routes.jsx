@@ -100,13 +100,4 @@ export default [
       </MainDashboard>
     ),
   },
-
-  // {
-  //   path: "/WalletStatus",
-  //   element: (
-  //     <MainDashboard includeDashboardNav={false}>
-  //       <WalletStatus />
-  //     </MainDashboard>
-  //   ),
-  // },
 ];

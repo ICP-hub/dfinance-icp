@@ -3,7 +3,7 @@ import { Drawer, useMediaQuery } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../utils/useAuthClient";
+// import { useAuth } from "../../utils/useAuthClient";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
@@ -30,13 +30,13 @@ import { ArrowUpDown } from "lucide-react";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import { artemis } from "../../integration/ArtemisAutoConnect";
+// import WalletDetails from "../../pages/Market/Market";
 
 const MobileTopNav = ({
   isMobileNav,
   setIsMobileNav,
   isHomeNav,
-  handleCreateInternetIdentity,
-  handleLogout,
+
 }) => {
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
@@ -98,41 +98,41 @@ const MobileTopNav = ({
   const isLargeScreen = useMediaQuery("(min-width: 1134px)");
   const isMobile2 = window.innerWidth <= 640;
 
-  const {
-    isAuthenticated,
-    login,
-    logout,
-    principal,
-    reloadLogin,
-    accountIdString,
-  } = useAuth();
+  // const {
+  //   isAuthenticated,
+  //   login,
+  //   logout,
+  //   principal,
+  //   reloadLogin,
+  //   accountIdString,
+  // } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated === true) {
-      dispatch(
-        setUserData({
-          name: generateRandomUsername(),
-          isAuth: isAuthenticated,
-          principal,
-          imageUrl:
-            "https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg",
-        })
-      );
-    } else {
-      dispatch(setUserData(null));
-    }
-  }, [isAuthenticated]);
+  // useEffect(() => {
+  //   if (isAuthenticated === true) {
+  //     dispatch(
+  //       setUserData({
+  //         name: generateRandomUsername(),
+  //         isAuth: isAuthenticated,
+  //         principal,
+  //         imageUrl:
+  //           "https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg",
+  //       })
+  //     );
+  //   } else {
+  //     dispatch(setUserData(null));
+  //   }
+  // }, [isAuthenticated]);
 
   // Unconditionally call all hooks, but only render Drawer for small screens
   const handleClose = () => {
     setIsMobileNav(false);
   };
 
- 
+
   const copyToClipboard = () => {
-    if (principal) {
+    if (walletDetails.principalId) {
       navigator.clipboard
-        .writeText(principal)
+        .writeText(walletDetails.principalId)
         .then(() => {
           toast.success("Principal copied to clipboard", {
             position: "top-center",
@@ -149,10 +149,10 @@ const MobileTopNav = ({
         });
     }
   };
-  
+
 
   const truncateString = (str, maxLength) => {
-    return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
+    return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
   };
 
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
@@ -216,7 +216,7 @@ const MobileTopNav = ({
           </button>
         </div>
 
-        {isAuthenticated && isMobile2 && (
+        {isWalletConnected && isMobile2 && (
           <div className="flex items-center gap-1 my-2 mx-2 mb-4 p-1 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 ">
             <div
               className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
@@ -230,7 +230,7 @@ const MobileTopNav = ({
                 className="object-contain w-5 h-5 -mr-[3px]"
               />
               <span className=" font-bold ml-3">
-                {truncateString(principal, 18)}
+                {truncateString(walletDetails.principalId, 18)}
               </span>
             </div>
 
@@ -247,7 +247,7 @@ const MobileTopNav = ({
                   <div className="w-full flex items-center gap-2">
                     <img src={loader} alt="square" className="w-8 h-8" />
                     <h1 className="font-bold md:text-xl text-[17px] text-blue-800 dark:text-darkText">
-                      {truncateString(principal, 20)}
+                    {truncateString(walletDetails.principalId, 20)}
                     </h1>
                   </div>
                   <div className="flex flex-col-reverse   lg:block">
@@ -344,10 +344,22 @@ const MobileTopNav = ({
 
         {!isHomeNav
           ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-              if (link.alwaysPresent) {
-                return (
+            if (link.alwaysPresent) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-2 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            } else if (isTestnetMode && link.testnet) {
+              return (
+                <React.Fragment key={index}>
                   <NavLink
-                    key={index}
                     to={link.route}
                     className="text-[#2A1F9D] mt-5 p-2 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
                     style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
@@ -355,49 +367,37 @@ const MobileTopNav = ({
                   >
                     {link.title}
                   </NavLink>
-                );
-              } else if (isTestnetMode && link.testnet) {
-                return (
-                  <React.Fragment key={index}>
-                    <NavLink
-                      to={link.route}
-                      className="text-[#2A1F9D] mt-5 p-2 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-                      onClick={handleClose}
-                    >
-                      {link.title}
-                    </NavLink>
-                    {link.title === "Faucet" && (
-                      <>{/* Additional content for Faucet */}</>
-                    )}
-                  </React.Fragment>
-                );
-              } else if (!isTestnetMode && !link.testnet) {
-                return (
-                  <NavLink
-                    key={index}
-                    to={link.route}
-                    className="text-[#2A1F9D] mt-5 p-2 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-                    onClick={handleClose}
-                  >
-                    {link.title}
-                  </NavLink>
-                );
-              }
-              return null;
-            })
+                  {link.title === "Faucet" && (
+                    <>{/* Additional content for Faucet */}</>
+                  )}
+                </React.Fragment>
+              );
+            } else if (!isTestnetMode && !link.testnet) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-2 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            }
+            return null;
+          })
           : HOME_TOP_NAV_LINK.map((link, index) => (
-              <NavLink
-                key={index}
-                to={link.route}
-                className="text-[#2A1F9D] text-sm mt-5 p-2 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-                onClick={handleClose}
-              >
-                {link.title}
-              </NavLink>
-            ))}
+            <NavLink
+              key={index}
+              to={link.route}
+              className="text-[#2A1F9D] text-sm mt-5 p-2 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+              style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+              onClick={handleClose}
+            >
+              {link.title}
+            </NavLink>
+          ))}
 
         <h2 className="text-sm my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2 mt-8">
           Settings
@@ -422,7 +422,7 @@ const MobileTopNav = ({
               </div>
             </div>
 
-            {isAuthenticated && (
+            {isWalletConnected && (
               <div className="flex items-center">
                 <label
                   htmlFor="testnetMode"
@@ -445,17 +445,17 @@ const MobileTopNav = ({
         </div>
       </div>
       <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
-                      <Button
-                        title="Switch Wallet"
-                        className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
-                      />
-                     <Button
-  title="Disconnect"
-  className="bg-gradient-to-tr from-[#E46E6E] to-[#8F1843] border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-light"
-  onClickHandler={handleLogout}
-/>
+        <Button
+          title="Switch Wallet"
+          className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
+        />
+        <Button
+          title="Disconnect"
+          className="bg-gradient-to-tr from-[#E46E6E] to-[#8F1843] border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+          onClickHandler={handleDisconnect}
+        />
 
-                    </div>
+      </div>
     </Drawer>
   );
 };

@@ -5,7 +5,7 @@ import { transactionHistory } from "../../utils/constants"; // Adjust the path a
 import { MdContentCopy } from "react-icons/md"; // Import MdContentCopy icon
 import { toast } from 'react-toastify'; // Import toast from react-toastify
 import 'react-toastify/dist/ReactToastify.css'; // Import toast styles
-import { useAuth } from "../../utils/useAuthClient"
+// import { useAuth } from "../../utils/useAuthClient"
 import { Modal } from "@mui/material"
 import { useDispatch, useSelector } from 'react-redux'
 import Element from "../../../public/element/Elements.svg"
@@ -20,20 +20,22 @@ import {
 } from "../../utils/constants"
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 const ITEMS_PER_PAGE = 10;
+
 const TransactionHistory = () => {
   const [Showsearch, setShowSearch] = useState(false);
   const [filteredTransactionHistory, setFilteredTransactionHistory] = useState(transactionHistory);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const location = useLocation();
-  const {
-    isAuthenticated,
-    login,
-  } = useAuth();
+  // const {
+  //   isAuthenticated,
+  //   login,
+  // } = useAuth();
   const navigate = useNavigate();
   const shouldRenderTransactionHistory =
     location.pathname === "/dashboard/transaction-history";
   const dispatch = useDispatch()
-  const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
+  const { isWalletConnected, isWalletModalOpen } = useSelector(state => state.wallets);
   const handleWalletConnect = () => {
     console.log("connrcterd");
     dispatch(setWalletModalOpen(!isWalletModalOpen))
@@ -55,18 +57,18 @@ const TransactionHistory = () => {
   const handleWallet = () => {
     dispatch(setWalletModalOpen(!isWalletModalOpen))
     dispatch(setIsWalletConnected(true))
-    navigate('/dashboard')
+  
   }
+  // useEffect(() => {
+  //   if (isWalletCreated) {
+  //     // navigate('/dashboard')
+  //   }
+  // }, [isWalletCreated]);
   useEffect(() => {
-    if (isWalletCreated) {
-      navigate('/dashboard')
-    }
-  }, [isWalletCreated]);
-  useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isWalletConnected) {
       navigate('/dashboard'); // Navigate to dashboard when wallet is disconnected
     }
-  }, [isAuthenticated, history]);
+  }, [isWalletConnected]);
 
 
   const handleSearchInputChange = (event) => {
@@ -111,10 +113,10 @@ const TransactionHistory = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handleRowClick = ( transaction) => {
+  const handleRowClick = (transaction) => {
     navigate(`/dashboard/transaction/${transaction.id}`, { state: { transaction } });
   };
-  
+
   return (
     <div className="relative w-full lg:w-12/12">
       {transactionHistory.length === 0 && <div className="absolute right-0 top-0 h-full md:w-1/2 pointer-events-none sxs3:w-[65%] z-[-1]">
@@ -207,16 +209,16 @@ const TransactionHistory = () => {
                   <tbody>
                     {currentItems.map((tx, index) => (
                       <tr key={tx.id} onClick={() => handleRowClick(tx)} className="w-full text-[#4659CF] hover:bg-[#ddf5ff8f] dark:hover:bg-[#5d59b0] rounded-lg h-[50px] cursor-pointer "><td className="py-2 px-4">
-                          <div className="flex items-center dark:text-darkTextSecondary1">
-                            <span>{`${tx.hash.slice(0, 14)}...`}</span>
-                            <button
-                              className="ml-2 focus:outline-none"
-                              onClick={() => copyToClipboard(tx.hash)}
-                            >
-                              <MdContentCopy />
-                            </button>
-                          </div>
-                        </td>
+                        <div className="flex items-center dark:text-darkTextSecondary1">
+                          <span>{`${tx.hash.slice(0, 14)}...`}</span>
+                          <button
+                            className="ml-2 focus:outline-none"
+                            onClick={() => copyToClipboard(tx.hash)}
+                          >
+                            <MdContentCopy />
+                          </button>
+                        </div>
+                      </td>
                         {/* <td className="py-2 px-4 dark:text-darkTextSecondary mr-7">{tx.block}</td> */}
                         <td className="py-2 px-4">
                           <div className="bg-[#ADB0FF]  text-[#2A1F9D] rounded-full px-1 py-1 mr-10">
@@ -253,7 +255,7 @@ const TransactionHistory = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               <div className="md:hidden"> {/* Display mobile-friendly layout on small screens */}
                 {currentItems.map((tx, index) => (
                   <>
@@ -322,13 +324,13 @@ const TransactionHistory = () => {
         </div>
       )}
       <div className="flex justify-center mt-4 gap-2">
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
-              </div>
-              
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>
+
     </div>
   )
 }

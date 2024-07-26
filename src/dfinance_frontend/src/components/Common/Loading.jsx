@@ -15,7 +15,7 @@ const Loading = ({ isLoading }) => {
     if (!isLoading) return null;
 
     return (
-        <div className="bouncing-loader">
+        <div className="bouncing-loader select-none">
             <div className="loader-element"><img src={loader} alt="loader" /></div>
             <div className="loader-element"><img src={loader} alt="loader" /></div>
             <div className="loader-element"><img src={loader} alt="loader" /></div>

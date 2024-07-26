@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux"
 import React from "react"
 import Button from "../Common/Button"
-import { useAuth } from "../../utils/useAuthClient"
+// import { useAuth } from "../../utils/useAuthClient"
 import { SlidersHorizontal, SlidersVertical } from "lucide-react"
 import { ASSET_DETAILS } from "../../utils/constants"
 import { setAssetDetailFilter } from "../../redux/reducers/utilityReducer"
@@ -15,10 +15,15 @@ import { useParams } from "react-router-dom"
 import { Modal } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
+// import {
+//   setIsWalletConnected,
+//   setWalletModalOpen
+// } from '../../redux/reducers/utilityReducer'
 import {
   setIsWalletConnected,
-  setWalletModalOpen
-} from '../../redux/reducers/utilityReducer'
+  setWalletModalOpen,
+  setWalletDetails
+} from '../../redux/reducers/walletsReducer'
 import { WalletMinimal } from 'lucide-react';
 import { Info } from 'lucide-react';
 
@@ -26,6 +31,7 @@ import icplogo from '../../../public/wallet/icp.png'
 import plug from "../../../public/wallet/plug.png"
 import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
+import { WalletModal } from "../WalletModal"
 
 
 
@@ -37,20 +43,22 @@ const AssetDetails = () => {
   // redux
   const dispatch = useDispatch()
   const { assetDetailFilter } = useSelector((state) => state.utility)
+  const { isWalletModalOpen, walletDetails, isWalletConnected } = useSelector(state => state.wallets)
+  
 
   const handleFilter = (value) => {
     setIsFilter(false)
     dispatch(setAssetDetailFilter(value))
   }
 
-  const {
-    isAuthenticated,
-    login,
-    logout,
-    principal,
-    reloadLogin,
-    accountIdString,
-  } = useAuth();
+  // const {
+  //   isAuthenticated,
+  //   login,
+  //   logout,
+  //   principal,
+  //   reloadLogin,
+  //   accountIdString,
+  // } = useAuth();
 
   const renderFilterComponent = () => {
     switch (assetDetailFilter) {
@@ -70,28 +78,31 @@ const AssetDetails = () => {
 
   const navigate = useNavigate()
 
-  const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
+  // const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
 
 
+
+  // const handleWalletConnect = () => {
+  //   console.log("connrcterd");
+  //   dispatch(setWalletModalOpen(!isWalletModalOpen))
+  //   // dispatch(setIsWalletCreated(true))
+  // }
+
+  // const handleWallet = () => {
+  //   dispatch(setWalletModalOpen(!isWalletModalOpen))
+  //   dispatch(setIsWalletConnected(true))
+  //   navigate('/dashboard/my-supply')
+  // }
+
+  // useEffect(() => {
+  //   if (isWalletCreated) {
+  //     navigate('/dashboard/wallet-details')
+  //   }
+  // }, [isWalletCreated]);
 
   const handleWalletConnect = () => {
-    console.log("connrcterd");
     dispatch(setWalletModalOpen(!isWalletModalOpen))
-    // dispatch(setIsWalletCreated(true))
-  }
-
-  const handleWallet = () => {
-    dispatch(setWalletModalOpen(!isWalletModalOpen))
-    dispatch(setIsWalletConnected(true))
-    navigate('/dashboard/my-supply')
-  }
-
-  useEffect(() => {
-    if (isWalletCreated) {
-      navigate('/dashboard/wallet-details')
-    }
-  }, [isWalletCreated]);
-
+}
 
 
   const loginHandler = async (val) => {
@@ -171,7 +182,7 @@ const AssetDetails = () => {
           {renderFilterComponent()}
         </div>
       </div>
-      {!isAuthenticated && <div className="w-full lg:w-3/12">
+      {!isWalletConnected && <div className="w-full lg:w-3/12">
         <div className="w-full bg-[#233D63] p-4 rounded-[20px] text-white">
           <h1 className="font-semibold">Total Supplied</h1>
           <p className="text-gray-300 text-[12px] my-1">
@@ -184,7 +195,7 @@ const AssetDetails = () => {
       </div>}
 
 
-      {isAuthenticated && <div className="w-full lg1:w-3/12">
+      {isWalletConnected && <div className="w-full lg1:w-3/12">
         <div className="w-full bg-[#233D63] p-4 rounded-[20px] text-white">
           <h1 className="font-semibold mb-5">Your Info</h1>
           <div className="flex">
@@ -248,59 +259,9 @@ const AssetDetails = () => {
       </div>}
 
 
-      {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
-        <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
-          <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
-          <div className='flex flex-col gap-2 mt-3 text-sm'>
-            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
-              Internet Identity
-              <div className='w-8 h-8'>
-                <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-              </div>
-            </div>
-            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
-              Plug
-              <div className='w-8 h-8'>
-                <img src={plug} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-              </div>
-            </div>
-            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
-              Bifinity
-              <div className='w-8 h-8'>
-                <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-              </div>
-            </div>
-            <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
-              NFID
-              <div className='w-8 h-8'>
-                <img src={nfid} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-              </div>
-            </div>
-          </div>
-          <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
-
-          <div className="w-full">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-              placeholder="Enter ethereum address or username"
-            />
-          </div>
-
-          {inputValue && (
-            <div className="w-full flex mt-3">
-              <Button
-                title="Connect"
-                onClickHandler={handleWallet}
-                className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
-              />
-            </div>
-          )}
-
-        </div>
-      </Modal>}
+      {!isWalletConnected && (
+        <WalletModal />
+      )}
 
     </div>
   )

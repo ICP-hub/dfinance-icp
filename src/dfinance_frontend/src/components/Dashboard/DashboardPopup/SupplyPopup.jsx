@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Info, Check, Wallet, X } from "lucide-react";
-import { useAuth } from "../../../utils/useAuthClient";
+// import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
 
@@ -18,12 +18,12 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
     setAmount(e.target.value);
   };
 
-  const {
-    createLedgerActor,
-  } = useAuth();
+  // const {
+  //   createLedgerActor,
+  // } = useAuth();
 
-  const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
-  // const ledgerActor = walletDetails.ledgerActor;
+  // const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
+  const ledgerActor = walletDetails.ledgerActor;
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);

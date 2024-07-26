@@ -8,7 +8,7 @@ import {
     setWalletDetails
 } from '../../redux/reducers/walletsReducer'
 import { Modal } from '@mui/material'
-import { useAuth } from "../../utils/useAuthClient"
+// import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/element/Elements.svg"
 import MySupply from './MySupply'
 import icplogo from '../../../public/wallet/icp.png'
@@ -34,10 +34,10 @@ const CreateWallet = () => {
     const [shouldRefresh, setShouldRefresh] = useState(false);
     const walletProviders = useSelector(state => state.wallets.walletDetails.wallets);
 
-    const {
-        isAuthenticated,
-        login,
-    } = useAuth();
+    // const {
+    //     isAuthenticated,
+    //     login,
+    // } = useAuth();
 
     const handleWalletConnect = () => {
         dispatch(setWalletModalOpen(!isWalletModalOpen))
@@ -55,16 +55,16 @@ const CreateWallet = () => {
         }
     }, [isWalletConnected]);
 
-    const loginHandler = async (provider) => {
-        dispatch(setWalletDetails({ provider }));
-        login(provider.id)
-            .then(() => {
-                console.log('Login successful');
-            })
-            .catch((error) => {
-                console.error('Login failed', error);
-            });
-    };
+    // const loginHandler = async (provider) => {
+    //     dispatch(setWalletDetails({ provider }));
+    //     login(provider.id)
+    //         .then(() => {
+    //             console.log('Login successful');
+    //         })
+    //         .catch((error) => {
+    //             console.error('Login failed', error);
+    //         });
+    // };
 
     const [inputValue, setInputValue] = useState('');
 

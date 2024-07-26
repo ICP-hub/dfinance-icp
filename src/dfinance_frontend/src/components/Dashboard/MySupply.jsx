@@ -25,13 +25,14 @@ import PaymentDone from "./DashboardPopup/PaymentDone";
 import { useNavigate } from "react-router-dom";
 import Borrow from "./DashboardPopup/BorrowPopup";
 import Repay from "./DashboardPopup/Repay";
-import { useAuth } from "../../utils/useAuthClient";
+// import { useAuth } from "../../utils/useAuthClient";
 
 const MySupply = () => {
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
-  const { isAuthenticated } = useAuth();
+  // const { isAuthenticated } = useAuth();
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
+  const { isWalletModalOpen, walletDetails, isWalletConnected } = useSelector(state => state.wallets)
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
     type: "",
@@ -56,6 +57,7 @@ const MySupply = () => {
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
   const [isborrowVisible, setIsborrowVisible] = useState(true);
   const [isSupplyVisible, setIsSupplyVisible] = useState(true);
+
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
@@ -212,7 +214,7 @@ const MySupply = () => {
         </button>
 
         <div className="ml-auto lg:hidden sxs3:flex align-center justify-center">
-          {isAuthenticated && shouldRenderTransactionHistoryButton && (
+          {isWalletConnected && shouldRenderTransactionHistoryButton && (
             <a href="/dashboard/transaction-history" className="block">
               <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none">
                 Transactions

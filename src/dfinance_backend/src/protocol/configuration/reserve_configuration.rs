@@ -263,6 +263,87 @@ impl ReserveConfiguration {
     pub fn get_caps(&self) -> (u64, u64) {
         (self.borrow_cap, self.supply_cap)
     }
+
+
+
+
+    pub fn initialize(
+        ltv: u16,
+        liquidation_threshold: u16,
+        liquidation_bonus: u16,
+        decimals: u8,
+        active: bool,
+        frozen: bool,
+        borrowing_enabled: bool,
+        stable_borrowing_enabled: bool,
+        paused: bool,
+        borrowable_in_isolation: bool,
+        siloed_borrowing: bool,
+        flashloan_enabled: bool,
+        reserve_factor: u128,
+        borrow_cap: u64,
+        supply_cap: u64,
+        liquidation_protocol_fee: u16,
+        emode_category: u8,
+        unbacked_mint_cap: u64,
+        debt_ceiling: u64,
+    ) -> Self {
+        if ltv > Self::MAX_VALID_LTV {
+            panic!("Invalid LTV value");
+        }
+        if liquidation_threshold > Self::MAX_VALID_LIQUIDATION_THRESHOLD {
+            panic!("Invalid liquidation threshold value");
+        }
+        if liquidation_bonus > Self::MAX_VALID_LIQUIDATION_BONUS {
+            panic!("Invalid liquidation bonus value");
+        }
+        if decimals > Self::MAX_VALID_DECIMALS {
+            panic!("Invalid decimals value");
+        }
+        if reserve_factor > Self::MAX_VALID_RESERVE_FACTOR {
+            panic!("Invalid reserve factor value");
+        }
+        if borrow_cap > Self::MAX_VALID_BORROW_CAP {
+            panic!("Invalid borrow cap value");
+        }
+        if supply_cap > Self::MAX_VALID_SUPPLY_CAP {
+            panic!("Invalid supply cap value");
+        }
+        if liquidation_protocol_fee > Self::MAX_VALID_LIQUIDATION_PROTOCOL_FEE {
+            panic!("Invalid liquidation protocol fee value");
+        }
+        if emode_category > Self::MAX_VALID_EMODE_CATEGORY {
+            panic!("Invalid eMode category value");
+        }
+        if unbacked_mint_cap > Self::MAX_VALID_UNBACKED_MINT_CAP {
+            panic!("Invalid unbacked mint cap value");
+        }
+        if debt_ceiling > Self::MAX_VALID_DEBT_CEILING {
+            panic!("Invalid debt ceiling value");
+        }
+
+        Self {
+            ltv,
+            liquidation_threshold,
+            liquidation_bonus,
+            decimals,
+            active,
+            frozen,
+            borrowing_enabled,
+            stable_borrowing_enabled,
+            paused,
+            borrowable_in_isolation,
+            siloed_borrowing,
+            flashloan_enabled,
+            reserve_factor,
+            borrow_cap,
+            supply_cap,
+            liquidation_protocol_fee,
+            emode_category,
+            unbacked_mint_cap,
+            debt_ceiling,
+        }
+    }
 }
 
 

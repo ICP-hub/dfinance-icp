@@ -9,7 +9,7 @@ use crate::protocol::libraries::math::percentage_maths::percent_mul;
 use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
 use crate::declarations::assets::ReserveData;
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
-use crate::protocol::libraries::logic::interface::ivariable_debt_token::VariableDebtToken;
+// use crate::protocol::libraries::logic::interface::ivariable_debt_token::VariableDebtToken;
 
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds

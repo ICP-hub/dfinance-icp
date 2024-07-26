@@ -1,17 +1,46 @@
+
 type ReserveData = record {
   id : nat16;
-  variable_debt_token_canister : opt principal;
-  last_update_timestamp : opt nat64;
-  liquidity_index : opt nat;
-  variable_borrow_index : opt nat;
-  d_token_canister : opt principal;
-  stable_debt_token_canister : opt principal;
-  interest_rate_strategy_address : opt principal;
-  current_liquidity_rate : opt nat;
-  current_variable_borrow_rate : opt nat;
-  current_stable_borrow_rate : opt nat;
+  variable_debt_token_address : principal;
+  last_update_timestamp : nat64;
+  liquidity_index : nat;
+  variable_borrow_index : nat;
+  a_token_address : principal;
+  stable_debt_token_address : principal;
+  interest_rate_strategy_address : principal;
+  current_liquidity_rate : nat;
+  current_variable_borrow_rate : nat;
+  current_stable_borrow_rate : nat;
+  accrued_to_treasury : nat;
+  unbacked : nat;
+  isolation_mode_total_debt : nat;
+  configuration : ReserveConfiguration;
 };
+
+type ReserveConfiguration = record {
+  ltv: nat16;
+  liquidation_threshold: nat16;
+  liquidation_bonus: nat16;
+  decimals: nat8;
+  active: bool;
+  frozen: bool;
+  borrowing_enabled: bool;
+  stable_borrowing_enabled: bool;
+  paused: bool;
+  borrowable_in_isolation: bool;
+  siloed_borrowing: bool;
+  flashloan_enabled: bool;
+  reserve_factor: nat;
+  borrow_cap: nat64;
+  supply_cap: nat64;
+  liquidation_protocol_fee: nat16;
+  emode_category: nat8;
+  unbacked_mint_cap: nat64;
+  debt_ceiling: nat64;
+};
+
 service : () -> {
   get_asset_data : () -> (ReserveData) query;
   new_canister : () -> (principal);
+  initialize_reserve : () -> ();
 };

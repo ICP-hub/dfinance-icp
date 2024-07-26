@@ -1,7 +1,5 @@
 use candid::{CandidType, Deserialize, Nat, Principal};
 
-
-
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 
 #[derive(Debug, CandidType, Deserialize)]
@@ -17,7 +15,7 @@ pub struct ReserveData {
     pub a_token_address: Principal,
     pub stable_debt_token_address: Principal,
     pub variable_debt_token_address: Principal,
-    pub interest_rate_strategy_address: String,
+    pub interest_rate_strategy_address: Principal,
     pub accrued_to_treasury: u128,
     pub unbacked: u128,
     pub isolation_mode_total_debt: u128,

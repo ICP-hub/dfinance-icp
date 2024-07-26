@@ -402,7 +402,7 @@ const MobileTopNav = ({
               >
                 Dark Mode
               </label>
-              <span className="ml-[49px] text-[#2A1F9D] dark:text-darkTextSecondary">
+              <span className="ml-[40px] text-[#2A1F9D] dark:text-darkTextSecondary">
                 {isDarkMode ? "On" : "Off"}
               </span>
               <div className="flex align-center justify-center ml-3">
@@ -421,7 +421,7 @@ const MobileTopNav = ({
                 >
                   Testnet Mode
                 </label>
-                <span className="ml-6 text-[#2A1F9D] dark:text-darkTextSecondary">
+                <span className="ml-4 text-[#2A1F9D] dark:text-darkTextSecondary">
                   {isTestnetMode ? "On" : "Off"}
                 </span>
                 <div className="flex align-center justify-center ml-3">

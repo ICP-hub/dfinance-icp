@@ -3,7 +3,8 @@ import { Info, Check, Wallet, X } from "lucide-react";
 // import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import Vector from "../../../../public/Helpers/Vector.png"
-import Setting from "../../../../public/Helpers/settings.png"import { useSelector } from "react-redux";
+import Setting from "../../../../public/Helpers/settings.png";
+import { useSelector } from "react-redux";
 
 const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setIsModalOpen }) => {
   const transactionFee = 0.01;

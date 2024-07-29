@@ -195,7 +195,7 @@ const StakesConnected = () => {
 
 
                     {/* 3 */}
-                    <div className="w-full min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative text-[#2A1F9D] dark:text-darkText mt-7">
+                    <div className="w-full min-h-[350px] p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative text-[#2A1F9D] dark:text-darkText mt-1">
                         <h2 className="font-bold text-[16px]">Stake Dfinance</h2>
                         <p className="text-[12px] dark:text-darkTextSecondary">Total Staked: 2.12 M ($213.59 M)</p>
 

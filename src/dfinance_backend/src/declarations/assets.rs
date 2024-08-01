@@ -2,7 +2,7 @@ use candid::{CandidType, Deserialize, Nat, Principal};
 
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 
-#[derive(Debug, CandidType, Deserialize)]
+#[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
     pub configuration: ReserveConfiguration,
     pub liquidity_index: u128,
@@ -19,6 +19,30 @@ pub struct ReserveData {
     pub accrued_to_treasury: u128,
     pub unbacked: u128,
     pub isolation_mode_total_debt: u128,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ReserveCache {
+    pub reserve_configuration: ReserveConfiguration,
+    pub reserve_factor: u128,
+    pub curr_liquidity_index: u128,
+    pub next_liquidity_index: u128,
+    pub curr_variable_borrow_index: u128,
+    pub next_variable_borrow_index: u128,
+    pub curr_liquidity_rate: u128,
+    pub curr_variable_borrow_rate: u128,
+    pub a_token_address: Principal,
+    pub stable_debt_token_address: Principal,
+    pub variable_debt_token_address: Principal,
+    pub reserve_last_update_timestamp: u64,
+    pub curr_scaled_variable_debt: u128,
+    pub next_scaled_variable_debt: u128,
+    pub curr_principal_stable_debt: u128,
+    pub curr_total_stable_debt: u128,
+    pub curr_avg_stable_borrow_rate: u128,
+    pub stable_debt_last_update_timestamp: u64,
+    pub next_total_stable_debt: u128,
+    pub next_avg_stable_borrow_rate: u128,
 }
 
 // #[derive(CandidType, Deserialize, Clone, usize)]
@@ -49,8 +73,9 @@ pub struct ReserveData {
     
 // }
 
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteSupplyParams {
+    // pub asset: Principal,
     pub asset: String,
     pub amount: u128,
     pub on_behalf_of: String,

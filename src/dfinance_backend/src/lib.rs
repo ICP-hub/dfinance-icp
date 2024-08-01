@@ -1,4 +1,5 @@
 use ic_cdk_macros::export_candid;
+
 mod api;
 mod constants;
 mod declarations;
@@ -11,14 +12,47 @@ mod state;
 mod tests;
 mod utils;
 use crate::declarations::assets::ReserveData;
+use crate::declarations::assets::ExecuteSupplyParams;
 use crate::implementations::reserve::initialize_reserve;
-use candid::{Nat, Principal};
+use crate::protocol::libraries::logic::supply::SupplyLogic;
+use candid::Principal;
 use ic_cdk::init;
-//export_candid is used to export the canister interface.
+use ic_cdk_macros::update;
+
 
 #[init]
 fn init() {
     initialize_reserve();
     ic_cdk::println!("function called");
+}
+
+#[update]
+async fn deposit(
+    asset: String,
+    amount: u64,
+    on_behalf_of: String,
+    referral_code: u16,
+)-> Result<(), String> {
+    ic_cdk::println!("Starting deposit function");
+    let params = ExecuteSupplyParams {
+        asset,
+        amount: amount as u128,  // Convert to u128 as required by ExecuteSupplyParams
+        on_behalf_of,
+        referral_code,
+    };
+    ic_cdk::println!("Parameters for execute_supply: {:?}", params);
+    // SupplyLogic::execute_supply(params);
+    // ic_cdk::println!("function called");
+    match SupplyLogic::execute_supply(params).await {
+        Ok(_) => {
+            ic_cdk::println!("execute_supply function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_supply: {:?}", e);
+            Err(e)
+        }
+    }
+    
 }
 export_candid!();

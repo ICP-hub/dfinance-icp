@@ -3,7 +3,7 @@ use candid::{Nat, Principal};
 use ic_cdk::api::call::{call, CallResult};
 use ic_cdk::caller;
 use std::env;
-
+use dotenv::dotenv;
 use crate::api::deposit::asset_transfer_from;
 // use crate::api::state_handler::*;
 use crate::declarations::assets::ExecuteSupplyParams;
@@ -17,6 +17,10 @@ impl SupplyLogic {
     pub async fn execute_supply(params: ExecuteSupplyParams)-> Result<(), String> {
        
         println!("Starting execute_supply with params: {:?}", params);
+        dotenv().ok();
+        println!("CANISTER_ID_CKBTC_LEDGER: {:?}", env::var("CANISTER_ID_CKBTC_LEDGER"));
+println!("CANISTER_ID_DFINANCE_BACKEND: {:?}", env::var("CANISTER_ID_DFINANCE_BACKEND"));
+println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         // let canister_id_ckbtc_ledger = env::var("CANISTER_ID_CKBTC_LEDGER")
         //     .map_err(|_| "CANISTER_ID_CKBTC_LEDGER environment variable not set".to_string())?;
 
@@ -26,12 +30,15 @@ impl SupplyLogic {
         //     .expect("CANISTER_ID_CKBTC_LEDGER environment variable not set");
         // let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
         //     .expect("CANISTER_ID_ATOKEN environment variable not set");
-        let canister_id_ckbtc_ledger = env::var("CANISTER_ID_CKBTC_LEDGER")
-        .map_err(|_| "CANISTER_ID_CKBTC_LEDGER environment variable not set".to_string())?;
-    let canister_id_dfinance_backend = env::var("CANISTER_ID_DFINANCE_BACKEND")
-        .map_err(|_| "CANISTER_ID_CKBTC_LEDGER environment variable not set".to_string())?;
-    let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
-        .map_err(|_| "CANISTER_ID_ATOKEN environment variable not set".to_string())?;
+        // let canister_id_ckbtc_ledger = env::var("CANISTER_ID_CKBTC_LEDGER")
+        // .map_err(|_| "CANISTER_ID_CKBTC_LEDGER environment variable not set".to_string())?;
+        let canister_id_ckbtc_ledger = "br5f7-7uaaa-aaaaa-qaaca-cai".to_string();
+    // let canister_id_dfinance_backend = env::var("CANISTER_ID_DFINANCE_BACKEND")
+    //     .map_err(|_| "CANISTER_ID_Dfinance_backend environment variable not set".to_string())?;
+    let canister_id_dfinance_backend = "avqkn-guaaa-aaaaa-qaaea-cai".to_string();
+    let dtoken_canister_id="by6od-j4aaa-aaaaa-qaadq-cai".to_string();
+    // let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
+    //     .map_err(|_| "CANISTER_ID_ATOKEN environment variable not set".to_string())?;
      
         println!("Canister IDs fetched successfully");
 

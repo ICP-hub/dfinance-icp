@@ -32,8 +32,8 @@ impl SupplyLogic {
             let asset_index = &mut state.asset_index;
             asset_index
                 .get(&params.asset)
-                .unwrap()
-                .0
+                .expect("Reserve not found")
+                .clone()
         });
 
         // Fetches the reserve logic cache having the current values

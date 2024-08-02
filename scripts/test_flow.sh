@@ -3,7 +3,8 @@
 set -e
 
 # Use the specific identity
-dfx identity use user1
+# dfx identity new user1
+dfx identity use default
 
 # Get the principal of the user1 identity
 USER=$(dfx identity get-principal)
@@ -15,13 +16,13 @@ balance=$(dfx canister call ckbtc_ledger icrc1_balance_of "(record {owner=princi
 echo "Balance of the specific account \"${SPECIFIC_PRINCIPAL}\" : $balance"
 
 # Switch to the default identity
-dfx identity use default
-echo "Using default identity"
+dfx identity use user1
+echo "Using user1 identity"
 SPENDER=$(dfx identity get-principal)
 
 #back to user
-dfx identity use user1
-echo "Using user1 identity"
+dfx identity use default
+echo "Using default identity"
 
 # Approve a spender with the necessary arguments
 allow=$(dfx canister call ckbtc_ledger icrc2_approve "(record {

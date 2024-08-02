@@ -27,7 +27,7 @@ echo "Using default identity"
 # Approve a spender with the necessary arguments
 allow=$(dfx canister call ckbtc_ledger icrc2_approve "(record {
     from_subaccount=null;
-    spender=record { owner=principal\"${SPENDER}\"; subaccount=null };
+    spender=record { owner=principal\"a3shf-5eaaa-aaaaa-qaafa-cai\"; subaccount=null };
     amount=1000000000:nat;
     expected_allowance=null;
     expires_at=null;
@@ -38,30 +38,32 @@ allow=$(dfx canister call ckbtc_ledger icrc2_approve "(record {
 
 echo "Allowance Result: $allow"
 
+ON_BEHALF_OF=$(dfx identity get-principal)
+
 # call the execute supply function
-result=$(dfx canister call dfinance backend execute_supply "(record {
-    asset=\"$ASSET\";
-    amount=$AMOUNT:nat;
+result=$(dfx canister call dfinance_backend supply "(record {
+    asset=\"ckbtc\";
+    amount= 100000000:nat;
     on_behalf_of=\"$ON_BEHALF_OF\";
-    referral_code=$REFERRAL_CODE:nat16
+    referral_code=5678:nat16
 })")
 
 echo "Supply Execution Result: $result"
 
-dfx identity use user2
-echo "Using user2 identity"
-Borrower=$(dfx identity get-principal)
+# dfx identity use user2
+# echo "Using user2 identity"
+# Borrower=$(dfx identity get-principal)
 
 
-# call the execute borrow function
-result=$(dfx canister call dfinance backend execute_borrow "(record {
-    asset=\"$ASSET\";
-    amount=$AMOUNT:nat;
-    on_behalf_of=\"$ON_BEHALF_OF\";
-    referral_code=$REFERRAL_CODE:nat16
-})")
+# # call the execute borrow function
+# result=$(dfx canister call dfinance backend execute_borrow "(record {
+#     asset=\"$ASSET\";
+#     amount=$AMOUNT:nat;
+#     on_behalf_of=\"$ON_BEHALF_OF\";
+#     referral_code=$REFERRAL_CODE:nat16
+# })")
 
-echo "Borrow Execution Result: $result"
+# echo "Borrow Execution Result: $result"
 
 
 

@@ -11,6 +11,7 @@ use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
+use ic_cdk_macros;
 pub struct SupplyLogic;
 
 impl SupplyLogic {
@@ -32,11 +33,11 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         //     .expect("CANISTER_ID_ATOKEN environment variable not set");
         // let canister_id_ckbtc_ledger = env::var("CANISTER_ID_CKBTC_LEDGER")
         // .map_err(|_| "CANISTER_ID_CKBTC_LEDGER environment variable not set".to_string())?;
-        let canister_id_ckbtc_ledger = "br5f7-7uaaa-aaaaa-qaaca-cai".to_string();
+        let canister_id_ckbtc_ledger = "by6od-j4aaa-aaaaa-qaadq-cai".to_string();
     // let canister_id_dfinance_backend = env::var("CANISTER_ID_DFINANCE_BACKEND")
     //     .map_err(|_| "CANISTER_ID_Dfinance_backend environment variable not set".to_string())?;
-    let canister_id_dfinance_backend = "avqkn-guaaa-aaaaa-qaaea-cai".to_string();
-    let dtoken_canister_id="by6od-j4aaa-aaaaa-qaadq-cai".to_string();
+    let canister_id_dfinance_backend = "a3shf-5eaaa-aaaaa-qaafa-cai".to_string();
+    let dtoken_canister_id="asrmz-lmaaa-aaaaa-qaaeq-cai".to_string();
     // let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
     //     .map_err(|_| "CANISTER_ID_ATOKEN environment variable not set".to_string())?;
      
@@ -49,16 +50,19 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         //     Principal::from_text(canister_id_dfinance_backend).expect("Invalid platform principal");
         let ledger_canister_id =
             Principal::from_text(canister_id_ckbtc_ledger).map_err(|_| "Invalid ledger canister ID".to_string())?;
-        let user_principal = caller();
+            
+        let user_principal = Principal::from_text(params.on_behalf_of).map_err(|_| "Invalid user principal ID".to_string())?;
+        ic_cdk::println!("user principal {}", user_principal);
         let platform_principal =
             Principal::from_text(canister_id_dfinance_backend).map_err(|_| "Invalid platform principal".to_string())?;
+        ic_cdk::println!("platform principal {}", platform_principal);
         
 
        
 
         let amount_nat = Nat::from(params.amount);
 
-        println!("Principals and amount_nat prepared successfully");
+        ic_cdk::println!("Principals and amount_nat prepared successfully {}", amount_nat);
 
         // Reads the reserve_data from the ASSET_INDEX using the asset key
         
@@ -95,24 +99,24 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
             //     return;
             // }
             Ok(data) => {
-                println!("Reserve data found for asset: {:?}", data);
+                ic_cdk::println!("Reserve data found for asset: {:?}", data);
                 data
             }
             Err(e) => {
-                eprintln!("Error: {}", e);
+                ic_cdk::println!("Error: {}", e);
                 return Err(e);
             }
         };
 
         // Fetches the reserve logic cache having the current values
         let mut reserve_cache = reserve::cache(&reserve_data);
-        println!("Reserve cache fetched successfully: {:?}", reserve_cache);
+        ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
         // Updates the liquidity and borrow index
         reserve::update_state(&mut reserve_data, &mut reserve_cache);
-        println!("Reserve state updated successfully");
+        ic_cdk::println!("Reserve state updated successfully");
         // Validates supply using the reserve_data
         ValidationLogic::validate_supply(&reserve_cache, &reserve_data, params.amount);
-        println!("Supply validated successfully");
+        ic_cdk::println!("Supply validated successfully");
         // Updates inetrest rates with the assets and the amount
         reserve::update_interest_rates(
             &mut reserve_data,
@@ -121,8 +125,10 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
             params.amount,
             0,
         ).await;
-        println!("Interest rates updated successfully");
+        ic_cdk::println!("Interest rates updated successfully");
         // Transfers the asset from the user to our backend cansiter
+
+
         asset_transfer_from(
             ledger_canister_id,
             user_principal,
@@ -131,7 +137,7 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         )
         .await.map_err(|e| format!("Asset transfer failed: {:?}", e))?;
 
-        println!("Asset transfer from user to backend canister executed successfully");
+        ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
 
         // Inter canister call to execute dtoken transfer
         let mint: CallResult<()> = call::<
@@ -185,4 +191,15 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         // If first_supply == true : Validate automatic use as collateral
         // If first_supply == false : Set using as collateral
     }
+}
+
+
+#[ic_cdk_macros::update]
+async fn supply(params: ExecuteSupplyParams) ->Result<(), String>{
+
+    
+
+    SupplyLogic::execute_supply(params).await
+
+
 }

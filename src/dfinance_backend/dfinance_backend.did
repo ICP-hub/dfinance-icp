@@ -39,9 +39,17 @@ type ReserveConfiguration = record {
   debt_ceiling: nat64;
 };
 
+type ExecuteSupplyParams  = record {
+  asset: text;
+  amount: nat;
+  on_behalf_of : text;
+  referral_code: nat16;
+};
+
 service : () -> {
   get_asset_data : () -> (ReserveData) query;
   new_canister : () -> (principal);
   initialize_reserve : () -> ();
   deposit: (text, nat64, text, nat16) -> (variant { Ok: null; Err: text });
+  supply:(ExecuteSupplyParams) -> (variant { Ok: null; Err: text });
 };

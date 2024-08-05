@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Element from "../../public/element/Elements.svg";
 import { useDispatch, useSelector } from 'react-redux'
 import { Modal } from '@mui/material'
+import Astro from "../../public/Error/astro.png";
+import Globe from "../../public/Error/globe.png";
 import {
     setIsWalletConnected,
     setWalletModalOpen
@@ -75,13 +77,13 @@ const Error = () => {
                     <div className="text-[140px] sm:text-[100px] md:text-[250px] font-light text-white dark:text-darkText -rotate-12" style={{ fontFamily: 'Vampiro One' }}>4</div>
                     <div className="flex flex-col items-center relative">
                         <img
-                            src="/astro.png"
+                            src={Astro}
                             alt="Astronaut"
                             className="w-24 h-24 sm:w-24 sm:h-24 md:w-40 md:h-40 subtle-bounce relative z-40 lg:top-[-5px] left-[14px]" // Added lg:mt-[-100px]
                             style={{ marginTop: '-80px', marginLeft: '5px' }}
                         />
                         <img
-                            src="/globe.png"
+                            src={Globe}
                             alt="Globe"
                             className="w-24 h-24 sm:w-20 sm:h-20 md:w-40 md:h-40 absolute bottom-0 left-0 z-0"
                             style={{ marginBottom: '-50px' }} // Adjusted margin-bottom

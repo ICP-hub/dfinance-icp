@@ -1,8 +1,31 @@
 import { Check, X } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const FaucetPayment = ({ asset, onClose }) => {
     const [isVisible, setIsVisible] = useState(true);
+    const modalRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (modalRef.current && !modalRef.current.contains(event.target)) {
+                handleClose();
+            }
+        };
+
+        // Add event listener for clicks outside the component
+        document.addEventListener('mousedown', handleClickOutside);
+
+        // Prevent body scrolling
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            // Remove event listener on cleanup
+            document.removeEventListener('mousedown', handleClickOutside);
+
+            // Restore body scrolling
+            document.body.style.overflow = 'auto';
+        };
+    }, []);
 
     const handleClose = () => {
         setIsVisible(false);
@@ -14,7 +37,7 @@ const FaucetPayment = ({ asset, onClose }) => {
     }
 
     return (
-        <div className="w-[400px] h-[340px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div ref={modalRef} className="w-[325px] lg1:w-[420px] h-[350px] lg1:h-[340px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
             <div className="w-full flex flex-col items-center">
                 <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 focus:outline-none self-end">
                     <X size={24} />

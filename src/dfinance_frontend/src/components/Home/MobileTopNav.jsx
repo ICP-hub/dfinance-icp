@@ -402,7 +402,7 @@ const MobileTopNav = ({
               >
                 Dark Mode
               </label>
-              <span className="ml-[49px] text-[#2A1F9D] dark:text-darkTextSecondary">
+              <span className="ml-[40px] text-[#2A1F9D] dark:text-darkTextSecondary">
                 {isDarkMode ? "On" : "Off"}
               </span>
               <div className="flex align-center justify-center ml-3">
@@ -421,7 +421,7 @@ const MobileTopNav = ({
                 >
                   Testnet Mode
                 </label>
-                <span className="ml-6 text-[#2A1F9D] dark:text-darkTextSecondary">
+                <span className="ml-4 text-[#2A1F9D] dark:text-darkTextSecondary">
                   {isTestnetMode ? "On" : "Off"}
                 </span>
                 <div className="flex align-center justify-center ml-3">
@@ -442,7 +442,7 @@ const MobileTopNav = ({
                       />
                      <Button
   title="Disconnect"
-  className="bg-gradient-to-tr from-[#E46E6E] to-[#8F1843] border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+  className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-light"
   onClickHandler={handleLogout}
 />
 

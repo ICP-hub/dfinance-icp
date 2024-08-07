@@ -106,19 +106,19 @@ pub struct InitReserveParams {
     pub max_number_reserves: u64,
 }
 
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, PartialEq)]
 pub enum InterestRateMode {
     None,
     Stable,
     Variable,
 }
 
-#[derive(CandidType, Deserialize, Clone)]
-struct ExecuteBorrowParams {
+#[derive(CandidType, Deserialize, Clone, PartialEq)]
+pub struct ExecuteBorrowParams {
     pub asset: String,
     pub user: Principal,
     pub on_behalf_of: Principal,
-    pub amount: Nat,
+    pub amount: u128,
     pub interest_rate_mode: InterestRateMode,
     pub referral_code: u16,
     pub release_underlying: bool,
@@ -127,10 +127,11 @@ struct ExecuteBorrowParams {
     pub exchange_canister: Principal,
     pub user_emode_category: u8,
     pub price_oracle_sentinel: Principal,
+    pub interestRateMode : InterestRateMode,
 }
 
 #[derive(CandidType, Deserialize, Clone)]
-struct ExecuteRepayParams {
+pub struct ExecuteRepayParams {
     pub asset: String,
     pub amount: Nat,
     pub interest_rate_mode: InterestRateMode,

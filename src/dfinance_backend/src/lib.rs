@@ -16,9 +16,9 @@ use crate::declarations::assets::ExecuteSupplyParams;
 use crate::implementations::reserve::initialize_reserve;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use candid::Principal;
-use ic_cdk::init;
+use ic_cdk::{init, query};
 use ic_cdk_macros::update;
-
+use crate::api::state_handler::read_state;
 
 #[init]
 fn init() {
@@ -55,4 +55,16 @@ async fn deposit(
     }
     
 }
+
+#[query]
+fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
+    read_state(|state| {
+        // let state = state.borrow();
+        state.asset_index.get(&asset.to_string())
+        .map(|reserve| reserve.0.clone())
+        .ok_or_else(|| format!("Reserve not found for asset: {}", asset.to_string()))
+    })
+}
+
+
 export_candid!();

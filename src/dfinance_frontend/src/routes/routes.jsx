@@ -5,8 +5,8 @@ import Home from "../pages/Home/Home"
 
 import Error from "../pages/Error"
 import AssetDetails from "../components/Dashboard/AssetDetails"
-import DFinanceGov from "../pages/Governance/DFinanceGov"
-import ProposalDetails from "../components/Governance/ProposalDetails"
+// import DFinanceGov from "../pages/Governance/DFinanceGov"
+// import ProposalDetails from "../components/Governance/ProposalDetails"
 import MySupply from "../components/Dashboard/MySupply"
 import { elements } from "chart.js"
 import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
@@ -68,22 +68,22 @@ export default [
       </MainDashboard>
     ),
   },
-  {
-    path: "/governance",
-    element: (
-      <MainDashboard includeDashboardNav={false}>
-        <DFinanceGov  />
-      </MainDashboard>
-    ),
-  },
-  {
-    path: "/governance/proposal-details",
-    element: (
-      <MainDashboard>
-        <ProposalDetails />
-      </MainDashboard>
-    ),
-  },
+  // {
+  //   path: "/governance",
+  //   element: (
+  //     <MainDashboard includeDashboardNav={false}>
+  //       <DFinanceGov  />
+  //     </MainDashboard>
+  //   ),
+  // },
+  // {
+  //   path: "/governance/proposal-details",
+  //   element: (
+  //     <MainDashboard>
+  //       <ProposalDetails />
+  //     </MainDashboard>
+  //   ),
+  // },
   {
     path: "/stake",
     element: (

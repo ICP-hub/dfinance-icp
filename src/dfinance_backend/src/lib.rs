@@ -10,9 +10,11 @@ mod protocol;
 mod state;
 mod tests;
 mod utils;
-use crate::declarations::assets::ReserveData;
-// use crate::implementations::reserve::initialize_reserve;
-use candid::{Nat, Principal};
+// use crate::declarations::assets::ReserveData;
+use crate::declarations::assets::ExecuteSupplyParams;
+use crate::implementations::reserve::initialize_reserve;
+use crate::protocol::libraries::logic::supply::SupplyLogic;
+use candid::{Nat,Principal};
 use ic_cdk::init;
 //export_candid is used to export the canister interface.
 

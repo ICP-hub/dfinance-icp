@@ -19,6 +19,7 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
 
   const {
     createLedgerActor,
+    backendActor
   } = useAuth();
 
   const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
@@ -43,8 +44,12 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
     console.log("isApproved state after approval:", isApproved);
   };
 
-  const handleSupplyETH = () => {
+  const handleSupplyETH = async () => {
     console.log("Supply function called for", asset, "ETH:", amount);
+    // const supply = await 
+    console.log("Backend actor" ,backendActor)
+    const sup = await backendActor.deposit("ckbtc", 100 , "user", 0);
+    console.log("Supply", sup);
     setIsPaymentDone(true); // Show payment done popup after successful transaction
     setIsVisible(false); // Close SupplyPopup
    

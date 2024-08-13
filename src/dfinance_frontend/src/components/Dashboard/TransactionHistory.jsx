@@ -182,7 +182,7 @@ const TransactionHistory = () => {
           {filteredTransactionHistory.length === 0 ? (
             <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
               <div className="w-20 h-15">
-                <img src="/empty file.gif" alt="empty" className="w-30" />
+                <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
               </div>
               <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
                 Transaction History is not currently available for this market.
@@ -210,8 +210,11 @@ const TransactionHistory = () => {
                           <div className="flex items-center dark:text-darkTextSecondary1">
                             <span>{`${tx.hash.slice(0, 14)}...`}</span>
                             <button
-                              className="ml-2 focus:outline-none"
-                              onClick={() => copyToClipboard(tx.hash)}
+                              className="ml-2 focus:outline-none hover:text-blue-400 hover:dark:text-blue-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(tx.hash);
+                              }}
                             >
                               <MdContentCopy />
                             </button>
@@ -228,8 +231,11 @@ const TransactionHistory = () => {
                           <div className="flex items-center dark:text-darkTextSecondary1">
                             <span>{`${tx.from.slice(0, 14)}...`}</span>
                             <button
-                              className="ml-2 focus:outline-none"
-                              onClick={() => copyToClipboard(tx.from)}
+                              className="ml-2 focus:outline-none hover:text-blue-400 hover:dark:text-blue-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(tx.hash);
+                              }}
                             >
                               <MdContentCopy />
                             </button>
@@ -239,8 +245,11 @@ const TransactionHistory = () => {
                           <div className="flex items-center dark:text-darkTextSecondary1">
                             <span>{`${tx.to.slice(0, 14)}...`}</span>
                             <button
-                              className="ml-2 focus:outline-none"
-                              onClick={() => copyToClipboard(tx.to)}
+                              className="ml-2 focus:outline-none hover:text-blue-400 hover:dark:text-blue-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(tx.hash);
+                              }}
                             >
                               <MdContentCopy />
                             </button>
@@ -265,7 +274,10 @@ const TransactionHistory = () => {
                           <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{`${tx.hash.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
-                            onClick={() => copyToClipboard(tx.hash)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(tx.hash);
+                            }}
                           >
                             <MdContentCopy />
                           </button>
@@ -287,7 +299,10 @@ const TransactionHistory = () => {
                           <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1"> {`${tx.from.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
-                            onClick={() => copyToClipboard(tx.from)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(tx.hash);
+                            }}
                           >
                             <MdContentCopy />
                           </button>
@@ -299,7 +314,10 @@ const TransactionHistory = () => {
                           <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{`${tx.from.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
-                            onClick={() => copyToClipboard(tx.to)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(tx.hash);
+                            }}
                           >
                             <MdContentCopy />
                           </button>

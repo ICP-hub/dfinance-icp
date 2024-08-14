@@ -186,7 +186,7 @@ const WalletDetails = () => {
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>
           <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
-            No ssests found!
+            No assets found!
           </p>
         </div> : <div className="w-full">
           <div className="w-full overflow-auto content">

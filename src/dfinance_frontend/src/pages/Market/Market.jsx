@@ -140,7 +140,7 @@ const WalletDetails = () => {
               type="text"
               name="search"
               id="search"
-              placeholder="Search for proposals"
+              placeholder="Search assets"
               style={{ fontSize: '0.75rem' }}
               className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                 ? "animate-fade-left flex"
@@ -170,7 +170,7 @@ const WalletDetails = () => {
           type="text"
           name="search"
           id="search"
-          placeholder="Search for products"
+          placeholder="Search assets"
           className={`placeholder-gray-500 w-[300px] block md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
             ? "animate-fade-left flex"
             : "animate-fade-right hidden"
@@ -186,7 +186,7 @@ const WalletDetails = () => {
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>
           <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
-            No such assests!
+            No ssests found!
           </p>
         </div> : <div className="w-full">
           <div className="w-full overflow-auto content">

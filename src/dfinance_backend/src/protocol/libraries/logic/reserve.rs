@@ -389,14 +389,18 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
 }
 
 pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
-    if reserve_data.last_update_timestamp == current_timestamp() {
+    
+    let current_time = current_timestamp();
+    println!("Current timestamp: {}", current_time);
+
+    if reserve_data.last_update_timestamp == current_time {
         return;
     }
 
     update_indexes(reserve_data, reserve_cache);
     accrue_to_treasury(reserve_data, reserve_cache);
 
-    reserve_data.last_update_timestamp = current_timestamp();
+    reserve_data.last_update_timestamp = current_time;
 }
 
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
@@ -503,7 +507,7 @@ pub async fn update_interest_rates(
 async fn calculate_interest_rates(params: CalculateInterestRatesParams) -> (u128, u128, u128) {
     // Call the interest rate strategy canister to get the rates
     // For now, just return some dummy values
-    (0, 0, 0)
+    (1, 1, 1)
 }
 
 async fn emit_reserve_data_updated(

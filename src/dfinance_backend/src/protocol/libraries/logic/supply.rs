@@ -17,10 +17,10 @@ impl SupplyLogic {
     pub async fn execute_supply(params: ExecuteSupplyParams)-> Result<(), String> {
        
         println!("Starting execute_supply with params: {:?}", params);
-        dotenv().ok();
-        println!("CANISTER_ID_CKBTC_LEDGER: {:?}", env::var("CANISTER_ID_CKBTC_LEDGER"));
-println!("CANISTER_ID_DFINANCE_BACKEND: {:?}", env::var("CANISTER_ID_DFINANCE_BACKEND"));
-println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
+        // dotenv().ok();
+//         println!("CANISTER_ID_CKBTC_LEDGER: {:?}", env::var("CANISTER_ID_CKBTC_LEDGER"));
+// println!("CANISTER_ID_DFINANCE_BACKEND: {:?}", env::var("CANISTER_ID_DFINANCE_BACKEND"));
+// println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         // let canister_id_ckbtc_ledger = env::var("CANISTER_ID_CKBTC_LEDGER")
         //     .map_err(|_| "CANISTER_ID_CKBTC_LEDGER environment variable not set".to_string())?;
 
@@ -35,8 +35,8 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         let canister_id_ckbtc_ledger = "br5f7-7uaaa-aaaaa-qaaca-cai".to_string();
     // let canister_id_dfinance_backend = env::var("CANISTER_ID_DFINANCE_BACKEND")
     //     .map_err(|_| "CANISTER_ID_Dfinance_backend environment variable not set".to_string())?;
-    let canister_id_dfinance_backend = "avqkn-guaaa-aaaaa-qaaea-cai".to_string();
-    let dtoken_canister_id="by6od-j4aaa-aaaaa-qaadq-cai".to_string();
+    // let canister_id_dfinance_backend = "avqkn-guaaa-aaaaa-qaaea-cai".to_string();
+    // let dtoken_canister_id="by6od-j4aaa-aaaaa-qaadq-cai".to_string();
     // let dtoken_canister_id = env::var("CANISTER_ID_ATOKEN")
     //     .map_err(|_| "CANISTER_ID_ATOKEN environment variable not set".to_string())?;
      
@@ -49,9 +49,11 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         //     Principal::from_text(canister_id_dfinance_backend).expect("Invalid platform principal");
         let ledger_canister_id =
             Principal::from_text(canister_id_ckbtc_ledger).map_err(|_| "Invalid ledger canister ID".to_string())?;
-        let user_principal = caller();
-        let platform_principal =
-            Principal::from_text(canister_id_dfinance_backend).map_err(|_| "Invalid platform principal".to_string())?;
+        // let user_principal = caller();
+        let user_principal=Principal::from_text("i5hok-bgbg2-vmnlz-qa4ur-wm6z3-ha5xl-c3tut-i7oxy-6ayyw-2zvma-lqe".to_string()).map_err(|_| "Invalid user canister ID".to_string())?;
+        // let platform_principal =
+        //     Principal::from_text(canister_id_dfinance_backend).map_err(|_| "Invalid platform principal".to_string())?;
+        let platform_principal=Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai".to_string()).map_err(|_| "Invalid platform canister ID".to_string())?;
         
 
        
@@ -59,7 +61,13 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         let amount_nat = Nat::from(params.amount);
 
         println!("Principals and amount_nat prepared successfully");
-
+        // transfer_from_ckbtc(
+        //     ledger_canister_id,
+        //     user_principal,
+        //     platform_principal,
+        //     amount_nat,
+        // )
+        // .await;
         // Reads the reserve_data from the ASSET_INDEX using the asset key
         
         // let reserve_data = mutate_state(|state| {
@@ -123,6 +131,7 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
         ).await;
         println!("Interest rates updated successfully");
         // Transfers the asset from the user to our backend cansiter
+
         asset_transfer_from(
             ledger_canister_id,
             user_principal,
@@ -133,56 +142,6 @@ println!("CANISTER_ID_ATOKEN: {:?}", env::var("CANISTER_ID_ATOKEN"));
 
         println!("Asset transfer from user to backend canister executed successfully");
 
-        // Inter canister call to execute dtoken transfer
-        let mint: CallResult<()> = call::<
-            (
-                Principal,
-                Principal,
-                Option<Vec<u8>>,
-                Option<Vec<u8>>,
-                Nat,
-                Option<Vec<u8>>,
-            ),
-            (),
-        >(
-            Principal::from_text(dtoken_canister_id).expect("Invalid principal"),
-            "execute_transfer",
-            (
-                platform_principal,
-                user_principal,
-                None,
-                None,
-                amount_nat,
-                None,
-            ),
-        )
-        .await;
-
-        // print!("Mint function {:?}", mint);
-        match mint {
-            Ok(_) => {
-                println!("Mint function executed successfully");
-
-                // Optionally, you can wrap `reserve_data` back into `Candid` if needed
-                let updated_reserve_data = Candid(reserve_data);
-                // let asset_key = params.asset.clone();
-                // Save the updated reserve data back to the state if needed
-                mutate_state(|state| {
-                    let asset_index = &mut state.asset_index;
-                    asset_index.insert("ckbtc".to_string(), updated_reserve_data);
-                });
-
-                println!("Reserve data updated in state successfully");
-                Ok(())
-            }
-            Err(e) => {
-                eprintln!("Mint function failed: {:?}", e);
-                Err(format!("Mint function failed: {:?}", e))
-            }
-        }
-
-        // --------- Isolation mode logic (TODO) ---------
-        // If first_supply == true : Validate automatic use as collateral
-        // If first_supply == false : Set using as collateral
+        Ok(())
     }
 }

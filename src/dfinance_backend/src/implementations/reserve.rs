@@ -32,7 +32,7 @@ pub fn initialize_reserve() {
     );
     let data = ReserveData {
         last_update_timestamp: ic_cdk::api::time(),
-        current_liquidity_rate: 10000000,
+        current_liquidity_rate: 0,
         current_stable_borrow_rate: 8,
         current_variable_borrow_rate: 4,
         interest_rate_strategy_address: Principal::from_text("hbrpn-74aaa-aaaaa-qaaxq-cai").unwrap(),

@@ -22,7 +22,7 @@ use ic_cdk::{init, query};
 use ic_cdk_macros::update;
 use crate::api::state_handler::read_state;
 use candid::Nat;
-
+use crate::protocol::libraries::types::datatypes::UserData;
 #[init]
 fn init() {
     initialize_reserve();
@@ -97,5 +97,25 @@ async fn borrow(
             Err(e)
         }
     }
+}
+
+#[query]
+fn get_user_data(user: String) -> Result<UserData, String> {
+    let user_principal = Principal::from_text(user.to_string())
+        .map_err(|_| "Invalid user canister ID".to_string())?;
+
+    read_state(|state| {
+        // let state = state.borrow();
+        state
+            .user_profile
+            .get(&user_principal)
+            .map(|reserve| reserve.0.clone())
+            .ok_or_else(|| {
+                format!(
+                    "User not found for principal: {}",
+                    user_principal.to_string()
+                )
+            })
+    })
 }
 export_candid!();

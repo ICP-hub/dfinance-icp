@@ -27,13 +27,14 @@ use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 // }
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
-    pub asset_name: String,
+    pub asset_name: Option<String>,
     pub id: u16,
-    pub borrow_rate: f64, //8.25
-    pub supply_rate_apr: f64, //8.25
+    pub borrow_rate: Option<f64>, //8.25
+    pub supply_rate_apr: Option<f64>, //8.25
+    pub total_supply: Option<u128>,
     pub last_update_timestamp: u64,
-    pub d_token_canister: String, 
-    pub debt_token_canister: String,
+    pub d_token_canister: Option<String>, 
+    pub debt_token_canister: Option<String>,
     pub accrued_to_treasury: u128,
     pub liquidity_index: u128,
     pub current_liquidity_rate: u128,

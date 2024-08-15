@@ -366,16 +366,24 @@ fn current_timestamp() -> u64 {
 pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
     ReserveCache {
         reserve_configuration: reserve_data.configuration.clone(),
-        reserve_factor: reserve_data.configuration.get_reserve_factor(),
+        // reserve_factor: reserve_data.configuration.get_reserve_factor(),
+        reserve_factor: 0,
         curr_liquidity_index: reserve_data.liquidity_index,
         next_liquidity_index: reserve_data.liquidity_index,
-        curr_variable_borrow_index: reserve_data.variable_borrow_index,
-        next_variable_borrow_index: reserve_data.variable_borrow_index,
+        // curr_variable_borrow_index: reserve_data.variable_borrow_index,
+        curr_variable_borrow_index: 0,
+        // next_variable_borrow_index: reserve_data.variable_borrow_index,
+        next_variable_borrow_index: 0,
         curr_liquidity_rate: reserve_data.current_liquidity_rate,
-        curr_variable_borrow_rate: reserve_data.current_variable_borrow_rate,
-        a_token_address: reserve_data.a_token_address,
-        stable_debt_token_address: reserve_data.stable_debt_token_address,
-        variable_debt_token_address: reserve_data.variable_debt_token_address,
+        curr_variable_borrow_rate: 0,
+        // next_variable_borrow_index: reserve_data.current_variable_borrow_rate,
+        // next_variable_borrow_index: 0,
+        // a_token_address: reserve_data.a_token_address,
+        a_token_address: Principal::anonymous(),
+        // stable_debt_token_address: reserve_data.stable_debt_token_address,
+        stable_debt_token_address: Principal::anonymous(),
+        // variable_debt_token_address: reserve_data.variable_debt_token_address,
+        variable_debt_token_address: Principal::anonymous(),
         reserve_last_update_timestamp: reserve_data.last_update_timestamp,
         curr_scaled_variable_debt: 0,
         next_scaled_variable_debt: 0,
@@ -420,7 +428,7 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
             current_timestamp(),
         );
         reserve_cache.next_variable_borrow_index = ray_mul(cumulated_variable_borrow_interest, reserve_cache.curr_variable_borrow_index);
-        reserve_data.variable_borrow_index = reserve_cache.next_variable_borrow_index;
+        // reserve_data.variable_borrow_index = reserve_cache.next_variable_borrow_index;
     }
 }
 
@@ -477,7 +485,7 @@ pub async fn update_interest_rates(
     vars.total_variable_debt = reserve_cache.next_scaled_variable_debt * reserve_cache.next_variable_borrow_index / 1e27 as u128;
 
     let params = CalculateInterestRatesParams {
-        unbacked: reserve_data.unbacked,
+        // unbacked: reserve_data.unbacked,
         liquidity_added,
         liquidity_taken,
         total_stable_debt: reserve_cache.next_total_stable_debt,
@@ -491,8 +499,8 @@ pub async fn update_interest_rates(
     let (next_liquidity_rate, next_stable_rate, next_variable_rate) = calculate_interest_rates(params).await;
 
     reserve_data.current_liquidity_rate = next_liquidity_rate;
-    reserve_data.current_stable_borrow_rate = next_stable_rate;
-    reserve_data.current_variable_borrow_rate = next_variable_rate;
+    // reserve_data.current_stable_borrow_rate = next_stable_rate;
+    // reserve_data.current_variable_borrow_rate = next_variable_rate;
 
     emit_reserve_data_updated(
         reserve_address,

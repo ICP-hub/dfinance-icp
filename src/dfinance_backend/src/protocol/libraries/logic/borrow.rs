@@ -492,6 +492,8 @@ use crate::declarations::assets::ExecuteBorrowParams;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::logic::reserve;
 use crate::declarations::assets::InterestRateMode;
+use crate::protocol::libraries::types::datatypes::UserData;
+use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     dotenv().ok();
@@ -615,12 +617,57 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     let (result,): (TransferFromResult,) = call(ledger_canister_id, "icrc2_transfer_from", (args,))
         .await
         .map_err(|e| e.1)?;
+    let initial_user_data = UserData {
+        net_worth: None,
+        net_apy: None,
+        health_factor: None,
+        supply: None,
+        borrow: None,
+    };
+
+    mutate_state(|state| {
+        let ini_user = &mut state.user_profile;
+        ini_user.insert(user_principal, Candid(initial_user_data));
+        ic_cdk::println!("User added successfully");
+    });
+
+    let user_data = mutate_state(|state| {
+        let data = &mut state.user_profile;
+        data.get(&user_principal)
+            .map(|reserve| reserve.0.clone())
+            .ok_or_else(|| format!("User not found"))
+    });
+
+    let mut user_prof = match user_data {
+        Ok(data) => {
+            ic_cdk::println!("User data found");
+            data
+        }
+        Err(e) => {
+            ic_cdk::println!("Error: {}", e);
+            return Err(e);
+        }
+    };
+
+    user_prof.net_worth = Some(params.amount);
+    user_prof.net_apy = Some(8.25);
+    user_prof.supply = None;
+    user_prof.borrow = Some(vec![("ckbtc".to_string(), params.amount)]);
+
+    mutate_state(|state| {
+        let user_dt = &mut state.user_profile;
+        user_dt.insert(user_principal, Candid(user_prof.clone()));
+    });
+
+    ic_cdk::println!("User data: {:?}", user_prof);
+
 
     match result {
         TransferFromResult::Ok(balance) => Ok(()),
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
     }
 
+   
     // If the function completes successfully, return Ok(())
     // Ok(())
 }

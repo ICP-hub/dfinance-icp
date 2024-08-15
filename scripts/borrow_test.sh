@@ -35,6 +35,10 @@ reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$ass
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
+echo "Fetching user data..."
+user_data=$(./user.sh)
+echo "user data: $user_data"
+
 # Approve the transfer
 # approve_amount=1000000000  # Set the amount you want to approve
 # echo "Approving transfer of $approve_amount from user1 to backend_canister..."
@@ -72,6 +76,10 @@ echo "Fetching reserve data after borrow..."
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
+
+echo "Fetching user data..."
+user_data=$(./user.sh)
+echo "user data: $user_data"
 
 # Switch back to the default identity at the end
 dfx identity use default

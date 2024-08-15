@@ -13,13 +13,22 @@ pub struct Transaction {
     pub transaction_fee: f64,
 }
 
+// #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
+// pub struct UserData {
+//     pub net_worth: f64,
+//     pub net_apy: f64,
+//     pub health_factor: f64,
+//     pub transaction_history: Vec<Transaction>,
+//     pub faucet: Option<Vec<(String, u64)>>,
+// }
+
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
-    pub net_worth: f64,
-    pub net_apy: f64,
-    pub health_factor: f64,
-    pub transaction_history: Vec<Transaction>,
-    pub faucet: Option<Vec<(String, u64)>>,
+    pub net_worth: Option<u128>,
+    pub net_apy: Option<f64>,
+    pub health_factor: Option<f64>,
+    pub supply: Option<Vec<(String, u128)>>,
+    pub borrow: Option<Vec<(String, u128)>>
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -43,7 +52,7 @@ pub struct InitReserveInput {
 
 #[derive(Debug, CandidType, Deserialize, Serialize)]
 pub struct CalculateInterestRatesParams {
-    pub unbacked: u128,
+    // pub unbacked: u128,
     pub liquidity_added: u128,
     pub liquidity_taken: u128,
     pub total_stable_debt: u128,

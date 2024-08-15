@@ -13,40 +13,46 @@ pub fn initialize_reserve() {
         5000,    // ltv
         7500,    // liquidation_threshold
         500,     // liquidation_bonus
-        18,      // decimals
+        // 18,      // decimals
         true,    // active
         false,   // frozen
         true,    // borrowing_enabled
-        true,    // stable_borrowing_enabled
+        // true,    // stable_borrowing_enabled
         false,   // paused
-        true,    // borrowable_in_isolation
-        false,   // siloed_borrowing
-        true,    // flashloan_enabled
-        2000,    // reserve_factor
+        // true,    // borrowable_in_isolation
+        // false,   // siloed_borrowing
+        // true,    // flashloan_enabled
+        // 2000,    // reserve_factor
         100000,  // borrow_cap
         100000,  // supply_cap
         100,     // liquidation_protocol_fee
-        1,       // emode_category
-        50000,   // unbacked_mint_cap
-        1000000  // debt_ceiling
+        // 1,       // emode_category
+        // 50000,   // unbacked_mint_cap
+        // 1000000  // debt_ceiling
     );
     let data = ReserveData {
+        asset_name: Some("ckbtc".to_string()),
         last_update_timestamp: ic_cdk::api::time(),
         current_liquidity_rate: 0,
-        current_stable_borrow_rate: 8,
-        current_variable_borrow_rate: 4,
-        interest_rate_strategy_address: Principal::from_text("hbrpn-74aaa-aaaaa-qaaxq-cai").unwrap(),
-        a_token_address: Principal::from_text("hbrpn-74aaa-aaaaa-qaaxq-cai").unwrap(),
-        stable_debt_token_address: 
-            Principal::from_text("fsomn-xeaaa-aaaaa-qaaza-cai").unwrap(),
-        variable_debt_token_address: 
-            Principal::from_text("fsomn-xeaaa-aaaaa-qaaza-cai").unwrap(),
+        borrow_rate: Some(0.0),
+        supply_rate_apr: Some(0.0),
+        d_token_canister: Some("bub".to_string()),
+        debt_token_canister: Some("hbh".to_string()),
+        total_supply: Some(0),
+        // current_stable_borrow_rate: 8,
+        // current_variable_borrow_rate: 4,
+        // interest_rate_strategy_address: Principal::from_text("hbrpn-74aaa-aaaaa-qaaxq-cai").unwrap(),
+        // a_token_address: Principal::from_text("hbrpn-74aaa-aaaaa-qaaxq-cai").unwrap(),
+        // stable_debt_token_address: 
+            // Principal::from_text("fsomn-xeaaa-aaaaa-qaaza-cai").unwrap(),
+        // variable_debt_token_address: 
+            // Principal::from_text("fsomn-xeaaa-aaaaa-qaaza-cai").unwrap(),
         accrued_to_treasury: 0,
-        unbacked: 0,
-        isolation_mode_total_debt: 0,
+        // unbacked: 0,
+        // isolation_mode_total_debt: 0,
         liquidity_index: 10000000000,
         id: 1,
-        variable_borrow_index: 5000000000,
+        // variable_borrow_index: 5000000000,
         configuration: config,
     };
 

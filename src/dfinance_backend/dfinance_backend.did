@@ -1,19 +1,15 @@
 
 type ReserveData = record {
+  asset_name : opt text;
   id : nat16;
-  variable_debt_token_address : principal;
+  debt_token_canister : opt text;
   last_update_timestamp : nat64;
   liquidity_index : nat;
-  variable_borrow_index : nat;
-  a_token_address : principal;
-  stable_debt_token_address : principal;
-  interest_rate_strategy_address : principal;
+  d_token_canister : opt text;
   current_liquidity_rate : nat;
-  current_variable_borrow_rate : nat;
-  current_stable_borrow_rate : nat;
+  borrow_rate : opt float64;
+  supply_rate_apr : opt float64;
   accrued_to_treasury : nat;
-  unbacked : nat;
-  isolation_mode_total_debt : nat;
   configuration : ReserveConfiguration;
 };
 
@@ -21,22 +17,21 @@ type ReserveConfiguration = record {
   ltv: nat16;
   liquidation_threshold: nat16;
   liquidation_bonus: nat16;
-  decimals: nat8;
   active: bool;
   frozen: bool;
   borrowing_enabled: bool;
-  stable_borrowing_enabled: bool;
   paused: bool;
-  borrowable_in_isolation: bool;
-  siloed_borrowing: bool;
-  flashloan_enabled: bool;
-  reserve_factor: nat;
   borrow_cap: nat64;
   supply_cap: nat64;
   liquidation_protocol_fee: nat16;
-  emode_category: nat8;
-  unbacked_mint_cap: nat64;
-  debt_ceiling: nat64;
+};
+
+type UserData = record {
+   net_worth: opt nat;
+    net_apy: opt float64;
+    health_factor: opt float64;
+     supply: opt vec record { text; nat };
+    borrow: opt vec record { text; nat };
 };
 type Result = variant { Ok; Err : text };
 type Result_1 = variant { Ok : nat; Err : text };
@@ -55,4 +50,5 @@ service : () -> {
   borrow: (text, nat64, text, text, nat) -> (Result);
   supply : (ExecuteSupplyParams) -> (Result_1);
   get_reserve_data: (text) -> (variant { Ok: ReserveData; Err: text}) query;
+  get_user_data: (text) -> (variant {Ok: UserData; Err: text}) query;
 };

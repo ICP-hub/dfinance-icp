@@ -38,7 +38,8 @@ type ReserveConfiguration = record {
   unbacked_mint_cap: nat64;
   debt_ceiling: nat64;
 };
-
+type Result = variant { Ok; Err : text };
+type Result_1 = variant { Ok : nat; Err : text };
 type ExecuteSupplyParams  = record {
   asset: text;
   amount: nat;
@@ -51,5 +52,6 @@ service : () -> {
   new_canister : () -> (principal);
   initialize_reserve : () -> ();
   deposit: (text, nat64, text, nat16) -> (variant { Ok: null; Err: text });
-  supply:(ExecuteSupplyParams) -> (variant { Ok: null; Err: text });
+  supply : (ExecuteSupplyParams) -> (Result_1);
+  get_reserve_data: (text) -> (variant { Ok: ReserveData; Err: text}) query;
 };

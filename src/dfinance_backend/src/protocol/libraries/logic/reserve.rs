@@ -391,7 +391,7 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
 pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
     
     let current_time = current_timestamp();
-    println!("Current timestamp: {}", current_time);
+    ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
         return;

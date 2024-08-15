@@ -19,7 +19,7 @@ use candid::Principal;
 use ic_cdk::{init, query};
 use ic_cdk_macros::update;
 use crate::api::state_handler::read_state;
-
+use candid::Nat;
 #[init]
 fn init() {
     initialize_reserve();

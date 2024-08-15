@@ -38,20 +38,20 @@ echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
 # Approve the transfer
-approve_amount=1000000000  # Set the amount you want to approve
-echo "Approving transfer of $approve_amount from user1 to backend_canister..."
-allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
-    from_subaccount=null;
-    spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
-    amount=$approve_amount:nat;
-    expected_allowance=null;
-    expires_at=null;
-    fee=null;
-    memo=null;
-    created_at_time=null
-})")
-echo "Allowance Set: $allow"
-echo "--------------------------------------"
+# approve_amount=1000000000  # Set the amount you want to approve
+# echo "Approving transfer of $approve_amount from user1 to backend_canister..."
+# allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
+#     from_subaccount=null;
+#     spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
+#     amount=$approve_amount:nat;
+#     expected_allowance=null;
+#     expires_at=null;
+#     fee=null;
+#     memo=null;
+#     created_at_time=null
+# })")
+# echo "Allowance Set: $allow"
+# echo "--------------------------------------"
 
 # Call the deposit function on the backend canister
 deposit_amount=50  # Set the amount to deposit

@@ -52,6 +52,7 @@ service : () -> {
   new_canister : () -> (principal);
   initialize_reserve : () -> ();
   deposit: (text, nat64, text, nat16) -> (variant { Ok: null; Err: text });
+  borrow: (text, nat64, text, text, nat) -> (Result);
   supply : (ExecuteSupplyParams) -> (Result_1);
   get_reserve_data: (text) -> (variant { Ok: ReserveData; Err: text}) query;
 };

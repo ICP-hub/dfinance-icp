@@ -12,7 +12,7 @@ default_principal=$(dfx identity get-principal)
 echo "Default Principal (Spender): $default_principal"
 
 
-dtoken_canister=$(dfx canister id dtoken)
+dtoken_canister=$(dfx canister id dfinance_backend)
 # Get the principal for the user1 identity (recipient)
 # dfx identity use user1
 # user1_principal=$(dfx identity get-principal)
@@ -22,7 +22,7 @@ dtoken_canister=$(dfx canister id dtoken)
 dfx identity use default
 
 # Directly perform the transfer to user1 (skip the approval since self-approval is not allowed)
-transfer_amount=5000  # Set the amount to transfer to user1
+transfer_amount=50000  # Set the amount to transfer to user1
 transfer_result=$(dfx canister call $canister_id $transfer_method "(record {
     from_subaccount=null;
     to=record { owner=principal\"${dtoken_canister}\"; subaccount=null };

@@ -1,3 +1,4 @@
+use declarations::assets::ExecuteBorrowParams;
 use ic_cdk_macros::export_candid;
 
 mod api;
@@ -15,11 +16,13 @@ use crate::declarations::assets::ReserveData;
 use crate::declarations::assets::ExecuteSupplyParams;
 use crate::implementations::reserve::initialize_reserve;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
+use crate::protocol::libraries::logic::borrow;
 use candid::Principal;
 use ic_cdk::{init, query};
 use ic_cdk_macros::update;
 use crate::api::state_handler::read_state;
 use candid::Nat;
+
 #[init]
 fn init() {
     initialize_reserve();
@@ -66,5 +69,33 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
     })
 }
 
+#[update]
+async fn borrow(
+    asset: String,
+    amount: u64,
+    user: String,
+    on_behalf_of: String,
+    interest_rate: Nat,
+) -> Result<(), String> {
+    ic_cdk::println!("Starting borrow function");
+    let params = ExecuteBorrowParams {
+        asset,
+        user,
+        on_behalf_of,
+        amount: amount as u128,
+        interest_rate,
+    };
+    ic_cdk::println!("Parameters for execute_borrow: {:?}", params);
 
+    match borrow::execute_borrow(params).await {
+        Ok(_) => {
+            ic_cdk::println!("execute_borrow function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_borrow: {:?}", e);
+            Err(e)
+        }
+    }
+}
 export_candid!();

@@ -2,23 +2,42 @@ use candid::{CandidType, Deserialize, Nat, Principal};
 
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 
+
+// #[derive(Debug, CandidType, Deserialize, Clone)]
+// pub struct ReserveData {
+    
+//     pub configuration: ReserveConfiguration,
+//     pub liquidity_index: u128,
+//     pub current_liquidity_rate: u128,
+//     pub variable_borrow_index: u128,
+//     pub current_variable_borrow_rate: u128, //borrow_rate
+//     pub current_stable_borrow_rate: u128, //remove
+//     pub last_update_timestamp: u64,
+//     pub id: u16,
+//     pub a_token_address: Principal,
+    
+//     pub stable_debt_token_address: Principal,
+//     pub variable_debt_token_address: Principal,
+    
+//     pub interest_rate_strategy_address: Principal,
+//     pub accrued_to_treasury: u128,
+//     pub unbacked: u128,
+//     pub isolation_mode_total_debt: u128,
+
+// }
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
-    pub configuration: ReserveConfiguration,
+    pub asset_name: String,
+    pub id: u16,
+    pub borrow_rate: f64, //8.25
+    pub supply_rate_apr: f64, //8.25
+    pub last_update_timestamp: u64,
+    pub d_token_canister: String, 
+    pub debt_token_canister: String,
+    pub accrued_to_treasury: u128,
     pub liquidity_index: u128,
     pub current_liquidity_rate: u128,
-    pub variable_borrow_index: u128,
-    pub current_variable_borrow_rate: u128,
-    pub current_stable_borrow_rate: u128,
-    pub last_update_timestamp: u64,
-    pub id: u16,
-    pub a_token_address: Principal,
-    pub stable_debt_token_address: Principal,
-    pub variable_debt_token_address: Principal,
-    pub interest_rate_strategy_address: Principal,
-    pub accrued_to_treasury: u128,
-    pub unbacked: u128,
-    pub isolation_mode_total_debt: u128,
+    pub configuration: ReserveConfiguration,
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
@@ -145,21 +164,30 @@ pub enum InterestRateMode {
     Variable,
 }
 
-#[derive(CandidType, Deserialize, Clone, PartialEq)]
+// #[derive(CandidType, Deserialize, Clone, PartialEq)]
+// pub struct ExecuteBorrowParams {
+//     pub asset: String,
+//     pub user: Principal,
+//     pub on_behalf_of: Principal,
+//     pub amount: u128,
+//     pub interest_rate_mode: InterestRateMode,
+//     pub referral_code: u16,
+//     pub release_underlying: bool,
+//     pub max_stable_rate_borrow_size_percent: Nat,
+//     pub reserves_count: Nat,
+//     pub exchange_canister: Principal,
+//     pub user_emode_category: u8,
+//     pub price_oracle_sentinel: Principal,
+//     pub interestRateMode : InterestRateMode,
+// }
+
+#[derive(Debug, CandidType, Deserialize, Clone, PartialEq)]
 pub struct ExecuteBorrowParams {
     pub asset: String,
-    pub user: Principal,
-    pub on_behalf_of: Principal,
+    pub user: String,
+    pub on_behalf_of: String,
     pub amount: u128,
-    pub interest_rate_mode: InterestRateMode,
-    pub referral_code: u16,
-    pub release_underlying: bool,
-    pub max_stable_rate_borrow_size_percent: Nat,
-    pub reserves_count: Nat,
-    pub exchange_canister: Principal,
-    pub user_emode_category: u8,
-    pub price_oracle_sentinel: Principal,
-    pub interestRateMode : InterestRateMode,
+    pub interest_rate: Nat,
 }
 
 #[derive(CandidType, Deserialize, Clone)]

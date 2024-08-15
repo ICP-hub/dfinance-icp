@@ -110,31 +110,31 @@ impl SupplyLogic {
         //     return Err("Insufficient funds for Dtoken transfer".to_string());
         // }
         
-        // let dtoken_args = TransferArgs {
-        //     to: TransferAccount {
-        //         owner: user_principal,
-        //         subaccount: None,
-        //     },
-        //     fee: None,
-        //     spender_subaccount: None,
-        //     memo: None,
-        //     created_at_time: None,
-        //     amount: amount_nat,
-        // };
+        let dtoken_args = TransferArgs {
+            to: TransferAccount {
+                owner: user_principal,
+                subaccount: None,
+            },
+            fee: None,
+            spender_subaccount: None,
+            memo: None,
+            created_at_time: None,
+            amount: amount_nat,
+        };
 
-        // let (new_result,): (TransferFromResult,) =
-        //     call(dtoken_canister_principal, "icrc1_transfer", (dtoken_args, false))
-        //         .await
-        //         .map_err(|e| e.1)?;
+        let (new_result,): (TransferFromResult,) =
+            call(dtoken_canister_principal, "icrc1_transfer", (dtoken_args, false))
+                .await
+                .map_err(|e| e.1)?;
 
-        // match new_result {
-        //     TransferFromResult::Ok(new_balance) => {
-        //         ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
-        //         Ok(new_balance)
-        //     }
-        //     TransferFromResult::Err(err) => Err(format!("{:?}", err)),
-        // }
-        Ok(amount_nat)
+        match new_result {
+            TransferFromResult::Ok(new_balance) => {
+                ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+                Ok(new_balance)
+            }
+            TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+        }
+        // Ok(amount_nat)
     }
 }
 

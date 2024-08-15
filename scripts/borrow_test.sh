@@ -3,21 +3,22 @@
 set -e
 
 # Set variables
-ckbtc_canister="br5f7-7uaaa-aaaaa-qaaca-cai"  # Replace with your actual canister ID if different
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"  # Replace with your actual backend canister ID
+ckbtc_canister="br5f7-7uaaa-aaaaa-qaaca-cai"  
+backend_canister="avqkn-guaaa-aaaaa-qaaea-cai" 
 approve_method="icrc2_approve"
-deposit_method="deposit"
-reserve_data_method="get_asset_data"
-initialize_reserve_method="initialize_reserve"
 
-# Get the principal for the user1 identity (spender)
+borrow_method="borrow"
+reserve_data_method="get_reserve_data"
+
+
+# Get the principal for the user1 identity (borrower)
 dfx identity use user1
 user1_principal=$(dfx identity get-principal)
-echo "User1 Principal (Spender): $user1_principal"
+echo "User1 Principal (Borrower): $user1_principal"
 
-# Get the principal for the backend_canister (receiver)
+# Get the principal for the backend_canister (lender)
 backend_canister_principal=$(dfx canister id $backend_canister)
-echo "Backend Canister Principal (Receiver): $backend_canister_principal"
+echo "Backend Canister Principal (Lender): $backend_canister_principal"
 
 # Check balances before operations
 echo "Checking balances before operations..."
@@ -27,13 +28,10 @@ echo "User1 Balance: $user1_balance"
 echo "Backend Canister Balance: $backend_balance"
 echo "--------------------------------------"
 
-# Initialize reserve in the backend canister
-# echo "Initializing reserve for ckbtc in backend canister..."
-# dfx canister call $backend_canister $initialize_reserve_method
 
-# Echo the reserve data
 echo "Fetching reserve data..."
-reserve_data=$(dfx canister call $backend_canister $reserve_data_method)
+asset="ckbtc"
+reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
@@ -53,25 +51,25 @@ echo "--------------------------------------"
 # echo "Allowance Set: $allow"
 # echo "--------------------------------------"
 
-# Call the deposit function on the backend canister
-deposit_amount=50  # Set the amount to deposit
-currency="ckbtc"  # Replace with the actual currency text if different
-referral_code=0  # Replace with the actual referral code if needed
-echo "Depositing $deposit_amount to backend_canister..."
-deposit_result=$(dfx canister call $backend_canister $deposit_method "(\"$currency\", $deposit_amount:nat64, \"${user1_principal}\", $referral_code:nat16)")
-echo "Deposit Result: $deposit_result"
+# Call the borrow function on the backend canister
+borrow_amount=50  
+currency="ckbtc" 
+referral_code=0  
+echo "Borrowing $borrow_amount from backend_canister..."
+borrow_result=$(dfx canister call $backend_canister $borrow_method "(\"$currency\", $borrow_amount:nat64, \"${user1_principal}\",\"${user1_principal}\", $referral_code:nat)")
+echo "Borrow Result: $borrow_result"
 echo "--------------------------------------"
 
-# Check balances after deposit
-echo "Checking balances after deposit..."
+# Check balances after borrow
+echo "Checking balances after Borrow..."
 user1_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
 backend_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
-echo "User1 Balance After Deposit: $user1_balance_after"
-echo "Backend Canister Balance After Deposit: $backend_balance_after"
+echo "User1 Balance After Borrow: $user1_balance_after"
+echo "Backend Canister Balance After Borrow: $backend_balance_after"
 echo "--------------------------------------"
 
-echo "Fetching reserve data after supply..."
-reserve_data=$(dfx canister call $backend_canister $reserve_data_method)
+echo "Fetching reserve data after borrow..."
+reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 

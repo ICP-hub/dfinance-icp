@@ -20,17 +20,22 @@ impl SupplyLogic {
        
         ic_cdk::println!("Starting execute_supply with params: {:?}", params);
         
-        let canister_id_ckbtc_ledger = "br5f7-7uaaa-aaaaa-qaaca-cai".to_string();
-        let dtoken_canister_id="by6od-j4aaa-aaaaa-qaadq-cai".to_string();
+        let canister_id_ckbtc_ledger = "aovwi-4maaa-aaaaa-qaagq-cai".to_string();
+        let dtoken_canister_id="ahw5u-keaaa-aaaaa-qaaha-cai".to_string();
     ic_cdk::println!("Canister IDs fetched successfully");
     
       
         let ledger_canister_id =
             Principal::from_text(canister_id_ckbtc_ledger).map_err(|_| "Invalid ledger canister ID".to_string())?;
+
+        
         // let user_principal = caller();
-        let user_principal=Principal::from_text("i5hok-bgbg2-vmnlz-qa4ur-wm6z3-ha5xl-c3tut-i7oxy-6ayyw-2zvma-lqe".to_string()).map_err(|_| "Invalid user canister ID".to_string())?;
+
+
+        let dtoken_canister_principal = Principal::from_text(dtoken_canister_id).map_err(|_| "Invalid dtoken canister ID".to_string())?;
+        
        
-        let platform_principal=Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai".to_string()).map_err(|_| "Invalid platform canister ID".to_string())?;
+        let platform_principal=Principal::from_text("a3shf-5eaaa-aaaaa-qaafa-cai".to_string()).map_err(|_| "Invalid platform canister ID".to_string())?;
         
 
        
@@ -111,7 +116,7 @@ impl SupplyLogic {
         // Transfers the asset from the user to our backend cansiter
         asset_transfer_from(
             ledger_canister_id,
-            user_principal,
+            params.on_behalf_of,
             platform_principal,
             amount_nat.clone(),
         )
@@ -129,13 +134,13 @@ impl SupplyLogic {
 
         mutate_state(|state| {
             let ini_user = &mut state.user_profile;
-            ini_user.insert(user_principal, Candid(initial_user_data));
+            ini_user.insert(params.on_behalf_of, Candid(initial_user_data));
             ic_cdk::println!("User added successfully");
         });
 
         let user_data = mutate_state(|state| {
             let data = &mut state.user_profile;
-            data.get(&user_principal)
+            data.get(&params.on_behalf_of)
                 .map(|reserve| reserve.0.clone())
                 .ok_or_else(|| format!("User not found"))
         });
@@ -158,7 +163,7 @@ impl SupplyLogic {
 
         mutate_state(|state| {
             let user_dt = &mut state.user_profile;
-            user_dt.insert(user_principal, Candid(user_prof.clone()));
+            user_dt.insert(params.on_behalf_of, Candid(user_prof.clone()));
         });
 
         ic_cdk::println!("User data: {:?}", user_prof);
@@ -172,31 +177,31 @@ impl SupplyLogic {
         //     return Err("Insufficient funds for Dtoken transfer".to_string());
         // }
         
-        // let dtoken_args = TransferArgs {
-        //     to: TransferAccount {
-        //         owner: user_principal,
-        //         subaccount: None,
-        //     },
-        //     fee: None,
-        //     spender_subaccount: None,
-        //     memo: None,
-        //     created_at_time: None,
-        //     amount: amount_nat,
-        // };
+        let dtoken_args = TransferArgs {
+            to: TransferAccount {
+                owner: params.on_behalf_of,
+                subaccount: None,
+            },
+            fee: None,
+            spender_subaccount: None,
+            memo: None,
+            created_at_time: None,
+            amount: amount_nat.clone(),
+        };
 
-        // let (new_result,): (TransferFromResult,) =
-        //     call(dtoken_canister_principal, "icrc1_transfer", (dtoken_args, false))
-        //         .await
-        //         .map_err(|e| e.1)?;
+        let (new_result,): (TransferFromResult,) =
+            call(dtoken_canister_principal, "icrc1_transfer", (dtoken_args, false))
+                .await
+                .map_err(|e| e.1)?;
 
-        // match new_result {
-        //     TransferFromResult::Ok(new_balance) => {
-        //         ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
-        //         Ok(new_balance)
-        //     }
-        //     TransferFromResult::Err(err) => Err(format!("{:?}", err)),
-        // }
-        Ok(amount_nat)
+        match new_result {
+            TransferFromResult::Ok(new_balance) => {
+                ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+                Ok(new_balance)
+            }
+            TransferFromResult::Err(err) => Err(format!("{:?}", err))
+        }
+        
     }
 }
 

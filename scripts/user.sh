@@ -1,8 +1,8 @@
 
 set -e
 
-user_principal="i5hok-bgbg2-vmnlz-qa4ur-wm6z3-ha5xl-c3tut-i7oxy-6ayyw-2zvma-lqe"
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"
+user_principal="rhddl-hq5dq-vuqjs-vzn32-5onmo-kqm7h-2irwx-fmbth-i6762-g3o2p-vae"
+backend_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
 get_user_method="get_user_data"
 
 user_data=$(dfx canister call $backend_canister $get_user_method "(\"$user_principal\")")

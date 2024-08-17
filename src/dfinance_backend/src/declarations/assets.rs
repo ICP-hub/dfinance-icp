@@ -98,7 +98,7 @@ pub struct ExecuteSupplyParams {
     // pub asset: Principal,
     pub asset: String,
     pub amount: u128,
-    pub on_behalf_of: String,
+    pub on_behalf_of: Principal,
     pub referral_code: u16,
 }
 

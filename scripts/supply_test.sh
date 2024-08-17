@@ -3,16 +3,16 @@
 set -e
 
 # Set variables
-ckbtc_canister="br5f7-7uaaa-aaaaa-qaaca-cai"  
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"  
+ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai"  
+backend_canister="a3shf-5eaaa-aaaaa-qaafa-cai"  
 approve_method="icrc2_approve"
-deposit_method="deposit"
+deposit_method="supply"
 
 reserve_data_method="get_reserve_data"
 # initialize_reserve_method="initialize_reserve"
 
 # Get the principal for the user1 identity (spender)
-dfx identity use user1
+dfx identity use default
 user1_principal=$(dfx identity get-principal)
 echo "User1 Principal (Spender): $user1_principal"
 
@@ -39,34 +39,41 @@ reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$ass
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
-echo "Fetching user data..."
-user_data=$(./user.sh)
-echo "user data: $user_data"
+# echo "Fetching user data..."
+# user_data=$(./user.sh)
+# echo "user data: $user_data"
 
 # Approve the transfer
-# approve_amount=1000000000  # Set the amount you want to approve
-# echo "Approving transfer of $approve_amount from user1 to backend_canister..."
-# allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
-#     from_subaccount=null;
-#     spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
-#     amount=$approve_amount:nat;
-#     expected_allowance=null;
-#     expires_at=null;
-#     fee=null;
-#     memo=null;
-#     created_at_time=null
-# })")
-# echo "Allowance Set: $allow"
-# echo "--------------------------------------"
+approve_amount=10000000  # Set the amount you want to approve
+echo "Approving transfer of $approve_amount from user1 to backend_canister..."
+allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
+    from_subaccount=null;
+    spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
+    amount=$approve_amount:nat;
+    expected_allowance=null;
+    expires_at=null;
+    fee=null;
+    memo=null;
+    created_at_time=null
+})")
+echo "Allowance Set: $allow"
+echo "--------------------------------------"
 
 # Call the deposit function on the backend canister
-deposit_amount=50  
-currency="ckbtc"  
-referral_code=0  
-echo "Depositing $deposit_amount to backend_canister..."
-deposit_result=$(dfx canister call $backend_canister $deposit_method "(\"$currency\", $deposit_amount:nat64,\"${user1_principal}\", $referral_code:nat16)")
-echo "Deposit Result: $deposit_result"
-echo "--------------------------------------"
+dfx identity use default
+
+# Get the principal of the default identity
+ON_BEHALF_OF=$(dfx identity get-principal)
+
+# call the execute supply function
+result=$(dfx canister call dfinance_backend supply "(record {
+    asset=\"ckbtc\";
+    amount= 1000000;
+    on_behalf_of=principal \"${ON_BEHALF_OF}\";
+    referral_code=5678:nat16
+})")
+
+echo "Supply Execution Result: $result"
 
 # Check balances after deposit
 echo "Checking balances after deposit..."
@@ -81,9 +88,9 @@ reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$ass
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
-echo "Fetching user data..."
-user_data=$(./user.sh)
-echo "user data: $user_data"
-# Switch back to the default identity at the end
-dfx identity use default
-echo "Switched back to default identity."
+# echo "Fetching user data..."
+# user_data=$(./user.sh)
+# echo "user data: $user_data"
+# # Switch back to the default identity at the end
+# dfx identity use default
+# echo "Switched back to default identity."

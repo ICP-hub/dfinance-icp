@@ -33,7 +33,7 @@ fn init() {
 async fn deposit(
     asset: String,
     amount: u64,
-    on_behalf_of: String,
+    on_behalf_of: Principal,
     referral_code: u16,
 )-> Result<(), String> {
     ic_cdk::println!("Starting deposit function");

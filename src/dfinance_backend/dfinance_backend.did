@@ -1,17 +1,61 @@
+type ExecuteSupplyParams = record {
+  asset : text;
+  referral_code : nat16;
+  on_behalf_of : principal;
+  amount : nat;
+};
+type ReserveConfiguration = record {
+  ltv : nat16;
+  liquidation_protocol_fee : nat16;
+  active : bool;
+  supply_cap : nat64;
+  borrow_cap : nat64;
+  borrowing_enabled : bool;
+  frozen : bool;
+  liquidation_bonus : nat16;
+  liquidation_threshold : nat16;
+  paused : bool;
+};
 type ReserveData = record {
   id : nat16;
-  variable_debt_token_canister : opt principal;
-  last_update_timestamp : opt nat64;
-  liquidity_index : opt nat;
-  variable_borrow_index : opt nat;
-  d_token_canister : opt principal;
-  stable_debt_token_canister : opt principal;
-  interest_rate_strategy_address : opt principal;
-  current_liquidity_rate : opt nat;
-  current_variable_borrow_rate : opt nat;
-  current_stable_borrow_rate : opt nat;
+  asset_name : opt text;
+  debt_token_canister : opt text;
+  last_update_timestamp : nat64;
+  liquidity_index : nat;
+  d_token_canister : opt text;
+  current_liquidity_rate : nat;
+  borrow_rate : opt float64;
+  supply_rate_apr : opt float64;
+  configuration : ReserveConfiguration;
+  accrued_to_treasury : nat;
+  total_supply : opt nat;
+};
+type Result = variant { Ok; Err : text };
+type Result_1 = variant { Ok : ReserveData; Err : text };
+type Result_2 = variant { Ok : UserData; Err : text };
+type Result_3 = variant { Ok : nat; Err : text };
+type UserData = record {
+  net_apy : opt float64;
+  health_factor : opt float64;
+  borrow : opt vec record { text; nat };
+  supply : opt vec record { text; nat };
+  net_worth : opt nat;
 };
 service : () -> {
-  get_asset_data : () -> (ReserveData) query;
+  borrow : (text, nat64, text, text, nat) -> (Result);
+  configure_reserve_as_collateral : (text, nat16, nat16, nat16) -> (Result);
+  deposit : (text, nat64, principal, nat16) -> (Result);
+  get_reserve_data : (text) -> (Result_1) query;
+  get_user_data : (text) -> (Result_2) query;
+  initialize_reserve : () -> ();
   new_canister : () -> (principal);
-};
+  set_borrow_cap : (text, nat64) -> (Result);
+  set_liquidation_protocol_fee : (text, nat16) -> (Result);
+  set_pool_pause : (bool) -> (Result);
+  set_reserve_active : (text, bool) -> (Result);
+  set_reserve_borrowing : (text, bool) -> (Result);
+  set_reserve_freeze : (text, bool) -> (Result);
+  set_reserve_pause : (text, bool) -> (Result);
+  set_supply_cap : (text, nat64) -> (Result);
+  supply : (ExecuteSupplyParams) -> (Result_3);
+}

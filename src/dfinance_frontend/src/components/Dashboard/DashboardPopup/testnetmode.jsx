@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Popup Component
 const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   const handleDisableTestnetClick = () => {
-    handleTestnetModeToggle(false); // Update state to disable Testnet mode
-    localStorage.removeItem("isTestnetMode"); // Remove Testnet mode from localStorage
-    onClose(); // Close the popup after disabling Testnet mode
+    handleTestnetModeToggle(false); 
+    localStorage.removeItem("isTestnetMode"); 
+    onClose();
     toast.info('Testnet mode disabled successfully!');
   };
 
@@ -23,7 +30,7 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
             className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6"
             onClick={onClose}
           >
-            <X className="text-black w-6 h-6 dark:text-darkText cursor pointer" />
+            <X className="text-black w-6 h-6 dark:text-darkText cursor-pointer" />
           </div>
           <div className="dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd dark:text-darkText">
             <h2 className="text-xl font-semibold mb-4 dark:text-darkText">Testnet Mode is ON</h2>

@@ -20,6 +20,7 @@ import plug from "../../../public/wallet/plug.png"
 import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
 import Pagination from "../../components/Common/pagination";
+
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
 
@@ -37,14 +38,14 @@ const WalletDetails = () => {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
- 
+
   const {
     isAuthenticated,
     login,
   } = useAuth();
 
- 
-  
+
+
   const handleDetailsClick = (asset) => {
     setSelectedAsset(asset); // Update selectedAsset with the clicked asset
     console.log("Selected Asset:", asset); // Optional: Log selected asset for debugging
@@ -99,7 +100,7 @@ const WalletDetails = () => {
     setCurrentPage(1);
   };
 
-  const totalPages = Math.ceil( WALLET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(WALLET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE);
   const filteredItems = WALLET_ASSETS_TABLE_ROW.filter(item =>
     item.asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.total_supply_count.toString().includes(searchQuery)
@@ -139,7 +140,7 @@ const WalletDetails = () => {
               type="text"
               name="search"
               id="search"
-              placeholder="Search for proposals"
+              placeholder="Search assets"
               style={{ fontSize: '0.75rem' }}
               className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                 ? "animate-fade-left flex"
@@ -169,7 +170,7 @@ const WalletDetails = () => {
           type="text"
           name="search"
           id="search"
-          placeholder="Search for products"
+          placeholder="Search assets"
           className={`placeholder-gray-500 w-[300px] block md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
             ? "animate-fade-left flex"
             : "animate-fade-right hidden"
@@ -180,7 +181,14 @@ const WalletDetails = () => {
       }
 
       <div className="w-full min-h-[400px] mt-6 lg:px-10 mb-20">
-        <div className="w-full">
+        {currentItems.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
+          <div className="w-20 h-15">
+            <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+          </div>
+          <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+            No assets found!
+          </p>
+        </div> : <div className="w-full">
           <div className="w-full overflow-auto content">
             <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText">
               <thead>
@@ -239,14 +247,14 @@ const WalletDetails = () => {
             </table>
           </div>
           <div className="w-full flex justify-center mt-6">
-  <div id="pagination" className="flex gap-2">
-  <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
-  </div>
-</div>
+            <div id="pagination" className="flex gap-2">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </div>
 
 
 
@@ -364,7 +372,8 @@ const WalletDetails = () => {
           </Modal>}
 
 
-        </div>
+        </div>}
+
       </div>
     </div >
   )

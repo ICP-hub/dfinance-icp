@@ -111,10 +111,10 @@ const TransactionHistory = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handleRowClick = ( transaction) => {
+  const handleRowClick = (transaction) => {
     navigate(`/dashboard/transaction/${transaction.id}`, { state: { transaction } });
   };
-  
+
   return (
     <div className="relative w-full lg:w-12/12">
       {transactionHistory.length === 0 && <div className="absolute right-0 top-0 h-full md:w-1/2 pointer-events-none sxs3:w-[65%] z-[-1]">
@@ -136,7 +136,7 @@ const TransactionHistory = () => {
                   type="text"
                   name="search"
                   id="search"
-                  placeholder="Search for proposals"
+                  placeholder="Search transactions"
                   style={{ fontSize: '0.75rem' }}
                   className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                     ? "animate-fade-left flex"
@@ -168,7 +168,7 @@ const TransactionHistory = () => {
               type="text"
               name="search"
               id="search"
-              placeholder="Search for products"
+              placeholder="Search transactions"
               className={`placeholder-gray-500 w-[250px] -mt-5 mb-2 block md:hidden z-20 px-4 py-[2px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                 ? "animate-fade-left flex"
                 : "animate-fade-right hidden"
@@ -182,10 +182,10 @@ const TransactionHistory = () => {
           {filteredTransactionHistory.length === 0 ? (
             <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
               <div className="w-20 h-15">
-                <img src="/empty file.gif" alt="empty" className="w-30" />
+                <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
               </div>
               <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
-                Transaction History is not currently available for this market.
+                No transaction found!
               </p>
             </div>
           ) : (
@@ -207,16 +207,19 @@ const TransactionHistory = () => {
                   <tbody>
                     {currentItems.map((tx, index) => (
                       <tr key={tx.id} onClick={() => handleRowClick(tx)} className="w-full text-[#4659CF] hover:bg-[#ddf5ff8f] dark:hover:bg-[#5d59b0] rounded-lg h-[50px] cursor-pointer "><td className="py-2 px-4">
-                          <div className="flex items-center dark:text-darkTextSecondary1">
-                            <span>{`${tx.hash.slice(0, 14)}...`}</span>
-                            <button
-                              className="ml-2 focus:outline-none"
-                              onClick={() => copyToClipboard(tx.hash)}
-                            >
-                              <MdContentCopy />
-                            </button>
-                          </div>
-                        </td>
+                        <div className="flex items-center dark:text-darkTextSecondary1">
+                          <span>{`${tx.hash.slice(0, 14)}...`}</span>
+                          <button
+                            className="ml-2 focus:outline-none hover:text-blue-400 hover:dark:text-blue-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(tx.hash);
+                            }}
+                          >
+                            <MdContentCopy />
+                          </button>
+                        </div>
+                      </td>
                         {/* <td className="py-2 px-4 dark:text-darkTextSecondary mr-7">{tx.block}</td> */}
                         <td className="py-2 px-4">
                           <div className="bg-[#ADB0FF]  text-[#2A1F9D] rounded-full px-1 py-1 mr-10">
@@ -228,8 +231,11 @@ const TransactionHistory = () => {
                           <div className="flex items-center dark:text-darkTextSecondary1">
                             <span>{`${tx.from.slice(0, 14)}...`}</span>
                             <button
-                              className="ml-2 focus:outline-none"
-                              onClick={() => copyToClipboard(tx.from)}
+                              className="ml-2 focus:outline-none hover:text-blue-400 hover:dark:text-blue-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(tx.hash);
+                              }}
                             >
                               <MdContentCopy />
                             </button>
@@ -239,8 +245,11 @@ const TransactionHistory = () => {
                           <div className="flex items-center dark:text-darkTextSecondary1">
                             <span>{`${tx.to.slice(0, 14)}...`}</span>
                             <button
-                              className="ml-2 focus:outline-none"
-                              onClick={() => copyToClipboard(tx.to)}
+                              className="ml-2 focus:outline-none hover:text-blue-400 hover:dark:text-blue-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(tx.hash);
+                              }}
                             >
                               <MdContentCopy />
                             </button>
@@ -253,7 +262,7 @@ const TransactionHistory = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               <div className="md:hidden"> {/* Display mobile-friendly layout on small screens */}
                 {currentItems.map((tx, index) => (
                   <>
@@ -265,7 +274,10 @@ const TransactionHistory = () => {
                           <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{`${tx.hash.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
-                            onClick={() => copyToClipboard(tx.hash)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(tx.hash);
+                            }}
                           >
                             <MdContentCopy />
                           </button>
@@ -287,7 +299,10 @@ const TransactionHistory = () => {
                           <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1"> {`${tx.from.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
-                            onClick={() => copyToClipboard(tx.from)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(tx.hash);
+                            }}
                           >
                             <MdContentCopy />
                           </button>
@@ -299,7 +314,10 @@ const TransactionHistory = () => {
                           <span className="ml-2 text-xs text-[#4659CF] dark:text-darkTextSecondary1">{`${tx.from.slice(0, 14)}...`}</span>
                           <button
                             className="ml-2 focus:outline-none text-[#4659CF] dark:text-darkTextSecondary1"
-                            onClick={() => copyToClipboard(tx.to)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(tx.hash);
+                            }}
                           >
                             <MdContentCopy />
                           </button>
@@ -321,14 +339,14 @@ const TransactionHistory = () => {
           )}
         </div>
       )}
-      <div className="flex justify-center mt-4 gap-2">
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
-              </div>
-              
+      {filteredTransactionHistory.length > 0 && <div className="flex justify-center mt-4 gap-2">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>}
+
     </div>
   )
 }

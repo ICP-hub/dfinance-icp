@@ -1,4 +1,3 @@
-
 set -e
 
 user_principal="rhddl-hq5dq-vuqjs-vzn32-5onmo-kqm7h-2irwx-fmbth-i6762-g3o2p-vae"

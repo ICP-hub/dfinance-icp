@@ -172,6 +172,22 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  const fetchReserveData = async (asset) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+  
+    try {
+      const reserveData = await backendActor.get_reserve_data(asset);
+      console.log('Reserve Data:', reserveData);
+      return reserveData;
+    } catch (error) {
+      console.error('Error fetching reserve data:', error);
+      throw error;
+    }
+  };
+  
+
   return {
     isAuthenticated,
     login,
@@ -185,6 +201,7 @@ export const useAuthClient = (options = defaultOptions) => {
     createLedgerActor,
     reloadLogin,
     accountIdString,
+    fetchReserveData, 
   };
 };
 

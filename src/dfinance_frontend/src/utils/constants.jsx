@@ -187,13 +187,13 @@ export const TAB_CARD_DATA = [
     description:
       "Ethereum is a decentralized, open-source blockchain system that features smart contract functionality. It is the second-largest cryptocurrency by market capitalization, after Bitcoin.",
   },
-  {
-    id: 2,
-    title: "Dragginz",
-    image: Dragginz,
-    description:
-      "Ripple is a digital payment protocol that operates as both a cryptocurrency and a payment network for financial transactions. It is known for its digital payment protocol and native cryptocurrency, XRP.",
-  },
+  // {
+  //   id: 2,
+  //   title: "Dragginz",
+  //   image: Dragginz,
+  //   description:
+  //     "Ripple is a digital payment protocol that operates as both a cryptocurrency and a payment network for financial transactions. It is known for its digital payment protocol and native cryptocurrency, XRP.",
+  // },
   {
     id: 3,
     title: "Internet computer",
@@ -202,61 +202,82 @@ export const TAB_CARD_DATA = [
       "Litecoin is a peer-to-peer cryptocurrency and open-source software project released under the MIT/X11 license. Creation and transfer of coins are based on an open-source cryptographic protocol and is not managed by any central authority.",
   },
   {
-    id: 4,
-    title: "OpenChat",
-    image: openChat,
+    id: 0,
+    title: "ckBTC",
+    image: ckBTC,
     description:
-      "Cardano is a blockchain platform for changemakers, innovators, and visionaries, with the tools and technologies required to create possibility for the many, as well as the few, and bring about positive global change.",
+      "Bitcoin is the first decentralized digital currency. It was invented in 2008 by an unknown person or group of people using the name Satoshi Nakamoto and started in 2009 when its source code was released as open-source software.",
   },
   {
-    id: 5,
-    title: "Kinic",
-    image: Kinic,
+    id: 1,
+    title: "ckETH",
+    image: cekTH,
     description:
-      "Polkadot is a next-generation blockchain protocol connecting multiple specialized blockchains into one unified network. It aims to enable seamless communication and interoperability between different blockchains.",
+      "Ethereum is a decentralized, open-source blockchain system that features smart contract functionality. It is the second-largest cryptocurrency by market capitalization, after Bitcoin.",
   },
   {
-    id: 6,
-    title: "Hot or Not",
-    image: HotOrNot,
+    id: 3,
+    title: "Internet computer",
+    image: icp,
     description:
-      "Chainlink is a decentralized oracle network that enables smart contracts to securely interact with real-world data, events, and payments. It aims to bridge the gap between blockchain-based smart contracts and external data sources.",
+      "Litecoin is a peer-to-peer cryptocurrency and open-source software project released under the MIT/X11 license. Creation and transfer of coins are based on an open-source cryptographic protocol and is not managed by any central authority.",
   },
-  {
-    id: 7,
-    title: "ICX",
-    image: icx,
-    description:
-      "Stellar is an open-source, decentralized protocol for digital currency to fiat currency transfers which allows cross-border transactions between any pair of currencies. It aims to provide low-cost financial services to people in underserved regions.",
-  },
-  {
-    id: 8,
-    title: "ICGhost",
-    image: ICGGhost,
-    description:
-      "Dogecoin is a cryptocurrency that started as a joke based on the popular 'Doge' meme. Despite its origins, Dogecoin has developed a strong community and is used by some as a tipping system on social media platforms.",
-  },
-  {
-    id: 9,
-    title: "Modclub",
-    image: Modclub,
-    description:
-      "Binance Coin is the native cryptocurrency of the Binance exchange, one of the largest cryptocurrency exchanges in the world. It is used to pay for transaction fees on the Binance exchange and can also be used for various other purposes within the Binance ecosystem.",
-  },
-  {
-    id: 10,
-    title: "BOOM DAO",
-    image: BooMDao,
-    description:
-      "Uniswap is a decentralized finance (DeFi) protocol that enables automated trading of decentralized finance tokens on the Ethereum blockchain. It allows users to swap various Ethereum-based tokens without the need for an intermediary.",
-  },
-  {
-    id: 11,
-    title: "Catalyze",
-    image: catalyze,
-    description:
-      "Solana is a high-performance blockchain platform designed for decentralized applications and crypto-currencies. It aims to provide fast, secure, and scalable infrastructure for decentralized applications and crypto-currencies.",
-  },
+  // {
+  //   id: 4,
+  //   title: "OpenChat",
+  //   image: openChat,
+  //   description:
+  //     "Cardano is a blockchain platform for changemakers, innovators, and visionaries, with the tools and technologies required to create possibility for the many, as well as the few, and bring about positive global change.",
+  // },
+  // {
+  //   id: 5,
+  //   title: "Kinic",
+  //   image: Kinic,
+  //   description:
+  //     "Polkadot is a next-generation blockchain protocol connecting multiple specialized blockchains into one unified network. It aims to enable seamless communication and interoperability between different blockchains.",
+  // },
+  // {
+  //   id: 6,
+  //   title: "Hot or Not",
+  //   image: HotOrNot,
+  //   description:
+  //     "Chainlink is a decentralized oracle network that enables smart contracts to securely interact with real-world data, events, and payments. It aims to bridge the gap between blockchain-based smart contracts and external data sources.",
+  // },
+  // {
+  //   id: 7,
+  //   title: "ICX",
+  //   image: icx,
+  //   description:
+  //     "Stellar is an open-source, decentralized protocol for digital currency to fiat currency transfers which allows cross-border transactions between any pair of currencies. It aims to provide low-cost financial services to people in underserved regions.",
+  // },
+  // {
+  //   id: 8,
+  //   title: "ICGhost",
+  //   image: ICGGhost,
+  //   description:
+  //     "Dogecoin is a cryptocurrency that started as a joke based on the popular 'Doge' meme. Despite its origins, Dogecoin has developed a strong community and is used by some as a tipping system on social media platforms.",
+  // },
+  // {
+  //   id: 9,
+  //   title: "Modclub",
+  //   image: Modclub,
+  //   description:
+  //     "Binance Coin is the native cryptocurrency of the Binance exchange, one of the largest cryptocurrency exchanges in the world. It is used to pay for transaction fees on the Binance exchange and can also be used for various other purposes within the Binance ecosystem.",
+  // },
+  // {
+  //   id: 10,
+  //   title: "BOOM DAO",
+  //   image: BooMDao,
+  //   description:
+  //     "Uniswap is a decentralized finance (DeFi) protocol that enables automated trading of decentralized finance tokens on the Ethereum blockchain. It allows users to swap various Ethereum-based tokens without the need for an intermediary.",
+  // },
+  // {
+  //   id: 11,
+  //   title: "Catalyze",
+  //   image: catalyze,
+  //   description:
+  //     "Solana is a high-performance blockchain platform designed for decentralized applications and crypto-currencies. It aims to provide fast, secure, and scalable infrastructure for decentralized applications and crypto-currencies.",
+  // },
 ]
 
 

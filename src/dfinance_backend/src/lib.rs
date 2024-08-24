@@ -29,18 +29,26 @@ fn init() {
     ic_cdk::println!("function called");
 }
 
+// #[ic_cdk_macros::update]
+// async fn initialize_reserve_call() -> Result<(), String> {
+//     initialize_reserve().await
+// }
+
 #[update]
 async fn deposit(
     asset: String,
     amount: u64,
     on_behalf_of: String,
+    is_collateral: bool,
     referral_code: u16,
+
 )-> Result<(), String> {
     ic_cdk::println!("Starting deposit function");
     let params = ExecuteSupplyParams {
         asset,
         amount: amount as u128,  // Convert to u128 as required by ExecuteSupplyParams
         on_behalf_of,
+        is_collateral,
         referral_code,
     };
     ic_cdk::println!("Parameters for execute_supply: {:?}", params);
@@ -116,6 +124,18 @@ fn get_user_data(user: String) -> Result<UserData, String> {
                     user_principal.to_string()
                 )
             })
+    })
+}
+
+#[query]
+fn get_all_assets() -> Vec<String> {
+    read_state(|state| {
+        let mut asset_names = Vec::new();
+        let iter = state.reserve_list.iter();
+        for (key, _) in iter {
+            asset_names.push(key.clone());
+        }
+        asset_names
     })
 }
 export_candid!();

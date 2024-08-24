@@ -3,7 +3,7 @@
 set -e
 
 # Set variables
-ckbtc_canister="br5f7-7uaaa-aaaaa-qaaca-cai"  
+ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"  
 backend_canister="avqkn-guaaa-aaaaa-qaaea-cai" 
 approve_method="icrc2_approve"
 
@@ -56,7 +56,7 @@ echo "user data: $user_data"
 # echo "--------------------------------------"
 
 # Call the borrow function on the backend canister
-borrow_amount=50  
+borrow_amount=500  
 currency="ckbtc" 
 referral_code=0  
 echo "Borrowing $borrow_amount from backend_canister..."

@@ -3,7 +3,7 @@
 set -e
 
 # Set variables
-ckbtc_canister="br5f7-7uaaa-aaaaa-qaaca-cai"  
+ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"  
 backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"  
 approve_method="icrc2_approve"
 deposit_method="deposit"
@@ -44,7 +44,7 @@ user_data=$(./user.sh)
 echo "user data: $user_data"
 
 # Approve the transfer
-# approve_amount=1000000000  # Set the amount you want to approve
+# approve_amount=1000000000  
 # echo "Approving transfer of $approve_amount from user1 to backend_canister..."
 # allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
 #     from_subaccount=null;
@@ -60,7 +60,7 @@ echo "user data: $user_data"
 # echo "--------------------------------------"
 
 # Call the deposit function on the backend canister
-deposit_amount=50  
+deposit_amount=20_000 
 currency="ckbtc"  
 referral_code=0  
 echo "Depositing $deposit_amount to backend_canister..."

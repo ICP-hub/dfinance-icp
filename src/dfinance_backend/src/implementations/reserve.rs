@@ -3,16 +3,17 @@ use crate::{
     declarations::{assets::ReserveData, storable::Candid},
     protocol::configuration::reserve_configuration::ReserveConfiguration,
 };
-
-use candid::Principal;
-use ic_cdk::update;
-
+use candid::{Nat, Principal};
+// use candid::Principal;
+use ic_cdk::{update, query};
+use crate::declarations::transfer::*;
+use ic_cdk::call;
 #[update]
-pub fn initialize_reserve() {
+pub fn initialize_reserve(){
     let config = ReserveConfiguration::initialize(
         5000,    // ltv
         7500,    // liquidation_threshold
-        500,     // liquidation_bonus
+        5,     // liquidation_bonus
         // 18,      // decimals
         true,    // active
         false,   // frozen
@@ -30,15 +31,20 @@ pub fn initialize_reserve() {
         // 50000,   // unbacked_mint_cap
         // 1000000  // debt_ceiling
     );
+    // let backend_canister_principal = Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai")
+    //     .map_err(|_| "Invalid backend canister ID".to_string())?;
+
+    // let total_supply = get_ckbtc_balance(backend_canister_principal).await?;
+
     let data = ReserveData {
         asset_name: Some("ckbtc".to_string()),
         last_update_timestamp: ic_cdk::api::time(),
         current_liquidity_rate: 0,
-        borrow_rate: Some(0.0),
-        supply_rate_apr: Some(0.0),
-        d_token_canister: Some("bub".to_string()),
-        debt_token_canister: Some("hbh".to_string()),
-        total_supply: Some(0),
+        borrow_rate: Some(8.25),
+        supply_rate_apr: Some(8.25),
+        d_token_canister: Some("by6od-j4aaa-aaaaa-qaadq-cai".to_string()),
+        debt_token_canister: Some("b77ix-eeaaa-aaaaa-qaada-cai".to_string()),
+        // total_supply: Some(total_supply),
         // current_stable_borrow_rate: 8,
         // current_variable_borrow_rate: 4,
         // interest_rate_strategy_address: Principal::from_text("hbrpn-74aaa-aaaaa-qaaxq-cai").unwrap(),
@@ -55,12 +61,15 @@ pub fn initialize_reserve() {
         // variable_borrow_index: 5000000000,
         configuration: config,
     };
-
+    let ckbtc_principal = Principal::from_text("c2lt4-zmaaa-aaaaa-qaaiq-cai".to_string())
+        .expect("Invalid ckbtc ledger principal");
     mutate_state(|state| {
         let reserve_data = &mut state.asset_index;
+        state.reserve_list.insert("ckbtc".to_string(), ckbtc_principal);
         reserve_data.insert("ckbtc".to_string(), Candid(data));
         ic_cdk::println!("Reserve initialized successfully");
     });
+    
 }
 // pub fn initialize_reserve(reserve_key: String) -> Result<(), String> {
 //     mutate_state(|state| {
@@ -129,5 +138,27 @@ pub fn initialize_reserve() {
 
         
     
+// #[query]
+// pub async fn get_ckbtc_balance(backend_canister_principal: Principal) -> Result<Nat, String> {
+//     // Set up the principal for the ckbtc ledger canister
+//     let ckbtc_ledger_canister_principal = Principal::from_text("br5f7-7uaaa-aaaaa-qaaca-cai")
+//         .map_err(|_| "Invalid ckbtc ledger canister ID".to_string())?;
 
+//     // Create the account structure for the backend canister
+//     let backend_account = TransferAccount {
+//         owner: backend_canister_principal,
+//         subaccount: None,
+//     };
 
+//     // Call the ckbtc ledger canister to get the balance of the backend canister
+//     let (backend_balance,): (Nat,) = call(
+//         ckbtc_ledger_canister_principal,
+//         "icrc1_balance_of",
+//         (backend_account,)
+//     ).await
+//     .map_err(|e| e.1)?;
+
+//     ic_cdk::println!("Backend canister balance for ckbtc: {}", backend_balance);
+
+//     Ok(backend_balance)
+// }

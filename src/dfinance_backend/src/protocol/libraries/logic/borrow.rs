@@ -499,8 +499,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     dotenv().ok();
     ic_cdk::println!("Starting execute_supply with params: {:?}", params);
 
-    let canister_id_ckbtc_ledger = "br5f7-7uaaa-aaaaa-qaaca-cai".to_string();
-    let dtoken_canister_id = "by6od-j4aaa-aaaaa-qaadq-cai".to_string();
+    let canister_id_ckbtc_ledger = "c2lt4-zmaaa-aaaaa-qaaiq-cai".to_string();
+    let dtoken_canister_id = "c5kvi-uuaaa-aaaaa-qaaia-cai".to_string();
     let debttoken_canister_id = "by6od-j4aaa-aaaaa-qaadq-cai".to_string();
     ic_cdk::println!("Canister IDs fetched successfully");
 
@@ -623,6 +623,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
         health_factor: None,
         supply: None,
         borrow: None,
+        // total_collateral: 0.0,
+            // total_debt: 0.0,
+            // available_borrow: 0.0,
+            // ltv: 0.0,
+            // current_liquidation_threshold: 80.0,
     };
 
     mutate_state(|state| {

@@ -25,15 +25,36 @@ pub struct Transaction {
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub net_worth: Option<u128>,
-    pub net_apy: Option<f64>,
+    // pub total_collateral: f64, //generalize all value in one base currency like eth
+    // pub total_debt: f64,  
+    // pub available_borrow: f64,
+    pub net_apy: Option<f64>, //is needed?
     pub health_factor: Option<f64>,
-    pub supply: Option<Vec<(String, u128)>>,
-    pub borrow: Option<Vec<(String, u128)>>
+    pub supply: Option<Vec<(String, u128)>>, // asset, amount
+    pub borrow: Option<Vec<(String, u128)>>,
+    // pub reserves: Vec<UserReserveData>,
+    // pub ltv: f64, 
+    // pub current_liquidation_threshold: f64,
+}
+
+
+
+#[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
+pub struct UserReserveData {
+    pub user_id: String,                   
+    pub reserve: String,                    
+    pub principal_stable_debt: u64,         // Principal amount of debt at a stable rate
+    pub total_stable_debt: u64,             // Total stable debt including accrued interest
+    pub total_variable_debt: u64,           // Total variable debt including accrued interest
+    pub avg_stable_borrow_rate: f64,        // Weighted average stable borrow rate
+    pub last_update_timestamp: u64,         // Timestamp of the last update to this data
+    pub liquidity_index: f64,               // Liquidity index at the time of the last update
+    pub variable_borrow_index: f64,         // Variable borrow index at the time of the last update
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InitReserveInput {
-    pub a_token_impl: Principal,
+    pub d_token_impl: Principal,
     pub stable_debt_token_impl: Principal,
     pub variable_debt_token_impl: Principal,
     pub underlying_asset_decimals: u8,
@@ -41,8 +62,8 @@ pub struct InitReserveInput {
     pub underlying_asset: Principal,
     pub treasury: Principal,
     pub incentives_controller: Principal,
-    pub a_token_name: String,
-    pub a_token_symbol: String,
+    pub d_token_name: String,
+    pub d_token_symbol: String,
     pub variable_debt_token_name: String,
     pub variable_debt_token_symbol: String,
     pub stable_debt_token_name: String,
@@ -61,5 +82,5 @@ pub struct CalculateInterestRatesParams {
     pub reserve_factor: u128,
     // pub reserve: Principal,
     pub reserve: String,
-    pub a_token: Principal,
+    pub d_token: Principal,
 }

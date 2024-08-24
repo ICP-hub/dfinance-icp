@@ -44,7 +44,7 @@ type UserData = record {
 service : () -> {
   borrow : (text, nat64, text, text, nat) -> (Result);
   configure_reserve_as_collateral : (text, nat16, nat16, nat16) -> (Result);
-  deposit : (text, nat64, principal, nat16) -> (Result);
+  deposit : (text, nat, principal, nat) -> (Result);
   get_reserve_data : (text) -> (Result_1) query;
   get_user_data : (text) -> (Result_2) query;
   initialize_reserve : () -> ();
@@ -58,4 +58,6 @@ service : () -> {
   set_reserve_pause : (text, bool) -> (Result);
   set_supply_cap : (text, nat64) -> (Result);
   supply : (ExecuteSupplyParams) -> (Result_3);
-}
+  get_all_users : () -> (vec record { principal; UserData }) query;
+  check_user : (text) -> (variant { Ok : text; Err : text });
+};

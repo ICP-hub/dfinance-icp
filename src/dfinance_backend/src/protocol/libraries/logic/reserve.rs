@@ -1,15 +1,15 @@
 use candid::{variant, CandidType, Nat, Principal};
 use serde::{Deserialize, Serialize};
 
-use ic_cdk::api::time;
 use crate::protocol::libraries::math::math_utils;
+use ic_cdk::api::time;
 
-use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_mul, ray_div};
-use crate::protocol::libraries::math::percentage_maths::percent_mul;
-use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
-use crate::declarations::assets::ReserveData;
 use crate::declarations::assets::ReserveCache;
+use crate::declarations::assets::ReserveData;
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
+use crate::protocol::libraries::math::percentage_maths::percent_mul;
+use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_div, ray_mul};
+use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
 // use crate::protocol::libraries::logic::interface::ivariable_debt_token::VariableDebtToken;
 
 fn current_timestamp() -> u64 {
@@ -17,7 +17,6 @@ fn current_timestamp() -> u64 {
 }
 // type Result = variant {Ok : Nat; Err : String};
 
-    
 //     // #[derive(CandidType, Deserialize, Clone, Debug)]
 //     // pub struct ReserveCache {
 //     //     pub reserve_configuration: ReserveConfiguration,
@@ -50,7 +49,7 @@ fn current_timestamp() -> u64 {
 //         total_debt_accrued: u128,
 //         amount_to_mint: u128,
 //     }
-    
+
 //     impl Default for AccrueToTreasuryLocalVars {
 //         fn default() -> Self {
 //             AccrueToTreasuryLocalVars {
@@ -85,7 +84,7 @@ fn current_timestamp() -> u64 {
 //             liquidity_taken: u128,
 //             // strategy: &dyn IReserveInterestRateStrategy,
 //         );
-    
+
 //     }
 
 //     impl ReserveLogic for ReserveData {
@@ -170,55 +169,49 @@ fn current_timestamp() -> u64 {
 //         }
 //     }
 
-    
-    
-    
 //     fn accrue_to_treasury(&mut self, reserve_cache: &ReserveCache) {
 //         let mut vars = AccrueToTreasuryLocalVars::default();
-    
+
 //         if reserve_cache.reserve_factor == 0 {
 //             return;
 //         }
-    
+
 //         // calculate the total variable debt at moment of the last interaction
 //         vars.prev_total_variable_debt = ray_mul(
 //             reserve_cache.curr_scaled_variable_debt,
 //             reserve_cache.curr_variable_borrow_index,
 //         );
-    
+
 //         // calculate the new total variable debt after accumulation of the interest on the index
 //         vars.curr_total_variable_debt = ray_mul(
 //             reserve_cache.curr_scaled_variable_debt,
 //             reserve_cache.next_variable_borrow_index,
 //         );
-    
+
 //         // calculate the stable debt until the last timestamp update
 //         vars.cumulated_stable_interest = math_utils::calculate_compounded_interest(
 //             reserve_cache.curr_avg_stable_borrow_rate,
 //             reserve_cache.stable_debt_last_update_timestamp,
 //             reserve_cache.reserve_last_update_timestamp,
 //         );
-    
+
 //         vars.prev_total_stable_debt = ray_mul(
 //             reserve_cache.curr_principal_stable_debt,
 //             vars.cumulated_stable_interest,
 //         );
-    
+
 //         // debt accrued is the sum of the current debt minus the sum of the debt at the last update
 //         vars.total_debt_accrued = vars.curr_total_variable_debt
 //             + reserve_cache.curr_total_stable_debt
 //             - vars.prev_total_variable_debt
 //             - vars.prev_total_stable_debt;
-    
+
 //         vars.amount_to_mint = percent_mul(vars.total_debt_accrued, reserve_cache.reserve_factor);
-    
+
 //         if vars.amount_to_mint != 0 {
 //             self.accrued_to_treasury += ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
 //         }
 //     }
-
-    
-    
 
 //     // fn update_interest_rates(
 //     //     &mut self,
@@ -273,9 +266,9 @@ fn current_timestamp() -> u64 {
 //         liquidity_taken: u128,
 //     ) {
 //         let mut vars = UpdateInterestRatesLocalVars::default();
-    
+
 //         vars.total_variable_debt = reserve_cache.next_scaled_variable_debt * reserve_cache.next_variable_borrow_index / 1e27 as u128;
-    
+
 //         let params = CalculateInterestRatesParams {
 //             unbacked: self.unbacked,
 //             liquidity_added,
@@ -287,13 +280,13 @@ fn current_timestamp() -> u64 {
 //             reserve: reserve_address,
 //             a_token: reserve_cache.a_token_address,
 //         };
-    
+
 //         let (next_liquidity_rate, next_stable_rate, next_variable_rate) = calculate_interest_rates(params).await;
-    
+
 //         self.current_liquidity_rate = next_liquidity_rate;
 //         self.current_stable_borrow_rate = next_stable_rate;
 //         self.current_variable_borrow_rate = next_variable_rate;
-    
+
 //         // Emit ReserveDataUpdated event equivalent
 //         emit_reserve_data_updated(
 //             reserve_address,
@@ -304,14 +297,9 @@ fn current_timestamp() -> u64 {
 //             reserve_cache.next_variable_borrow_index,
 //         ).await;
 //     }
-    
-   
+
 //     }
 
-    
-
-    
-    
 //     async fn emit_reserve_data_updated(
 //         reserve_address: Principal,
 //         next_liquidity_rate: u128,
@@ -327,7 +315,6 @@ fn current_timestamp() -> u64 {
 //             reserve_address, next_liquidity_rate, next_stable_rate, next_variable_rate, next_liquidity_index, next_variable_borrow_index
 //         );
 //     }
-
 
 // pub trait IStableDebtToken {
 //     fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64);
@@ -351,8 +338,6 @@ fn current_timestamp() -> u64 {
 // trait IReserveInterestRateStrategy {
 //     fn calculate_interest_rates(&self, params: CalculateInterestRatesParams) -> (u128, u128, u128);
 // }
-
-
 
 // // src/reserve.rs
 // use candid::Principal;
@@ -397,7 +382,6 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
 }
 
 pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
-    
     let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
 
@@ -417,7 +401,10 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
             reserve_cache.curr_liquidity_rate,
             reserve_cache.reserve_last_update_timestamp,
         );
-        reserve_cache.next_liquidity_index = ray_mul(cumulated_liquidity_interest, reserve_cache.curr_liquidity_index);
+        reserve_cache.next_liquidity_index = ray_mul(
+            cumulated_liquidity_interest,
+            reserve_cache.curr_liquidity_index,
+        );
         reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
     }
 
@@ -427,7 +414,10 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
             reserve_cache.reserve_last_update_timestamp,
             current_timestamp(),
         );
-        reserve_cache.next_variable_borrow_index = ray_mul(cumulated_variable_borrow_interest, reserve_cache.curr_variable_borrow_index);
+        reserve_cache.next_variable_borrow_index = ray_mul(
+            cumulated_variable_borrow_interest,
+            reserve_cache.curr_variable_borrow_index,
+        );
         // reserve_data.variable_borrow_index = reserve_cache.next_variable_borrow_index;
     }
 }
@@ -460,32 +450,32 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
         vars.cumulated_stable_interest,
     );
 
-    vars.total_debt_accrued = vars.curr_total_variable_debt
-        + reserve_cache.curr_total_stable_debt
+    vars.total_debt_accrued = vars.curr_total_variable_debt + reserve_cache.curr_total_stable_debt
         - vars.prev_total_variable_debt
         - vars.prev_total_stable_debt;
 
     vars.amount_to_mint = percent_mul(vars.total_debt_accrued, reserve_cache.reserve_factor);
 
     if vars.amount_to_mint != 0 {
-        reserve_data.accrued_to_treasury += ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
+        reserve_data.accrued_to_treasury +=
+            ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
     }
 }
 
 pub async fn update_interest_rates(
     reserve_data: &mut ReserveData,
     reserve_cache: &ReserveCache,
-    // reserve_address: Principal,
     reserve_address: String,
     liquidity_added: u128,
     liquidity_taken: u128,
 ) {
     let mut vars = UpdateInterestRatesLocalVars::default();
 
-    vars.total_variable_debt = reserve_cache.next_scaled_variable_debt * reserve_cache.next_variable_borrow_index / 1e27 as u128;
+    vars.total_variable_debt = reserve_cache.next_scaled_variable_debt
+        * reserve_cache.next_variable_borrow_index
+        / 1e27 as u128;
 
     let params = CalculateInterestRatesParams {
-        // unbacked: reserve_data.unbacked,
         liquidity_added,
         liquidity_taken,
         total_stable_debt: reserve_cache.next_total_stable_debt,
@@ -496,11 +486,10 @@ pub async fn update_interest_rates(
         a_token: reserve_cache.a_token_address,
     };
 
-    let (next_liquidity_rate, next_stable_rate, next_variable_rate) = calculate_interest_rates(params).await;
+    let (next_liquidity_rate, next_stable_rate, next_variable_rate) =
+        calculate_interest_rates(params).await;
 
     reserve_data.current_liquidity_rate = next_liquidity_rate;
-    // reserve_data.current_stable_borrow_rate = next_stable_rate;
-    // reserve_data.current_variable_borrow_rate = next_variable_rate;
 
     emit_reserve_data_updated(
         reserve_address,
@@ -509,7 +498,8 @@ pub async fn update_interest_rates(
         next_variable_rate,
         reserve_cache.next_liquidity_index,
         reserve_cache.next_variable_borrow_index,
-    ).await;
+    )
+    .await;
 }
 
 async fn calculate_interest_rates(params: CalculateInterestRatesParams) -> (u128, u128, u128) {
@@ -531,7 +521,12 @@ async fn emit_reserve_data_updated(
     // For now, just a simple print statement
     println!(
         "ReserveDataUpdated: {:?}, {}, {}, {}, {}, {}",
-        reserve_address, next_liquidity_rate, next_stable_rate, next_variable_rate, next_liquidity_index, next_variable_borrow_index
+        reserve_address,
+        next_liquidity_rate,
+        next_stable_rate,
+        next_variable_rate,
+        next_liquidity_index,
+        next_variable_borrow_index
     );
 }
 
@@ -564,6 +559,3 @@ struct UpdateInterestRatesLocalVars {
     next_variable_rate: u128,
     total_variable_debt: u128,
 }
-
-
-

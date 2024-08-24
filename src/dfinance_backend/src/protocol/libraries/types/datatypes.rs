@@ -13,22 +13,27 @@ pub struct Transaction {
     pub transaction_fee: f64,
 }
 
-// #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
-// pub struct UserData {
-//     pub net_worth: f64,
-//     pub net_apy: f64,
-//     pub health_factor: f64,
-//     pub transaction_history: Vec<Transaction>,
-//     pub faucet: Option<Vec<(String, u64)>>,
-// }
-
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub net_worth: Option<u128>,
     pub net_apy: Option<f64>,
     pub health_factor: Option<f64>,
     pub supply: Option<Vec<(String, u128)>>,
-    pub borrow: Option<Vec<(String, u128)>>
+    pub borrow: Option<Vec<(String, u128)>>,
+    pub transaction_history: Option<Vec<Transaction>>,
+}
+
+impl Default for UserData {
+    fn default() -> Self {
+        Self {
+            net_worth: Default::default(),
+            net_apy: Default::default(),
+            health_factor: Default::default(),
+            supply: Default::default(),
+            borrow: Default::default(),
+            transaction_history: Default::default(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

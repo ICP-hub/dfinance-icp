@@ -12,9 +12,10 @@ mod protocol;
 mod state;
 mod tests;
 mod utils;
-use crate::api::state_handler::read_state;
+use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ExecuteSupplyParams;
 use crate::declarations::assets::ReserveData;
+use crate::declarations::storable::Candid;
 use crate::implementations::reserve::initialize_reserve;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
@@ -119,4 +120,38 @@ fn get_user_data(user: String) -> Result<UserData, String> {
             })
     })
 }
+
+// Get all users
+#[query]
+fn get_all_users() -> Vec<(Principal, UserData)> {
+    read_state(|state| {
+        state
+            .user_profile
+            .iter()
+            .map(|(k, v)| (k.clone(), v.0.clone()))
+            .collect()
+    })
+}
+
+// Initialize user if not found
+#[update]
+fn check_user(user: String) -> Result<String, String> {
+    let user_principal =
+        Principal::from_text(&user).map_err(|_| "Invalid user canister ID".to_string())?;
+
+    let user_data = mutate_state(|state| {
+        let user_index = &mut state.user_profile;
+        match user_index.get(&user_principal) {
+            Some(_) => Ok("User available".to_string()),
+            None => {
+                let default_user_data = UserData::default();
+                user_index.insert(user_principal.clone(), Candid(default_user_data));
+                Ok("User added".to_string())
+            }
+        }
+    });
+
+    user_data
+}
+
 export_candid!();

@@ -2,7 +2,7 @@
 
 set -e
 
-dfx identity use minter
+dfx identity use newminter 
 
 export MINTER=$(dfx identity get-principal)
 echo $MINTER

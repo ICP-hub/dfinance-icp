@@ -13,9 +13,23 @@ import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
 import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
+import { Principal } from "@dfinity/principal";
 
 const DashboardNav = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, backendActor, principal } = useAuth();
+  const [userData, setUserData] = useState(null);
+
+  const Principal1 = "gxdsw-tuuif-npfcg-srrix-uy2zv-c3bco-fbiss-i27un-p7far-7iedd-qae";
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+          const data = await backendActor.get_user_data(Principal1);
+          console.log("backend data", data)
+          setUserData(data);
+    };
+    fetchUserData();
+  }, [backendActor, Principal1]);
+  
 
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
@@ -116,6 +130,7 @@ const DashboardNav = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
+
 
   return (
     <div className="w-full ">

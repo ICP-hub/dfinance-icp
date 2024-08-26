@@ -20,12 +20,14 @@ import plug from "../../../public/wallet/plug.png"
 import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
 import Pagination from "../../components/Common/pagination";
+import UserInformationPopup from "./userInformation"
 
 const ITEMS_PER_PAGE = 8;
 const DebtStatus = () => {
 
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const showSearchBar = () => {
@@ -48,8 +50,8 @@ const DebtStatus = () => {
 
   const handleDetailsClick = (asset) => {
     setSelectedAsset(asset); // Update selectedAsset with the clicked asset
-    console.log("Selected Asset:", asset); // Optional: Log selected asset for debugging
-    navigate(`/dashboard/asset-details/${asset}`); // Navigate to asset details page
+    setShowUserInfoPopup(true); // Optional: Log selected asset for debugging
+     
   };
 
 
@@ -180,7 +182,7 @@ const DebtStatus = () => {
         />
       }
 
-      <div className="w-full min-h-[400px] mt-6 lg:px-10 mb-20">
+      <div className="w-full min-h-[400px] mt-6 lg:px-10 ">
         {currentItems.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
@@ -194,7 +196,7 @@ const DebtStatus = () => {
               <thead>
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {LIQUIDATION_USERLIST_COL.slice(0, 2).map((item, index) => (
-                    <td key={index} className="p-3 whitespace-nowrap">
+                    <td key={index} className="p-3 whitespace-nowrap py-4">
                       {item.header}
                     </td>
                   ))}
@@ -210,12 +212,12 @@ const DebtStatus = () => {
                     key={index}
                     className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
-                    <td className="p-2 align-top py-6">
+                    <td className="p-2 align-top py-8 ">
                       <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
                         <p>{item.user_principle}</p>
                       </div>
                     </td>
-                    <td className="p-2 align-top py-6">
+                    <td className="p-2 align-top py-8 ">
                       <div className="flex flex-row ml-2 mt-2">
                         <div>
                           <p className="font-medium">${item.debt_amount}M</p>
@@ -225,21 +227,21 @@ const DebtStatus = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-6">
-                      <div className="flex gap-2">
+                    <td className="p-5 align-top hidden md:table-cell  py-8">
+                      <div className="flex gap-2 items-center">
                         <img src={item.debt_assets[0].image} alt="Asset 1" className="rounded-[50%] w-7" />
                         <img src={item.debt_assets[1].image} alt="Asset 1" className="rounded-[50%] w-7" />
                       </div>
                     </td>
-                    <td className="p-5 align-top hidden md:table-cell">
+                    <td className="p-5 align-top hidden md:table-cell py-8">
                       <div className="flex gap-2 items-center">
                         <img src={item.collateral_assets[0].image} alt="Asset 1" className="rounded-[50%] w-7" />
                         <img src={item.collateral_assets[1].image} alt="Asset 1" className="rounded-[50%] w-7" />
                         <img src={item.collateral_assets[2].image} alt="Asset 1" className="rounded-[50%] w-7" />
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-5">{item.borrow_apy}</td>
-                    <td className="p-3 align-top flex">
+                    <td className="p-3 align-top hidden md:table-cell pt-5 py-8">{item.borrow_apy}</td>
+                    <td className="p-3 align-top flex py-8">
                       <div className="w-full flex justify-end align-center">
                         <Button title={"Liquidate"} className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-sm
                                lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px]     font-inter" onClickHandler={() => handleDetailsClick(item.asset)} />
@@ -254,7 +256,12 @@ const DebtStatus = () => {
         </div>}
 
       </div>
-
+      {showUserInfoPopup && (
+        <UserInformationPopup
+          onClose={() => setShowUserInfoPopup(false)} 
+          asset={selectedAsset}
+        />
+      )}
 
     </div >
   )

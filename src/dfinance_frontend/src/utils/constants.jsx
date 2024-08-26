@@ -42,18 +42,24 @@ export const FOOTER_LINK_1 = [
   },
   {
     id: 1,
+    title: "Liquidate",
+    route: "/Liquidate",
+    icon: "",
+  },
+  {
+    id: 2,
     title: "Security",
     route: "/#",
     icon: "",
   },
   {
-    id: 2,
+    id: 3,
     title: "Docs",
     route: "/#",
     icon: "",
   },
   {
-    id: 3,
+    id: 4,
     title: "FAQ",
     route: "/#",
     icon: "",
@@ -538,6 +544,72 @@ export const WALLET_ASSETS_TABLE_ROW = [
     total_borrow_count: 3.19,
     total_borrow: 156.51,
     borrow_apy: 3.19,
+  },
+]
+
+
+export const LIQUIDATION_USERLIST_COL = [
+  {
+    col_id: 0,
+    header: "User Principle",
+  },
+  {
+    col_id: 1,
+    header: "Debt Amount",
+  },
+  {
+    col_id: 2,
+    header: "Debt assets",
+  },
+  {
+    col_id: 3,
+    header: "Collateral Assets",
+  },
+  
+]
+
+export const LIQUIDATION_USERLIST_ROW = [
+  {
+    row_id: 0,
+    user_principle: "2tv4x-wgo7x-a7wst-3y...",
+    debt_amount: 156.51,
+    debt_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+    ],
+    collateral_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+      { image: cekTH },
+    ],
+  },
+  {
+    row_id: 1,
+    user_principle: "2tv4x-wgo7x-a7wst-3y...",
+    debt_amount: 156.51,
+    debt_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+    ],
+    collateral_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+      { image: cekTH },
+    ],
+  },
+  {
+    row_id: 2,
+    user_principle: "2tv4x-wgo7x-a7wst-3y...",
+    debt_amount: 156.51,
+    debt_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+    ],
+    collateral_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+      { image: cekTH },
+    ],
   },
 ]
 

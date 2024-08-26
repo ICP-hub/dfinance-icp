@@ -15,32 +15,57 @@ pub struct Transaction {
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
-    pub net_worth: Option<u128>,
-    // pub total_collateral: f64, //generalize all value in one base currency like eth
-    // pub total_debt: f64,  
-    // pub available_borrow: f64,
-    pub net_apy: Option<f64>, //is needed?
+    pub user_id: Option<String>,
+    pub net_worth: Option<f64>,
+    pub net_apy: Option<f64>,
     pub health_factor: Option<f64>,
-    pub supply: Option<Vec<(String, u128)>>, // asset, amount
-    pub borrow: Option<Vec<(String, u128)>>,
-    // pub reserves: Vec<UserReserveData>,
-    // pub ltv: f64, 
-    // pub current_liquidation_threshold: f64,
+    pub reserves: Option<Vec<(String, UserReserveData)>>,
 }
 
-
+impl Default for UserData {
+    fn default() -> Self {
+        Self {
+            user_id: Default::default(),
+            net_worth: Some(0.0),
+            net_apy: Some(0.0),
+            health_factor: Some(0.0),
+            reserves: Default::default(),
+        }
+    }
+}
 
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserReserveData {
-    pub user_id: String,                   
-    pub reserve: String,                    
-    pub principal_stable_debt: u64,         // Principal amount of debt at a stable rate
-    pub total_stable_debt: u64,             // Total stable debt including accrued interest
-    pub total_variable_debt: u64,           // Total variable debt including accrued interest
-    pub avg_stable_borrow_rate: f64,        // Weighted average stable borrow rate
-    pub last_update_timestamp: u64,         // Timestamp of the last update to this data
-    pub liquidity_index: f64,               // Liquidity index at the time of the last update
-    pub variable_borrow_index: f64,         // Variable borrow index at the time of the last update
+    pub reserve: String,
+    pub principal_stable_debt: u64,
+    pub total_stable_debt: u64,
+    pub total_variable_debt: u64,
+    pub avg_stable_borrow_rate: f64,
+    pub last_update_timestamp: u64,
+    pub liquidity_index: f64,
+    pub asset_supply: f64,
+    pub asset_borrow: f64,
+    pub variable_borrow_index: f64,
+    pub asset_price_when_supplied: f64,
+    pub asset_price_when_borrowed: f64,
+}
+impl Default for UserReserveData {
+    fn default() -> Self {
+        Self {
+            reserve: Default::default(),
+            principal_stable_debt: Default::default(),
+            total_stable_debt: Default::default(),
+            total_variable_debt: Default::default(),
+            avg_stable_borrow_rate: Default::default(),
+            last_update_timestamp: Default::default(),
+            liquidity_index: Default::default(),
+            asset_supply: Default::default(),
+            asset_borrow: Default::default(),
+            variable_borrow_index: Default::default(),
+            asset_price_when_supplied: Default::default(),
+            asset_price_when_borrowed: Default::default(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -64,14 +89,12 @@ pub struct InitReserveInput {
 
 #[derive(Debug, CandidType, Deserialize, Serialize)]
 pub struct CalculateInterestRatesParams {
-    // pub unbacked: u128,
     pub liquidity_added: u128,
     pub liquidity_taken: u128,
     pub total_stable_debt: u128,
     pub total_variable_debt: u128,
     pub average_stable_borrow_rate: u128,
     pub reserve_factor: u128,
-    // pub reserve: Principal,
     pub reserve: String,
     pub d_token: Principal,
 }

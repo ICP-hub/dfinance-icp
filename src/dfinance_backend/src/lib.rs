@@ -30,11 +30,6 @@ fn init() {
     ic_cdk::println!("function called");
 }
 
-// #[ic_cdk_macros::update]
-// async fn initialize_reserve_call() -> Result<(), String> {
-//     initialize_reserve().await
-// }
-
 // Function to call the execute_supply logic
 #[update]
 async fn deposit(
@@ -43,8 +38,7 @@ async fn deposit(
     on_behalf_of: String,
     is_collateral: bool,
     referral_code: u16,
-
-)-> Result<(), String> {
+) -> Result<(), String> {
     ic_cdk::println!("Starting deposit function");
     let params = ExecuteSupplyParams {
         asset,
@@ -129,6 +123,7 @@ fn get_user_data(user: String) -> Result<UserData, String> {
     })
 }
 
+// Get names of all assets of the reserve
 #[query]
 fn get_all_assets() -> Vec<String> {
     read_state(|state| {

@@ -97,11 +97,17 @@ pub struct ExecuteBorrowParams {
     pub interest_rate: Nat,
 }
 
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteRepayParams {
     pub asset: String,
-    pub amount: Nat,
-    pub interest_rate_mode: InterestRateMode,
-    pub on_behalf_of: Principal,
-    use_dtokens: bool,
+    pub amount: u128,
+    pub on_behalf_of: Option<String>,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ExecuteWithdrawParams {
+    pub asset: String,
+    pub amount: u128,
+    pub on_behalf_of: Option<String>,
+    pub is_collateral: bool,
 }

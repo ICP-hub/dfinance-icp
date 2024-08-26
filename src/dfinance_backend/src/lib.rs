@@ -1,6 +1,11 @@
-use declarations::assets::ExecuteBorrowParams;
+use candid::Nat;
+use candid::Principal;
+use declarations::assets::{
+    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+};
+use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
-
+use ic_cdk_macros::update;
 mod api;
 mod constants;
 mod declarations;
@@ -13,17 +18,13 @@ mod state;
 mod tests;
 mod utils;
 use crate::api::state_handler::{mutate_state, read_state};
-use crate::declarations::assets::ExecuteSupplyParams;
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
 use crate::implementations::reserve::initialize_reserve;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
-use candid::Nat;
-use candid::Principal;
-use ic_cdk::{init, query};
-use ic_cdk_macros::update;
+
 #[init]
 fn init() {
     initialize_reserve();
@@ -167,6 +168,56 @@ fn check_user(user: String) -> Result<String, String> {
     });
 
     user_data
+}
+
+// Repays debt of the user
+#[update]
+async fn repay(asset: String, amount: u128, on_behalf: String) -> Result<(), String> {
+    ic_cdk::println!("Starting repay function");
+    let params = ExecuteRepayParams {
+        asset,
+        amount: amount as u128,
+        on_behalf_of: Some(on_behalf),
+    };
+    ic_cdk::println!("Parameters for execute_repay: {:?}", params);
+    match borrow::execute_repay(params).await {
+        Ok(_) => {
+            ic_cdk::println!("execute_repay function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_repay: {:?}", e);
+            Err(e)
+        }
+    }
+}
+
+// Withdraws amount from the collateral/supply
+#[update]
+async fn withdraw(
+    asset: String,
+    amount: u128,
+    on_behalf: String,
+    collateral: bool,
+) -> Result<(), String> {
+    ic_cdk::println!("Starting withdraw function");
+    let params = ExecuteWithdrawParams {
+        asset,
+        amount: amount as u128,
+        on_behalf_of: Some(on_behalf),
+        is_collateral: collateral,
+    };
+    ic_cdk::println!("Parameters for execute_withdraw: {:?}", params);
+    match SupplyLogic::execute_withdraw(params).await {
+        Ok(_) => {
+            ic_cdk::println!("execute_withdraw function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_withdraw: {:?}", e);
+            Err(e)
+        }
+    }
 }
 
 export_candid!();

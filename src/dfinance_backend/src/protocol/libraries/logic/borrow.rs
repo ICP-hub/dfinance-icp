@@ -2,7 +2,7 @@ use crate::api::state_handler::*;
 use crate::constants::asset_address::{
     BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
 };
-use crate::declarations::assets::ExecuteBorrowParams;
+use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use candid::{Nat, Principal};
@@ -127,4 +127,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     }
 
     // User updation logic here ----------------------------------->
+}
+
+pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
+    Ok(())
 }

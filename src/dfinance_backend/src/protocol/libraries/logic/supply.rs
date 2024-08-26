@@ -1,5 +1,5 @@
 use crate::api::state_handler::mutate_state;
-use crate::declarations::assets::ExecuteSupplyParams;
+use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
@@ -122,4 +122,6 @@ impl SupplyLogic {
         }
         // User updation logic here ----------------------------------->
     }
+
+    pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<(), String> {Ok(())}
 }

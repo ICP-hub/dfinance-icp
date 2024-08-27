@@ -10,7 +10,6 @@ import {
 import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/element/Elements.svg"
-import MySupply from '../Dashboard/MySupply'
 import icplogo from '../../../public/wallet/icp.png'
 import plug from "../../../public/wallet/plug.png"
 import bifinity from "../../../public/wallet/bifinity.png"
@@ -26,24 +25,15 @@ const Liquidate = () => {
     const {
         isAuthenticated,
         login,
-        logout,
-        updateClient,
-        authClient,
-        identity,
-        principal,
-        backendActor,
-        accountId,
-        createLedgerActor,
-        reloadLogin,
-        accountIdString,
     } = useAuth()
 
-
+    const [showDebtStatus, setShowDebtStatus] = useState(false);
+    const [showWarning, setShowWarning] = useState(false); // Warning state
 
     const handleWalletConnect = () => {
-        console.log("connrcterd");
-        dispatch(setWalletModalOpen(!isWalletModalOpen))
-        // dispatch(setIsWalletCreated(true))
+        console.log("connected");
+        dispatch(setWalletModalOpen(false))
+        dispatch(setIsWalletConnected(true))
     }
 
     const handleWallet = () => {
@@ -56,13 +46,17 @@ const Liquidate = () => {
         if (isWalletCreated) {
             navigate('/dashboard/wallet-details')
         }
-    }, [isWalletCreated]);
+
+        // Hide the warning if the user becomes authenticated
+        if (isAuthenticated) {
+            setShowWarning(false);
+        }
+    }, [isWalletCreated, isAuthenticated]);
 
     const loginHandler = async (val) => {
         await login(val);
-        // navigate("/");
-
-        // await existingUserHandler();
+        dispatch(setIsWalletConnected(true))
+        dispatch(setWalletModalOpen(!isWalletModalOpen))
     };
 
     const [inputValue, setInputValue] = useState('');
@@ -71,65 +65,64 @@ const Liquidate = () => {
         setInputValue(event.target.value);
     };
 
-    const { state, pathname } = useLocation();
-
+    const { pathname } = useLocation();
     const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
-
     const theme = useSelector((state) => state.theme.theme);
-
     const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
-    const [showDebtStatus, setShowDebtStatus] = useState(false);
-    
     const handleLiquidateClick = () => {
-        setShowDebtStatus(true);  
+        if (!isAuthenticated) {
+            setShowWarning(true); // Show warning if not authenticated
+        } else {
+            setShowDebtStatus(true); // Show DebtStatus component if authenticated
+        }
     }
 
     const handleBackClick = () => {
-        setShowDebtStatus(false);  
+        setShowDebtStatus(false);
     }
 
     return (
         <>
             <div className="full">
-                <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-8 dark:text-darkText">
-                    Liquidate
-                </h1>
                 <div className="flex h-[60px] gap-5 -ml-3">
-                    
-                        <div className=" lg1:-mt-1 mt-[20px] cursor-pointer" onClick={() => navigate(-1)}>
-                            <ChevronLeft size={40} color={chevronColor} />
-                        </div>
-                   
-                    <h1 className="text-[#2A1F9D] text-xl inline-flex items-center lg1:mt-0 mt-10 mb-8 dark:text-darkText ml-1">
-                        <img src={icplogo} alt="Icp Logo" className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]" />
-                        ICP Market
+                    <div className="lg1:-mt-0 mt-[20px] cursor-pointer" onClick={() => navigate(-1)}>
+                        <ChevronLeft size={30} color={chevronColor} />
+                    </div>
+                    <h1 className="text-[#2A1F9D] text-xl font-bold inline-flex items-center lg1:mt-0 mt-10 mb-8 dark:text-darkText ml-1">
+                        Liquidation
                     </h1>
                 </div>
 
                 {!showDebtStatus ? (
-                <div className="relative w-full md:w-11/12 mx-auto my-6 min-h-[450px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
-                    <div className="absolute right-0 top-0 h-full w-full md:w-1/2 pointer-events-none">
-                        <img
-                            src={Element}
-                            alt="Elements"
-                            className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
-                        />
-                    </div>
-                    <h1 className="text-[#2A1F9D] font-bold my-2 text-xl dark:text-darkText mb-3">
-                        Check Users in Debt
-                    </h1>
+                    <div className="relative w-full md:w-11/12 mx-auto my-6 min-h-[450px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
+                        <div className="absolute right-0 top-0 h-full w-full md:w-1/2 pointer-events-none">
+                            <img
+                                src={Element}
+                                alt="Elements"
+                                className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
+                            />
+                        </div>
+                        <h1 className="text-[#2A1F9D] font-bold my-2 text-xl dark:text-darkText mb-3">
+                            Check Users in Debt
+                        </h1>
+                        
+                        {/* Display the warning if not authenticated */}
+                        {showWarning && (
+                            <div className="text-red-500 font-bold mb-4">
+                                Please connect your wallet to check the debt status.
+                            </div>
+                        )}
 
-                    <Button title="Get Debt Status" onClickHandler={handleLiquidateClick} />
-                </div>
+                        <Button title="Get Debt Status" onClickHandler={handleLiquidateClick} />
+                    </div>
                 ) : (
-                    <DebtStatus onBackClick={handleBackClick} />  // Render the DebtStatus component
+                    <DebtStatus onBackClick={handleBackClick} />
                 )}
 
-
-
-                <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
-                        <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
+                {!isAuthenticated && (
+                    <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+                        <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                             <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
                             <div className='flex flex-col gap-2 mt-3 text-sm'>
                                 <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
@@ -178,14 +171,12 @@ const Liquidate = () => {
                                     />
                                 </div>
                             )}
-
                         </div>
                     </Modal>
+                )}
             </div>
-
-
         </>
     )
 }
 
-export default Liquidate
+export default Liquidate;

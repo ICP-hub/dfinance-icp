@@ -1,17 +1,22 @@
+use candid::{Nat, Principal};
+use ic_cdk::call;
+pub struct SupplyLogic;
 use crate::api::state_handler::mutate_state;
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::declarations::storable::Candid;
+use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::{
     api::deposit::asset_transfer_from,
     constants::asset_address::{BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DTOKEN_CANISTER},
 };
-use candid::{Nat, Principal};
-use ic_cdk::call;
-pub struct SupplyLogic;
-use crate::declarations::transfer::*;
+
 impl SupplyLogic {
+    // -------------------------------------
+    // ----------- SUPPLY LOGIC ------------
+    // -------------------------------------
+
     pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
         ic_cdk::println!("Starting execute_supply with params: {:?}", params);
 
@@ -120,8 +125,112 @@ impl SupplyLogic {
             }
             TransferFromResult::Err(err) => Err(format!("{:?}", err)),
         }
-        // User updation logic here ----------------------------------->
+
+        // ----------- User updation logic here -------------
     }
 
-    pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<(), String> {Ok(())}
+    // -------------------------------------
+    // ---------- WITHDRAW LOGIC -----------
+    // -------------------------------------
+
+    pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<(), String> {
+        ic_cdk::println!("Starting execute_withdraw with params: {:?}", params);
+
+        let (user_principal, liquidator_principal) = if let Some(on_behalf_of) = params.on_behalf_of
+        {
+            let user_principal = Principal::from_text(on_behalf_of)
+                .map_err(|_| "Invalid user canister ID".to_string())?;
+            let liquidator_principal = ic_cdk::caller();
+            (user_principal, Some(liquidator_principal))
+        } else {
+            let user_principal = ic_cdk::caller();
+            (user_principal, None)
+        };
+
+        let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
+            .map_err(|_| "Invalid ledger canister ID".to_string())?;
+
+        let platform_principal = Principal::from_text(BACKEND_CANISTER)
+            .map_err(|_| "Invalid platform canister ID".to_string())?;
+
+        let dtoken_canister_principal = Principal::from_text(DTOKEN_CANISTER)
+            .map_err(|_| "Invalid dtoken canister ID".to_string())?;
+
+        // Reads the reserve data from the asset
+        let reserve_data_result = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .map(|reserve| reserve.0.clone())
+                .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
+        });
+
+        let mut reserve_data = match reserve_data_result {
+            Ok(data) => {
+                ic_cdk::println!("Reserve data found for asset: {:?}", data);
+                data
+            }
+            Err(e) => {
+                ic_cdk::println!("Error: {}", e);
+                return Err(e);
+            }
+        };
+
+        // ---------- Update state() ----------
+
+        // ---------- Validate withdraw() ----------
+
+        let withdraw_amount = Nat::from(params.amount);
+
+        // Determines the receiver principal
+        let transfer_to_principal = if let Some(liquidator) = liquidator_principal {
+            liquidator
+        } else {
+            user_principal
+        };
+
+        // Tranfers the withdraw amount from the pool to the user
+        let args = TransferFromArgs {
+            to: TransferAccount {
+                owner: transfer_to_principal,
+                subaccount: None,
+            },
+            fee: None,
+            spender_subaccount: None,
+            from: TransferAccount {
+                owner: platform_principal,
+                subaccount: None,
+            },
+            memo: None,
+            created_at_time: None,
+            amount: withdraw_amount.clone(),
+        };
+        let (result,): (TransferFromResult,) =
+            call(ledger_canister_id, "icrc2_transfer_from", (args,))
+                .await
+                .map_err(|e| e.1)?;
+
+        match result {
+            TransferFromResult::Ok(balance) => Ok(()),
+            TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+        };
+
+        // Transfers dtoken from user to the pool
+        asset_transfer_from(
+            ledger_canister_id,
+            user_principal,
+            platform_principal,
+            withdraw_amount.clone(),
+        )
+        .await
+        .map_err(|e| format!("Asset transfer failed: {:?}", e))?;
+
+        ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
+
+        // ---------- Update reserve data ----------
+
+        // ---------- Update user data ----------
+
+        Ok(())
+    }
 }

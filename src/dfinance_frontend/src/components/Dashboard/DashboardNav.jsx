@@ -133,22 +133,48 @@ const DashboardNav = () => {
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
 
 
-  const [reserveData, setReserveData] = useState(null);
+  // const [assets, setAssets] = useState([]);
 
-  useEffect(() => {
-    const asset = "ckbtc"; 
-    const fetchData = async () => {
-      try {
-        const data = await fetchReserveData(asset);
-        setReserveData(data);
-        console.log(data)
-      } catch (err) {
-        setError(err.message);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchAssets = async () => {
+  //     if (!backendActor) return;
 
-    fetchData(); 
-  }, [fetchReserveData]); 
+  //     try {
+  //       const assetNames = await backendActor.get_all_assets(); // Call the Rust function
+  //       console.log("asset names", assetNames);
+  //       setAssets(assetNames); // Update state with the fetched asset names
+  //     } catch (error) {
+  //       console.error('Error fetching asset names:', error);
+  //     }
+  //   };
+
+  //   fetchAssets(); // Trigger the fetch on component mount
+  // }, [backendActor]);
+
+
+  // const [reserveData, setReserveData] = useState(null);
+
+  // // Fetch reserve data for each asset name
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     if (assets.length === 0 || !fetchReserveData) return;
+
+  //     try {
+  //       const data = {};
+  //       for (const asset of assets) {
+  //         const reserveDataForAsset = await fetchReserveData(asset); // Fetch reserve data for each asset
+  //         data[asset] = reserveDataForAsset;
+  //         console.log(`${asset} reserve data:`, reserveDataForAsset);
+  //       }
+  //       setReserveData(data); // Update state with the fetched reserve data for all assets
+  //     } catch (err) {
+  //       console.error('Error fetching reserve data:', err);
+  //       setError(err.message);
+  //     }
+  //   };
+
+  //   fetchData(); // Trigger the fetch on assets or fetchReserveData change
+  // }, [assets, fetchReserveData]);
 
 
   return (

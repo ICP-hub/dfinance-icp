@@ -3,8 +3,8 @@
 set -e
 
 # Set variables
-ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai"  
-backend_canister="a3shf-5eaaa-aaaaa-qaafa-cai"  
+ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"  
+backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"  
 approve_method="icrc2_approve"
 deposit_method="supply"
 
@@ -60,20 +60,13 @@ echo "Allowance Set: $allow"
 echo "--------------------------------------"
 
 # Call the deposit function on the backend canister
-dfx identity use default
-
-# Get the principal of the default identity
-ON_BEHALF_OF=$(dfx identity get-principal)
-
-# call the execute supply function
-result=$(dfx canister call dfinance_backend supply "(record {
-    asset=\"ckbtc\";
-    amount= 1000000;
-    on_behalf_of=principal \"${ON_BEHALF_OF}\";
-    referral_code=5678:nat16
-})")
-
-echo "Supply Execution Result: $result"
+deposit_amount=20_000 
+currency="ckbtc"  
+referral_code=0  
+echo "Depositing $deposit_amount to backend_canister..."
+deposit_result=$(dfx canister call $backend_canister $deposit_method "(\"$currency\", $deposit_amount:nat64,\"${user1_principal}\", $referral_code:nat16)")
+echo "Deposit Result: $deposit_result"
+echo "--------------------------------------"
 
 # Check balances after deposit
 echo "Checking balances after deposit..."

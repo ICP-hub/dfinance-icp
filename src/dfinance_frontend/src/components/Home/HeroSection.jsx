@@ -22,7 +22,7 @@ const HeroSection = () => {
                     <span className="font-semibold bg-gradient-to-tr from-[#4659CF]/100 to-[#C562BD]/70 bg-clip-text text-transparent">Borrow</span> Across Network
                 </h1>
                 <p className="text-sm mt-6 font-normal text-[#737373] text-center dark:text-darkTextSecondary leading-snug mx-auto max-w-xs sm:max-w-md lg:max-w-2xl lg:leading-snug lg:text-base lg:max-h-[3.5rem] overflow-hidden">
-    Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC.
+                Contrary to common belief, smart investments aren’t just luck. They’re rooted in strategy and sound financial principles.
 </p>
 
 

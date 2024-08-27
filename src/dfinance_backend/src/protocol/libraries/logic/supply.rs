@@ -17,21 +17,23 @@ use crate::declarations::transfer::*;
 impl SupplyLogic {
     pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
         ic_cdk::println!("Starting execute_supply with params: {:?}", params);
-
-        let canister_id_ckbtc_ledger = "aovwi-4maaa-aaaaa-qaagq-cai".to_string();
-        let dtoken_canister_id = "ahw5u-keaaa-aaaaa-qaaha-cai".to_string();
-        ic_cdk::println!("Canister IDs fetched successfully");
-
-        let ledger_canister_id = Principal::from_text(canister_id_ckbtc_ledger)
-            .map_err(|_| "Invalid ledger canister ID".to_string())?;
-
+        
+        let canister_id_ckbtc_ledger = "c2lt4-zmaaa-aaaaa-qaaiq-cai".to_string();
+        
+        // let dtoken_canister_id="c5kvi-uuaaa-aaaaa-qaaia-cai".to_string();
+    ic_cdk::println!("Canister IDs fetched successfully");
+    
+      
+        let ledger_canister_id =
+            Principal::from_text(canister_id_ckbtc_ledger).map_err(|_| "Invalid ledger canister ID".to_string())?;
         // let user_principal = caller();
+        let user_principal=Principal::from_text("i5hok-bgbg2-vmnlz-qa4ur-wm6z3-ha5xl-c3tut-i7oxy-6ayyw-2zvma-lqe".to_string()).map_err(|_| "Invalid user canister ID".to_string())?;
+       
+        let platform_principal=Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai".to_string()).map_err(|_| "Invalid platform canister ID".to_string())?;
+        
+        let dtoken_canister_principal= Principal::from_text("c5kvi-uuaaa-aaaaa-qaaia-cai".to_string()).map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
-        let dtoken_canister_principal = Principal::from_text(dtoken_canister_id)
-            .map_err(|_| "Invalid dtoken canister ID".to_string())?;
-
-        let platform_principal = Principal::from_text("a3shf-5eaaa-aaaaa-qaafa-cai".to_string())
-            .map_err(|_| "Invalid platform canister ID".to_string())?;
+       
 
         let amount_nat = Nat::from(params.amount);
 
@@ -121,6 +123,11 @@ impl SupplyLogic {
             health_factor: None,
             supply: None,
             borrow: None,
+            // total_collateral: 0.0,
+            // total_debt: 0.0,
+            // available_borrow: 0.0,
+            // ltv: 0.0,
+            // current_liquidation_threshold: 80.0, 
         };
 
         mutate_state(|state| {
@@ -167,26 +174,23 @@ impl SupplyLogic {
         // if balance < params.amount {
         //     return Err("Insufficient funds for Dtoken transfer".to_string());
         // }
-
+        
         let dtoken_args = TransferArgs {
             to: TransferAccount {
-                owner: params.on_behalf_of,
+                owner: user_principal,
                 subaccount: None,
             },
             fee: None,
             spender_subaccount: None,
             memo: None,
             created_at_time: None,
-            amount: amount_nat.clone(),
+            amount: amount_nat,
         };
 
-        let (new_result,): (TransferFromResult,) = call(
-            dtoken_canister_principal,
-            "icrc1_transfer",
-            (dtoken_args, false),
-        )
-        .await
-        .map_err(|e| e.1)?;
+        let (new_result,): (TransferFromResult,) =
+            call(dtoken_canister_principal, "icrc1_transfer", (dtoken_args, false))
+                .await
+                .map_err(|e| e.1)?;
 
         match new_result {
             TransferFromResult::Ok(new_balance) => {
@@ -195,6 +199,7 @@ impl SupplyLogic {
             }
             TransferFromResult::Err(err) => Err(format!("{:?}", err)),
         }
+        // Ok(amount_nat)
     }
 }
 

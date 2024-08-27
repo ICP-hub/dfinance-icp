@@ -26,13 +26,17 @@ import icplogo from '../../../public/wallet/icp.png'
 import plug from "../../../public/wallet/plug.png"
 import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
+import useAssetData from "../Common/useAssets"
 
 
 
 const AssetDetails = () => {
   const [isFilter, setIsFilter] = React.useState(false)
   const { id } = useParams();
-  console.log(id);
+
+  const {filteredItems } = useAssetData();
+  
+
 
   // redux
   const dispatch = useDispatch()
@@ -55,15 +59,15 @@ const AssetDetails = () => {
   const renderFilterComponent = () => {
     switch (assetDetailFilter) {
       case "Supply Info":
-        return <SupplyInfo />
+        return <SupplyInfo filteredItems={filteredItems}/>
       case "Borrow Info":
-        return <BorrowInfo />
+        return <BorrowInfo filteredItems={filteredItems}/>
       case "E-Mode info":
-        return <EModeInfo />
+        return <EModeInfo  filteredItems={filteredItems}/>
       case "Interest rate model":
-        return <InterestRateModel />
+        return <InterestRateModel filteredItems={filteredItems}/>
       default:
-        return <SupplyInfo />
+        return <SupplyInfo filteredItems={filteredItems}/>
     }
   }
 

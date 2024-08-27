@@ -58,4 +58,6 @@ service : () -> {
   set_reserve_pause : (text, bool) -> (Result);
   set_supply_cap : (text, nat64) -> (Result);
   supply : (ExecuteSupplyParams) -> (Result_3);
+  get_all_assets: () -> (vec text) query;
 }
+

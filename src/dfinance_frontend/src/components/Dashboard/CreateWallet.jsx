@@ -91,6 +91,9 @@ const CreateWallet = () => {
         fetchBalance();
       }, [isAuthenticated, ledgerActor, principalObj]);
 
+
+     
+
     return (
         <>
             {isAuthenticated ? <MySupply /> : <div className="relative w-full md:w-11/12 mx-auto my-6 min-h-[450px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">

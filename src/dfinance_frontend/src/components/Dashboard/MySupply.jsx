@@ -26,11 +26,28 @@ import { useNavigate } from "react-router-dom";
 import Borrow from "./DashboardPopup/BorrowPopup";
 import Repay from "./DashboardPopup/Repay";
 import { useAuth } from "../../utils/useAuthClient";
+import { Principal } from "@dfinity/principal";
+import { useEffect } from "react";
+import { useCallback } from "react";
+import { useMemo } from "react";
 
 const MySupply = () => {
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
-  const { isAuthenticated } = useAuth();
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    updateClient,
+    authClient,
+    identity,
+    principal,
+    backendActor,
+    accountId,
+    createLedgerActor,
+    reloadLogin,
+    accountIdString,
+} = useAuth()
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
@@ -188,6 +205,68 @@ const MySupply = () => {
       No assets to borrow.
     </p>
   );
+
+  const [balance, setBalance] = useState(null);
+  const [usdBalance, setUsdBalance] = useState(null);
+  const [conversionRate, setConversionRate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
+
+  const fetchBalance = useCallback(async () => {
+    if (isAuthenticated && ledgerActor && principalObj) {
+      try {
+        const account = { owner: principalObj, subaccount: [] };
+        const balance = await ledgerActor.icrc1_balance_of(account);
+        setBalance(balance.toString());
+        console.log("Fetched Balance:", balance.toString());
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+        setError(error);
+      }
+    }
+  }, [isAuthenticated, ledgerActor, principalObj]);
+
+  const fetchConversionRate = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setConversionRate(data['internet-computer'].usd);
+      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
+    } catch (error) {
+      console.error("Error fetching conversion rate:", error);
+      setError(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchBalance(), fetchConversionRate()]);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
+
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
+      setUsdBalance(balanceInUsd);
+    }
+  }, [balance, conversionRate]);
+
+
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6">
       <div className="flex justify-center -mb-38 lg:hidden">
@@ -390,9 +469,9 @@ const MySupply = () => {
                                   </td>
                                   <td className="p-3 align-top">
                                     <div className="flex flex-col">
-                                      <p>{item.wallet_balance_count}</p>
+                                      <p>{balance}</p>
                                       <p className="font-light">
-                                        ${item.wallet_balance}M
+                                        ${usdBalance}
                                       </p>
                                     </div>
                                   </td>
@@ -593,8 +672,8 @@ const MySupply = () => {
                       </td>
                       <td className="p-3 align-top">
                         <div className="flex flex-col">
-                          <p>{item.wallet_balance_count}</p>
-                          <p className="font-light">${item.wallet_balance}M</p>
+                          <p>{balance}</p>
+                          <p className="font-light">${usdBalance}</p>
                         </div>
                       </td>
                       <td className="p-3 align-top">{item.apy}</td>

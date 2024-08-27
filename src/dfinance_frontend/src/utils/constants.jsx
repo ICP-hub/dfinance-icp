@@ -1,7 +1,7 @@
 import ckBTC from '../../public/assests-icon/ckBTC.png';
 import cekTH from '../../public/assests-icon/cekTH.png';
 import Dragginz from "../../public/assests-icon/Dragginz.png"
-import icp from '../../public/assests-icon/ICP.png';
+import icp from '../../public/assests-icon/ICP.svg';
 import openChat from '../../public/assests-icon/openChat.png';
 import Kinic from '../../public/assests-icon/Kinic.png';
 import HotOrNot from '../../public/assests-icon/HotOrNot.png';
@@ -10,6 +10,7 @@ import ICGGhost from '../../public/assests-icon/ICGGhost.png';
 import Modclub from '../../public/assests-icon/Modclub.png';
 import BooMDao from '../../public/assests-icon/BooMDao.png';
 import catalyze from '../../public/assests-icon/catalyze.png';
+import ckusdc from '../../public/assests-icon/ckusdc.svg';
 
 import trailofbits from '../../public/assests-icon/trail-Of-Bits-svg-fill.png'
 import certora from '../../public/assests-icon/certora-svg-fill.png'
@@ -178,14 +179,14 @@ export const TAB_CARD_DATA = [
     title: "ckBTC",
     image: ckBTC,
     description:
-      "Bitcoin is the first decentralized digital currency. It was invented in 2008 by an unknown person or group of people using the name Satoshi Nakamoto and started in 2009 when its source code was released as open-source software.",
+      "ckBTC — a multi-chain bitcoin twin, trustlessly created by chain-key cryptography and Internet Computer smart contracts that directly hold raw bitcoin. Send and receive ckBTC with 1-2 second finality and negligible fees. ",
   },
   {
     id: 1,
     title: "ckETH",
     image: cekTH,
     description:
-      "Ethereum is a decentralized, open-source blockchain system that features smart contract functionality. It is the second-largest cryptocurrency by market capitalization, after Bitcoin.",
+      "ckETH, or chain-key Ether, is an ICP-native token representing Ethereum’s ETH on the Internet Computer blockchain. It improves usability and reduces transaction costs for Ethereum users.",
   },
   // {
   //   id: 2,
@@ -199,28 +200,15 @@ export const TAB_CARD_DATA = [
     title: "Internet computer",
     image: icp,
     description:
-      "Litecoin is a peer-to-peer cryptocurrency and open-source software project released under the MIT/X11 license. Creation and transfer of coins are based on an open-source cryptographic protocol and is not managed by any central authority.",
+      "ICP, developed by the DFINITY Foundation, is a blockchain technology enabling smart contracts and decentralized apps to run directly on the internet, bypassing traditional servers.",
   },
+  
   {
-    id: 0,
-    title: "ckBTC",
-    image: ckBTC,
+    id: 4,
+    title: "ckUSDC",
+    image: ckusdc,
     description:
-      "Bitcoin is the first decentralized digital currency. It was invented in 2008 by an unknown person or group of people using the name Satoshi Nakamoto and started in 2009 when its source code was released as open-source software.",
-  },
-  {
-    id: 1,
-    title: "ckETH",
-    image: cekTH,
-    description:
-      "Ethereum is a decentralized, open-source blockchain system that features smart contract functionality. It is the second-largest cryptocurrency by market capitalization, after Bitcoin.",
-  },
-  {
-    id: 3,
-    title: "Internet computer",
-    image: icp,
-    description:
-      "Litecoin is a peer-to-peer cryptocurrency and open-source software project released under the MIT/X11 license. Creation and transfer of coins are based on an open-source cryptographic protocol and is not managed by any central authority.",
+      "ckUSDC is an ICRC-1-compliant token on the Internet Computer, backed 1:1 by USDC. It allows seamless minting and redemption of ckUSDC for USDC through the ckETH minter canister.",
   },
   // {
   //   id: 4,

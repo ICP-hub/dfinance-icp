@@ -180,7 +180,8 @@ const UserInformationPopup = ({ onClose }) => {
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
     {transactionResult ? (
         // Transaction result popup
-        <div className="bg-white dark:bg-[#1D1B40] dark:text-darkText p-6 rounded-md w-full max-w-md mx-4 text-center">
+        <div ref={popupRef}
+         className="bg-white dark:bg-[#1D1B40] dark:text-darkText p-6 rounded-md w-full max-w-md mx-4 text-center">
           <div className="flex flex-col items-center">
             {transactionResult === "success" ? (
               <>

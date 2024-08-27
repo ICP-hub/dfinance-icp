@@ -14,6 +14,8 @@ import StakeDetails from "../pages/Stake/Stake"
 import Faucet from "../pages/Faucet/faucet"
 
 import TransactionDetail from "../components/Dashboard/Transaction"
+import Liquidate from "../components/Liquidate/Liquidate"
+import DebtStatus from "../components/Liquidate/DebtStatus"
 export default [
   {
     path: "/",
@@ -97,6 +99,14 @@ export default [
     element: (
       <MainDashboard includeDashboardNav={false}>
         <Faucet/>
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/Liquidate",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <Liquidate/>
       </MainDashboard>
     ),
   },

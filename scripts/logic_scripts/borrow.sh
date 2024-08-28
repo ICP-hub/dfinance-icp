@@ -36,7 +36,7 @@ echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
 echo "Fetching user data..."
-user_data=$(./user.sh)
+user_data=$(../integration_scripts/user_data.sh)
 echo "user data: $user_data"
 
 # Approve the transfer
@@ -58,9 +58,10 @@ echo "user data: $user_data"
 # Call the borrow function on the backend canister
 borrow_amount=500  
 currency="ckbtc" 
-referral_code=0  
+interest_rate=0  
+
 echo "Borrowing $borrow_amount from backend_canister..."
-borrow_result=$(dfx canister call $backend_canister $borrow_method "(\"$currency\", $borrow_amount:nat64, \"${user1_principal}\",\"${user1_principal}\", $referral_code:nat)")
+borrow_result=$(dfx canister call $backend_canister $borrow_method "(\"$currency\", $borrow_amount:nat64, \"${user1_principal}\",\"${user1_principal}\", $interest_rate:nat)")
 echo "Borrow Result: $borrow_result"
 echo "--------------------------------------"
 
@@ -78,7 +79,7 @@ echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
 echo "Fetching user data..."
-user_data=$(./user.sh)
+user_data=$(../integration_scripts/user_data.sh)
 echo "user data: $user_data"
 
 # Switch back to the default identity at the end

@@ -3,8 +3,8 @@
 set -e
 
 # Set variables
-ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai"  
-backend_canister="a3shf-5eaaa-aaaaa-qaafa-cai"  
+ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"  
+backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"  
 approve_method="icrc2_approve"
 deposit_method="supply"
 
@@ -44,34 +44,32 @@ echo "--------------------------------------"
 # echo "user data: $user_data"
 
 # Approve the transfer
-approve_amount=10000000  # Set the amount you want to approve
-echo "Approving transfer of $approve_amount from user1 to backend_canister..."
-allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
-    from_subaccount=null;
-    spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
-    amount=$approve_amount:nat;
-    expected_allowance=null;
-    expires_at=null;
-    fee=null;
-    memo=null;
-    created_at_time=null
-})")
-echo "Allowance Set: $allow"
-echo "--------------------------------------"
+# approve_amount=10000000  # Set the amount you want to approve
+# echo "Approving transfer of $approve_amount from user1 to backend_canister..."
+# allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
+#     from_subaccount=null;
+#     spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
+#     amount=$approve_amount:nat;
+#     expected_allowance=null;
+#     expires_at=null;
+#     fee=null;
+#     memo=null;
+#     created_at_time=null
+# })")
+# echo "Allowance Set: $allow"
+# echo "--------------------------------------"
 
 # Call the deposit function on the backend canister
 dfx identity use default
 
 # Get the principal of the default identity
-ON_BEHALF_OF=$(dfx identity get-principal)
-
+# ON_BEHALF_OF=$(dfx identity get-principal)
+deposit_amount=50  
+currency="ckbtc"  
+referral_code=0  
+is_collateral=true
 # call the execute supply function
-result=$(dfx canister call dfinance_backend supply "(record {
-    asset=\"ckbtc\";
-    amount= 1000000;
-    on_behalf_of=principal \"${ON_BEHALF_OF}\";
-    referral_code=5678:nat16
-})")
+result=$(dfx canister call dfinance_backend deposit "(\"$currency\", $deposit_amount:nat64, \"${user1_principal}\", $is_collateral:bool)")
 
 echo "Supply Execution Result: $result"
 

@@ -43,7 +43,8 @@ type ReserveData = record {
   supply_rate_apr : opt float64;
   configuration : ReserveConfiguration;
   accrued_to_treasury : nat;
-  total_supply : opt nat;
+  total_supply : opt float64;
+  can_be_collateral: opt bool;
 };
 
 type Result = variant { Ok; Err : text };
@@ -59,6 +60,9 @@ type UserData = record {
   net_apy : opt float64;
   health_factor : opt float64;
   net_worth : opt float64;
+  total_collateral: opt float64;
+  total_debt: opt float64;
+  available_borrow: opt float64;
   reserves : opt vec record { text; UserReserveData };
   ltv: opt float64;
   liquidation_threshold: opt float64;
@@ -90,7 +94,7 @@ service : () -> {
   supply : (ExecuteSupplyParams) -> (Result_1);
   repay : (text, nat, text) -> (variant { Ok : null; Err : text });
   withdraw : (text, nat, text, bool) -> (variant { Ok : null; Err : text });
-  deposit : (text, nat64, text, nat16) -> (variant { Ok : null; Err : text });
+  deposit : (text, nat64, text, bool) -> (variant { Ok : null; Err : text });
   get_all_users : () -> (vec record { principal; UserData }) query;
   check_user : (text) -> (variant { Ok : text; Err : text });
 };

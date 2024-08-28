@@ -57,7 +57,7 @@ pub struct ExecuteSupplyParams {
     pub amount: u128,
     pub on_behalf_of: String, //optional
     pub is_collateral: bool,
-    pub referral_code: u16, //optional //
+
 }
 
 #[derive(CandidType, Deserialize, Clone)]

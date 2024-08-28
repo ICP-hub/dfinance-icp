@@ -5,6 +5,7 @@ set -e
 # Set variables
 ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"  
 backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"  
+dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 
@@ -24,8 +25,11 @@ echo "Backend Canister Principal (Receiver): $backend_canister_principal"
 echo "Checking balances before operations..."
 user1_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
 backend_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
+user1_dtoken=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
 echo "User1 Balance: $user1_balance"
 echo "Backend Canister Balance: $backend_balance"
+echo "User1 Dtoken Balance: $user1_dtoken"
+
 echo "--------------------------------------"
 
 # Initialize reserve in the backend canister
@@ -77,6 +81,7 @@ echo "Supply Execution Result: $result"
 echo "Checking balances after deposit..."
 user1_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
 backend_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
+user1_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
 echo "User1 Balance After Deposit: $user1_balance_after"
 echo "Backend Canister Balance After Deposit: $backend_balance_after"
 echo "--------------------------------------"

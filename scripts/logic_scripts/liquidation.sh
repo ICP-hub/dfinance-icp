@@ -3,8 +3,8 @@
 set -e
 
 # Set variables
-ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai"
-backend_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
+ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
+backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 
@@ -15,7 +15,7 @@ reserve_data_method="get_reserve_data"
 dfx identity use default
 user_principal=$(dfx identity get-principal)
 echo "User1 Principal (Debt User): $user_principal"
-
+# dfx identity new liquidator
 dfx identity use liquidator
 liquidator_principal=$(dfx identity get-principal)
 echo "Liquidator Principal (Liquidator): $liquidator_principal"
@@ -48,37 +48,40 @@ echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
 echo "Fetching user data..."
-user_data=$(./integration_scripts/user_data.sh)
+user_data=$(../integration_scripts/user_data.sh)
 echo "user data: $user_data"
 
-# Approve the transfer
-approve_amount=10000000 # Set the amount you want to approve
-echo "Approving transfer of $approve_amount from liquidator to backend_canister..."
-allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
-    from_subaccount=null;
-    spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
-    amount=$approve_amount:nat;
-    expected_allowance=null;
-    expires_at=null;
-    fee=null;
-    memo=null;
-    created_at_time=null
-})")
-echo "Allowance Set: $allow"
-echo "--------------------------------------"
+
 
 # Call the deposit function on the backend canister
 dfx identity use default
 
+
+
+
 # Get the principal of the default identity
 ON_BEHALF_OF=$(dfx identity get-principal)
 
+
+dfx identity use liquidator
+# Approve the transfer
+# approve_amount=10000000 # Set the amount you want to approve
+# echo "Approving transfer of $approve_amount from liquidator to backend_canister..."
+# allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
+#     from_subaccount=null;
+#     spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
+#     amount=$approve_amount:nat;
+#     expected_allowance=null;
+#     expires_at=null;
+#     fee=null;
+#     memo=null;
+#     created_at_time=null
+# })")
+# echo "Allowance Set: $allow"
+# echo "--------------------------------------"
+amount=1000
 # call the repay function
-repay=$(dfx canister call dfinance_backend repay "(record {
-    asset=\"ckbtc\";
-    amount= 1000;
-    on_behalf_of=principal \"${ON_BEHALF_OF}\";
-})")
+repay=$(dfx canister call dfinance_backend repay "(\"ckbtc\", $amount:nat, \"${ON_BEHALF_OF}\")")
 
 echo "Repay Execution Result: $repay"
 
@@ -98,21 +101,18 @@ echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
 # call the withdraw function
-withdraw=$(dfx canister call dfinance_backend withdraw "(record {
-    asset=\"ckbtc\";
-    amount= 100;
-    on_behalf_of=principal \"${ON_BEHALF_OF}\";
-    is_collateral= true;
-})")
-
+collateral=true
+withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckbtc\", $amount:nat, \"${ON_BEHALF_OF}\", $collateral:bool)")
 echo "Withdraw Execution Result: $withdraw"
-
+dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
 # Check balances after withdraw
 echo "Checking balances after getting reward..."
 user_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
 liquidator_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${liquidator_principal}\"; subaccount=null})")
 backend_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
+user_balance=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
 echo "User Balance after withdraw: $user_balance"
+echo "User Dtoken Balance after withdraw: $user_dtoken_balance"
 echo "Liquidator Balance after withdraw: $liquidator_balance"
 echo "Backend Canister Balance after withdraw: $backend_balance"
 echo "--------------------------------------"

@@ -9,7 +9,7 @@ use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::{
     api::deposit::asset_transfer_from,
-    constants::asset_address::{BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DTOKEN_CANISTER},
+    constants::asset_address::{BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DTOKEN_CANISTER},
 };
 
 impl SupplyLogic {

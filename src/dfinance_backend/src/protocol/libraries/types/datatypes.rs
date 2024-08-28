@@ -17,11 +17,16 @@ pub struct Transaction {
 pub struct UserData {
     pub user_id: Option<String>,
     pub net_worth: Option<f64>,
+    pub total_collateral: Option<f64>,
+    pub total_debt: Option<f64>,
+    pub available_borrow: Option<f64>,
     pub net_apy: Option<f64>,
     pub health_factor: Option<f64>,
     pub ltv: Option<f64>,
     pub liquidation_threshold: Option<f64>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
+    
+
 }
 
 impl Default for UserData {
@@ -29,6 +34,9 @@ impl Default for UserData {
         Self {
             user_id: Default::default(),
             net_worth: Some(0.0),
+            total_collateral: Some(0.0),
+            total_debt: Some(0.0),
+            available_borrow: Some(0.0), 
             net_apy: Some(0.0),
             health_factor: Some(0.0),
             ltv: Some(0.0),

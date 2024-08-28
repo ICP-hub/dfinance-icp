@@ -8,7 +8,7 @@ pub struct ReserveData {
     pub id: u16,
     pub borrow_rate: Option<f64>, //8.25
     pub supply_rate_apr: Option<f64>, //8.25
-    // pub total_supply: Option<Nat>,
+    pub total_supply: Option<f64>,
     pub last_update_timestamp: u64,
     pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,
@@ -16,6 +16,7 @@ pub struct ReserveData {
     pub liquidity_index: u128,
     pub current_liquidity_rate: u128,
     pub configuration: ReserveConfiguration,
+    pub can_be_collateral: Option<bool>,
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]

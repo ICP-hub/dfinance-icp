@@ -121,7 +121,9 @@ const DebtStatus = () => {
       closePopup();
     }
   };
-
+  const truncateText = (text, length) => {
+    return text.length > length ? text.substring(0, length) + "..." : text;
+  };
   useEffect(() => {
     if (showPopup) {
       document.addEventListener('mousedown', handleOutsideClick);
@@ -213,7 +215,7 @@ const DebtStatus = () => {
                   >
                     <td className="p-2 align-top py-8 ">
                       <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
-                        <p>{item.user_principle}</p>
+                        <p> <p>{truncateText(item.user_principle, 20)}</p> </p>
                       </div>
                     </td>
                     <td className="p-2 align-top py-8 ">

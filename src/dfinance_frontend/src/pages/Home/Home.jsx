@@ -132,62 +132,62 @@ const Home = () => {
         <HeroSection />
 
         {/* Tab based section */}
-       <section className="mt-16">
-      <div className="w-full" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-        <nav className="flex justify-center not-italic">
-          <Tabs
-            value={currentTab}
-            onChange={(e, newTab) => setCurrentTab(newTab)}
-            sx={{
-              "& .MuiTabs-indicator": {
-                backgroundImage:
-                  "linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7))",
-              },
-            }}
-          >
-            {MAIN_NAV_LINK.map((item, index) => (
-              <Tab
-                key={index}
-                label={item.title}
-                disableRipple={true}
-                disableFocusRipple={true}
+        <section className="mt-16">
+          <div className="w-full" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            <nav className="flex justify-center not-italic">
+              <Tabs
+                value={currentTab}
+                onChange={(e, newTab) => setCurrentTab(newTab)}
                 sx={{
-                  textTransform: "capitalize",
-                  fontStyle: "normal",
-                  fontFamily: "Poppins",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  color: theme === "dark" ? "white" : "#2A1F9D",
-                  "&.Mui-selected": {
-                    color: "transparent",
+                  "& .MuiTabs-indicator": {
                     backgroundImage:
                       "linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7))",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
                   },
                 }}
-              />
+              >
+                {MAIN_NAV_LINK.map((item, index) => (
+                  <Tab
+                    key={index}
+                    label={item.title}
+                    disableRipple={true}
+                    disableFocusRipple={true}
+                    sx={{
+                      textTransform: "capitalize",
+                      fontStyle: "normal",
+                      fontFamily: "Poppins",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      color: theme === "dark" ? "white" : "#2A1F9D",
+                      "&.Mui-selected": {
+                        color: "transparent",
+                        backgroundImage:
+                          "linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7))",
+                        backgroundClip: "text",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      },
+                    }}
+                  />
+                ))}
+              </Tabs>
+            </nav>
+            {MAIN_NAV_LINK.map((item) => (
+              <React.Fragment key={item.id}>
+                {currentTab === item.id && (
+                  <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
+                    {item.content}
+                  </p>
+                )}
+              </React.Fragment>
             ))}
-          </Tabs>
-        </nav>
-        {MAIN_NAV_LINK.map((item) => (
-          <React.Fragment key={item.id}>
-            {currentTab === item.id && (
-              <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
-                {item.content}
-              </p>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="w-full mt-10">
-        <h1 className="font-semibold bg-gradient-to-r from-[#4659CF] via-[#C562BD] to-transparent h-12 w-48 bg-clip-text text-transparent text-[36px] mb-2">
-          Markets
-        </h1>
-        <TabPanel />
-      </div>
-    </section>
+          </div>
+          <div className="w-full mt-10">
+            <h1 className="font-semibold bg-gradient-to-r from-[#4659CF] via-[#C562BD] to-transparent h-12 w-48 bg-clip-text text-transparent text-[36px] mb-2">
+              Markets
+            </h1>
+            <TabPanel />
+          </div>
+        </section>
 
         {/* Info section */}
         <section className="mt-2 md:mt-8">
@@ -223,10 +223,9 @@ const Home = () => {
             <div className="w-full flex justify-center mt-3">
               {" "}
               {/* Center align the button on all screens */}
-              <Buton
-  className=" text-white rounded-xl p-3 px-8 shadow-md shadow-[#00000040] font-semibold text-sm"
-  title="LEARN MORE"
-/>
+              <Button
+                title="LEARN MORE"
+              />
 
             </div>
           </div>
@@ -275,38 +274,34 @@ const Home = () => {
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full dark:text-darkText">
                       <div
-                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${
-                          currentFAQ === index
+                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${currentFAQ === index
                             ? "bg-[#eef0f5] dark:bg-currentFAQBackground"
                             : ""
-                        } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
+                          } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
                         onClick={() => setCurrentFAQ(index)}
                       >
                         <div className="w-1/12">
                           <div
-                            className={`w-4 h-4 rounded-full ${
-                              currentFAQ === index
+                            className={`w-4 h-4 rounded-full ${currentFAQ === index
                                 ? "bg-[#517687] dark:bg-darkText"
                                 : "bg-[#DBE8EE] dark:bg-[#192C35]"
-                            }`}
+                              }`}
                           ></div>
                         </div>
                         <div className="w-10/12">{item.question}</div>
                         <div
-                          className={`w-1/12 ${
-                            currentFAQ === index
+                          className={`w-1/12 ${currentFAQ === index
                               ? "text-[#517687] dark:text-darkText rotate-90 md:rotate-0"
                               : "text-[#DBE8EE] dark:text-[#192C35]"
-                          } flex justify-end`}
+                            } flex justify-end`}
                         >
                           <ChevronRight />
                         </div>
                       </div>
                       {currentFAQ === index && (
                         <div
-                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
-                            currentFAQ === index ? "opacity-100" : "opacity-0"
-                          }`}
+                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${currentFAQ === index ? "opacity-100" : "opacity-0"
+                            }`}
                         >
                           <p>{item.answer}</p>
                         </div>
@@ -340,9 +335,8 @@ const Home = () => {
       </div>
       {/* Footer */}
       <button
-        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
+        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
+          }`}
         onClick={scrollToTop}
       >
         <LuMoveUp className="text-[30px] mx-auto hover:text-white transition-colors" />

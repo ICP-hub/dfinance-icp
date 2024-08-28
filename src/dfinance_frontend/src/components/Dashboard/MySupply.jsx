@@ -30,6 +30,8 @@ import { Principal } from "@dfinity/principal";
 import { useEffect } from "react";
 import { useCallback } from "react";
 import { useMemo } from "react";
+import useAssetData from "../Common/useAssets";
+import ckBTC from '../../../public/assests-icon/ckBTC.png';
 
 const MySupply = () => {
   const navigate = useNavigate();
@@ -47,7 +49,7 @@ const MySupply = () => {
     createLedgerActor,
     reloadLogin,
     accountIdString,
-} = useAuth()
+  } = useAuth()
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
@@ -266,26 +268,27 @@ const MySupply = () => {
     }
   }, [balance, conversionRate]);
 
+  const { assets, reserveData, filteredItems } = useAssetData();
+  const filteredReserveData = Object.fromEntries(filteredItems);
+  console.log(filteredReserveData)
 
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6">
       <div className="flex justify-center -mb-38 lg:hidden">
         <button
-          className={`w-1/2 py-2  ${
-            activeSection === "supply"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
-              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
-          }`}
+          className={`w-1/2 py-2  ${activeSection === "supply"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
+            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
+            }`}
           onClick={() => setActiveSection("supply")}
         >
           &#8226; Supply
         </button>
         <button
-          className={`w-1/2 py-1  ${
-            activeSection === "borrow"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
-              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
-          }`}
+          className={`w-1/2 py-1  ${activeSection === "borrow"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
+            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
+            }`}
           onClick={() => setActiveSection("borrow")}
         >
           &#8226; Borrow
@@ -304,14 +307,14 @@ const MySupply = () => {
 
       <div className="w-full lg:w-6/12 mt-6 md:mt-4 lg:mt-20">
         <div
-          className={`${
-            activeSection === "supply" ? "block" : "hidden"
-          } lg:block`}
+          className={`${activeSection === "supply" ? "block" : "hidden"
+            } lg:block`}
         >
           <div
-            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar  ${
-              isSupplyVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar  
+              ${isSupplyVisible ? "min-h-auto" : "min-h-[100px]"
+              } 
+            p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             {/* Header */}
             <div className="flex justify-between items-center mt-3">
@@ -410,8 +413,8 @@ const MySupply = () => {
                             </div>
                             {index !==
                               MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
-                              <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
-                            )}
+                                <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+                              )}
                           </div>
                         )
                       )}
@@ -427,8 +430,8 @@ const MySupply = () => {
                 <>
                   {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
                     noSupplyMessage
-                  ) : (
-                    <div className="w-full h-[250px] mt-4 relative">
+                  ) : ( //
+                    <div className="w-full max-h-[250px] mt-4 relative">
                       {/* Fixed Header */}
                       <div className="w-full  z-10 sticky top-0">
                         <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
@@ -437,7 +440,7 @@ const MySupply = () => {
                               {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
                                 <td
                                   key={index}
-                                  className="p-3 whitespace-nowrap"
+                                  className="p-3"
                                 >
                                   {item.header}
                                 </td>
@@ -451,7 +454,7 @@ const MySupply = () => {
                       <div className="w-full h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ">
                         <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                           <tbody>
-                            {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map(
+                            {filteredItems.slice(0, 8).map(
                               (item, index) => (
                                 <tr
                                   key={index}
@@ -459,12 +462,13 @@ const MySupply = () => {
                                 >
                                   <td className="p-3 align-top">
                                     <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
-                                      <img
-                                        src={item.image}
-                                        alt={item.asset}
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                      {item.asset}
+                                      {item[0] === "ckbtc" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "cketh" && (
+                                        <img src={ckEthImage} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0]}
                                     </div>
                                   </td>
                                   <td className="p-3 align-top">
@@ -476,7 +480,7 @@ const MySupply = () => {
                                     </div>
                                   </td>
                                   <td className="p-3 align-top mt-1.5">
-                                    {item.apy}
+                                    <p >{item[1].Ok.apy ? item[1].Ok.apy : "0"}</p>
                                   </td>
                                   <td className="p-3 align-top">
                                     <div className="w-full flex items-center justify-center">
@@ -523,9 +527,8 @@ const MySupply = () => {
           </div>
 
           <div
-            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${
-              isVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${isVisible ? "min-h-[200px]" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -621,8 +624,8 @@ const MySupply = () => {
                             </div>
                             {index !==
                               MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
-                              <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
-                            )}
+                                <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+                              )}
                           </div>
                         )
                       )}
@@ -634,87 +637,88 @@ const MySupply = () => {
 
             {/* for desktop screen */}
             <div className="hidden xl:block">
-      {isVisible && (
-        MY_ASSET_TO_SUPPLY_TABLE_ROW.length === 0 ? (
-          noAssetsToSupplyMessage
-        ) : (
-          <div className="w-full h-[275px] overflow-hidden">
-            <div className="w-full sticky top-0 z-10 ">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
-                <thead>
-                  <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
-                    {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
-                      <th key={index} className="p-3 whitespace-nowrap">
-                        {item.header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-              </table>
+              {isVisible && (
+                MY_ASSET_TO_SUPPLY_TABLE_ROW.length === 0 ? (
+                  noAssetsToSupplyMessage
+                ) : ( // h-[275px]
+                  <div className="w-full max-h-[257px] overflow-hidden">
+                    <div className="w-full sticky top-0 z-10 ">
+                      <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
+                        <thead>
+                          <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
+                            {MY_SUPPLY_ASSET_TABLE_COL.map((item, index) => (
+                              <th key={index} className="p-3 whitespace-nowrap">
+                                {item.header}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                      </table>
+                    </div>
+                    <div className="w-full h-[calc(100%_-_40px)] overflow-y-auto scrollbar-custom ">
+                      <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
+                        <tbody>
+                          {filteredItems.slice(0, 8).map((item, index) => (
+                            <tr
+                              key={index}
+                              className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                            >
+                              <td className="p-3 align-top">
+                                <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                                  {item[0] === "ckbtc" && (
+                                    <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                  )}
+                                  {item[0] === "cketh" && (
+                                    <img src={ckEthImage} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                  )}
+                                  {item[0]}
+                                </div>
+                              </td>
+                              <td className="p-3 align-top">
+                                <div className="flex flex-col">
+                                  <p>{balance}</p>
+                                  <p className="font-light">${usdBalance}</p>
+                                </div>
+                              </td>
+                              <td className="p-3 align-top"> <p >{item[1].Ok.apy ? item[1].Ok.apy : "0"}</p></td>
+                              <td className="p-3 align-top">
+                                <div className="w-full flex items-center justify-center dark:text-darkText">
+                                  <Check color={checkColor} size={16} />
+                                </div>
+                              </td>
+                              <td className="p-3 align-top">
+                                <div className="w-full flex gap-2">
+                                  <Button
+                                    title={"Supply"}
+                                    onClickHandler={() =>
+                                      handleModalOpen(
+                                        "supply",
+                                        item.asset,
+                                        item.image
+                                      )
+                                    }
+                                    className={
+                                      "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
+                                    }
+                                  />
+                                  <Button
+                                    title={"Details"}
+                                    onClickHandler={() =>
+                                      navigate("/dashboard/asset-details")
+                                    }
+                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                  />
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
-            <div className="w-full h-[calc(100%_-_40px)] overflow-y-auto scrollbar-custom ">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
-                <tbody>
-                  {MY_ASSET_TO_SUPPLY_TABLE_ROW.slice(0, 8).map((item, index) => (
-                    <tr
-                      key={index}
-                      className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
-                    >
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
-                          <img
-                            src={item.image}
-                            alt={item.asset}
-                            className="w-8 h-8 rounded-full"
-                          />
-                          {item.asset}
-                        </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-col">
-                          <p>{balance}</p>
-                          <p className="font-light">${usdBalance}</p>
-                        </div>
-                      </td>
-                      <td className="p-3 align-top">{item.apy}</td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex items-center justify-center dark:text-darkText">
-                          <Check color={checkColor} size={16} />
-                        </div>
-                      </td>
-                      <td className="p-3 align-top">
-                        <div className="w-full flex gap-2">
-                          <Button
-                            title={"Supply"}
-                            onClickHandler={() =>
-                              handleModalOpen(
-                                "supply",
-                                item.asset,
-                                item.image
-                              )
-                            }
-                            className={
-                              "bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
-                            }
-                          />
-                          <Button
-                            title={"Details"}
-                            onClickHandler={() =>
-                              navigate("/dashboard/asset-details")
-                            }
-                            className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )
-      )}
-    </div>
 
 
           </div>
@@ -722,15 +726,13 @@ const MySupply = () => {
       </div>
       <div className="w-full lg:w-6/12 md:-mt-10 lg:mt-20">
         <div
-          className={`${
-            activeSection === "borrow" ? "block" : "hidden"
-          } lg:block`}
+          className={`${activeSection === "borrow" ? "block" : "hidden"
+            } lg:block`}
         >
           <div
-            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar ${
-             isborrowVisible ? "min-h-[350px]" : "min-h-[100px]"
-               
-            }  p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar ${isborrowVisible ? "max-h-[220px]" : "min-h-[100px]"
+
+              }  p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-3">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -819,7 +821,7 @@ const MySupply = () => {
                                 {item.apy_type}
                               </p>
                             </div>
-                            
+
                             <div className="flex justify-center gap-2 mt-4 ">
                               <Button
                                 title={"Borrow"}
@@ -848,8 +850,8 @@ const MySupply = () => {
                             </div>
                             {index !==
                               MY_BORROW_ASSET_TABLE_ROWS.length - 1 && (
-                              <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
-                            )}
+                                <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
+                              )}
                           </div>
                         )
                       )}
@@ -866,7 +868,8 @@ const MySupply = () => {
                   {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
                     noBorrowMessage
                   ) : (
-                    <div className="w-full md:mt-6 h-[251px]">
+                    // h-[251px]
+                    <div className="w-full md:mt-6">
                       {/* Container for the fixed header */}
                       <div className="sticky top-0 z-10 ">
                         <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
@@ -888,7 +891,7 @@ const MySupply = () => {
                       <div className="overflow-y-auto h-[calc(245px-40px)] scrollbar-custom  ">
                         <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
                           <tbody>
-                            {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map(
+                            {filteredItems.slice(0, 8).map(
                               (item, index) => (
                                 <tr
                                   key={index}
@@ -896,26 +899,32 @@ const MySupply = () => {
                                 >
                                   <td className="p-3 align-top mb-1 ">
                                     <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
-                                      <img
-                                        src={item.image}
-                                        alt={item.asset}
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                      {item.asset}
+                                    {item[0] === "ckbtc" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "cketh" && (
+                                        <img src={ckEthImage} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0]}
                                     </div>
                                   </td>
                                   <td className="p-3 align-top">
                                     <div className="flex flex-col">
-                                      <p>{item.wallet_balance_count}</p>
+                                    <p>{balance}</p>
+                                      <p className="font-light">
+                                        ${usdBalance}
+                                      </p>
+                                      {/* <p>{item.wallet_balance_count}</p>
                                       <p className="font-light">
                                         ${item.wallet_balance}M
-                                      </p>
+                                      </p> */}
                                     </div>
                                   </td>
-                                  <td className="p-3 align-top">{item.apy}</td>
+                                  <td className="p-3 align-top"> <p >{item[1].Ok.apy ? item[1].Ok.apy : "0"}</p></td>
                                   <td className="p-3 align-top">
                                     <div className="w-full flex mt-2.5">
-                                      {item.apy_type}
+                                       <p >{item[1].Ok.apytype ? item[1].Ok.apytype : "variable"}</p> 
+                                       {/* apytype */}
                                     </div>
                                   </td>
                                   <td className="p-3 align-top">
@@ -936,7 +945,7 @@ const MySupply = () => {
                                         onClickHandler={() =>
                                           handleModalOpen(
                                             "repay",
-                                            
+
                                             item.asset,
                                             item.image
                                           )
@@ -959,9 +968,8 @@ const MySupply = () => {
           </div>
 
           <div
-            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${
-             isBorrowVisible ? "min-h-[350px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${isBorrowVisible ? "min-h-[350px]" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center">
               <h1 className="text-[#2A1F9D] font-semibold my-2 ml-2 dark:text-darkText">
@@ -1045,8 +1053,8 @@ const MySupply = () => {
                             </div>
                             {index !==
                               MY_BORROW_ASSET_TABLE_ROWS.length - 1 && (
-                              <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
-                            )}
+                                <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
+                              )}
                           </div>
                         )
                       )}

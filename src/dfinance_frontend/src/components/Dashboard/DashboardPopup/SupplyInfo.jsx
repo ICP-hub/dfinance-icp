@@ -3,12 +3,108 @@ import CircleProgess from "../../Common/CircleProgess"
 import LineGraph from "../../Common/LineGraph"
 import { Check } from 'lucide-react';
 import { useParams } from "react-router-dom";
+import { useState } from "react";
+import { useMemo } from "react";
+import { Principal } from "@dfinity/principal";
+import { useAuth } from "../../../utils/useAuthClient";
+import { useCallback
+ } from "react";
+ import { useEffect } from "react";
 
 const SupplyInfo = ({filteredItems}) => {
+
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    updateClient,
+    authClient,
+    identity,
+    principal,
+    backendActor,
+    accountId,
+    createLedgerActor,
+    reloadLogin,
+    accountIdString,
+  } = useAuth()
   const { id } = useParams();
 
- 
+  const [balance, setBalance] = useState(null);
+  const [usdBalance, setUsdBalance] = useState(null);
+  const [supplyCapUsd, setSupplyCapUsd] = useState(null);
+  const [borrowCapUsd, setBorrowCapUsd] = useState(null);
+  const [conversionRate, setConversionRate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
+
+  const fetchBalance = useCallback(async () => {
+    if (isAuthenticated && ledgerActor && principalObj) {
+      try {
+        const account = { owner: principalObj, subaccount: [] };
+        const balance = await ledgerActor.icrc1_balance_of(account);
+        setBalance(balance.toString());
+        console.log("Fetched Balance:", balance.toString());
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+        setError(error);
+      }
+    }
+  }, [isAuthenticated, ledgerActor, principalObj]);
+
+  const fetchConversionRate = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setConversionRate(data['internet-computer'].usd);
+      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
+    } catch (error) {
+      console.error("Error fetching conversion rate:", error);
+      setError(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchBalance(), fetchConversionRate()]);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
+
+  let supply_cap
+  let borrow_cap
+  filteredItems.map((item, index) =>{
+     supply_cap = item[1].Ok.configuration.supply_cap;
+     borrow_cap = item[1].Ok.configuration.borrow_cap;
+  })
+
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
+      const supplyCapUsd = (parseFloat(supply_cap) * conversionRate).toFixed(2);
+      const borrowCapUsd = (parseFloat(borrow_cap) * conversionRate).toFixed(2);
+      setUsdBalance(balanceInUsd);
+      setSupplyCapUsd(supplyCapUsd)
+      setBorrowCapUsd(borrowCapUsd)
+    }
+
+    
+  }, [balance, conversionRate]);
+
+ 
 
   return (
 
@@ -28,19 +124,19 @@ const SupplyInfo = ({filteredItems}) => {
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
             />
-            <p>3.19M of 5.70M</p>
-            <p className="text-[11px]">$123.19M of $786.55M</p>
+            <p>  <span >{item[1].Ok.total_supplied ? item[1].Ok.total_supplied : "0"}</span> of <span>{item[1].Ok.configuration.supply_cap.toString()}</span></p>
+            <p className="text-[11px]">${usdBalance} of ${supplyCapUsd}</p>
           </div>
           <hr
               className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
             />
           <div className="relative text-[#5B62FE] dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold  mb-[1px] dark:text-darkText">Total Supplied</h1>
+            <h1 className="text-[#2A1F9D] font-bold  mb-[1px] dark:text-darkText">Total Borrowed</h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5  mb-[1px]`}
             />
-            <p>3.19M of 5.70M</p>
-            <p className="text-[11px]">$123.19M of $786.55M</p>
+              <p>  <span >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</span> of <span>{item[1].Ok.configuration.borrow_cap.toString()}</span></p>
+              <p className="text-[11px]">${usdBalance} of ${borrowCapUsd}</p>
           </div>
         </div>
       </div>

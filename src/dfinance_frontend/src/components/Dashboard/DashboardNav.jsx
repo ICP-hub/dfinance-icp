@@ -14,23 +14,84 @@ import { ChevronLeft } from 'lucide-react';
 import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
 import { Principal } from "@dfinity/principal";
+import { PrincipalClass } from "@dfinity/candid/lib/cjs/idl";
 
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } = useAuth();
-  const [userData, setUserData] = useState(null);
-  console.log("backendactor", backendActor)
-
-  const Principal1 = 'gxdsw-tuuif-npfcg-srrix-uy2zv-c3bco-fbiss-i27un-p7far-7iedd-qae';
+  const [userData, setUserData] = useState();
+  const [walletDetailTab, setWalletDetailTab] = useState([
+    {
+      id: 0,
+      title: "Net Worth",
+      count: "$0.00",
+    },
+    {
+      id: 1,
+      title: "Net APY",
+      count: "0.00 %",
+    },
+    {
+      id: 2,
+      title: "Health Factor",
+      count: "0.00 %",
+    },
+  ]);
 
   useEffect(() => {
+    // Define an async function inside the useEffect
     const fetchUserData = async () => {
-      const data = await backendActor.get_user_data(Principal1);
-      console.log("backend data", data)
-      setUserData(data);
+      if (backendActor) {
+        try {
+          const result = await getUserData(principal.toString());
+          console.log('get_user_data:', result);
+          setUserData(result);
+          updateWalletDetailTab(result);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        console.error('Backend actor initialization failed.');
+      }
     };
-    fetchUserData();
-  }, [backendActor, Principal1]);
 
+    // Call the async function
+    fetchUserData();
+  }, [principal, backendActor]);
+
+  const getUserData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_user_data(user);
+      console.log('get_user_data:', result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
+    }
+  };
+
+  const updateWalletDetailTab = (data) => {
+    if (!data || !data.Ok) return;
+
+    const { net_worth, net_apy, health_factor } = data.Ok;
+
+    const updatedTab = walletDetailTab.map((item) => {
+      switch (item.id) {
+        case 0:
+          return { ...item, count: `$${net_worth[0] }` };
+        case 1:
+          return { ...item, count: `${net_apy[0] }%` };
+        case 2:
+          return { ...item, count: `${health_factor[0]}%` };
+        default:
+          return item;
+      }
+    });
+
+    setWalletDetailTab(updatedTab);
+  };
 
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
@@ -132,51 +193,6 @@ const DashboardNav = () => {
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
 
-
-  // const [assets, setAssets] = useState([]);
-
-  // useEffect(() => {
-  //   const fetchAssets = async () => {
-  //     if (!backendActor) return;
-
-  //     try {
-  //       const assetNames = await backendActor.get_all_assets(); // Call the Rust function
-  //       console.log("asset names", assetNames);
-  //       setAssets(assetNames); // Update state with the fetched asset names
-  //     } catch (error) {
-  //       console.error('Error fetching asset names:', error);
-  //     }
-  //   };
-
-  //   fetchAssets(); // Trigger the fetch on component mount
-  // }, [backendActor]);
-
-
-  // const [reserveData, setReserveData] = useState(null);
-
-  // // Fetch reserve data for each asset name
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if (assets.length === 0 || !fetchReserveData) return;
-
-  //     try {
-  //       const data = {};
-  //       for (const asset of assets) {
-  //         const reserveDataForAsset = await fetchReserveData(asset); // Fetch reserve data for each asset
-  //         data[asset] = reserveDataForAsset;
-  //         console.log(`${asset} reserve data:`, reserveDataForAsset);
-  //       }
-  //       setReserveData(data); // Update state with the fetched reserve data for all assets
-  //     } catch (err) {
-  //       console.error('Error fetching reserve data:', err);
-  //       setError(err.message);
-  //     }
-  //   };
-
-  //   fetchData(); // Trigger the fetch on assets or fetchReserveData change
-  // }, [assets, fetchReserveData]);
-
-
   return (
     <div className="w-full ">
       {['/dashboard', '/market', '/governance'].includes(pathname) && (
@@ -222,7 +238,7 @@ const DashboardNav = () => {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 mt-2">
-                    {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+                    {(isDashboardSupplyOrMain ? walletDetailTab : WALLET_DETAILS_TABS).map((data, index) => (
                       <div
                         key={index}
                         className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
@@ -256,7 +272,7 @@ const DashboardNav = () => {
           {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText mb-5">
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
-                ? WALLET_DETAIL_TAB
+                ? walletDetailTab
                 : WALLET_DETAILS_TABS
               ).map((data, index) => (
                 <div key={index} className="relative group">

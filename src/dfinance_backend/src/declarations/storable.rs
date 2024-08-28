@@ -35,8 +35,6 @@ where
     }
 }
 
-
-
 // The StoredPrincipal struct is a wrapper around the Principal struct. It provides the implementation of the Storable trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct StoredPrincipal(pub Principal);

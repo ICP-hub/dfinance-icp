@@ -2,46 +2,22 @@
 // use serde::{Deserialize, Serialize};
 use candid::{CandidType, Deserialize, Principal};
 use ic_stable_structures::storable::{Bound, Storable};
-use serde::{Serialize, Deserialize as SerdeDeserialize};
-
-
+use serde::{Deserialize as SerdeDeserialize, Serialize};
 
 #[derive(Default, CandidType, SerdeDeserialize, Serialize, Clone, Debug)]
 // #[derive(Default, Serialize, Deserialize, Clone, Debug)]
 pub struct ReserveConfiguration {
     ltv: u16,
     liquidation_threshold: u16,
-    liquidation_bonus: u16, //5%
+    liquidation_bonus: u16,  //5%
     borrowing_enabled: bool, //true
     borrow_cap: u64,
-    supply_cap: u64, //10M
+    supply_cap: u64,               //10M
     liquidation_protocol_fee: u16, //0
     active: bool,
     frozen: bool,
     paused: bool,
 }
-
-// pub struct ReserveConfiguration {
-//     ltv: u16,
-//     liquidation_threshold: u16,
-//     liquidation_bonus: u16,
-//     decimals: u8,
-//     active: bool,
-//     frozen: bool,
-//     borrowing_enabled: bool,
-//     stable_borrowing_enabled: bool,
-//     paused: bool,
-//     borrowable_in_isolation: bool,
-//     siloed_borrowing: bool,
-//     flashloan_enabled: bool,
-//     reserve_factor: u128,
-//     borrow_cap: u64,
-//     supply_cap: u64,
-//     liquidation_protocol_fee: u16,
-//     emode_category: u8,
-//     unbacked_mint_cap: u64,
-//     debt_ceiling: u64,
-// }
 
 impl ReserveConfiguration {
     pub const MAX_VALID_LTV: u16 = 65535;
@@ -91,18 +67,6 @@ impl ReserveConfiguration {
     pub fn get_liquidation_bonus(&self) -> u16 {
         self.liquidation_bonus
     }
-
-    // pub fn set_decimals(&mut self, decimals: u8) {
-    //     if decimals <= Self::MAX_VALID_DECIMALS {
-    //         self.decimals = decimals;
-    //     } else {
-    //         panic!("Invalid decimals value");
-    //     }
-    // }
-
-    // pub fn get_decimals(&self) -> u8 {
-    //     self.decimals
-    // }
 
     pub fn set_active(&mut self, active: bool) {
         self.active = active;
@@ -263,7 +227,7 @@ impl ReserveConfiguration {
     }
 
     // pub fn get_params(&self) -> (u16, u16, u16, u8, u128, u8) {
-        pub fn get_params(&self) -> (u16, u16, u16) {
+    pub fn get_params(&self) -> (u16, u16, u16) {
         (
             self.ltv,
             self.liquidation_threshold,
@@ -277,9 +241,6 @@ impl ReserveConfiguration {
     pub fn get_caps(&self) -> (u64, u64) {
         (self.borrow_cap, self.supply_cap)
     }
-
-
-
 
     pub fn initialize(
         ltv: u16,
@@ -359,5 +320,3 @@ impl ReserveConfiguration {
         }
     }
 }
-
-

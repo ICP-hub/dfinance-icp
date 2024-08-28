@@ -1,10 +1,9 @@
-
-use ic_cdk_macros::*;
 use crate::api::state_handler::mutate_state;
 use crate::api::state_handler::read_state;
 use crate::declarations::storable::Candid;
 use candid::Principal;
 use ic_cdk::api::call::call;
+use ic_cdk_macros::*;
 
 #[update]
 fn set_reserve_borrowing(asset: String, enabled: bool) -> Result<(), String> {
@@ -98,7 +97,6 @@ fn set_reserve_freeze(asset: String, freeze: bool) -> Result<(), String> {
     })
 }
 
-
 #[update]
 fn set_reserve_pause(asset: String, paused: bool) -> Result<(), String> {
     mutate_state(|state| {
@@ -167,7 +165,6 @@ fn set_reserve_pause(asset: String, paused: bool) -> Result<(), String> {
 //         check_no_borrowers(&asset).await?;
 //     }
 //     mutate_state(|state| {
-        
 
 //         let mut reserve_data = state
 //             .asset_index
@@ -228,7 +225,9 @@ fn set_liquidation_protocol_fee(asset: String, new_fee: u16) -> Result<(), Strin
             .ok_or_else(|| format!("Reserve not found for asset: {}", asset))?;
 
         let old_fee = reserve_data.configuration.get_liquidation_protocol_fee();
-        reserve_data.configuration.set_liquidation_protocol_fee(new_fee);
+        reserve_data
+            .configuration
+            .set_liquidation_protocol_fee(new_fee);
         state.asset_index.insert(asset, Candid(reserve_data));
 
         Ok(())
@@ -268,15 +267,18 @@ fn configure_reserve_as_collateral(
         }
 
         reserve_data.configuration.set_ltv(ltv);
-        reserve_data.configuration.set_liquidation_threshold(liquidation_threshold);
-        reserve_data.configuration.set_liquidation_bonus(liquidation_bonus);
+        reserve_data
+            .configuration
+            .set_liquidation_threshold(liquidation_threshold);
+        reserve_data
+            .configuration
+            .set_liquidation_bonus(liquidation_bonus);
 
         state.asset_index.insert(asset, Candid(reserve_data));
 
         Ok(())
     })
 }
-
 
 fn check_no_suppliers(asset: &String) -> Result<(), String> {
     mutate_state(|state| {
@@ -314,19 +316,14 @@ fn check_no_suppliers(asset: &String) -> Result<(), String> {
 //     let stable_debt_token_address = reserve_data.stable_debt_token_address;
 //     let variable_debt_token_address = reserve_data.variable_debt_token_address;
 
-    
 //     let (stable_total_supply,): (u128,) = call(Principal::from(stable_debt_token_address), "icrc1_total_supply", ()).await
 //         .map_err(|e| format!("Failed to call total_supply on stable debt token: {:?}", e))?;
 
-    
 //     let (variable_total_supply,): (u128,) = call(Principal::from(variable_debt_token_address), "icrc1_total_supply", ()).await
 //         .map_err(|e| format!("Failed to call total_supply on variable debt token: {:?}", e))?;
 
-    
 //     Ok(stable_total_supply + variable_total_supply)
 // }
-
-
 
 // #[update]
 // fn set_unbacked_mint_cap(asset: String, new_unbacked_mint_cap: u64) -> Result<(), String> {
@@ -344,13 +341,15 @@ fn check_no_suppliers(asset: &String) -> Result<(), String> {
 //     })
 // }
 
-
-
 #[update]
 fn set_pool_pause(paused: bool) -> Result<(), String> {
     mutate_state(|state| {
         // Iterate over the keys in the `asset_index` without cloning the map
-        let keys: Vec<String> = state.asset_index.iter().map(|(key, _)| key.clone()).collect();
+        let keys: Vec<String> = state
+            .asset_index
+            .iter()
+            .map(|(key, _)| key.clone())
+            .collect();
 
         for asset in keys {
             set_reserve_pause(asset, paused)?;
@@ -359,4 +358,3 @@ fn set_pool_pause(paused: bool) -> Result<(), String> {
         Ok(())
     })
 }
-

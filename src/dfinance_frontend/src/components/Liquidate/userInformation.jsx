@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Info, X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
-import cketh from "../../../public/assests-icon/cekTH.svg";
-import ckbtc from "../../../public/assests-icon/ckBTC.svg";
+import cketh from "../../../public/assests-icon/CKETH.svg";
+import ckbtc from "../../../public/assests-icon/CKBTC.svg";
 import icp from "../../../public/assests-icon/icpdark.svg";
 import Button from "../Common/Button";
 import Vector from "../../../public/Helpers/Vector.svg";
@@ -10,8 +10,9 @@ import check from "../../../public/assests-icon/check.svg";
 import cross from "../../../public/assests-icon/cross.svg";
 
 
-const UserInformationPopup = ({ onClose }) => {
-  const { principal } = useAuth();
+const UserInformationPopup = ({ onClose, asset, principal }) => {
+  const [rewardAmount, setRewardAmount] = useState(0);
+  const [amountToRepay, setAmountToRepay] = useState(100);
   const popupRef = useRef(null);
   const [isDebtInfo, setIsDebtInfo] = useState(false); // State to manage content view
   const [isCollateralOverlay, setIsCollateralOverlay] = useState(false); // New state for Collateral Overlay
@@ -53,9 +54,17 @@ const UserInformationPopup = ({ onClose }) => {
       setIsDebtInfo(true); // Switch to Debt Information view
     }
   };
-
+ 
+  
   const handleAssetSelection = (asset) => {
     setSelectedAsset(asset); // Set the selected asset (only one at a time)
+    const assetRewardAmounts = {
+      cketh: 0.0032560,
+      ckbtc: 0.0010250,
+      icp: 5.032560,
+    };
+    
+    setRewardAmount(assetRewardAmounts[asset] || 0);
   };
 
   const renderAssetDetails = (asset) => {
@@ -64,7 +73,7 @@ const UserInformationPopup = ({ onClose }) => {
         return (
           <div className="mt-4">
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText  rounded-md p-2 text-sm">
-              <p className="text-lg font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
+              <p className="text-base font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
                 ckETH Price
               </p>
               <p className="text-xs font-medium text-gray-900 dark:text-darkText">
@@ -72,16 +81,16 @@ const UserInformationPopup = ({ onClose }) => {
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-lg font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
+              <p className="text-base font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
                 ckETH Liquidation Bonus %
               </p>
               <p className="text-xs font-medium">10%</p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-lg font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-base font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-80">
                  Reward Amount
               </p>
-              <p className="text-xs font-medium">0.0032560</p>
+              <p className="text-xs font-medium">{rewardAmount}</p>
             </div>
           </div>
         );
@@ -89,24 +98,24 @@ const UserInformationPopup = ({ onClose }) => {
         return (
           <div className="mt-4">
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
-              <p className="text-lg font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 ckBTC Price
               </p>
-              <p className="text-xs font-medium text-gray-900 dark:text-darkText ">
+              <p className="text-sm font-medium text-[#2A1F9D]  dark:text-darkText ">
                 0.0010250
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-lg font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 ckBTC liquidation Bonus %
               </p>
-              <p className="text-xs font-medium">15%</p>
+              <p className="text-sm font-medium">15%</p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-lg font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-80">
                 Reward Amount
               </p>
-              <p className="text-xs font-medium">0.0010250</p>
+              <p className="text-sm font-medium">{rewardAmount}</p>
             </div>
           </div>
         );
@@ -114,7 +123,7 @@ const UserInformationPopup = ({ onClose }) => {
         return (
           <div className="mt-4">
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
-              <p className="text-lg font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 ICP Price
               </p>
               <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">
@@ -122,23 +131,24 @@ const UserInformationPopup = ({ onClose }) => {
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-lg font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 ICP Liquidation Bonus %
               </p>
               <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">12%</p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-lg font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 Reward Amount
               </p>
-              <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">5.032560</p>
+              <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">{rewardAmount}</p>
             </div>
           </div>
         );
       default:
         return null;
     }
-  };const handleCheckboxClick = (e) => {
+  };
+  const handleCheckboxClick = (e) => {
     setIsCheckboxChecked(e.target.checked);
   };
 
@@ -193,8 +203,8 @@ const UserInformationPopup = ({ onClose }) => {
                   Check Your wallet balance
                 </p>
                 <button
-                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-8 py-4 relative"
-                  onClick={handleClosePopup}
+                   className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
+                   onClick={handleClosePopup}
                 >
                   Close Now
                 </button>
@@ -209,8 +219,8 @@ const UserInformationPopup = ({ onClose }) => {
                   Try Again 
                 </p>
                 <button
-                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-8 py-4 relative"
-                  onClick={handleRetry}
+                   className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
+                   onClick={handleRetry}
                 >
                   Retry
                 </button>
@@ -224,7 +234,7 @@ const UserInformationPopup = ({ onClose }) => {
             Warning Pop Up
           </h2>
           <p className="text-sm text-[#989898] text-center dark:text-darkText mt-4">
-            Are you sure you want to liquidate on behalf of "<strong>{principal}</strong>"? <strong>1000 ICP</strong> will be <strong>deducted</strong> from your account & <strong>100 ICP</strong> will be rewarded.
+            Are you sure you want to liquidate on behalf of "<strong>{principal}</strong>"? <strong>{amountToRepay}ICP</strong> will be <strong>deducted</strong> from your account & <strong>{rewardAmount}</strong> will be rewarded.
           </p>
           <div className="mt-4 flex justify-center">
             <label className="flex items-center text-[#989898]">
@@ -240,7 +250,7 @@ const UserInformationPopup = ({ onClose }) => {
 
           <div className="flex justify-center mt-6">
             <button
-              className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-8 py-4 relative"
+              className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
               onClick={handleCancelOrConfirm}
             >
               {isCheckboxChecked ? "Call Liquidation" : "Cancel"}
@@ -250,10 +260,10 @@ const UserInformationPopup = ({ onClose }) => {
       ) : (
         <div
           ref={popupRef}
-          className="bg-white dark:bg-[#1D1B40] dark:text-darkText p-6 rounded-md w-full max-w-md mx-4"
+          className="bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/6 -translate-y-1/10 p-6 text-[#2A1F9D] dark:bg-darkOverlayBackground dark:text-darkText font-poppins w-full max-w-md mx-4"
         >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-[#2A1F9D] dark:text-darkText">
+            <h2 className="text-xl font-semibold text-[#2A1F9D] dark:text-darkText">
               {isCollateralOverlay
                 ? "Collateral Information"
                 : isDebtInfo
@@ -286,7 +296,7 @@ const UserInformationPopup = ({ onClose }) => {
                       onChange={() => handleAssetSelection("cketh")}
                     />
 
-                    <img src={cketh} alt="ETH" className="w-9 h-10" />
+                    <img src={cketh} alt="ETH" className="w-9 h-10 cursor-pointer" />
                   </label>
 
                   <label className="flex items-center space-x-2">
@@ -298,7 +308,7 @@ const UserInformationPopup = ({ onClose }) => {
                       onChange={() => handleAssetSelection("ckbtc")}
                     />
 
-                    <img src={ckbtc} alt="BTC" className="w-9 h-10" />
+                    <img src={ckbtc} alt="BTC" className="w-9 h-10 cursor-pointer" />
                   </label>
 
                   <label className="flex items-center space-x-2">
@@ -310,7 +320,7 @@ const UserInformationPopup = ({ onClose }) => {
                       onChange={() => handleAssetSelection("icp")}
                     />
 
-                    <img src={icp} alt="ICP" className="w-9 h-10" />
+                    <img src={icp} alt="ICP" className="w-9 h-10 cursor-pointer" />
                   </label>
                 </div>
 
@@ -328,13 +338,13 @@ const UserInformationPopup = ({ onClose }) => {
               <div className="flex justify-between mt-4">
                 <button
                   title="Back"
-                  className="py-4 px-9 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-darkText"
+                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-darkText"
                   onClick={() => setIsCollateralOverlay(false)}
                 >
                   Back
                 </button>
                 <button
-                  className="px-4 text-sm font-semibold text-white bg-gradient-to-r from-[#EB8863] to-[#81198E] rounded-md"
+                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
                   onClick={handleCallLiquidation}
                 >
                   Call Liquidation
@@ -345,7 +355,7 @@ const UserInformationPopup = ({ onClose }) => {
             // Debt Information Content
             <div>
               <div className="mb-6">
-                <h3 className="text-lg font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
+                <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
                   Debt Asset
                 </h3>
                 <div className="mb-4 relative w-10 h-10">
@@ -363,35 +373,35 @@ const UserInformationPopup = ({ onClose }) => {
                   <img
                     src={icp}
                     alt="ICP"
-                    className="w-9 h-10 absolute top-0 left-12"
+                    className="w-8 h-10 absolute top-0 left-12"
                   />
                 </div>
                 <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
-                  <p className="text-lg font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
+                  <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
                     Close Factor
                   </p>
                   <p className="text-lg font-bold text-gray-900 dark:text-darkText ">
                     50%
                   </p>
                 </div>
-                <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText  rounded-md p-2 text-sm text-[#F30606] mt-4 flex justify-between items-center mb-56">
-                  <p className="text-lg font-bold text-[#2A1F9D] dark:text-darkText dark:opacity-50">
+                <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText  rounded-md p-2 text-sm text-[#F30606] mt-4 flex justify-between items-center mb-40">
+                  <p className="text-base font-bold text-[#2A1F9D] dark:text-darkText dark:opacity-50">
                     Amount to Repay
                   </p>
-                  <p className="text-lg font-bold">100</p>
+                  <p className="text-base font-bold">{amountToRepay}</p>
                 </div>
               </div>
               <div className="flex justify-between mt-4">
                 <button
                   title="Back"
-                  className="py-4 px-9 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white"
+                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white"
                   onClick={() => setIsDebtInfo(false)} // Go back to User Info view
                 >
                   Back
                 </button>
                 <button
-                  className="px-9 text-sm font-semibold text-white bg-gradient-to-r from-[#EB8863] to-[#81198E] rounded-md"
-                  onClick={handleNextClick}
+                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
+                 onClick={handleNextClick}
                 >
                   NEXT
                 </button>
@@ -406,31 +416,31 @@ const UserInformationPopup = ({ onClose }) => {
                 </h3>
                 <div className="mb-4">
                   <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm text-gray-900 ">
-                    <p className="text-lg font-normal font-Poppins text-[#2A1F9D] opacity-50 dark:text-darkText mb-1 ">
-                      User Principle
+                    <p className="text-sm font-normal font-Poppins text-[#2A1F9D] opacity-50 dark:text-darkText mb-1 ">
+                      User Principal
                     </p>
-                    <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText dark:opacity-100 ">
-                      {principal}
+                    <p className="text-xs font-semibold text-[#2A1F9D] dark:text-darkText dark:opacity-100 ">
+                    {` ${principal}`}
                     </p>
                   </div>
                 </div>
                 <div className="mb-4">
                   <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm text-[#F30606]">
-                    <p className="text-lg font-normal text-[#2A1F9D] dark:text-darkText opacity-50 mb-1 ">
+                    <p className="text-sm font-normal text-[#2A1F9D] dark:text-darkText opacity-50 mb-1 ">
                       User Health Factor
                     </p>
                     <p className="text-xs font-medium text-[#F30606] ">0.8</p>
                   </div>
                 </div>
               </div>
-              <div className="w-full h-[0.5px] bg-gradient-to-r from-[#EB8863] to-[#81198E] my-4 opacity-50"></div>
+              <div className="w-full h-[0.8px] bg-gradient-to-r from-[#EB8863] to-[#81198E] my-4 "></div>
               <div className="mb-6">
                 <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
                   My Section
                 </h3>
                 <div className="mb-4">
                   <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm text-gray-900 ">
-                    <p className="text-lg font-normal font-Poppins text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
+                    <p className="text-sm font-normal font-Poppins text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                       My Wallet Balance
                     </p>
                     <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
@@ -440,7 +450,7 @@ const UserInformationPopup = ({ onClose }) => {
                 </div>
                 <div className="mb-4">
                   <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm text-green-500">
-                    <p className="text-lg font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
+                    <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                       My Health Factor
                     </p>
                     <p className="text-xs font-medium">4.00</p>
@@ -450,7 +460,7 @@ const UserInformationPopup = ({ onClose }) => {
               <div className="flex justify-end mt-4">
                 <button
                   onClick={handleNextClick}
-                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-8 py-4 relative"   >
+                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   >
                   NEXT
                 </button>
               </div>

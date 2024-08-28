@@ -18,3 +18,5 @@ CANISTERS=dtoken,dfinance_backend,debttoken
 for canister in $(echo $CANISTERS | sed "s/,/ /g"); do
   generate_did "$canister"
 done
+
+echo "did generated"

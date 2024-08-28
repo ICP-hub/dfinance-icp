@@ -2,29 +2,6 @@ use candid::{CandidType, Deserialize, Nat, Principal};
 
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 
-
-// #[derive(Debug, CandidType, Deserialize, Clone)]
-// pub struct ReserveData {
-    
-//     pub configuration: ReserveConfiguration,
-//     pub liquidity_index: u128,
-//     pub current_liquidity_rate: u128,
-//     pub variable_borrow_index: u128,
-//     pub current_variable_borrow_rate: u128, //borrow_rate
-//     pub current_stable_borrow_rate: u128, //remove
-//     pub last_update_timestamp: u64,
-//     pub id: u16,
-//     pub a_token_address: Principal,
-    
-//     pub stable_debt_token_address: Principal,
-//     pub variable_debt_token_address: Principal,
-    
-//     pub interest_rate_strategy_address: Principal,
-//     pub accrued_to_treasury: u128,
-//     pub unbacked: u128,
-//     pub isolation_mode_total_debt: u128,
-
-// }
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
     pub asset_name: Option<String>,
@@ -33,7 +10,7 @@ pub struct ReserveData {
     pub supply_rate_apr: Option<f64>, //8.25
     // pub total_supply: Option<Nat>,
     pub last_update_timestamp: u64,
-    pub d_token_canister: Option<String>, 
+    pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,
     pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.
     pub liquidity_index: u128,
@@ -75,7 +52,6 @@ pub struct ReserveCache {
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteSupplyParams {
-    // pub asset: Principal,
     pub asset: String,
     pub amount: u128,
     pub on_behalf_of: String, //optional
@@ -107,61 +83,12 @@ pub struct InitReserveParams {
     pub max_number_reserves: u64,
 }
 
-// #[derive(CandidType, Deserialize, Clone)]
-// pub enum InterestRateMode {
-//     None,
-//     Stable,
-//     Variable,
-// }
-
-// #[derive(CandidType, Deserialize, Clone)]
-// struct ExecuteBorrowParams {
-//     pub asset: String,
-//     pub user: Principal,
-//     pub on_behalf_of: Principal,
-//     pub amount: Nat,
-//     pub interest_rate_mode: InterestRateMode,
-//     pub referral_code: u16,
-//     pub release_underlying: bool,
-//     pub max_stable_rate_borrow_size_percent: Nat,
-//     pub reserves_count: Nat,
-//     pub exchange_canister: Principal,
-//     pub user_emode_category: u8,
-//     pub price_oracle_sentinel: Principal,
-// }
-
-// #[derive(CandidType, Deserialize, Clone)]
-// struct ExecuteRepayParams {
-//     pub asset: String,
-//     pub amount: Nat,
-//     pub interest_rate_mode: InterestRateMode,
-//     pub on_behalf_of: Principal,
-//     use_dtokens: bool,
-// }
-
 #[derive(CandidType, Deserialize, Clone, PartialEq)]
 pub enum InterestRateMode {
     None,
     Stable,
     Variable,
 }
-
-// #[derive(CandidType, Deserialize, Clone, PartialEq)]
-// pub struct ExecuteBorrowParams {
-//     pub asset: String,
-//     pub user: Principal,
-//     pub on_behalf_of: Principal,
-//     pub amount: u128,
-//     pub interest_rate_mode: InterestRateMode,
-//     pub referral_code: u16,
-//     pub release_underlying: bool,
-//     pub max_stable_rate_borrow_size_percent: Nat,
-//     pub reserves_count: Nat,
-//     pub exchange_canister: Principal,
-//     pub user_emode_category: u8,
-//     pub price_oracle_sentinel: Principal,
-//     pub interestRateMode : InterestRateMode,
-// }
 
 #[derive(Debug, CandidType, Deserialize, Clone, PartialEq)]
 pub struct ExecuteBorrowParams {
@@ -172,13 +99,17 @@ pub struct ExecuteBorrowParams {
     pub interest_rate: Nat,
 }
 
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteRepayParams {
     pub asset: String,
-    pub amount: Nat,
-    pub interest_rate_mode: InterestRateMode,
-    pub on_behalf_of: Principal,
-    use_dtokens: bool,
+    pub amount: u128,
+    pub on_behalf_of: Option<String>,
 }
 
-
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ExecuteWithdrawParams {
+    pub asset: String,
+    pub amount: u128,
+    pub on_behalf_of: Option<String>,
+    pub is_collateral: bool,
+}

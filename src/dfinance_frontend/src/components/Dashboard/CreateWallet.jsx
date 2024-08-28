@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Button from '../Button'
+import Button from '../Common/Button'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -9,12 +9,12 @@ import {
 
 import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
-import Element from "../../../public/Elements.svg"
+import Element from "../../../public/element/Elements.svg"
 import MySupply from './MySupply'
-import icplogo from '../../../public/icp.png'
-import plug from "../../../public/plug.png"
-import bifinity from "../../../public/bifinity.png"
-import nfid from "../../../public/nfid.png"
+import icplogo from '../../../public/wallet/icp.png'
+import plug from "../../../public/wallet/plug.png"
+import bifinity from "../../../public/wallet/bifinity.png"
+import nfid from "../../../public/wallet/nfid.png"
 
 const CreateWallet = () => {
     const navigate = useNavigate()

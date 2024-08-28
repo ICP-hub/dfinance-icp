@@ -1,4 +1,3 @@
-
 use candid::{Nat, Principal};
 use core::panic;
 use ic_cdk::api::call::{call, CallResult};

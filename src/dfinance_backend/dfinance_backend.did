@@ -1,7 +1,39 @@
+type ExecuteSupplyParams = record {
+  asset : text;
+  referral_code : nat16;
+  on_behalf_of : principal;
+  amount : nat;
+};
+
+type ExecuteRepayParams = record {
+  asset : text;
+  amount : nat;
+  on_behalf_of : opt text;
+};
+
+type ExecuteWithdrawParams = record {
+  asset : text;
+  amount : nat;
+  on_behalf_of : opt text;
+  is_collateral : bool;
+};
+
+type ReserveConfiguration = record {
+  ltv : nat16;
+  liquidation_protocol_fee : nat16;
+  active : bool;
+  supply_cap : nat64;
+  borrow_cap : nat64;
+  borrowing_enabled : bool;
+  frozen : bool;
+  liquidation_bonus : nat16;
+  liquidation_threshold : nat16;
+  paused : bool;
+};
 
 type ReserveData = record {
-  asset_name : opt text;
   id : nat16;
+  asset_name : opt text;
   debt_token_canister : opt text;
   last_update_timestamp : nat64;
   liquidity_index : nat;
@@ -9,49 +41,56 @@ type ReserveData = record {
   current_liquidity_rate : nat;
   borrow_rate : opt float64;
   supply_rate_apr : opt float64;
-  accrued_to_treasury : nat;
   configuration : ReserveConfiguration;
+  accrued_to_treasury : nat;
+  total_supply : opt nat;
 };
 
-type ReserveConfiguration = record {
-  ltv: nat16;
-  liquidation_threshold: nat16;
-  liquidation_bonus: nat16;
-  active: bool;
-  frozen: bool;
-  borrowing_enabled: bool;
-  paused: bool;
-  borrow_cap: nat64;
-  supply_cap: nat64;
-  liquidation_protocol_fee: nat16;
-};
+type Result = variant { Ok; Err : text };
+
+type Result_1 = variant { Ok : ReserveData; Err : text };
+
+type Result_2 = variant { Ok : UserData; Err : text };
+
+type Result_3 = variant { Ok : nat; Err : text };
 
 type UserData = record {
-   net_worth: opt nat;
-    net_apy: opt float64;
-    health_factor: opt float64;
-     supply: opt vec record { text; nat };
-    borrow: opt vec record { text; nat };
+  user_id : opt text;
+  net_apy : opt float64;
+  health_factor : opt float64;
+  net_worth : opt float64;
+  reserves : opt vec record { text; UserReserveData };
+  ltv: opt float64;
+  liquidation_threshold: opt float64;
 };
-type Result = variant { Ok; Err : text };
-type Result_1 = variant { Ok : nat; Err : text };
-type ExecuteSupplyParams  = record {
-  asset: text;
-  amount: nat;
-  on_behalf_of : text;
-  referral_code: nat16;
+
+type UserReserveData = record {
+  reserve : text;
+  principal_stable_debt : nat64;
+  total_stable_debt : nat64;
+  total_variable_debt : nat64;
+  avg_stable_borrow_rate : float64;
+  last_update_timestamp : nat64;
+  liquidity_index : float64;
+  asset_supply : float64;
+  asset_borrow : float64;
+  variable_borrow_index : float64;
+  asset_price_when_supplied : float64;
+  asset_price_when_borrowed : float64;
 };
 
 service : () -> {
-  get_asset_data : () -> (ReserveData) query;
+  initialize_reserve : () -> ();
   new_canister : () -> (principal);
-  
-  initialize_reserve: () -> ();
-  deposit: (text, nat64, text, nat16) -> (variant { Ok: null; Err: text });
-  borrow: (text, nat64, text, text, nat) -> (Result);
+  configure_reserve_as_collateral : (text, nat16, nat16, nat16) -> (Result);
+  get_reserve_data : (text) -> (variant { Ok : ReserveData; Err : text }) query;
+  get_user_data : (text) -> (variant { Ok : UserData; Err : text }) query;
+  get_all_assets : () -> (vec text) query;
+  borrow : (text, nat64, text, text, nat) -> (Result);
   supply : (ExecuteSupplyParams) -> (Result_1);
-  get_reserve_data: (text) -> (variant { Ok: ReserveData; Err: text}) query;
-  get_user_data: (text) -> (variant {Ok: UserData; Err: text}) query;
-  get_all_assets: () -> (vec text) query;
-  "initialize_reserve_list": (vec record { text; principal }) -> (Result);
+  repay : (text, nat, text) -> (variant { Ok : null; Err : text });
+  withdraw : (text, nat, text, bool) -> (variant { Ok : null; Err : text });
+  deposit : (text, nat64, text, nat16) -> (variant { Ok : null; Err : text });
+  get_all_users : () -> (vec record { principal; UserData }) query;
+  check_user : (text) -> (variant { Ok : text; Err : text });
 };

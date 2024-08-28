@@ -1,7 +1,11 @@
-use api::state_handler::mutate_state;
-use declarations::assets::ExecuteBorrowParams;
+use candid::Nat;
+use candid::Principal;
+use declarations::assets::{
+    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+};
+use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
-
+use ic_cdk_macros::update;
 mod api;
 mod constants;
 mod declarations;
@@ -13,52 +17,21 @@ mod protocol;
 mod state;
 mod tests;
 mod utils;
+use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
-use crate::declarations::assets::ExecuteSupplyParams;
+use crate::declarations::storable::Candid;
 use crate::implementations::reserve::initialize_reserve;
-use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::logic::borrow;
-use candid::Principal;
-use ic_cdk::{init, query};
-use ic_cdk_macros::update;
-
-use crate::api::state_handler::read_state;
-use candid::Nat;
+use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
+
 #[init]
 fn init() {
     // initialize_reserve();
     ic_cdk::println!("function called");
-
-    let ledger_tokens = vec![
-        // ("ckBTC", Principal::from_text("c2lt4-zmaaa-aaaaa-qaaiq-cai").unwrap()),
-        ("ckETH", Principal::from_text("ctiya-peaaa-aaaaa-qaaja-cai").unwrap()),
-    
-    ];
-
-    mutate_state(|state| {
-        for (token_name, principal) in ledger_tokens {
-            state.reserve_list.insert(token_name.to_string(), principal).unwrap();
-        }
-    });
 }
 
-#[update]
-fn initialize_reserve_list(ledger_tokens: Vec<(String, Principal)>) -> Result<(), String> {
-    ic_cdk::println!("Initialize reserve list function called");
-
-    mutate_state(|state| {
-        for (token_name, principal) in ledger_tokens {
-            state.reserve_list.insert(token_name.to_string(), principal);
-        }
-        Ok(())
-    })
-}
-// #[ic_cdk_macros::update]
-// async fn initialize_reserve_call() -> Result<(), String> {
-//     initialize_reserve().await
-// }
-
+// Function to call the execute_supply logic
 #[update]
 async fn deposit(
     asset: String,
@@ -66,19 +39,16 @@ async fn deposit(
     on_behalf_of: String,
     is_collateral: bool,
     referral_code: u16,
-
-)-> Result<(), String> {
+) -> Result<(), String> {
     ic_cdk::println!("Starting deposit function");
     let params = ExecuteSupplyParams {
         asset,
-        amount: amount as u128,  
+        amount: amount as u128,
         on_behalf_of,
         is_collateral,
         referral_code,
     };
     ic_cdk::println!("Parameters for execute_supply: {:?}", params);
-    // SupplyLogic::execute_supply(params);
-    // ic_cdk::println!("function called");
     match SupplyLogic::execute_supply(params).await {
         Ok(_) => {
             ic_cdk::println!("execute_supply function called successfully");
@@ -89,19 +59,21 @@ async fn deposit(
             Err(e)
         }
     }
-    
 }
 
+// Function to fetch the reserve-data based on the asset
 #[query]
 fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
     read_state(|state| {
-        // let state = state.borrow();
-        state.asset_index.get(&asset.to_string())
-        .map(|reserve| reserve.0.clone())
-        .ok_or_else(|| format!("Reserve not found for asset: {}", asset.to_string()))
+        state
+            .asset_index
+            .get(&asset.to_string())
+            .map(|reserve| reserve.0.clone())
+            .ok_or_else(|| format!("Reserve not found for asset: {}", asset.to_string()))
     })
 }
 
+// Function to call the execute_borrow logic
 #[update]
 async fn borrow(
     asset: String,
@@ -132,13 +104,13 @@ async fn borrow(
     }
 }
 
+// Function to get the user data based on the principal
 #[query]
 fn get_user_data(user: String) -> Result<UserData, String> {
     let user_principal = Principal::from_text(user.to_string())
         .map_err(|_| "Invalid user canister ID".to_string())?;
 
     read_state(|state| {
-        // let state = state.borrow();
         state
             .user_profile
             .get(&user_principal)
@@ -152,6 +124,7 @@ fn get_user_data(user: String) -> Result<UserData, String> {
     })
 }
 
+// Get names of all assets of the reserve
 #[query]
 pub fn get_all_assets() -> Vec<String> {
     read_state(|state| {
@@ -164,5 +137,87 @@ pub fn get_all_assets() -> Vec<String> {
     })
 }
 
+// Get all users
+#[query]
+fn get_all_users() -> Vec<(Principal, UserData)> {
+    read_state(|state| {
+        state
+            .user_profile
+            .iter()
+            .map(|(k, v)| (k.clone(), v.0.clone()))
+            .collect()
+    })
+}
+
+// Initialize user if not found
+#[update]
+fn check_user(user: String) -> Result<String, String> {
+    let user_principal =
+        Principal::from_text(&user).map_err(|_| "Invalid user canister ID".to_string())?;
+
+    let user_data = mutate_state(|state| {
+        let user_index = &mut state.user_profile;
+        match user_index.get(&user_principal) {
+            Some(_) => Ok("User available".to_string()),
+            None => {
+                let default_user_data = UserData::default();
+                user_index.insert(user_principal.clone(), Candid(default_user_data));
+                Ok("User added".to_string())
+            }
+        }
+    });
+
+    user_data
+}
+
+// Repays debt of the user
+#[update]
+async fn repay(asset: String, amount: u128, on_behalf: String) -> Result<(), String> {
+    ic_cdk::println!("Starting repay function");
+    let params = ExecuteRepayParams {
+        asset,
+        amount: amount as u128,
+        on_behalf_of: Some(on_behalf),
+    };
+    ic_cdk::println!("Parameters for execute_repay: {:?}", params);
+    match borrow::execute_repay(params).await {
+        Ok(_) => {
+            ic_cdk::println!("execute_repay function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_repay: {:?}", e);
+            Err(e)
+        }
+    }
+}
+
+// Withdraws amount from the collateral/supply
+#[update]
+async fn withdraw(
+    asset: String,
+    amount: u128,
+    on_behalf: String,
+    collateral: bool,
+) -> Result<(), String> {
+    ic_cdk::println!("Starting withdraw function");
+    let params = ExecuteWithdrawParams {
+        asset,
+        amount: amount as u128,
+        on_behalf_of: Some(on_behalf),
+        is_collateral: collateral,
+    };
+    ic_cdk::println!("Parameters for execute_withdraw: {:?}", params);
+    match SupplyLogic::execute_withdraw(params).await {
+        Ok(_) => {
+            ic_cdk::println!("execute_withdraw function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_withdraw: {:?}", e);
+            Err(e)
+        }
+    }
+}
 
 export_candid!();

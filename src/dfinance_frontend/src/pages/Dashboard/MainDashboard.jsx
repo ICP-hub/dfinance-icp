@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
-import Ellipse from "../../components/Ellipse";
+import Navbar from "../../components/Layout/Navbar";
+import Footer from "../../components/Layout/Footer";
+import Ellipse from "../../components/Common/Ellipse";
 
 import DashboardNav from "../../components/Dashboard/DashboardNav";
 import { useAuth } from "../../utils/useAuthClient";

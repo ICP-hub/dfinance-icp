@@ -1,56 +1,52 @@
-
 use candid::{Nat, Principal};
-// use ic_cdk::api::call::{call, CallResult};
-use ic_cdk::caller;
-use std::env;
-use dotenv::dotenv;
 use ic_cdk::call;
-use crate::api::deposit::asset_transfer_from;
-// use crate::api::state_handler::*;
-use crate::declarations::assets::ExecuteSupplyParams;
+pub struct SupplyLogic;
+use crate::api::state_handler::mutate_state;
+use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
+use crate::declarations::storable::Candid;
+use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::api::state_handler::mutate_state;
-use crate::declarations::storable::Candid;
-use crate::protocol::libraries::types::datatypes::UserData;
-pub struct SupplyLogic;
-use crate::declarations::transfer::*;
-impl SupplyLogic {
-    pub async fn execute_supply(params: ExecuteSupplyParams)-> Result<Nat, String> {
-       
-        ic_cdk::println!("Starting execute_supply with params: {:?}", params);
-        
-        let canister_id_ckbtc_ledger = "c2lt4-zmaaa-aaaaa-qaaiq-cai".to_string();
-        
-        // let dtoken_canister_id="c5kvi-uuaaa-aaaaa-qaaia-cai".to_string();
-    ic_cdk::println!("Canister IDs fetched successfully");
-    
-      
-        let ledger_canister_id =
-            Principal::from_text(canister_id_ckbtc_ledger).map_err(|_| "Invalid ledger canister ID".to_string())?;
-        // let user_principal = caller();
-        let user_principal=Principal::from_text("i5hok-bgbg2-vmnlz-qa4ur-wm6z3-ha5xl-c3tut-i7oxy-6ayyw-2zvma-lqe".to_string()).map_err(|_| "Invalid user canister ID".to_string())?;
-       
-        let platform_principal=Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai".to_string()).map_err(|_| "Invalid platform canister ID".to_string())?;
-        
-        let dtoken_canister_principal= Principal::from_text("c5kvi-uuaaa-aaaaa-qaaia-cai".to_string()).map_err(|_| "Invalid dtoken canister ID".to_string())?;
+use crate::{
+    api::deposit::asset_transfer_from,
+    constants::asset_address::{BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DTOKEN_CANISTER},
+};
 
-       
+impl SupplyLogic {
+    // -------------------------------------
+    // ----------- SUPPLY LOGIC ------------
+    // -------------------------------------
+
+    pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
+        ic_cdk::println!("Starting execute_supply with params: {:?}", params);
+
+        // Fetchs the canister ids, principal and amount
+        let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
+            .map_err(|_| "Invalid ledger canister ID".to_string())?;
+
+        let user_principal = Principal::from_text(params.on_behalf_of)
+            .map_err(|_| "Invalid user canister ID".to_string())?;
+
+        let platform_principal = Principal::from_text(BACKEND_CANISTER)
+            .map_err(|_| "Invalid platform canister ID".to_string())?;
+
+        let dtoken_canister_principal = Principal::from_text(DTOKEN_CANISTER)
+            .map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
         let amount_nat = Nat::from(params.amount);
 
-        ic_cdk::println!("Principals and amount_nat prepared successfully");
-       
+        ic_cdk::println!("Canister ids, principal and amount successfully");
+
+        // Reads the reserve data from the asset
         let reserve_data_result = mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index
-                .get(&params.asset.to_string())
+                .get(&params.asset.to_string().clone())
                 .map(|reserve| reserve.0.clone())
                 .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
         });
-       
+
         let mut reserve_data = match reserve_data_result {
-           
             Ok(data) => {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
                 data
@@ -70,28 +66,8 @@ impl SupplyLogic {
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates supply using the reserve_data
-        ValidationLogic::validate_supply(&reserve_cache, &reserve_data, params.amount);
+        ValidationLogic::validate_supply(&reserve_cache, &reserve_data, params.amount).await;
         ic_cdk::println!("Supply validated successfully");
-        // let arg= TransferAccount {
-        //     owner: platform_principal,
-        //     subaccount: None,
-        // };
-        // async fn example_function(ledger_canister_id: Principal, transfer_account: TransferAccount) -> Result<u64, String> {
-        //     // Expecting the response to be a tuple with one element (u64)
-        //     let result: Result<(u64,), (ic_cdk::api::call::RejectionCode, String)> = call(ledger_canister_id, "icrc2_balance_of", (transfer_account,))
-        //         .await;
-        
-        //     // Extract the u64 value from the tuple
-        //     match result {
-        //         Ok((balance,)) => Ok(balance),
-        //         Err((_, err_msg)) => Err(err_msg),
-        //     }
-        // }
-        // let total_supply = example_function(ledger_canister_id, arg).await?;
-        // reserve_data.total_supply = Some(total_supply.clone());
-        // reserve_data.total_supply = call(ledger_canister_id, "icrc2_balance_of", arg)
-        // .await
-       
 
         // Updates inetrest rates with the assets and the amount
         reserve::update_interest_rates(
@@ -100,15 +76,14 @@ impl SupplyLogic {
             params.asset,
             params.amount,
             0,
-        ).await;
+        )
+        .await;
         ic_cdk::println!("Interest rates updated successfully");
-        
+
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert("ckbtc".to_string(), Candid(reserve_data.clone()));
         });
-        
-
 
         // Transfers the asset from the user to our backend cansiter
         asset_transfer_from(
@@ -117,189 +92,12 @@ impl SupplyLogic {
             platform_principal,
             amount_nat.clone(),
         )
-        .await.map_err(|e| format!("Asset transfer failed: {:?}", e))?;
+        .await
+        .map_err(|e| format!("Asset transfer failed: {:?}", e))?;
 
         ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
 
-
-        // let user_data_result = mutate_state(|state| {
-        //     state.user_profile.get(&user_principal)
-        //         .map(|candid| candid.0.clone())
-        //         .ok_or_else(|| "User data not found".to_string())
-        // });
-        
-        // let mut user_data = match user_data_result {
-        //     Ok(data) => {
-        //         ic_cdk::println!("Existing user data found: {:?}", data);
-        //         data
-        //     },
-        //     Err(_) => {
-        //         ic_cdk::println!("User not found. Initializing new user data.");
-        //         UserData {
-        //             net_worth: None,
-        //             net_apy: None,
-        //             health_factor: None,
-        //             supply: Some(Vec::new()),
-        //             borrow: Some(Vec::new()),
-        //             total_collateral: Some(0.0),
-        //             total_supply: Some(0.0),
-        //         }
-        //     }
-        // };
-        
-        // // **Fetch or Initialize UserReserveData**
-        // let user_reserve_data_result = mutate_state(|state| {
-        //     state.user_reserves.get(&user_principal)
-        //         .and_then(|reserves| reserves.get(&params.asset))
-        //         .map(|candid| candid.0.clone())
-        //         .ok_or_else(|| "User reserve data not found".to_string())
-        // });
-        
-        //let mut user_reserve_data = match user_reserve_data_result {
-        //     Ok(data) => {
-        //         ic_cdk::println!("Existing user reserve data found for asset {}: {:?}", params.asset, data);
-        //         data
-        //     },
-        //     Err(_) => {
-        //         ic_cdk::println!("User reserve data not found for asset {}. Initializing.", params.asset);
-        //         UserReserveData {
-        //             asset_id: params.asset.clone(),
-        //             supplied_amount: Nat::from(0u128),
-        //             borrowed_amount: Nat::from(0u128),
-        //             is_collateral: false,
-        //         }
-        //     }
-        // };
-        
-        // // **Update UserReserveData**
-        // let new_supplied_amount = user_reserve_data.supplied_amount.clone() + Nat::from(params.amount);
-        // user_reserve_data.supplied_amount = new_supplied_amount;
-        
-        // if params.is_collateral {
-        //     user_reserve_data.is_collateral = true;
-        // }
-        
-        // // **Convert to ICP**
-        // let converted_amount = match convert_to_icp(&params.asset, params.amount) {
-        //     Ok(amount_icp) => amount_icp,
-        //     Err(e) => {
-        //         ic_cdk::println!("Error converting to ICP: {}", e);
-        //         return Err(e);
-        //     }
-        // };
-        
-        // // **Update UserData**
-        // user_data.total_supply = Some(user_data.total_supply.unwrap_or(0.0) + converted_amount);
-        
-        // if params.is_collateral {
-        //     user_data.total_collateral = Some(user_data.total_collateral.unwrap_or(0.0) + converted_amount);
-        // }
-
-        // // **Update supply vector in UserData**
-        // if let Some(supplies) = &mut user_data.supply {
-        //     if let Some(existing_supply) = supplies.iter_mut().find(|(asset, _)| asset == &params.asset) {
-        //         existing_supply.1 += Nat::from(params.amount);
-        //     } else {
-        //         supplies.push((params.asset.clone(), Nat::from(params.amount)));
-        //     }
-        // } else {
-        //     user_data.supply = Some(vec![(params.asset.clone(), Nat::from(params.amount))]);
-        // } 
-        // if let Some(borrows) = &mut user_data.borrow {
-        //     if borrows.iter().all(|(asset, _)| asset != &params.asset) {
-        //         borrows.push((params.asset.clone(), Nat::from(0)));  // Add with 0 borrowed amount if not already present
-        //     }
-        // } else {
-        //     user_data.borrow = Some(vec![(params.asset.clone(), Nat::from(0))]);
-        // }
-        
-        // // **Recalculate Health Factor**
-        // let total_borrowed = user_data.borrow
-        //     .as_ref()
-        //     .map(|borrows| borrows.iter().map(|(_, amount)| amount.0 as f64).sum())
-        //     .unwrap_or(0.0);
-        
-        // let total_collateral = user_data.total_collateral.unwrap_or(0.0);
-        
-        // let health_factor = calculate_health_factor(total_collateral, total_borrowed);
-        
-        // user_data.health_factor = Some(health_factor);
-        
-        // // **Update UserReserveData and UserData in State**
-        // mutate_state(|state| {
-        //     // Update user_reserves
-        //     state.user_reserves.entry(user_principal)
-        //         .or_insert_with(BTreeMap::new)
-        //         .insert(params.asset.clone(), Candid(user_reserve_data.clone()));
-        // });
-        
-        // mutate_state(|state| {
-        //     // Update user_profile
-        //     state.user_profile.insert(user_principal, Candid(user_data.clone()));
-        // });
-        
-        // ic_cdk::println!("User data updated successfully: {:?}", user_data);
-        
-    
-        
-        let initial_user_data = UserData {
-            net_worth: None,
-            net_apy: None,
-            health_factor: None,
-            supply: None,
-            borrow: None,
-            // total_collateral: 0.0,
-            // total_debt: 0.0,
-            // available_borrow: 0.0,
-            // ltv: 0.0,
-            // current_liquidation_threshold: 80.0, 
-        };
-
-        mutate_state(|state| {
-            let ini_user = &mut state.user_profile;
-            ini_user.insert(user_principal, Candid(initial_user_data));
-            ic_cdk::println!("User added successfully");
-        });
-
-        let user_data = mutate_state(|state| {
-            let data = &mut state.user_profile;
-            data.get(&user_principal)
-                .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| format!("User not found"))
-        });
-
-        let mut user_prof = match user_data {
-            Ok(data) => {
-                ic_cdk::println!("User data found");
-                data
-            }
-            Err(e) => {
-                ic_cdk::println!("Error: {}", e);
-                return Err(e);
-            }
-        };
-
-        user_prof.net_worth = Some(0);
-        user_prof.net_apy = Some(8.25);
-        user_prof.supply = Some(vec![("ckbtc".to_string(), params.amount)]);
-        user_prof.borrow = None;
-
-        mutate_state(|state| {
-            let user_dt = &mut state.user_profile;
-            user_dt.insert(user_principal, Candid(user_prof.clone()));
-        });
-
-        ic_cdk::println!("User data: {:?}", user_prof);
-        // let (balance,): (Nat,) = call(dtoken_canister_principal, "icrc1_balance_of", (user_principal,))
-        //     .await
-        //     .map_err(|e| e.1)?;
-        
-        // ic_cdk::println!("User balance: {}", balance);
-        
-        // if balance < params.amount {
-        //     return Err("Insufficient funds for Dtoken transfer".to_string());
-        // }
-        
+        // Transfers dtoken from pool to the user principal
         let dtoken_args = TransferArgs {
             to: TransferAccount {
                 owner: user_principal,
@@ -312,10 +110,13 @@ impl SupplyLogic {
             amount: amount_nat,
         };
 
-        let (new_result,): (TransferFromResult,) =
-            call(dtoken_canister_principal, "icrc1_transfer", (dtoken_args, false))
-                .await
-                .map_err(|e| e.1)?;
+        let (new_result,): (TransferFromResult,) = call(
+            dtoken_canister_principal,
+            "icrc1_transfer",
+            (dtoken_args, false),
+        )
+        .await
+        .map_err(|e| e.1)?;
 
         match new_result {
             TransferFromResult::Ok(new_balance) => {
@@ -324,12 +125,112 @@ impl SupplyLogic {
             }
             TransferFromResult::Err(err) => Err(format!("{:?}", err)),
         }
-        // Ok(amount_nat)
+
+        // ----------- User updation logic here -------------
+    }
+
+    // -------------------------------------
+    // ---------- WITHDRAW LOGIC -----------
+    // -------------------------------------
+
+    pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<(), String> {
+        ic_cdk::println!("Starting execute_withdraw with params: {:?}", params);
+
+        let (user_principal, liquidator_principal) = if let Some(on_behalf_of) = params.on_behalf_of
+        {
+            let user_principal = Principal::from_text(on_behalf_of)
+                .map_err(|_| "Invalid user canister ID".to_string())?;
+            let liquidator_principal = ic_cdk::caller();
+            (user_principal, Some(liquidator_principal))
+        } else {
+            let user_principal = ic_cdk::caller();
+            (user_principal, None)
+        };
+
+        let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
+            .map_err(|_| "Invalid ledger canister ID".to_string())?;
+
+        let platform_principal = Principal::from_text(BACKEND_CANISTER)
+            .map_err(|_| "Invalid platform canister ID".to_string())?;
+
+        let dtoken_canister_principal = Principal::from_text(DTOKEN_CANISTER)
+            .map_err(|_| "Invalid dtoken canister ID".to_string())?;
+
+        // Reads the reserve data from the asset
+        let reserve_data_result = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .map(|reserve| reserve.0.clone())
+                .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
+        });
+
+        let mut reserve_data = match reserve_data_result {
+            Ok(data) => {
+                ic_cdk::println!("Reserve data found for asset: {:?}", data);
+                data
+            }
+            Err(e) => {
+                ic_cdk::println!("Error: {}", e);
+                return Err(e);
+            }
+        };
+
+        // ---------- Update state() ----------
+
+        // ---------- Validate withdraw() ----------
+
+        let withdraw_amount = Nat::from(params.amount);
+
+        // Determines the receiver principal
+        let transfer_to_principal = if let Some(liquidator) = liquidator_principal {
+            liquidator
+        } else {
+            user_principal
+        };
+
+        // Tranfers the withdraw amount from the pool to the user
+        let args = TransferFromArgs {
+            to: TransferAccount {
+                owner: transfer_to_principal,
+                subaccount: None,
+            },
+            fee: None,
+            spender_subaccount: None,
+            from: TransferAccount {
+                owner: platform_principal,
+                subaccount: None,
+            },
+            memo: None,
+            created_at_time: None,
+            amount: withdraw_amount.clone(),
+        };
+        let (result,): (TransferFromResult,) =
+            call(ledger_canister_id, "icrc2_transfer_from", (args,))
+                .await
+                .map_err(|e| e.1)?;
+
+        match result {
+            TransferFromResult::Ok(balance) => Ok(()),
+            TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+        };
+
+        // Transfers dtoken from user to the pool
+        asset_transfer_from(
+            ledger_canister_id,
+            user_principal,
+            platform_principal,
+            withdraw_amount.clone(),
+        )
+        .await
+        .map_err(|e| format!("Asset transfer failed: {:?}", e))?;
+
+        ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
+
+        // ---------- Update reserve data ----------
+
+        // ---------- Update user data ----------
+
+        Ok(())
     }
 }
-
-#[ic_cdk_macros::update]
-async fn supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
-    SupplyLogic::execute_supply(params).await
-}
-

@@ -7,11 +7,11 @@ import {
   WALLET_DETAIL_TAB,
 } from "../../utils/constants";
 import { useSelector } from "react-redux";
-import RiskPopup from "./RiskDetails";
+import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
-import icplogo from '../../../public/icp.png'
+import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
 
 const DashboardNav = () => {
@@ -29,7 +29,7 @@ const DashboardNav = () => {
     state || TAB_CARD_DATA[0]
   );
   const dropdownRef = useRef(null);
-  const menuRef = useRef(null);
+  
 
   const theme = useSelector((state) => state.theme.theme);
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
@@ -43,7 +43,19 @@ const DashboardNav = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     }
   };
+  const menuRef = useRef(null);
 
+  useEffect(() => {
+      if (isMenuOpen) {
+          document.body.classList.add('overflow-hidden');
+      } else {
+          document.body.classList.remove('overflow-hidden');
+      }
+
+      return () => {
+          document.body.classList.remove('overflow-hidden');
+      };
+  }, [isMenuOpen]);
 
   const toggleDropdown = () => {
     if (!isDrop) {
@@ -115,17 +127,17 @@ const DashboardNav = () => {
 
       <div className="flex h-[60px] gap-5 -ml-3">
         {!['/dashboard', '/market', '/governance'].includes(pathname) && (
-          <div className="-mt-1 cursor-pointer" onClick={() => navigate(-1)}>
+          <div className=" lg1:-mt-1 mt-[20px] cursor-pointer" onClick={() => navigate(-1)}>
             <ChevronLeft size={40} color={chevronColor} />
           </div>
         )}
-        <h1 className="text-[#2A1F9D] text-xl inline-flex items-center mb-8 dark:text-darkText ml-1">
+        <h1 className="text-[#2A1F9D] text-xl inline-flex items-center lg1:mt-0 mt-10 mb-8 dark:text-darkText ml-1">
           <img src={icplogo} alt="Icp Logo" className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]" />
           ICP Market
         </h1>
 
         {/* Menu Button */}
-        <div className="md:hidden flex ml-auto -mt-10">
+        <div className="md:hidden flex ml-auto -mt-1">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
             <EllipsisVertical color={checkColor} size={18} />
           </button>
@@ -192,56 +204,48 @@ const DashboardNav = () => {
           </div> */}
           {/* Menu button for small screens */}
           <div className="relative">
-
-
             {/* Menu Items */}
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
-                } md:hidden`}
-            >
-              <div
-                className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-[#2A1F9D] mt-5  font-bold  border shadow-sm  border-gray-400 dark:border-none  dark:bg-darkOverlayBackground mx-2 my-1
-                         bg-white px-3 py-7 rounded-lg w-11/12 max-w-md  dark:text-darkText"
-                ref={menuRef}
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <div
-                    className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 "
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <X className="text-black dark:text-darkText w-6 h-6" />
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-4">
-                  {(isDashboardSupplyOrMain
-                    ? WALLET_DETAIL_TAB
-                    : WALLET_DETAILS_TABS
-                  ).map((data, index) => (
-                    <div
-                      key={index}
-                      className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
-                      style={{ minWidth: "220px", flex: "1 0 220px" }} // Adjust minWidth and flex properties
-                    >
-                      <button className="relative w-full text-left flex justify-between items-center">
-                        <span>{data.title}</span>
-                        <span className="font-bold">{data.count}</span>
-                        <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-end mt-14 md:mt-0">
-                  <button
-                    className=" w-full py-3 px-3 bg-[#FFC1C1] shadow-xl text-red-600 text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
-                    onClick={handleOpenPopup}
-                    style={{ minWidth: "220px" }} // Ensure button has consistent width
-                  >
-                    Risk Details
-                  </button>
-                </div>
-              </div>
+            <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}>
+            <div className="flex justify-center items-center min-h-screen">
+  <div
+    className="relative text-[#2A1F9D] mt-5 font-bold border shadow-sm border-gray-400 dark:border-none dark:bg-darkOverlayBackground mx-2 my-1 bg-white px-3 py-7 rounded-lg w-11/12 max-w-md dark:text-darkText"
+    ref={menuRef}
+  >
+    <div className="absolute top-2 right-2  text-gray-500 hover:text-gray-700 w-6 h-6" onClick={() => setIsMenuOpen(false)}>
+      <X className="text-black dark:text-darkText w-6 h-6" />
+    </div>
+
+    <div className="flex flex-wrap items-center gap-4 mt-2">
+      {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
+        <div
+          key={index}
+          className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+          style={{ minWidth: "220px", flex: "1 0 220px" }}
+        >
+          <button className="relative w-full text-left flex justify-between items-center">
+            <span>{data.title}</span>
+            <span className="font-bold">{data.count}</span>
+            <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+          </button>
+        </div>
+      ))}
+    </div>
+
+    <div className="flex justify-end mt-10 md:mt-0">
+      <button
+        className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
+        onClick={handleOpenPopup}
+        style={{ minWidth: "220px" }}
+      >
+        Risk Details
+      </button>
+    </div>
+  </div>
+
+
+   </div>
             </div>
-          </div>
+        </div>
 
           {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText mb-5">
             {pathname !== "/dashboard/transaction-history" &&

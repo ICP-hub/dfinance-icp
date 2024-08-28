@@ -1,2 +1,2 @@
-pub mod reserve_configuration;
 pub mod configurator;
+pub mod reserve_configuration;

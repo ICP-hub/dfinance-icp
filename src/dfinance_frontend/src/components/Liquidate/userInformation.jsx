@@ -123,7 +123,7 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
         return (
           <div className="mt-4">
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
-              <p className="text-lg font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 ICP Price
               </p>
               <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">
@@ -131,13 +131,13 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-lg font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 ICP Liquidation Bonus %
               </p>
               <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">12%</p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-lg font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 Reward Amount
               </p>
               <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">{rewardAmount}</p>

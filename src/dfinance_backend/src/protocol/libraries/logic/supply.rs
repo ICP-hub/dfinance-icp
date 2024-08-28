@@ -120,6 +120,127 @@ impl SupplyLogic {
         .await.map_err(|e| format!("Asset transfer failed: {:?}", e))?;
 
         ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
+
+
+        // let user_data_result = mutate_state(|state| {
+        //     state.user_profile.get(&user_principal)
+        //         .map(|candid| candid.0.clone())
+        //         .ok_or_else(|| "User data not found".to_string())
+        // });
+        
+        // let mut user_data = match user_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("Existing user data found: {:?}", data);
+        //         data
+        //     },
+        //     Err(_) => {
+        //         ic_cdk::println!("User not found. Initializing new user data.");
+        //         UserData {
+        //             net_worth: None,
+        //             net_apy: None,
+        //             health_factor: None,
+        //             supply: Some(Vec::new()),
+        //             borrow: Some(Vec::new()),
+        //             total_collateral: Some(0.0),
+        //             total_supply: Some(0.0),
+        //         }
+        //     }
+        // };
+        
+        // // **Fetch or Initialize UserReserveData**
+        // let user_reserve_data_result = mutate_state(|state| {
+        //     state.user_reserves.get(&user_principal)
+        //         .and_then(|reserves| reserves.get(&params.asset))
+        //         .map(|candid| candid.0.clone())
+        //         .ok_or_else(|| "User reserve data not found".to_string())
+        // });
+        
+        //let mut user_reserve_data = match user_reserve_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("Existing user reserve data found for asset {}: {:?}", params.asset, data);
+        //         data
+        //     },
+        //     Err(_) => {
+        //         ic_cdk::println!("User reserve data not found for asset {}. Initializing.", params.asset);
+        //         UserReserveData {
+        //             asset_id: params.asset.clone(),
+        //             supplied_amount: Nat::from(0u128),
+        //             borrowed_amount: Nat::from(0u128),
+        //             is_collateral: false,
+        //         }
+        //     }
+        // };
+        
+        // // **Update UserReserveData**
+        // let new_supplied_amount = user_reserve_data.supplied_amount.clone() + Nat::from(params.amount);
+        // user_reserve_data.supplied_amount = new_supplied_amount;
+        
+        // if params.is_collateral {
+        //     user_reserve_data.is_collateral = true;
+        // }
+        
+        // // **Convert to ICP**
+        // let converted_amount = match convert_to_icp(&params.asset, params.amount) {
+        //     Ok(amount_icp) => amount_icp,
+        //     Err(e) => {
+        //         ic_cdk::println!("Error converting to ICP: {}", e);
+        //         return Err(e);
+        //     }
+        // };
+        
+        // // **Update UserData**
+        // user_data.total_supply = Some(user_data.total_supply.unwrap_or(0.0) + converted_amount);
+        
+        // if params.is_collateral {
+        //     user_data.total_collateral = Some(user_data.total_collateral.unwrap_or(0.0) + converted_amount);
+        // }
+
+        // // **Update supply vector in UserData**
+        // if let Some(supplies) = &mut user_data.supply {
+        //     if let Some(existing_supply) = supplies.iter_mut().find(|(asset, _)| asset == &params.asset) {
+        //         existing_supply.1 += Nat::from(params.amount);
+        //     } else {
+        //         supplies.push((params.asset.clone(), Nat::from(params.amount)));
+        //     }
+        // } else {
+        //     user_data.supply = Some(vec![(params.asset.clone(), Nat::from(params.amount))]);
+        // } 
+        // if let Some(borrows) = &mut user_data.borrow {
+        //     if borrows.iter().all(|(asset, _)| asset != &params.asset) {
+        //         borrows.push((params.asset.clone(), Nat::from(0)));  // Add with 0 borrowed amount if not already present
+        //     }
+        // } else {
+        //     user_data.borrow = Some(vec![(params.asset.clone(), Nat::from(0))]);
+        // }
+        
+        // // **Recalculate Health Factor**
+        // let total_borrowed = user_data.borrow
+        //     .as_ref()
+        //     .map(|borrows| borrows.iter().map(|(_, amount)| amount.0 as f64).sum())
+        //     .unwrap_or(0.0);
+        
+        // let total_collateral = user_data.total_collateral.unwrap_or(0.0);
+        
+        // let health_factor = calculate_health_factor(total_collateral, total_borrowed);
+        
+        // user_data.health_factor = Some(health_factor);
+        
+        // // **Update UserReserveData and UserData in State**
+        // mutate_state(|state| {
+        //     // Update user_reserves
+        //     state.user_reserves.entry(user_principal)
+        //         .or_insert_with(BTreeMap::new)
+        //         .insert(params.asset.clone(), Candid(user_reserve_data.clone()));
+        // });
+        
+        // mutate_state(|state| {
+        //     // Update user_profile
+        //     state.user_profile.insert(user_principal, Candid(user_data.clone()));
+        // });
+        
+        // ic_cdk::println!("User data updated successfully: {:?}", user_data);
+        
+    
         
         let initial_user_data = UserData {
             net_worth: None,

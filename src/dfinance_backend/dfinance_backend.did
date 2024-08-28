@@ -53,4 +53,5 @@ service : () -> {
   get_reserve_data: (text) -> (variant { Ok: ReserveData; Err: text}) query;
   get_user_data: (text) -> (variant {Ok: UserData; Err: text}) query;
   get_all_assets: () -> (vec text) query;
+  "initialize_reserve_list": (vec record { text; principal }) -> (Result);
 };

@@ -116,3 +116,75 @@ dfx deploy dtoken --argument "(variant { Init = record {
 #  }})"
 
 echo "dckBTC has been successfully deployed with initial circulation set to 0."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# #!/bin/bash
+
+# set -e
+
+# # Function to deploy a token
+# deploy_token() {
+#     local TOKEN_NAME=$1
+#     local TOKEN_SYMBOL=$2
+#     local BACKEND=$3
+#     local PRE_MINTED_TOKENS=$4
+#     local TRANSFER_FEE=$5
+#     local TRIGGER_THRESHOLD=$6
+#     local NUM_OF_BLOCK_TO_ARCHIVE=$7
+#     local CYCLE_FOR_ARCHIVE_CREATION=$8
+#     local FEATURE_FLAGS=$9
+
+#     echo "Deploying $TOKEN_NAME with symbol $TOKEN_SYMBOL..."
+
+#     dfx deploy dtoken --argument "(variant { Init = record {
+#         token_symbol = \"${TOKEN_SYMBOL}\";
+#         token_name = \"${TOKEN_NAME}\";
+#         minting_account = record { owner = principal \"${BACKEND}\" };
+#         transfer_fee = ${TRANSFER_FEE};
+#         metadata = vec {};
+#         feature_flags = opt record { icrc2 = ${FEATURE_FLAGS} };
+#         initial_balances = vec {};  
+#         archive_options = record {
+#             num_blocks_to_archive = ${NUM_OF_BLOCK_TO_ARCHIVE};
+#             trigger_threshold = ${TRIGGER_THRESHOLD};
+#             controller_id = principal \"${BACKEND}\";
+#             cycles_for_archive_creation = opt ${CYCLE_FOR_ARCHIVE_CREATION};
+#         };
+#     }})"
+
+#     echo "$TOKEN_NAME has been successfully deployed with initial circulation set to 0."
+# }
+
+# # Backend principal
+# export BACKEND="avqkn-guaaa-aaaaa-qaaea-cai"
+
+# # Common parameters
+# export PRE_MINTED_TOKENS=0
+# export TRANSFER_FEE=100
+# export TRIGGER_THRESHOLD=2000
+# export NUM_OF_BLOCK_TO_ARCHIVE=1000
+# export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
+# export FEATURE_FLAGS=false
+
+# # Deploy dckBTC
+# deploy_token "dckBTC" "dckBTC" $BACKEND $PRE_MINTED_TOKENS $TRANSFER_FEE $TRIGGER_THRESHOLD $NUM_OF_BLOCK_TO_ARCHIVE $CYCLE_FOR_ARCHIVE_CREATION $FEATURE_FLAGS
+
+# # Deploy dckETH
+# deploy_token "dckETH" "dckETH" $BACKEND $PRE_MINTED_TOKENS $TRANSFER_FEE $TRIGGER_THRESHOLD $NUM_OF_BLOCK_TO_ARCHIVE $CYCLE_FOR_ARCHIVE_CREATION $FEATURE_FLAGS

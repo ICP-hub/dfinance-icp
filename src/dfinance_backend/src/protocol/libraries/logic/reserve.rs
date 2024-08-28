@@ -224,6 +224,21 @@ async fn calculate_interest_rates(params: CalculateInterestRatesParams) -> (u128
     // For now, just return some dummy values
     (1, 1, 1)
 }
+// fn calculate_liquidity_rate(total_supply: u64, total_borrowed: u64) -> f64 {
+//     let utilization_rate = if total_supply == 0 {
+//         0.0
+//     } else {
+//         total_borrowed as f64 / total_supply as f64
+//     };
+
+//     let base_rate = 0.02; // 2% base rate
+//     let interest_rate_model = |utilization: f64| -> f64 {
+//         base_rate + utilization * 0.1 // Linear model: 10% slope
+//     };
+
+//     interest_rate_model(utilization_rate)
+// }
+
 
 async fn emit_reserve_data_updated(
     // reserve_address: Principal,

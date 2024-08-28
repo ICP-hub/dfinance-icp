@@ -1,3 +1,4 @@
+use api::state_handler::mutate_state;
 use declarations::assets::ExecuteBorrowParams;
 use ic_cdk_macros::export_candid;
 
@@ -20,15 +21,39 @@ use crate::protocol::libraries::logic::borrow;
 use candid::Principal;
 use ic_cdk::{init, query};
 use ic_cdk_macros::update;
+
 use crate::api::state_handler::read_state;
 use candid::Nat;
 use crate::protocol::libraries::types::datatypes::UserData;
 #[init]
 fn init() {
-    initialize_reserve();
+    // initialize_reserve();
     ic_cdk::println!("function called");
+
+    let ledger_tokens = vec![
+        // ("ckBTC", Principal::from_text("c2lt4-zmaaa-aaaaa-qaaiq-cai").unwrap()),
+        ("ckETH", Principal::from_text("ctiya-peaaa-aaaaa-qaaja-cai").unwrap()),
+    
+    ];
+
+    mutate_state(|state| {
+        for (token_name, principal) in ledger_tokens {
+            state.reserve_list.insert(token_name.to_string(), principal).unwrap();
+        }
+    });
 }
 
+#[update]
+fn initialize_reserve_list(ledger_tokens: Vec<(String, Principal)>) -> Result<(), String> {
+    ic_cdk::println!("Initialize reserve list function called");
+
+    mutate_state(|state| {
+        for (token_name, principal) in ledger_tokens {
+            state.reserve_list.insert(token_name.to_string(), principal);
+        }
+        Ok(())
+    })
+}
 // #[ic_cdk_macros::update]
 // async fn initialize_reserve_call() -> Result<(), String> {
 //     initialize_reserve().await
@@ -46,7 +71,7 @@ async fn deposit(
     ic_cdk::println!("Starting deposit function");
     let params = ExecuteSupplyParams {
         asset,
-        amount: amount as u128,  // Convert to u128 as required by ExecuteSupplyParams
+        amount: amount as u128,  
         on_behalf_of,
         is_collateral,
         referral_code,
@@ -128,7 +153,7 @@ fn get_user_data(user: String) -> Result<UserData, String> {
 }
 
 #[query]
-fn get_all_assets() -> Vec<String> {
+pub fn get_all_assets() -> Vec<String> {
     read_state(|state| {
         let mut asset_names = Vec::new();
         let iter = state.reserve_list.iter();
@@ -138,4 +163,6 @@ fn get_all_assets() -> Vec<String> {
         asset_names
     })
 }
+
+
 export_candid!();

@@ -32,7 +32,7 @@ pub struct UserData {
     pub health_factor: Option<f64>,
     pub supply: Option<Vec<(String, u128)>>, // asset, amount
     pub borrow: Option<Vec<(String, u128)>>,
-    // pub reserves: Vec<UserReserveData>,
+    // pub reserves: Vec<(String, UserReserveData)>,
     // pub ltv: f64, 
     // pub current_liquidation_threshold: f64,
 }
@@ -42,7 +42,9 @@ pub struct UserData {
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserReserveData {
     pub user_id: String,                   
-    pub reserve: String,                    
+    pub reserve: String,   
+    // pub total_supply
+    // pub total_borrow                 
     pub principal_stable_debt: u64,         // Principal amount of debt at a stable rate
     pub total_stable_debt: u64,             // Total stable debt including accrued interest
     pub total_variable_debt: u64,           // Total variable debt including accrued interest

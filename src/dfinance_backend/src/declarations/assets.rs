@@ -35,7 +35,7 @@ pub struct ReserveData {
     pub last_update_timestamp: u64,
     pub d_token_canister: Option<String>, 
     pub debt_token_canister: Option<String>,
-    pub accrued_to_treasury: u128,
+    pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.
     pub liquidity_index: u128,
     pub current_liquidity_rate: u128,
     pub configuration: ReserveConfiguration,
@@ -71,42 +71,16 @@ pub struct ReserveCache {
     pub next_avg_stable_borrow_rate: u128,
 }
 
-// #[derive(CandidType, Deserialize, Clone, usize)]
-// pub struct ReserveConfigurationMap {
-//     pub data: U256,
-// }
 
-// #[derive(CandidType, Deserialize, Clone, Default)]
-// pub struct ReserveData {
-//     pub configuration: ReserveConfiguration,
-//     pub a_token_address: Option<Principal>,
-//     pub stable_debt_token_address: Option<Principal>,
-//     pub variable_debt_token_address: Option<Principal>,
-//     pub interest_rate_strategy_address: Option<Principal>,
-//     pub liquidity_index: Option<u128>,
-//     pub variable_borrow_index: Option<u128>,
-//     pub current_liquidity_rate: Option<u128>,
-//     pub current_variable_borrow_rate: Option<u128>,
-//     pub current_stable_borrow_rate: Option<u128>,
-//     pub last_update_timestamp: Option<u64>,
-//     pub id: u16,
-//     pub accrued_to_treasury: Option<u128>,
-//     pub unbacked: u128,
-//     pub isolation_mode_total_debt: u128,
-//     // pub total_stable_debt: Option<u128>,
-//     // pub total_variable_debt: Option<u128>,
-//     // pub reserve_factor: Option<u128>,
-    
-// }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteSupplyParams {
     // pub asset: Principal,
     pub asset: String,
     pub amount: u128,
-    pub on_behalf_of: String,
+    pub on_behalf_of: String, //optional
     pub is_collateral: bool,
-    pub referral_code: u16,
+    pub referral_code: u16, //optional //
 }
 
 #[derive(CandidType, Deserialize, Clone)]

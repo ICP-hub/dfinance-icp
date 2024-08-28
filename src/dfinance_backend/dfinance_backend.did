@@ -60,6 +60,8 @@ type UserData = record {
   health_factor : opt float64;
   net_worth : opt float64;
   reserves : opt vec record { text; UserReserveData };
+  ltv: opt float64;
+  liquidation_threshold: opt float64;
 };
 
 type UserReserveData = record {

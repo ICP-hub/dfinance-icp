@@ -571,7 +571,7 @@ export const LIQUIDATION_USERLIST_COL = [
 export const LIQUIDATION_USERLIST_ROW = [
   {
     row_id: 0,
-    user_principle: "2tv4x-wgo7x-a7wst-3y...",
+    user_principle: "2tv4x-wgo7x-a7wst-3yfjwnfkh2iug8738fhbi2k2bijfbj l ",
     debt_amount: 156.51,
     debt_assets: [
       { image: ckBTC },
@@ -695,24 +695,24 @@ export const MY_SUPPLY_ASSET_TABLE_ROWS = [
     apy_desc: "Eligible for 2.9M$ GHO Community program"
   },
   
-  {
-    row_id: 3,
-    asset: "Dragginz",
-    image: Dragginz,
-    wallet_balance_count: 3.19,
-    wallet_balance: 156.51,
-    apy: 1.50,
-    apy_desc: "Eligible for 2.9M$ GHO Community program"
-  },
-  {
-    row_id: 4,
-    asset: "Dragginz",
-    image: Dragginz,
-    wallet_balance_count: 3.19,
-    wallet_balance: 156.51,
-    apy: 1.50,
-    apy_desc: "Eligible for 2.9M$ GHO Community program"
-  },
+  // {
+  //   row_id: 3,
+  //   asset: "Dragginz",
+  //   image: Dragginz,
+  //   wallet_balance_count: 3.19,
+  //   wallet_balance: 156.51,
+  //   apy: 1.50,
+  //   apy_desc: "Eligible for 2.9M$ GHO Community program"
+  // },
+  // {
+  //   row_id: 4,
+  //   asset: "Dragginz",
+  //   image: Dragginz,
+  //   wallet_balance_count: 3.19,
+  //   wallet_balance: 156.51,
+  //   apy: 1.50,
+  //   apy_desc: "Eligible for 2.9M$ GHO Community program"
+  // },
 ]
 
 export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
@@ -834,37 +834,37 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
     apy_desc: "Eligible for 2.9M$ GHO Community program",
     apy_type: "variable"
   },
-  {
-    row_id: 1,
-    asset: "ckBTC",
-    image: ckBTC,
-    wallet_balance_count: 3.19,
-    wallet_balance: 156.51,
-    apy: 1.50,
-    apy_desc: "Eligible for 2.9M$ GHO Community program",
-    apy_type: "variable"
-  },
+  // {
+  //   row_id: 1,
+  //   asset: "ckBTC",
+  //   image: ckBTC,
+  //   wallet_balance_count: 3.19,
+  //   wallet_balance: 156.51,
+  //   apy: 1.50,
+  //   apy_desc: "Eligible for 2.9M$ GHO Community program",
+  //   apy_type: "variable"
+  // },
   
-  {
-    row_id: 3,
-    asset: "Dragginz",
-    image: Dragginz,
-    wallet_balance_count: 3.19,
-    wallet_balance: 156.51,
-    apy: 1.50,
-    apy_desc: "Eligible for 2.9M$ GHO Community program",
-    apy_type: "variable"
-  },
-  {
-    row_id: 4,
-    asset: "Dragginz",
-    image: Dragginz,
-    wallet_balance_count: 3.19,
-    wallet_balance: 156.51,
-    apy: 1.50,
-    apy_desc: "Eligible for 2.9M$ GHO Community program",
-    apy_type: "variable"
-  },
+  // {
+  //   row_id: 2,
+  //   asset: "Dragginz",
+  //   image: Dragginz,
+  //   wallet_balance_count: 3.19,
+  //   wallet_balance: 156.51,
+  //   apy: 1.50,
+  //   apy_desc: "Eligible for 2.9M$ GHO Community program",
+  //   apy_type: "variable"
+  // },
+  // {
+  //   row_id: 3,
+  //   asset: "Dragginz",
+  //   image: Dragginz,
+  //   wallet_balance_count: 3.19,
+  //   wallet_balance: 156.51,
+  //   apy: 1.50,
+  //   apy_desc: "Eligible for 2.9M$ GHO Community program",
+  //   apy_type: "variable"
+  // },
   
  
 ]

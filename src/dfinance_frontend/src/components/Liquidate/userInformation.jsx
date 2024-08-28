@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Info, X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
-import cketh from "../../../public/assests-icon/CKETH.svg";
-import ckbtc from "../../../public/assests-icon/CKBTC.svg";
-import icp from "../../../public/assests-icon/icpdark.svg";
+import cketh from "../../../public/assests-icon/cketh.png";
+import ckbtc from '../../../public/assests-icon/ckbtc.png'
+import icp from "../../../public/assests-icon/icpdark.png";
 import Button from "../Common/Button";
-import Vector from "../../../public/Helpers/Vector.svg";
-import check from "../../../public/assests-icon/check.svg";
-import cross from "../../../public/assests-icon/cross.svg";
+import Vector from "../../../public/Helpers/Vector.png";
+import check from "../../../public/assests-icon/check.png";
+import cross from "../../../public/assests-icon/Cross.png";
 
 
 const UserInformationPopup = ({ onClose, asset, principal }) => {
@@ -73,24 +73,24 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
         return (
           <div className="mt-4">
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText  rounded-md p-2 text-sm">
-              <p className="text-base font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
+              <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 ckETH Price
               </p>
-              <p className="text-xs font-medium text-gray-900 dark:text-darkText">
+              <p className="text-sm font-medium">
                 0.0032560
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-base font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
+              <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 ckETH Liquidation Bonus %
               </p>
-              <p className="text-xs font-medium">10%</p>
+              <p className="text-smsm font-medium">10%</p>
             </div>
-            <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-base font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-80">
+            <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm mt-4">
+              <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                  Reward Amount
               </p>
-              <p className="text-xs font-medium">{rewardAmount}</p>
+              <p className="text-sm font-medium text-green-500">{rewardAmount}</p>
             </div>
           </div>
         );
@@ -111,36 +111,36 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
               </p>
               <p className="text-sm font-medium">15%</p>
             </div>
-            <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-80">
+            <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm mt-4">
+              <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 Reward Amount
               </p>
-              <p className="text-sm font-medium">{rewardAmount}</p>
+              <p className="text-sm font-medium text-green-500">{rewardAmount}</p>
             </div>
           </div>
         );
       case "icp":
         return (
           <div className="mt-4">
-            <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
-              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+            <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 ICP Price
               </p>
-              <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">
+              <p className="text-sm font-medium text-[#2A1F9D]   dark:text-darkText ">
                 5.032560
               </p>
             </div>
-            <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+            <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm mt-4">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 ICP Liquidation Bonus %
               </p>
-              <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">12%</p>
+              <p className="text-sm font-medium text-[#2A1F9D]   dark:text-darkText ">12%</p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
-              <p className="text-xs font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 Reward Amount
               </p>
-              <p className="text-xs font-bold text-[#2A1F9D]   dark:text-darkText ">{rewardAmount}</p>
+              <p className="text-sm font-medium text-green-500   ">{rewardAmount}</p>
             </div>
           </div>
         );
@@ -213,16 +213,14 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
               <>
                 <img src={cross} alt="Failure" className="w-30 h-30" />
                 <h2 className="text-2xl font-bold text-[#2A1F9D] dark:text-darkText mb-2">
-                  Liquidation Failed
+                  Liquidation Call Failed
                 </h2>
-                <p className="text-gray-500 dark:text-darkText mb-4">
-                  Try Again 
-                </p>
+               
                 <button
                    className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
                    onClick={handleRetry}
                 >
-                  Retry
+                  Try Again
                 </button>
               </>
             )}
@@ -234,19 +232,20 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
             Warning Pop Up
           </h2>
           <p className="text-sm text-[#989898] text-center dark:text-darkText mt-4">
-            Are you sure you want to liquidate on behalf of "<strong>{principal}</strong>"? <strong>{amountToRepay}ICP</strong> will be <strong>deducted</strong> from your account & <strong>{rewardAmount}</strong> will be rewarded.
+            Are you sure you want to liquidate on behalf of "<strong>{principal}</strong>"? <strong>{amountToRepay} ICP</strong> will be <strong>deducted</strong> from your account & <strong>{rewardAmount}</strong> will be rewarded.
           </p>
           <div className="mt-4 flex justify-center">
-            <label className="flex items-center text-[#989898]">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={isCheckboxChecked}
-                onChange={handleCheckboxClick}
-              />
-              Yes, call Liquidation
-            </label>
-          </div>
+  <label className="flex items-center text-[#989898]">
+    <input
+      type="checkbox"
+      className="mr-2 h-4 w-4 appearance-none border-2 border-gray-300 rounded bg-white checked:bg-gray-400 checked:border-gray-400 checked:text-white focus:outline-none checked:after:content-['✔'] checked:after:text-white checked:after:text-xs checked:after:flex checked:after:justify-center checked:after:items-center"
+      checked={isCheckboxChecked}
+      onChange={handleCheckboxClick}
+    />
+    Yes, call Liquidation
+  </label>
+</div>
+
 
           <div className="flex justify-center mt-6">
             <button
@@ -368,24 +367,24 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
                   <img
                     src={ckbtc}
                     alt="ckBTC"
-                    className="w-8 h-10 absolute top-0 left-6"
+                    className="w-8 h-10 absolute top-0 left-8"
                   />
                   <img
                     src={icp}
                     alt="ICP"
-                    className="w-8 h-10 absolute top-0 left-12"
+                    className="w-8 h-10 absolute top-0 left-16"
                   />
                 </div>
                 <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
                   <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
                     Close Factor
                   </p>
-                  <p className="text-lg font-bold text-gray-900 dark:text-darkText ">
+                  <p className="text-lg font-bold text-[#2A1F9D] dark:text-darkText ">
                     50%
                   </p>
                 </div>
-                <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText  rounded-md p-2 text-sm text-[#F30606] mt-4 flex justify-between items-center mb-40">
-                  <p className="text-base font-bold text-[#2A1F9D] dark:text-darkText dark:opacity-50">
+                <div className="bg-gray-100 dark:bg-darkBackground/30   rounded-md p-2 text-sm text-[#F30606] mt-4 flex justify-between items-center mb-40">
+                  <p className="text-base font-bold text-[#2A1F9D] dark:text-darkText ">
                     Amount to Repay
                   </p>
                   <p className="text-base font-bold">{amountToRepay}</p>

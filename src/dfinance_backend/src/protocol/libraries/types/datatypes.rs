@@ -19,6 +19,8 @@ pub struct UserData {
     pub net_worth: Option<f64>,
     pub net_apy: Option<f64>,
     pub health_factor: Option<f64>,
+    pub ltv: Option<f64>,
+    pub liquidation_threshold: Option<f64>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
 }
 
@@ -29,6 +31,8 @@ impl Default for UserData {
             net_worth: Some(0.0),
             net_apy: Some(0.0),
             health_factor: Some(0.0),
+            ltv: Some(0.0),
+            liquidation_threshold: Some(0.0),
             reserves: Default::default(),
         }
     }

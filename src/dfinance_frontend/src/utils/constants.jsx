@@ -368,7 +368,7 @@ export const WALLET_DETAILS_TABS = [
   },
   {
     id: 1,
-    title: "Total Available",
+    title: "Total Supplies",
     count: "400.76",
   },
   {

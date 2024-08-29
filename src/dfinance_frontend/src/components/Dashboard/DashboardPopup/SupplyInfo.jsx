@@ -13,7 +13,7 @@ import {
 import { useEffect } from "react";
 import { X } from 'lucide-react';
 
-const SupplyInfo = ({ filteredItems }) => {
+const SupplyInfo = ({ filteredItems,  supplyPercentage, formatNumber}) => {
 
   const {
     isAuthenticated,
@@ -25,7 +25,7 @@ const SupplyInfo = ({ filteredItems }) => {
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [supplyCapUsd, setSupplyCapUsd] = useState(null);
-  const [supplyPercentage, setSupplyPercentage] = useState()
+
   const [borrowCapUsd, setBorrowCapUsd] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -95,39 +95,10 @@ const SupplyInfo = ({ filteredItems }) => {
       setUsdBalance(balanceInUsd);
       setSupplyCapUsd(supplyCapUsd)
       setBorrowCapUsd(borrowCapUsd)
-
-
-      // Calculate the percentage
-      const percentage = supplyCapUsd > 0
-        ? ((parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100).toFixed(2)
-        : 0;
-
-      setSupplyPercentage(percentage);
-
-      console.log(`Balance as a percentage of Supply Cap: ${percentage}%`);
     }
 
 
   }, [balance, conversionRate, supply_cap]);
-
-
-  function formatNumber(num) {
-    if (num === null || num === undefined) {
-      return '0'; // or any default value you'd prefer
-    }
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
-    }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-    }
-    return num.toString();
-  }
-
-
 
   return (
 
@@ -144,10 +115,10 @@ const SupplyInfo = ({ filteredItems }) => {
                 <CircleProgess progessValue="..." />
               )}
             </div>
-            <div className="w-full lg:9/12  md:w-12/12 flex gap-12 lg:px-3 overflow-auto text-xs md:text-sm lg:text-base whitespace-nowrap sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden sxs3:gap-4 md:gap-14">
+            <div className="w-full lg:w-9/12 flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs md:text-sm lg:text-base mt-3 lg:mt-0 sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden md:gap-10 sxs3:gap-4">
 
               <div className="relative text-[#5B62FE] dark:text-darkText">
-                <h1 className="text-[#2A1F9D] font-bold mb-[1px] dark:text-darkText">Total Supplied</h1>
+                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Total Supplied</h1>
                 <hr
                   className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
                 />

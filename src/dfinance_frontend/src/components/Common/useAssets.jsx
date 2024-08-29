@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../utils/useAuthClient';
+
 const useAssetData = (searchQuery = '') => {
     
   const {
@@ -11,6 +12,8 @@ const useAssetData = (searchQuery = '') => {
 
   const [assets, setAssets] = useState([]);
   const [reserveData, setReserveData] = useState(null);
+  const [totalMarketSize, setTotalMarketSize] = useState(0);
+  const [totalSupplySize, setTotalSupplySize] = useState(0);
   const [error, setError] = useState(null);
 
   // Fetch asset names
@@ -31,20 +34,34 @@ const useAssetData = (searchQuery = '') => {
     fetchAssets(); 
   }, [backendActor]);
 
-  // Fetch reserve data for each asset
+  // Fetch reserve data for each asset and calculate total market size
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0 || !fetchReserveData) return;
 
       try {
         const data = {};
+        let totalMarketSizeTemp = 0;
+        let totalSupplies = 0
+
         for (const asset of assets) {
           const reserveDataForAsset = await fetchReserveData(asset); 
           data[asset] = reserveDataForAsset;
           console.log(`${asset} reserve data:`, reserveDataForAsset);
+
+          // Add the supply_cap to the total market size
+          const supplyCap = parseFloat(reserveDataForAsset.Ok.configuration.supply_cap);
+          const totalSupply = parseFloat(reserveDataForAsset.Ok.total_supply);
+          console.log("supplyCap", supplyCap)
+          console.log("TotalSupplies", totalSupply)
+          totalMarketSizeTemp += supplyCap;
+          totalSupplies += totalSupply;
         }
+
         console.log("All reserve data before setting state:", data);
         setReserveData(data); 
+        setTotalMarketSize(formatNumber(totalMarketSizeTemp)); // Set total market size
+        setTotalSupplySize(formatNumber(totalSupplies))
       } catch (err) {
         console.error('Error fetching reserve data:', err);
         setError(err.message);
@@ -56,7 +73,10 @@ const useAssetData = (searchQuery = '') => {
 
   useEffect(() => {
     console.log("Updated reserveData state:", reserveData);
+    console.log("Total market size", totalMarketSize);
   }, [reserveData]);
+
+
 
   // Filter items based on the search query
   const filteredItems = reserveData
@@ -68,8 +88,25 @@ const useAssetData = (searchQuery = '') => {
     : []; 
 
 
+    function formatNumber(num) {
+      if (num === null || num === undefined) {
+        return '0';
+      }
+      if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+      }
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+      }
+      if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+      }
+      return num.toString();
+    }
 
-  return { assets, reserveData, filteredItems};
+
+
+  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize};
 };
 
 export default useAssetData;

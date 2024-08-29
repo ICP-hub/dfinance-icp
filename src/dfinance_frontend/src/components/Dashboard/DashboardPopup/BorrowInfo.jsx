@@ -2,7 +2,7 @@ import React from "react"
 import CircleProgess from "../../Common/CircleProgess"
 import LineGraph from "../../Common/LineGraph"
 
-const BorrowInfo = ({filteredItems, formatNumber, usdBalance, borrowCapUsd}) => {
+const BorrowInfo = ({filteredItems, formatNumber, usdBalance, borrowCapUsd, supplyPercentage}) => {
   console.log("filteredItems from borrow",filteredItems)
    // Initialize variables to store the extracted values
    let asset_name = "";
@@ -42,9 +42,13 @@ const BorrowInfo = ({filteredItems, formatNumber, usdBalance, borrowCapUsd}) => 
   return (
     <div className="w-full lg:w-10/12 ">
       <div className="w-full flex flex-col lg:flex-row items-start sxs3:flex-row sxs3:mb-7">
-        <div className="w-full lg:w-2/12">
-          <CircleProgess progessValue={75} />
-        </div>
+      <div className="w-full md:w-2/12">
+              {supplyPercentage !== undefined ? (
+                <CircleProgess progessValue={supplyPercentage} />
+              ) : (
+                <CircleProgess progessValue="..." />
+              )}
+            </div>
         <div className="w-full lg:w-9/12 flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs md:text-sm lg:text-base mt-3 lg:mt-0 sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden md:gap-10 sxs3:gap-4">
           {/* Total Borrowed */}
           <div className="relative text-[#5B62FE] dark:text-darkText">

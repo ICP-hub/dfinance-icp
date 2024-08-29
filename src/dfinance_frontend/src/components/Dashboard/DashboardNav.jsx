@@ -15,9 +15,11 @@ import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
 import { Principal } from "@dfinity/principal";
 import { PrincipalClass } from "@dfinity/candid/lib/cjs/idl";
+import useAssetData from "../Common/useAssets";
 
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } = useAuth();
+  const { totalMarketSize, totalSupplySize } = useAssetData();
   const [userData, setUserData] = useState();
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
@@ -35,6 +37,14 @@ const DashboardNav = () => {
       title: "Health Factor",
       count: "0.00 %",
     },
+  ]);
+
+
+ 
+  const [walletDetailTabs, setWalletDetailTabs] = useState([
+    { id: 0, title: "Total Market Size", count: "0" },
+    { id: 1, title: "Total Supplies", count: "0" },
+    { id: 2, title: "Total Borrows", count: "0" },
   ]);
 
   useEffect(() => {
@@ -92,6 +102,27 @@ const DashboardNav = () => {
 
     setWalletDetailTab(updatedTab);
   };
+
+
+  const updateWalletDetailTabs = () => {
+    const updatedTabs = walletDetailTabs.map((item) => {
+      switch (item.id) {
+        case 0:
+          return { ...item, count: `${totalMarketSize}` };
+        case 1:
+          return { ...item, count: `${isNaN(totalSupplySize) ? '0' : totalSupplySize}` };
+        case 2:
+        default:
+          return item;
+      }
+    });
+
+    setWalletDetailTabs(updatedTabs);
+  };
+
+  useEffect(() => {
+    updateWalletDetailTabs();
+  }, [totalMarketSize]);
 
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
@@ -238,7 +269,7 @@ const DashboardNav = () => {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 mt-2">
-                    {(isDashboardSupplyOrMain ? walletDetailTab : WALLET_DETAILS_TABS).map((data, index) => (
+                    {(isDashboardSupplyOrMain ? walletDetailTab : walletDetailTabs).map((data, index) => (
                       <div
                         key={index}
                         className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
@@ -273,7 +304,7 @@ const DashboardNav = () => {
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
                 ? walletDetailTab
-                : WALLET_DETAILS_TABS
+                : walletDetailTabs
               ).map((data, index) => (
                 <div key={index} className="relative group">
                   <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80">

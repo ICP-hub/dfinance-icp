@@ -47,7 +47,7 @@ const AssetDetails = () => {
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [supplyCapUsd, setSupplyCapUsd] = useState(null);
-  const [supplyPercentage, setSupplyPercentage] = useState()
+  const [supplyPercentage, setSupplyPercentage] = useState("")
   const [borrowCapUsd, setBorrowCapUsd] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -150,8 +150,8 @@ const AssetDetails = () => {
 
       // Calculate the percentage
       const percentage = supplyCapUsd > 0
-        ? ((parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100).toFixed(2)
-        : 0;
+      ? Math.round((parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100)
+      : 0;
 
       setSupplyPercentage(percentage);
 
@@ -173,7 +173,7 @@ const AssetDetails = () => {
       return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
     }
     if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
     }
     return num.toString();
   }
@@ -262,9 +262,9 @@ const AssetDetails = () => {
   const renderFilterComponent = () => {
     switch (assetDetailFilter) {
       case "Supply Info":
-        return <SupplyInfo filteredItems={filteredItems} />
+        return <SupplyInfo filteredItems={filteredItems} supplyPercentage={supplyPercentage} formatNumber={formatNumber} />
       case "Borrow Info":
-        return <BorrowInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd}/>
+        return <BorrowInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd} supplyPercentage={supplyPercentage}/>
       // case "E-Mode info":
       //   return <EModeInfo  filteredItems={filteredItems}/>
       // case "Interest rate model":

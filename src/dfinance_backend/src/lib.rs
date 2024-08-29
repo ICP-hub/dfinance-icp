@@ -27,8 +27,20 @@ use crate::protocol::libraries::types::datatypes::UserData;
 
 #[init]
 fn init() {
-    initialize_reserve();
+    // initialize_reserve();
     ic_cdk::println!("function called");
+}
+
+#[update]
+fn initialize_reserve_list(ledger_tokens: Vec<(String, Principal)>) -> Result<(), String> {
+    ic_cdk::println!("Initialize reserve list function called");
+
+    mutate_state(|state| {
+        for (token_name, principal) in ledger_tokens {
+            state.reserve_list.insert(token_name.to_string(), principal);
+        }
+        Ok(())
+    })
 }
 
 // Function to call the execute_supply logic
@@ -38,7 +50,6 @@ async fn deposit(
     amount: u64,
     on_behalf_of: String,
     is_collateral: bool,
-    referral_code: u16,
 ) -> Result<(), String> {
     ic_cdk::println!("Starting deposit function");
     let params = ExecuteSupplyParams {
@@ -46,7 +57,6 @@ async fn deposit(
         amount: amount as u128,
         on_behalf_of,
         is_collateral,
-        referral_code,
     };
     ic_cdk::println!("Parameters for execute_supply: {:?}", params);
     match SupplyLogic::execute_supply(params).await {
@@ -126,7 +136,7 @@ fn get_user_data(user: String) -> Result<UserData, String> {
 
 // Get names of all assets of the reserve
 #[query]
-fn get_all_assets() -> Vec<String> {
+pub fn get_all_assets() -> Vec<String> {
     read_state(|state| {
         let mut asset_names = Vec::new();
         let iter = state.reserve_list.iter();

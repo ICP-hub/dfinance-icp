@@ -12,7 +12,7 @@ default_principal=$(dfx identity get-principal)
 echo "Default Principal (Spender): $default_principal"
 
 # Get the principal for the user1 identity (recipient)
-dfx identity use user1
+dfx identity use liquidator
 user1_principal=$(dfx identity get-principal)
 echo "User1 Principal (Recipient): $user1_principal"
 

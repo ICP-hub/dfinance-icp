@@ -8,11 +8,14 @@ use candid::{Nat, Principal};
 use ic_cdk::{update, query};
 use crate::declarations::transfer::*;
 use ic_cdk::call;
+use crate::get_all_assets;
 #[update]
 pub fn initialize_reserve(){
+    let asset_names = get_all_assets();
+    for asset_name in asset_names {
     let config = ReserveConfiguration::initialize(
-        5000,    // ltv
-        7500,    // liquidation_threshold
+        75,    // ltv
+        80,    // liquidation_threshold
         5,     // liquidation_bonus
         // 18,      // decimals
         true,    // active
@@ -23,7 +26,7 @@ pub fn initialize_reserve(){
         // true,    // borrowable_in_isolation
         // false,   // siloed_borrowing
         // true,    // flashloan_enabled
-        // 2000,    // reserve_factor
+        // 5,    // reserve_factor
         100000,  // borrow_cap
         100000,  // supply_cap
         100,     // liquidation_protocol_fee
@@ -37,14 +40,15 @@ pub fn initialize_reserve(){
     // let total_supply = get_ckbtc_balance(backend_canister_principal).await?;
 
     let data = ReserveData {
-        asset_name: Some("ckbtc".to_string()),
+        asset_name: Some(asset_name.clone()),
         last_update_timestamp: ic_cdk::api::time(),
         current_liquidity_rate: 0,
         borrow_rate: Some(8.25),
         supply_rate_apr: Some(8.25),
         d_token_canister: Some("by6od-j4aaa-aaaaa-qaadq-cai".to_string()),
         debt_token_canister: Some("b77ix-eeaaa-aaaaa-qaada-cai".to_string()),
-        // total_supply: Some(total_supply),
+        total_supply: Some(0.0),
+        can_be_collateral: Some(true),
         // current_stable_borrow_rate: 8,
         // current_variable_borrow_rate: 4,
         // interest_rate_strategy_address: Principal::from_text("hbrpn-74aaa-aaaaa-qaaxq-cai").unwrap(),
@@ -56,20 +60,20 @@ pub fn initialize_reserve(){
         accrued_to_treasury: 0,
         // unbacked: 0,
         // isolation_mode_total_debt: 0,
-        liquidity_index: 10000000000,
+        liquidity_index: 1,
         id: 1,
         // variable_borrow_index: 5000000000,
         configuration: config,
     };
-    let ckbtc_principal = Principal::from_text("c2lt4-zmaaa-aaaaa-qaaiq-cai".to_string())
-        .expect("Invalid ckbtc ledger principal");
+    // let ckbtc_principal = Principal::from_text("c2lt4-zmaaa-aaaaa-qaaiq-cai".to_string())
+    //     .expect("Invalid ckbtc ledger principal");
     mutate_state(|state| {
         let reserve_data = &mut state.asset_index;
-        state.reserve_list.insert("ckbtc".to_string(), ckbtc_principal);
-        reserve_data.insert("ckbtc".to_string(), Candid(data));
-        ic_cdk::println!("Reserve initialized successfully");
+        // state.reserve_list.insert("ckbtc".to_string(), ckbtc_principal);
+        reserve_data.insert(asset_name.clone(), Candid(data));
+        ic_cdk::println!("Reserve for {} initialized successfully", asset_name);
     });
-    
+}
 }
 // pub fn initialize_reserve(reserve_key: String) -> Result<(), String> {
 //     mutate_state(|state| {

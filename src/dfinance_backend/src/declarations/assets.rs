@@ -8,14 +8,15 @@ pub struct ReserveData {
     pub id: u16,
     pub borrow_rate: Option<f64>, //8.25
     pub supply_rate_apr: Option<f64>, //8.25
-    // pub total_supply: Option<Nat>,
+    pub total_supply: Option<f64>,
     pub last_update_timestamp: u64,
     pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,
-    pub accrued_to_treasury: u128,
+    pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.
     pub liquidity_index: u128,
     pub current_liquidity_rate: u128,
     pub configuration: ReserveConfiguration,
+    pub can_be_collateral: Option<bool>,
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
@@ -48,13 +49,15 @@ pub struct ReserveCache {
     pub next_avg_stable_borrow_rate: u128,
 }
 
+
+
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteSupplyParams {
     pub asset: String,
     pub amount: u128,
-    pub on_behalf_of: String,
+    pub on_behalf_of: String, //optional
     pub is_collateral: bool,
-    pub referral_code: u16,
+
 }
 
 #[derive(CandidType, Deserialize, Clone)]

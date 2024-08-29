@@ -9,7 +9,7 @@ use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::{
     api::deposit::asset_transfer_from,
-    constants::asset_address::{BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DTOKEN_CANISTER},
+    constants::asset_address::{BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DTOKEN_CANISTER},
 };
 
 impl SupplyLogic {
@@ -140,7 +140,8 @@ impl SupplyLogic {
         {
             let user_principal = Principal::from_text(on_behalf_of)
                 .map_err(|_| "Invalid user canister ID".to_string())?;
-            let liquidator_principal = ic_cdk::caller();
+            // let liquidator_principal = ic_cdk::caller();
+            let liquidator_principal = Principal::from_text("37nia-rv3ep-e4hzo-5vtfx-3zrxb-kwfhi-m27sj-wsvci-d2qyt-3dbs3-mqe".to_string()).map_err(|_| "Invalid liquidator id".to_string())?;
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();
@@ -216,14 +217,33 @@ impl SupplyLogic {
         };
 
         // Transfers dtoken from user to the pool
-        asset_transfer_from(
-            ledger_canister_id,
-            user_principal,
-            platform_principal,
-            withdraw_amount.clone(),
+        // asset_transfer_from(
+        //     dtoken_canister_principal, //dtoken
+        //     user_principal,
+        //     platform_principal,
+        //     withdraw_amount.clone(),
+        // )
+        // .await
+        // .map_err(|e| format!("Asset transfer failed: {:?}", e))?;
+        let dtoken_args = TransferArgs {
+            to: TransferAccount {
+                owner: platform_principal,
+                subaccount: None,
+            },
+            fee: None,
+            spender_subaccount: None,
+            memo: None,
+            created_at_time: None,
+            amount: withdraw_amount.clone(),
+        };
+
+        let (new_result,): (TransferFromResult,) = call(
+            dtoken_canister_principal,
+            "icrc1_transfer",
+            (dtoken_args, false),
         )
         .await
-        .map_err(|e| format!("Asset transfer failed: {:?}", e))?;
+        .map_err(|e| e.1)?;
 
         ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
 

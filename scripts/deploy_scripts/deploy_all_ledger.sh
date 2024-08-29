@@ -11,4 +11,7 @@ echo "debttoken ledger: $output"
 output3=$(./deploy_dtoken.sh)
 echo "dtoken ledger: $output"
 
+output4=$(./deploy_cketh.sh)
+echo "cketh ledger: $output"
+
 echo "all scripts deployed successfully"

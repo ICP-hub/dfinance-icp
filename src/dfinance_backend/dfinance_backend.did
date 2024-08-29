@@ -60,6 +60,8 @@ type UserData = record {
   health_factor : opt float64;
   net_worth : opt float64;
   reserves : opt vec record { text; UserReserveData };
+  ltv: opt float64;
+  liquidation_threshold: opt float64;
 };
 
 type UserReserveData = record {
@@ -89,6 +91,6 @@ service : () -> {
   repay : (text, nat, text) -> (variant { Ok : null; Err : text });
   withdraw : (text, nat, text, bool) -> (variant { Ok : null; Err : text });
   deposit : (text, nat64, text, nat16) -> (variant { Ok : null; Err : text });
-  get_all_users: () -> (vec record { principal; UserData }) query;
-  check_user: (text) -> (variant { Ok: text; Err: text });
+  get_all_users : () -> (vec record { principal; UserData }) query;
+  check_user : (text) -> (variant { Ok : text; Err : text });
 };

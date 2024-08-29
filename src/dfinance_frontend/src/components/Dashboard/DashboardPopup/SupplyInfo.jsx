@@ -7,11 +7,13 @@ import { useState } from "react";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
 import { useAuth } from "../../../utils/useAuthClient";
-import { useCallback
- } from "react";
- import { useEffect } from "react";
+import {
+  useCallback
+} from "react";
+import { useEffect } from "react";
+import { X } from 'lucide-react';
 
-const SupplyInfo = ({filteredItems}) => {
+const SupplyInfo = ({ filteredItems }) => {
 
   const {
     isAuthenticated,
@@ -32,10 +34,12 @@ const SupplyInfo = ({filteredItems}) => {
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [supplyCapUsd, setSupplyCapUsd] = useState(null);
+  const [supplyPercentage, setSupplyPercentage] = useState()
   const [borrowCapUsd, setBorrowCapUsd] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isCollateral, setIsCollateral] = useState(true);
 
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
   const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
@@ -86,9 +90,10 @@ const SupplyInfo = ({filteredItems}) => {
 
   let supply_cap
   let borrow_cap
-  filteredItems.map((item, index) =>{
-     supply_cap = item[1].Ok.configuration.supply_cap;
-     borrow_cap = item[1].Ok.configuration.borrow_cap;
+  
+  filteredItems.map((item, index) => {
+    supply_cap = item[1].Ok.configuration.supply_cap;
+    borrow_cap = item[1].Ok.configuration.borrow_cap;
   })
 
   useEffect(() => {
@@ -99,90 +104,130 @@ const SupplyInfo = ({filteredItems}) => {
       setUsdBalance(balanceInUsd);
       setSupplyCapUsd(supplyCapUsd)
       setBorrowCapUsd(borrowCapUsd)
+
+
+      // Calculate the percentage
+      const percentage = supplyCapUsd > 0
+        ? ((parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100).toFixed(2)
+        : 0;
+
+      setSupplyPercentage(percentage);
+
+      console.log(`Balance as a percentage of Supply Cap: ${percentage}%`);
     }
 
-    
-  }, [balance, conversionRate]);
 
- 
+  }, [balance, conversionRate, supply_cap]);
+
+
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0'; // or any default value you'd prefer
+    }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    }
+    return num.toString();
+  }
+
+
 
   return (
 
-  
-     
-      <div className="w-full lg:w-10/12 ">
+
+
+    <div className="w-full lg:w-10/12 ">
       {filteredItems.map((item, index) => (
-      <>
-      <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7">
-        <div className="w-full md:w-2/12">
-          <CircleProgess progessValue={75} />
-        </div>
-        <div className="w-full lg:9/12  md:w-12/12 flex gap-12 lg:px-3 overflow-auto text-xs md:text-sm lg:text-base whitespace-nowrap sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden sxs3:gap-4 md:gap-14">
-        
-          <div className="relative text-[#5B62FE] dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold mb-[1px] dark:text-darkText">Total Supplied</h1>
-            <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
-            />
-            <p>  <span >{item[1].Ok.total_supplied ? item[1].Ok.total_supplied : "0"}</span> of <span>{item[1].Ok.configuration.supply_cap.toString()}</span></p>
-            <p className="text-[11px]">${usdBalance} of ${supplyCapUsd}</p>
-          </div>
-          <hr
-              className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
-            />
-          <div className="relative text-[#5B62FE] dark:text-darkText">
+        <>
+          <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7">
+            <div className="w-full md:w-2/12">
+              {supplyPercentage !== undefined ? (
+                <CircleProgess progessValue={supplyPercentage} />
+              ) : (
+                <CircleProgess progessValue="..." />
+              )}
+            </div>
+            <div className="w-full lg:9/12  md:w-12/12 flex gap-12 lg:px-3 overflow-auto text-xs md:text-sm lg:text-base whitespace-nowrap sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden sxs3:gap-4 md:gap-14">
+
+              <div className="relative text-[#5B62FE] dark:text-darkText">
+                <h1 className="text-[#2A1F9D] font-bold mb-[1px] dark:text-darkText">Total Supplied</h1>
+                <hr
+                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
+                />
+                <p>  <span >{item[1].Ok.total_supplied ? formatNumber(item[1].Ok.total_supplied) : "0"}</span> of <span>{formatNumber(item[1].Ok.configuration.supply_cap.toString())}</span></p>
+                <p className="text-[11px]">${formatNumber(usdBalance)} of ${formatNumber(supplyCapUsd)}</p>
+              </div>
+
+              <hr
+                className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
+              />
+
+              <div className="relative text-[#5B62FE] dark:text-darkText">
+                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">APY, variable</h1>
+                <hr
+                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+                />
+                <p>{item[1].Ok.supply_rate_apr}%</p>
+              </div>
+              {/* <div className="relative text-[#5B62FE] dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold  mb-[1px] dark:text-darkText">Total Borrowed</h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5  mb-[1px]`}
             />
               <p>  <span >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</span> of <span>{item[1].Ok.configuration.borrow_cap.toString()}</span></p>
               <p className="text-[11px]">${usdBalance} of ${borrowCapUsd}</p>
+          </div> */}
+            </div>
           </div>
-        </div>
-      </div>
-      <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
-        <div className="w-full flex gap-5 text-[#2A1F9D] mb-6 dark:text-darkText">
-          <button className='cursor-pointer hover:text-[#7369df]'>Supply APR</button>
-        </div>
-        <LineGraph />
+          <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
+            <div className="w-full flex gap-5 text-[#2A1F9D] mb-6 dark:text-darkText">
+              <button className='cursor-pointer hover:text-[#7369df]'>Supply APR</button>
+            </div>
+            <LineGraph />
 
-        <p className="mt-8 text-[#5B62FE] flex items-center gap-2 dark:text-darkText">
-          Collateral usage <Check /> Can be collateral
-        </p>
+            <p className="mt-8 text-[#5B62FE] flex items-center gap-2 dark:text-darkText">
+              Collateral usage {isCollateral ? <Check /> : <X />} {isCollateral ? "Can be collateral" : "Cannot be collateral"}
+            </p>
 
-        <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap">
-          <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Max LTV</h1>
-            <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-            />
-            <p>{item[1].Ok.configuration.ltv}</p>
+            <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap">
+              <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
+                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Max LTV</h1>
+                <hr
+                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+                />
+                <p>{item[1].Ok.configuration.ltv}%</p>
+              </div>
+              <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
+                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
+                  Liquidation threshold
+                </h1>
+                <hr
+                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+                />
+                <p>{item[1].Ok.configuration.liquidation_threshold}%</p>
+              </div>
+              <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
+                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Liquidation bonus</h1>
+                <hr
+                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+                />
+                <p>{item[1].Ok.configuration.liquidation_bonus}%</p>
+              </div>
+            </div>
           </div>
-          <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
-              Liquidation threshold
-            </h1>
-            <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-            />
-            <p>{item[1].Ok.configuration.liquidation_threshold}</p>
-          </div>
-          <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Liquidation penalty</h1>
-            <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-            />
-            <p>{item[1].Ok.configuration.liquidation_bonus}</p>
-          </div>
-        </div>
-      </div>
-      </>
-        ))}
+        </>
+      ))}
     </div>
- 
+
 
   )
-  
+
 }
 
 export default SupplyInfo

@@ -2,9 +2,10 @@ import React from "react"
 import CircleProgess from "../../Common/CircleProgess"
 import LineGraph from "../../Common/LineGraph"
 
-const BorrowInfo = () => {
+const BorrowInfo = (filteredItems, formatNumber) => {
   return (
     <div className="w-full lg:w-10/12 ">
+      {}
       <div className="w-full flex flex-col lg:flex-row items-start sxs3:flex-row sxs3:mb-7">
         <div className="w-full lg:w-2/12">
           <CircleProgess progessValue={75} />
@@ -21,8 +22,8 @@ const BorrowInfo = () => {
           </div>
 
           <hr
-              className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
-            />
+                className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
+              />
 
           {/* APY, variable */}
           <div className="relative text-[#5B62FE] dark:text-darkText">
@@ -33,18 +34,15 @@ const BorrowInfo = () => {
             <p>1.50%</p>
           </div>
 
-          <hr
-              className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
-            />
 
           {/* Borrow cap */}
-          <div className="relative text-[#5B62FE] dark:text-darkText">
+          {/* <div className="relative text-[#5B62FE] dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Borrow cap</h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
             <p>1.50M</p>
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
@@ -61,7 +59,7 @@ const BorrowInfo = () => {
             />
             <p>60%</p>
           </div>
-          <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText">
+          {/* <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Collector Contract
             </h1>
@@ -69,7 +67,7 @@ const BorrowInfo = () => {
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
             <button>View Contract</button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

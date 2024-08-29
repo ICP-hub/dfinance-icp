@@ -294,7 +294,7 @@ const DashboardNav = () => {
               </button>
             )}
           </div>}
-          {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
+          {isPopupOpen && <RiskPopup onClose={handleClosePopup} userData={userData}/>}
 
         </div>
         <div className="ml-auto hidden lg:flex">

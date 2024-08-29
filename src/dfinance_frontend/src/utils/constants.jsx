@@ -43,18 +43,24 @@ export const FOOTER_LINK_1 = [
   },
   {
     id: 1,
+    title: "Liquidate",
+    route: "/Liquidate",
+    icon: "",
+  },
+  {
+    id: 2,
     title: "Security",
     route: "/#",
     icon: "",
   },
   {
-    id: 2,
+    id: 3,
     title: "Docs",
     route: "/#",
     icon: "",
   },
   {
-    id: 3,
+    id: 4,
     title: "FAQ",
     route: "/#",
     icon: "",
@@ -550,11 +556,77 @@ export const WALLET_ASSETS_TABLE_ROW = [
   },
 ]
 
+
+export const LIQUIDATION_USERLIST_COL = [
+  {
+    col_id: 0,
+    header: "User Principle",
+  },
+  {
+    col_id: 1,
+    header: "Debt Amount",
+  },
+  {
+    col_id: 2,
+    header: "Debt assets",
+  },
+  {
+    col_id: 3,
+    header: "Collateral Assets",
+  },
+  
+]
+
+export const LIQUIDATION_USERLIST_ROW = [
+  {
+    row_id: 0,
+    user_principle: "2tv4x-wgo7x-a7wst-3y...",
+    debt_amount: 156.51,
+    debt_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+    ],
+    collateral_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+      { image: cekTH },
+    ],
+  },
+  {
+    row_id: 1,
+    user_principle: "2tv4x-wgo7x-a7wst-3y...",
+    debt_amount: 156.51,
+    debt_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+    ],
+    collateral_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+      { image: cekTH },
+    ],
+  },
+  {
+    row_id: 2,
+    user_principle: "2tv4x-wgo7x-a7wst-3y...",
+    debt_amount: 156.51,
+    debt_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+    ],
+    collateral_assets: [
+      { image: ckBTC },
+      { image: cekTH },
+      { image: cekTH },
+    ],
+  },
+]
+
 export const ASSET_DETAILS = [
   "Supply Info",
   "Borrow Info",
-  "E-Mode info",
-  "Interest rate model",
+  // "E-Mode info",
+  // "Interest rate model",
 ]
 
 export const PROPOSALS_DETAILS = [
@@ -1358,12 +1430,12 @@ export const FAUCET_ASSETS_TABLE_ROW = [
     image: cekTH,
     WalletBalance: 0,
   },
-  {
-    row_id: 2,
-    asset: "Dragginz",
-    image: Dragginz,
-    WalletBalance: 0,
-  },
+  // {
+  //   row_id: 2,
+  //   asset: "Dragginz",
+  //   image: Dragginz,
+  //   WalletBalance: 0,
+  // },
   {
     row_id: 3,
     asset: "ICP",
@@ -1372,52 +1444,58 @@ export const FAUCET_ASSETS_TABLE_ROW = [
   },
   {
     row_id: 4,
-    asset: "OpenChat",
-    image: openChat,
+    asset: "ckUSDC",
+    image: ckusdc,
     WalletBalance: 0,
   },
-  {
-    row_id: 5,
-    asset: "Kinic",
-    image: Kinic,
-    WalletBalance: 0,
-  },
-  {
-    row_id: 6,
-    image: HotOrNot,
-    asset: "Hot or Not",
-    WalletBalance: 0,
-  },
-  {
-    row_id: 7,
-    image: icx,
-    asset: "ICX",
-    WalletBalance: 0,
-  },
-  {
-    row_id: 8,
-    asset: "ICGhost",
-    image: ICGGhost,
-    WalletBalance: 0,
-  },
-  {
-    row_id: 9,
-    asset: "Modclub",
-    image: Modclub,
-    WalletBalance: 0,
-  },
-  {
-    row_id: 10,
-    asset: "BOOM DAO",
-    image: BooMDao,
-    WalletBalance: 0,
-  },
-  {
-    row_id: 11,
-    image: catalyze,
-    asset: "Catalyze",
-    WalletBalance: 0,
-  },
+  // {
+  //   row_id: 4,
+  //   asset: "OpenChat",
+  //   image: openChat,
+  //   WalletBalance: 0,
+  // },
+  // {
+  //   row_id: 5,
+  //   asset: "Kinic",
+  //   image: Kinic,
+  //   WalletBalance: 0,
+  // },
+  // {
+  //   row_id: 6,
+  //   image: HotOrNot,
+  //   asset: "Hot or Not",
+  //   WalletBalance: 0,
+  // },
+  // {
+  //   row_id: 7,
+  //   image: icx,
+  //   asset: "ICX",
+  //   WalletBalance: 0,
+  // },
+  // {
+  //   row_id: 8,
+  //   asset: "ICGhost",
+  //   image: ICGGhost,
+  //   WalletBalance: 0,
+  // },
+  // {
+  //   row_id: 9,
+  //   asset: "Modclub",
+  //   image: Modclub,
+  //   WalletBalance: 0,
+  // },
+  // {
+  //   row_id: 10,
+  //   asset: "BOOM DAO",
+  //   image: BooMDao,
+  //   WalletBalance: 0,
+  // },
+  // {
+  //   row_id: 11,
+  //   image: catalyze,
+  //   asset: "Catalyze",
+  //   WalletBalance: 0,
+  // },
 ]
 
 

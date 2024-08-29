@@ -27,20 +27,32 @@ import plug from "../../../public/wallet/plug.png"
 import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
 import useAssetData from "../Common/useAssets"
+import { useMemo } from "react";
+import { Principal } from "@dfinity/principal";
+import {
+  useCallback
+} from "react";
+import MySupplyModal from "./MySupplyModal"
+import SupplyPopup from "./DashboardPopup/SupplyPopup"
+import ckbtc from "../../../public/assests-icon/ckBTC.png"
 
 
 
 const AssetDetails = () => {
   const [isFilter, setIsFilter] = React.useState(false)
-  const { id } = useParams();
-
-  const {filteredItems } = useAssetData();
-  
-
-
-  // redux
+  const { filteredItems } = useAssetData();
   const dispatch = useDispatch()
   const { assetDetailFilter } = useSelector((state) => state.utility)
+
+  const [balance, setBalance] = useState(null);
+  const [usdBalance, setUsdBalance] = useState(null);
+  const [supplyCapUsd, setSupplyCapUsd] = useState(null);
+  const [supplyPercentage, setSupplyPercentage] = useState()
+  const [borrowCapUsd, setBorrowCapUsd] = useState(null);
+  const [conversionRate, setConversionRate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isCollateral, setIsCollateral] = useState(true);
 
   const handleFilter = (value) => {
     setIsFilter(false)
@@ -51,32 +63,137 @@ const AssetDetails = () => {
     isAuthenticated,
     login,
     logout,
+    updateClient,
+    authClient,
+    identity,
     principal,
+    backendActor,
+    accountId,
+    createLedgerActor,
     reloadLogin,
     accountIdString,
-  } = useAuth();
+  } = useAuth()
+
+  const { id } = useParams();
 
   const renderFilterComponent = () => {
     switch (assetDetailFilter) {
       case "Supply Info":
-        return <SupplyInfo filteredItems={filteredItems}/>
+        return <SupplyInfo filteredItems={filteredItems} />
       case "Borrow Info":
-        return <BorrowInfo filteredItems={filteredItems}/>
-      case "E-Mode info":
-        return <EModeInfo  filteredItems={filteredItems}/>
-      case "Interest rate model":
-        return <InterestRateModel filteredItems={filteredItems}/>
+        return <BorrowInfo filteredItems={filteredItems} />
+      // case "E-Mode info":
+      //   return <EModeInfo  filteredItems={filteredItems}/>
+      // case "Interest rate model":
+      //   return <InterestRateModel filteredItems={filteredItems}/>
       default:
-        return <SupplyInfo filteredItems={filteredItems}/>
+        return <SupplyInfo filteredItems={filteredItems} />
     }
+  }
+
+  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
+
+  const fetchBalance = useCallback(async () => {
+    if (isAuthenticated && ledgerActor && principalObj) {
+      try {
+        const account = { owner: principalObj, subaccount: [] };
+        const balance = await ledgerActor.icrc1_balance_of(account);
+        setBalance(balance.toString());
+        console.log("Fetched Balance:", balance.toString());
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+        setError(error);
+      }
+    }
+  }, [isAuthenticated, ledgerActor, principalObj]);
+
+  const fetchConversionRate = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setConversionRate(data['internet-computer'].usd);
+      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
+    } catch (error) {
+      console.error("Error fetching conversion rate:", error);
+      setError(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchBalance(), fetchConversionRate()]);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
+
+  let supply_cap
+  let borrow_cap  
+  let asset;
+
+  filteredItems.map((item, index) => {
+    asset = item[0];
+    supply_cap = item[1].Ok.configuration.supply_cap;
+    borrow_cap = item[1].Ok.configuration.borrow_cap;
+  })
+
+  console.log("asserhuhdhd", asset)
+
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
+      const supplyCapUsd = (parseFloat(supply_cap) * conversionRate).toFixed(2);
+      const borrowCapUsd = (parseFloat(borrow_cap) * conversionRate).toFixed(2);
+      setUsdBalance(balanceInUsd);
+      setSupplyCapUsd(supplyCapUsd)
+      setBorrowCapUsd(borrowCapUsd)
+
+
+      // Calculate the percentage
+      const percentage = supplyCapUsd > 0
+        ? ((parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100).toFixed(2)
+        : 0;
+
+      setSupplyPercentage(percentage);
+
+      console.log(`Balance as a percentage of Supply Cap: ${percentage}%`);
+    }
+
+
+  }, [balance, conversionRate, supply_cap]);
+
+
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0';
+    }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    }
+    return num.toString();
   }
 
 
   const navigate = useNavigate()
 
   const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
-
-
 
   const handleWalletConnect = () => {
     console.log("connrcterd");
@@ -96,12 +213,9 @@ const AssetDetails = () => {
     }
   }, [isWalletCreated]);
 
-
-
   const loginHandler = async (val) => {
     await login(val);
     // navigate("/");
-
     // await existingUserHandler();
   };
 
@@ -110,6 +224,52 @@ const AssetDetails = () => {
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
+
+  const [isModalOpen, setIsModalOpen] = useState({
+    isOpen: false,
+    type: "",
+    asset: "",
+    image: "",
+  });
+
+  const handleModalOpen = (type, asset, image) => {
+    console.log("Handle modal opened");
+    setIsModalOpen({
+      isOpen: true,
+      type: type,
+      asset: asset,
+      image: image,
+    });
+  };
+
+
+  const renderModalOpen = (type) => {
+    console.log(type)
+    switch (type) {
+      case "supply":
+        return (
+          <MySupplyModal
+            isModalOpen={isModalOpen.isOpen}
+            handleModalOpen={handleModalOpen}
+            children={
+              <SupplyPopup //asset, image, balance, isModalOpen, handleModalOpen, setIsModalOpen
+                asset={isModalOpen.asset}
+                image={isModalOpen.image}
+                balance={0}
+                isModalOpen={isModalOpen.isOpen}
+                handleModalOpen={handleModalOpen}
+                setIsModalOpen={setIsModalOpen}
+              />
+            }
+          />
+        );
+  
+     
+      default:
+        return null;
+    }
+  };
+
 
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-16 my-6 gap-6 mb-[5rem]">
@@ -196,7 +356,7 @@ const AssetDetails = () => {
             <div>  <p className="text-gray-300 text-[12px] my-1">
               Wallet Balance
             </p>
-              <h1 className="font-semibold">0 ckETH</h1></div>
+              <h1 className="font-semibold">{formatNumber(balance)} {id}</h1></div>
           </div>
 
           <div>
@@ -210,16 +370,24 @@ const AssetDetails = () => {
               </div>
               <div className="flex">
                 <div>
-                  <h1 className="font-semibold">0 ckETH</h1>
-                  <p className="text-light text-[10px] text-gray-400">0$</p>
+                  <h1 className="font-semibold">{formatNumber(balance)} {id}</h1>
+                  <p className="text-light text-[10px] text-gray-400">${formatNumber(usdBalance)}</p>
                 </div>
                 <div className="ml-auto">
-                  <Button title={"Supply"} className={"my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"} />
+                  <Button 
+                  title={"Supply"}
+                    onClickHandler={() =>
+                      handleModalOpen(
+                        "supply",
+                        id,
+                         id === "ckbtc" && ckbtc
+                      )
+                    } className={"my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"} />
                 </div>
               </div>
 
 
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <p className=" text-[12px] my-1 text-darkTextSecondary1">
                   Assets to Supply
                 </p>
@@ -227,22 +395,23 @@ const AssetDetails = () => {
               </div>
               <div className="flex">
                 <div>
-                  <h1 className="font-semibold">0 ckETH</h1>
-                  <p className="text-light text-[10px] text-gray-400">0$</p>
+                  <h1 className="font-semibold">{formatNumber(balance)} {id}</h1>
+                  <p className="text-light text-[10px] text-gray-400">${formatNumber(usdBalance)}</p>
                 </div>
                 <div className="ml-auto">
                   <Button title={"Supply"} className={"my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"} />
                 </div>
-              </div>
+              </div> */}
 
 
             </div>
 
-            <div className="bg-[#59588D] mt-5 rounded-lg px-2 py-1">
-              <p className=" text-[10px] my-1">
-                Your Ethereum wallet is empty. Purchase or transfer assets.
-              </p>
-            </div>
+            {balance === "0" &&
+              <div className="bg-[#59588D] mt-5 rounded-lg px-2 py-1">
+                <p className=" text-[10px] my-1">
+                  Your wallet is empty. Please add assets to your wallet before supplying.
+                </p>
+              </div>}
 
 
 
@@ -305,7 +474,7 @@ const AssetDetails = () => {
 
         </div>
       </Modal>}
-
+      {renderModalOpen(isModalOpen.type)}
     </div>
   )
 }

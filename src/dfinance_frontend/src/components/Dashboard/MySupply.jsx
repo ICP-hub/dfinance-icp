@@ -354,8 +354,8 @@ const MySupply = () => {
       ) : (
         <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
           {/* Fixed Header */}
-          <div className="w-full z-10 sticky top-0 bg-white dark:bg-darkOverlayBackground">
-            <div className="grid grid-cols-[1.4fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
+          <div className="w-full z-10 sticky top-0 ">
+            <div className="grid grid-cols-[1.4fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
               <div className="p-5">Asset</div>
               <div className="p-5">Wallet Balance</div>
               <div className="p-5">Apy</div>
@@ -372,7 +372,7 @@ const MySupply = () => {
                 : ""
             }`}
           >
-            <div className="grid gap-2 dark:text-darkText">
+            <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
               {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
                 <div
                   key={index}
@@ -551,8 +551,8 @@ const MySupply = () => {
       ) : (
         <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
           {/* Fixed Header */}
-          <div className="w-full z-10 sticky top-0 bg-white dark:bg-darkOverlayBackground">
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 p-5">
+          <div className="w-full z-10 sticky top-0 ">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500] p-5">
               <div>Asset</div>
               <div>Wallet Balance</div>
               <div>Apy</div>
@@ -567,7 +567,7 @@ const MySupply = () => {
               MY_SUPPLY_ASSET_TABLE_ROWS.length > 3 ? "h-[260px]" : ""
             }`}
           >
-            <div className="grid gap-2 dark:text-darkText">
+            <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
               {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
                 <div
                   key={index}

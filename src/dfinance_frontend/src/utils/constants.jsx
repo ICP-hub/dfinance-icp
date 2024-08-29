@@ -834,16 +834,16 @@ export const MY_BORROW_ASSET_TABLE_ROWS = [
     apy_desc: "Eligible for 2.9M$ GHO Community program",
     apy_type: "variable"
   },
-  // {
-  //   row_id: 1,
-  //   asset: "ckBTC",
-  //   image: ckBTC,
-  //   wallet_balance_count: 3.19,
-  //   wallet_balance: 156.51,
-  //   apy: 1.50,
-  //   apy_desc: "Eligible for 2.9M$ GHO Community program",
-  //   apy_type: "variable"
-  // },
+  {
+    row_id: 1,
+    asset: "ckBTC",
+    image: ckBTC,
+    wallet_balance_count: 3.19,
+    wallet_balance: 156.51,
+    apy: 1.50,
+    apy_desc: "Eligible for 2.9M$ GHO Community program",
+    apy_type: "variable"
+  },
   
   // {
   //   row_id: 2,
@@ -1374,15 +1374,15 @@ export const transactionHistory = [
 
 // constants.js
 
-export const healthFactorValue = 5.26;
+export const healthFactorValue = 0.5;
 export const healthFactorCutOutPositions = {
     green: 10,
-    red: 60
+    
 };
 
-export const currentLTVValue = 15.28;
+export const currentLTVValue = 50;
 export const currentLTVCutOutPositions = {
-    green: 20,
+  
     red: 70
 };
 

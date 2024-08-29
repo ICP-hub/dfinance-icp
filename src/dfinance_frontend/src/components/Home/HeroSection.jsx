@@ -31,7 +31,7 @@ const HeroSection = () => {
                 <div className="w-full mt-10 h-32 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl text-center p-4 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                     <h1 className="text-[#2A1F9D] font-bold lg:my-3 dark:text-darkText">$ {liquidityCounter}</h1>
                     {/* <p className="text-sm font-normal text-[#585454] lg:my-3 dark:text-darkText">of liquidity is locked in crypto across {8} networks and over {15} markets.</p> */}
-                    <p className="text-sm font-normal text-[#585454] lg:my-3 dark:text-darkText">Total supply <span className='font-semibold'>{liquidityCounter}</span> of assets has been supplied to the protocol</p>
+                    <p className="text-sm font-normal text-[#585454] lg:my-3 dark:text-darkText">Total supply of assets has been supplied to the protocol</p>
                 </div>
 
             </div>

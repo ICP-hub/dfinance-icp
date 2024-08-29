@@ -448,9 +448,9 @@ const MySupply = () => {
                           <thead>
                             <tr className="grid grid-cols-[1fr_2fr_1fr_1fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
                               <td className="p-5">Asset</td>
-                              <td className="p-5 ml-7">Wallet Balance</td>
-                              <td className="p-5 -ml-10">Apy</td>
-                              <td className="p-5 -ml-14">Can be Collateral</td>
+                              <td className="p-5 ml-2">Wallet Balance</td>
+                              <td className="p-5 -ml-12">Apy</td>
+                              <td className="p-5 -ml-16">Can be Collateral</td>
                             </tr>
                           </thead>
                         </table>
@@ -490,11 +490,11 @@ const MySupply = () => {
                                       </p>
                                     </div>
                                   </td>
-                                  <td className="p-3 align-center mt-1.5">
-                                    <p >{item[1].Ok.supply_rate_apr}%</p>
+                                  <td className="p-3 pl-14 align-top  mt-1.5">
+                                    {item[1].Ok.supply_rate_apr}%
                                   </td>
-                                  <td className="p-3 align-top">
-                                    <div className="w-full pl-10 flex items-center justify-center">
+                                  <td className="p-3 pr-8 align-top">
+                                    <div className="w-full pl-10 flex items-center">
                                       <CustomizedSwitches />
                                     </div>
                                   </td>
@@ -660,9 +660,9 @@ const MySupply = () => {
                           <thead>
                             <tr className="grid grid-cols-[1fr_2fr_1fr_1fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
                               <td className="p-5">Asset</td>
-                              <td className="p-5 ml-12">Wallet Balance</td>
+                              <td className="p-5 ml-9">Wallet Balance</td>
                               <td className="p-5 -ml-5">Apy</td>
-                              <td className="p-5 -ml-14">Can be Collateral</td>
+                              <td className="p-5 -ml-16">Can be Collateral</td>
                             </tr>
                           </thead>
                         </table>
@@ -694,7 +694,7 @@ const MySupply = () => {
                                       {item[0]}
                                     </div>
                                   </td>
-                                  <td className="p-3 pl-6 align-top">
+                                  <td className="p-3 pl-10 align-top">
                                     <div className="flex flex-col">
                                       <p>{balance}</p>
                                       <p className="font-light">
@@ -702,10 +702,10 @@ const MySupply = () => {
                                       </p>
                                     </div>
                                   </td>
-                                  <td className="p-3  align-center  mt-1.5">
-                                    <p >{item[1].Ok.supply_rate_apr}%</p>
+                                  <td className="p-3 pl-14 align-top  mt-1.5">
+                                    {item[1].Ok.supply_rate_apr}%
                                   </td>
-                                  <td className="p-3  pr-20 align-top">
+                                  <td className="p-3  pr-20 pl-8 align-top">
                                     <div className="w-full  flex items-center justify-end">
                                       <Check color={checkColor} size={16} />
                                     </div>
@@ -897,9 +897,9 @@ const MySupply = () => {
                           <thead>
                             <tr className="grid grid-cols-[1.9fr_1.25fr_1fr_1fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
                               <td className="p-3">Asset</td>
-                              <td className="p-3">Debt</td>
-                              <td className="p-3">Apy</td>
-                              <td className="p-3">Apy type</td>
+                              <td className="p-3  ">Debt</td>
+                              <td className="p-3 ">Apy</td>
+                              <td className="p-3 -ml-2">Apy type</td>
                             </tr>
                           </thead>
                         </table>
@@ -930,7 +930,7 @@ const MySupply = () => {
                                       {item[0]}
                                     </div>
                                   </td>
-                                  <td className="p-3 align-top">
+                                  <td className="p-3 pl-4 align-top">
                                     <div className="flex flex-col">
                                       <p>{balance}</p>
                                       <p className="font-light">
@@ -942,12 +942,12 @@ const MySupply = () => {
                                       </p> */}
                                     </div>
                                   </td>
-                                  <td className="p-3 pr-6 align-top">
-                                    {item.apy}
+                                  <td className="p-3 pl-15 align-top  mt-2">
+                                    {item[1].Ok.supply_rate_apr}%
                                   </td>
                                   <td className="p-3 align-top">
-                                    <div className="w-full flex mt-2.5">
-                                      <p >{item[1].Ok.borrow_rate}%</p>
+                                    <div className="w-full flex">
+                                      <p >Variable</p>
                                     </div>
                                   </td>
                                   <td className="p-3 align-top">

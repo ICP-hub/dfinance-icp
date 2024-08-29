@@ -1503,11 +1503,11 @@ export const STACK_DETAILS_TABS = [
   {
     id: 0,
     title: "Funds In Safety Module",
-    count: "488.62",
+    count: "0",
   },
   {
     id: 1,
     title: "Total Emmision Per Day",
-    count: "163.93",
+    count: "0",
   },
 ]

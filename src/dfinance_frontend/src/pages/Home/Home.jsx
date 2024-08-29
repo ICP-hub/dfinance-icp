@@ -203,7 +203,7 @@ const Home = () => {
               <div className="w-full xl:w-3/12 flex justify-start mt-3 lg:mt-0 md:justify-end">
                 {" "}
                 {/* Center align the button on mobile screens only */}
-                <Button title="LEARN MORE" />
+                <Button title="COMMING SOON" />
               </div>
             </div>
           </div>
@@ -216,8 +216,7 @@ const Home = () => {
               Governed by the <span className="font-semibold">Community</span>
             </h1>
             <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6 dark:text-darkText">
-              DFinance is a fully decentralized, community governed protocol
-              <br className="hidden lg:inline" /> with 166,579 token holders.
+              DFinance is a fully decentralized, community governed protocol.
             </p>
 
             <div className="w-full flex justify-center mt-3">

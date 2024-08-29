@@ -17,17 +17,8 @@ const SupplyInfo = ({ filteredItems }) => {
 
   const {
     isAuthenticated,
-    login,
-    logout,
-    updateClient,
-    authClient,
-    identity,
     principal,
-    backendActor,
-    accountId,
     createLedgerActor,
-    reloadLogin,
-    accountIdString,
   } = useAuth()
   const { id } = useParams();
 
@@ -39,7 +30,7 @@ const SupplyInfo = ({ filteredItems }) => {
   const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isCollateral, setIsCollateral] = useState(true);
+  const [isCollateral, setIsCollateral] = useState(false);
 
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
   const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
@@ -131,7 +122,7 @@ const SupplyInfo = ({ filteredItems }) => {
       return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
     }
     if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
     }
     return num.toString();
   }

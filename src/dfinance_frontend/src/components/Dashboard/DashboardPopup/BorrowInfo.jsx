@@ -2,10 +2,45 @@ import React from "react"
 import CircleProgess from "../../Common/CircleProgess"
 import LineGraph from "../../Common/LineGraph"
 
-const BorrowInfo = (filteredItems, formatNumber, usdBalance, supplyCapUsd) => {
+const BorrowInfo = ({filteredItems, formatNumber, usdBalance, borrowCapUsd}) => {
+  console.log("filteredItems from borrow",filteredItems)
+   // Initialize variables to store the extracted values
+   let asset_name = "";
+   let accrued_to_treasury = "0";
+   let borrow_rate = "0";
+   let supply_cap = "0";
+   let borrow_cap = "0";
+   let ltv = "0";
+   let supply_rate_apr = "0";
+   let total_supply = "0";
+   let total_borrowed = "0";
+   let current_liquidity_rate = "0";
+   let liquidity_index = "0";
+   let d_token_canister = "";
+   let debt_token_canister = "";
+ 
+   // Extract the required data from the filteredItems array
+   if (filteredItems && filteredItems.length > 0) {
+     const item = filteredItems[0][1].Ok;
+ 
+     asset_name = item.asset_name ? item.asset_name[0] : "Unknown";
+     accrued_to_treasury = item.accrued_to_treasury?.toString() || "0";
+     borrow_rate = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
+     supply_cap = item.configuration.supply_cap?.toString() || "0";
+     borrow_cap = formatNumber(item.configuration.borrow_cap?.toString()) || "0";
+     ltv = item.configuration.ltv?.toString() || "0";
+     supply_rate_apr = item.supply_rate_apr ? item.supply_rate_apr[0].toString() : "0";
+     total_supply = item.total_supply ? formatNumber(item.total_supply) : "0";
+     current_liquidity_rate = item.current_liquidity_rate?.toString() || "0";
+     liquidity_index = item.liquidity_index?.toString() || "0";
+     d_token_canister = item.d_token_canister ? item.d_token_canister[0] : "N/A";
+     debt_token_canister = item.debt_token_canister ? item.debt_token_canister[0] : "N/A";
+     total_borrowed = item.total_borrowed ? formatNumber(item.total_borrowed) : "0";
+   }
+
+
   return (
     <div className="w-full lg:w-10/12 ">
-      {}
       <div className="w-full flex flex-col lg:flex-row items-start sxs3:flex-row sxs3:mb-7">
         <div className="w-full lg:w-2/12">
           <CircleProgess progessValue={75} />
@@ -17,8 +52,8 @@ const BorrowInfo = (filteredItems, formatNumber, usdBalance, supplyCapUsd) => {
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-             {/* <p>  <span >{item[1].Ok.total_supplied ? formatNumber(item[1].Ok.total_supplied) : "0"}</span> of <span>{formatNumber(item[1].Ok.configuration.supply_cap.toString())}</span></p> */}
-                <p className="text-[11px]">${usdBalance} of </p>
+             <p>  <span >{total_borrowed}</span> of <span>{borrow_cap}</span></p>
+             <p className="text-[11px]">${formatNumber(usdBalance)} of ${formatNumber(borrowCapUsd)}</p>
           </div>
 
           <hr
@@ -31,7 +66,7 @@ const BorrowInfo = (filteredItems, formatNumber, usdBalance, supplyCapUsd) => {
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-            <p>1.50%</p>
+            <p>{supply_rate_apr}%</p>
           </div>
 
 

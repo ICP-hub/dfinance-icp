@@ -137,7 +137,6 @@ const AssetDetails = () => {
 
   console.log("asserhuhdhd", asset)
 
-  let formatNumberusdBalance;
 
   useEffect(() => {
     if (balance && conversionRate) {
@@ -265,7 +264,7 @@ const AssetDetails = () => {
       case "Supply Info":
         return <SupplyInfo filteredItems={filteredItems} />
       case "Borrow Info":
-        return <BorrowInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} supplyCapUsd={supplyCapUsd}/>
+        return <BorrowInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd}/>
       // case "E-Mode info":
       //   return <EModeInfo  filteredItems={filteredItems}/>
       // case "Interest rate model":

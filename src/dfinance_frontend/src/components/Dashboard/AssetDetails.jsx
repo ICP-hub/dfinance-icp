@@ -76,20 +76,7 @@ const AssetDetails = () => {
 
   const { id } = useParams();
 
-  const renderFilterComponent = () => {
-    switch (assetDetailFilter) {
-      case "Supply Info":
-        return <SupplyInfo filteredItems={filteredItems} />
-      case "Borrow Info":
-        return <BorrowInfo filteredItems={filteredItems} />
-      // case "E-Mode info":
-      //   return <EModeInfo  filteredItems={filteredItems}/>
-      // case "Interest rate model":
-      //   return <InterestRateModel filteredItems={filteredItems}/>
-      default:
-        return <SupplyInfo filteredItems={filteredItems} />
-    }
-  }
+
 
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
   const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
@@ -149,6 +136,8 @@ const AssetDetails = () => {
   })
 
   console.log("asserhuhdhd", asset)
+
+  let formatNumberusdBalance;
 
   useEffect(() => {
     if (balance && conversionRate) {
@@ -269,6 +258,22 @@ const AssetDetails = () => {
         return null;
     }
   };
+
+
+  const renderFilterComponent = () => {
+    switch (assetDetailFilter) {
+      case "Supply Info":
+        return <SupplyInfo filteredItems={filteredItems} />
+      case "Borrow Info":
+        return <BorrowInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} supplyCapUsd={supplyCapUsd}/>
+      // case "E-Mode info":
+      //   return <EModeInfo  filteredItems={filteredItems}/>
+      // case "Interest rate model":
+      //   return <InterestRateModel filteredItems={filteredItems}/>
+      default:
+        return <SupplyInfo filteredItems={filteredItems} />
+    }
+  }
 
 
   return (

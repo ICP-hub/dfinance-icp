@@ -2,7 +2,7 @@ import React from "react"
 import CircleProgess from "../../Common/CircleProgess"
 import LineGraph from "../../Common/LineGraph"
 
-const BorrowInfo = (filteredItems, formatNumber) => {
+const BorrowInfo = (filteredItems, formatNumber, usdBalance, supplyCapUsd) => {
   return (
     <div className="w-full lg:w-10/12 ">
       {}
@@ -17,8 +17,8 @@ const BorrowInfo = (filteredItems, formatNumber) => {
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-            <p>3.19M of 5.70M</p>
-            <p className="text-[11px]">$123.19M of $786.55M</p>
+             {/* <p>  <span >{item[1].Ok.total_supplied ? formatNumber(item[1].Ok.total_supplied) : "0"}</span> of <span>{formatNumber(item[1].Ok.configuration.supply_cap.toString())}</span></p> */}
+                <p className="text-[11px]">${usdBalance} of </p>
           </div>
 
           <hr

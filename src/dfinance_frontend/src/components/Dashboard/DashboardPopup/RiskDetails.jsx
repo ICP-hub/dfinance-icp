@@ -25,25 +25,48 @@ const RiskPopup = ({ onClose, userData }) => {
     const Ltv_Value = userData.Ok.health_factor;
 
     useEffect(() => {
-        // Add inline styles to body to prevent scrolling
         document.body.style.overflow = 'hidden';
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
-            // Remove inline styles from body to allow scrolling again
             document.body.style.overflow = '';
         };
     }, []);
+
+    // Helper function to calculate the position for Health Factor
+    const calculateHealthFactorPosition = (value) => {
+        // Scale value to percentage (assuming value is between 0 and 10)
+        return Math.max(0, Math.min(100, value * 10)); // Clamping between 0 and 100
+    };
+
+    // Helper function to calculate the position for LTV
+    const calculateLTVPosition = (value, min, max) => {
+        return ((value - min) / (max - min)) * 100;
+    };
+
+    // Dynamic positions for Health Factor
+    const healthFactorPosition = calculateHealthFactorPosition(healthFactorValue);
+    console.log('Health Factor Value:', healthFactorValue);
+    console.log('Health Factor Position:', healthFactorPosition);
+
+    // Dynamic positions for Current LTV
+    const currentLTVPosition = calculateLTVPosition(currentLTVValue, 0, 100); // Assuming range is 0 to 100
+    console.log('Current LTV Value:', currentLTVValue);
+    console.log('Current LTV Position:', currentLTVPosition);
+
+    // Determine colors based on value positions
+    const healthFactorColor = healthFactorValue < healthFactorMinValue ? 'yellow' : 'green';
+    const ltvColor = currentLTVValue > currentLTVThreshold ? 'yellow' : 'green';
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black opacity-50"></div>
 
-            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg w-[380px] lg:w-[780px]  mx-4 sm:mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
+            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg w-[380px] lg:w-[780px] mx-4 sm:mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
                 {/* Close button */}
                 <div
-                    className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer "
+                    className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer"
                     onClick={onClose}
                 >
                     <X className="text-black dark:text-darkText w-6 h-6" />
@@ -76,12 +99,14 @@ const RiskPopup = ({ onClose, userData }) => {
                                     <rect x="0" y="15" width="100%" height="2" fill="url(#lineGradient)" />
 
                                     {/* Cut-out rectangles */}
-                                    <rect x={`${healthFactorCutOutPositions.green}%`} y="12" width="0.25%" height="9" fill="red" mt-4 />
-                                    <rect x={`${healthFactorCutOutPositions.red}%`} y="12" width="0.25%" height="9" fill="yellow" mt-4 />
+                                    <rect x={`${healthFactorCutOutPositions.green}%`} y="12" width="0.25%" height="9" fill="red" />
+                                 
+                                    {/* Current health factor value marker */}
+                                    <rect x={`${healthFactorPosition}%`} y="12" width="0.25%" height="9" fill={healthFactorColor} />
+                                    <text x={`${healthFactorPosition}%`} y="9" fill="white" fontSize="12" textAnchor="middle" dx="0.3em" dy=".07em">{healthFactorValue}</text>
 
                                     {/* Percentage markers */}
                                     <text x={`${healthFactorCutOutPositions.green}%`} y="35" fill="red" fontSize="12" textAnchor="middle">{healthFactorMinValue}</text>
-                                    <text x={`${healthFactorCutOutPositions.red}%`} y="9" fill="blue" fontSize="10" textAnchor="middle">{health_Factor_Value}</text>
                                 </svg>
                                 <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{health_Factor_Value}</span>
                             </div>
@@ -107,12 +132,14 @@ const RiskPopup = ({ onClose, userData }) => {
                                     <rect x="0" y="15" width="100%" height="2" fill="url(#lineGradientt)" />
 
                                     {/* Cut-out rectangles */}
-                                    <rect x={`${currentLTVCutOutPositions.green}%`} y="12" width="0.25%" height="9" fill="green" mt-4 />
-                                    <rect x={`${currentLTVCutOutPositions.red}%`} y="12" width="0.25%" height="9" fill="red" mt-4 />
+                                    <rect x={`${currentLTVCutOutPositions.red}%`} y="12" width="0.25%" height="9" fill="red" />
+
+                                    {/* Current LTV value marker */}
+                                    <rect x={`${currentLTVPosition}%`} y="12" width="0.25%" height="9" fill={ltvColor} />
+                                    <text x={`${currentLTVPosition}%`} y="30" fill="white" fontSize="12" textAnchor="middle" dx="0.1em" dy=".2em">{currentLTVValue}</text>
 
                                     {/* Percentage markers */}
-                                    <text x={`${currentLTVCutOutPositions.green}%`} y="10" fill="green" fontSize="12" textAnchor="middle">{Ltv_Value}%</text>
-                                    <text x={`${currentLTVCutOutPositions.red}%`} y="10" fill="red" fontSize="12" textAnchor="middle">{liquidationThreshold_Value}</text>
+                                    <text x={`${currentLTVCutOutPositions.red}%`} y="10" fill="red" fontSize="12" textAnchor="middle">{currentLTVThreshold}</text>
                                     <text x={`${currentLTVCutOutPositions.red}%`} y="40" fill="red" fontSize="12" textAnchor="middle">{liquidationThresholdLabel}</text>
                                 </svg>
                                 <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded cursor-pointer">{Ltv_Value}</span>

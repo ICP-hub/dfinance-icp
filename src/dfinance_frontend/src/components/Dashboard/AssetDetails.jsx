@@ -35,6 +35,7 @@ import {
 import MySupplyModal from "./MySupplyModal"
 import SupplyPopup from "./DashboardPopup/SupplyPopup"
 import ckbtc from "../../../public/assests-icon/ckBTC.png"
+import cketh from '../../../public/assests-icon/cketh.png'
 
 
 
@@ -262,7 +263,7 @@ const AssetDetails = () => {
   const renderFilterComponent = () => {
     switch (assetDetailFilter) {
       case "Supply Info":
-        return <SupplyInfo filteredItems={filteredItems} supplyPercentage={supplyPercentage} formatNumber={formatNumber} />
+        return <SupplyInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd} supplyPercentage={supplyPercentage}/>
       case "Borrow Info":
         return <BorrowInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd} supplyPercentage={supplyPercentage}/>
       // case "E-Mode info":
@@ -384,7 +385,7 @@ const AssetDetails = () => {
                       handleModalOpen(
                         "supply",
                         id,
-                         id === "ckbtc" && ckbtc
+                        (id === "ckBTC" && ckbtc) || (id === "ckETH" && cketh)
                       )
                     } className={"my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"} />
                 </div>

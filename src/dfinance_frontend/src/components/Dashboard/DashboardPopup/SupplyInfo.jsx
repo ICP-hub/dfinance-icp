@@ -13,107 +13,69 @@ import {
 import { useEffect } from "react";
 import { X } from 'lucide-react';
 
-const SupplyInfo = ({ filteredItems,  supplyPercentage, formatNumber}) => {
+const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, supplyPercentage}) => {
+  const [collateral, setCollateral] = useState(false);
 
-  const {
-    isAuthenticated,
-    principal,
-    createLedgerActor,
-  } = useAuth()
-  const { id } = useParams();
-
-  const [balance, setBalance] = useState(null);
-  const [usdBalance, setUsdBalance] = useState(null);
-  const [supplyCapUsd, setSupplyCapUsd] = useState(null);
-
-  const [borrowCapUsd, setBorrowCapUsd] = useState(null);
-  const [conversionRate, setConversionRate] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isCollateral, setIsCollateral] = useState(false);
-
-  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
-  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
-
-  const fetchBalance = useCallback(async () => {
-    if (isAuthenticated && ledgerActor && principalObj) {
-      try {
-        const account = { owner: principalObj, subaccount: [] };
-        const balance = await ledgerActor.icrc1_balance_of(account);
-        setBalance(balance.toString());
-        console.log("Fetched Balance:", balance.toString());
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-        setError(error);
-      }
-    }
-  }, [isAuthenticated, ledgerActor, principalObj]);
-
-  const fetchConversionRate = useCallback(async () => {
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      setConversionRate(data['internet-computer'].usd);
-      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
-    } catch (error) {
-      console.error("Error fetching conversion rate:", error);
-      setError(error);
-    }
-  }, []);
 
   useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([fetchBalance(), fetchConversionRate()]);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
-
-  let supply_cap
-  let borrow_cap
-  
-  filteredItems.map((item, index) => {
-    supply_cap = item[1].Ok.configuration.supply_cap;
-    borrow_cap = item[1].Ok.configuration.borrow_cap;
-  })
-
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
-      const supplyCapUsd = (parseFloat(supply_cap) * conversionRate).toFixed(2);
-      const borrowCapUsd = (parseFloat(borrow_cap) * conversionRate).toFixed(2);
-      setUsdBalance(balanceInUsd);
-      setSupplyCapUsd(supplyCapUsd)
-      setBorrowCapUsd(borrowCapUsd)
+    if (filteredItems && filteredItems.length > 0) {
+      const item = filteredItems[0][1].Ok;
+      setCollateral(item.can_be_collateral);
     }
+  }, [filteredItems]);
 
+  console.log("filteredItems from borrow",filteredItems)
+  // Initialize variables to store the extracted values
+  let asset_name = "";
+  let accrued_to_treasury = "0";
+  let borrow_rate = "0";
+  let supply_cap = "0";
+  let borrow_cap = "0";
+  let ltv = "0";
+  let supply_rate_apr = "0";
+  let total_supply = "0";
+  let total_borrowed = "0";
+  let total_supplied = "0";
+  let current_liquidity_rate = "0";
+  let liquidity_index = "0";
+  let d_token_canister = "";
+  let debt_token_canister = "";
+  let liquidation_bonus =""
+  let liquidation_threshold=""
 
-  }, [balance, conversionRate, supply_cap]);
+  // Extract the required data from the filteredItems array
+  if (filteredItems && filteredItems.length > 0) {
+    const item = filteredItems[0][1].Ok;
+
+    asset_name = item.asset_name ? item.asset_name[0] : "Unknown";
+    accrued_to_treasury = item.accrued_to_treasury?.toString() || "0";
+    borrow_rate = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
+    supply_cap = item.configuration.supply_cap?.toString() || "0";
+    borrow_cap = formatNumber(item.configuration.borrow_cap?.toString()) || "0";
+    ltv = item.configuration.ltv?.toString() || "0";
+    liquidation_threshold = item.configuration.liquidation_threshold?.toString() || "0";
+    liquidation_bonus = item.configuration.liquidation_bonus?.toString() || "0";
+    supply_rate_apr = item.supply_rate_apr ? item.supply_rate_apr[0].toString() : "0";
+    total_supply = item.total_supply ? formatNumber(item.total_supply) : "0";
+    current_liquidity_rate = item.current_liquidity_rate?.toString() || "0";
+    liquidity_index = item.liquidity_index?.toString() || "0";
+    d_token_canister = item.d_token_canister ? item.d_token_canister[0] : "N/A";
+    debt_token_canister = item.debt_token_canister ? item.debt_token_canister[0] : "N/A";
+    total_borrowed = item.total_borrowed ? formatNumber(item.total_borrowed) : "0";
+    total_supplied = item.total_supplied ? formatNumber(item.total_supplied) : "0";
+  }
 
   return (
 
 
 
     <div className="w-full lg:w-10/12 ">
-      {filteredItems.map((item, index) => (
-        <>
+     
           <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7">
             <div className="w-full md:w-2/12">
-              {supplyPercentage !== undefined ? (
-                <CircleProgess progessValue={supplyPercentage} />
-              ) : (
-                <CircleProgess progessValue="..." />
-              )}
+          
+                <CircleProgess progessValue={75} />
+              
             </div>
             <div className="w-full lg:w-9/12 flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs md:text-sm lg:text-base mt-3 lg:mt-0 sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden md:gap-10 sxs3:gap-4">
 
@@ -122,8 +84,8 @@ const SupplyInfo = ({ filteredItems,  supplyPercentage, formatNumber}) => {
                 <hr
                   className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
                 />
-                <p>  <span >{item[1].Ok.total_supplied ? formatNumber(item[1].Ok.total_supplied) : "0"}</span> of <span>{formatNumber(item[1].Ok.configuration.supply_cap.toString())}</span></p>
-                <p className="text-[11px]">${formatNumber(usdBalance)} of ${formatNumber(supplyCapUsd)}</p>
+                 <p>  <span >{total_supplied}</span> of <span>{borrow_cap}</span></p>
+                 <p className="text-[11px]">${formatNumber(usdBalance)} of ${formatNumber(borrowCapUsd)}</p>
               </div>
 
               <hr
@@ -135,7 +97,7 @@ const SupplyInfo = ({ filteredItems,  supplyPercentage, formatNumber}) => {
                 <hr
                   className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
                 />
-                <p>{item[1].Ok.supply_rate_apr}%</p>
+                      <p>{supply_rate_apr}%</p>
               </div>
               {/* <div className="relative text-[#5B62FE] dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold  mb-[1px] dark:text-darkText">Total Borrowed</h1>
@@ -154,7 +116,7 @@ const SupplyInfo = ({ filteredItems,  supplyPercentage, formatNumber}) => {
             <LineGraph />
 
             <p className="mt-8 text-[#5B62FE] flex items-center gap-2 dark:text-darkText">
-              Collateral usage {isCollateral ? <Check /> : <X />} {isCollateral ? "Can be collateral" : "Cannot be collateral"}
+              Collateral usage {collateral ? <Check /> : <X />} {collateral ? "Can be collateral" : "Cannot be collateral"}
             </p>
 
             <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap">
@@ -163,7 +125,7 @@ const SupplyInfo = ({ filteredItems,  supplyPercentage, formatNumber}) => {
                 <hr
                   className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
                 />
-                <p>{item[1].Ok.configuration.ltv}%</p>
+                <p>{ltv}%</p>
               </div>
               <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
                 <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
@@ -172,19 +134,18 @@ const SupplyInfo = ({ filteredItems,  supplyPercentage, formatNumber}) => {
                 <hr
                   className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
                 />
-                <p>{item[1].Ok.configuration.liquidation_threshold}%</p>
+                <p>{liquidation_threshold}%</p>
               </div>
               <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
                 <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Liquidation bonus</h1>
                 <hr
                   className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
                 />
-                <p>{item[1].Ok.configuration.liquidation_bonus}%</p>
+                <p>{liquidation_bonus}%</p>
               </div>
             </div>
           </div>
-        </>
-      ))}
+        
     </div>
 
 

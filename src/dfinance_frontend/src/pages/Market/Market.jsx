@@ -21,6 +21,7 @@ import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
 import Pagination from "../../components/Common/pagination";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
+import cekTH from '../../../public/assests-icon/cekTH.png';
 import useAssets from "../../components/Common/useAssets"
 import useAssetData from "../../components/Common/useAssets"
 
@@ -219,11 +220,11 @@ const WalletDetails = () => {
                   >
                     <td className="p-2 align-top py-4">
                       <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
-                        {item[0] === "ckbtc" && (
+                        {item[0] === "ckBTC" && (
                           <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full"/>
                         )}
-                        {item[0] === "cketh" && (
-                          <img src={ckEthImage} alt="cketh logo" className="w-8 h-8 rounded-full"/>
+                        {item[0] === "ckETH" && (
+                          <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full"/>
                         )}
                         {item[0]}
                       </div>

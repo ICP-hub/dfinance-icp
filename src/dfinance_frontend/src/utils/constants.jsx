@@ -1392,7 +1392,7 @@ export const healthFactorCutOutPositions = {
 export const currentLTVValue = 50;
 export const currentLTVCutOutPositions = {
   
-    red: 70
+  
 };
 
 export const healthFactorMinValue = 1.00;

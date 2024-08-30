@@ -22,4 +22,4 @@ initialize_reserve_method="initialize_reserve"
 
 # Initialize reserve in the backend canister
 echo "Initializing reserve for all assets in backend canister..."
-dfx canister call $backend_canister $initialize_reserve_method
+dfx canister call $backend_canister_principal $initialize_reserve_method

@@ -32,6 +32,7 @@ import { useCallback } from "react";
 import { useMemo } from "react";
 import useAssetData from "../Common/useAssets";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
+import ckETH from '../../../public/assests-icon/cketh.png'
 
 const MySupply = () => {
   const navigate = useNavigate();
@@ -272,6 +273,24 @@ const MySupply = () => {
   const filteredReserveData = Object.fromEntries(filteredItems);
   console.log(filteredReserveData)
 
+
+
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0';
+    }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toString();
+  }
+
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6">
       <div className="flex justify-center -mb-38 lg:hidden">
@@ -336,12 +355,12 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
   {isSupplyVisible && (
     <>
-      {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+      {filteredItems.length === 0 ? (
         noSupplyMessage
       ) : (
         <div
           className={`relative mt-4 overflow-y-auto scrollbar-custom ${
-            MY_SUPPLY_ASSET_TABLE_ROWS.length > 1
+            filteredItems.length > 1
               ? "max-h-[280px]" // Height for one asset, adjust as needed
               : "max-h-auto" // No fixed height if one asset
           }`}
@@ -349,22 +368,23 @@ const MySupply = () => {
           {/* Container for the scrollable content */}
           <div
             className={`w-full ${
-              MY_SUPPLY_ASSET_TABLE_ROWS.length > 1 ? "h-full" : ""
+              filteredItems.length > 1 ? "h-full" : ""
             }`}
           >
-            {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+            {filteredItems.slice(0, 8).map((item, index) => (
               <div
                 key={index}
                 className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText`}
               >
                 <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                  <img
-                    src={item.image}
-                    alt={item.asset}
-                    className="w-8 h-8 rounded-full dark:text-darkText"
-                  />
+                {item[0] === "ckBTC" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "ckETH" && (
+                                        <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
                   <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
-                    {item.asset}
+                  {item[0]}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-4 mt-6">
@@ -372,12 +392,12 @@ const MySupply = () => {
                     Wallet Balance:
                   </p>
                   <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                    ${item.wallet_balance_count}M
+                  <p>{balance}</p>
                   </p>
                 </div>
                 <div className="flex justify-end text-xs dark:text-darkText">
                   <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                    ${item.wallet_balance}M
+                  ${formatNumber(usdBalance)}
                   </p>
                 </div>
                 <div className="flex justify-between text-xs text-[#233D63] font-semibold mt-6 mb-1">
@@ -385,7 +405,7 @@ const MySupply = () => {
                     APY:
                   </p>
                   <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2 mb-2">
-                    {item.apy}%
+                  {item[1].Ok.supply_rate_apr}%
                   </p>
                 </div>
                 <div className="flex justify-between text-xs text-[#233D63] font-semibold mt-3 mb-4">
@@ -435,7 +455,7 @@ const MySupply = () => {
         <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
           {/* Fixed Header */}
           <div className="w-full z-10 sticky top-0 ">
-            <div className="grid grid-cols-[1.4fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+            <div className="grid grid-cols-[2fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
               <div className="p-5">Asset</div>
               <div className="p-5">Wallet Balance</div>
               <div className="p-5">Apy</div>
@@ -447,32 +467,33 @@ const MySupply = () => {
           {/* Scrollable Content Area */}
           <div
             className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${
-              MY_SUPPLY_ASSET_TABLE_ROWS.length > 3
+              filteredItems.length > 3
                 ? "h-[260px]"
                 : ""
             }`}
           >
             <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-              {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+              {filteredItems.slice(0, 8).map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-[1.65fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                  className="grid grid-cols-[2.1fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                 >
                   <div className="p-3 align-top flex items-center gap-2">
-                    <img
-                      src={item.image}
-                      alt={item.asset}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    {item.asset}
+                  {item[0] === "ckBTC" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "ckETH" && (
+                                        <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0]}
                   </div>
                   <div className="p-3 align-top flex flex-col">
-                    <p>{item.wallet_balance_count}</p>
+                    <p>{balance}</p>
                     <p className="font-light">
-                      ${item.wallet_balance}M
+                      ${formatNumber(usdBalance)}
                     </p>
                   </div>
-                  <div className="p-3 align-top">{item.apy}</div>
+                  <div className="p-3 align-top"> {item[1].Ok.supply_rate_apr}%</div>
                   <div className="p-3 align-top flex items-center justify-center">
                     <CustomizedSwitches />
                   </div>
@@ -536,26 +557,27 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
-                  {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+                  {filteredItems.length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[280px] overflow-y-auto scrollbar-custom">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map(
+                        {filteredItems.slice(0, 8).map(
                           (item, index) => (
                             <div
                               key={index}
                               className="p-3 rounded-lg dark:bg-darkSurface mb-4 dark:text-darkText"
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                <img
-                                  src={item.image}
-                                  alt={item.asset}
-                                  className="w-8 h-8 rounded-full"
-                                />
+                              {item[0] === "ckBTC" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "ckETH" && (
+                                        <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
                                 <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
-                                  {item.asset}
+                                {item[0]}
                                 </span>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
@@ -563,12 +585,12 @@ const MySupply = () => {
                                   Wallet Balance:
                                 </p>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                  {item.wallet_balance_count}
+                                <p>{balance}</p>
                                 </p>
                               </div>
                               <div className="flex justify-end text-xs mb-2">
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                  ${item.wallet_balance}M
+                                ${formatNumber(usdBalance)}
                                 </p>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
@@ -576,7 +598,7 @@ const MySupply = () => {
                                   APY:
                                 </p>
                                 <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
-                                  {item.apy}%
+                                {item[1].Ok.supply_rate_apr}%
                                 </p>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
@@ -608,7 +630,7 @@ const MySupply = () => {
                                 />
                               </div>
                               {index !==
-                                MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
+                                filteredItems.length - 1 && (
                                   <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
                                 )}
                             </div>
@@ -631,44 +653,49 @@ const MySupply = () => {
         <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
           {/* Fixed Header */}
           <div className="w-full z-10 sticky top-0 ">
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500] p-5">
-              <div>Asset</div>
-              <div>Wallet Balance</div>
-              <div>Apy</div>
-              <div>Can be Collateral</div>
-              <div></div>
+            <div className="grid grid-cols-[2fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+              <div className="p-5">Asset</div>
+              <div className="p-5">Wallet Balance</div>
+              <div className="p-5">Apy</div>
+              <div className="p-5">Can be Collateral</div>
+              <div className="p-5"></div>
             </div>
           </div>
 
           {/* Scrollable Content Area */}
           <div
             className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${
-              MY_SUPPLY_ASSET_TABLE_ROWS.length > 3 ? "h-[260px]" : ""
+              filteredItems.length > 3
+                ? "h-[260px]"
+                : ""
             }`}
           >
             <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-              {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
+              {filteredItems.slice(0, 8).map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-[1.9fr_0.9fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                  className="grid grid-cols-[2.1fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                 >
-                  <div className="p-3 flex items-center gap-2 whitespace-nowrap">
-                    <img
-                      src={item.image}
-                      alt={item.asset}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    {item.asset}
+                  <div className="p-3 align-top flex items-center gap-2">
+                  {item[0] === "ckBTC" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "ckETH" && (
+                                        <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0]}
                   </div>
-                  <div className="p-3 flex flex-col">
-                    <p>{item.wallet_balance_count}</p>
-                    <p className="font-light">${item.wallet_balance}M</p>
+                  <div className="p-3 align-top flex flex-col">
+                  <p>{balance}</p>
+                    <p className="font-light">
+                    ${formatNumber(usdBalance)}
+                    </p>
                   </div>
-                  <div className="p-3">{item.apy}</div>
-                  <div className="p-3 flex items-center justify-center">
-                    <Check color={checkColor} size={16} />
+                  <div className="p-3 align-top">{item[1].Ok.supply_rate_apr}%</div>
+                  <div className="p-3 align-top flex items-center justify-center dark:text-darkText">
+                  <Check color={checkColor} size={16} />
                   </div>
-                  <div className="p-3 flex gap-2 pt-2">
+                  <div className="p-3 align-top flex gap-2 pt-2">
                     <Button
                       title={"Supply"}
                       onClickHandler={() =>
@@ -684,6 +711,7 @@ const MySupply = () => {
                       title={"Details"}
                       onClickHandler={() =>
                         navigate("/dashboard/asset-details")
+                      
                       }
                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                     />
@@ -747,27 +775,28 @@ const MySupply = () => {
             {/* mobile screen for borrow */}
             {isborrowVisible && (
               <>
-                {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
+                {filteredItems.length === 0 ? (
                   noBorrowMessage
                 ) : (
                   <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                     <div className="relative mt-4 max-h-[280px] overflow-y-auto scrollbar-custom">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map(
+                        {filteredItems.slice(0, 8).map(
                           (item, index) => (
                             <div
                               key={index}
                               className="p-3 rounded-lg dark:bg-darkSurface mb-4 dark:text-darkText"
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                <img
-                                  src={item.image}
-                                  alt={item.asset}
-                                  className="w-8 h-8 rounded-full"
-                                />
+                              {item[0] === "ckBTC" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "ckETH" && (
+                                        <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
                                 <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
-                                  {item.asset}
+                                {item[0]}
                                 </span>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
@@ -775,12 +804,12 @@ const MySupply = () => {
                                   Debt
                                 </p>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText mt-4">
-                                  ${item.wallet_balance}M
+                                <p>{balance}</p>
                                 </p>
                               </div>
                               <div className="flex justify-end text-xs font-semibold">
                                 <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
-                                  {item.wallet_balance_count}
+                                ${formatNumber(usdBalance)}
                                 </p>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
@@ -788,7 +817,7 @@ const MySupply = () => {
                                   APY:
                                 </p>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
-                                  {item.apy}
+                                {item[1].Ok.supply_rate_apr}%
                                 </p>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
@@ -796,7 +825,7 @@ const MySupply = () => {
                                   APY Type:
                                 </p>
                                 <p className="text-right text-white bg-[#79779a] px-4 border border-white rounded-lg p-2 dark:text-darkText">
-                                  {item.apy_type}
+                                  varible
                                 </p>
                               </div>
 
@@ -825,7 +854,7 @@ const MySupply = () => {
                                 />
                               </div>
                               {index !==
-                                MY_BORROW_ASSET_TABLE_ROWS.length - 1 && (
+                                filteredItems.length - 1 && (
                                   <div className="border-t border-[#2A1F9D] my-4 opacity-50"></div>
                                 )}
                             </div>
@@ -842,7 +871,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {MY_BORROW_ASSET_TABLE_ROWS.length === 0 ? (
+                  {filteredItems.length === 0 ? (
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-8 relative max-h-[260px] overflow-hidden">
@@ -859,38 +888,39 @@ const MySupply = () => {
                       </div>
                       {/* Scrollable table body */}
                       <div
-                        className={`w-full h-auto overflow-y-auto scrollbar-custom ${MY_BORROW_ASSET_TABLE_ROWS.length > 3
+                        className={`w-full h-auto overflow-y-auto scrollbar-custom ${filteredItems.length > 3
                             ? "max-h-[calc(260px-40px)]"
-                            : `h-[${80 * MY_BORROW_ASSET_TABLE_ROWS.length}px]`
+                            : `h-[${80 * filteredItems.length}px]`
                           }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-4">
-                          {MY_BORROW_ASSET_TABLE_ROWS.slice(0, 8).map(
+                          {filteredItems.slice(0, 8).map(
                             (item, index) => (
                               <div
                                 key={index}
                                 className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-2"
                               >
                                 <div className="p-3 flex items-center gap-2">
-                                  <img
-                                    src={item.image}
-                                    alt={item.asset}
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                  {item.asset}
+                                {item[0] === "ckBTC" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "ckETH" && (
+                                        <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0]}
                                 </div>
                                 <div className="p-3">
                                   <div className="flex flex-col">
-                                    <p>{item.wallet_balance_count}</p>
+                                  <p>{balance}</p>
                                     <p className="font-light">
-                                      ${item.wallet_balance}M
+                                    ${formatNumber(usdBalance)}
                                     </p>
                                   </div>
                                 </div>
-                                <div className="p-3">{item.apy}</div>
+                                <div className="p-3">{item[1].Ok.supply_rate_apr}%</div>
                                 <div className="p-3">
                                   <div className="w-full flex mt-2.5">
-                                    {item.apy_type}
+                                   variable
                                   </div>
                                 </div>
                                 <div className="p-3 flex gap-2">
@@ -952,26 +982,27 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
-                  {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+                  {filteredItems.length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[290px] overflow-y-auto scrollbar-none">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map(
+                        {filteredItems.slice(0, 8).map(
                           (item, index) => (
                             <div
                               key={index}
                               className="p-3 rounded-lg dark:bg-darkSurface mb-4 dark:text-darkText"
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                <img
-                                  src={item.image}
-                                  alt={item.asset}
-                                  className="w-8 h-8 rounded-full"
-                                />
+                              {item[0] === "ckBTC" && (
+                                        <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                      )}
+                                      {item[0] === "ckETH" && (
+                                        <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      )}
                                 <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
-                                  {item.asset}
+                                {item[0]}
                                 </span>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
@@ -979,12 +1010,12 @@ const MySupply = () => {
                                   Wallet Balance:
                                 </p>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                  ${item.wallet_balance_count}M
+                                {balance}
                                 </p>
                               </div>
                               <div className="flex justify-end text-xs">
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                  ${item.wallet_balance}M
+                                ${formatNumber(usdBalance)}
                                 </p>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-1">
@@ -992,7 +1023,7 @@ const MySupply = () => {
                                   APY:
                                 </p>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2 mb-2">
-                                  {item.apy}%
+                                {item[1].Ok.supply_rate_apr}%
                                 </p>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-3 mb-4">
@@ -1028,7 +1059,7 @@ const MySupply = () => {
                                 />
                               </div>
                               {index !==
-                                MY_SUPPLY_ASSET_TABLE_ROWS.length - 1 && (
+                                filteredItems.length - 1 && (
                                 <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
                               )}
                             </div>
@@ -1141,7 +1172,7 @@ const MySupply = () => {
                     </div> */}
 
                     {/* Supply Section */}
-                    {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+                    {filteredItems.length === 0 ? (
                       noSupplyMessage
                     ) : (
                       <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4">
@@ -1163,11 +1194,11 @@ const MySupply = () => {
                               >
                                 <td className="p-3 align-top">
                                 <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
-                                      {item[0] === "ckbtc" && (
+                                      {item[0] === "ckBTC" && (
                                         <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
                                       )}
-                                      {item[0] === "cketh" && (
-                                        <img src={ckEthImage} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                      {item[0] === "ckETH" && (
+                                        <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
                                       )}
                                       {item[0]}
                                     </div>
@@ -1176,7 +1207,7 @@ const MySupply = () => {
                                   <div className="flex flex-col">
                                   <p>{balance}</p>
                                     <p className="font-light">
-                                    ${usdBalance}
+                                    ${formatNumber(usdBalance)}
                                     </p>
                                   </div>
                                 </td>

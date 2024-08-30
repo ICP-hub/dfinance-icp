@@ -355,7 +355,7 @@ const MySupply = () => {
         <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
           {/* Fixed Header */}
           <div className="w-full z-10 sticky top-0 ">
-            <div className="grid grid-cols-[1.4fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+            <div className="grid grid-cols-[2fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
               <div className="p-5">Asset</div>
               <div className="p-5">Wallet Balance</div>
               <div className="p-5">Apy</div>
@@ -376,7 +376,7 @@ const MySupply = () => {
               {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-[1.65fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                  className="grid grid-cols-[2.1fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                 >
                   <div className="p-3 align-top flex items-center gap-2">
                     <img
@@ -552,28 +552,30 @@ const MySupply = () => {
         <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
           {/* Fixed Header */}
           <div className="w-full z-10 sticky top-0 ">
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500] p-5">
-              <div>Asset</div>
-              <div>Wallet Balance</div>
-              <div>Apy</div>
-              <div>Can be Collateral</div>
-              <div></div>
+            <div className="grid grid-cols-[2fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+              <div className="p-5">Asset</div>
+              <div className="p-5">Wallet Balance</div>
+              <div className="p-5">Apy</div>
+              <div className="p-5">Can be Collateral</div>
+              <div className="p-5"></div>
             </div>
           </div>
 
           {/* Scrollable Content Area */}
           <div
             className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${
-              MY_SUPPLY_ASSET_TABLE_ROWS.length > 3 ? "h-[260px]" : ""
+              MY_SUPPLY_ASSET_TABLE_ROWS.length > 3
+                ? "h-[260px]"
+                : ""
             }`}
           >
             <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
               {MY_SUPPLY_ASSET_TABLE_ROWS.slice(0, 8).map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-[1.9fr_0.9fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                  className="grid grid-cols-[2.1fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                 >
-                  <div className="p-3 flex items-center gap-2 whitespace-nowrap">
+                  <div className="p-3 align-top flex items-center gap-2">
                     <img
                       src={item.image}
                       alt={item.asset}
@@ -581,15 +583,17 @@ const MySupply = () => {
                     />
                     {item.asset}
                   </div>
-                  <div className="p-3 flex flex-col">
+                  <div className="p-3 align-top flex flex-col">
                     <p>{item.wallet_balance_count}</p>
-                    <p className="font-light">${item.wallet_balance}M</p>
+                    <p className="font-light">
+                      ${item.wallet_balance}M
+                    </p>
                   </div>
-                  <div className="p-3">{item.apy}</div>
-                  <div className="p-3 flex items-center justify-center">
-                    <Check color={checkColor} size={16} />
+                  <div className="p-3 align-top">{item.apy}</div>
+                  <div className="p-3 align-top flex items-center justify-center dark:text-darkText">
+                  <Check color={checkColor} size={16} />
                   </div>
-                  <div className="p-3 flex gap-2 pt-2">
+                  <div className="p-3 align-top flex gap-2 pt-2">
                     <Button
                       title={"Supply"}
                       onClickHandler={() =>
@@ -605,6 +609,7 @@ const MySupply = () => {
                       title={"Details"}
                       onClickHandler={() =>
                         navigate("/dashboard/asset-details")
+                      
                       }
                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                     />

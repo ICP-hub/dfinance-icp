@@ -141,7 +141,7 @@ const WalletDetails = () => {
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
-        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">ICP Assets</h1>
+        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText -ml-3">ICP Assets</h1>
         <div className="ml-auto   ">
           {Showsearch && (
             <input
@@ -202,14 +202,23 @@ const WalletDetails = () => {
               <thead>
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
-                    <td key={index} className="p-3 whitespace-nowrap">
+                    <td key={index} className=" whitespace-nowrap">
+                    <div className={`flex ${index === 0 ? 'justify-start' : 'justify-center'}`}>
                       {item.header}
-                    </td>
+                    </div>
+                  </td>
                   ))}
-                  <td className="p-3 hidden md:table-cell">{WALLET_ASSETS_TABLE_COL[2]?.header}</td>
-                  <td className="p-3 hidden md:table-cell">{WALLET_ASSETS_TABLE_COL[3]?.header}</td>
-                  <td className="p-3 hidden md:table-cell">{WALLET_ASSETS_TABLE_COL[4]?.header}</td>
-                  <td className="p-3">{WALLET_ASSETS_TABLE_COL[5]?.header}</td>
+                  <td className="p-3 hidden md:table-cell"><div className="flex justify-center">
+                  {WALLET_ASSETS_TABLE_COL[2]?.header}</div></td>
+                  <td className="p-3 hidden md:table-cell">
+                    <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[3]?.header}</div>
+                    </td>
+                    <td className="p-3 hidden md:table-cell">
+                    <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[4]?.header}</div>
+                    </td>
+               <td className="p-3 ">
+                    <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[5]?.header}</div>
+                    </td>
                 </tr>
               </thead>
               <tbody>
@@ -218,8 +227,8 @@ const WalletDetails = () => {
                     key={index}
                     className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
-                    <td className="p-2 align-top py-4">
-                      <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
+                    <td className=" align-top py-4">
+                      <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap mt-2">
                         {item[0] === "ckBTC" && (
                           <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full"/>
                         )}
@@ -230,24 +239,31 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-2 align-top py-4">
-                      <div className="flex flex-row ml-2 mt-2">
+                      <div className="flex justify-center flex-row mt-2">
                         <div>
                           {/* <p>{item.total_supply_count}</p> */}
                           <p >{item[1].Ok.total_supply.length > 0 ? item[1].Ok.total_supply : "0"}</p>
                         </div>
-                        <div className="md:hidden justify-center align-center mt-2 ml-5" onClick={() => handleChevronClick(item[0])}>
+                        <div className="md:hidden justify-center ml-6" onClick={() => handleChevronClick(item[0])}>
                           <ChevronRight size={22} color={chevronColor} />
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-5">{item[1].Ok.supply_rate_apr}%</td>
+                    <td className="p-3 align-top hidden md:table-cell pt-5"><div className="flex justify-center">
+                    {item[1].Ok.supply_rate_apr}%</div></td>
                     <td className="p-3 align-top hidden md:table-cell">
-                      <div className="flex flex-col mt-2">
+                      <div className="flex justify-center flex-row mt-2">
+
+                      <div>
                         {/* <p>{item.total_borrow_count}</p> */}
-                        <p >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</p> {/* Print Total Borrowing */}
+                        <p >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</p> 
                       </div>
+                      </div>
+                     
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-5">{item[1].Ok.borrow_rate}%</td>
+                    <td className="p-3 align-top hidden md:table-cell pt-5">
+                      <div className="flex justify-center">{item[1].Ok.borrow_rate}%</div>
+                      </td>
                     <td className="p-3 align-top flex">
                       <div className="w-full flex justify-end align-center">
                         <Button title={"Details"} className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-sm

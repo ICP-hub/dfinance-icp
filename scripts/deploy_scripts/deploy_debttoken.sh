@@ -2,18 +2,18 @@
 
 set -e
 
-# dfx identity use minter
+# dfx identity use newminter
 
 # export MINTER=$(dfx identity get-principal)
 # echo $MINTER
-export BACKEND="avqkn-guaaa-aaaaa-qaaea-cai"
+export BACKEND="b77ix-eeaaa-aaaaa-qaada-cai"
 
 export TOKEN_NAME="debtckBTC"
 echo "token_name : $TOKEN_NAME"
 
 export TOKEN_SYMBOL="debtckBTC"
 
-#dfx identity use default
+dfx identity use default
 
 export DEFAULT="2vxsx-fae"
 

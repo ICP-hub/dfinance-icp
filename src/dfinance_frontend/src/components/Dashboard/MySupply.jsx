@@ -189,24 +189,44 @@ const MySupply = () => {
   };
   const hasNoBorrows = MY_BORROW_ASSET_TABLE_ROWS.length === 0;
   const noBorrowMessage = (
-    <p className="text-[#233D63] font-semibold ml-2 mt-10">
-      Nothing borrowed yet
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
+    <div className="w-20 h-15">
+      <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+    </div>
+    <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+    Nothing borrowed yet
     </p>
+  </div>
   );
   const noSupplyMessage = (
-    <p className="text-[#233D63] font-semibold ml-2 mt-10">
-      Nothing supplied yet
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
+    <div className="w-20 h-15">
+      <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+    </div>
+    <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+    Nothing supplied yet
     </p>
+  </div>
   );
   const noAssetsToSupplyMessage = (
-    <p className="text-[#233D63] font-semibold ml-2 mt-10">
-      No assets to supply.
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
+    <div className="w-20 h-15">
+      <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+    </div>
+    <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+    No assets to supply.
     </p>
+  </div>
   );
   const noAssetsToBorrowMessage = (
-    <p className="text-[#233D63] font-semibold ml-2 mt-10">
-      No assets to borrow.
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
+    <div className="w-20 h-15">
+      <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+    </div>
+    <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+    No assets to borrow.
     </p>
+  </div>
   );
 
   const [balance, setBalance] = useState(null);
@@ -449,7 +469,7 @@ const MySupply = () => {
          <div className="hidden xl:block">
   {isSupplyVisible && (
     <>
-      {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
+      {filteredItems.length === 0 ? (
         noSupplyMessage
       ) : (
         <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
@@ -476,7 +496,7 @@ const MySupply = () => {
               {filteredItems.slice(0, 8).map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-[2.1fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                  className="grid grid-cols-[2.1fr_1fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                 >
                   <div className="p-3 align-top flex items-center gap-2">
                   {item[0] === "ckBTC" && (
@@ -558,7 +578,7 @@ const MySupply = () => {
               {isVisible && (
                 <>
                   {filteredItems.length === 0 ? (
-                    noSupplyMessage
+                    noAssetsToSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[280px] overflow-y-auto scrollbar-custom">
                       {/* Container for the content */}
@@ -647,8 +667,8 @@ const MySupply = () => {
             <div className="hidden xl:block">
   {isVisible && (
     <>
-      {MY_SUPPLY_ASSET_TABLE_ROWS.length === 0 ? (
-        noSupplyMessage
+      {filteredItems.length === 0 ? (
+        noAssetsToSupplyMessage
       ) : (
         <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
           {/* Fixed Header */}
@@ -773,6 +793,7 @@ const MySupply = () => {
               </div>
             </div>
             {/* mobile screen for borrow */}
+            <div className="block xl:hidden"> 
             {isborrowVisible && (
               <>
                 {filteredItems.length === 0 ? (
@@ -866,6 +887,7 @@ const MySupply = () => {
                 )}
               </>
             )}
+            </div>
 
             {/* desktop screen */}
             <div className="hidden xl:block">
@@ -983,7 +1005,7 @@ const MySupply = () => {
               {isSupplyVisible && (
                 <>
                   {filteredItems.length === 0 ? (
-                    noSupplyMessage
+                    noAssetsToBorrowMessage
                   ) : (
                     <div className="relative mt-4 max-h-[290px] overflow-y-auto scrollbar-none">
                       {/* Container for the content */}
@@ -1173,7 +1195,7 @@ const MySupply = () => {
 
                     {/* Supply Section */}
                     {filteredItems.length === 0 ? (
-                      noSupplyMessage
+                      noAssetsToBorrowMessage
                     ) : (
                       <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4">
                         <thead>

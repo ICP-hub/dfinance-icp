@@ -79,13 +79,13 @@ const useAssetData = (searchQuery = '') => {
 
 
   // Filter items based on the search query
-  const filteredItems = reserveData
+const filteredItems = reserveData && Object.keys(reserveData).length > 0
     ? Object.entries(reserveData).filter(([asset, data]) =>
-      asset.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (data.total_supply && data.total_supply.toString().includes(searchQuery)) || 
-      (data.borrow_rate && data.borrow_rate.some(rate => rate.toString().includes(searchQuery))) 
+        asset.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (data.total_supply && data.total_supply.toString().includes(searchQuery)) || 
+        (data.borrow_rate && data.borrow_rate.some(rate => rate.toString().includes(searchQuery)))
     )
-    : []; 
+    : [];
 
 
     function formatNumber(num) {

@@ -22,7 +22,7 @@ const HeroSection = () => {
                     <span className="font-semibold bg-gradient-to-tr from-[#4659CF]/100 to-[#C562BD]/70 bg-clip-text text-transparent">Borrow</span> Across Network
                 </h1>
                 <p className="text-sm mt-6 font-normal text-[#737373] text-center dark:text-darkTextSecondary leading-snug mx-auto max-w-xs sm:max-w-md lg:max-w-2xl lg:leading-snug lg:text-base lg:max-h-[3.5rem] overflow-hidden">
-    Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC.
+                Contrary to common belief, smart investments aren’t just luck. They’re rooted in strategy and sound financial principles.
 </p>
 
 
@@ -30,7 +30,8 @@ const HeroSection = () => {
 
                 <div className="w-full mt-10 h-32 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl text-center p-4 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                     <h1 className="text-[#2A1F9D] font-bold lg:my-3 dark:text-darkText">$ {liquidityCounter}</h1>
-                    <p className="text-sm font-normal text-[#585454] lg:my-3 dark:text-darkText">of liquidity is locked in crypto across {8} networks and over {15} markets.</p>
+                    {/* <p className="text-sm font-normal text-[#585454] lg:my-3 dark:text-darkText">of liquidity is locked in crypto across {8} networks and over {15} markets.</p> */}
+                    <p className="text-sm font-normal text-[#585454] lg:my-3 dark:text-darkText">Total supply of assets has been supplied to the protocol</p>
                 </div>
 
             </div>

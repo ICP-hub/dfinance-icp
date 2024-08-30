@@ -1,17 +1,22 @@
 import React, { useEffect, useRef } from 'react';
 import {
     healthFactorValue,
-    healthFactorCutOutPositions,
     currentLTVValue,
-    currentLTVCutOutPositions,
     healthFactorMinValue,
     currentLTVThreshold,
     liquidationThresholdLabel
 } from '../../../utils/constants';
 import { X } from 'lucide-react';
 
-const RiskPopup = ({ onClose }) => {
+const RiskPopup = ({ onClose, userData }) => {
     const popupRef = useRef(null);
+
+
+    console.log("userdata in risk", userData)
+    const health_Factor_Value = userData.Ok.health_factor;
+    const liquidationThreshold_Value1= userData.Ok.liquidation_threshold;
+    const liquidationThreshold_Value= 76.5;
+    const Ltv_Value = userData.Ok.ltv;
 
     const handleClickOutside = (event) => {
         if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -20,27 +25,72 @@ const RiskPopup = ({ onClose }) => {
     };
 
     useEffect(() => {
-        // Add inline styles to body to prevent scrolling
         document.body.style.overflow = 'hidden';
-
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
-            // Remove inline styles from body to allow scrolling again
             document.body.style.overflow = '';
         };
     }, []);
 
+    // Helper function to calculate the position for Health Factor
+    const calculateHealthFactorPosition = (value) => {
+        if (typeof value !== 'number' || isNaN(value)) {
+            console.error('Invalid Health Factor value:', value);
+            return NaN;
+        }
+        return Math.max(0, Math.min(100, (value / 10) * 100)); // Clamping between 0 and 100
+    };
+
+    // Helper function to calculate the position for LTV
+    const calculateLTVPosition = (value, min, max) => {
+        if (typeof value !== 'number' || typeof min !== 'number' || typeof max !== 'number' || min === max) {
+            console.error('Invalid input values for LTV position calculation:', { value, min, max });
+            return NaN;
+        }
+        return ((value - min) / (max - min)) * 100; // Scaling value to percentage
+    };
+
+    // Parse currentLTVThreshold if it's a percentage string
+    const parseThreshold = (threshold) => {
+        if (typeof threshold === 'string') {
+            const parsed = parseFloat(threshold.replace('%', ''));
+            if (!isNaN(parsed)) return parsed;
+        }
+        return threshold; // Return as is if not a string or parsing fails
+    };
+
+    // Convert `currentLTVThreshold` to a number
+    const thresholdValue = parseThreshold(liquidationThreshold_Value);
+
+    // Dynamic positions for Health Factor
+    const healthFactorPosition = calculateHealthFactorPosition(health_Factor_Value);
+    const healthFactorMinPosition = calculateHealthFactorPosition(healthFactorMinValue);
+
+    // Dynamic positions for Current LTV and Current LTV Threshold
+    const currentLTVPosition = calculateLTVPosition(Ltv_Value, 0, 100);
+    const currentLTVThresholdPosition = calculateLTVPosition(thresholdValue, 0, 100);
+
+    // Debugging logs
+    console.log('Health Factor Value:', health_Factor_Value);
+    console.log('Health Factor Position:', healthFactorPosition);
+    console.log('Health Factor Min Value:', healthFactorMinValue);
+    console.log('Health Factor Min Position:', healthFactorMinPosition);
+    console.log('Current LTV Value:', Ltv_Value);
+    console.log('Current LTV Position:', currentLTVPosition);
+    console.log('Current LTV Threshold:', liquidationThreshold_Value);
+    console.log('Parsed Current LTV Threshold:', thresholdValue);
+    console.log('Current LTV Threshold Position:', currentLTVThresholdPosition);
+
+    // Determine colors based on value positions
+    const healthFactorColor = health_Factor_Value < healthFactorMinValue ? 'yellow' : 'green';
+    const ltvColor = Ltv_Value > thresholdValue ? 'yellow' : 'green';
+
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black opacity-50"></div>
-
-            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg w-[380px] lg:w-[780px]  mx-4 sm:mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
-                {/* Close button */}
-                <div
-                    className=" h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer "
-                    onClick={onClose}
-                >
+            <div ref={popupRef} className="bg-white rounded-lg overflow-hidden shadow-lg w-[380px] lg:w-[780px] mx-4 sm:mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground">
+                <div className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer" onClick={onClose}>
                     <X className="text-black dark:text-darkText w-6 h-6" />
                 </div>
                 <div className="px-6 py-4">
@@ -58,7 +108,6 @@ const RiskPopup = ({ onClose }) => {
                             </p>
                             <div className="flex items-center mt-4">
                                 <svg width="100%" height="40">
-                                    {/* Define the gradient */}
                                     <defs>
                                         <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                             <stop offset="5%" style={{ stopColor: 'red', stopOpacity: 1 }} />
@@ -66,21 +115,17 @@ const RiskPopup = ({ onClose }) => {
                                             <stop offset="100%" style={{ stopColor: 'lightgreen', stopOpacity: 1 }} />
                                         </linearGradient>
                                     </defs>
-
-                                    {/* Background line */}
                                     <rect x="0" y="15" width="100%" height="2" fill="url(#lineGradient)" />
-
-                                    {/* Cut-out rectangles */}
-                                    <rect x={`${healthFactorCutOutPositions.green}%`} y="12" width="0.25%" height="9" fill="red" mt-4 />
-                                    <rect x={`${healthFactorCutOutPositions.red}%`} y="12" width="0.25%" height="9" fill="yellow" mt-4 />
-
-                                    {/* Percentage markers */}
-                                    <text x={`${healthFactorCutOutPositions.green}%`} y="35" fill="red" fontSize="12" textAnchor="middle">{healthFactorMinValue}</text>
-                                    <text x={`${healthFactorCutOutPositions.red}%`} y="9" fill="blue" fontSize="10" textAnchor="middle">{healthFactorValue}</text>
+                                    <rect x={`${healthFactorMinPosition}%`} y="12" width="0.25%" height="9" fill="red" />
+                                    <rect x={`${healthFactorPosition}%`} y="12" width="0.25%" height="9" fill={healthFactorColor} />
+                                    <text x={`${healthFactorPosition}%`} y="9" fill="gray" fontSize="12" textAnchor="middle" dx="0.3em" dy=".07em">{health_Factor_Value}</text>
+                                    <text x={`${healthFactorMinPosition}%`} y="35" fill="red" fontSize="12" textAnchor="middle">{healthFactorMinValue}</text>
                                 </svg>
-                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{healthFactorValue}</span>
+                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{health_Factor_Value}</span>
                             </div>
-                            <p className="text-xs text-gray-400 mt-1 dark:text-darkTextSecondary">If the health factor goes below {healthFactorMinValue}, the {liquidationThresholdLabel.toLowerCase()} of your collateral might be triggered.</p>
+                            <p className="text-xs text-gray-400 mt-1 dark:text-darkTextSecondary">
+                                If the health factor goes below {healthFactorMinValue}, the {liquidationThresholdLabel.toLowerCase()} of your collateral might be triggered.
+                            </p>
                         </div>
                         <div className="border border-gray-600 rounded-lg p-4">
                             <h4 className="text-sm font-semibold text-blue-700 dark:text-darkText">Current LTV</h4>
@@ -89,7 +134,6 @@ const RiskPopup = ({ onClose }) => {
                             </p>
                             <div className="flex items-center mt-4">
                                 <svg width="100%" height="40">
-                                    {/* Define the gradient */}
                                     <defs>
                                         <linearGradient id="lineGradientt" x1="0%" y1="0%" x2="100%" y2="0%">
                                             <stop offset="20%" style={{ stopColor: 'green', stopOpacity: 1 }} />
@@ -97,22 +141,18 @@ const RiskPopup = ({ onClose }) => {
                                             <stop offset="100%" style={{ stopColor: '#E9E9E9', stopOpacity: 1 }} />
                                         </linearGradient>
                                     </defs>
-
-                                    {/* Background line */}
                                     <rect x="0" y="15" width="100%" height="2" fill="url(#lineGradientt)" />
-
-                                    {/* Cut-out rectangles */}
-                                    <rect x={`${currentLTVCutOutPositions.green}%`} y="12" width="0.25%" height="9" fill="green" mt-4 />
-                                    <rect x={`${currentLTVCutOutPositions.red}%`} y="12" width="0.25%" height="9" fill="red" mt-4 />
-
-                                    {/* Percentage markers */}
-                                    <text x={`${currentLTVCutOutPositions.green}%`} y="10" fill="green" fontSize="12" textAnchor="middle">{currentLTVValue}%</text>
-                                    <text x={`${currentLTVCutOutPositions.red}%`} y="10" fill="red" fontSize="12" textAnchor="middle">{currentLTVThreshold}</text>
-                                    <text x={`${currentLTVCutOutPositions.red}%`} y="40" fill="red" fontSize="12" textAnchor="middle">{liquidationThresholdLabel}</text>
+                                    <rect x={`${currentLTVThresholdPosition}%`} y="12" width="0.25%" height="9" fill="yellow" />
+                                    <rect x={`${currentLTVPosition}%`} y="12" width="0.25%" height="9" fill={ltvColor} />
+                                    <text x={`${currentLTVPosition}%`} y="30" fill="gray" fontSize="12" textAnchor="left" dx="0.1em" dy=".2em">{Ltv_Value}</text>
+                                    <text x={`${currentLTVThresholdPosition}%`} y="10" fill="red" fontSize="12" textAnchor="middle">{liquidationThreshold_Value}</text>
+                                    <text x={`${currentLTVThresholdPosition}%`} y="40" fill="red" fontSize="12" textAnchor="middle">{liquidationThresholdLabel}</text>
                                 </svg>
-                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded cursor-pointer">{currentLTVValue}</span>
+                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded cursor-pointer">{Ltv_Value}</span>
                             </div>
-                            <p className="text-xs text-gray-400 mt-6 dark:text-darkTextSecondary">If your loan to value goes above {currentLTVThreshold}, your collateral may be liquidated.</p>
+                            <p className="text-xs text-gray-400 mt-6 dark:text-darkTextSecondary">
+                                If your loan to value goes above {liquidationThreshold_Value}, your collateral may be liquidated.
+                            </p>
                         </div>
                     </div>
                 </div>

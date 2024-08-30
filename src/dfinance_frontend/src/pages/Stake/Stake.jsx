@@ -76,7 +76,7 @@ const StakeDetails = () => {
                             Staking
                         </h1>
                         <p className="text-[#5B62FE] text-sm text-justify mt-3 dark:text-darkTextSecondary">
-                            Dfinance, GHO, and ABPT holders (ICP network only) can stake their assets in the Safety Module to add more security to the protocol and earn Safety Incentives. In the case of a shortfall event, your stake can be slashed to cover the deficit, providing an additional layer of protection for the protocol. <a href="#" className='underline'>Learn more about risks involved</a>
+                            In the ICP network, token holders can stake their assets in the Safety Module to enhance the protocol's security while earning incentives. During a shortfall event, your stake may be partially used to cover the deficit, offering an additional layer of protection for the protocol. <a href="#" className='underline'>Learn more about risks involved</a>
                         </p>
                     </div>
 

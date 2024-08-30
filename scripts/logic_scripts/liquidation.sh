@@ -7,7 +7,7 @@ ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
 backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
-
+debt_canister="cuj6u-c4aaa-aaaaa-qaajq-cai"
 reserve_data_method="get_reserve_data"
 # initialize_reserve_method="initialize_reserve"
 
@@ -34,6 +34,8 @@ backend_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {o
 echo "User Balance: $user_balance"
 echo "Liquidator Balance: $liquidator_balance"
 echo "Backend Canister Balance: $backend_balance"
+user1_debt_token_balance=$(dfx canister call $debt_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
+echo "User1 Debt Token Balance: $user1_debt_token_balance"
 echo "--------------------------------------"
 
 # Initialize reserve in the backend canister
@@ -79,7 +81,7 @@ dfx identity use liquidator
 # })")
 # echo "Allowance Set: $allow"
 # echo "--------------------------------------"
-amount=1000
+amount=150
 # call the repay function
 repay=$(dfx canister call dfinance_backend repay "(\"ckbtc\", $amount:nat, \"${ON_BEHALF_OF}\")")
 
@@ -93,6 +95,10 @@ backend_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {o
 echo "User Balance after repay: $user_balance"
 echo "Liquidator Balance after repay: $liquidator_balance"
 echo "Backend Canister Balance after repay: $backend_balance"
+user1_debt_token_balance=$(dfx canister call $debt_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
+echo "User1 Debt Token Balance After Repay: $user1_debt_token_balance"
+user_dtoken_balance=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
+echo "User Dtoken Balance before withdraw: $user_dtoken_balance"
 echo "--------------------------------------"
 
 echo "Fetching reserve data after repay..."
@@ -110,11 +116,12 @@ echo "Checking balances after getting reward..."
 user_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
 liquidator_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${liquidator_principal}\"; subaccount=null})")
 backend_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
-user_balance=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
+user_dtoken_balance=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
 echo "User Balance after withdraw: $user_balance"
 echo "User Dtoken Balance after withdraw: $user_dtoken_balance"
 echo "Liquidator Balance after withdraw: $liquidator_balance"
 echo "Backend Canister Balance after withdraw: $backend_balance"
+
 echo "--------------------------------------"
 
 # Fetching reserve data

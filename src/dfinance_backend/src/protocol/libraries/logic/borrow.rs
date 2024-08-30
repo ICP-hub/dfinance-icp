@@ -120,7 +120,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
         },
         memo: None,
         created_at_time: None,
-        amount: amount_nat,
+        amount: amount_nat.clone(),
     };
     let (result,): (TransferFromResult,) = call(ledger_canister_id, "icrc2_transfer_from", (args,))
         .await
@@ -128,6 +128,36 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
 
     match result {
         TransferFromResult::Ok(balance) => Ok(()),
+        TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+    };
+    
+
+
+    let debttoken_args = TransferArgs {
+        to: TransferAccount {
+            owner: user_principal,
+            subaccount: None,
+        },
+        fee: None,
+        spender_subaccount: None,
+        memo: None,
+        created_at_time: None,
+        amount: amount_nat.clone(),
+    };
+
+    let (new_result,): (TransferFromResult,) = call(
+        debttoken_canister_id,
+        "icrc1_transfer",
+        (debttoken_args, false),
+    )
+    .await
+    .map_err(|e| e.1)?;
+
+    match new_result {
+        TransferFromResult::Ok(new_balance) => {
+            ic_cdk::println!("Debttoken transfer from backend to user executed successfully {:?}", new_balance);
+            Ok(())
+        }
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
     }
 
@@ -207,10 +237,37 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
     ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
 
     // ---------- debttoken logic that will reduce the user debt ----------
+    
+    let debttoken_args = TransferArgs {
+        to: TransferAccount {
+            owner: platform_principal,
+            subaccount: None,
+        },
+        fee: None,
+        spender_subaccount: None,
+        memo: None,
+        created_at_time: None,
+        amount: repay_amount.clone(),
+    };
 
+    let (new_result,): (TransferFromResult,) = call(
+        debttoken_canister_id,
+        "icrc1_transfer",
+        (debttoken_args, false),
+    )
+    .await
+    .map_err(|e| e.1)?;
+
+    match new_result {
+        TransferFromResult::Ok(new_balance) => {
+            ic_cdk::println!("Debttoken transfer from backend to user executed successfully {:?}", new_balance);
+            Ok(())
+        }
+        TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+    }
     // ---------- Update reserve data ----------
 
     // ---------- Update user data ----------
 
-    Ok(())
+    // Ok(())
 }

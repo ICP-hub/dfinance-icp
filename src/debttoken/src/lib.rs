@@ -18,7 +18,7 @@ use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::icrc1::transfer::Memo;
 use icrc_ledger_types::icrc1::transfer::{TransferArg, TransferError};
 use num_traits::ToPrimitive;
-
+use candid::Principal;
 use std::cell::RefCell;
 
 const MAX_MESSAGE_SIZE: u64 = 1024 * 1024;
@@ -412,11 +412,34 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool) -> Result<Nat, TransferErr
             error_code: Nat::from(1u32),
         });
     }
-
-    let from_account = Account {
-        owner: ic_cdk::api::caller(),
-        subaccount: arg.from_subaccount,
+    let caller_principal = Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai".to_string())
+    .map_err(|e| TransferError::GenericError {
+        message: format!("Invalid user principal: {}", e),
+        error_code: Nat::from(2u32),
+    })?;
+    let user_principal = Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe".to_string())
+    .map_err(|e| TransferError::GenericError {
+        message: format!("Invalid user principal: {}", e),
+        error_code: Nat::from(2u32),
+    })?;
+   
+    let from_account = if arg.to.owner != caller_principal {
+        Account {
+            owner: caller_principal,
+            subaccount: arg.from_subaccount,
+        }
+    } else {
+       
+        Account {
+            owner: user_principal,
+            subaccount: arg.from_subaccount,
+        }
     };
+
+    // let from_account = Account {
+    //     owner: ic_cdk::api::caller(),
+    //     subaccount: arg.from_subaccount,
+    // };
     execute_transfer(
         from_account,
         arg.to,

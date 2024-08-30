@@ -10,7 +10,7 @@ deposit_method="supply"
 debt_canister="cuj6u-c4aaa-aaaaa-qaajq-cai"
 reserve_data_method="get_reserve_data"
 # initialize_reserve_method="initialize_reserve"
-
+dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
 # Get the principal for the user1 identity (spender)
 dfx identity use default
 user_principal=$(dfx identity get-principal)

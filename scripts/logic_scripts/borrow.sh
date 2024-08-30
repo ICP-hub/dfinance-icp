@@ -12,7 +12,7 @@ reserve_data_method="get_reserve_data"
 
 
 # Get the principal for the user1 identity (borrower)
-dfx identity use user1
+dfx identity use default
 user1_principal=$(dfx identity get-principal)
 echo "User1 Principal (Borrower): $user1_principal"
 

@@ -29,7 +29,7 @@ pub struct TransferAccount {
     pub subaccount: Option<Vec<u8>>,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum TransferFromResult {
     Ok(Nat),
     Err(TransferFromError),

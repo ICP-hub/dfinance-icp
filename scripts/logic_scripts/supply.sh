@@ -82,10 +82,14 @@ echo "Supply Execution Result: $result"
 echo "Checking balances after deposit..."
 user1_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
 backend_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
-user1_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
+user1_dtoken=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
+backend_dtoken=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
 echo "User1 Balance After Deposit: $user1_balance_after"
 echo "Backend Canister Balance After Deposit: $backend_balance_after"
+echo "User1 Dtoken Balance After Deposit: $user1_dtoken"
+echo "Backend Dtoken Balance After Deposit: $backend_dtoken"
 echo "--------------------------------------"
+
 
 echo "Fetching reserve data after supply..."
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")

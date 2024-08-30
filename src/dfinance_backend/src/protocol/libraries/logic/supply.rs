@@ -244,8 +244,8 @@ impl SupplyLogic {
         )
         .await
         .map_err(|e| e.1)?;
-
-        ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
+        ic_cdk::println!("Dtoken call result : {:?}", new_result);
+        ic_cdk::println!("Dtoken Asset transfer from user to backend canister executed successfully");
 
         // ---------- Update reserve data ----------
 

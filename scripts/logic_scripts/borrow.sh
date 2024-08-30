@@ -20,12 +20,15 @@ echo "User1 Principal (Borrower): $user1_principal"
 backend_canister_principal=$(dfx canister id $backend_canister)
 echo "Backend Canister Principal (Lender): $backend_canister_principal"
 
+debt_canister="cuj6u-c4aaa-aaaaa-qaajq-cai"
 # Check balances before operations
 echo "Checking balances before operations..."
 user1_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
 backend_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
 echo "User1 Balance: $user1_balance"
 echo "Backend Canister Balance: $backend_balance"
+user1_debt_token_balance=$(dfx canister call $debt_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
+echo "User1 Debt Balance: $user1_debt_token_balance"
 echo "--------------------------------------"
 
 
@@ -71,6 +74,8 @@ user1_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(recor
 backend_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
 echo "User1 Balance After Borrow: $user1_balance_after"
 echo "Backend Canister Balance After Borrow: $backend_balance_after"
+user1_debt_token_balance=$(dfx canister call $debt_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
+echo "User1 Debt token Balance after borrow: $user1_debt_token_balance"
 echo "--------------------------------------"
 
 echo "Fetching reserve data after borrow..."

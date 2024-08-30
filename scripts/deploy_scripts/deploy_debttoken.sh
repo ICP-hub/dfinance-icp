@@ -2,10 +2,11 @@
 
 set -e
 
-dfx identity use newminter 
+# dfx identity use minter
 
-export MINTER=$(dfx identity get-principal)
-echo $MINTER
+# export MINTER=$(dfx identity get-principal)
+# echo $MINTER
+export BACKEND="avqkn-guaaa-aaaaa-qaaea-cai"
 
 export TOKEN_NAME="debtckBTC"
 echo "token_name : $TOKEN_NAME"
@@ -17,7 +18,7 @@ export TOKEN_SYMBOL="debtckBTC"
 export DEFAULT="2vxsx-fae"
 
 export PRE_MINTED_TOKENS=10_000_000_000
-export TRANSFER_FEE=10_000
+export TRANSFER_FEE=100
 
 dfx identity use default
 
@@ -35,7 +36,7 @@ dfx deploy debttoken --argument "(variant {Init =
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
-     minting_account = record { owner = principal \"${MINTER}\" };
+     minting_account = record { owner = principal \"${BACKEND}\" };
      transfer_fee = ${TRANSFER_FEE};
      metadata = vec {};
      feature_flags = opt record{icrc2 = ${FEATURE_FLAGS}};

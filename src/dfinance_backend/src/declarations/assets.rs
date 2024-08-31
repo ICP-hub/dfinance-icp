@@ -34,9 +34,9 @@ pub struct ReserveCache {
     //utilization rate, which is the percentage of the total available assets that have been borrowed. A higher utilization rate generally leads to a higher liquidity rate.
     pub curr_liquidity_rate: u128,//APY //percentage rate at which your deposit grows. //This interest comes from the payments made by borrowers who are using the deposited assets.
     pub curr_variable_borrow_rate: u128,
-    pub d_token_canister: Principal,
-    // pub stable_debt_token_address: Principal,
-    // pub variable_debt_token_address: Principal,
+    pub d_token_canister: Option<String>,
+    // pub stable_debt_token_canister: Principal,
+    // pub variable_debt_token_canister: Principal,
     pub debt_token_canister: Principal,
     pub reserve_last_update_timestamp: u64,
     // pub curr_scaled_variable_debt: u128,
@@ -70,13 +70,13 @@ pub struct CalculateInterestRatesParams {
     pub average_stable_borrow_rate: u128,
     pub reserve_factor: u128,
     pub reserve: String,
-    pub a_token: String,
+    pub d_token: String,
 }
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct InitReserveParams {
     pub asset: String,
-    pub a_token_address: String,
+    pub d_token_address: String,
     pub stable_debt_address: String,
     pub variable_debt_address: String,
     pub interest_rate_strategy_address: String,

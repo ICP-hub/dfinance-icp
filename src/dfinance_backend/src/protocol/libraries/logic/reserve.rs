@@ -1,4 +1,4 @@
-use candid::{variant, CandidType, Nat, Principal};
+use candid::{CandidType, Principal};
 use serde::{Deserialize, Serialize};
 
 use crate::protocol::libraries::math::math_utils;
@@ -6,67 +6,16 @@ use ic_cdk::api::time;
 
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
-use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 use crate::protocol::libraries::math::percentage_maths::percent_mul;
 use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_div, ray_mul};
 use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
-// use crate::protocol::libraries::logic::interface::ivariable_debt_token::VariableDebtToken;
 
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds
 }
     
-    
-//     async fn emit_reserve_data_updated(
-//         reserve_address: Principal,
-//         next_liquidity_rate: u128,
-//         next_stable_rate: u128,
-//         next_variable_rate: u128,
-//         next_liquidity_index: u128,
-//         next_variable_borrow_index: u128,
-//     ) {
-//         // Implement the logging or state update logic
-//         // For now, just a simple print statement
-//         println!(
-//             "ReserveDataUpdated: {:?}, {}, {}, {}, {}, {}",
-//             reserve_address, next_liquidity_rate, next_stable_rate, next_variable_rate, next_liquidity_index, next_variable_borrow_index
-//         );
-//     }
-
-// pub trait IStableDebtToken {
-//     fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64);
-// }
-
-// pub struct StableDebtTokenImpl;
-// impl IStableDebtToken for StableDebtTokenImpl {
-//     fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64) {
-//         // Implement the logic to get supply data from the token address
-//         (0, 0, 0, 0)
-//     }
-// }
-// //temp
-// // pub trait IStableDebtToken {
-// //     fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64) {
-// //         // Implement the logic to get supply data from the token address
-// //         (0, 0, 0, 0)
-// //     }
-// // }
-
-// trait IReserveInterestRateStrategy {
-//     fn calculate_interest_rates(&self, params: CalculateInterestRatesParams) -> (u128, u128, u128);
-// }
-
-// // src/reserve.rs
-// use candid::Principal;
-// use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
-// use crate::declarations::assets::{ReserveData, ReserveCache};
-// use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
-// use crate::protocol::libraries::math::math_utils;
-// use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_mul, ray_div};
-// use crate::protocol::libraries::math::percentage_maths::percent_mul;
 
 
-// how much ltv?
 pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
     ReserveCache {
         reserve_configuration: reserve_data.configuration.clone(),
@@ -80,14 +29,11 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
         next_variable_borrow_index: 0,
         curr_liquidity_rate: reserve_data.current_liquidity_rate,
         curr_variable_borrow_rate: 0,
-        // next_variable_borrow_rate: reserve_data.current_variable_borrow_rate,
-       
-        // a_token_address: reserve_data.a_token_address,
-        d_token_canister: Principal::anonymous(),
+        // next_variable_borrow_rate: reserve_data.current_variable_borrow_rate,   
+        d_token_canister: reserve_data.d_token_canister.clone(),
         // stable_debt_token_address: reserve_data.stable_debt_token_address,
         debt_token_canister: Principal::anonymous(),
         // variable_debt_token_address: reserve_data.variable_debt_token_address,
-        
         reserve_last_update_timestamp: reserve_data.last_update_timestamp,
         // curr_scaled_variable_debt: 0,  //related to the borrower's debt
         // next_scaled_variable_debt: 0,
@@ -197,7 +143,7 @@ pub async fn update_interest_rates(
         average_stable_borrow_rate: reserve_cache.next_avg_stable_borrow_rate,
         reserve_factor: reserve_cache.reserve_factor,
         reserve: reserve_address.clone(),
-        d_token: reserve_cache.d_token_canister,
+        d_token: reserve_cache.d_token_canister.clone(),
     };
 
     let (next_liquidity_rate, next_stable_rate, next_variable_rate) =
@@ -238,7 +184,7 @@ async fn calculate_interest_rates(params: CalculateInterestRatesParams) -> (u128
 
 
 async fn emit_reserve_data_updated(
-    // reserve_address: Principal,
+    
     reserve_address: String,
     next_liquidity_rate: u128,
     next_stable_rate: u128,

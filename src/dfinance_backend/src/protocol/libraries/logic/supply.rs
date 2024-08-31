@@ -216,15 +216,7 @@ impl SupplyLogic {
             TransferFromResult::Err(err) => Err(format!("{:?}", err)),
         };
 
-        // Transfers dtoken from user to the pool
-        // asset_transfer_from(
-        //     dtoken_canister_principal, //dtoken
-        //     user_principal,
-        //     platform_principal,
-        //     withdraw_amount.clone(),
-        // )
-        // .await
-        // .map_err(|e| format!("Asset transfer failed: {:?}", e))?;
+        
         let dtoken_args = TransferArgs {
             to: TransferAccount {
                 owner: platform_principal,

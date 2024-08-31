@@ -366,7 +366,7 @@ const MySupply = () => {
                 {isSupplyVisible ? (
                   <EyeOff  size={16} className="ml-2"/>
                 ) : (
-                  <Eye  size={16} />
+                  <Eye  size={16} className="ml-2"/>
                 )}
               </button>
             </div>
@@ -566,7 +566,7 @@ const MySupply = () => {
                 {isVisible ? (
                   <EyeOff  size={16} className="ml-2"/>
                 ) : (
-                  <Eye  size={16} />
+                  <Eye  size={16} className="ml-2"/>
                 )}
               </button>
             </div>
@@ -766,7 +766,7 @@ const MySupply = () => {
                 {isborrowVisible ? (
                   <EyeOff className="ml-2" size={16} />
                 ) : (
-                  <Eye  size={16} />
+                  <Eye  size={16} className="ml-2"/>
                 )}
               </button>
             </div>
@@ -995,7 +995,7 @@ const MySupply = () => {
                 {isBorrowVisible ? (
                   <EyeOff className="ml-2" size={16} />
                 ) : (
-                  <Eye  size={16} />
+                  <Eye  size={16} className="ml-2"/>
                 )}
               </button>
             </div>

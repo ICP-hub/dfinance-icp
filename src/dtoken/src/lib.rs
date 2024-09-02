@@ -416,30 +416,28 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool) -> Result<Nat, TransferErr
         });
     }
 
-    // let caller_principal = ic_cdk::api::caller();
-    let caller_principal = Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai".to_string())
-    .map_err(|e| TransferError::GenericError {
-        message: format!("Invalid user principal: {}", e),
-        error_code: Nat::from(2u32),
-    })?;
+    
+    let caller_principal = ic_cdk::api::caller();
     let user_principal = Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe".to_string())
     .map_err(|e| TransferError::GenericError {
-        message: format!("Invalid user principal: {}", e),
+        message: format!("Invalid canister id: {}", e),
         error_code: Nat::from(2u32),
     })?;
    
-    let from_account = if arg.to.owner != caller_principal {
+    let from_account = if arg.to.owner == caller_principal {
         Account {
-            owner: caller_principal,
+            owner: user_principal,
             subaccount: arg.from_subaccount,
         }
     } else {
        
         Account {
-            owner: user_principal,
+            owner: caller_principal,
             subaccount: arg.from_subaccount,
         }
     };
+
+
 
 
     // let from_account = Account {

@@ -174,11 +174,11 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
     let (user_principal, liquidator_principal) = if let Some(on_behalf_of) = params.on_behalf_of {
         let user_principal = Principal::from_text(on_behalf_of)
             .map_err(|_| "Invalid user canister ID".to_string())?;
-        // let liquidator_principal = ic_cdk::caller();
-        let liquidator_principal = Principal::from_text("37nia-rv3ep-e4hzo-5vtfx-3zrxb-kwfhi-m27sj-wsvci-d2qyt-3dbs3-mqe".to_string()).map_err(|_| "Invalid liquidator id".to_string())?;
+        let liquidator_principal = ic_cdk::caller();
         (user_principal, Some(liquidator_principal))
     } else {
         let user_principal = ic_cdk::caller();
+        ic_cdk::println!("Caller is: {:?}", user_principal.to_string());
         (user_principal, None)
     };
 

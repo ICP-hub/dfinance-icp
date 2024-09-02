@@ -69,7 +69,7 @@ dfx identity use default
 
 # Get the principal of the default identity
 # ON_BEHALF_OF=$(dfx identity get-principal)
-deposit_amount=50  
+deposit_amount=5000
 currency="ckbtc"  
 referral_code=0  
 is_collateral=true

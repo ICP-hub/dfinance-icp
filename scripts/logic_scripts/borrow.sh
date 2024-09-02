@@ -59,7 +59,7 @@ echo "user data: $user_data"
 # echo "--------------------------------------"
 
 # Call the borrow function on the backend canister
-borrow_amount=500  
+borrow_amount=3000  
 currency="ckbtc" 
 interest_rate=0  
 

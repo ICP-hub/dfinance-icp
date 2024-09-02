@@ -92,8 +92,8 @@ service : () -> {
   get_all_assets : () -> (vec text) query;
   borrow : (text, nat64, text, text, nat) -> (Result);
   supply : (ExecuteSupplyParams) -> (Result_1);
-  repay : (text, nat, text) -> (variant { Ok : null; Err : text });
-  withdraw : (text, nat, text, bool) -> (variant { Ok : null; Err : text });
+  repay : (text, nat, opt text) -> (variant { Ok : null; Err : text });
+  withdraw : (text, nat, opt text, bool) -> (variant { Ok : null; Err : text });
   deposit : (text, nat64, text, bool) -> (variant { Ok : null; Err : text });
   get_all_users : () -> (vec record { principal; UserData }) query;
   check_user : (text) -> (variant { Ok : text; Err : text });

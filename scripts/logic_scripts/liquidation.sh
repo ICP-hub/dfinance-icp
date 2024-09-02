@@ -81,9 +81,9 @@ dfx identity use liquidator
 # })")
 # echo "Allowance Set: $allow"
 # echo "--------------------------------------"
-amount=150
+amount=1000
 # call the repay function
-repay=$(dfx canister call dfinance_backend repay "(\"ckbtc\", $amount:nat, \"${ON_BEHALF_OF}\")")
+repay=$(dfx canister call dfinance_backend repay "(\"ckbtc\", $amount:nat, opt \"${ON_BEHALF_OF}\")")
 
 echo "Repay Execution Result: $repay"
 
@@ -108,7 +108,7 @@ echo "--------------------------------------"
 
 # call the withdraw function
 collateral=true
-withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckbtc\", $amount:nat, \"${ON_BEHALF_OF}\", $collateral:bool)")
+withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckbtc\", $amount:nat, opt \"${ON_BEHALF_OF}\", $collateral:bool)")
 echo "Withdraw Execution Result: $withdraw"
 dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
 # Check balances after withdraw

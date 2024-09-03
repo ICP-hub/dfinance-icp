@@ -144,11 +144,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
         created_at_time: None,
         amount: amount_nat.clone(),
     };
-
+     
     let (new_result,): (TransferFromResult,) = call(
         debttoken_canister_id,
         "icrc1_transfer",
-        (debttoken_args, false),
+        (debttoken_args, false, Some(platform_principal)),
     )
     .await
     .map_err(|e| e.1)?;
@@ -253,7 +253,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
     let (new_result,): (TransferFromResult,) = call(
         debttoken_canister_id,
         "icrc1_transfer",
-        (debttoken_args, false),
+        (debttoken_args, false, Some(user_principal)),
     )
     .await
     .map_err(|e| e.1)?;

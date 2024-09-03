@@ -7,7 +7,6 @@ use ic_cdk::api::time;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
 use crate::protocol::libraries::math::percentage_maths::percent_mul;
-use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_div, ray_mul};
 use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
 
 fn current_timestamp() -> u64 {
@@ -54,24 +53,24 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
         return;
     }
 
-    update_indexes(reserve_data, reserve_cache);
+    // update_indexes(reserve_data, reserve_cache);
     accrue_to_treasury(reserve_data, reserve_cache);
 
     reserve_data.last_update_timestamp = current_time;
 }
 
-pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
-    if reserve_cache.curr_liquidity_rate != 0 {
-        let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
-            reserve_cache.curr_liquidity_rate,
-            reserve_cache.reserve_last_update_timestamp,
-        );
-        reserve_cache.next_liquidity_index = ray_mul(
-            cumulated_liquidity_interest,
-            reserve_cache.curr_liquidity_index,
-        );
-        reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
-    }
+// pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
+//     if reserve_cache.curr_liquidity_rate != 0 {
+//         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
+//             reserve_cache.curr_liquidity_rate,
+//             reserve_cache.reserve_last_update_timestamp,
+//         );
+//         reserve_cache.next_liquidity_index = ray_mul(
+//             cumulated_liquidity_interest,
+//             reserve_cache.curr_liquidity_index,
+//         );
+//         reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
+//     }
 
     // if reserve_cache.curr_scaled_variable_debt != 0 {
     //     let cumulated_variable_borrow_interest = math_utils::calculate_compounded_interest(
@@ -82,7 +81,7 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
     //     reserve_cache.next_variable_borrow_index = ray_mul(cumulated_variable_borrow_interest, reserve_cache.curr_variable_borrow_index);
     //     // reserve_data.variable_borrow_index = reserve_cache.next_variable_borrow_index;
     // }
-}
+// }
 
 pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &ReserveCache) {
     let mut vars = AccrueToTreasuryLocalVars::default();
@@ -107,10 +106,10 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
         reserve_cache.reserve_last_update_timestamp,
     );
 
-    vars.prev_total_stable_debt = ray_mul(
-        reserve_cache.curr_principal_stable_debt,
-        vars.cumulated_stable_interest,
-    );
+    // vars.prev_total_stable_debt = ray_mul(
+    //     reserve_cache.curr_principal_stable_debt,
+    //     vars.cumulated_stable_interest,
+    // );
 
     vars.total_debt_accrued = vars.curr_total_variable_debt + reserve_cache.curr_total_stable_debt
         - vars.prev_total_variable_debt
@@ -118,10 +117,10 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
 
     vars.amount_to_mint = percent_mul(vars.total_debt_accrued, reserve_cache.reserve_factor);
 
-    if vars.amount_to_mint != 0 {
-        reserve_data.accrued_to_treasury +=
-            ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
-    }
+    // if vars.amount_to_mint != 0 {
+    //     reserve_data.accrued_to_treasury +=
+    //         ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
+    // }
 }
 
 pub async fn update_interest_rates(

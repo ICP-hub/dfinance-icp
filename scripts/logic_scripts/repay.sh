@@ -44,11 +44,11 @@ echo "Checking balances after repay..."
 user_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
 backend_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
 user1_debt_token_balance=$(dfx canister call $debt_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
-user_dtoken_balance=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
+# user_dtoken_balance=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")
 echo "User Balance after repay: $user_balance"
 echo "Backend Canister Balance after repay: $backend_balance"
 echo "User Debt Token Balance after repay: $user1_debt_token_balance"
-echo "User Dtoken Balance: $user_dtoken_balance"
+
 echo "--------------------------------------"
 
 # Fetching reserve data after repay

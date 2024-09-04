@@ -14,12 +14,22 @@ pub struct TransferFromArgs {
 }
 
 #[derive(CandidType, Deserialize)]
+pub struct TransferArgs {
+    pub to: TransferAccount,
+    pub fee: Option<u64>,
+    pub spender_subaccount: Option<Vec<u8>>,
+    pub memo: Option<Vec<u8>>,
+    pub created_at_time: Option<u64>,
+    pub amount: Nat,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct TransferAccount {
     pub owner: Principal,
     pub subaccount: Option<Vec<u8>>,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum TransferFromResult {
     Ok(Nat),
     Err(TransferFromError),

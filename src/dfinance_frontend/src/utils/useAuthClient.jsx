@@ -4,6 +4,7 @@ import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
 import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
+import useAssetData from "../components/Common/useAssets";
 
 // Create a React context for authentication state
 const AuthContext = createContext();
@@ -142,6 +143,13 @@ export const useAuthClient = (options = defaultOptions) => {
       const backendActor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, { agent });
       setBackendActor(backendActor);
 
+      // Ensure backendActor is initialized before making calls
+    if (backendActor) {
+      await checkUser(principal.toString());
+    } else {
+      console.error('Backend actor initialization failed.');
+    }
+
     } catch (error) {
       console.error("Authentication update error:", error);
     }
@@ -172,6 +180,36 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  const checkUser = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.check_user(user);
+      console.log('check_user result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error checking user:', error);
+      throw error;
+    }
+  };
+
+  const fetchReserveData = async (asset) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+  
+    try {
+      const reserveData = await backendActor.get_reserve_data(asset);
+      console.log('Reserve Data:', reserveData);
+      return reserveData;
+    } catch (error) {
+      console.error('Error fetching reserve data:', error);
+      throw error;
+    }
+  };
+  
+
   return {
     isAuthenticated,
     login,
@@ -185,6 +223,8 @@ export const useAuthClient = (options = defaultOptions) => {
     createLedgerActor,
     reloadLogin,
     accountIdString,
+    fetchReserveData, 
+    checkUser,
   };
 };
 

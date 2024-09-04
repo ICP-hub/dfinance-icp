@@ -1,0 +1,82 @@
+type Account = record { owner : principal; subaccount : opt blob };
+type ArchiveOptions = record {
+  num_blocks_to_archive : nat64;
+  max_transactions_per_response : opt nat64;
+  trigger_threshold : nat64;
+  more_controller_ids : opt vec principal;
+  max_message_size_bytes : opt nat64;
+  cycles_for_archive_creation : opt nat64;
+  node_max_memory_size_bytes : opt nat64;
+  controller_id : principal;
+};
+type ChangeArchiveOptions = record {
+  num_blocks_to_archive : opt nat64;
+  max_transactions_per_response : opt nat64;
+  trigger_threshold : opt nat64;
+  more_controller_ids : opt vec principal;
+  max_message_size_bytes : opt nat64;
+  cycles_for_archive_creation : opt nat64;
+  node_max_memory_size_bytes : opt nat64;
+  controller_id : opt principal;
+};
+type ChangeFeeCollector = variant { SetTo : Account; Unset };
+type FeatureFlags = record { icrc2 : bool };
+type InitArgs = record {
+  decimals : opt nat8;
+  token_symbol : text;
+  transfer_fee : nat;
+  metadata : vec record { text; MetadataValue };
+  minting_account : Account;
+  initial_balances : vec record { Account; nat };
+  maximum_number_of_accounts : opt nat64;
+  accounts_overflow_trim_quantity : opt nat64;
+  fee_collector_account : opt Account;
+  archive_options : ArchiveOptions;
+  max_memo_length : opt nat16;
+  token_name : text;
+  feature_flags : opt FeatureFlags;
+};
+type LedgerArgument = variant { Upgrade : opt UpgradeArgs; Init : InitArgs };
+type MetadataValue = variant { Int : int; Nat : nat; Blob : blob; Text : text };
+type Result = variant { Ok : nat; Err : TransferError };
+type TransferArg = record {
+  to : Account;
+  fee : opt nat;
+  memo : opt blob;
+  from_subaccount : opt blob;
+  created_at_time : opt nat64;
+  amount : nat;
+};
+type TransferError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
+};
+type UpgradeArgs = record {
+  change_archive_options : opt ChangeArchiveOptions;
+  token_symbol : opt text;
+  transfer_fee : opt nat;
+  metadata : opt vec record { text; MetadataValue };
+  maximum_number_of_accounts : opt nat64;
+  accounts_overflow_trim_quantity : opt nat64;
+  change_fee_collector : opt ChangeFeeCollector;
+  max_memo_length : opt nat16;
+  token_name : opt text;
+  feature_flags : opt FeatureFlags;
+};
+service : (LedgerArgument) -> {
+  icrc1_balance_of : (Account) -> (nat) query;
+  icrc1_decimals : () -> (nat8) query;
+  icrc1_fee : () -> (nat) query;
+  icrc1_metadata : () -> (vec record { text; MetadataValue }) query;
+  icrc1_minting_account : () -> (opt Account) query;
+  icrc1_name : () -> (text) query;
+  icrc1_symbol : () -> (text) query;
+  icrc1_total_supply : () -> (nat) query;
+  icrc1_transfer : (TransferArg, bool, opt principal) -> (Result);
+}

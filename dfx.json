@@ -10,9 +10,29 @@
         }
       }
     },
+    "cketh_ledger": {
+            "type": "custom",
+            "candid": "https://raw.githubusercontent.com/dfinity/ic/17df8febdb922c3981475035d830f09d9b990a5a/rs/rosetta-api/icrc1/ledger/ledger.did",
+            "wasm": "https://download.dfinity.systems/ic/17df8febdb922c3981475035d830f09d9b990a5a/canisters/ic-icrc1-ledger.wasm.gz",
+            "remote": {
+                "id": {
+                    "ic": "ss2fx-dyaaa-aaaar-qacoq-cai"
+                }
+            }
+        },
     "dfinance_backend": {
       "candid": "src/dfinance_backend/dfinance_backend.did",
       "package": "dfinance_backend",
+      "type": "rust"
+    },
+    "dtoken": {
+      "candid": "src/dtoken/dtoken.did",
+      "package": "dtoken",
+      "type": "rust"
+    },
+    "debttoken": {
+      "candid": "src/debttoken/debttoken.did",
+      "package": "debttoken",
       "type": "rust"
     },
     "dfinance_frontend": {
@@ -25,7 +45,7 @@
       "type": "assets",
       "workspace": "dfinance_frontend"
     },
-    "internet_identity" : {
+    "internet_identity": {
       "type": "pull",
       "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
     }

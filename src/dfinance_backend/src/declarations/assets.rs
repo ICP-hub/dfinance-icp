@@ -1,57 +1,54 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Nat, Principal};
 
-// #[derive(Debug, CandidType, Deserialize)]
-// pub struct ReserveData {
-//     pub liquidity_index: u128,
-//     pub current_liquidity_rate: u128,
-//     pub variable_borrow_index: u128,
-//     pub current_variable_borrow_rate: u128,
-//     pub current_stable_borrow_rate: u128,
-//     pub last_update_timestamp: u64,
-//     pub id: u16,
-//     pub a_token_address: String,
-//     pub stable_debt_token_address: String,
-//     pub variable_debt_token_address: String,
-//     pub interest_rate_strategy_address: String,
-//     pub accrued_to_treasury: u128,
-//     pub unbacked: u128,
-//     pub isolation_mode_total_debt: u128,
-// }
+use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 
-#[derive(CandidType, Deserialize, Clone)]
-pub struct ReserveConfigurationMap {
-    pub data: u128,
-}
-
-#[derive(CandidType, Deserialize, Clone, Default)]
+#[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
-    pub configuration: Option<ReserveConfigurationMap>,
-    pub a_token_address: Option<Principal>,
-    pub stable_debt_token_address: Option<Principal>,
-    pub variable_debt_token_address: Option<Principal>,
-    pub interest_rate_strategy_address: Option<Principal>,
-    pub liquidity_index: Option<u128>,
-    pub variable_borrow_index: Option<u128>,
-    pub current_liquidity_rate: Option<u128>,
-    pub current_variable_borrow_rate: Option<u128>,
-    pub current_stable_borrow_rate: Option<u128>,
-    pub last_update_timestamp: Option<u64>,
+    pub asset_name: Option<String>,
     pub id: u16,
-    pub accrued_to_treasury: Option<u128>,
-    pub unbacked: u128,
-    pub isolation_mode_total_debt: u128,
-    // pub total_stable_debt: Option<u128>,
-    // pub total_variable_debt: Option<u128>,
-    // pub reserve_factor: Option<u128>,
-    
+    pub borrow_rate: Option<f64>, //8.25
+    pub supply_rate_apr: Option<f64>, //8.25
+    pub total_supply: Option<f64>,
+    pub last_update_timestamp: u64,
+    pub d_token_canister: Option<String>,
+    pub debt_token_canister: Option<String>,
+    pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.
+    pub liquidity_index: u128,
+    pub current_liquidity_rate: u128,
+    pub configuration: ReserveConfiguration,
+    pub can_be_collateral: Option<bool>,
 }
 
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ReserveCache {
+    pub reserve_configuration: ReserveConfiguration,
+    //Liquidity Index(t)=Liquidity Index(t−1) ×(1+ Borrow Interest Rate×Δt/365×100)
+    //If you deposit 100 DAI into Aave and the liquidity index increases from 1 to 1.05 over a certain period, your deposit is now worth 105 DAI (reflecting the interest earned).
+    pub curr_liquidity_index: u128,
+    pub next_liquidity_index: u128,
+    //When demand for borrowing an asset is high, the liquidity rate increases to incentivize more deposits. Conversely, if demand is low, the liquidity rate decreases.
+    //utilization rate, which is the percentage of the total available assets that have been borrowed. A higher utilization rate generally leads to a higher liquidity rate.
+    pub curr_liquidity_rate: u128,//APY //percentage rate at which your deposit grows. //This interest comes from the payments made by borrowers who are using the deposited assets.
+    pub d_token_canister: Option<String>,
+    pub debt_token_canister: Principal,
+    pub reserve_last_update_timestamp: u64,
+    pub curr_principal_stable_debt: u128,
+    pub curr_total_stable_debt: u128,
+    pub curr_avg_stable_borrow_rate: u128,
+    pub stable_debt_last_update_timestamp: u64,
+    pub next_total_stable_debt: u128,
+    pub next_avg_stable_borrow_rate: u128,
+}
+
+
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteSupplyParams {
     pub asset: String,
     pub amount: u128,
-    pub on_behalf_of: String,
-    pub referral_code: u16,
+    pub on_behalf_of: String, //optional
+    pub is_collateral: bool,
+
 }
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -64,13 +61,13 @@ pub struct CalculateInterestRatesParams {
     pub average_stable_borrow_rate: u128,
     pub reserve_factor: u128,
     pub reserve: String,
-    pub a_token: String,
+    pub d_token: String,
 }
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct InitReserveParams {
     pub asset: String,
-    pub a_token_address: String,
+    pub d_token_address: String,
     pub stable_debt_address: String,
     pub variable_debt_address: String,
     pub interest_rate_strategy_address: String,
@@ -78,6 +75,33 @@ pub struct InitReserveParams {
     pub max_number_reserves: u64,
 }
 
+#[derive(CandidType, Deserialize, Clone, PartialEq)]
+pub enum InterestRateMode {
+    None,
+    Stable,
+    Variable,
+}
 
+#[derive(Debug, CandidType, Deserialize, Clone, PartialEq)]
+pub struct ExecuteBorrowParams {
+    pub asset: String,
+    pub user: String,
+    pub on_behalf_of: String,
+    pub amount: u128,
+    pub interest_rate: Nat,
+}
 
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ExecuteRepayParams {
+    pub asset: String,
+    pub amount: u128,
+    pub on_behalf_of: Option<String>,
+}
 
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ExecuteWithdrawParams {
+    pub asset: String,
+    pub amount: u128,
+    pub on_behalf_of: Option<String>,
+    pub is_collateral: bool,
+}

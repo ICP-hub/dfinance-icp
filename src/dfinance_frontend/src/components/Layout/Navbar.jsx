@@ -651,7 +651,7 @@ export default function Navbar({ isHomeNav }) {
                                 className="w-6 h-6"
                             />
                             <span className="text-lg text-[#2A1F9D] dark:text-darkText">
-                                1 INCH
+                                ckETH
                             </span>
                             <svg
                                 className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"

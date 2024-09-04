@@ -13,9 +13,116 @@ import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
 import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
+import { Principal } from "@dfinity/principal";
+import { PrincipalClass } from "@dfinity/candid/lib/cjs/idl";
+import useAssetData from "../Common/useAssets";
 
 const DashboardNav = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, backendActor, principal, fetchReserveData } = useAuth();
+  const { totalMarketSize, totalSupplySize } = useAssetData();
+  const [userData, setUserData] = useState();
+  const [walletDetailTab, setWalletDetailTab] = useState([
+    {
+      id: 0,
+      title: "Net Worth",
+      count: "$0.00",
+    },
+    {
+      id: 1,
+      title: "Net APY",
+      count: "0.00 %",
+    },
+    {
+      id: 2,
+      title: "Health Factor",
+      count: "0.00 %",
+    },
+  ]);
+
+
+ 
+  const [walletDetailTabs, setWalletDetailTabs] = useState([
+    { id: 0, title: "Total Market Size", count: "0" },
+    { id: 1, title: "Total Supplies", count: "0" },
+    { id: 2, title: "Total Borrows", count: "0" },
+  ]);
+
+  useEffect(() => {
+    // Define an async function inside the useEffect
+    const fetchUserData = async () => {
+      if (backendActor) {
+        try {
+          const result = await getUserData(principal.toString());
+          console.log('get_user_data:', result);
+          setUserData(result);
+          updateWalletDetailTab(result);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        console.error('Backend actor initialization failed.');
+      }
+    };
+
+    // Call the async function
+    fetchUserData();
+  }, [principal, backendActor]);
+
+  const getUserData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_user_data(user);
+      console.log('get_user_data:', result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
+    }
+  };
+
+  const updateWalletDetailTab = (data) => {
+    if (!data || !data.Ok) return;
+
+    const { net_worth, net_apy, health_factor } = data.Ok;
+
+    const updatedTab = walletDetailTab.map((item) => {
+      switch (item.id) {
+        case 0:
+          return { ...item, count: `$${net_worth[0] }` };
+        case 1:
+          return { ...item, count: `${net_apy[0] }%` };
+        case 2:
+          return { ...item, count: `${health_factor[0]}%` };
+        default:
+          return item;
+      }
+    });
+
+    setWalletDetailTab(updatedTab);
+  };
+
+
+  const updateWalletDetailTabs = () => {
+    const updatedTabs = walletDetailTabs.map((item) => {
+      switch (item.id) {
+        case 0:
+          return { ...item, count: `${totalMarketSize}` };
+        case 1:
+          return { ...item, count: `${isNaN(totalSupplySize) ? '0' : totalSupplySize}` };
+        case 2:
+        default:
+          return item;
+      }
+    });
+
+    setWalletDetailTabs(updatedTabs);
+  };
+
+  useEffect(() => {
+    updateWalletDetailTabs();
+  }, [totalMarketSize]);
 
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
@@ -29,7 +136,7 @@ const DashboardNav = () => {
     state || TAB_CARD_DATA[0]
   );
   const dropdownRef = useRef(null);
-  
+
 
   const theme = useSelector((state) => state.theme.theme);
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
@@ -46,15 +153,15 @@ const DashboardNav = () => {
   const menuRef = useRef(null);
 
   useEffect(() => {
-      if (isMenuOpen) {
-          document.body.classList.add('overflow-hidden');
-      } else {
-          document.body.classList.remove('overflow-hidden');
-      }
+    if (isMenuOpen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
 
-      return () => {
-          document.body.classList.remove('overflow-hidden');
-      };
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
   }, [isMenuOpen]);
 
   const toggleDropdown = () => {
@@ -146,112 +253,58 @@ const DashboardNav = () => {
 
       <div className="w-full flex flex-wrap justify-start items-center gap-2 mb-8 lg:mb-2">
         <div className="flex">
-          {/* <div className="flex items-center gap-2">
-            <div className="rounded-full border overflow-hidden shrink-0">
-              <img
-                src={currentValueData ? currentValueData.image : ""}
-                alt={currentValueData ? currentValueData.title : ""}
-                className="w-[30px] h-[30px] md:w-8 md:h-8 shrink-0"
-              />
-            </div>
 
-            <h1 className="text-[#3739b4] font-semibold dark:text-darkText">
-              {currentValueData ? currentValueData.title : ""}
-            </h1>
-
-            <div className="relative" ref={dropdownRef}>
-              <span
-                className="block p-1 rounded-full bg-[#8CC0D770] text-[#3739b4] cursor-pointer dark:text-darkText"
-                onClick={toggleDropdown}
-              >
-                {!isDrop ? (
-                  <ChevronRight size={16} color={chevronColor} />
-                ) : (
-                  <ChevronDown size={16} color={chevronColor} />
-                )}
-              </span>
-              {isDrop && (
-                <div className="w-fit z-50 absolute overflow-hidden animate-fade-down animate-duration-500 top-full mt-3 bg-[#0C5974] text-white rounded-2xl">
-                  {TAB_CARD_DATA.map((data, index) => (
-                    <div
-                      key={index}
-                      className={`flex whitespace-nowrap hover:bg-[#2a6980] ${currentValueIndex === index ? "bg-[#347c96]" : ""
-                        } items-center text-white p-3 px-4 gap-3`}
-                      onClick={() => {
-                        setCurrentValueIndex(index);
-                        setIsDrop(false);
-                        document.removeEventListener(
-                          "mousedown",
-                          handleClickOutside
-                        );
-                        handleAssetSelect(index);
-                      }}
-                    >
-                      <div className="w-5 h-5 rounded-full border overflow-hidden">
-                        <img
-                          src={data.image}
-                          alt={data.title}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-
-                      <h1 className="text-xs">{data.title}</h1>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div> */}
           {/* Menu button for small screens */}
           <div className="relative">
+          {/* <button onClick={handleFetch}>Fetch Reserve Data</button> */}
             {/* Menu Items */}
             <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}>
-            <div className="flex justify-center items-center min-h-screen">
-  <div
-    className="relative text-[#2A1F9D] mt-5 font-bold border shadow-sm border-gray-400 dark:border-none dark:bg-darkOverlayBackground mx-2 my-1 bg-white px-3 py-7 rounded-lg w-11/12 max-w-md dark:text-darkText"
-    ref={menuRef}
-  >
-    <div className="absolute top-2 right-2  text-gray-500 hover:text-gray-700 w-6 h-6" onClick={() => setIsMenuOpen(false)}>
-      <X className="text-black dark:text-darkText w-6 h-6" />
-    </div>
+              <div className="flex justify-center items-center min-h-screen">
+                <div
+                  className="relative text-[#2A1F9D] mt-5 font-bold border shadow-sm border-gray-400 dark:border-none dark:bg-darkOverlayBackground mx-2 my-1 bg-white px-3 py-7 rounded-lg w-11/12 max-w-md dark:text-darkText"
+                  ref={menuRef}
+                >
+                  <div className="absolute top-2 right-2  text-gray-500 hover:text-gray-700 w-6 h-6" onClick={() => setIsMenuOpen(false)}>
+                    <X className="text-black dark:text-darkText w-6 h-6" />
+                  </div>
 
-    <div className="flex flex-wrap items-center gap-4 mt-2">
-      {(isDashboardSupplyOrMain ? WALLET_DETAIL_TAB : WALLET_DETAILS_TABS).map((data, index) => (
-        <div
-          key={index}
-          className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
-          style={{ minWidth: "220px", flex: "1 0 220px" }}
-        >
-          <button className="relative w-full text-left flex justify-between items-center">
-            <span>{data.title}</span>
-            <span className="font-bold">{data.count}</span>
-            <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-          </button>
-        </div>
-      ))}
-    </div>
+                  <div className="flex flex-wrap items-center gap-4 mt-2">
+                    {(isDashboardSupplyOrMain ? walletDetailTab : walletDetailTabs).map((data, index) => (
+                      <div
+                        key={index}
+                        className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+                        style={{ minWidth: "220px", flex: "1 0 220px" }}
+                      >
+                        <button className="relative w-full text-left flex justify-between items-center">
+                          <span>{data.title}</span>
+                          <span className="font-bold">{data.count}</span>
+                          <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
 
-    <div className="flex justify-end mt-10 md:mt-0">
-      <button
-        className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
-        onClick={handleOpenPopup}
-        style={{ minWidth: "220px" }}
-      >
-        Risk Details
-      </button>
-    </div>
-  </div>
+                  <div className="flex justify-end mt-10 md:mt-0">
+                    <button
+                      className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
+                      onClick={handleOpenPopup}
+                      style={{ minWidth: "220px" }}
+                    >
+                      Risk Details
+                    </button>
+                  </div>
+                </div>
 
 
-   </div>
+              </div>
             </div>
-        </div>
+          </div>
 
           {isAuthenticated && <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText mb-5">
             {pathname !== "/dashboard/transaction-history" &&
               (isDashboardSupplyOrMain
-                ? WALLET_DETAIL_TAB
-                : WALLET_DETAILS_TABS
+                ? walletDetailTab
+                : walletDetailTabs
               ).map((data, index) => (
                 <div key={index} className="relative group">
                   <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80">
@@ -272,7 +325,7 @@ const DashboardNav = () => {
               </button>
             )}
           </div>}
-          {isPopupOpen && <RiskPopup onClose={handleClosePopup} />}
+          {isPopupOpen && <RiskPopup onClose={handleClosePopup} userData={userData}/>}
 
         </div>
         <div className="ml-auto hidden lg:flex">

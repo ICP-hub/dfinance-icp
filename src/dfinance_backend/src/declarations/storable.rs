@@ -4,7 +4,7 @@ use ic_stable_structures::storable::{Blob, Bound, Storable};
 use std::borrow::Cow;
 
 // The Candid struct is a wrapper around the data that needs to be stored in the canister. It proivdes the implementation of the Storable trait.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Candid<T>(pub T)
 where
     T: CandidType + for<'de> Deserialize<'de>;

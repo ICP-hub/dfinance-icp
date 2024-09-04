@@ -19,6 +19,7 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
 
   const {
     createLedgerActor,
+    backendActor
   } = useAuth();
 
   const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
@@ -43,8 +44,12 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
     console.log("isApproved state after approval:", isApproved);
   };
 
-  const handleSupplyETH = () => {
+  const handleSupplyETH = async () => {
     console.log("Supply function called for", asset, "ETH:", amount);
+    // const supply = await 
+    console.log("Backend actor" ,backendActor)
+    const sup = await backendActor.deposit("ckbtc", 100 , "user", 0);
+    console.log("Supply", sup);
     setIsPaymentDone(true); // Show payment done popup after successful transaction
     setIsVisible(false); // Close SupplyPopup
 
@@ -178,7 +183,7 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
 
             <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
               <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
-                <span>Add aToken to wallet to track your balance.</span>
+                <span>Add dToken to wallet to track your balance.</span>
               </div>
               <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
                 <Wallet />

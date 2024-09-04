@@ -3,10 +3,8 @@ use crate::{
     declarations::{assets::ReserveData, storable::Candid},
     protocol::configuration::reserve_configuration::ReserveConfiguration,
 };
-// use candid::{Nat, Principal};
+
 use ic_cdk::update;
-// use crate::declarations::transfer::*;
-// use ic_cdk::call;
 use crate::get_all_assets;
 #[update]
 pub fn initialize_reserve(){
@@ -36,8 +34,6 @@ pub fn initialize_reserve(){
         debt_token_canister: Some("b77ix-eeaaa-aaaaa-qaada-cai".to_string()),
         total_supply: Some(0.0),
         can_be_collateral: Some(true),
-        // current_stable_borrow_rate: 8,
-        // current_variable_borrow_rate: 4,
         accrued_to_treasury: 0,
         liquidity_index: 1,
         id: 1,

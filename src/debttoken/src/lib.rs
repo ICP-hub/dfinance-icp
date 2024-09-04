@@ -417,25 +417,7 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Pri
                 owner: from_principal,
                 subaccount: None,
             };
-    // let caller_principal = ic_cdk::api::caller();
-    // let user_principal = Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe".to_string())
-    // .map_err(|e| TransferError::GenericError {
-    //     message: format!("Invalid canister id: {}", e),
-    //     error_code: Nat::from(2u32),
-    // })?;
-   
-    // let from_account = if arg.to.owner == caller_principal {
-    //     Account {
-    //         owner: user_principal,
-    //         subaccount: arg.from_subaccount,
-    //     }
-    // } else {
-       
-    //     Account {
-    //         owner: caller_principal,
-    //         subaccount: arg.from_subaccount,
-    //     }
-    // };
+    
 
 
     execute_transfer(
@@ -459,52 +441,6 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Pri
 }
 
 
-
-// #[update]
-// #[candid_method(update)]
-// async fn outer_transfer(
-//     token_name: String,
-//     from_principal: Principal,
-//     to_principal: Principal,
-//     amount: Nat,
-//     lock: bool,
-// ) -> Result<Nat, TransferError> {
-//     // let user_principal = Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe".to_string())
-//     //     .map_err(|e| TransferError::GenericError {
-//     //         message: format!("Invalid principal: {}", e),
-//     //         error_code: Nat::from(2u32),
-//     //     })?;
-//    let to_account = Account {
-//             owner: to_principal,
-//             subaccount: None,
-//         };
-//     let from_account = Account {
-//         owner: from_principal,
-//         subaccount: None,
-//     };
-
-//     let transfer_arg = TransferArg {
-//         to: to_account,
-//         from_subaccount: None,
-//         fee: None,  
-//         amount,
-//         memo: None,
-//         created_at_time: None,
-//     };
-
-//     match token_name.as_str() {
-//         "dckbtc" => {
-//             icrc1_transfer(transfer_arg, lock, from_account).await
-//         },
-//         "dcketh" => {
-//             icrc1_transfer(transfer_arg, lock, from_account).await
-//         },
-//         _ => Err(TransferError::GenericError {
-//             message: "Invalid token name.".to_string(),
-//             error_code: Nat::from(4u32),
-//         }),
-//     }
-// }
 
 export_candid!();
 

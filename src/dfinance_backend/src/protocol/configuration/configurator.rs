@@ -1,8 +1,5 @@
 use crate::api::state_handler::mutate_state;
-// use crate::api::state_handler::read_state;
 use crate::declarations::storable::Candid;
-// use candid::Principal;
-// use ic_cdk::api::call::call;
 use ic_cdk_macros::*;
 
 #[update]
@@ -14,10 +11,7 @@ fn set_reserve_borrowing(asset: String, enabled: bool) -> Result<(), String> {
             .map(|reserve| reserve.0.clone())
             .ok_or_else(|| format!("Reserve not found for asset: {}", asset))?;
 
-        // if !enabled && reserve_data.configuration.get_stable_borrowing_enabled() {
-        //     return Err("Stable rate borrowing is enabled".to_string());
-        // }
-
+        
         reserve_data.configuration.set_borrowing_enabled(enabled);
         state.asset_index.insert(asset, Candid(reserve_data));
 
@@ -78,28 +72,6 @@ fn set_reserve_pause(asset: String, paused: bool) -> Result<(), String> {
         Ok(())
     })
 }
-
-// #[update]
-// fn set_reserve_factor(asset: String, new_reserve_factor: u128) -> Result<(), String> {
-//     if new_reserve_factor > 10000 {
-//         return Err("Invalid reserve factor".to_string());
-//     }
-
-//     mutate_state(|state| {
-//         let mut reserve_data = state
-//             .asset_index
-//             .get(&asset)
-//             .map(|reserve| reserve.0.clone())
-//             .ok_or_else(|| format!("Reserve not found for asset: {}", asset))?;
-
-//         let old_reserve_factor = reserve_data.configuration.get_reserve_factor();
-//         reserve_data.configuration.set_reserve_factor(new_reserve_factor);
-//         state.asset_index.insert(asset, Candid(reserve_data));
-
-//         Ok(())
-//     })
-// }
-
 
 
 #[update]
@@ -229,24 +201,7 @@ fn check_no_suppliers(asset: &String) -> Result<(), String> {
 //     Ok(())
 // }
 
-// async fn get_total_debt(asset: String) -> Result<u128, String> {
-//     let reserve_data = read_state(|state| {
-//         state.asset_index.get(&asset)
-//             .map(|reserve| reserve.0.clone())
-//             .ok_or_else(|| format!("Reserve not found for asset: {}", asset))
-//     })?;
 
-//     let stable_debt_token_address = reserve_data.stable_debt_token_address;
-//     let variable_debt_token_address = reserve_data.variable_debt_token_address;
-
-//     let (stable_total_supply,): (u128,) = call(Principal::from(stable_debt_token_address), "icrc1_total_supply", ()).await
-//         .map_err(|e| format!("Failed to call total_supply on stable debt token: {:?}", e))?;
-
-//     let (variable_total_supply,): (u128,) = call(Principal::from(variable_debt_token_address), "icrc1_total_supply", ()).await
-//         .map_err(|e| format!("Failed to call total_supply on variable debt token: {:?}", e))?;
-
-//     Ok(stable_total_supply + variable_total_supply)
-// }
 
 
 

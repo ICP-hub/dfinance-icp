@@ -1,5 +1,4 @@
-//you can create implementation for any struct or enum in this folder
-//you can also create new files in this folder
+
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 
 use crate::constants::memory::{ASSET_INDEX_MEMORY_ID, USER_PROFILE_MEMORY_ID, RESERVES_MEMORY_ID};

@@ -1,4 +1,4 @@
-use crate::api::deposit::asset_transfer_from;
+use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
 use crate::constants::asset_address::{
     BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
@@ -25,8 +25,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     let debttoken_canister_id = Principal::from_text(DEBTTOKEN_CANISTER)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
-    let user_principal = Principal::from_text(params.on_behalf_of)
-        .map_err(|_| "Invalid user canister ID".to_string())?;
+    // let user_principal = Principal::from_text(params.on_behalf_of)
+    //     .map_err(|_| "Invalid user canister ID".to_string())?;
+    let user_principal = ic_cdk::caller();
+    
 
     let platform_principal = Principal::from_text(BACKEND_CANISTER)
         .map_err(|_| "Invalid platform canister ID".to_string())?;

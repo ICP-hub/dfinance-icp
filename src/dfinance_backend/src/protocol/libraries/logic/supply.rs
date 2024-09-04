@@ -8,7 +8,7 @@ use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::{
-    api::deposit::asset_transfer_from,
+    api::functions::asset_transfer_from,
     constants::asset_address::{BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DTOKEN_CANISTER},
 };
 
@@ -31,8 +31,9 @@ impl SupplyLogic {
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
 
-        let user_principal = Principal::from_text(params.on_behalf_of)
-            .map_err(|_| "Invalid user canister ID".to_string())?;
+        // let user_principal = Principal::from_text(params.on_behalf_of)
+        //     .map_err(|_| "Invalid user canister ID".to_string())?;
+        let user_principal = ic_cdk::caller();
 
         let platform_principal = Principal::from_text(BACKEND_CANISTER)
             .map_err(|_| "Invalid platform canister ID".to_string())?;
@@ -120,7 +121,7 @@ impl SupplyLogic {
         let (new_result,): (TransferFromResult,) = call(
             dtoken_canister_principal,
             "icrc1_transfer",
-            (dtoken_args, false),
+            (dtoken_args, false, Some(platform_principal)),
         )
         .await
         .map_err(|e| e.1)?;
@@ -239,7 +240,7 @@ impl SupplyLogic {
         let (new_result,): (TransferFromResult,) = call(
             dtoken_canister_principal,
             "icrc1_transfer",
-            (dtoken_args, false),
+            (dtoken_args, false, Some(user_principal)),
         )
         .await
         .map_err(|e| e.1)?;

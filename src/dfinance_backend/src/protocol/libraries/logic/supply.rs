@@ -9,7 +9,9 @@ use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::{
     api::functions::asset_transfer_from,
-    constants::asset_address::{BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DTOKEN_CANISTER},
+    constants::asset_address::{
+        BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DTOKEN_CANISTER,
+    },
 };
 
 impl SupplyLogic {
@@ -20,19 +22,9 @@ impl SupplyLogic {
     pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
         ic_cdk::println!("Starting execute_supply with params: {:?}", params);
 
-        // Fetchs the canister ids, principal and amount
-        // let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
-        //     .map_err(|_| "Invalid ledger canister ID".to_string())?;
-        let ledger_canister_id = mutate_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&params.asset.to_string().clone())
-                .map(|principal| principal.clone())  
-                .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
-        })?;
+        let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
+            .map_err(|_| "Invalid ledger canister ID".to_string())?;
 
-        // let user_principal = Principal::from_text(params.on_behalf_of)
-        //     .map_err(|_| "Invalid user canister ID".to_string())?;
         let user_principal = ic_cdk::caller();
 
         let platform_principal = Principal::from_text(BACKEND_CANISTER)
@@ -72,11 +64,11 @@ impl SupplyLogic {
         // Updates the liquidity and borrow index
         reserve::update_state(&mut reserve_data, &mut reserve_cache);
         ic_cdk::println!("Reserve state updated successfully");
-        // let asset_clone = params.asset.clone();
+
         // Validates supply using the reserve_data
         ValidationLogic::validate_supply(&reserve_cache, &reserve_data, params.amount).await;
         ic_cdk::println!("Supply validated successfully");
-        
+
         // Updates inetrest rates with the assets and the amount
         reserve::update_interest_rates(
             &mut reserve_data,
@@ -87,7 +79,7 @@ impl SupplyLogic {
         )
         .await;
         ic_cdk::println!("Interest rates updated successfully");
-        
+
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
@@ -149,7 +141,6 @@ impl SupplyLogic {
             let user_principal = Principal::from_text(on_behalf_of)
                 .map_err(|_| "Invalid user canister ID".to_string())?;
             let liquidator_principal = ic_cdk::caller();
-            // let liquidator_principal = Principal::from_text("37nia-rv3ep-e4hzo-5vtfx-3zrxb-kwfhi-m27sj-wsvci-d2qyt-3dbs3-mqe".to_string()).map_err(|_| "Invalid liquidator id".to_string())?;
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();
@@ -224,7 +215,6 @@ impl SupplyLogic {
             TransferFromResult::Err(err) => Err(format!("{:?}", err)),
         };
 
-        
         let dtoken_args = TransferArgs {
             to: TransferAccount {
                 owner: platform_principal,
@@ -245,7 +235,9 @@ impl SupplyLogic {
         .await
         .map_err(|e| e.1)?;
         ic_cdk::println!("Dtoken call result : {:?}", new_result);
-        ic_cdk::println!("Dtoken Asset transfer from user to backend canister executed successfully");
+        ic_cdk::println!(
+            "Dtoken Asset transfer from user to backend canister executed successfully"
+        );
 
         // ---------- Update reserve data ----------
 

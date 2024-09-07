@@ -7,10 +7,10 @@ ckbtc_canister="bkyz2-fmaaa-aaaaa-qaaaq-cai"
 backend_canister="be2us-64aaa-aaaaa-qaabq-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
-debt_canister="bw4dl-smaaa-aaaaa-qaacq-cai"
+debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
 reserve_data_method="get_reserve_data"
 # initialize_reserve_method="initialize_reserve"
-dtoken_canister="b77ix-eeaaa-aaaaa-qaada-cai"
+dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 # Get the principal for the user1 identity (spender)
 dfx identity use default
 user_principal=$(dfx identity get-principal)
@@ -110,7 +110,7 @@ echo "--------------------------------------"
 collateral=true
 withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckbtc\", $amount:nat, opt \"${ON_BEHALF_OF}\", $collateral:bool)")
 echo "Withdraw Execution Result: $withdraw"
-dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
+dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 # Check balances after withdraw
 echo "Checking balances after getting reward..."
 user_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")

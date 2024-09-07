@@ -3,7 +3,7 @@
 set -e
 
 # Set variables
-canister_id="c5kvi-uuaaa-aaaaa-qaaia-cai" 
+canister_id="a4tbr-q4aaa-aaaaa-qaafq-cai" 
 transfer_method="icrc1_transfer"
 
 # Get the principal for the default identity (spender)

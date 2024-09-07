@@ -5,8 +5,8 @@ set -e
 # Set variables
 ckbtc_canister="bkyz2-fmaaa-aaaaa-qaaaq-cai"
 backend_canister="be2us-64aaa-aaaaa-qaabq-cai"
-debt_canister="bw4dl-smaaa-aaaaa-qaacq-cai"
-dtoken_canister="b77ix-eeaaa-aaaaa-qaada-cai"
+debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
+dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 reserve_data_method="get_reserve_data"
 
 # Use the default identity

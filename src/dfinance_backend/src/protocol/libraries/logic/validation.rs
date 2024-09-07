@@ -33,7 +33,7 @@ impl ValidationLogic {
         // Supply cap limit 10 million
         let supply_cap = Nat::from(10000000u64);
 
-        let dtoken_canister_id = "c5kvi-uuaaa-aaaaa-qaaia-cai".to_string();
+        let dtoken_canister_id = "a4tbr-q4aaa-aaaaa-qaafq-cai".to_string();
         let total_supply: CallResult<(Nat,)> = call(
             Principal::from_text(dtoken_canister_id).expect("Invalid principal"),
             "icrc1_total_supply",

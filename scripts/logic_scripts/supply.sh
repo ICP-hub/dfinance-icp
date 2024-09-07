@@ -6,7 +6,7 @@ set -e
 # Set variables
 ckbtc_canister="bkyz2-fmaaa-aaaaa-qaaaq-cai"  
 backend_canister="be2us-64aaa-aaaaa-qaabq-cai"  
-dtoken_canister="b77ix-eeaaa-aaaaa-qaada-cai"
+dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 
@@ -49,20 +49,20 @@ echo "--------------------------------------"
 # echo "user data: $user_data"
 
 # Approve the transfer
-# approve_amount=10000000  # Set the amount you want to approve
-# echo "Approving transfer of $approve_amount from user1 to backend_canister..."
-# allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
-#     from_subaccount=null;
-#     spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
-#     amount=$approve_amount:nat;
-#     expected_allowance=null;
-#     expires_at=null;
-#     fee=null;
-#     memo=null;
-#     created_at_time=null
-# })")
-# echo "Allowance Set: $allow"
-# echo "--------------------------------------"
+approve_amount=10000000  # Set the amount you want to approve
+echo "Approving transfer of $approve_amount from user1 to backend_canister..."
+allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
+    from_subaccount=null;
+    spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
+    amount=$approve_amount:nat;
+    expected_allowance=null;
+    expires_at=null;
+    fee=null;
+    memo=null;
+    created_at_time=null
+})")
+echo "Allowance Set: $allow"
+echo "--------------------------------------"
 
 # Call the deposit function on the backend canister
 dfx identity use default

@@ -11,7 +11,7 @@ echo "Token Name: $TOKEN_NAME"
 export TOKEN_SYMBOL="dckBTC"
 
 # Set default principal (used for minting account)
-export BACKEND="avqkn-guaaa-aaaaa-qaaea-cai"
+export BACKEND="be2us-64aaa-aaaaa-qaabq-cai"
 
 # Set pre-minted tokens and transfer fee (initial circulation is set to 0)
 export PRE_MINTED_TOKENS=0

@@ -2,12 +2,14 @@
 
 set -e
 
-# Set variables
-ckbtc_canister="bkyz2-fmaaa-aaaaa-qaaaq-cai"  
-backend_canister="b77ix-eeaaa-aaaaa-qaada-cai" 
-debt_canister="asrmz-lmaaa-aaaaa-qaaeq-cai"
-approve_method="icrc2_approve"
+# Load environment variables from .env
+source ../../.env
 
+# Set variables
+ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
+debt_canister=$CANISTER_ID_DEBTTOKEN
+approve_method="icrc2_approve"
 borrow_method="borrow"
 reserve_data_method="get_reserve_data"
 

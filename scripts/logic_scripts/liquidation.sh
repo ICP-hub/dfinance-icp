@@ -2,15 +2,17 @@
 
 set -e
 
+source ../../.env
+
 # Set variables
-ckbtc_canister="bkyz2-fmaaa-aaaaa-qaaaq-cai"
-backend_canister="b77ix-eeaaa-aaaaa-qaada-cai"
+ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
+debt_canister=$CANISTER_ID_DEBTTOKEN
+dtoken_canister=$CANISTER_ID_DTOKEN
 approve_method="icrc2_approve"
 deposit_method="supply"
-debt_canister="asrmz-lmaaa-aaaaa-qaaeq-cai"
 reserve_data_method="get_reserve_data"
-# initialize_reserve_method="initialize_reserve"
-dtoken_canister="avqkn-guaaa-aaaaa-qaaea-cai"
+
 # Get the principal for the user1 identity (spender)
 dfx identity use default
 user_principal=$(dfx identity get-principal)
@@ -38,10 +40,6 @@ user1_debt_token_balance=$(dfx canister call $debt_canister icrc1_balance_of "(r
 echo "User1 Debt Token Balance: $user1_debt_token_balance"
 echo "--------------------------------------"
 
-# Initialize reserve in the backend canister
-# echo "Initializing reserve for ckbtc in backend canister..."
-# dfx canister call $backend_canister $initialize_reserve_method
-
 # Echo the reserve data
 echo "Fetching reserve data..."
 asset="ckBTC"
@@ -53,17 +51,11 @@ echo "Fetching user data..."
 user_data=$(../integration_scripts/user_data.sh)
 echo "user data: $user_data"
 
-
-
 # Call the deposit function on the backend canister
 dfx identity use default
 
-
-
-
 # Get the principal of the default identity
 ON_BEHALF_OF=$(dfx identity get-principal)
-
 
 dfx identity use liquidator
 # Approve the transfer
@@ -110,7 +102,7 @@ echo "--------------------------------------"
 collateral=true
 withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckBTC\", $amount:nat, opt \"${ON_BEHALF_OF}\", $collateral:bool)")
 echo "Withdraw Execution Result: $withdraw"
-dtoken_canister="avqkn-guaaa-aaaaa-qaaea-cai"
+
 # Check balances after withdraw
 echo "Checking balances after getting reward..."
 user_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")

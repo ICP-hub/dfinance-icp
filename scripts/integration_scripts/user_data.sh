@@ -1,7 +1,10 @@
 set -e
 
-user_principal="gsyb3-neiyj-ybncb-5xjnt-nh2kf-u3h3b-bvtqm-4uyzh-uqkvk-yrvqd-oae"
-backend_canister="b77ix-eeaaa-aaaaa-qaada-cai"
+source ../../.env
+
+dfx identity use default
+user_principal=$(dfx identity get-principal)
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND
 get_user_method="get_user_data"
 user=$(dfx canister call $backend_canister check_user "(\"$user_principal\")")
 user_data=$(dfx canister call $backend_canister $get_user_method "(\"$user_principal\")")

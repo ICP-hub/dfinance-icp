@@ -2,9 +2,11 @@
 
 set -e
 
+source ../../.env 
+
 # Set variables
-ckbtc_canister="br5f7-7uaaa-aaaaa-qaaca-cai"  
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai" 
+ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND
 approve_method="icrc2_approve"
 transfer_method="icrc1_transfer"
 reserve_data_method="get_asset_data"
@@ -74,12 +76,6 @@ backend_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(rec
 echo "User1 Balance After Transfer: $user1_balance_after"
 echo "Backend Canister Balance After Transfer: $backend_balance_after"
 echo "--------------------------------------"
-
-# Fetch and echo the updated reserve data
-# echo "Fetching updated reserve data..."
-# updated_reserve_data=$(dfx canister call $backend_canister $reserve_data_method)
-# echo "Updated Reserve Data: $updated_reserve_data"
-# echo "--------------------------------------"
 
 # Switch back to the default identity at the end
 dfx identity use default

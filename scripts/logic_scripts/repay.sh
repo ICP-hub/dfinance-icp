@@ -2,11 +2,13 @@
 
 set -e
 
+source ../../.env
+
 # Set variables
-ckbtc_canister="bkyz2-fmaaa-aaaaa-qaaaq-cai"
-backend_canister="b77ix-eeaaa-aaaaa-qaada-cai"
-debt_canister="asrmz-lmaaa-aaaaa-qaaeq-cai"
-dtoken_canister="avqkn-guaaa-aaaaa-qaaea-cai"
+ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
+debt_canister=$CANISTER_ID_DEBTTOKEN
+dtoken_canister=$CANISTER_ID_DTOKEN
 reserve_data_method="get_reserve_data"
 
 # Use the default identity
@@ -56,3 +58,7 @@ echo "Fetching reserve data after repay..."
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"ckBTC\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
+
+echo "Fetching user data..."
+user_data=$(../integration_scripts/user_data.sh)
+echo "user data: $user_data"

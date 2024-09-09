@@ -6,7 +6,7 @@ set -e
 check_balance() {
     local principal=$1
     local label=$2
-    local canister_id="ckbtc_ledger"  # Replace
+    local canister_id="ckbtc_ledger"
     local balance_method="icrc1_balance_of"
 
     # Check the balance

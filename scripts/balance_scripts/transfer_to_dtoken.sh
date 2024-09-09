@@ -2,8 +2,10 @@
 
 set -e
 
+source ../../.env
+
 # Set variables
-canister_id="a4tbr-q4aaa-aaaaa-qaafq-cai" 
+canister_id=$CANISTER_ID_DTOKEN
 transfer_method="icrc1_transfer"
 
 # Get the principal for the default identity (spender)

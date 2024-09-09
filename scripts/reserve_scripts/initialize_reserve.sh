@@ -1,13 +1,9 @@
-# backend_canister_principal=$(dfx canister id $backend_canister)
-# echo "Backend Canister Principal (Receiver): $backend_canister_principal"
-
-
 BACKEND_CANISTER_ID="dfinance_backend"
 
 # List of ledger tokens to initialize in the reserve list
 LEDGER_TOKENS='(vec {
     record { "ckBTC"; principal "bkyz2-fmaaa-aaaaa-qaaaq-cai" };
-    record { "ckETH"; principal "a3shf-5eaaa-aaaaa-qaafa-cai" };
+    record { "ckETH"; principal "bw4dl-smaaa-aaaaa-qaacq-cai" };
 })'
 
 # Call the initialize_reserve_list function on the backend canister

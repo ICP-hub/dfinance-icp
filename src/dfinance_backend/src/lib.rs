@@ -20,7 +20,6 @@ mod utils;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
-// use crate::implementations::reserve::initialize_reserve;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;

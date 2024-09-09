@@ -6,7 +6,7 @@ set -e
 
 # export MINTER=$(dfx identity get-principal)
 # echo $MINTER
-export BACKEND="be2us-64aaa-aaaaa-qaabq-cai"
+export BACKEND="b77ix-eeaaa-aaaaa-qaada-cai"
 
 export TOKEN_NAME="debtckBTC"
 echo "token_name : $TOKEN_NAME"

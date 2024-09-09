@@ -4,8 +4,8 @@ set -e
 
 # Set variables
 ckbtc_canister="bkyz2-fmaaa-aaaaa-qaaaq-cai"  
-backend_canister="be2us-64aaa-aaaaa-qaabq-cai" 
-debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
+backend_canister="b77ix-eeaaa-aaaaa-qaada-cai" 
+debt_canister="asrmz-lmaaa-aaaaa-qaaeq-cai"
 approve_method="icrc2_approve"
 
 borrow_method="borrow"
@@ -32,7 +32,7 @@ echo "--------------------------------------"
 
 
 echo "Fetching reserve data..."
-asset="ckbtc"
+asset="ckBTC"
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
@@ -59,7 +59,7 @@ echo "user data: $user_data"
 
 # Call the borrow function on the backend canister
 borrow_amount=3000  
-currency="ckbtc" 
+currency="ckBTC" 
 interest_rate=0  
 
 echo "Borrowing $borrow_amount from backend_canister..."

@@ -2,20 +2,22 @@
 
 set -e
 
+source ../../.env
+
 # Set variables
-ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"
+ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
+debt_canister=$CANISTER_ID_DEBTTOKEN
+dtoken_canister=$CANISTER_ID_DTOKEN
 approve_method="icrc2_approve"
 deposit_method="supply"
-debt_canister="cuj6u-c4aaa-aaaaa-qaajq-cai"
 reserve_data_method="get_reserve_data"
-# initialize_reserve_method="initialize_reserve"
-dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
+
 # Get the principal for the user1 identity (spender)
 dfx identity use default
 user_principal=$(dfx identity get-principal)
 echo "User1 Principal (Debt User): $user_principal"
-# dfx identity new liquidator
+dfx identity new liquidator || true
 dfx identity use liquidator
 liquidator_principal=$(dfx identity get-principal)
 echo "Liquidator Principal (Liquidator): $liquidator_principal"
@@ -38,13 +40,9 @@ user1_debt_token_balance=$(dfx canister call $debt_canister icrc1_balance_of "(r
 echo "User1 Debt Token Balance: $user1_debt_token_balance"
 echo "--------------------------------------"
 
-# Initialize reserve in the backend canister
-# echo "Initializing reserve for ckbtc in backend canister..."
-# dfx canister call $backend_canister $initialize_reserve_method
-
 # Echo the reserve data
 echo "Fetching reserve data..."
-asset="ckbtc"
+asset="ckBTC"
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
@@ -53,37 +51,31 @@ echo "Fetching user data..."
 user_data=$(../integration_scripts/user_data.sh)
 echo "user data: $user_data"
 
-
-
 # Call the deposit function on the backend canister
 dfx identity use default
-
-
-
 
 # Get the principal of the default identity
 ON_BEHALF_OF=$(dfx identity get-principal)
 
-
 dfx identity use liquidator
 # Approve the transfer
-# approve_amount=10000000 # Set the amount you want to approve
-# echo "Approving transfer of $approve_amount from liquidator to backend_canister..."
-# allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
-#     from_subaccount=null;
-#     spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
-#     amount=$approve_amount:nat;
-#     expected_allowance=null;
-#     expires_at=null;
-#     fee=null;
-#     memo=null;
-#     created_at_time=null
-# })")
-# echo "Allowance Set: $allow"
-# echo "--------------------------------------"
+approve_amount=10000000 # Set the amount you want to approve
+echo "Approving transfer of $approve_amount from liquidator to backend_canister..."
+allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
+    from_subaccount=null;
+    spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
+    amount=$approve_amount:nat;
+    expected_allowance=null;
+    expires_at=null;
+    fee=null;
+    memo=null;
+    created_at_time=null
+})")
+echo "Allowance Set: $allow"
+echo "--------------------------------------"
 amount=1000
 # call the repay function
-repay=$(dfx canister call dfinance_backend repay "(\"ckbtc\", $amount:nat, opt \"${ON_BEHALF_OF}\")")
+repay=$(dfx canister call dfinance_backend repay "(\"ckBTC\", $amount:nat, opt \"${ON_BEHALF_OF}\")")
 
 echo "Repay Execution Result: $repay"
 
@@ -108,9 +100,9 @@ echo "--------------------------------------"
 
 # call the withdraw function
 collateral=true
-withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckbtc\", $amount:nat, opt \"${ON_BEHALF_OF}\", $collateral:bool)")
+withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckBTC\", $amount:nat, opt \"${ON_BEHALF_OF}\", $collateral:bool)")
 echo "Withdraw Execution Result: $withdraw"
-dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
+
 # Check balances after withdraw
 echo "Checking balances after getting reward..."
 user_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user_principal}\"; subaccount=null})")

@@ -1,7 +1,9 @@
 #!/bin/bash
 
+source ../../.env
+
 # Set the canister ID for the backend
-BACKEND_CANISTER_ID="avqkn-guaaa-aaaaa-qaaea-cai"
+BACKEND_CANISTER_ID=$CANISTER_ID_DFINANCE_BACKEND
 
 # Function to call a canister method
 call_canister_method() {

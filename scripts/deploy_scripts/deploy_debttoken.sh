@@ -3,10 +3,11 @@
 set -e
 
 # dfx identity use minter
+source ../../.env
 
 # export MINTER=$(dfx identity get-principal)
 # echo $MINTER
-export BACKEND="avqkn-guaaa-aaaaa-qaaea-cai"
+export BACKEND=CANISTER_ID_DFINANCE_BACKEND
 
 export TOKEN_NAME="debtckBTC"
 echo "token_name : $TOKEN_NAME"

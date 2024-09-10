@@ -2,6 +2,7 @@
 
 set -e
 
+
 output1=$(./deploy_ckbtc.sh)
 echo "ckbtc ledger: $output"
 

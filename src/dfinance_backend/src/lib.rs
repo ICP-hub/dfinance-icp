@@ -8,7 +8,7 @@ use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 mod api;
 mod constants;
-mod declarations;
+pub mod declarations;
 mod dynamic_canister;
 mod guards;
 mod implementations;

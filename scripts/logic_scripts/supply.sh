@@ -69,7 +69,7 @@ dfx identity use default
 
 # Get the principal of the default identity
 # ON_BEHALF_OF=$(dfx identity get-principal)
-deposit_amount=5000
+deposit_amount=1000
 currency="ckbtc"  
 referral_code=0  
 is_collateral=true
@@ -84,7 +84,6 @@ echo "Checking balances after supply..."
 user1_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
 backend_balance_after=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
 user1_dtoken=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
-# backend_dtoken=$(dfx canister call $dtoken_canister icrc1_balance_of "(record {owner=principal\"${backend_canister_principal}\"; subaccount=null})")
 echo "User1 Balance After Deposit: $user1_balance_after"
 echo "Backend Canister Balance After Deposit: $backend_balance_after"
 echo "User1 Dtoken Balance After Deposit: $user1_dtoken"

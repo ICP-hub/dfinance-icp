@@ -127,13 +127,13 @@ export const DASHBOARD_TOP_NAV_LINK = [
     icon: "",
     alwaysPresent: true
   },
-  {
-    id: 2,
-    title: "Stake",
-    route: "/stake",
-    icon: "",
-    testnet: false
-  },
+  // {
+  //   id: 2,
+  //   title: "Stake",
+  //   route: "/stake",
+  //   icon: "",
+  //   testnet: false
+  // },
   {
     id: 3,
     title: "Faq",

@@ -11,12 +11,12 @@ import { AuthProvider } from "./utils/useAuthClient"
 // init
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider >
-      <Provider store={store}>
+    <Provider store={store}>
+      <AuthProvider >
         <BrowserRouter>
-          <App/>
+          <App />
         </BrowserRouter>
-      </Provider>
-    </AuthProvider>
+      </AuthProvider>
+    </Provider>
   </React.StrictMode>
 )

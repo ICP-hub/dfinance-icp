@@ -74,7 +74,7 @@ const DashboardNav = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
-      console.log('get_user_data:', result);
+      console.log('get_user_data in dashboardnav:', result);
       return result;
     } catch (error) {
       console.error('Error fetching user data:', error);

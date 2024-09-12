@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useEffect } from "react";
 import { X } from 'lucide-react';
+import CircularProgress from "../../Common/CircularProgressbar";
 
 const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, supplyPercentage}) => {
   const [collateral, setCollateral] = useState(false);
@@ -72,9 +73,9 @@ const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
     <div className="w-full lg:w-10/12 ">
      
           <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7">
-            <div className="w-full md:w-2/12">
+            <div className="w-full md:w-2/12 flex justify-center align-items-center">
           
-                <CircleProgess progessValue={75} />
+            <CircularProgress  progessValue={supplyPercentage} />
               
             </div>
             <div className="w-full lg:w-9/12 flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs md:text-sm lg:text-base mt-3 lg:mt-0 sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden md:gap-10 sxs3:gap-4">

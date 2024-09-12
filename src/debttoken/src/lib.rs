@@ -405,41 +405,21 @@ async fn execute_transfer(
 
 #[update]
 #[candid_method(update)]
-async fn icrc1_transfer(arg: TransferArg, lock: bool) -> Result<Nat, TransferError> {
+async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {
     if lock {
         return Err(TransferError::GenericError {
             message: "Transfers are currently locked.".to_string(),
             error_code: Nat::from(1u32),
         });
     }
-    let caller_principal = Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai".to_string())
-    .map_err(|e| TransferError::GenericError {
-        message: format!("Invalid user principal: {}", e),
-        error_code: Nat::from(2u32),
-    })?;
-    let user_principal = Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe".to_string())
-    .map_err(|e| TransferError::GenericError {
-        message: format!("Invalid user principal: {}", e),
-        error_code: Nat::from(2u32),
-    })?;
-   
-    let from_account = if arg.to.owner != caller_principal {
-        Account {
-            owner: caller_principal,
-            subaccount: arg.from_subaccount,
-        }
-    } else {
-       
-        Account {
-            owner: user_principal,
-            subaccount: arg.from_subaccount,
-        }
-    };
+    let from_principal = from_principal.unwrap_or_else(ic_cdk::api::caller);
+    let from_account = Account {
+                owner: from_principal,
+                subaccount: None,
+            };
+    
 
-    // let from_account = Account {
-    //     owner: ic_cdk::api::caller(),
-    //     subaccount: arg.from_subaccount,
-    // };
+
     execute_transfer(
         from_account,
         arg.to,
@@ -459,6 +439,8 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool) -> Result<Nat, TransferErr
         err
     })
 }
+
+
 
 export_candid!();
 

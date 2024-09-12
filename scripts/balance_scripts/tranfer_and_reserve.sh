@@ -3,8 +3,8 @@
 set -e
 
 # Set variables
-ckbtc_canister="br5f7-7uaaa-aaaaa-qaaca-cai"  # Replace with your actual canister ID if different
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"  # Replace with your actual backend canister ID
+ckbtc_canister="br5f7-7uaaa-aaaaa-qaaca-cai"  
+backend_canister="avqkn-guaaa-aaaaa-qaaea-cai" 
 approve_method="icrc2_approve"
 transfer_method="icrc1_transfer"
 reserve_data_method="get_asset_data"

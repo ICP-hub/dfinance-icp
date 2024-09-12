@@ -6,7 +6,7 @@
 
 
 // // use pool::Pool;
-// // use initializablea_token::InitializableAToken;
+// // use initializabled_token::InitializableDToken;
 // // use initializable_debt_token::InitializableDebtToken;
 
 
@@ -16,14 +16,14 @@
 // #[derive(CandidType, Serialize, Deserialize, Debug)]
 // pub struct ReserveInitialized {
 //     asset: Principal,
-//     a_token: Principal,
+//     d_token: Principal,
 //     stable_debt_token: Principal,
 //     variable_debt_token: Principal,
 //     interest_rate_strategy_address: Principal,
 // }
 
 // #[derive(CandidType, Serialize, Deserialize)]
-// pub struct ATokenUpgraded {
+// pub struct DTokenUpgraded {
 //     asset: Principal,
 //     proxy: Principal,
 //     implementation: Principal,
@@ -45,16 +45,16 @@
 
 // #[update]
 // async fn execute_init_reserve(pool: Principal, input: InitReserveInput) {
-//     let a_token_proxy_address = _init_token_with_proxy(
-//         input.a_token_impl,
-//         &InitializableAToken::initialize(
+//     let d_token_proxy_address = _init_token_with_proxy(
+//         input.d_token_impl,
+//         &InitializableDToken::initialize(
 //             pool,
 //             input.treasury,
 //             input.underlying_asset,
 //             input.incentives_controller,
 //             input.underlying_asset_decimals,
-//             input.a_token_name,
-//             input.a_token_symbol,
+//             input.d_token_name,
+//             input.d_token_symbol,
 //             input.params.clone(),
 //         ),
 //     ).await;
@@ -85,7 +85,7 @@
 //         ),
 //     ).await;
 
-//     call::<_, ()>(pool, "initReserve", (input.underlying_asset, a_token_proxy_address, stable_debt_token_proxy_address, variable_debt_token_proxy_address, input.interest_rate_strategy_address)).await.unwrap();
+//     call::<_, ()>(pool, "initReserve", (input.underlying_asset, d_token_proxy_address, stable_debt_token_proxy_address, variable_debt_token_proxy_address, input.interest_rate_strategy_address)).await.unwrap();
 
 //     let mut current_config = DataTypes::ReserveConfigurationMap { data: 0 };
 //     current_config.set_decimals(input.underlying_asset_decimals);
@@ -97,7 +97,7 @@
 
 //     print(format!("ReserveInitialized event: {:?}", ReserveInitialized {
 //         asset: input.underlying_asset,
-//         a_token: a_token_proxy_address,
+//         d_token: d_token_proxy_address,
 //         stable_debt_token: stable_debt_token_proxy_address,
 //         variable_debt_token: variable_debt_token_proxy_address,
 //         interest_rate_strategy_address: input.interest_rate_strategy_address,
@@ -105,11 +105,11 @@
 // }
 
 // // #[update]
-// // async fn execute_update_a_token(cached_pool: Principal, input: ConfiguratorInputTypes::UpdateATokenInput) {
+// // async fn execute_update_d_token(cached_pool: Principal, input: ConfiguratorInputTypes::UpdateDTokenInput) {
 // //     let reserve_data = call::<_, DataTypes::ReserveData>(cached_pool, "getReserveData", (input.asset,)).await.unwrap();
 // //     let (_, _, _, decimals, _, _) = call::<_, (u8, u8, u8, u8, u8, u8)>(cached_pool, "getConfiguration", (input.asset,)).await.unwrap();
 
-// //     let encoded_call = IInitializableAToken::initialize(
+// //     let encoded_call = IInitializableDToken::initialize(
 // //         cached_pool,
 // //         input.treasury,
 // //         input.asset,
@@ -120,11 +120,11 @@
 // //         input.params.clone(),
 // //     );
 
-// //     _upgrade_token_implementation(reserve_data.a_token_address, input.implementation, &encoded_call).await;
+// //     _upgrade_token_implementation(reserve_data.d_token_address, input.implementation, &encoded_call).await;
 
-// //     ic_cdk::api::print(format!("ATokenUpgraded event: {:?}", ATokenUpgradedEvent {
+// //     ic_cdk::api::print(format!("DTokenUpgraded event: {:?}", DTokenUpgradedEvent {
 // //         asset: input.asset,
-// //         proxy: reserve_data.a_token_address,
+// //         proxy: reserve_data.d_token_address,
 // //         implementation: input.implementation,
 // //     }));
 // // }

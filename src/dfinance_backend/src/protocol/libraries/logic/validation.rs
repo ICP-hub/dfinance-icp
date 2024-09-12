@@ -1,7 +1,7 @@
 use candid::{Nat, Principal};
 use core::panic;
 use ic_cdk::api::call::{call, CallResult};
-use std::env;
+// use std::env;
 
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
@@ -235,7 +235,7 @@ impl ValidationLogic {
     //             || params.reserve_cache.reserve_configuration.get_ltv() == 0
     //             || params.amount
     //                 > IERC20::balance_of(
-    //                     &params.reserve_cache.a_token_address,
+    //                     &params.reserve_cache.d_token_address,
     //                     &params.user_address,
     //                 )
     //         {
@@ -243,7 +243,7 @@ impl ValidationLogic {
     //         }
 
     //         vars.available_liquidity =
-    //             IERC20::balance_of(&params.asset, &params.reserve_cache.a_token_address);
+    //             IERC20::balance_of(&params.asset, &params.reserve_cache.d_token_address);
 
     //         let max_loan_size_stable = vars
     //             .available_liquidity

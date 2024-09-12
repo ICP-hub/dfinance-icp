@@ -81,26 +81,6 @@ fn pre_upgrade() {
         .expect("failed to encode ledger state");
 }
 
-// #[post_upgrade]
-// fn post_upgrade(args: Option<LedgerArgument>) {
-//     LEDGER.with(|cell| {
-//         *cell.borrow_mut() = Some(
-//             ciborium::de::from_reader(StableReader::default())
-//                 .expect("failed to decode ledger state"),
-//         );
-//     });
-
-//     if let Some(args) = args {
-//         match args {
-//             LedgerArgument::Init(_) => panic!("Cannot upgrade the canister with an Init argument. Please provide an Upgrade argument."),
-//             LedgerArgument::Upgrade(upgrade_args) => {
-//                 if let Some(upgrade_args) = upgrade_args {
-//                     Access::with_ledger_mut(|ledger| ledger.upgrade(&LOG, upgrade_args));
-//                 }
-//             }
-//         }
-//     }
-// }
 
 #[post_upgrade]
 fn post_upgrade(args: Option<LedgerArgument>) {
@@ -315,115 +295,6 @@ fn icrc1_total_supply() -> Nat {
     Access::with_ledger(|ledger| ledger.balances().total_supply().into())
 }
 
-// async fn execute_transfer(
-//     from_account: Account,
-//     to: Account,
-//     spender: Option<Account>,
-//     fee: Option<Nat>,
-//     amount: Nat,
-//     memo: Option<Memo>,
-//     created_at_time: Option<u64>,
-// ) -> Result<Nat, CoreTransferError<Tokens>> {
-//     let block_idx = Access::with_ledger_mut(|ledger| {
-//         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());
-//         let created_at_time = created_at_time.map(TimeStamp::from_nanos_since_unix_epoch);
-
-//         match memo.as_ref() {
-//             Some(memo) if memo.0.len() > ledger.max_memo_length() as usize => {
-//                 ic_cdk::trap(&format!(
-//                     "the memo field size of {} bytes is above the allowed limit of {} bytes",
-//                     memo.0.len(),
-//                     ledger.max_memo_length()
-//                 ))
-//             }
-//             _ => {}
-//         };
-//         let amount = match Tokens::try_from(amount.clone()) {
-//             Ok(n) => n,
-//             Err(_) => {
-//                 // No one can have so many tokens
-//                 let balance_tokens = ledger.balances().account_balance(&from_account);
-//                 let balance = Nat::from(balance_tokens);
-//                 assert!(balance < amount);
-//                 return Err(CoreTransferError::InsufficientFunds {
-//                     balance: balance_tokens,
-//                 });
-//             }
-//         };
-
-//         let (tx, effective_fee) = if &to == ledger.minting_account() {
-//             let expected_fee = Tokens::zero();
-//             if fee.is_some() && fee.as_ref() != Some(&expected_fee.into()) {
-//                 return Err(CoreTransferError::BadFee { expected_fee });
-//             }
-
-//             let balance = ledger.balances().account_balance(&from_account);
-//             let min_burn_amount = ledger.transfer_fee().min(balance);
-//             if amount < min_burn_amount {
-//                 return Err(CoreTransferError::BadBurn { min_burn_amount });
-//             }
-//             if Tokens::is_zero(&amount) {
-//                 return Err(CoreTransferError::BadBurn {
-//                     min_burn_amount: ledger.transfer_fee(),
-//                 });
-//             }
-
-//             (
-//                 Transaction {
-//                     operation: Operation::Burn {
-//                         from: from_account,
-//                         spender,
-//                         amount,
-//                     },
-//                     created_at_time: created_at_time.map(|t| t.as_nanos_since_unix_epoch()),
-//                     memo,
-//                 },
-//                 Tokens::zero(),
-//             )
-//         } else if &from_account == ledger.minting_account() {
-//             if spender.is_some() {
-//                 ic_cdk::trap("the minter account cannot delegate mints")
-//             }
-//             let expected_fee = Tokens::zero();
-//             if fee.is_some() && fee.as_ref() != Some(&expected_fee.into()) {
-//                 return Err(CoreTransferError::BadFee { expected_fee });
-//             }
-//             (
-//                 Transaction::mint(to, amount, created_at_time, memo),
-//                 Tokens::zero(),
-//             )
-//         } else {
-//             let expected_fee_tokens = ledger.transfer_fee();
-//             if fee.is_some() && fee.as_ref() != Some(&expected_fee_tokens.into()) {
-//                 return Err(CoreTransferError::BadFee {
-//                     expected_fee: expected_fee_tokens,
-//                 });
-//             }
-//             (
-//                 Transaction::transfer(
-//                     from_account,
-//                     to,
-//                     spender,
-//                     amount,
-//                     fee.map(|_| expected_fee_tokens),
-//                     created_at_time,
-//                     memo,
-//                 ),
-//                 expected_fee_tokens,
-//             )
-//         };
-
-//         let (block_idx, _) = apply_transaction(ledger, tx, now, effective_fee)?;
-//         Ok(block_idx)
-//     })?;
-
-//     // NB. we need to set the certified data before the first async call to make sure that the
-//     // blockchain state agrees with the certificate while archiving is in progress.
-//     ic_cdk::api::set_certified_data(&Access::with_ledger(Ledger::root_hash));
-
-//     archive_blocks::<Access>(&LOG, MAX_MESSAGE_SIZE).await;
-//     Ok(Nat::from(block_idx))
-// }
 async fn execute_transfer(
     from_account: Account,
     to: Account,
@@ -537,7 +408,7 @@ async fn execute_transfer(
 
 #[update]
 #[candid_method(update)]
-async fn icrc1_transfer(arg: TransferArg, lock: bool) -> Result<Nat, TransferError> {
+async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {
     if lock {
         return Err(TransferError::GenericError {
             message: "Transfers are currently locked.".to_string(),
@@ -545,36 +416,13 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool) -> Result<Nat, TransferErr
         });
     }
 
-    // let caller_principal = ic_cdk::api::caller();
-    let caller_principal = Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai".to_string())
-    .map_err(|e| TransferError::GenericError {
-        message: format!("Invalid user principal: {}", e),
-        error_code: Nat::from(2u32),
-    })?;
-    let user_principal = Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe".to_string())
-    .map_err(|e| TransferError::GenericError {
-        message: format!("Invalid user principal: {}", e),
-        error_code: Nat::from(2u32),
-    })?;
-   
-    let from_account = if arg.to.owner != caller_principal {
-        Account {
-            owner: caller_principal,
-            subaccount: arg.from_subaccount,
-        }
-    } else {
-       
-        Account {
-            owner: user_principal,
-            subaccount: arg.from_subaccount,
-        }
-    };
+    let from_principal = from_principal.unwrap_or_else(ic_cdk::api::caller);
+    let from_account = Account {
+                owner: from_principal,
+                subaccount: None,
+            };
+    
 
-
-    // let from_account = Account {
-    //     owner: ic_cdk::api::caller(),
-    //     subaccount: arg.from_subaccount,
-    // };
     execute_transfer(
         from_account,
         arg.to,

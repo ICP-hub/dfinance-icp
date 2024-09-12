@@ -1,4 +1,4 @@
-use crate::api::deposit::asset_transfer_from;
+use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
 use crate::constants::asset_address::{
     BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
@@ -25,8 +25,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     let debttoken_canister_id = Principal::from_text(DEBTTOKEN_CANISTER)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
-    let user_principal = Principal::from_text(params.on_behalf_of)
-        .map_err(|_| "Invalid user canister ID".to_string())?;
+    // let user_principal = Principal::from_text(params.on_behalf_of)
+    //     .map_err(|_| "Invalid user canister ID".to_string())?;
+    let user_principal = ic_cdk::caller();
+    
 
     let platform_principal = Principal::from_text(BACKEND_CANISTER)
         .map_err(|_| "Invalid platform canister ID".to_string())?;
@@ -144,11 +146,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
         created_at_time: None,
         amount: amount_nat.clone(),
     };
-
+     
     let (new_result,): (TransferFromResult,) = call(
         debttoken_canister_id,
         "icrc1_transfer",
-        (debttoken_args, false),
+        (debttoken_args, false, Some(platform_principal)),
     )
     .await
     .map_err(|e| e.1)?;
@@ -174,11 +176,11 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
     let (user_principal, liquidator_principal) = if let Some(on_behalf_of) = params.on_behalf_of {
         let user_principal = Principal::from_text(on_behalf_of)
             .map_err(|_| "Invalid user canister ID".to_string())?;
-        // let liquidator_principal = ic_cdk::caller();
-        let liquidator_principal = Principal::from_text("37nia-rv3ep-e4hzo-5vtfx-3zrxb-kwfhi-m27sj-wsvci-d2qyt-3dbs3-mqe".to_string()).map_err(|_| "Invalid liquidator id".to_string())?;
+        let liquidator_principal = ic_cdk::caller();
         (user_principal, Some(liquidator_principal))
     } else {
         let user_principal = ic_cdk::caller();
+        ic_cdk::println!("Caller is: {:?}", user_principal.to_string());
         (user_principal, None)
     };
 
@@ -253,7 +255,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
     let (new_result,): (TransferFromResult,) = call(
         debttoken_canister_id,
         "icrc1_transfer",
-        (debttoken_args, false),
+        (debttoken_args, false, Some(user_principal)),
     )
     .await
     .map_err(|e| e.1)?;

@@ -20,7 +20,7 @@ mod utils;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
-use crate::implementations::reserve::initialize_reserve;
+// use crate::implementations::reserve::initialize_reserve;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
@@ -182,12 +182,12 @@ fn check_user(user: String) -> Result<String, String> {
 
 // Repays debt of the user
 #[update]
-async fn repay(asset: String, amount: u128, on_behalf: String) -> Result<(), String> {
+async fn repay(asset: String, amount: u128, on_behalf: Option<String>) -> Result<(), String> {
     ic_cdk::println!("Starting repay function");
     let params = ExecuteRepayParams {
         asset,
         amount: amount as u128,
-        on_behalf_of: Some(on_behalf),
+        on_behalf_of: on_behalf,
     };
     ic_cdk::println!("Parameters for execute_repay: {:?}", params);
     match borrow::execute_repay(params).await {
@@ -207,14 +207,14 @@ async fn repay(asset: String, amount: u128, on_behalf: String) -> Result<(), Str
 async fn withdraw(
     asset: String,
     amount: u128,
-    on_behalf: String,
+    on_behalf: Option<String>,
     collateral: bool,
 ) -> Result<(), String> {
     ic_cdk::println!("Starting withdraw function");
     let params = ExecuteWithdrawParams {
         asset,
         amount: amount as u128,
-        on_behalf_of: Some(on_behalf),
+        on_behalf_of: on_behalf,
         is_collateral: collateral,
     };
     ic_cdk::println!("Parameters for execute_withdraw: {:?}", params);

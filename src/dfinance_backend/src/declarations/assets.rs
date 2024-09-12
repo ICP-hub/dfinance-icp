@@ -22,25 +22,16 @@ pub struct ReserveData {
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ReserveCache {
     pub reserve_configuration: ReserveConfiguration,
-    pub reserve_factor: u128,   //The reserve factor determines the portion of the interest that goes into the reserve pool. when someone borrow, interest is distributed b/w lenders and pool. //how much
     //Liquidity Index(t)=Liquidity Index(t−1) ×(1+ Borrow Interest Rate×Δt/365×100)
     //If you deposit 100 DAI into Aave and the liquidity index increases from 1 to 1.05 over a certain period, your deposit is now worth 105 DAI (reflecting the interest earned).
     pub curr_liquidity_index: u128,
     pub next_liquidity_index: u128,
-    //It tracks the cumulative interest rate applied to borrowed assets over time, helping to calculate the amount of interest that borrowers owe.
-    pub curr_variable_borrow_index: u128,
-    pub next_variable_borrow_index: u128,
     //When demand for borrowing an asset is high, the liquidity rate increases to incentivize more deposits. Conversely, if demand is low, the liquidity rate decreases.
     //utilization rate, which is the percentage of the total available assets that have been borrowed. A higher utilization rate generally leads to a higher liquidity rate.
     pub curr_liquidity_rate: u128,//APY //percentage rate at which your deposit grows. //This interest comes from the payments made by borrowers who are using the deposited assets.
-    pub curr_variable_borrow_rate: u128,
-    pub d_token_canister: Principal,
-    // pub stable_debt_token_address: Principal,
-    // pub variable_debt_token_address: Principal,
+    pub d_token_canister: Option<String>,
     pub debt_token_canister: Principal,
     pub reserve_last_update_timestamp: u64,
-    // pub curr_scaled_variable_debt: u128,
-    // pub next_scaled_variable_debt: u128,
     pub curr_principal_stable_debt: u128,
     pub curr_total_stable_debt: u128,
     pub curr_avg_stable_borrow_rate: u128,
@@ -70,13 +61,13 @@ pub struct CalculateInterestRatesParams {
     pub average_stable_borrow_rate: u128,
     pub reserve_factor: u128,
     pub reserve: String,
-    pub a_token: String,
+    pub d_token: String,
 }
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct InitReserveParams {
     pub asset: String,
-    pub a_token_address: String,
+    pub d_token_address: String,
     pub stable_debt_address: String,
     pub variable_debt_address: String,
     pub interest_rate_strategy_address: String,

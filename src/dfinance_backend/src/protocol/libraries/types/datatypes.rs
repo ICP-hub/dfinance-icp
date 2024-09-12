@@ -106,7 +106,7 @@ pub struct CalculateInterestRatesParams {
     pub total_stable_debt: u128,
     pub total_variable_debt: u128,
     pub average_stable_borrow_rate: u128,
-    pub reserve_factor: u128,
+    // pub reserve_factor: u128,
     pub reserve: String,
-    pub d_token: Principal,
+    pub d_token: Option<String>,
 }

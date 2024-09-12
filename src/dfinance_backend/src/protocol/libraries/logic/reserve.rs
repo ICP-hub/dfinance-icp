@@ -1,4 +1,4 @@
-use candid::{variant, CandidType, Nat, Principal};
+use candid::{CandidType, Principal};
 use serde::{Deserialize, Serialize};
 
 use crate::protocol::libraries::math::math_utils;
@@ -6,91 +6,24 @@ use ic_cdk::api::time;
 
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
-use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 use crate::protocol::libraries::math::percentage_maths::percent_mul;
-use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_div, ray_mul};
 use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
-// use crate::protocol::libraries::logic::interface::ivariable_debt_token::VariableDebtToken;
 
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds
 }
     
-    
-//     async fn emit_reserve_data_updated(
-//         reserve_address: Principal,
-//         next_liquidity_rate: u128,
-//         next_stable_rate: u128,
-//         next_variable_rate: u128,
-//         next_liquidity_index: u128,
-//         next_variable_borrow_index: u128,
-//     ) {
-//         // Implement the logging or state update logic
-//         // For now, just a simple print statement
-//         println!(
-//             "ReserveDataUpdated: {:?}, {}, {}, {}, {}, {}",
-//             reserve_address, next_liquidity_rate, next_stable_rate, next_variable_rate, next_liquidity_index, next_variable_borrow_index
-//         );
-//     }
-
-// pub trait IStableDebtToken {
-//     fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64);
-// }
-
-// pub struct StableDebtTokenImpl;
-// impl IStableDebtToken for StableDebtTokenImpl {
-//     fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64) {
-//         // Implement the logic to get supply data from the token address
-//         (0, 0, 0, 0)
-//     }
-// }
-// //temp
-// // pub trait IStableDebtToken {
-// //     fn get_supply_data(token_address: Principal) -> (u128, u128, u128, u64) {
-// //         // Implement the logic to get supply data from the token address
-// //         (0, 0, 0, 0)
-// //     }
-// // }
-
-// trait IReserveInterestRateStrategy {
-//     fn calculate_interest_rates(&self, params: CalculateInterestRatesParams) -> (u128, u128, u128);
-// }
-
-// // src/reserve.rs
-// use candid::Principal;
-// use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
-// use crate::declarations::assets::{ReserveData, ReserveCache};
-// use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
-// use crate::protocol::libraries::math::math_utils;
-// use crate::protocol::libraries::math::wath_ray_math::wad_ray_math::{ray_mul, ray_div};
-// use crate::protocol::libraries::math::percentage_maths::percent_mul;
 
 
-// how much ltv?
 pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
     ReserveCache {
         reserve_configuration: reserve_data.configuration.clone(),
-        // reserve_factor: reserve_data.configuration.get_reserve_factor(),
-        reserve_factor: 0,
         curr_liquidity_index: reserve_data.liquidity_index,
         next_liquidity_index: reserve_data.liquidity_index,
-        // curr_variable_borrow_index: reserve_data.variable_borrow_index,
-        curr_variable_borrow_index: 0,
-        // next_variable_borrow_index: reserve_data.variable_borrow_index,
-        next_variable_borrow_index: 0,
-        curr_liquidity_rate: reserve_data.current_liquidity_rate,
-        curr_variable_borrow_rate: 0,
-        // next_variable_borrow_rate: reserve_data.current_variable_borrow_rate,
-       
-        // a_token_address: reserve_data.a_token_address,
-        d_token_canister: Principal::anonymous(),
-        // stable_debt_token_address: reserve_data.stable_debt_token_address,
+        curr_liquidity_rate: reserve_data.current_liquidity_rate,  
+        d_token_canister: reserve_data.d_token_canister.clone(),
         debt_token_canister: Principal::anonymous(),
-        // variable_debt_token_address: reserve_data.variable_debt_token_address,
-        
         reserve_last_update_timestamp: reserve_data.last_update_timestamp,
-        // curr_scaled_variable_debt: 0,  //related to the borrower's debt
-        // next_scaled_variable_debt: 0,
         curr_principal_stable_debt: 0, //It is the initial principal borrowed when the loan is first issued under a stable rate.
         curr_total_stable_debt: 0, // total amount of debt that a borrower owes under a stable interest rate. //stable debt is locked in at a fixed rate at the time of borrowing
         curr_avg_stable_borrow_rate: 0, //If a borrower takes out multiple loans under different stable interest rates, the average stable borrow rate reflects the overall interest rate they are paying across all their stable loans.
@@ -108,24 +41,24 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
         return;
     }
 
-    update_indexes(reserve_data, reserve_cache);
-    accrue_to_treasury(reserve_data, reserve_cache);
+    // update_indexes(reserve_data, reserve_cache);
+    // accrue_to_treasury(reserve_data, reserve_cache);
 
     reserve_data.last_update_timestamp = current_time;
 }
 
-pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
-    if reserve_cache.curr_liquidity_rate != 0 {
-        let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
-            reserve_cache.curr_liquidity_rate,
-            reserve_cache.reserve_last_update_timestamp,
-        );
-        reserve_cache.next_liquidity_index = ray_mul(
-            cumulated_liquidity_interest,
-            reserve_cache.curr_liquidity_index,
-        );
-        reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
-    }
+// pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
+//     if reserve_cache.curr_liquidity_rate != 0 {
+//         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
+//             reserve_cache.curr_liquidity_rate,
+//             reserve_cache.reserve_last_update_timestamp,
+//         );
+//         reserve_cache.next_liquidity_index = ray_mul(
+//             cumulated_liquidity_interest,
+//             reserve_cache.curr_liquidity_index,
+//         );
+//         reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
+//     }
 
     // if reserve_cache.curr_scaled_variable_debt != 0 {
     //     let cumulated_variable_borrow_interest = math_utils::calculate_compounded_interest(
@@ -136,47 +69,47 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
     //     reserve_cache.next_variable_borrow_index = ray_mul(cumulated_variable_borrow_interest, reserve_cache.curr_variable_borrow_index);
     //     // reserve_data.variable_borrow_index = reserve_cache.next_variable_borrow_index;
     // }
-}
+// }
 
-pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &ReserveCache) {
-    let mut vars = AccrueToTreasuryLocalVars::default();
+// pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &ReserveCache) {
+//     let mut vars = AccrueToTreasuryLocalVars::default();
 
-    if reserve_cache.reserve_factor == 0 {
-        return;
-    }
+//     if reserve_cache.reserve_factor == 0 {
+//         return;
+//     }
 
-    // vars.prev_total_variable_debt = ray_mul(
-    //     reserve_cache.curr_scaled_variable_debt,
-    //     reserve_cache.curr_variable_borrow_index,
-    // );
+//     // vars.prev_total_variable_debt = ray_mul(
+//     //     reserve_cache.curr_scaled_variable_debt,
+//     //     reserve_cache.curr_variable_borrow_index,
+//     // );
 
-    // vars.curr_total_variable_debt = ray_mul(
-    //     reserve_cache.curr_scaled_variable_debt,
-    //     reserve_cache.next_variable_borrow_index,
-    // );
+//     // vars.curr_total_variable_debt = ray_mul(
+//     //     reserve_cache.curr_scaled_variable_debt,
+//     //     reserve_cache.next_variable_borrow_index,
+//     // );
 
-    vars.cumulated_stable_interest = math_utils::calculate_compounded_interest(
-        reserve_cache.curr_avg_stable_borrow_rate,
-        reserve_cache.stable_debt_last_update_timestamp,
-        reserve_cache.reserve_last_update_timestamp,
-    );
+//     vars.cumulated_stable_interest = math_utils::calculate_compounded_interest(
+//         reserve_cache.curr_avg_stable_borrow_rate,
+//         reserve_cache.stable_debt_last_update_timestamp,
+//         reserve_cache.reserve_last_update_timestamp,
+//     );
 
-    vars.prev_total_stable_debt = ray_mul(
-        reserve_cache.curr_principal_stable_debt,
-        vars.cumulated_stable_interest,
-    );
+//     // vars.prev_total_stable_debt = ray_mul(
+//     //     reserve_cache.curr_principal_stable_debt,
+//     //     vars.cumulated_stable_interest,
+//     // );
 
-    vars.total_debt_accrued = vars.curr_total_variable_debt + reserve_cache.curr_total_stable_debt
-        - vars.prev_total_variable_debt
-        - vars.prev_total_stable_debt;
+//     vars.total_debt_accrued = vars.curr_total_variable_debt + reserve_cache.curr_total_stable_debt
+//         - vars.prev_total_variable_debt
+//         - vars.prev_total_stable_debt;
 
-    vars.amount_to_mint = percent_mul(vars.total_debt_accrued, reserve_cache.reserve_factor);
+//     vars.amount_to_mint = percent_mul(vars.total_debt_accrued, reserve_cache.reserve_factor);
 
-    if vars.amount_to_mint != 0 {
-        reserve_data.accrued_to_treasury +=
-            ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
-    }
-}
+//     // if vars.amount_to_mint != 0 {
+//     //     reserve_data.accrued_to_treasury +=
+//     //         ray_div(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
+//     // }
+// }
 
 pub async fn update_interest_rates(
     reserve_data: &mut ReserveData,
@@ -195,9 +128,9 @@ pub async fn update_interest_rates(
         total_stable_debt: reserve_cache.next_total_stable_debt,
         total_variable_debt: vars.total_variable_debt,
         average_stable_borrow_rate: reserve_cache.next_avg_stable_borrow_rate,
-        reserve_factor: reserve_cache.reserve_factor,
+        // reserve_factor: reserve_cache.reserve_factor,
         reserve: reserve_address.clone(),
-        d_token: reserve_cache.d_token_canister,
+        d_token: reserve_cache.d_token_canister.clone(),
     };
 
     let (next_liquidity_rate, next_stable_rate, next_variable_rate) =
@@ -211,7 +144,7 @@ pub async fn update_interest_rates(
         next_stable_rate,
         next_variable_rate,
         reserve_cache.next_liquidity_index,
-        reserve_cache.next_variable_borrow_index,
+        // reserve_cache.next_variable_borrow_index,
     )
     .await;
 }
@@ -238,24 +171,24 @@ async fn calculate_interest_rates(params: CalculateInterestRatesParams) -> (u128
 
 
 async fn emit_reserve_data_updated(
-    // reserve_address: Principal,
+    
     reserve_address: String,
     next_liquidity_rate: u128,
     next_stable_rate: u128,
     next_variable_rate: u128,
     next_liquidity_index: u128,
-    next_variable_borrow_index: u128,
+    // next_variable_borrow_index: u128,
 ) {
     // Implement the logging or state update logic
     // For now, just a simple print statement
     println!(
-        "ReserveDataUpdated: {:?}, {}, {}, {}, {}, {}",
+        "ReserveDataUpdated: {:?}, {}, {}, {}, {}",
         reserve_address,
         next_liquidity_rate,
         next_stable_rate,
         next_variable_rate,
         next_liquidity_index,
-        next_variable_borrow_index
+        // next_variable_borrow_index
     );
 }
 

@@ -1,6 +1,7 @@
 import { Info, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
 import Vector from "../../../../public/Helpers/Vector.png"
+import { Fuel } from 'lucide-react';
 const Borrow = ({ asset, image }) => {
   const [amount, setAmount] = useState("0.00");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
@@ -10,6 +11,7 @@ const Borrow = ({ asset, image }) => {
   const handleAcknowledgeChange = (e) => {
     setIsAcknowledged(e.target.checked);
   };
+  const value = 5.23;
   const handleBorrowETH = () => {
     // Implement your supply ETH logic here
     console.log("Borrow", asset, "ETH:", amount);
@@ -21,7 +23,7 @@ const Borrow = ({ asset, image }) => {
         <div className="w-full">
           <div className="w-full flex justify-between my-2">
             <h1>Amount</h1>
-            <h1>Slippage 0.10%</h1>
+            
           </div>
           <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
             <div className="w-4/12">
@@ -32,7 +34,7 @@ const Borrow = ({ asset, image }) => {
                 className="text-lg focus:outline-none bg-gray-100  rounded-md p-2 px-4 w-full dark:bg-darkBackground/5 dark:text-darkText"
                 placeholder="0.00"
               />
-              <p className="mt-2">$30.00</p>
+              <p className="mt-1 text-xs">$30.00</p>
             </div>
             <div className="w-8/12 flex flex-col items-end">
               <div className="w-auto flex items-center gap-2">
@@ -43,7 +45,7 @@ const Borrow = ({ asset, image }) => {
                 />
                 <span className="text-lg">{asset}</span>
               </div>
-              <p className="text-xs mt-2"> Balance 0.0032560 Max</p>
+              <p className="text-xs mt-4"> Balance 0.0032560 Max</p>
             </div>
           </div>
         </div>
@@ -58,11 +60,25 @@ const Borrow = ({ asset, image }) => {
                 <p>
                   <span className="text-red-500">1.00</span>
                   <span className="text-gray-500 mx-1">→</span>
-                  <span className="text-green-500">5.23</span>
+                  <span
+                        className={`${
+                          value > 3
+                            ? "text-green-500"
+                            : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
+                      >
+                        {value}
+                      </span>
                 </p>
               </div>
               <div className="w-full flex justify-end items-center mt-1 ">
-                <p className="text-gray-500">liquidation at &lt;1.5</p>
+                <p className="text-gray-500">liquidation at &lt;1</p>
               </div>
             </div>
             
@@ -73,11 +89,7 @@ const Borrow = ({ asset, image }) => {
       <div className="w-full mt-3">
         <div className="w-full">
           <div className="flex items-center">
-            <img
-              src={Vector}
-              alt="Vector Image"
-              className="w-4 h-4 mr-1"
-            />
+          <Fuel className="w-4 h-4 mr-1" />
             <h1>$6.06</h1>
             <Info size={16} className="ml-2" />
           </div>

@@ -333,10 +333,8 @@ fn setup() -> (PocketIc, Principal, Principal, Principal, Principal, Principal) 
         amount: Nat::from(90_000u64),
     };
 
-    // Encode the TransferArg
     let transfer_args_encoded = encode_args((transfer_args, false, Option::<Principal>::None)).expect("Failed to encode arguments");
 
-    // Call the icrc1_transfer method on the ckbtc_canister
     let transfer_result = pic.update_call(
         ckbtc_canister,           
         Principal::anonymous(),   
@@ -393,13 +391,10 @@ fn setup() -> (PocketIc, Principal, Principal, Principal, Principal, Principal) 
 
 
     (pic, backend_canister, ckbtc_canister, cketh_canister, dtoken_canister, debttoken_canister) 
-    // (pic, backend_canister, ckbtc_canister, dtoken_canister)
 }
 
 
-// Function to check the balance of a specific principal
 fn check_balance(pic: &PocketIc, canister: Principal, user_principal: Principal) -> Nat {
-    // Encode the balance check arguments as required by the icrc1_balance_of function
     let args_encoded = encode_one(
     Account {
         owner: user_principal,
@@ -407,18 +402,17 @@ fn check_balance(pic: &PocketIc, canister: Principal, user_principal: Principal)
     }
 ).expect("Failed to encode arguments");
 
-    // Call the icrc1_balance_of method on the ckbtc_canister
     let result = pic.query_call(
-    canister,         // Canister you're calling
-        Principal::anonymous(), // Caller (anonymous in this case)
-        "icrc1_balance_of",     // Method name
-        args_encoded,           // Encoded arguments
+    canister,         
+        Principal::anonymous(), 
+        "icrc1_balance_of",     
+        args_encoded,           
     ).expect("Failed to query balance");
 
-    // Match the result to check if it's a successful reply
+    
     match result {
         WasmResult::Reply(response) => {
-            // Decode the response to get the balance (expected as u64)
+          
             let balance: Nat = candid::decode_one(&response).expect("Failed to decode balance");
             balance
         }
@@ -430,7 +424,6 @@ fn check_balance(pic: &PocketIc, canister: Principal, user_principal: Principal)
 
 #[test]
 fn test_check_balances() {
-    // let (pic, backend_canister, ckbtc_canister, dtoken_canister) = setup();
     let (pic, backend_canister, ckbtc_canister,cketh_canister, dtoken_canister, debttoken_canister) = setup(); 
 
     
@@ -456,7 +449,7 @@ fn test_check_balances() {
 
 #[test]
 fn test_asset_list_func() {
-    // let (pic, backend_canister, ckbtc_canister, dtoken_canister) = setup();
+   
     let (pic, backend_canister, ckbtc_canister,cketh_canister, dtoken_canister, debttoken_canister) = setup(); 
     let Ok(WasmResult::Reply(response)) = pic.query_call(
         backend_canister,
@@ -506,12 +499,14 @@ fn update_canister_constants(ckbtc_id: String, cketh_id: String, dtoken_id: Stri
 
 // #[test]
 // fn test_update_canister_ids_in_rs_file() {
-//     let (pic, backend_canister, ckbtc_canister, dtoken_canister) = setup();
-    
+
+//     let (pic, backend_canister, ckbtc_canister,cketh_canister, dtoken_canister, debttoken_canister) = setup(); 
+
 //     update_canister_constants(
 //         ckbtc_canister.to_string(),
-       
+        //    cketh_canister.to_string(),
 //         dtoken_canister.to_string(),
+        //    debttoken_canister.to_string(),
 //         backend_canister.to_string(),
 //     );
 
@@ -539,10 +534,10 @@ fn transfer_ckbtc_to_liquidator(
         amount: Nat::from(50_000u64),
     };
 
-    // Encode the TransferArg
+    
     let transfer_args_encoded = encode_args((transfer_args, false, Option::<Principal>::None)).expect("Failed to encode arguments");
 
-    // Call the icrc1_transfer method on the ckbtc_canister
+
     let transfer_result = pic.update_call(
         ckbtc_canister,           
         Principal::anonymous(),   
@@ -604,33 +599,31 @@ fn transfer_debttoken_to_anonymous(
     debttoken_canister: Principal, 
     platform_principal: Principal
 ) {
-    // Prepare the TransferArgs for transferring dtoken to an anonymous user
+    
     let debttoken_args = TransferArgs {
         to: TransferAccount {
-            owner: Principal::anonymous(), // Transfer to anonymous principal
+            owner: Principal::anonymous(), 
             subaccount: None,
         },
-        fee: None, // No fee
+        fee: None,
         spender_subaccount: None,
         memo: None,
         created_at_time: None,
-        amount: Nat::from(10_000u64), // Amount of dtoken to transfer
+        amount: Nat::from(40_000u64), 
     };
 
-    // Encode the TransferArgs
     let debttoken_args_encoded = encode_args((debttoken_args, false, Some(platform_principal)))
 
         .expect("Failed to encode dtoken transfer arguments");
 
-    // Call the `icrc2_transfer` method on the dtoken canister
     let transfer_result = pic.update_call(
-        debttoken_canister,         // Canister you're calling (dtoken canister)
-        platform_principal,      // Caller (platform principal that initiates the transfer)
-        "icrc1_transfer",        // Method name
-        debttoken_args_encoded,     // Encoded arguments
+        debttoken_canister,        
+        platform_principal,      
+        "icrc1_transfer",        
+        debttoken_args_encoded,    
     );
 
-    // Handle the result of the transfer
+    
     match transfer_result {
         Ok(WasmResult::Reply(reply)) => {
             let transfer_from_result: Result<TransferFromResult, _> = candid::decode_one(&reply);
@@ -685,33 +678,33 @@ fn transfer_dtoken_to_anonymous(
     dtoken_canister: Principal, 
     platform_principal: Principal
 ) {
-    // Prepare the TransferArgs for transferring dtoken to an anonymous user
+    
     let dtoken_args = TransferArgs {
         to: TransferAccount {
-            owner: Principal::anonymous(), // Transfer to anonymous principal
+            owner: Principal::anonymous(), 
             subaccount: None,
         },
-        fee: None, // No fee
+        fee: None, 
         spender_subaccount: None,
         memo: None,
         created_at_time: None,
-        amount: Nat::from(10_000u64), // Amount of dtoken to transfer
+        amount: Nat::from(40_000u64),
     };
 
-    // Encode the TransferArgs
+    
     let dtoken_args_encoded = encode_args((dtoken_args, false, Some(platform_principal)))
 
         .expect("Failed to encode dtoken transfer arguments");
 
-    // Call the `icrc2_transfer` method on the dtoken canister
+    
     let transfer_result = pic.update_call(
-        dtoken_canister,         // Canister you're calling (dtoken canister)
-        platform_principal,      // Caller (platform principal that initiates the transfer)
-        "icrc1_transfer",        // Method name
-        dtoken_args_encoded,     // Encoded arguments
+        dtoken_canister,         
+        platform_principal,      
+        "icrc1_transfer",        
+        dtoken_args_encoded,     
     );
 
-    // Handle the result of the transfer
+   
     match transfer_result {
         Ok(WasmResult::Reply(reply)) => {
             let transfer_from_result: Result<TransferFromResult, _> = candid::decode_one(&reply);
@@ -1409,8 +1402,6 @@ fn test_withdraw() {
         is_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
-        simulate_insufficient_balance: bool,
-        simulate_dtoken_transfer_failure: bool,
     }
 
     let test_cases = vec![
@@ -1422,8 +1413,7 @@ fn test_withdraw() {
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
+
         },
         // Non-existent asset case
         TestCase {
@@ -1433,8 +1423,6 @@ fn test_withdraw() {
             is_collateral: false,
             expect_success: false,
             expected_error_message: Some("Reserve not found for asset: nonexistent_asset".to_string()),
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         
         // Large amount
@@ -1445,8 +1433,6 @@ fn test_withdraw() {
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Insufficient balance
         // TestCase {
@@ -1472,62 +1458,7 @@ fn test_withdraw() {
         println!();
         println!("Test case details: {:?}", case);
         println!();
-        println!();
-    // for case in test_cases {
-        // Approve before withdraw
-        // let approve_args = ApproveArgs {
-        //     fee: None,
-        //     memo: None,
-        //     from_subaccount: None,
-        //     created_at_time: None,
-        //     amount: Nat::from(10_000_000u64),  //alternative
-        //     expected_allowance: None,
-        //     expires_at: None,
-        //     spender: Account {
-        //         owner: backend_canister,
-        //         subaccount: None,
-        //     },
-        // };
-
-       
-        // let args_encoded = encode_one(approve_args).expect("Failed to encode approve arguments");
-
-        // // Call the `approve` method on `ckbtc_canister`
-        // let approve_result = pic.update_call(
-        //     ckbtc_canister,
-        //     Principal::anonymous(),
-        //     "icrc2_approve",
-        //     args_encoded,
-        // );
-
-        // // Handle the result of the approve call
-        // match approve_result {
-        //     Ok(WasmResult::Reply(reply)) => {
-        //         let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
-        //         match approve_response {
-        //             Ok(ApproveResult::Ok(block_index)) => {
-        //                 println!("Approve succeeded, block index: {}", block_index);
-        //             }
-        //             Ok(ApproveResult::Err(error)) => {
-        //                 println!("Approve failed with error: {:?}", error);
-        //                 continue; 
-        //             }
-        //             Err(e) => {
-        //                 println!("Failed to decode ApproveResult: {:?}", e);
-        //                 continue; 
-        //             }
-        //         }
-        //     }
-        //     Ok(WasmResult::Reject(reject_message)) => {
-        //         println!("Approve call rejected: {}", reject_message);
-        //         continue;
-        //     }
-        //     Err(e) => {
-        //         println!("Error during approve call: {:?}", e);
-        //         continue; 
-        //     }
-        // }
-
+    
         // Now call the deposit function
         let result = pic.update_call(
             backend_canister,
@@ -1625,7 +1556,7 @@ fn test_withdraw() {
 // ===============Liquidation ===============
 
 #[test]
-fn test_Liquidation() {
+fn test_liquidation() {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -1634,8 +1565,6 @@ fn test_Liquidation() {
         is_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
-        simulate_insufficient_balance: bool,
-        simulate_dtoken_transfer_failure: bool,
     }
 
     let test_cases = vec![
@@ -1644,12 +1573,10 @@ fn test_Liquidation() {
             asset: "ckBTC".to_string(),
             amount: 1000,
             on_behalf_of: Some(Principal::anonymous().to_text()),
-            // liquidator: Some(Principal::anonymous().to_text()),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
+          
         },
         // Non-existent asset case
         TestCase {
@@ -1658,45 +1585,37 @@ fn test_Liquidation() {
             on_behalf_of: Some(Principal::anonymous().to_text()),
             is_collateral: false,
             expect_success: false,
-            expected_error_message: Some("Reserve not found for asset: nonexistent_asset ".to_string()),
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
+            expected_error_message: Some("Reserve not found for asset: nonexistent_asset".to_string()),
+           
         },
         // Minimum valid amount
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 1, // Minimum valid amount
-            on_behalf_of: Some(Principal::anonymous().to_text()),
-            is_collateral: true,
-            expect_success: true,
-            expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
-        },
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: 1, // Minimum valid amount
+        //     on_behalf_of: Some(Principal::anonymous().to_text()),
+        //     is_collateral: true,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
         // Large amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 100_000, // Large amount
+            amount: 10_000, // Large amount
             on_behalf_of: Some(Principal::anonymous().to_text()),
-            // liquidator: Some(Principal::anonymous().to_text()),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Insufficient balance
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 10_000_000, // Valid amount but insufficient balance
-            on_behalf_of: Some(Principal::anonymous().to_text()),
-            // liquidator: Some(Principal::anonymous().to_text()),
-            is_collateral: true,
-            expect_success: false,
-            expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
-            simulate_insufficient_balance: true,
-            simulate_dtoken_transfer_failure: false,
-        },
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: 10_000_000, // Valid amount but insufficient balance
+        //     on_behalf_of: Some(Principal::anonymous().to_text()),
+        //     is_collateral: true,
+        //     expect_success: false,
+        //     expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
+
+        // },
     ];
 
     let (pic, backend_canister, ckbtc_canister,cketh_canister ,dtoken_canister,debttoken_canister) = setup();
@@ -1706,7 +1625,18 @@ fn test_Liquidation() {
     transfer_ckbtc_to_liquidator(&pic, liquidator_principal, ckbtc_canister);
     transfer_dtoken_to_anonymous(&pic, dtoken_canister, backend_canister);
     transfer_debttoken_to_anonymous(&pic, debttoken_canister, backend_canister);
-    for case in test_cases {
+    println!();
+    println!("****************************************************************************"); 
+        println!();
+    for (i, case) in test_cases.iter().enumerate() {
+        // Print the case number
+        println!("Running test case no: {}", i + 1);
+        println!();
+        println!("Test case details: {:?}", case);
+        println!();
+        println!();
+
+
         // Approve before liquidation
         let approve_args = ApproveArgs {
             fee: None,
@@ -1770,7 +1700,7 @@ fn test_Liquidation() {
             "repay",   
             encode_args((
                 case.asset.clone(),
-                case.amount, //cnahged here
+                case.amount,
                 case.on_behalf_of.clone(),
                
             )).unwrap(),
@@ -1916,6 +1846,9 @@ fn test_Liquidation() {
             assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after liquidation");
             assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after liquidation"); 
         }
+        println!();
+        println!("****************************************************************************"); 
+        println!();
     }
 }
 

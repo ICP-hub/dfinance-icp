@@ -6,10 +6,32 @@ import { FAUCET_ASSETS_TABLE_ROW, FAUCET_ASSETS_TABLE_COL } from "../../utils/co
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup"; // Import your FaucetPopup component here
 import Pagination from "../Common/pagination";
+import useAssetData from "../Common/useAssets";
+import ckBTC from '../../../public/assests-icon/ckBTC.png';
+import cekTH from '../../../public/assests-icon/cekTH.png';
+import { useMemo, useCallback } from "react";
+import { Principal } from "@dfinity/principal";
+import { useAuth } from "../../utils/useAuthClient";
+import { useEffect } from "react";
 
 const ITEMS_PER_PAGE = 8; // Number of items per page
 
 const FaucetDetails = () => {
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    updateClient,
+    authClient,
+    identity,
+    principal,
+    backendActor,
+    accountId,
+    createLedgerActor,
+    reloadLogin,
+    accountIdString,
+  } = useAuth()
+
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,12 +58,97 @@ const FaucetDetails = () => {
     setShowPopup(false);
   };
 
+  const {filteredItems} = useAssetData();
+
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = FAUCET_ASSETS_TABLE_ROW.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
+
+  
+  const [balance, setBalance] = useState(null);
+  const [usdBalance, setUsdBalance] = useState(null);
+  const [conversionRate, setConversionRate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
+
+  const fetchBalance = useCallback(async () => {
+    if (isAuthenticated && ledgerActor && principalObj) {
+      try {
+        const account = { owner: principalObj, subaccount: [] };
+        const balance = await ledgerActor.icrc1_balance_of(account);
+        setBalance(balance.toString());
+        console.log("Fetched Balance:", balance.toString());
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+        setError(error);
+      }
+    }
+  }, [isAuthenticated, ledgerActor, principalObj]);
+
+  const fetchConversionRate = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setConversionRate(data['internet-computer'].usd);
+      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
+    } catch (error) {
+      console.error("Error fetching conversion rate:", error);
+      setError(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchBalance(), fetchConversionRate()]);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
+
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
+      setUsdBalance(balanceInUsd);
+    }
+  }, [balance, conversionRate]);
+
+  const filteredReserveData = Object.fromEntries(filteredItems);
+  console.log(filteredReserveData)
+
+
+
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0';
+    }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toString();
+  }
+
 
   return (
     <div className="w-full">
@@ -64,22 +171,28 @@ const FaucetDetails = () => {
               {currentItems.map((item, index) => (
                 <tr
                   key={index}
-                  className={`w-full font-bold hover:bg-[#ddf5ff8f] rounded-lg text-[12px] ${
+                  className={`w-full font-bold hover:bg-[#ddf5ff8f] rounded-lg text-sm ${
                     index !== currentItems.length - 1 ? "gradient-line-bottom" : ""
                   }`}
                 >
                   <td className="p-3 align-top">
                     <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
-                      <img src={item.image} alt={item.asset} className="w-8 h-8 rounded-full mr-2" />
-                      {item.asset}
+                    {item[0] === "ckBTC" && (
+                          <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full mr-2"/>
+                        )}
+                        {item[0] === "ckETH" && (
+                          <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full mr-2"/>
+                        )}
+                        {item[0]}
                     </div>
                   </td>
                   <td className="p-3 align-top">
-                    <div className="flex flex-row ml-6">
+                    <div className="flex flex-row ml-5">
                       <div>
-                        <p>{item.total_supply_count}</p>
+                     
                         <center>
-                          <p className="font-light">{item.WalletBalance}</p>
+                        <p>{balance}</p>
+                          <p className="font-light"> ${formatNumber(usdBalance)}</p>
                         </center>
                       </div>
                     </div>

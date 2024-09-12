@@ -35,6 +35,7 @@ import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import ckETH from '../../../public/assests-icon/cketh.png'
 
 const MySupply = () => {
+  const [userData, setUserData] = useState();
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
   const {
@@ -59,6 +60,40 @@ const MySupply = () => {
     image: "",
   });
   console.log("hello", isModalOpen);
+
+  useEffect(() => {
+    // Define an async function inside the useEffect
+    const fetchUserData = async () => {
+      if (backendActor) {
+        try {
+          const result = await getUserData(principal.toString());
+          console.log('get_user_data:', result);
+          setUserData(result);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        console.error('Backend actor initialization failed.');
+      }
+    };
+
+    // Call the async function
+    fetchUserData();
+  }, [principal, backendActor]);
+
+  const getUserData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_user_data(user);
+      console.log('get_user_data in mysupply:', result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
+    }
+  };
 
   const handleModalOpen = (type, asset, image) => {
     console.log("Handle modal opened");
@@ -375,7 +410,7 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
-                  {filteredItems.length === 0 ? (
+                 {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div
@@ -467,7 +502,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                  {filteredItems.length === 0 ? (
+                  {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
@@ -794,7 +829,7 @@ const MySupply = () => {
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
-                  {filteredItems.length === 0 ? (
+                  {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
                     noBorrowMessage
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
@@ -891,7 +926,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {filteredItems.length === 0 ? (
+                  {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6 relative max-h-[260px] overflow-hidden">

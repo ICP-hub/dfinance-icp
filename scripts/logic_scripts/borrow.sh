@@ -65,7 +65,7 @@ currency="ckBTC"
 interest_rate=0  
 
 echo "Borrowing $borrow_amount from backend_canister..."
-borrow_result=$(dfx canister call $backend_canister $borrow_method "(\"$currency\", $borrow_amount:nat64, \"${user1_principal}\",\"${user1_principal}\", $interest_rate:nat)")
+borrow_result=$(dfx canister call $backend_canister $borrow_method "(\"$currency\", $borrow_amount:nat64)")
 echo "Borrow Result: $borrow_result"
 echo "--------------------------------------"
 

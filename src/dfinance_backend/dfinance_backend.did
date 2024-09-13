@@ -1,7 +1,6 @@
 type ExecuteSupplyParams = record {
   asset : text;
   referral_code : nat16;
-  on_behalf_of : principal;
   amount : nat;
 };
 
@@ -55,6 +54,8 @@ type Result_2 = variant { Ok : UserData; Err : text };
 
 type Result_3 = variant { Ok : nat; Err : text };
 
+type Result_4 = variant { Ok : null; Err : text };
+
 type UserData = record {
   user_id : opt text;
   net_apy : opt float64;
@@ -90,11 +91,10 @@ service : () -> {
   get_reserve_data : (text) -> (variant { Ok : ReserveData; Err : text }) query;
   get_user_data : (text) -> (variant { Ok : UserData; Err : text }) query;
   get_all_assets : () -> (vec text) query;
-  borrow : (text, nat64, text, text, nat) -> (Result);
-  supply : (ExecuteSupplyParams) -> (Result_1);
-  repay : (text, nat, opt text) -> (variant { Ok : null; Err : text });
-  withdraw : (text, nat, opt text, bool) -> (variant { Ok : null; Err : text });
-  deposit : (text, nat64, text, bool) -> (variant { Ok : null; Err : text });
   get_all_users : () -> (vec record { principal; UserData }) query;
   check_user : (text) -> (variant { Ok : text; Err : text });
+  supply : (text, nat64, bool) -> (Result_4);
+  borrow : (text, nat64) -> (Result_4);
+  repay : (text, nat, opt text) -> (Result_4);
+  withdraw : (text, nat, opt text, bool) -> (Result_4);
 };

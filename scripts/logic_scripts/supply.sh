@@ -71,7 +71,7 @@ is_collateral=true
 
 # call the execute supply function
 echo "Suppling $deposit_amount $currency to platform......."
-result=$(dfx canister call dfinance_backend deposit "(\"$currency\", $deposit_amount:nat64, \"${user1_principal}\", $is_collateral:bool)")
+result=$(dfx canister call dfinance_backend supply "(\"$currency\", $deposit_amount:nat64, $is_collateral:bool)")
 
 echo "Supply Execution Result: $result"
 

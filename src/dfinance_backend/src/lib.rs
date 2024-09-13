@@ -1,4 +1,3 @@
-use candid::Nat;
 use candid::Principal;
 use declarations::assets::{
     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
@@ -43,17 +42,11 @@ fn initialize_reserve_list(ledger_tokens: Vec<(String, Principal)>) -> Result<()
 
 // Function to call the execute_supply logic
 #[update]
-async fn deposit(
-    asset: String,
-    amount: u64,
-    on_behalf_of: String,
-    is_collateral: bool,
-) -> Result<(), String> {
+async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), String> {
     ic_cdk::println!("Starting deposit function");
     let params = ExecuteSupplyParams {
         asset,
         amount: amount as u128,
-        on_behalf_of,
         is_collateral,
     };
     ic_cdk::println!("Parameters for execute_supply: {:?}", params);
@@ -83,20 +76,11 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
 
 // Function to call the execute_borrow logic
 #[update]
-async fn borrow(
-    asset: String,
-    amount: u64,
-    user: String,
-    on_behalf_of: String,
-    interest_rate: Nat,
-) -> Result<(), String> {
+async fn borrow(asset: String, amount: u64) -> Result<(), String> {
     ic_cdk::println!("Starting borrow function");
     let params = ExecuteBorrowParams {
         asset,
-        user,
-        on_behalf_of,
         amount: amount as u128,
-        interest_rate,
     };
     ic_cdk::println!("Parameters for execute_borrow: {:?}", params);
 

@@ -62,7 +62,6 @@ const MySupply = () => {
   console.log("hello", isModalOpen);
 
   useEffect(() => {
-    // Define an async function inside the useEffect
     const fetchUserData = async () => {
       if (backendActor) {
         try {
@@ -76,8 +75,6 @@ const MySupply = () => {
         console.error('Backend actor initialization failed.');
       }
     };
-
-    // Call the async function
     fetchUserData();
   }, [principal, backendActor]);
 
@@ -162,7 +159,7 @@ const MySupply = () => {
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
             children={
-              <SupplyPopup //asset, image, balance, isModalOpen, handleModalOpen, setIsModalOpen
+              <SupplyPopup 
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
                 balance={0}
@@ -415,8 +412,8 @@ const MySupply = () => {
                   ) : (
                     <div
                       className={`relative mt-4 overflow-y-auto scrollbar-custom ${filteredItems.length > 1
-                        ? "max-h-[280px]" // Height for one asset, adjust as needed
-                        : "max-h-auto" // No fixed height if one asset
+                        ? "max-h-[280px]" 
+                        : "max-h-auto" 
                         }`}
                     >
                       {/* Container for the scrollable content */}

@@ -1,31 +1,24 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  const numVisiblePages = 3; // Number of visible page numbers
+  const numVisiblePages = 3; 
 
-  // Calculate the range of page numbers to display
   const getPageRange = () => {
     let startPage, endPage;
 
     if (totalPages <= numVisiblePages) {
-      // Show all pages if there are fewer pages than the number to display
       startPage = 1;
       endPage = totalPages;
     } else {
-      // Center the window around the current page, but adjust for edges
       const halfVisiblePages = Math.floor(numVisiblePages / 2);
 
       if (currentPage <= halfVisiblePages + 1) {
-        // If close to the beginning, show starting pages
         startPage = 1;
         endPage = numVisiblePages;
       } else if (currentPage >= totalPages - halfVisiblePages) {
-        // If close to the end, show ending pages
         startPage = totalPages - numVisiblePages + 1;
         endPage = totalPages;
       } else {
-        // Show the current page in the middle of the range
         startPage = currentPage - halfVisiblePages;
         endPage = currentPage + halfVisiblePages;
       }

@@ -1,6 +1,7 @@
 import { Info, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
 import Vector from "../../../../public/Helpers/Vector.png"
+
 const Borrow = ({ asset, image }) => {
   const [amount, setAmount] = useState("0.00");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
@@ -11,9 +12,9 @@ const Borrow = ({ asset, image }) => {
     setIsAcknowledged(e.target.checked);
   };
   const handleBorrowETH = () => {
-    // Implement your supply ETH logic here
     console.log("Borrow", asset, "ETH:", amount);
   };
+
   return (
     <>
       <h1 className="font-semibold text-xl">Borrow {asset}</h1>
@@ -65,7 +66,7 @@ const Borrow = ({ asset, image }) => {
                 <p className="text-gray-500">liquidation at &lt;1.5</p>
               </div>
             </div>
-            
+
           </div>
         </div>
       </div>
@@ -81,23 +82,23 @@ const Borrow = ({ asset, image }) => {
             <h1>$6.06</h1>
             <Info size={16} className="ml-2" />
           </div>
-          
+
           <div className="flex items-center mt-2">
-              <input
-                type="checkbox"
-                id="acknowledgeRisk"
-                className="mr-2"
-                onChange={handleAcknowledgeChange}
-              />
-              <label
-                htmlFor="acknowledgeRisk"
-                className="text-sm text-gray-700 dark:text-white"
-              >
-                I acknowledge the risk involved
-              </label>
-            </div>
+            <input
+              type="checkbox"
+              id="acknowledgeRisk"
+              className="mr-2"
+              onChange={handleAcknowledgeChange}
+            />
+            <label
+              htmlFor="acknowledgeRisk"
+              className="text-sm text-gray-700 dark:text-white"
+            >
+              I acknowledge the risk involved
+            </label>
+          </div>
           <div className="w-full flex flex-col my-3 space-y-2">
-          <div className="w-full flex bg-[#BA5858] p-3 rounded-lg">
+            <div className="w-full flex bg-[#BA5858] p-3 rounded-lg">
               <div className="w-1/12 flex items-center justify-center">
                 <div className="warning-icon-container">
                   <TriangleAlert />
@@ -124,11 +125,10 @@ const Borrow = ({ asset, image }) => {
         </div>
 
         <div className="w-full">
-        <button
+          <button
             onClick={handleBorrowETH}
-            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-              !isAcknowledged ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${!isAcknowledged ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={!isAcknowledged}
           >
             Borrow {asset}

@@ -1,5 +1,4 @@
 import React from 'react'
-import CircleProgess from '../../Common/CircleProgess'
 import LineGraph from '../../Common/LineGraph'
 
 const InterestRateModel = () => {

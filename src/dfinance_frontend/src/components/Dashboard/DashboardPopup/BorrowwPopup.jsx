@@ -1,6 +1,7 @@
-import { Info, TriangleAlert } from "lucide-react";
+import { Info } from "lucide-react";
 import React, { useState } from "react";
 import Vector from "../../../../public/Helpers/Vector.png"
+
 const BorrowPopup = ({ asset, image }) => {
   const [amount, setAmount] = useState("0.00");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
@@ -11,7 +12,6 @@ const BorrowPopup = ({ asset, image }) => {
 
   const handleBorrowETH = () => {
     if (isAcknowledged) {
-      // Implement your supply ETH logic here
       console.log("Borrow", asset, "ETH:", amount);
     } else {
       console.log("Please acknowledge the risk involved.");

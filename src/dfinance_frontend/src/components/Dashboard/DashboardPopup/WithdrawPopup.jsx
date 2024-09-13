@@ -2,6 +2,7 @@ import React from "react";
 import Button from "../../Common/Button";
 import { Info } from "lucide-react";
 import Vector from "../../../../public/Helpers/Vector.png"
+
 const WithdrawPopup = ({ asset, image }) => {
   return (
     <>

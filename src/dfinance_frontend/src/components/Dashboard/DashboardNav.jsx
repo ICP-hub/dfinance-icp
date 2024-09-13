@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import {
   TAB_CARD_DATA,
   WALLET_DETAILS_TABS,
@@ -13,8 +12,6 @@ import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
 import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
-import { Principal } from "@dfinity/principal";
-import { PrincipalClass } from "@dfinity/candid/lib/cjs/idl";
 import useAssetData from "../Common/useAssets";
 
 const DashboardNav = () => {
@@ -39,8 +36,6 @@ const DashboardNav = () => {
     },
   ]);
 
-
- 
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: "0" },
     { id: 1, title: "Total Supplies", count: "0" },
@@ -48,7 +43,6 @@ const DashboardNav = () => {
   ]);
 
   useEffect(() => {
-    // Define an async function inside the useEffect
     const fetchUserData = async () => {
       if (backendActor) {
         try {
@@ -63,8 +57,6 @@ const DashboardNav = () => {
         console.error('Backend actor initialization failed.');
       }
     };
-
-    // Call the async function
     fetchUserData();
   }, [principal, backendActor]);
 
@@ -84,15 +76,13 @@ const DashboardNav = () => {
 
   const updateWalletDetailTab = (data) => {
     if (!data || !data.Ok) return;
-
     const { net_worth, net_apy, health_factor } = data.Ok;
-
     const updatedTab = walletDetailTab.map((item) => {
       switch (item.id) {
         case 0:
-          return { ...item, count: `$${net_worth[0] }` };
+          return { ...item, count: `$${net_worth[0]}` };
         case 1:
-          return { ...item, count: `${net_apy[0] }%` };
+          return { ...item, count: `${net_apy[0]}%` };
         case 2:
           return { ...item, count: `${health_factor[0]}%` };
         default:
@@ -102,7 +92,6 @@ const DashboardNav = () => {
 
     setWalletDetailTab(updatedTab);
   };
-
 
   const updateWalletDetailTabs = () => {
     const updatedTabs = walletDetailTabs.map((item) => {
@@ -127,8 +116,6 @@ const DashboardNav = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { isWalletConnected } = useSelector((state) => state.utility);
-
-
   const [isDrop, setIsDrop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentValueIndex, setCurrentValueIndex] = useState(state?.id || 0);
@@ -136,10 +123,9 @@ const DashboardNav = () => {
     state || TAB_CARD_DATA[0]
   );
   const dropdownRef = useRef(null);
-
-
   const theme = useSelector((state) => state.theme.theme);
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
+
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
       setIsDrop(false);
@@ -203,7 +189,6 @@ const DashboardNav = () => {
     setIsPopupOpen(false);
   };
 
-  // Determine if it's dashboard supply or main based on pathname
   const isDashboardSupplyOrMain = pathname === "/dashboard";
 
   const handleAssetSelect = (index) => {
@@ -211,10 +196,8 @@ const DashboardNav = () => {
     setIsDrop(false);
   };
 
-  // Dynamic title based on pathname
   const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
 
-  // Determine if Risk Details button should be rendered
   const shouldRenderRiskDetailsButton =
     !pathname.includes("/market") &&
     !pathname.includes("/governance") &&
@@ -243,7 +226,6 @@ const DashboardNav = () => {
           ICP Market
         </h1>
 
-        {/* Menu Button */}
         <div className="md:hidden flex ml-auto -mt-1">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
             <EllipsisVertical color={checkColor} size={18} />
@@ -256,8 +238,6 @@ const DashboardNav = () => {
 
           {/* Menu button for small screens */}
           <div className="relative">
-          {/* <button onClick={handleFetch}>Fetch Reserve Data</button> */}
-            {/* Menu Items */}
             <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}>
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -294,8 +274,6 @@ const DashboardNav = () => {
                     </button>
                   </div>
                 </div>
-
-
               </div>
             </div>
           </div>
@@ -325,7 +303,7 @@ const DashboardNav = () => {
               </button>
             )}
           </div>}
-          {isPopupOpen && <RiskPopup onClose={handleClosePopup} userData={userData}/>}
+          {isPopupOpen && <RiskPopup onClose={handleClosePopup} userData={userData} />}
 
         </div>
         <div className="ml-auto hidden lg:flex">

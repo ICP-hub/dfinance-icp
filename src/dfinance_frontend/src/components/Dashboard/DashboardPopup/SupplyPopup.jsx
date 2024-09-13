@@ -4,7 +4,8 @@ import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import Vector from "../../../../public/Helpers/Vector.png"
 import Setting from "../../../../public/Helpers/settings.png"
-const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setIsModalOpen }) => {
+
+const SupplyPopup = ({ asset, image, balance, setIsModalOpen }) => {
   const transactionFee = 0.01;
   const hasEnoughBalance = balance >= transactionFee;
 
@@ -46,17 +47,16 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
 
   const handleSupplyETH = async () => {
     console.log("Supply function called for", asset, "ETH:", amount);
-    // const supply = await 
-    console.log("Backend actor" ,backendActor)
-    const sup = await backendActor.deposit("ckbtc", 100 , "user", 0);
+    console.log("Backend actor", backendActor)
+    const sup = await backendActor.deposit("ckbtc", 100, "user", 0);
     console.log("Supply", sup);
-    setIsPaymentDone(true); // Show payment done popup after successful transaction
-    setIsVisible(false); // Close SupplyPopup
+    setIsPaymentDone(true);
+    setIsVisible(false);
 
   };
 
   const handleClosePaymentPopup = () => {
-    setIsPaymentDone(false); // Hide the payment done popup
+    setIsPaymentDone(false);
     setIsModalOpen(false)
   };
 
@@ -160,7 +160,6 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
                 isApproved ? handleSupplyETH() : handleApprove();
               }}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
-            // disabled={!hasEnoughBalance} // Disable button if balance is not enough
             >
               {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
             </button>

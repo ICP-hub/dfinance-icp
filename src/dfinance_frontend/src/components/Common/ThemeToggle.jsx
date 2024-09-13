@@ -1,8 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from "../../redux/reducers/themeReducer";
-import { AiOutlineMoon } from "react-icons/ai";
-import { GrSun } from "react-icons/gr";
 import Sun from "../../../public/theme/Sun.svg"
 import Moon from "../../../public/theme/Moon.svg"
 

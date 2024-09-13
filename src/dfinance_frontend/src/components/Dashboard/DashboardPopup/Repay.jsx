@@ -9,14 +9,12 @@ const Repay = ({ asset, image }) => {
     };
 
     const handleRepayETH = () => {
-        // Implement your supply ETH logic here
-       
         console.log("Repay", asset, "ETH:", amount);
     };
     return (
         <>
             <h1 className='font-semibold text-xl'>Repay {asset} </h1>
-          
+
             <div className='flex flex-col gap-2 mt-5 text-sm'>
                 <div className="w-full">
                     <div className="w-full flex justify-between my-2">
@@ -50,20 +48,20 @@ const Repay = ({ asset, image }) => {
                     </div>
                     <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
                         <div className="w-full flex flex-col my-1">
-                        <div className="w-full flex justify-between items-center mt-2">
+                            <div className="w-full flex justify-between items-center mt-2">
                                 <p className='text-nowrap -mt-12'>Remaining debt</p>
                                 <p>
                                     <span className="text-[#2A1F9D] text-nowrap mt-2 dark:text-darkText">0.00001250 ETH</span>
-                                    <span className="text-[#2A1F9D] dark:text-darkText">→</span> 
+                                    <span className="text-[#2A1F9D] dark:text-darkText">→</span>
                                     <div className="w-full flex justify-end items-center mt-1 ">
-                                <p className="text-[#2A1F9D] mb-2 dark:text-darkText">0.00002010 ETH</p>
-                            </div>
-                            <div className="w-full flex justify-end items-center ">
-                               
-                                <span className="text-[#909094] text-nowrap -mt-2">$6.0</span>
-                                    <span className="text-[#909094] -mt-2 ">→</span> 
-                                    <span className="text-[#909094] text-nowrap -mt-2">$6.0</span>
-                            </div>
+                                        <p className="text-[#2A1F9D] mb-2 dark:text-darkText">0.00002010 ETH</p>
+                                    </div>
+                                    <div className="w-full flex justify-end items-center ">
+
+                                        <span className="text-[#909094] text-nowrap -mt-2">$6.0</span>
+                                        <span className="text-[#909094] -mt-2 ">→</span>
+                                        <span className="text-[#909094] text-nowrap -mt-2">$6.0</span>
+                                    </div>
                                 </p>
                             </div>
                             <div className="w-full flex justify-between items-center">
@@ -76,7 +74,7 @@ const Repay = ({ asset, image }) => {
                                 <p className="text-[#909094]">liquidation at &lt;1.5</p>
                             </div>
                         </div>
-                       
+
                     </div>
                 </div>
             </div>
@@ -100,7 +98,7 @@ const Repay = ({ asset, image }) => {
                             </div>
                         </div>
 
-                       
+
                     </div>
                 </div>
 

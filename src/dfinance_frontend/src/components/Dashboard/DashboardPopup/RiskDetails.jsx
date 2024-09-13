@@ -14,7 +14,7 @@ const RiskPopup = ({ onClose, userData }) => {
 
     console.log("userdata in risk", userData)
     const health_Factor_Value = userData.Ok.health_factor;
-    const Ltv_Value =userData.Ok.ltv;
+    const Ltv_Value = userData.Ok.ltv;
     const liquidationThreshold_Value = 76.5;
     const healthFactorMinValue = 1;
 
@@ -33,45 +33,36 @@ const RiskPopup = ({ onClose, userData }) => {
         };
     }, []);
 
-    // Helper function to calculate the position for Health Factor
     const calculateHealthFactorPosition = (value) => {
         if (typeof value !== 'number' || isNaN(value)) {
             console.error('Invalid Health Factor value:', value);
             return NaN;
         }
-        return Math.max(0, Math.min(100, (value / 10) * 100)); // Clamping between 0 and 100
+        return Math.max(0, Math.min(100, (value / 10) * 100));
     };
 
-    // Helper function to calculate the position for LTV
     const calculateLTVPosition = (value, min, max) => {
         if (typeof value !== 'number' || typeof min !== 'number' || typeof max !== 'number' || min === max) {
             console.error('Invalid input values for LTV position calculation:', { value, min, max });
             return NaN;
         }
-        return ((value - min) / (max - min)) * 100; // Scaling value to percentage
+        return ((value - min) / (max - min)) * 100;
     };
 
-    // Parse currentLTVThreshold if it's a percentage string
     const parseThreshold = (threshold) => {
         if (typeof threshold === 'string') {
             const parsed = parseFloat(threshold.replace('%', ''));
             if (!isNaN(parsed)) return parsed;
         }
-        return threshold; // Return as is if not a string or parsing fails
+        return threshold;
     };
 
-    // Convert `currentLTVThreshold` to a number
     const thresholdValue = parseThreshold(liquidationThreshold_Value);
-
-    // Dynamic positions for Health Factor
     const healthFactorPosition = calculateHealthFactorPosition(health_Factor_Value);
     const healthFactorMinPosition = calculateHealthFactorPosition(healthFactorMinValue);
-
-    // Dynamic positions for Current LTV and Current LTV Threshold
     const currentLTVPosition = calculateLTVPosition(Ltv_Value, 0, 100);
     const currentLTVThresholdPosition = calculateLTVPosition(thresholdValue, 0, 100);
 
-    // Debugging logs
     console.log('Health Factor Value:', health_Factor_Value);
     console.log('Health Factor Position:', healthFactorPosition);
     console.log('Health Factor Min Value:', healthFactorMinValue);
@@ -82,7 +73,6 @@ const RiskPopup = ({ onClose, userData }) => {
     console.log('Parsed Current LTV Threshold:', thresholdValue);
     console.log('Current LTV Threshold Position:', currentLTVThresholdPosition);
 
-    // Determine colors based on value positions
     const healthFactorColor = health_Factor_Value < healthFactorMinValue ? 'yellow' : 'green';
     const ltvColor = Ltv_Value > thresholdValue ? 'yellow' : 'green';
 

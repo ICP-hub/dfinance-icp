@@ -8,7 +8,7 @@ export function usePageLoading() {
       console.log('Page fully loaded');
       setTimeout(() => {
         setIsLoading(false);
-      }, 1000); // 1 second delay
+      }, 1000);
     };
 
     const handleBeforeUnload = () => {
@@ -19,12 +19,11 @@ export function usePageLoading() {
     window.addEventListener('load', handleLoad);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // Check if the document is already loaded
     if (document.readyState === 'complete') {
       console.log('Document is already fully loaded');
       setTimeout(() => {
         setIsLoading(false);
-      }, 1000); // 1 second delay
+      }, 1000); 
     }
 
     return () => {

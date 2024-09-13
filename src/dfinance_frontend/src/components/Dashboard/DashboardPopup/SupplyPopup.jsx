@@ -48,7 +48,7 @@ const SupplyPopup = ({ asset, image, balance, setIsModalOpen }) => {
   const handleSupplyETH = async () => {
     console.log("Supply function called for", asset, "ETH:", amount);
     console.log("Backend actor", backendActor)
-    const sup = await backendActor.deposit("ckbtc", 100, "user", 0);
+    const sup = await backendActor.deposit("ckBTC", 500, "user", true);
     console.log("Supply", sup);
     setIsPaymentDone(true);
     setIsVisible(false);

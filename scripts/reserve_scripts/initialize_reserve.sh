@@ -6,8 +6,8 @@ BACKEND_CANISTER_ID="dfinance_backend"
 
 # List of ledger tokens to initialize in the reserve list
 LEDGER_TOKENS='(vec {
-    record { "ckBTC"; principal "c2lt4-zmaaa-aaaaa-qaaiq-cai" };
-    record { "ckETH"; principal "ctiya-peaaa-aaaaa-qaaja-cai" };
+    record { "ckBTC"; principal "bkyz2-fmaaa-aaaaa-qaaaq-cai" };
+    record { "ckETH"; principal "br5f7-7uaaa-aaaaa-qaaca-cai" };
 })'
 
 # Call the initialize_reserve_list function on the backend canister

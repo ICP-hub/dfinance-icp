@@ -1,6 +1,6 @@
-pub const CKBTC_LEDGER_CANISTER: &str = "c2lt4-zmaaa-aaaaa-qaaiq-cai";
-pub const CKETH_LEDGER_CANISTER: &str = "ctiya-peaaa-aaaaa-qaaja-cai";
-pub const DTOKEN_CANISTER: &str = "c5kvi-uuaaa-aaaaa-qaaia-cai";
-pub const DEBTTOKEN_CANISTER: &str = "cuj6u-c4aaa-aaaaa-qaajq-cai";
-pub const BACKEND_CANISTER: &str = "avqkn-guaaa-aaaaa-qaaea-cai";
+pub const CKBTC_LEDGER_CANISTER: &str = "bkyz2-fmaaa-aaaaa-qaaaq-cai";
+pub const CKETH_LEDGER_CANISTER: &str = "br5f7-7uaaa-aaaaa-qaaca-cai";
+pub const DTOKEN_CANISTER: &str = "asrmz-lmaaa-aaaaa-qaaeq-cai";
+pub const DEBTTOKEN_CANISTER: &str = "avqkn-guaaa-aaaaa-qaaea-cai";
+pub const BACKEND_CANISTER: &str = "bw4dl-smaaa-aaaaa-qaacq-cai";
 pub const FRONTEND_CANISTER: &str = "asrmz-lmaaa-aaaaa-qaaeq-cai";

@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Info, Check, Wallet, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
-import { Fuel } from 'lucide-react';
-
+import { Fuel } from "lucide-react";
+import { useSelector } from "react-redux";
 import Setting from "../../../../public/Helpers/settings.png";
 const SupplyPopup = ({
   asset,
@@ -14,9 +14,18 @@ const SupplyPopup = ({
   setIsModalOpen,
 }) => {
   const transactionFee = 0.01;
+  const fees = useSelector((state) => state.fees.fees);
+  console.log("Asset:", asset); // Check what asset value is being passed
+  console.log("Fees:", fees); // Check the fees object
+  const normalizedAsset = asset ? asset.toLowerCase() : 'default';
+
+  if (!fees) {
+    return <p>Error: Fees data not available.</p>;
+  }
+  const transferFee = fees[normalizedAsset] || fees.default;
   const hasEnoughBalance = balance >= transactionFee;
   const value = 5.23;
-  const [amount, setAmount] = useState("0.00");
+  const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -51,7 +60,7 @@ const SupplyPopup = ({
     setIsApproved(true);
     console.log("isApproved state after approval:", isApproved);
   };
-
+  const isCollateral = true;
   const handleSupplyETH = async () => {
     console.log("Supply function called for", asset, "ETH:", amount);
     // const supply = await
@@ -83,21 +92,21 @@ const SupplyPopup = ({
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="0.00"
+                    className="text-xs focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder="Enter Amount"
                   />
-                  <p className="text-xs text-gray-500 mt-1">$0</p>
+                  <p className="text-xs text-gray-500 mt-3">$0</p>
                 </div>
                 <div className="w-9/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
-                      className="object-cover w-8 h-8"
+                      className="object-cover w-8 h-8 rounded-full"
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">Supply Balance {balance} Max</p>
+                  <p className="text-xs mt-3">Supply Balance {balance} Max</p>
                 </div>
               </div>
             </div>
@@ -112,7 +121,13 @@ const SupplyPopup = ({
                 </div>
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
-                  <p>Enabled</p>
+                  <p
+                    className={`font-semibold ${
+                      isCollateral ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    {isCollateral ? "Enabled" : "Disabled"}
+                  </p>
                 </div>
                 <div className="w-full flex flex-col my-1">
                   <div className="w-full flex justify-between items-center">
@@ -148,23 +163,28 @@ const SupplyPopup = ({
           {!hasEnoughBalance && (
             <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
               <p className="text-yellow-700">
-                You do not have enough ETH in your account to pay for
-                transaction fees on the Ethereum Sepolia network. Please deposit
-                ETH from another account.
+                You do not have enough {asset} in your account to pay for
+                transaction fees on the Ethereum Sepolia network. Please deposit{" "}
+                {asset} from another account.
               </p>
             </div>
           )}
 
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
-            <Fuel className="w-4 h-4 mr-1" />
-              <h1>$6.06</h1>
+              <Fuel className="w-4 h-4 mr-1" />
+              <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
+              <img
+                src={image}
+                alt="asset icon"
+                className="object-cover w-8 h-8 rounded-full" // Ensure the image is fully rounded
+              />
               <div className="relative group">
                 <Info size={16} className="ml-2 cursor-pointer" />
 
                 {/* Tooltip */}
                 <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-                  Fee deducted on every transaction
+                  Fees deducted on every transaction
                 </div>
               </div>
             </div>

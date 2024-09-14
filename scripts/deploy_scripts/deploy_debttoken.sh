@@ -20,7 +20,7 @@ export DEFAULT="2vxsx-fae"
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=100
 
-dfx identity use default
+dfx identity use abcd
 
 export ARCHIVE_CONTROLLER=$(dfx identity get-principal)
 

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 const Repay = ({ asset, image }) => {
-  const [amount, setAmount] = useState("0.00");
+  const [amount, setAmount] = useState("");
   const value = 5.23;
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
@@ -32,22 +32,22 @@ const Repay = ({ asset, image }) => {
             <h1>Amount</h1>
           </div>
           <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-            <div className="w-4/12">
+            <div className="w-5/12">
               <input
                 type="number"
                 value={amount}
                 onChange={handleAmountChange}
                 className="text-lg focus:outline-none bg-gray-100  rounded-md py-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                placeholder="0.00"
+                placeholder="Enter Amount"
               />
               <p className="mt-1">$30.00</p>
             </div>
-            <div className="w-8/12 flex flex-col items-end">
+            <div className="w-7/12 flex flex-col items-end">
               <div className="w-auto flex items-center gap-2">
                 <img
                   src={image}
                   alt="Item Image"
-                  className="object-fill w-8 h-8"
+                  className="object-fill w-6 h-6 rounded-full"
                 />
                 <span className="text-lg">{asset}</span>
               </div>
@@ -120,7 +120,7 @@ const Repay = ({ asset, image }) => {
               <img
                 src={image}
                 alt="asset icon"
-                className="object-cover w-8 h-8 rounded-full" // Ensure the image is fully rounded
+                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
               />
               <div className="relative group">
                 <Info size={16} className="ml-2 cursor-pointer" />
@@ -139,8 +139,8 @@ const Repay = ({ asset, image }) => {
                 </div>
               </div>
               <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                You do not have enough ETH in your account to pay for
-                transaction fees on Ethereum Sepolia network. Please deposit ETH
+                You do not have enough {asset} in your account to pay for
+                transaction fees on Ethereum Sepolia network. Please deposit {' '} {asset}
                 from another account.
               </div>
             </div>

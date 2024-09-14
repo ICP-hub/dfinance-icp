@@ -31,9 +31,17 @@ const SupplyPopup = ({
   const [isVisible, setIsVisible] = useState(true);
 
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    const inputValue = parseFloat(e.target.value);
+  
+    // Check if the input is a number and not greater than the balance
+    if (!isNaN(inputValue) && inputValue <= balance) {
+      setAmount(inputValue);
+    } else if (inputValue > balance) {
+      setAmount(balance); // If the input exceeds the balance, set it to the balance
+    } else {
+      setAmount(''); // Reset to empty if the input is not a valid number
+    }
   };
-
   const { createLedgerActor, backendActor } = useAuth();
 
   const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
@@ -71,10 +79,12 @@ const SupplyPopup = ({
     setIsVisible(false); // Close SupplyPopup
   };
 
+  
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false); // Hide the payment done popup
     setIsModalOpen(false);
   };
+  
 
   return (
     <>
@@ -87,26 +97,26 @@ const SupplyPopup = ({
                 <h1>Amount</h1>
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                <div className="w-3/12">
+                <div className="w-5/12">
                   <input
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="text-xs focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="text-lg focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />
-                  <p className="text-xs text-gray-500 mt-3">$0</p>
+                  <p className="text-xs text-gray-500 mt-0.25">$0</p>
                 </div>
-                <div className="w-9/12 flex flex-col items-end">
+                <div className="w-7/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
-                      className="object-cover w-8 h-8 rounded-full"
+                      className="object-cover w-6 h-6 rounded-full"
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-3">Supply Balance {balance} Max</p>
+                  <p className="text-xs mt-4">Supply Balance {balance} Max</p>
                 </div>
               </div>
             </div>
@@ -172,12 +182,12 @@ const SupplyPopup = ({
 
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
-              <Fuel className="w-4 h-4 mr-1" />
+              <Fuel className="w-4 h-4 mr-1 " />
               <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
               <img
                 src={image}
                 alt="asset icon"
-                className="object-cover w-8 h-8 rounded-full" // Ensure the image is fully rounded
+                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
               />
               <div className="relative group">
                 <Info size={16} className="ml-2 cursor-pointer" />

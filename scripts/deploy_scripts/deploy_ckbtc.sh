@@ -61,9 +61,9 @@
 
 set -e
 
-dfx identity new newminter  || true
+dfx identity new minter  || true
 
-dfx identity use newminter 
+dfx identity use minter 
 
 export MINTER=$(dfx identity get-principal)
 echo "Minter Principal: $MINTER"
@@ -76,7 +76,7 @@ export TOKEN_SYMBOL="ckBTC"
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=100
 
-dfx identity use default
+dfx identity use abcd
 
 export USER=$(dfx identity get-principal)
 echo "User Principal: $USER"

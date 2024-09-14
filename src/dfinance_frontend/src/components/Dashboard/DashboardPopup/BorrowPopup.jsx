@@ -35,22 +35,22 @@ const Borrow = ({ asset, image }) => {
             <h1>Amount</h1>
           </div>
           <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-            <div className="w-4/12">
+            <div className="w-5/12">
               <input
-                type="text"
+                type="number"
                 value={amount}
                 onChange={handleAmountChange}
-                className="text-xs focus:outline-none bg-gray-100  rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
+                className="text-lg focus:outline-none bg-gray-100  rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                 placeholder="Enter Amount"
               />
-              <p className="mt-1 text-xs">$30.00</p>
+              <p className=" text-xs">$30.00</p>
             </div>
-            <div className="w-8/12 flex flex-col items-end">
+            <div className="w-7/12 flex flex-col items-end">
               <div className="w-auto flex items-center gap-2">
                 <img
                   src={image}
                   alt="Item Image"
-                  className="object-fill w-8 h-8"
+                  className="object-fill w-6 h-6 rounded-full"
                 />
                 <span className="text-lg">{asset}</span>
               </div>
@@ -58,11 +58,11 @@ const Borrow = ({ asset, image }) => {
             </div>
           </div>
         </div>
-        <div className="w-full dark:bg-darkBackground/30 dark:text-darkText">
+        <div className="w-full ">
           <div className="w-full flex justify-between my-2">
             <h1>Transaction overview</h1>
           </div>
-          <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/5 dark:text-darkText">
+          <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
             <div className="w-full flex flex-col my-1">
               <div className="w-full flex justify-between items-center">
                 <p>Health Factor</p>
@@ -102,7 +102,7 @@ const Borrow = ({ asset, image }) => {
               <img
                 src={image}
                 alt="asset icon"
-                className="object-cover w-8 h-8 rounded-full" // Ensure the image is fully rounded
+                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
               />
             <div className="relative group">
               <Info size={16} className="ml-2 cursor-pointer" />

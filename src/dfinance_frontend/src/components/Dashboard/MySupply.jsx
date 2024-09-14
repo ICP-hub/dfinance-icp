@@ -674,13 +674,14 @@ const MySupply = () => {
                                 </div>
                               </div>
                               <div className="flex justify-center gap-2 mt-2">
-                                <Button
+                              <Button
                                   title={"Supply"}
                                   onClickHandler={() =>
                                     handleModalOpen(
                                       "supply",
-                                      item.asset,
-                                      item.image
+                                      item[0],
+                                      (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                      item[1]?.Ok.supply_rate_apr
                                     )
                                   }
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-lg font-inter"

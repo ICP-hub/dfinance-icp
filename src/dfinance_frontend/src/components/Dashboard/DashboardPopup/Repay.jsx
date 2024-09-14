@@ -140,7 +140,7 @@ const Repay = ({ asset, image }) => {
               </div>
               <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
                 You do not have enough {asset} in your account to pay for
-                transaction fees on Ethereum Sepolia network. Please deposit {' '} {asset}
+                transaction fees on Ethereum Sepolia network. Please deposit {' '} {asset} {' '}
                 from another account.
               </div>
             </div>

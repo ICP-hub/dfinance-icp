@@ -43,6 +43,10 @@ num-traits = "0.2.19"
 serde = "1.0.203"
 serde_bytes = "0.11.15"
 
+
+dotenv = "0.15"  # or the latest version
+env_logger = "0.11"
+
 [dev-dependencies]
 candid-extractor = "0.1.4"
 candid_parser = "0.1.4"

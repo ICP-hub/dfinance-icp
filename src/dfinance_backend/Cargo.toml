@@ -26,7 +26,7 @@ time = "0.3.36"
 once_cell = "1.19.0"
 uint = "0.8"
 dotenv = "0.15.0"
-
+env_logger = "0.11"
 
 [dev-dependencies]
 pocket-ic = "4.0.0"

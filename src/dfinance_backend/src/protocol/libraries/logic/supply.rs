@@ -7,7 +7,7 @@ use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-
+use crate::protocol::libraries::types::datatypes::UserReserveData;
 // use candid::{CandidType, Deserialize};
 use candid::{CandidType, Deserialize, encode_args, decode_one};
 use serde::Serialize;

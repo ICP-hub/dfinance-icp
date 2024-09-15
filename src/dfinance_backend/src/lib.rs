@@ -21,13 +21,19 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
+use dotenv::dotenv;
+use std::env;
+
 
 #[init]
 fn init() {
+    //ini reserve list from asset_address
     // initialize_reserve();
     ic_cdk::println!("function called");
 }
 
+
+//remove
 #[update]
 fn initialize_reserve_list(ledger_tokens: Vec<(String, Principal)>) -> Result<(), String> {
     ic_cdk::println!("Initialize reserve list function called");
@@ -62,6 +68,25 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
     }
 }
 
+#[update]
+async fn liquidation_call(
+    asset: String,
+    amount: u64,
+    on_behalf_of: String,
+) -> Result<(), String> {
+    
+   
+    match SupplyLogic::execute_liquidation(asset, amount as u128, on_behalf_of).await {
+        Ok(_) => {
+            ic_cdk::println!("execute_liquidation function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
+            Err(e)
+        }
+    }
+}
 // Function to fetch the reserve-data based on the asset
 #[query]
 fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
@@ -186,7 +211,7 @@ async fn repay(asset: String, amount: u128, on_behalf: Option<String>) -> Result
 
 // Withdraws amount from the collateral/supply
 #[update]
-async fn withdraw(
+pub async fn withdraw(
     asset: String,
     amount: u128,
     on_behalf: Option<String>,

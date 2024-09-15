@@ -1035,10 +1035,10 @@ fn test_repay() {
         // Insufficient balance
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 10_000, // Valid amount but insufficient balance
+            amount: 70_000, // Valid amount but insufficient balance
             on_behalf_of: None,
             expect_success: false,
-            expected_error_message: Some("InsufficientFunds { balance: Nat(2000) }".to_string()), // change it later on
+            expected_error_message: Some("InsufficientFunds { balance: Nat(32000) }".to_string()), // change it later on
             simulate_insufficient_balance: true,
             simulate_dtoken_transfer_failure: false,
         },

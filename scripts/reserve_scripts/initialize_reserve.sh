@@ -16,3 +16,9 @@ dfx canister call $BACKEND_CANISTER_ID initialize_reserve_list "$LEDGER_TOKENS"
 
 echo "Initialization of reserve list completed."
 
+echo "Calling initialize_reserve on $BACKEND_CANISTER_ID ...."
+
+
+dfx canister call $BACKEND_CANISTER_ID initialize_reserve
+
+echo "initialize_reserve was called successfully for all reserves."

@@ -38,14 +38,14 @@ fn calculate_utilization_rate(total_supply: f64, total_borrowed: f64) -> f64 {
 
 fn calculate_interest_rates(
     total_supply: f64,
-    total_borrowed: f64,
+    total_borrowed: f64, //without interest
     total_stable_debt: f64,
     total_variable_debt: f64,
     average_stable_borrow_rate: f64,
     params: &InterestRateParams,
     reserve_factor: f64,
 ) -> (f64, f64, f64) {
-    let total_debt = total_stable_debt + total_variable_debt;
+    let total_debt = total_stable_debt + total_variable_debt; //include interest
     if total_debt == 0.0 {
         return (0.0, params.base_stable_rate_offset, params.base_variable_borrow_rate);
     }

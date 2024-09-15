@@ -21,30 +21,17 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
-use dotenv::dotenv;
-use std::env;
+use crate::implementations::reserve::initialize_reserve;
 
 
 #[init]
 fn init() {
-    //ini reserve list from asset_address
-    // initialize_reserve();
+    
+    initialize_reserve();
     ic_cdk::println!("function called");
 }
 
 
-//remove
-#[update]
-fn initialize_reserve_list(ledger_tokens: Vec<(String, Principal)>) -> Result<(), String> {
-    ic_cdk::println!("Initialize reserve list function called");
-
-    mutate_state(|state| {
-        for (token_name, principal) in ledger_tokens {
-            state.reserve_list.insert(token_name.to_string(), principal);
-        }
-        Ok(())
-    })
-}
 
 // Function to call the execute_supply logic
 #[update]

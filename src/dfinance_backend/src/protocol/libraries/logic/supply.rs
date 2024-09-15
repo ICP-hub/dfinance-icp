@@ -8,54 +8,16 @@ use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
-// use candid::{CandidType, Deserialize};
-use candid::{CandidType, Deserialize, encode_args, decode_one};
-use serde::Serialize;
 use crate::{
-    api::functions::asset_transfer_from,
+    api::functions::{asset_transfer_from, get_balance},
     constants::asset_address::{
-        BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DTOKEN_CANISTER, DEBTTOKEN_CANISTER,
+        BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
+        DTOKEN_CANISTER,
     },
 };
+use crate::{repay, withdraw};
 use ic_cdk::api;
-use crate::{withdraw, repay}; 
 
-
-#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
-struct Account {
-    owner: Principal,
-    subaccount: Option<Vec<u8>>,
-}
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct BalanceResponse {
-    pub balance: Nat,
-}
-
-pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
-    let account = Account {
-        owner: principal,
-        subaccount: None,
-    };
-
-    // Encode the account as Candid arguments
-    let encoded_args = encode_args((account,)).unwrap();
-
-    // Call the canister and get the raw response (Vec<u8>)
-    let raw_response = ic_cdk::api::call::call_raw(
-        canister,              // Target canister
-        "icrc1_balance_of",     // Method name
-        &encoded_args,          // Encoded arguments
-        0,                      // Cycles (0 in this case)
-    )
-    .await
-    .unwrap();
-
-    // Decode the raw Candid response into the BalanceResponse struct
-    // let response: BalanceResponse = decode_one(&raw_response).unwrap();
-    let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
-    // Return the balance as u64
-    balance
-}
 impl SupplyLogic {
     // -------------------------------------
     // ----------- SUPPLY LOGIC ------------
@@ -64,9 +26,6 @@ impl SupplyLogic {
     pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
         ic_cdk::println!("Starting execute_supply with params: {:?}", params);
 
-        // Fetchs the canister ids, principal and amount
-        // let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
-        //     .map_err(|_| "Invalid ledger canister ID".to_string())?;
         let ledger_canister_id = mutate_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -75,8 +34,6 @@ impl SupplyLogic {
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
 
-        // let user_principal = Principal::from_text(params.on_behalf_of)
-        //     .map_err(|_| "Invalid user canister ID".to_string())?;
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
@@ -114,7 +71,7 @@ impl SupplyLogic {
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
-        // Updates the liquidity and borrow index
+        // Updates the liquidity index
         reserve::update_state(&mut reserve_data, &mut reserve_cache);
         ic_cdk::println!("Reserve state updated successfully");
 
@@ -122,8 +79,7 @@ impl SupplyLogic {
         ValidationLogic::validate_supply(&reserve_cache, &reserve_data, params.amount).await;
         ic_cdk::println!("Supply validated successfully");
 
-
-        // Updates inetrest rates with the assets and the amount
+        // Updates interest rates with the assets and the amount
         reserve::update_interest_rates(
             &mut reserve_data,
             &reserve_cache,
@@ -133,7 +89,6 @@ impl SupplyLogic {
         )
         .await;
         ic_cdk::println!("Interest rates updated successfully");
-
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
@@ -330,7 +285,6 @@ impl SupplyLogic {
             TransferFromResult::Err(err) => Err(format!("{:?}", err)),
         };
 
-
         let dtoken_args = TransferArgs {
             to: TransferAccount {
                 owner: platform_principal,
@@ -426,9 +380,11 @@ impl SupplyLogic {
         Ok(())
     }
 
-    
-    pub async fn execute_liquidation(asset_name: String, amount: u128, on_behalf_of: String) -> Result<(), String>{
-        // Set canister IDs (mock values)
+    pub async fn execute_liquidation(
+        asset_name: String,
+        amount: u128,
+        on_behalf_of: String,
+    ) -> Result<(), String> {
         let ckbtc_canister = Principal::from_text(CKBTC_LEDGER_CANISTER)
             .map_err(|_| "Invalid ledger canister ID".to_string())?;
 
@@ -440,33 +396,18 @@ impl SupplyLogic {
 
         let debt_canister = Principal::from_text(DEBTTOKEN_CANISTER)
             .map_err(|_| "Invalid debttoken canister ID".to_string())?;
-        // Identity and principals
+
         let user_principal = Principal::from_text(on_behalf_of)
-                .map_err(|_| "Invalid user canister ID".to_string())?;
+            .map_err(|_| "Invalid user canister ID".to_string())?;
         ic_cdk::println!("User Principal (Debt User): {}", user_principal);
 
-        // Assuming the liquidator identity is already set for this example
         let liquidator_principal = api::caller();
         ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
 
-        // Get the backend canister principal
         let backend_canister_principal = backend_canister;
         ic_cdk::println!("Backend Canister Principal: {}", backend_canister_principal);
 
-        // Check balances before operations
         ic_cdk::println!("Checking balances before liquidation...");
-
-        // Function to call icrc1_balance_of on ckbtc_canister
-        // async fn get_balance(canister: Principal, principal: Principal) -> u64 {
-        //     let (response,): (BalanceResponse,) =
-        //         ic_cdk::api::call::call(canister, "icrc1_balance_of", (Account {
-        //             owner: principal,
-        //             subaccount: None,
-        //         }))
-        //             .await
-        //             .unwrap();
-        //     response.balance
-        // }
 
         let user_balance = get_balance(ckbtc_canister, user_principal).await;
         let liquidator_balance = get_balance(ckbtc_canister, liquidator_principal).await;
@@ -478,20 +419,14 @@ impl SupplyLogic {
         ic_cdk::println!("Backend Canister Balance: {}", backend_balance);
         ic_cdk::println!("User Debt Token Balance: {}", user_debt_token_balance);
 
-       
         let asset = asset_name.clone();
-      
 
-        // Repay the user's debt
-       
         let repay_response = repay(asset.clone(), amount, Some(user_principal.to_string())).await;
 
         match repay_response {
             Ok(_) => ic_cdk::println!("Repayment successful"),
             Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
         }
-
-        // Check balances after repayment
         let user_balance_after = get_balance(ckbtc_canister, user_principal).await;
         let liquidator_balance_after = get_balance(ckbtc_canister, liquidator_principal).await;
         let backend_balance_after = get_balance(ckbtc_canister, backend_canister_principal).await;
@@ -505,16 +440,20 @@ impl SupplyLogic {
             "Backend Canister Balance after repay: {}",
             backend_balance_after
         );
-        ic_cdk::println!("User Debt Token Balance after repay: {}", user_debt_token_balance_after);
+        ic_cdk::println!(
+            "User Debt Token Balance after repay: {}",
+            user_debt_token_balance_after
+        );
         // Withdraw the collateral
         let collateral = true; //params
-        // let withdraw_response: Result<(), String> = ic_cdk::api::call::call(
-        //     backend_canister,
-        //     "withdraw",
-        //     (asset.clone(), amount, Some(user_principal), collateral),
-        // )
-        // .await;
-        let withdraw_response = withdraw(asset.clone(), amount, Some(user_principal.to_string()), collateral).await;
+
+        let withdraw_response = withdraw(
+            asset.clone(),
+            amount,
+            Some(user_principal.to_string()),
+            collateral,
+        )
+        .await;
         match withdraw_response {
             Ok(_) => ic_cdk::println!("Withdraw successful"),
             Err(e) => ic_cdk::trap(&format!("Withdraw failed: {}", e)),
@@ -526,7 +465,7 @@ impl SupplyLogic {
             get_balance(ckbtc_canister, liquidator_principal).await;
         let backend_balance_after_withdraw =
             get_balance(ckbtc_canister, backend_canister_principal).await;
-            let user_d_token_balance = get_balance(dtoken_canister, user_principal).await;
+        let user_d_token_balance = get_balance(dtoken_canister, user_principal).await;
 
         ic_cdk::println!(
             "User Balance after withdraw: {}",
@@ -541,7 +480,6 @@ impl SupplyLogic {
             backend_balance_after_withdraw
         );
         ic_cdk::println!("User DToken Balance: {}", user_d_token_balance);
-    Ok(())
-        
+        Ok(())
     }
 }

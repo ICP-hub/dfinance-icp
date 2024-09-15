@@ -465,37 +465,37 @@ fn test_asset_list_func() {
 
 
 
-fn update_canister_constants(ckbtc_id: String, cketh_id: String, dtoken_id: String, debttoken_id:String, backend_id: String, ) {
+// fn update_canister_constants(ckbtc_id: String, cketh_id: String, dtoken_id: String, debttoken_id:String, backend_id: String, ) {
     
-    let constants_file_path = "./src/constants/asset_address.rs";  
+//     let constants_file_path = "./src/constants/asset_address.rs";  
 
     
-    let mut file_content = String::new();
-    fs::File::open(constants_file_path)
-        .expect("Unable to open file")
-        .read_to_string(&mut file_content)
-        .expect("Unable to read file");
+//     let mut file_content = String::new();
+//     fs::File::open(constants_file_path)
+//         .expect("Unable to open file")
+//         .read_to_string(&mut file_content)
+//         .expect("Unable to read file");
 
     
-    let updated_content = file_content
-        .replace("c2lt4-zmaaa-aaaaa-qaaiq-cai", &ckbtc_id)
-        // .replace("ctiya-peaaa-aaaaa-qaaja-cai", cketh_id)
-        .replace("c5kvi-uuaaa-aaaaa-qaaia-cai", &dtoken_id)
-        // .replace("cuj6u-c4aaa-aaaaa-qaajq-cai", debttoken_id)
-        .replace("avqkn-guaaa-aaaaa-qaaea-cai", &backend_id);
-        // .replace("asrmz-lmaaa-aaaaa-qaaeq-cai", frontend_id);
+//     let updated_content = file_content
+//         .replace("c2lt4-zmaaa-aaaaa-qaaiq-cai", &ckbtc_id)
+//         // .replace("ctiya-peaaa-aaaaa-qaaja-cai", cketh_id)
+//         .replace("c5kvi-uuaaa-aaaaa-qaaia-cai", &dtoken_id)
+//         // .replace("cuj6u-c4aaa-aaaaa-qaajq-cai", debttoken_id)
+//         .replace("avqkn-guaaa-aaaaa-qaaea-cai", &backend_id);
+//         // .replace("asrmz-lmaaa-aaaaa-qaaeq-cai", frontend_id);
 
     
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(constants_file_path)
-        .expect("Unable to open file for writing");
-    file.write_all(updated_content.as_bytes())
-        .expect("Unable to write updated content to file");
+//     let mut file = OpenOptions::new()
+//         .write(true)
+//         .truncate(true)
+//         .open(constants_file_path)
+//         .expect("Unable to open file for writing");
+//     file.write_all(updated_content.as_bytes())
+//         .expect("Unable to write updated content to file");
 
-    println!("Updated constants file with new canister IDs.");
-}
+//     println!("Updated constants file with new canister IDs.");
+// }
 
 // #[test]
 // fn test_update_canister_ids_in_rs_file() {

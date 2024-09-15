@@ -12,7 +12,6 @@ pub struct ReserveData {
     pub last_update_timestamp: u64,
     pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,
-    pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.
     pub liquidity_index: u128,
     pub current_liquidity_rate: u128,
     pub configuration: ReserveConfiguration,
@@ -101,3 +100,7 @@ pub struct ExecuteWithdrawParams {
     pub on_behalf_of: Option<String>,
     pub is_collateral: bool,
 }
+
+
+
+    // pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.

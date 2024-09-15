@@ -173,15 +173,15 @@ body{
 .bouncing-div > div:nth-child(3) {
   animation-delay: 0.3s;
 }
-/* styles.css or your custom CSS file */
+
 @keyframes fadeInLeft {
   0% {
     opacity: 0;
-    transform: translateX(-20px); /* Start slightly off-screen to the left */
+    transform: translateX(-20px); 
   }
   100% {
     opacity: 1;
-    transform: translateX(0); /* Fade in to its original position */
+    transform: translateX(0); 
   }
 }
 
@@ -189,20 +189,18 @@ body{
   animation: fadeInLeft 0.5s ease forwards; 
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
 .hide-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
 }
 /* App.css */
 .custom-toast {
-  max-width: 90%; /* Default size */
-  margin: 0 auto; /* Center on the screen */
+  max-width: 90%; 
+  margin: 0 auto; 
 }
 
 @media (max-width: 600px) {
@@ -212,70 +210,66 @@ body{
     border-radius: 5px; 
   }
 }
-/* styles.css */
-/* styles.css */
+
 :root {
-  --scrollbar-track-light: rgba(252, 189, 120, 0.1); /* Light mode track color */
-  --scrollbar-thumb-light: rgba(95, 91, 91, 0.6); /* Light mode thumb color */
-  --scrollbar-track-dark: rgba(3, 2, 48, 0.4); /* Dark mode track color */
-  --scrollbar-thumb-dark: rgba(104, 101, 101, 0.6); /* Dark mode thumb color */
+  --scrollbar-track-light: rgba(252, 189, 120, 0.1); 
+  --scrollbar-thumb-light: rgba(95, 91, 91, 0.6); 
+  --scrollbar-track-dark: rgba(3, 2, 48, 0.4); 
+  --scrollbar-thumb-dark: rgba(104, 101, 101, 0.6);
 }
 
-/* Default light mode */
 .scrollbar-custom {
   scrollbar-width: thin; /* For Firefox */
   scrollbar-color: var(--scrollbar-thumb-light) var(--scrollbar-track-light); /* Firefox */
 }
 
 .scrollbar-custom::-webkit-scrollbar {
-  width: 8px; /* Customize scrollbar width */
-  height: 8px; /* For horizontal scrollbar */
+  width: 8px; 
+  height: 8px; 
 }
 
 .scrollbar-custom::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-light); /* Custom track color */
+  background: var(--scrollbar-track-light); 
 }
 
 .scrollbar-custom::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb-light); /* Custom thumb color */
-  border-radius: var(--scrollbar-thumb-radius); /* Border radius for thumb */
+  background: var(--scrollbar-thumb-light);
+  border-radius: var(--scrollbar-thumb-radius); 
 }
 
-/* Hide the scrollbar arrows (buttons) */
+
 .scrollbar-custom::-webkit-scrollbar-button {
-  display: none; /* Hide the scrollbar buttons (arrows) */
+  display: none; 
 }
 
-/* Additional fixes */
 .scrollbar-custom::-webkit-scrollbar-corner {
-  background: transparent; /* Hide corner area */
+  background: transparent; 
 }
 
-/* Dark mode styles */
 .dark .scrollbar-custom {
   scrollbar-color: var(--scrollbar-thumb-dark) var(--scrollbar-track-dark); /* Firefox */
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-dark); /* Custom track color for dark mode */
+  background: var(--scrollbar-track-dark); 
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb-dark); /* Custom thumb color for dark mode */
-  border-radius: var(--scrollbar-thumb-radius); /* Border radius for thumb */
+  background: var(--scrollbar-thumb-dark);
+  border-radius: var(--scrollbar-thumb-radius); 
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-button {
-  display: none; /* Hide the scrollbar buttons (arrows) in dark mode */
+  display: none; 
 }
 
 
 .scrollbar-custom::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb-light); /* Custom thumb color */
+  background: var(--scrollbar-thumb-light); 
   border-radius: var(--scrollbar-thumb-radius); 
 }
 .scrollbar-custom::-webkit-scrollbar-button {
-  display: none; /* Hide the scrollbar buttons (arrows) */
+  display: none; 
 }
 
 /* Dark mode */
@@ -284,14 +278,21 @@ body{
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-dark); /* Custom track color */
+  background: var(--scrollbar-track-dark); 
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb-dark); /* Custom thumb color */
+  background: var(--scrollbar-thumb-dark); 
   border-radius: var(--scrollbar-thumb-radius); 
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-button {
-  display: none; /* Hide the scrollbar buttons (arrows) in dark mode */
+  display: none; 
+}
+
+.transition-bar {
+  transition: x 0.5s ease-in-out, width 0.5s ease-in-out;
+}
+.transition-text {
+  transition: transform 0.8s ease-in-out;
 }

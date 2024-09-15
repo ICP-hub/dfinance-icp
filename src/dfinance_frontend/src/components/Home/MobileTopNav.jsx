@@ -125,7 +125,7 @@ const MobileTopNav = ({
     setIsMobileNav(false);
   };
 
- 
+
   const copyToClipboard = () => {
     if (principal) {
       navigator.clipboard
@@ -146,7 +146,7 @@ const MobileTopNav = ({
         });
     }
   };
-  
+
 
   const truncateString = (str, maxLength) => {
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
@@ -172,6 +172,10 @@ const MobileTopNav = ({
 
   if (isLargeScreen) {
     return null; // Return null if it's a large screen
+  }
+
+  const switchWallet = () => {
+    dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }))
   }
 
   return (
@@ -335,82 +339,85 @@ const MobileTopNav = ({
 
         {!isHomeNav
           ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-              if (link.alwaysPresent) {
-                return (
+            if (link.alwaysPresent) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            } else if (isTestnetMode && link.testnet) {
+              return (
+                <React.Fragment key={index}>
                   <NavLink
-                    key={index}
                     to={link.route}
-                    className="text-[#2A1F9D] mt-5 p-2 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                    className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
                     style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
                     onClick={handleClose}
                   >
                     {link.title}
                   </NavLink>
-                );
-              } else if (isTestnetMode && link.testnet) {
-                return (
-                  <React.Fragment key={index}>
-                    <NavLink
-                      to={link.route}
-                      className="text-[#2A1F9D] mt-5 p-2 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-                      onClick={handleClose}
-                    >
-                      {link.title}
-                    </NavLink>
-                    {link.title === "Faucet" && (
-                      <>{/* Additional content for Faucet */}</>
-                    )}
-                  </React.Fragment>
-                );
-              } else if (!isTestnetMode && !link.testnet) {
-                return (
-                  <NavLink
-                    key={index}
-                    to={link.route}
-                    className="text-[#2A1F9D] mt-5 p-2 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-                    onClick={handleClose}
-                  >
-                    {link.title}
-                  </NavLink>
-                );
-              }
-              return null;
-            })
+                  {link.title === "Faucet" && (
+                    <>{/* Additional content for Faucet */}</>
+                  )}
+                </React.Fragment>
+              );
+            } else if (!isTestnetMode && !link.testnet) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            }
+            return null;
+          })
           : HOME_TOP_NAV_LINK.map((link, index) => (
-              <NavLink
-                key={index}
-                to={link.route}
-                className="text-[#2A1F9D] text-sm mt-5 p-2 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-                onClick={handleClose}
-              >
-                {link.title}
-              </NavLink>
-            ))}
+            <NavLink
+              key={index}
+              to={link.route}
+              className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+              style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+              onClick={handleClose}
+            >
+              {link.title}
+            </NavLink>
+          ))}
 
         <h2 className="text-sm my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2 mt-8">
           Settings
         </h2>
         <div className="p-2 dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 transition-colors duration-300 ease-in-out mx-2 my-1">
           <div className="flex flex-col space-y-1 ">
-            <div className="flex items-center">
+            <div className="flex items-center justify-between">
               <label
                 htmlFor="darkMode"
                 className="ml-1 text-lg text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
               >
                 Dark Mode
               </label>
-              <span className="ml-[40px] text-[#2A1F9D] dark:text-darkTextSecondary">
+              <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
                 {isDarkMode ? "On" : "Off"}
-              </span>
-              <div className="flex align-center justify-center ml-3">
-                <CustomizedSwitches
+            
+            <div className="-mr-4">
+            <CustomizedSwitches
                   checked={isDarkMode}
                   onChange={handleDarkModeToggle}
                 />
+            </div>
+      
               </div>
+             
             </div>
 
             {isAuthenticated && (
@@ -436,17 +443,18 @@ const MobileTopNav = ({
         </div>
       </div>
       <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
-                      <Button
-                        title="Switch Wallet"
-                        className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
-                      />
-                     <Button
-  title="Disconnect"
-  className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-light"
-  onClickHandler={handleLogout}
-/>
+        <Button
+          title="Switch Wallet"
+          className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
+          onClickHandler={switchWallet}
+        />
+        <Button
+          title="Disconnect"
+          className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-poppins"
+          onClickHandler={handleLogout}
+        />
 
-                    </div>
+      </div>
     </Drawer>
   );
 };

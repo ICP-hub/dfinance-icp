@@ -5,6 +5,7 @@ import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
 import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
 import useAssetData from "../components/Common/useAssets";
+import { useSelector } from "react-redux";
 
 // Create a React context for authentication state
 const AuthContext = createContext();
@@ -49,6 +50,8 @@ export const useAuthClient = (options = defaultOptions) => {
   const [principal, setPrincipal] = useState(null);
   const [backendActor, setBackendActor] = useState(null);
   const [accountId, setAccountId] = useState(null);
+
+  const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
 
   useEffect(() => {
     // On component mount, create an authentication client
@@ -114,8 +117,10 @@ export const useAuthClient = (options = defaultOptions) => {
       setPrincipal(null);
       setBackendActor(null);
       setAccountId(null);
-
-      window.location.reload();
+      if(isSwitchingWallet == false){
+        window.location.reload();
+      }
+      
     } catch (error) {
       console.error("Logout error:", error);
     }

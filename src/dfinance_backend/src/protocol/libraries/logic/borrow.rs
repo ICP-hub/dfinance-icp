@@ -4,8 +4,10 @@ use crate::constants::asset_address::{
     BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
 };
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
+use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
+use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
 use dotenv::dotenv;
 use ic_cdk::api::call::call;
@@ -25,10 +27,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     let debttoken_canister_id = Principal::from_text(DEBTTOKEN_CANISTER)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
-    // let user_principal = Principal::from_text(params.on_behalf_of)
-    //     .map_err(|_| "Invalid user canister ID".to_string())?;
     let user_principal = ic_cdk::caller();
-    
 
     let platform_principal = Principal::from_text(BACKEND_CANISTER)
         .map_err(|_| "Invalid platform canister ID".to_string())?;
@@ -132,8 +131,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
         TransferFromResult::Ok(balance) => Ok(()),
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
     };
-    
-
 
     let debttoken_args = TransferArgs {
         to: TransferAccount {
@@ -146,7 +143,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
         created_at_time: None,
         amount: amount_nat.clone(),
     };
-     
+
     let (new_result,): (TransferFromResult,) = call(
         debttoken_canister_id,
         "icrc1_transfer",
@@ -155,9 +152,72 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     .await
     .map_err(|e| e.1)?;
 
+    let user_data_result = mutate_state(|state| {
+        let user_profile_data = &mut state.user_profile;
+        user_profile_data
+            .get(&user_principal)
+            .map(|user| user.0.clone())
+            .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+    });
+
+    let mut user_data = match user_data_result {
+        Ok(data) => {
+            ic_cdk::println!("User found: {:?}", data);
+            data
+        }
+        Err(e) => {
+            ic_cdk::println!("Error: {}", e);
+            return Err(e);
+        }
+    };
+
+    // Checks if the reserve data for the asset already exists in the user's reserves
+    let user_reserve = match user_data.reserves {
+        Some(ref mut reserves) => reserves
+            .iter_mut()
+            .find(|(asset_name, _)| *asset_name == params.asset),
+        None => None,
+    };
+
+    if let Some((_, reserve_data)) = user_reserve {
+        // If Reserve data exists, it updates asset supply
+        reserve_data.asset_borrow += params.amount as f64;
+        ic_cdk::println!(
+            "Updated asset borrow for existing reserve: {:?}",
+            reserve_data
+        );
+    } else {
+        // If Reserve data does not exist, it creates a new one
+        let new_reserve = UserReserveData {
+            reserve: params.asset.clone(),
+            asset_borrow: params.amount as f64,
+            ..Default::default()
+        };
+
+        if let Some(ref mut reserves) = user_data.reserves {
+            reserves.push((params.asset.clone(), new_reserve));
+        } else {
+            user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
+        }
+
+        ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
+    }
+
+    // Saves the updated user data back to state
+    mutate_state(|state| {
+        state
+            .user_profile
+            .insert(user_principal, Candid(user_data.clone()));
+    });
+
+    ic_cdk::println!("User data updated successfully: {:?}", user_data);
+
     match new_result {
         TransferFromResult::Ok(new_balance) => {
-            ic_cdk::println!("Debttoken transfer from backend to user executed successfully {:?}", new_balance);
+            ic_cdk::println!(
+                "Debttoken transfer from backend to user executed successfully {:?}",
+                new_balance
+            );
             Ok(())
         }
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
@@ -239,7 +299,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
     ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
 
     // ---------- debttoken logic that will reduce the user debt ----------
-    
+
     let debttoken_args = TransferArgs {
         to: TransferAccount {
             owner: platform_principal,
@@ -262,14 +322,78 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
 
     match new_result {
         TransferFromResult::Ok(new_balance) => {
-            ic_cdk::println!("Debttoken transfer from backend to user executed successfully {:?}", new_balance);
+            ic_cdk::println!(
+                "Debttoken transfer from backend to user executed successfully {:?}",
+                new_balance
+            );
             Ok(())
         }
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
-    }
+    };
     // ---------- Update reserve data ----------
 
     // ---------- Update user data ----------
+    // Fetchs user data
+    let user_data_result = mutate_state(|state| {
+        let user_profile_data = &mut state.user_profile;
+        user_profile_data
+            .get(&user_principal)
+            .map(|user| user.0.clone())
+            .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+    });
 
-    // Ok(())
+    let mut user_data = match user_data_result {
+        Ok(data) => {
+            ic_cdk::println!("User found: {:?}", data);
+            data
+        }
+        Err(e) => {
+            ic_cdk::println!("Error: {}", e);
+            return Err(e);
+        }
+    };
+
+    // Checks if the reserve data for the asset already exists in the user's reserves
+    let user_reserve = match user_data.reserves {
+        Some(ref mut reserves) => reserves
+            .iter_mut()
+            .find(|(asset_name, _)| *asset_name == params.asset),
+        None => None,
+    };
+
+    // If the reserve exists, it will subtract the repaid amount from the asset borrow
+    if let Some((_, reserve_data)) = user_reserve {
+        // Ensures the user has enough borrow to repay
+        if reserve_data.asset_borrow >= params.amount as f64 {
+            reserve_data.asset_borrow -= params.amount as f64;
+            ic_cdk::println!(
+                "Reduced asset borrow for existing reserve: {:?}",
+                reserve_data
+            );
+        } else {
+            ic_cdk::println!("Insufficient asset borrow for repay.");
+            return Err(format!(
+                "Insufficient borrow for repay: requested {}, available {}",
+                params.amount, reserve_data.asset_borrow
+            ));
+        }
+    } else {
+        // If Reserve data does not exist, it returns an error since we cannot repay what is not borrowed
+        ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
+        return Err(format!(
+            "Cannot repay from a non-existing reserve for asset: {}",
+            params.asset
+        ));
+    }
+
+    // Saves the updated user data back to state
+    mutate_state(|state| {
+        state
+            .user_profile
+            .insert(user_principal, Candid(user_data.clone()));
+    });
+
+    ic_cdk::println!("User data updated successfully: {:?}", user_data);
+
+    Ok(())
 }

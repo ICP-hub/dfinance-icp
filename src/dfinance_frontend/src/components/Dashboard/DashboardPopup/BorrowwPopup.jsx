@@ -1,26 +1,65 @@
 import { Info } from "lucide-react";
 import React, { useState } from "react";
-import Vector from "../../../../public/Helpers/Vector.png"
+import { Fuel } from "lucide-react";
+import { useSelector } from "react-redux";
+import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
+import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
+import { useAuth } from "../../../utils/useAuthClient";
+import { useMemo } from "react";
 
-const BorrowPopup = ({ asset, image }) => {
-  const [amount, setAmount] = useState("0.00");
+const BorrowPopup = ({ asset, image,supplyRateAPR, balance }) => {
+  const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
+
+
+  const { createLedgerActor, backendActor } = useAuth();
+
+  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+
+  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
   };
+  const value = 5.23;
 
-  const handleBorrowETH = () => {
-    if (isAcknowledged) {
-      console.log("Borrow", asset, "ETH:", amount);
-    } else {
-      console.log("Please acknowledge the risk involved.");
-    }
-  };
+ const handleBorrowETH = async () => {
+  console.log("Borrow function called for", asset, amount);
+  let ledgerActor;
+
+  // Example logic to select the correct backend actor based on the asset
+  if (asset === "ckBTC") {
+    ledgerActor = ledgerActorckBTC;
+  } else if (asset === "ckETH") {
+    ledgerActor = ledgerActorckETH;
+  }
+
+  console.log("Backend actor", backendActor);
+
+  try {
+    const borrowResult = await backendActor.borrow(asset, Number(amount));
+    console.log("Borrow result", borrowResult);
+    
+    // You can handle the result here, e.g., showing success, updating UI, etc.
+  } catch (error) {
+    console.error("Error borrowing:", error);
+    // Handle error state, e.g., show error message
+  }
+};
 
   const handleAcknowledgeChange = (e) => {
     setIsAcknowledged(e.target.checked);
   };
+  const fees = useSelector((state) => state.fees.fees);
+  console.log("Asset:", asset); // Check what asset value is being passed
+  console.log("Fees:", fees); // Check the fees object
+  const normalizedAsset = asset ? asset.toLowerCase() : 'default';
+
+  if (!fees) {
+    return <p>Error: Fees data not available.</p>;
+  }
+  const transferFee = fees[normalizedAsset] || fees.default; 
+  const transferfee = 100;
 
   return (
     <>
@@ -32,26 +71,26 @@ const BorrowPopup = ({ asset, image }) => {
             
           </div>
           <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-            <div className="w-4/12">
+            <div className="w-5/12">
               <input
-                type="text"
+                type="number"
                 value={amount}
                 onChange={handleAmountChange}
                 className="text-lg focus:outline-none bg-gray-100 rounded-md py-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                placeholder="0.00"
+                placeholder="Enter Amount"
               />
-              <p className="mt-2">$30.00</p>
+              <p className="text-xs">$0</p>
             </div>
-            <div className="w-8/12 flex flex-col items-end">
+            <div className="w-7/12 flex flex-col items-end">
               <div className="w-auto flex items-center gap-2">
                 <img
                   src={image}
                   alt="Item Image"
-                  className="object-fill w-8 h-8"
+                  className="object-fill w-6 h-6 rounded-full"
                 />
                 <span className="text-lg">{asset}</span>
               </div>
-              <p className="text-xs mt-2">Balance 0.0032560 Max</p>
+              <p className="text-xs mt-4">Balance {balance} Max</p>
             </div>
           </div>
         </div>
@@ -66,7 +105,21 @@ const BorrowPopup = ({ asset, image }) => {
                 <p>
                   <span className="text-red-500">1.00</span>
                   <span className="text-gray-500 mx-1">→</span>
-                  <span className="text-green-500">5.23</span>
+                  <span
+                    className={`${
+                      value > 3
+                        ? "text-green-500"
+                        : value <= 1
+                        ? "text-red-500"
+                        : value <= 1.5
+                        ? "text-orange-600"
+                        : value <= 2
+                        ? "text-orange-400"
+                        : "text-orange-300"
+                    }`}
+                  >
+                    {value}
+                  </span>
                 </p>
               </div>
               <div className="w-full flex justify-end items-center mt-1">
@@ -77,12 +130,12 @@ const BorrowPopup = ({ asset, image }) => {
               <p>Rewards APR</p>
               <div className="flex items-center">
                 <p className="mr-2">2.54%</p>
-                <img src={image} alt="Item Image" className="w-7 h-7" />
+                <img src={image} alt="Item Image" className="w-6 h-6 rounded-full" />
               </div>
             </div>
             <div className="w-full flex justify-between items-center my-1">
               <p>APY, borrow rate</p>
-              <p>2.02%</p>
+              <p>8.25%</p>
             </div>
           </div>
         </div>
@@ -90,14 +143,22 @@ const BorrowPopup = ({ asset, image }) => {
 
       <div className="w-full mt-3">
         <div className="w-full">
-          <div className="flex items-center">
-            <img
-              src={Vector}
-              alt="Vector Image"
-              className="w-4 h-4 mr-1"
-            />
-            <h1>$6.06</h1>
-            <Info size={16} className="ml-2" />
+        <div className="flex items-center">
+            <Fuel className="w-4 h-4 mr-1" />
+            <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
+              <img
+                src={image}
+                alt="asset icon"
+                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+              />
+            <div className="relative group">
+              <Info size={16} className="ml-2 cursor-pointer" />
+
+              {/* Tooltip */}
+              <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
+                Fees deducted on every transaction
+              </div>
+            </div>
           </div>
           <div className="w-full flex flex-col my-3 space-y-2">
             

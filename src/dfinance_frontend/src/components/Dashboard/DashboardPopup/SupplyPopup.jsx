@@ -98,6 +98,14 @@ const SupplyPopup = ({
     } else {
       setUsdValue(0); // Reset USD value if input is empty or invalid
     }
+
+    // if (!isNaN(inputAmount) && inputAmount <= balance) {
+    //   setAmount(inputAmount);
+    // } else if (inputAmount > balance) {
+    //   setAmount(balance); // If the input exceeds the balance, set it to the balance
+    // } else {
+    //   setAmount(''); // Reset to empty if the input is not a valid number
+    // }
   };
   
   // Update the USD value whenever the amount changes or conversionRate is updated
@@ -165,11 +173,13 @@ const SupplyPopup = ({
 
   };
 
+  
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false)
     window.location.reload()
   };
+  
 
   return (
     <>
@@ -182,28 +192,28 @@ const SupplyPopup = ({
                 <h1>Amount</h1>
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                <div className="w-3/12">
+                <div className="w-5/12">
                   <input
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="text-xs focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="text-lg focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />
                    <p className="text-xs text-gray-500 mt-3">
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
-                <div className="w-9/12 flex flex-col items-end">
+                <div className="w-7/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
-                      className="object-cover w-8 h-8 rounded-full"
+                      className="object-cover w-6 h-6 rounded-full"
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-3">Supply Balance {balance} Max</p>
+                  <p className="text-xs mt-4">Supply Balance {balance} Max</p>
                 </div>
               </div>
             </div>
@@ -274,7 +284,7 @@ const SupplyPopup = ({
               <img
                 src={image}
                 alt="asset icon"
-                className="object-cover w-8 h-8 rounded-full" // Ensure the image is fully rounded
+                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
               />
               <div className="relative group">
                 <Info size={16} className="ml-2 cursor-pointer" />

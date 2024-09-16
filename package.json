@@ -31,7 +31,7 @@
     "@reduxjs/toolkit": "^2.2.3",
     "@tailwindcss/line-clamp": "^0.4.4",
     "aos": "^2.3.4",
-    "axios": "^1.7.5",
+    "axios": "^1.7.7",
     "chart.js": "^4.4.2",
     "ic-auth": "^0.9.1",
     "lucide-react": "^0.367.0",

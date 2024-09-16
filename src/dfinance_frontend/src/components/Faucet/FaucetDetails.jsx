@@ -13,6 +13,8 @@ import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
 import { useAuth } from "../../utils/useAuthClient";
 import { useEffect } from "react";
+import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger";
+import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
 
 const ITEMS_PER_PAGE = 8; // Number of items per page
 
@@ -75,13 +77,16 @@ const FaucetDetails = () => {
   const [error, setError] = useState(null);
 
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
-  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
+
+  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+
+  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
   const fetchBalance = useCallback(async () => {
-    if (isAuthenticated && ledgerActor && principalObj) {
+    if (isAuthenticated && ledgerActorckBTC && principalObj) {
       try {
         const account = { owner: principalObj, subaccount: [] };
-        const balance = await ledgerActor.icrc1_balance_of(account);
+        const balance = await ledgerActorckBTC.icrc1_balance_of(account);
         setBalance(balance.toString());
         console.log("Fetched Balance:", balance.toString());
       } catch (error) {
@@ -89,7 +94,7 @@ const FaucetDetails = () => {
         setError(error);
       }
     }
-  }, [isAuthenticated, ledgerActor, principalObj]);
+  }, [isAuthenticated, ledgerActorckBTC, principalObj]);
 
   const fetchConversionRate = useCallback(async () => {
     try {

@@ -44,9 +44,25 @@ const DebtStatus = () => {
   const {
     isAuthenticated,
     login,
+    getAllUsers
   } = useAuth();
 
+  const [users, setUsers] = useState([]);
 
+  useEffect(() => {
+    // Fetch all users when the component mounts
+    const fetchUsers = async () => {
+      try {
+        const usersData = await getAllUsers();
+        setUsers(usersData);
+        console.log("liquidation", usersData)
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    fetchUsers();
+  }, [getAllUsers]);
 
   const handleDetailsClick = (item) => {
     setSelectedAsset(item); // Update selectedAsset with the clicked asset
@@ -244,11 +260,11 @@ const DebtStatus = () => {
                     <td className="p-3 align-top hidden md:table-cell pt-5 py-8">{item.borrow_apy}</td>
                     <td className="p-3 align-top flex py-8">
                       <div className="w-full flex justify-end align-center">
-                      <Button
-  title={"Liquidate"}
-  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-sm lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] font-inter"
-  onClickHandler={() => handleDetailsClick(item)}
-/> </div>
+                        <Button
+                          title={"Liquidate"}
+                          className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-sm lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] font-inter"
+                          onClickHandler={() => handleDetailsClick(item)}
+                        /> </div>
                     </td>
                   </tr>
                 ))}
@@ -260,12 +276,12 @@ const DebtStatus = () => {
 
       </div>
       {showUserInfoPopup && selectedAsset && (
-  <UserInformationPopup
-    onClose={() => setShowUserInfoPopup(false)}
-    asset={selectedAsset.asset} // Pass the asset or other properties from the selected item
-    principal={selectedAsset.user_principle} // Pass the user_principle from the selected item
-  />
-)}
+        <UserInformationPopup
+          onClose={() => setShowUserInfoPopup(false)}
+          asset={selectedAsset.asset} // Pass the asset or other properties from the selected item
+          principal={selectedAsset.user_principle} // Pass the user_principle from the selected item
+        />
+      )}
 
 
     </div >

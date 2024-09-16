@@ -32,7 +32,10 @@ import { useCallback } from "react";
 import { useMemo } from "react";
 import useAssetData from "../Common/useAssets";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
-import ckETH from '../../../public/assests-icon/cketh.png'
+import ckETH from '../../../public/assests-icon/cketh.png';
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
+import { useParams } from "react-router-dom";
 
 const MySupply = () => {
   const [userData, setUserData] = useState();
@@ -52,7 +55,128 @@ const MySupply = () => {
     reloadLogin,
     accountIdString,
   } = useAuth()
+
+  const [ckBTCBalance, setCkBTCBalance] = useState(null);
+  const [ckETHBalance, setCkETHBalance] = useState(null);
+  const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
+  const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
+
+  const [balance, setBalance] = useState(null);
+  const [usdBalance, setUsdBalance] = useState(null);
+  const [conversionRate, setConversionRate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+
+  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+
+  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
+
+  const fetchBalance = useCallback(
+    async (assetType) => {
+      if (isAuthenticated && principalObj) {
+        try {
+          const account = { owner: principalObj, subaccount: [] };
+          let balance;
+
+          if (assetType === "ckBTC" && ledgerActorckBTC) {
+            balance = await ledgerActorckBTC.icrc1_balance_of(account);
+            setCkBTCBalance(balance.toString());  // Set ckBTC balance
+          } else if (assetType === "ckETH" && ledgerActorckETH) {
+            balance = await ledgerActorckETH.icrc1_balance_of(account);
+            setCkETHBalance(balance.toString());  // Set ckETH balance
+          } else {
+            throw new Error("Unsupported asset type or ledger actor not initialized");
+          }
+
+          console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+        } catch (error) {
+          console.error(`Error fetching balance for ${assetType}:`, error);
+          setError(error);
+        }
+      }
+    },
+    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, principalObj]
+  );
+
+  useEffect(() => {
+    if (ckBTCBalance && conversionRate) {
+      const balanceInUsd = (parseFloat(ckBTCBalance) * conversionRate).toFixed(2);
+      setCkBTCUsdBalance(balanceInUsd);
+    }
+  }, [ckBTCBalance, conversionRate]);
+
+  useEffect(() => {
+    if (ckETHBalance && conversionRate) {
+      const balanceInUsd = (parseFloat(ckETHBalance) * conversionRate).toFixed(2);
+      setCkETHUsdBalance(balanceInUsd);
+    }
+  }, [ckETHBalance, conversionRate]);
+
+
+  const fetchConversionRate = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setConversionRate(data['internet-computer'].usd);
+      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
+    } catch (error) {
+      console.error("Error fetching conversion rate:", error);
+      setError(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchBalance('ckBTC'), fetchBalance('ckETH'), fetchConversionRate()]);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
+
+
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
+      setUsdBalance(balanceInUsd);
+    }
+  }, [balance, conversionRate]);
+
+  const { assets, reserveData, filteredItems } = useAssetData();
+  const filteredReserveData = Object.fromEntries(filteredItems);
+  console.log(filteredReserveData)
+
+
+
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0';
+    }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toString();
+  }
+
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
+
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
     type: "",
@@ -92,13 +216,14 @@ const MySupply = () => {
     }
   };
 
-  const handleModalOpen = (type, asset, image) => {
+  const handleModalOpen = (type, asset, image, supplyRateAPR) => {
     console.log("Handle modal opened");
     setIsModalOpen({
       isOpen: true,
       type: type,
       asset: asset,
       image: image,
+      supplyRateAPR: supplyRateAPR,
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -159,9 +284,10 @@ const MySupply = () => {
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
             children={
-              <SupplyPopup 
+              <SupplyPopup
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
+                supplyRateAPR={isModalOpen.supplyRateAPR}
                 balance={0}
                 isModalOpen={isModalOpen.isOpen}
                 handleModalOpen={handleModalOpen}
@@ -261,87 +387,25 @@ const MySupply = () => {
     </div>
   );
 
-  const [balance, setBalance] = useState(null);
-  const [usdBalance, setUsdBalance] = useState(null);
-  const [conversionRate, setConversionRate] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [collateral, setCollateral] = useState(false);
 
-  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
-  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
-
-  const fetchBalance = useCallback(async () => {
-    if (isAuthenticated && ledgerActor && principalObj) {
-      try {
-        const account = { owner: principalObj, subaccount: [] };
-        const balance = await ledgerActor.icrc1_balance_of(account);
-        setBalance(balance.toString());
-        console.log("Fetched Balance:", balance.toString());
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-        setError(error);
-      }
-    }
-  }, [isAuthenticated, ledgerActor, principalObj]);
-
-  const fetchConversionRate = useCallback(async () => {
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      setConversionRate(data['internet-computer'].usd);
-      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
-    } catch (error) {
-      console.error("Error fetching conversion rate:", error);
-      setError(error);
-    }
-  }, []);
 
   useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([fetchBalance(), fetchConversionRate()]);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
-
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
-      setUsdBalance(balanceInUsd);
+    if (filteredItems && filteredItems.length > 0) {
+      const item = filteredItems[0][1].Ok;
+      setCollateral(item.can_be_collateral);
     }
-  }, [balance, conversionRate]);
+  }, [filteredItems]);
 
-  const { assets, reserveData, filteredItems } = useAssetData();
-  const filteredReserveData = Object.fromEntries(filteredItems);
-  console.log(filteredReserveData)
+  let supply_rate_apr = "0";
+  let borrow_rate_apr = "0";
 
-
-
-  function formatNumber(num) {
-    if (num === null || num === undefined) {
-      return '0';
-    }
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
-    }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-    }
-    return num.toString();
+  if (filteredItems && filteredItems.length > 0) {
+    const item = filteredItems[0][1].Ok;
+    supply_rate_apr = item.supply_rate_apr ? item.supply_rate_apr[0].toString() : "0";
+    borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
   }
+
 
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6">
@@ -396,9 +460,9 @@ const MySupply = () => {
               >
                 {isSupplyVisible ? "Hide" : "Show"}
                 {isSupplyVisible ? (
-                  <EyeOff  size={16} className="ml-2"/>
+                  <EyeOff size={16} className="ml-2" />
                 ) : (
-                  <Eye  size={16} className="ml-2"/>
+                  <Eye size={16} className="ml-2" />
                 )}
               </button>
             </div>
@@ -407,13 +471,13 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
-                 {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
+                  {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div
                       className={`relative mt-4 overflow-y-auto scrollbar-custom ${filteredItems.length > 1
-                        ? "max-h-[280px]" 
-                        : "max-h-auto" 
+                        ? "max-h-[280px]"
+                        : "max-h-auto"
                         }`}
                     >
                       {/* Container for the scrollable content */}
@@ -442,7 +506,18 @@ const MySupply = () => {
                                 Wallet Balance:
                               </p>
                               <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                <p>{balance}</p>
+                                {item[0] === "ckBTC" && (
+                                  <>
+                                    <p>{ckBTCBalance}</p>
+                                    <p className="font-light">${formatNumber(ckBTCUsdBalance)}</p>
+                                  </>
+                                )}
+                                {item[0] === "ckETH" && (
+                                  <>
+                                    <p>{ckETHBalance}</p>
+                                    <p className="font-light">${formatNumber(ckETHUsdBalance)}</p>
+                                  </>
+                                )}
                               </p>
                             </div>
                             <div className="flex justify-end text-xs dark:text-darkText">
@@ -494,17 +569,18 @@ const MySupply = () => {
               )}
             </div>
 
-
             {/* Content for Desktop Screens */}
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                  {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
+                  {userData?.Ok?.reserves[0].reduce(
+                    (total, reserveGroup) => total + (reserveGroup[1]?.asset_supply || 0),
+                    0
+                  ) === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
-                      {/* Fixed Header */}
-                      <div className="w-full z-10 sticky top-0 ">
+                      <div className="w-full z-10 sticky top-0">
                         <div className="grid grid-cols-[2fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-5">Asset</div>
                           <div className="p-5">Wallet Balance</div>
@@ -516,69 +592,77 @@ const MySupply = () => {
 
                       {/* Scrollable Content Area */}
                       <div
-                        className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${filteredItems.length > 3
+                        className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves?.filter((reserveGroup) => reserveGroup[1].asset_supply > 0).length > 3
                           ? "h-[260px]"
                           : ""
                           }`}
                       >
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                          {filteredItems.slice(0, 8).map((item, index) => (
-                            <div
-                              key={index}
-                              className="grid grid-cols-[2.1fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
-                            >
-                              <div className="p-3 align-top flex items-center gap-2">
-                                {item[0] === "ckBTC" && (
-                                  <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
-                                )}
-                                {item[0]}
+                          {userData?.Ok?.reserves[0].map((reserveGroup, index) => (
+                            reserveGroup[1]?.asset_supply > 0 && (
+                              <div
+                                key={index}
+                                className="grid grid-cols-[2.1fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                              >
+                                <div className="p-3 align-top flex items-center gap-2">
+                                  {reserveGroup[1]?.reserve === "ckBTC" && (
+                                    <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                  )}
+                                  {reserveGroup[1]?.reserve === "ckETH" && (
+                                    <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                  )}
+                                  {reserveGroup[1]?.reserve}
+                                </div>
+                                <div className="ml-5 align-top flex flex-col">
+                                  {reserveGroup[1]?.reserve === "ckETH" && (
+                                    <>
+                                      <p>{ckETHBalance}</p>
+                                      <p className="font-light">${formatNumber(ckETHUsdBalance)}</p>
+                                    </>
+                                  )}
+                                  {reserveGroup[1]?.reserve === "ckBTC" && (
+                                    <>
+                                      <p>{ckBTCBalance}</p>
+                                      <p className="font-light">${formatNumber(ckBTCUsdBalance)}</p>
+                                    </>
+                                  )}
+                                </div>
+                                <div className="ml-4 align-top">{supply_rate_apr}%</div>
+                                <div className=" align-top flex items-center justify-center ml-5 -mr-4">
+                                  <CustomizedSwitches />
+                                </div>
+                                <div className="p-3 align-top flex gap-2 pt-2">
+                                  <Button
+                                    title={"Supply"}
+                                    onClickHandler={() =>
+                                      handleModalOpen("supply", reserveGroup[1]?.reserve, (reserveGroup[1]?.reserve === "ckBTC" && ckBTC) || (reserveGroup[1]?.reserve === "ckETH" && ckETH), supply_rate_apr)
+                                    }
+                                    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                  />
+                                  <Button
+                                    title={"Withdraw"}
+                                    onClickHandler={() =>
+                                      handleModalOpen("withdraw", reserveGroup[1]?.reserve, reserveGroup[1]?.image)
+                                    }
+                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                  />
+                                </div>
                               </div>
-                              <div className="ml-5 align-top flex flex-col">
-                                <p>{balance}</p>
-                                <p className="font-light">
-                                  ${formatNumber(usdBalance)}
-                                </p>
-                              </div>
-                              <div className="ml-4 align-top"> {item[1].Ok.supply_rate_apr}%</div>
-                              <div className=" align-top flex items-center justify-center ml-5 -mr-4">
-                                <CustomizedSwitches />
-                              </div>
-                              <div className="p-3 align-top flex gap-2 pt-2">
-                                <Button
-                                  title={"Supply"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "supply",
-                                      item.asset,
-                                      item.image
-                                    )
-                                  }
-                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
-                                />
-                                <Button
-                                  title={"Withdraw"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "withdraw",
-                                      item.asset,
-                                      item.image
-                                    )
-                                  }
-                                  className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
-                                />
-                              </div>
-                            </div>
+                            )
                           ))}
                         </div>
+
                       </div>
                     </div>
                   )}
                 </>
               )}
             </div>
+
+
+
+
+
 
           </div>
 
@@ -596,9 +680,9 @@ const MySupply = () => {
               >
                 {isVisible ? "Hide" : "Show"}
                 {isVisible ? (
-                  <EyeOff  size={16} className="ml-2"/>
+                  <EyeOff size={16} className="ml-2" />
                 ) : (
-                  <Eye  size={16} className="ml-2"/>
+                  <Eye size={16} className="ml-2" />
                 )}
               </button>
             </div>
@@ -664,8 +748,9 @@ const MySupply = () => {
                                   onClickHandler={() =>
                                     handleModalOpen(
                                       "supply",
-                                      item.asset,
-                                      item.image
+                                      item[0],
+                                      (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                      item[1]?.supply_rate_apr
                                     )
                                   }
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-lg font-inter"
@@ -734,11 +819,20 @@ const MySupply = () => {
                                 {item[0]}
                               </div>
                               <div className="p-3 align-top flex flex-col">
-                                <p>{balance}</p>
-                                <p className="font-light">
-                                  ${formatNumber(usdBalance)}
-                                </p>
+                                {item[0] === "ckBTC" && (
+                                  <>
+                                    <p>{ckBTCBalance}</p>
+                                    <p className="font-light">${formatNumber(ckBTCUsdBalance)}</p>
+                                  </>
+                                )}
+                                {item[0] === "ckETH" && (
+                                  <>
+                                    <p>{ckETHBalance}</p>
+                                    <p className="font-light">${formatNumber(ckETHUsdBalance)}</p>
+                                  </>
+                                )}
                               </div>
+
                               <div className="ml-2 align-top">{item[1].Ok.supply_rate_apr}%</div>
                               <div className="-ml-3 align-top flex items-center justify-center dark:text-darkText">
                                 <Check color={checkColor} size={16} />
@@ -749,8 +843,9 @@ const MySupply = () => {
                                   onClickHandler={() =>
                                     handleModalOpen(
                                       "supply",
-                                      item.asset,
-                                      item.image
+                                      item[0],
+                                      (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                      item[1]?.Ok.supply_rate_apr
                                     )
                                   }
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
@@ -798,7 +893,7 @@ const MySupply = () => {
                 {isborrowVisible ? (
                   <EyeOff className="ml-2" size={16} />
                 ) : (
-                  <Eye  size={16} className="ml-2"/>
+                  <Eye size={16} className="ml-2" />
                 )}
               </button>
             </div>
@@ -923,7 +1018,10 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
+                  {userData?.Ok?.reserves[0].reduce(
+                    (total, reserveGroup) => total + (reserveGroup[1]?.asset_supply || 0),
+                    0
+                  ) === 0 ? (
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6 relative max-h-[260px] overflow-hidden">
@@ -940,38 +1038,46 @@ const MySupply = () => {
                       </div>
                       {/* Scrollable table body */}
                       <div
-                        className={`w-full h-auto overflow-y-auto scrollbar-custom ${filteredItems.length > 3
-                          ? "max-h-[calc(260px-40px)]"
-                          : `h-[${80 * filteredItems.length}px]`
+                        className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves?.filter((reserveGroup) => reserveGroup[1].asset_supply > 0).length > 3
+                          ? "h-[260px]"
+                          : ""
                           }`}
                       >
-                        <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-4">
-                          {filteredItems.slice(0, 8).map(
-                            (item, index) => (
+                        <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
+                          {userData?.Ok?.reserves[0].map((reserveGroup, index) => (
+                            reserveGroup[1]?.asset_supply > 0 && (
                               <div
                                 key={index}
-                                className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-2"
+                                className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-1"
                               >
                                 <div className="p-3 flex items-center gap-2">
-                                  {item[0] === "ckBTC" && (
+                                  {reserveGroup[1]?.reserve === "ckBTC" && (
                                     <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
                                   )}
-                                  {item[0] === "ckETH" && (
+                                  {reserveGroup[1]?.reserve === "ckETH" && (
                                     <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
                                   )}
-                                  {item[0]}
+                                  {reserveGroup[1]?.reserve}
                                 </div>
                                 <div className="p-3">
                                   <div className="flex flex-col">
-                                    <p>{balance}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(usdBalance)}
-                                    </p>
+                                    {reserveGroup[1]?.reserve === "ckETH" && (
+                                      <>
+                                        <p>{ckETHBalance}</p>
+                                        <p className="font-light">${formatNumber(ckETHUsdBalance)}</p>
+                                      </>
+                                    )}
+                                    {reserveGroup[1]?.reserve === "ckBTC" && (
+                                      <>
+                                        <p>{ckBTCBalance}</p>
+                                        <p className="font-light">${formatNumber(ckBTCUsdBalance)}</p>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="p-3">{item[1].Ok.supply_rate_apr}%</div>
+                                <div className="p-3">{borrow_rate_apr}%</div>
                                 <div className="p-3">
-                                  <div className="w-full flex mt-2.5">
+                                  <div className="w-full flex">
                                     variable
                                   </div>
                                 </div>
@@ -1001,14 +1107,17 @@ const MySupply = () => {
                                 </div>
                               </div>
                             )
-                          )}
+                          ))}
                         </div>
+
                       </div>
                     </div>
                   )}
                 </>
               )}
             </div>
+
+
           </div>
 
           <div
@@ -1027,7 +1136,7 @@ const MySupply = () => {
                 {isBorrowVisible ? (
                   <EyeOff className="ml-2" size={16} />
                 ) : (
-                  <Eye  size={16} className="ml-2"/>
+                  <Eye size={16} className="ml-2" />
                 )}
               </button>
             </div>
@@ -1257,10 +1366,18 @@ const MySupply = () => {
                                 </td>
                                 <td className="p-3 align-top">
                                   <div className="flex flex-col">
-                                    <p>{balance}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(usdBalance)}
-                                    </p>
+                                    {item[0] === "ckBTC" && (
+                                      <>
+                                        <p>{ckBTCBalance}</p>
+                                        <p className="font-light">${formatNumber(ckBTCUsdBalance)}</p>
+                                      </>
+                                    )}
+                                    {item[0] === "ckETH" && (
+                                      <>
+                                        <p>{ckETHBalance}</p>
+                                        <p className="font-light">${formatNumber(ckETHUsdBalance)}</p>
+                                      </>
+                                    )}
                                   </div>
                                 </td>
                                 <td className="p-3 align-center mt-1.5">

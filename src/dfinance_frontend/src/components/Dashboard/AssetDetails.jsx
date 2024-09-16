@@ -32,8 +32,12 @@ import MySupplyModal from "./MySupplyModal"
 import SupplyPopup from "./DashboardPopup/SupplyPopup"
 import ckbtc from "../../../public/assests-icon/ckBTC.png"
 import cketh from '../../../public/assests-icon/cketh.png'
+import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger";
+import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
+
 
 const AssetDetails = () => {
+
   const [isFilter, setIsFilter] = React.useState(false)
   const { filteredItems } = useAssetData();
   const dispatch = useDispatch()
@@ -62,13 +66,15 @@ const AssetDetails = () => {
   }
 
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
-  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
+
+  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
   const fetchBalance = useCallback(async () => {
-    if (isAuthenticated && ledgerActor && principalObj) {
+    if (isAuthenticated && ledgerActorckBTC && principalObj) {
       try {
         const account = { owner: principalObj, subaccount: [] };
-        const balance = await ledgerActor.icrc1_balance_of(account);
+        const balance = await ledgerActorckBTC.icrc1_balance_of(account);
         setBalance(balance.toString());
         console.log("Fetched Balance:", balance.toString());
       } catch (error) {
@@ -76,7 +82,7 @@ const AssetDetails = () => {
         setError(error);
       }
     }
-  }, [isAuthenticated, ledgerActor, principalObj]);
+  }, [isAuthenticated, ledgerActorckBTC, principalObj]);
 
   const fetchConversionRate = useCallback(async () => {
     try {
@@ -215,12 +221,13 @@ const AssetDetails = () => {
             handleModalOpen={handleModalOpen}
             children={
               <SupplyPopup
-                asset={isModalOpen.asset}
-                image={isModalOpen.image}
-                balance={0}
-                isModalOpen={isModalOpen.isOpen}
-                handleModalOpen={handleModalOpen}
-                setIsModalOpen={setIsModalOpen}
+              asset={isModalOpen.asset}
+              image={isModalOpen.image}
+              supplyRateAPR={isModalOpen.supplyRateAPR}
+              balance={0}
+              isModalOpen={isModalOpen.isOpen}
+              handleModalOpen={handleModalOpen}
+              setIsModalOpen={setIsModalOpen}
               />
             }
           />

@@ -12,7 +12,7 @@ default_principal=$(dfx identity get-principal)
 echo "Default Principal (Spender): $default_principal"
 
 
-user1_principal="zqnqq-6zsp3-yzaft-nylxj-vpug4-d2c5y-7xuuq-qot3v-4edvx-eoewq-zqe"
+user1_principal="gc734-l5fer-pa5ud-rklfi-iye5r-m5tcf-kjtm2-m25pg-obhda-qpwe5-7qe"
 echo "User1 Principal (Recipient): $user1_principal"
 
 # Switch back to the default identity

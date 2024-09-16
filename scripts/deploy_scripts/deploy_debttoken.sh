@@ -3,6 +3,7 @@
 set -e
 
 # dfx identity use minter
+source ../../.env
 
 # export MINTER=$(dfx identity get-principal)
 # echo $MINTER

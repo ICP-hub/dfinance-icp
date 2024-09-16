@@ -2,7 +2,7 @@
 
 set -e
 
-
+source ../../.env
 
 # Set token name and symbol
 export TOKEN_NAME="dckBTC"
@@ -11,7 +11,7 @@ echo "Token Name: $TOKEN_NAME"
 export TOKEN_SYMBOL="dckBTC"
 
 # Set default principal (used for minting account)
-export BACKEND="bw4dl-smaaa-aaaaa-qaacq-cai"
+export BACKEND=$CANISTER_ID_DFINANCE_BACKEND
 
 # Set pre-minted tokens and transfer fee (initial circulation is set to 0)
 export PRE_MINTED_TOKENS=0

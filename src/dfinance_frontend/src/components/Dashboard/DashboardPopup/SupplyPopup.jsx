@@ -5,49 +5,136 @@ import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import Setting from "../../../../public/Helpers/settings.png";
+import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
+import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
+import { useMemo } from "react";
+import { useEffect } from "react";
+import axios from "axios";
+
 const SupplyPopup = ({
   asset,
   image,
+  supplyRateAPR,
   balance,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
 }) => {
+
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
   console.log("Fees:", fees); // Check the fees object
   const normalizedAsset = asset ? asset.toLowerCase() : 'default';
+  console.log("SupplyPopup Props - Asset:", asset, "Supply Rate APR:", supplyRateAPR);
 
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
   const transferFee = fees[normalizedAsset] || fees.default;
+  const transferfee = 100;
   const hasEnoughBalance = balance >= transactionFee;
   const value = 5.23;
+  const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
+  const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
+  useEffect(() => {
+    const fetchConversionRate = async () => {
+      try {
+        let coinId;
+        
+        // Map asset to CoinGecko coin IDs
+        if (asset === "ckBTC") {
+          coinId = "bitcoin";
+        } else if (asset === "ckETH") {
+          coinId = "ethereum";
+        } else {
+          console.error("Unsupported asset:", asset);
+          return;
+        }
+  
+        // Fetch conversion rate from CoinGecko
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
+        );
+  
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+  
+        const data = await response.json();
+        console.log("CoinGecko data", data);
+  
+        // Extract the conversion rate (price in USD)
+        const rate = data[coinId]?.usd;
+        if (rate) {
+          setConversionRate(rate);
+          console.log("Conversion rate:", rate);
+        } else {
+          console.error("Conversion rate not found for asset:", asset);
+        }
+      } catch (error) {
+        console.error("Error fetching conversion rate", error);
+      }
+    };
+  
+    if (asset) {
+      fetchConversionRate();
+    }
+  }, [asset]);
+  
+
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    const inputAmount = e.target.value;
+    setAmount(inputAmount); // Update the amount state
+  
+    if (inputAmount && conversionRate) {
+      const convertedValue = parseFloat(inputAmount) * conversionRate;
+      setUsdValue(convertedValue); // Update the USD value state
+    } else {
+      setUsdValue(0); // Reset USD value if input is empty or invalid
+    }
   };
+  
+  // Update the USD value whenever the amount changes or conversionRate is updated
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const convertedValue = parseFloat(amount) * conversionRate;
+      setUsdValue(convertedValue); // Update USD value
+    } else {
+      setUsdValue(0); // Reset USD value if conditions are not met
+    }
+  }, [amount, conversionRate]);
 
   const { createLedgerActor, backendActor } = useAuth();
 
-  const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
+  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+
+  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);
-    console.log("Ledger Actor", ledgerActor);
+    let ledgerActor;
+    if (asset === "ckBTC") {
+      ledgerActor = ledgerActorckBTC;
+    } else if (asset === "ckETH") {
+      ledgerActor = ledgerActorckETH;
+    }
+
+ // Convert amount and transferFee to numbers and add them
+ const supplyAmount = parseFloat(amount);
+ const totalAmount = supplyAmount + transferfee;
 
     const approval = await ledgerActor.icrc2_approve({
       fee: [],
       memo: [],
       from_subaccount: [],
       created_at_time: [],
-      amount: 100000,
+      amount: totalAmount,
       expected_allowance: [],
       expires_at: [],
       spender: {
@@ -61,10 +148,17 @@ const SupplyPopup = ({
     console.log("isApproved state after approval:", isApproved);
   };
   const isCollateral = true;
+  
   const handleSupplyETH = async () => {
-    console.log("Supply function called for", asset, "ETH:", amount);
+    console.log("Supply function called for", asset, amount);
+    let ledgerActor;
+    if (asset === "ckBTC") {
+      ledgerActor = ledgerActorckBTC;
+    } else if (asset === "ckETH") {
+      ledgerActor = ledgerActorckETH;
+    }
     console.log("Backend actor", backendActor)
-    const sup = await backendActor.deposit("ckBTC", 500, "user", true);
+    const sup = await backendActor.supply(asset, 500, true);
     console.log("Supply", sup);
     setIsPaymentDone(true);
     setIsVisible(false);
@@ -74,6 +168,7 @@ const SupplyPopup = ({
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false)
+    window.location.reload()
   };
 
   return (
@@ -95,7 +190,9 @@ const SupplyPopup = ({
                     className="text-xs focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />
-                  <p className="text-xs text-gray-500 mt-3">$0</p>
+                   <p className="text-xs text-gray-500 mt-3">
+                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                  </p>
                 </div>
                 <div className="w-9/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -117,7 +214,7 @@ const SupplyPopup = ({
               <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Supply APY</p>
-                  <p>24.04%</p>
+                  <p>{supplyRateAPR}%</p>
                 </div>
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
@@ -173,7 +270,7 @@ const SupplyPopup = ({
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
               <Fuel className="w-4 h-4 mr-1" />
-              <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
+              <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
               <img
                 src={image}
                 alt="asset icon"
@@ -217,7 +314,7 @@ const SupplyPopup = ({
       )}
 
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px]   h-[380px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -229,9 +326,9 @@ const SupplyPopup = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p>You received 0.00025 {asset}</p>
+            <p>You supplied {amount} d{asset}</p>
 
-            <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
+            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
               <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
                 <span>Add dToken to wallet to track your balance.</span>
               </div>
@@ -239,7 +336,7 @@ const SupplyPopup = ({
                 <Wallet />
                 Add to wallet
               </button>
-            </div>
+            </div> */}
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"

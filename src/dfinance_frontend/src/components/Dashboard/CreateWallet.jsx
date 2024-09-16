@@ -15,6 +15,9 @@ import icplogo from '../../../public/wallet/icp.png'
 import nfid from "../../../public/wallet/nfid.png"
 import { Principal } from "@dfinity/principal";
 import { setUserData } from '../../redux/reducers/userReducer'
+import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger";
+import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
+import { useMemo } from 'react'
 
 const CreateWallet = () => {
     const navigate = useNavigate()
@@ -77,14 +80,16 @@ const CreateWallet = () => {
 
     const [balance, setBalance] = useState(null);
 
-    const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
+    const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+
+    const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
     useEffect(() => {
         const fetchBalance = async () => {
-            if (isAuthenticated && ledgerActor && principalObj) {
+            if (isAuthenticated && ledgerActorckBTC && principalObj) {
                 try {
                     const account = { owner: principalObj, subaccount: [] };
-                    const balance = await ledgerActor.icrc1_balance_of(account);
+                    const balance = await ledgerActorckBTC.icrc1_balance_of(account);
                     setBalance(balance.toString());
                     console.log("Fetched Balance:", balance.toString());
                 } catch (error) {
@@ -94,7 +99,7 @@ const CreateWallet = () => {
         };
 
         fetchBalance();
-    }, [isAuthenticated, ledgerActor, principalObj]);
+    }, [isAuthenticated, ledgerActorckBTC, principalObj]);
 
     const walletDisplayName = (wallet) => {
         switch (wallet) {

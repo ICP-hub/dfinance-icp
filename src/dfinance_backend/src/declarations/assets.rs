@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Nat, Principal};
+use candid::{CandidType, Deserialize, Principal};
 
 use crate::protocol::configuration::reserve_configuration::ReserveConfiguration;
 
@@ -46,7 +46,6 @@ pub struct ReserveCache {
 pub struct ExecuteSupplyParams {
     pub asset: String,
     pub amount: u128,
-    pub on_behalf_of: String, //optional
     pub is_collateral: bool,
 
 }
@@ -85,10 +84,7 @@ pub enum InterestRateMode {
 #[derive(Debug, CandidType, Deserialize, Clone, PartialEq)]
 pub struct ExecuteBorrowParams {
     pub asset: String,
-    pub user: String,
-    pub on_behalf_of: String,
     pub amount: u128,
-    pub interest_rate: Nat,
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]

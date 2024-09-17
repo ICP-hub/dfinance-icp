@@ -66,11 +66,10 @@ const MySupply = () => {
   const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
+  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
 
   const ledgerActorckBTC = useMemo(
     () =>
@@ -99,18 +98,15 @@ const MySupply = () => {
 
           if (assetType === "ckBTC" && ledgerActorckBTC) {
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString()); // Set ckBTC balance
-            console.log("balance fn", ckBTCBalance);
+            setCkBTCBalance(balance.toString());  // Set ckBTC balance
           } else if (assetType === "ckETH" && ledgerActorckETH) {
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString()); // Set ckETH balance
-            console.log("balance fn", ckETHBalance);
+            setCkETHBalance(balance.toString());  // Set ckETH balance
           } else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
           }
-
           console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
@@ -122,48 +118,49 @@ const MySupply = () => {
   );
 
   useEffect(() => {
-    if (ckBTCBalance && conversionRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * conversionRate).toFixed(
-        2
-      );
+    if (ckBTCBalance && ckBTCUsdRate) {
+      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
     }
-  }, [ckBTCBalance, conversionRate]);
-
+  }, [ckBTCBalance, ckBTCUsdRate]);
+  
   useEffect(() => {
-    if (ckETHBalance && conversionRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * conversionRate).toFixed(
-        2
-      );
+    if (ckETHBalance && ckETHUsdRate) {
+      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
     }
-  }, [ckETHBalance, conversionRate]);
+  }, [ckETHBalance, ckETHUsdRate]);
+  
+
 
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd"
-      );
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      setConversionRate(data["internet-computer"].usd);
-      console.log("Fetched Conversion Rate:", data["internet-computer"].usd);
+  
+      // Set conversion rates for ckBTC and ckETH
+      setCkBTCUsdRate(data.bitcoin.usd);
+      setCkETHUsdRate(data.ethereum.usd);
+  
+      console.log("Fetched Conversion Rates - ckBTC:", data.bitcoin.usd, "ckETH:", data.ethereum.usd);
     } catch (error) {
-      console.error("Error fetching conversion rate:", error);
+      console.error("Error fetching conversion rates:", error);
       setError(error);
     }
   }, []);
+  
 
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
         await Promise.all([
-          fetchBalance("ckBTC"),
-          fetchBalance("ckETH"),
-          fetchConversionRate(),
+          fetchBalance('ckBTC'),
+          fetchBalance('ckETH'),
+          fetchConversionRate()  // Fetch ckBTC and ckETH rates
         ]);
       } catch (error) {
         setError(error);
@@ -171,16 +168,18 @@ const MySupply = () => {
         setLoading(false);
       }
     };
-
+  
     fetchAllData();
   }, [fetchBalance, fetchConversionRate]);
+  
 
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
-      setUsdBalance(balanceInUsd);
-    }
-  }, [balance, conversionRate]);
+
+  // useEffect(() => {
+  //   if (balance && conversionRate) {
+  //     const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
+  //     setUsdBalance(balanceInUsd);
+  //   }
+  // }, [balance, conversionRate]);
 
   const { assets, reserveData, filteredItems } = useAssetData();
   const filteredReserveData = Object.fromEntries(filteredItems);
@@ -244,7 +243,6 @@ const MySupply = () => {
   };
 
   const handleModalOpen = (type, asset, image, supplyRateAPR) => {
-    console.log("Handle modal opened");
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -286,6 +284,7 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
+
                 supplyRateAPR={isModalOpen.supplyRateAPR}
                 balance={isModalOpen.balance}
               />
@@ -303,6 +302,7 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
+
                 supplyRateAPR={isModalOpen.supplyRateAPR}
                 balance={isModalOpen.balance}
               />
@@ -650,11 +650,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                  {!userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].every(
-                    (reserveGroup) => reserveGroup[1]?.asset_supply === 0
-                  ) ? (
+                  {(!userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || userData?.Ok?.reserves[0].every(reserveGroup => reserveGroup[1]?.asset_supply === 0)) ? (
                     noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
@@ -1196,11 +1192,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {!userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].every(
-                    (reserveGroup) => reserveGroup[1]?.asset_borrow === 0
-                  ) ? (
+                  {(!userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || userData?.Ok?.reserves[0].every(reserveGroup => reserveGroup[1]?.asset_borrow === 0)) ? (
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6 relative max-h-[260px] overflow-hidden">
@@ -1310,7 +1302,7 @@ const MySupply = () => {
                                           reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
-                                          repay_rate_apr
+                                          borrow_rate_apr
                                         )
                                       }
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"

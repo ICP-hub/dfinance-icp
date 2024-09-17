@@ -66,6 +66,9 @@ const MySupply = () => {
   const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
+const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
+
 
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
 
@@ -83,15 +86,12 @@ const MySupply = () => {
           if (assetType === "ckBTC" && ledgerActorckBTC) {
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
             setCkBTCBalance(balance.toString());  // Set ckBTC balance
-            console.log("balance fn", ckBTCBalance)
           } else if (assetType === "ckETH" && ledgerActorckETH) {
             balance = await ledgerActorckETH.icrc1_balance_of(account);
             setCkETHBalance(balance.toString());  // Set ckETH balance
-            console.log("balance fn",ckETHBalance)
           } else {
             throw new Error("Unsupported asset type or ledger actor not initialized");
           }
-
           console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
@@ -103,57 +103,68 @@ const MySupply = () => {
   );
 
   useEffect(() => {
-    if (ckBTCBalance && conversionRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * conversionRate).toFixed(2);
+    if (ckBTCBalance && ckBTCUsdRate) {
+      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
     }
-  }, [ckBTCBalance, conversionRate]);
-
+  }, [ckBTCBalance, ckBTCUsdRate]);
+  
   useEffect(() => {
-    if (ckETHBalance && conversionRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * conversionRate).toFixed(2);
+    if (ckETHBalance && ckETHUsdRate) {
+      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
     }
-  }, [ckETHBalance, conversionRate]);
+  }, [ckETHBalance, ckETHUsdRate]);
+  
 
 
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      setConversionRate(data['internet-computer'].usd);
-      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
+  
+      // Set conversion rates for ckBTC and ckETH
+      setCkBTCUsdRate(data.bitcoin.usd);
+      setCkETHUsdRate(data.ethereum.usd);
+  
+      console.log("Fetched Conversion Rates - ckBTC:", data.bitcoin.usd, "ckETH:", data.ethereum.usd);
     } catch (error) {
-      console.error("Error fetching conversion rate:", error);
+      console.error("Error fetching conversion rates:", error);
       setError(error);
     }
   }, []);
+  
 
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        await Promise.all([fetchBalance('ckBTC'), fetchBalance('ckETH'), fetchConversionRate()]);
+        await Promise.all([
+          fetchBalance('ckBTC'),
+          fetchBalance('ckETH'),
+          fetchConversionRate()  // Fetch ckBTC and ckETH rates
+        ]);
       } catch (error) {
         setError(error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchAllData();
   }, [fetchBalance, fetchConversionRate]);
+  
 
 
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
-      setUsdBalance(balanceInUsd);
-    }
-  }, [balance, conversionRate]);
+  // useEffect(() => {
+  //   if (balance && conversionRate) {
+  //     const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
+  //     setUsdBalance(balanceInUsd);
+  //   }
+  // }, [balance, conversionRate]);
 
   const { assets, reserveData, filteredItems } = useAssetData();
   const filteredReserveData = Object.fromEntries(filteredItems);
@@ -219,7 +230,6 @@ const MySupply = () => {
   };
 
   const handleModalOpen = (type, asset, image, supplyRateAPR) => {
-    console.log("Handle modal opened");
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -261,7 +271,7 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
-              
+
                 supplyRateAPR={isModalOpen.supplyRateAPR}
                 balance={isModalOpen.balance}
               />
@@ -279,9 +289,9 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
-             
+
                 supplyRateAPR={isModalOpen.supplyRateAPR}
-                   balance={isModalOpen.balance}
+                balance={isModalOpen.balance}
               />
             }
           />
@@ -550,28 +560,28 @@ const MySupply = () => {
                               </div>
                             </div>
                             <div className="flex justify-center gap-2 mt-2 mb-2">
-                            <Button
-                                  title={"Supply"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "supply",
-                                      item[0],
-                                      (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
-                                      item[1]?.Ok.supply_rate_apr
-                                    )
-                                  }
+                              <Button
+                                title={"Supply"}
+                                onClickHandler={() =>
+                                  handleModalOpen(
+                                    "supply",
+                                    item[0],
+                                    (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                    item[1]?.Ok.supply_rate_apr
+                                  )
+                                }
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg"
                               />
-                               <Button
-                                  title={"Withdraw"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "withdraw",
-                                      item[0],
-                                      (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
-                                      item[1]?.Ok.withdraw_rate_apr
-                                    )
-                                  }
+                              <Button
+                                title={"Withdraw"}
+                                onClickHandler={() =>
+                                  handleModalOpen(
+                                    "withdraw",
+                                    item[0],
+                                    (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                    item[1]?.Ok.withdraw_rate_apr
+                                  )
+                                }
                                 className={`w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent`}
                               />
                             </div>
@@ -591,8 +601,8 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                 {(!userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || userData?.Ok?.reserves[0].every(reserveGroup => reserveGroup[1]?.asset_supply === 0)) ? (
-        noSupplyMessage
+                  {(!userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || userData?.Ok?.reserves[0].every(reserveGroup => reserveGroup[1]?.asset_supply === 0)) ? (
+                    noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
                       <div className="w-full z-10 sticky top-0">
@@ -758,7 +768,7 @@ const MySupply = () => {
                                 </div>
                               </div>
                               <div className="flex justify-center gap-2 mt-2">
-                              <Button
+                                <Button
                                   title={"Supply"}
                                   onClickHandler={() =>
                                     handleModalOpen(
@@ -936,7 +946,7 @@ const MySupply = () => {
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
-                  { userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
+                  {userData?.Ok?.reserves?.length === 0 || filteredItems.length === 0 ? (
                     noBorrowMessage
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
@@ -991,28 +1001,28 @@ const MySupply = () => {
                                 </div>
 
                                 <div className="flex justify-center gap-2 mt-4">
-                                <Button
-                                  title={"Borrow"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "borrow",
-                                      item[0],
-                                      (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
-                                      item[1]?.Ok.borrow_rate_apr
-                                    )
-                                  }
+                                  <Button
+                                    title={"Borrow"}
+                                    onClickHandler={() =>
+                                      handleModalOpen(
+                                        "borrow",
+                                        item[0],
+                                        (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                        item[1]?.Ok.borrow_rate_apr
+                                      )
+                                    }
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-lg font-inter"
                                   />
                                   <Button
-                                  title={"Repay"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "repay",
-                                      item[0],
-                                      (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
-                                      item[1]?.Ok.repay_rate_apr
-                                    )
-                                  }
+                                    title={"Repay"}
+                                    onClickHandler={() =>
+                                      handleModalOpen(
+                                        "repay",
+                                        item[0],
+                                        (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                        item[1]?.Ok.repay_rate_apr
+                                      )
+                                    }
                                     className={`w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter`}
                                   />
                                 </div>
@@ -1035,8 +1045,8 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                     {(!userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || userData?.Ok?.reserves[0].every(reserveGroup => reserveGroup[1]?.asset_borrow === 0)) ? (
-        noBorrowMessage
+                  {(!userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || userData?.Ok?.reserves[0].every(reserveGroup => reserveGroup[1]?.asset_borrow === 0)) ? (
+                    noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6 relative max-h-[260px] overflow-hidden">
                       {/* Container for the fixed header */}
@@ -1096,28 +1106,28 @@ const MySupply = () => {
                                   </div>
                                 </div>
                                 <div className="p-3 flex gap-2">
-                                <Button
-                                  title={"Borrow"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "borrow",
-                                      reserveGroup[1]?.reserve, (reserveGroup[1]?.reserve === "ckBTC" && ckBTC) || (reserveGroup[1]?.reserve === "ckETH" && ckETH), 
-                                      reserveGroup[1]?.reserve === "ckBTC" ? ckBTCBalance : ckETHBalance,
-                                      supply_rate_apr
-                                    )
-                                  }
+                                  <Button
+                                    title={"Borrow"}
+                                    onClickHandler={() =>
+                                      handleModalOpen(
+                                        "borrow",
+                                        reserveGroup[1]?.reserve, (reserveGroup[1]?.reserve === "ckBTC" && ckBTC) || (reserveGroup[1]?.reserve === "ckETH" && ckETH),
+                                        reserveGroup[1]?.reserve === "ckBTC" ? ckBTCBalance : ckETHBalance,
+                                        supply_rate_apr
+                                      )
+                                    }
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
                                   />
                                   <Button
-                                  title={"Repay"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "repay",
-                                      reserveGroup[1]?.reserve, (reserveGroup[1]?.reserve === "ckBTC" && ckBTC) || (reserveGroup[1]?.reserve === "ckETH" && ckETH), 
-                                      reserveGroup[1]?.reserve === "ckBTC" ? ckBTCBalance : ckETHBalance,
-                                      supply_rate_apr
-                                    )
-                                  }
+                                    title={"Repay"}
+                                    onClickHandler={() =>
+                                      handleModalOpen(
+                                        "repay",
+                                        reserveGroup[1]?.reserve, (reserveGroup[1]?.reserve === "ckBTC" && ckBTC) || (reserveGroup[1]?.reserve === "ckETH" && ckETH),
+                                        reserveGroup[1]?.reserve === "ckBTC" ? ckBTCBalance : ckETHBalance,
+                                        supply_rate_apr
+                                      )
+                                    }
                                     className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                   />
                                 </div>
@@ -1212,7 +1222,7 @@ const MySupply = () => {
                                 </div>
                               </div>
                               <div className="flex justify-center gap-2 mt-2 mb-2">
-                              <Button
+                                <Button
                                   title={"Borrow"}
                                   onClickHandler={() =>
                                     handleModalOpen(
@@ -1224,11 +1234,11 @@ const MySupply = () => {
                                   }
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg"
                                 />
-                                 <Button
-                                      title={"Details"}
-                                      onClickHandler={() =>
-                                        handleModalOpen("payment")
-                                      }
+                                <Button
+                                  title={"Details"}
+                                  onClickHandler={() =>
+                                    handleModalOpen("payment")
+                                  }
                                   className="w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent"
                                 />
                               </div>
@@ -1398,17 +1408,17 @@ const MySupply = () => {
                                 </td>
                                 <td className="p-3 align-top">
                                   <div className="w-full flex gap-3 -mr-[3.8rem]">
-                                  <Button
-                                  title={"Borrow"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "borroww",
-                                      item[0],
-                                      (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
-                                      item[0] === "ckBTC" ? ckBTCBalance : ckETHBalance,
-                                      item[1]?.Ok.borrow_rate_apr
-                                    )
-                                  }
+                                    <Button
+                                      title={"Borrow"}
+                                      onClickHandler={() =>
+                                        handleModalOpen(
+                                          "borroww",
+                                          item[0],
+                                          (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                          item[0] === "ckBTC" ? ckBTCBalance : ckETHBalance,
+                                          item[1]?.Ok.borrow_rate_apr
+                                        )
+                                      }
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
                                     />
                                     <Button

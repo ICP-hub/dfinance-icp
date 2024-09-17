@@ -8,7 +8,6 @@ source ../../.env
 # export MINTER=$(dfx identity get-principal)
 # echo $MINTER
 export BACKEND=$CANISTER_ID_DFINANCE_BACKEND
-# export BACKEND="bw4dl-smaaa-aaaaa-qaacq-cai"
 export TOKEN_NAME="debtckBTC"
 echo "token_name : $TOKEN_NAME"
 
@@ -21,7 +20,7 @@ export DEFAULT="2vxsx-fae"
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=0
 
-dfx identity use abcd
+dfx identity use default
 
 export ARCHIVE_CONTROLLER=$(dfx identity get-principal)
 

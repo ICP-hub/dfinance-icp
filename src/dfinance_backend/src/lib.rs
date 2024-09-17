@@ -20,6 +20,7 @@ use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
+use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::implementations::reserve::initialize_reserve;
 
@@ -63,7 +64,7 @@ async fn liquidation_call(
 ) -> Result<(), String> {
     
    
-    match SupplyLogic::execute_liquidation(asset, amount as u128, on_behalf_of).await {
+    match LiquidationLogic::execute_liquidation(asset, amount as u128, on_behalf_of).await {
         Ok(_) => {
             ic_cdk::println!("execute_liquidation function called successfully");
             Ok(())

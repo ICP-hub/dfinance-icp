@@ -12,7 +12,6 @@ export TOKEN_SYMBOL="dckBTC"
 
 # Set default principal (used for minting account)
 export BACKEND=$CANISTER_ID_DFINANCE_BACKEND
-# export BACKEND="bw4dl-smaaa-aaaaa-qaacq-cai"
 
 # Set pre-minted tokens and transfer fee (initial circulation is set to 0)
 export PRE_MINTED_TOKENS=0

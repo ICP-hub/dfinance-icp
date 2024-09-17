@@ -208,6 +208,7 @@ const MySupply = () => {
     type: "",
     asset: "",
     image: "",
+    balance:"",
   });
   console.log("hello", isModalOpen);
 
@@ -242,13 +243,14 @@ const MySupply = () => {
     }
   };
 
-  const handleModalOpen = (type, asset, image, supplyRateAPR) => {
+  const handleModalOpen = (type, asset, image, supplyRateAPR, balance) => {
     setIsModalOpen({
       isOpen: true,
       type: type,
       asset: asset,
       image: image,
       supplyRateAPR: supplyRateAPR,
+      balance:balance,
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -284,9 +286,9 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
-
-                supplyRateAPR={isModalOpen.supplyRateAPR}
-                balance={isModalOpen.balance}
+           balance={isModalOpen.balance}    
+            supplyRateAPR={isModalOpen.supplyRateAPR}
+                
               />
             }
           />
@@ -302,9 +304,9 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
-
-                supplyRateAPR={isModalOpen.supplyRateAPR}
-                balance={isModalOpen.balance}
+                balance={isModalOpen.balance} 
+                 supplyRateAPR={isModalOpen.supplyRateAPR}
+               
               />
             }
           />
@@ -319,7 +321,7 @@ const MySupply = () => {
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
-                balance={0}
+                balance={isModalOpen.balance}
                 isModalOpen={isModalOpen.isOpen}
                 handleModalOpen={handleModalOpen}
                 setIsModalOpen={setIsModalOpen}
@@ -610,7 +612,10 @@ const MySupply = () => {
                                       (reserveGroup[1]?.reserve ===
                                         "ckETH" &&
                                         ckETH),
-                                    supply_rate_apr
+                                    supply_rate_apr,
+                                    reserveGroup[1]?.reserve === "ckBTC"
+                                    ? ckBTCBalance
+                                    : ckETHBalance,
                                   )
                                 }
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg"
@@ -736,7 +741,10 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
-                                          supply_rate_apr
+                                          supply_rate_apr,
+                                          reserveGroup[1]?.reserve === "ckBTC"
+                                          ? ckBTCBalance
+                                          : ckETHBalance,
                                         )
                                       }
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
@@ -875,7 +883,8 @@ const MySupply = () => {
                                     item[0],
                                     (item[0] === "ckBTC" && ckBTC) ||
                                       (item[0] === "ckETH" && ckETH),
-                                    item[1]?.Ok.supply_rate_apr
+                                    item[1]?.Ok.supply_rate_apr,
+                                    item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null
                                   )
                                 }
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-lg font-inter"
@@ -982,7 +991,8 @@ const MySupply = () => {
                                       item[0],
                                       (item[0] === "ckBTC" && ckBTC) ||
                                         (item[0] === "ckETH" && ckETH),
-                                      item[1]?.Ok.supply_rate_apr
+                                      item[1]?.Ok.supply_rate_apr,
+                                      item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null
                                     )
                                   }
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
@@ -1146,10 +1156,11 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
-                                          reserveGroup[1]?.reserve === "ckBTC"
+                                         
+                                          borrow_rate_apr,
+                                           reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
-                                          borrow_rate_apr
                                     )
                                   }
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-lg font-inter"
@@ -1279,10 +1290,11 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
+                                               borrow_rate_apr,
                                           reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
-                                          borrow_rate_apr
+                                         
                                         )
                                       }
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
@@ -1423,7 +1435,10 @@ const MySupply = () => {
                                     item[0],
                                     (item[0] === "ckBTC" && ckBTC) ||
                                       (item[0] === "ckETH" && ckETH),
-                                    item[1]?.Ok.borrow_rate_apr
+                                     item[1]?.Ok.borrow_rate_apr,
+                                   
+                                    item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null,
+                                    
                                   )
                                 }
                                 disabled={isTableDisabled}
@@ -1633,10 +1648,8 @@ const MySupply = () => {
                                         item[0],
                                         (item[0] === "ckBTC" && ckBTC) ||
                                           (item[0] === "ckETH" && ckETH),
-                                        item[0] === "ckBTC"
-                                          ? ckBTCBalance
-                                          : ckETHBalance,
-                                        item[1]?.Ok.borrow_rate_apr
+                                        item[1]?.Ok.borrow_rate_apr, 
+                                        item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null,
                                       )
                                     }
                                     disabled={isTableDisabled}

@@ -11,16 +11,39 @@ import { useMemo } from "react";
 const Borrow = ({ asset, image,supplyRateAPR, balance }) => {
   const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-
+console.log("jkbjkasbkjbdjk",balance)
   const { createLedgerActor, backendActor } = useAuth();
-
+  const [error, setError] = useState('');
   const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
 
   const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
 
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    const inputAmount = e.target.value;
+    
+    // Convert input to a number
+    const numericAmount = parseFloat(inputAmount);
+  
+    if (!isNaN(numericAmount) && numericAmount >= 0) {
+      if (numericAmount <= supplyBalance) {
+        // Calculate and format the USD value
+       
+        setAmount(inputAmount);
+        setError('');
+      } else {
+        setError('Amount exceeds the supply balance');
+       
+      }
+    } else if (inputAmount === '') {
+      // Allow empty input and reset error
+      setAmount('');
+    
+      setError('');
+    } else {
+      setError('Amount must be a positive number');
+     
+    }
   };
   const handleAcknowledgeChange = (e) => {
     setIsAcknowledged(e.target.checked);
@@ -59,8 +82,12 @@ const handleBorrowETH = async () => {
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = 100;
+  const numericBalance = parseFloat(balance); // Convert balance to a number
+const transferFee = Number(fees[normalizedAsset] || fees.default); // Ensure transfer fee is a number
+const supplyBalance = numericBalance - transferFee; // Calculate supply balance
+
+console.log("Supply Balance:", supplyBalance); // Debugging output
+
   return (
     <>
       <h1 className="font-semibold text-xl">Borrow {asset}</h1>
@@ -89,7 +116,7 @@ const handleBorrowETH = async () => {
                 />
                 <span className="text-lg">{asset}</span>
               </div>
-              <p className="text-xs mt-4"> Balance {balance} Max</p>
+              <p className="text-xs mt-4">{supplyBalance.toFixed(2)} Max </p>
             </div>
           </div>
         </div>
@@ -134,7 +161,7 @@ const handleBorrowETH = async () => {
         <div className="w-full">
           <div className="flex items-center">
             <Fuel className="w-4 h-4 mr-1" />
-            <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
+            <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
               <img
                 src={image}
                 alt="asset icon"

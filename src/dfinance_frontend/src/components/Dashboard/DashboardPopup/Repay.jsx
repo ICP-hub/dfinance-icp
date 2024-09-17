@@ -31,7 +31,7 @@ const Repay = ({ asset, image }) => {
     return <p>Error: Fees data not available.</p>;
   }
   const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = BigInt(100);
+  const transferfee = BigInt(transferFee);
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);

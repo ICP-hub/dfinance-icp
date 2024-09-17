@@ -83,9 +83,11 @@ const MySupply = () => {
           if (assetType === "ckBTC" && ledgerActorckBTC) {
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
             setCkBTCBalance(balance.toString());  // Set ckBTC balance
+            console.log("balance fn", ckBTCBalance)
           } else if (assetType === "ckETH" && ledgerActorckETH) {
             balance = await ledgerActorckETH.icrc1_balance_of(account);
             setCkETHBalance(balance.toString());  // Set ckETH balance
+            console.log("balance fn",ckETHBalance)
           } else {
             throw new Error("Unsupported asset type or ledger actor not initialized");
           }
@@ -589,11 +591,8 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                  {userData?.Ok?.reserves[0].reduce(
-                    (total, reserveGroup) => total + (reserveGroup[1]?.asset_supply || 0),
-                    0
-                  ) === 0 ? (
-                    noSupplyMessage
+                 {(!userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || userData?.Ok?.reserves[0].every(reserveGroup => reserveGroup[1]?.asset_supply === 0)) ? (
+        noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative max-h-[260px] overflow-hidden">
                       <div className="w-full z-10 sticky top-0">
@@ -608,13 +607,13 @@ const MySupply = () => {
 
                       {/* Scrollable Content Area */}
                       <div
-                        className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves?.filter((reserveGroup) => reserveGroup[1].asset_supply > 0).length > 3
+                        className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter((reserveGroup) => reserveGroup[1].asset_supply > 0).length > 3
                           ? "h-[260px]"
                           : ""
                           }`}
                       >
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                          {userData?.Ok?.reserves[0].map((reserveGroup, index) => (
+                          {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => (
                             reserveGroup[1]?.asset_supply > 0 && (
                               <div
                                 key={index}
@@ -1036,11 +1035,8 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {userData?.Ok?.reserves[0].reduce(
-                    (total, reserveGroup) => total + (reserveGroup[1]?.asset_borrow || 0),
-                    0
-                  ) === 0 ? (
-                    noBorrowMessage
+                     {(!userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || userData?.Ok?.reserves[0].every(reserveGroup => reserveGroup[1]?.asset_borrow === 0)) ? (
+        noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6 relative max-h-[260px] overflow-hidden">
                       {/* Container for the fixed header */}
@@ -1056,13 +1052,13 @@ const MySupply = () => {
                       </div>
                       {/* Scrollable table body */}
                       <div
-                        className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves?.filter((reserveGroup) => reserveGroup[1].asset_borrow > 0).length > 3
+                        className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter((reserveGroup) => reserveGroup[1].asset_borrow > 0).length > 3
                           ? "h-[260px]"
                           : ""
                           }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
-                          {userData?.Ok?.reserves[0].map((reserveGroup, index) => (
+                          {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => (
                             reserveGroup[1]?.asset_borrow > 0 && (
                               <div
                                 key={index}

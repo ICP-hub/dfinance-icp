@@ -6,10 +6,13 @@ import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/c
 import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
+import { Principal } from "@dfinity/principal";
 
 const Repay = ({ asset, image }) => {
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
   const { createLedgerActor, backendActor } = useAuth();
+  const [isApproved, setIsApproved] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
 
@@ -28,6 +31,41 @@ const Repay = ({ asset, image }) => {
     return <p>Error: Fees data not available.</p>;
   }
   const transferFee = fees[normalizedAsset] || fees.default;
+  const transferfee = BigInt(100);
+
+  const handleApprove = async () => {
+    console.log("Approve function called for", asset);
+    let ledgerActor;
+    if (asset === "ckBTC") {
+      ledgerActor = ledgerActorckBTC;
+    } else if (asset === "ckETH") {
+      ledgerActor = ledgerActorckETH;
+    }
+
+ // Convert amount and transferFee to numbers and add them
+ const repayAmount = BigInt(amount);
+ const totalAmount = repayAmount + transferfee;
+
+    const approval = await ledgerActor.icrc2_approve({
+      fee: [],
+      memo: [],
+      from_subaccount: [],
+      created_at_time: [],
+      amount: totalAmount,
+      expected_allowance: [],
+      expires_at: [],
+      spender: {
+        owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+        subaccount: [],
+      },
+    });
+
+    console.log("Approve", approval);
+    setIsApproved(true);
+    console.log("isApproved state after approval:", isApproved);
+  };
+
+
   const handleRepayETH = async () => {
     console.log("Repay function called for", asset, amount);
     let ledgerActor;
@@ -43,11 +81,12 @@ const Repay = ({ asset, image }) => {
   
     try {
       // Convert the amount to the appropriate units, if necessary
-      const amountInUnits = BigInt(Number(amount) * 1e18); // Example conversion to appropriate units
+      const amountInUnits = BigInt(amount); // Example conversion to appropriate units
   
       // Call the repay function on the selected ledger actor
-      const repayResult = await backendActor.repay(asset, amountInUnits);
+      const repayResult = await backendActor.repay(asset, amountInUnits, []);
       console.log("Repay result", repayResult);
+      window.location.reload()
   
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
@@ -183,10 +222,13 @@ const Repay = ({ asset, image }) => {
 
         <div className="w-full">
           <button
-            onClick={handleRepayETH}
+           onClick={() => {
+            console.log("Button clicked");
+            isApproved ? handleRepayETH() : handleApprove();
+          }}
             className="bg-gradient-to-tr from-[#ffaf5a]  to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
           >
-            Repay {asset}
+            {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
           </button>
         </div>
       </div>

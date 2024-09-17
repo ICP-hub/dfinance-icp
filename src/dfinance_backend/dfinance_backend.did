@@ -41,7 +41,6 @@ type ReserveData = record {
   borrow_rate : opt float64;
   supply_rate_apr : opt float64;
   configuration : ReserveConfiguration;
-  accrued_to_treasury : nat;
   total_supply : opt float64;
   can_be_collateral: opt bool;
 };
@@ -97,4 +96,5 @@ service : () -> {
   borrow : (text, nat64) -> (Result_4);
   repay : (text, nat, opt text) -> (Result_4);
   withdraw : (text, nat, opt text, bool) -> (Result_4);
+  liquidation_call : (text, nat64, text) -> (Result_2);
 };

@@ -7,7 +7,7 @@ use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 mod api;
 mod constants;
-mod declarations;
+pub mod declarations;
 mod dynamic_canister;
 mod guards;
 mod implementations;
@@ -21,24 +21,17 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
+use crate::implementations::reserve::initialize_reserve;
+
 
 #[init]
 fn init() {
-    // initialize_reserve();
+    
+    initialize_reserve();
     ic_cdk::println!("function called");
 }
 
-#[update]
-fn initialize_reserve_list(ledger_tokens: Vec<(String, Principal)>) -> Result<(), String> {
-    ic_cdk::println!("Initialize reserve list function called");
 
-    mutate_state(|state| {
-        for (token_name, principal) in ledger_tokens {
-            state.reserve_list.insert(token_name.to_string(), principal);
-        }
-        Ok(())
-    })
-}
 
 // Function to call the execute_supply logic
 #[update]
@@ -62,6 +55,25 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
     }
 }
 
+#[update]
+async fn liquidation_call(
+    asset: String,
+    amount: u64,
+    on_behalf_of: String,
+) -> Result<(), String> {
+    
+   
+    match SupplyLogic::execute_liquidation(asset, amount as u128, on_behalf_of).await {
+        Ok(_) => {
+            ic_cdk::println!("execute_liquidation function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
+            Err(e)
+        }
+    }
+}
 // Function to fetch the reserve-data based on the asset
 #[query]
 fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
@@ -186,7 +198,7 @@ async fn repay(asset: String, amount: u128, on_behalf: Option<String>) -> Result
 
 // Withdraws amount from the collateral/supply
 #[update]
-async fn withdraw(
+pub async fn withdraw(
     asset: String,
     amount: u128,
     on_behalf: Option<String>,

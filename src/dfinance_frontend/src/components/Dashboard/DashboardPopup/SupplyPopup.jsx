@@ -32,12 +32,12 @@ const SupplyPopup = ({
     return <p>Error: Fees data not available.</p>;
   }
   const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = 100;
+  const transferfee = BigInt(100);
   const hasEnoughBalance = balance >= transactionFee;
   const value = 5.23;
   const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
   const [usdValue, setUsdValue] = useState(0);
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -134,7 +134,7 @@ const SupplyPopup = ({
     }
 
  // Convert amount and transferFee to numbers and add them
- const supplyAmount = parseFloat(amount);
+ const supplyAmount = BigInt(amount);
  const totalAmount = supplyAmount + transferfee;
 
     const approval = await ledgerActor.icrc2_approve({
@@ -165,8 +165,11 @@ const SupplyPopup = ({
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
     }
+
+    const amountAsNat64 = BigInt(amount);
+
     console.log("Backend actor", backendActor)
-    const sup = await backendActor.supply(asset, 500, true);
+    const sup = await backendActor.supply(asset, amountAsNat64, true);
     console.log("Supply", sup);
     setIsPaymentDone(true);
     setIsVisible(false);
@@ -336,7 +339,7 @@ const SupplyPopup = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p>You supplied {amount} d{asset}</p>
+            <p>You received {amount} d{asset}</p>
 
             {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
               <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
@@ -349,7 +352,7 @@ const SupplyPopup = ({
             </div> */}
             <button
               onClick={handleClosePaymentPopup}
-              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
+              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
             >
               Close Now
             </button>

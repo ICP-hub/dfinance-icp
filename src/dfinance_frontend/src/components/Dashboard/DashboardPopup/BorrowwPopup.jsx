@@ -1,5 +1,6 @@
-import { Info } from "lucide-react";
+import { Info, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
+import Vector from "../../../../public/Helpers/Vector.png";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
@@ -11,19 +12,22 @@ const BorrowPopup = ({ asset, image,supplyRateAPR, balance }) => {
   const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
 
-
   const { createLedgerActor, backendActor } = useAuth();
 
   const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
 
   const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
+
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
   };
+  const handleAcknowledgeChange = (e) => {
+    setIsAcknowledged(e.target.checked);
+  };
   const value = 5.23;
 
- const handleBorrowETH = async () => {
+const handleBorrowETH = async () => {
   console.log("Borrow function called for", asset, amount);
   let ledgerActor;
 
@@ -34,11 +38,11 @@ const BorrowPopup = ({ asset, image,supplyRateAPR, balance }) => {
     ledgerActor = ledgerActorckETH;
   }
 
-  console.log("Backend actor", backendActor);
-
   try {
+    // const amountInUnits = BigInt(Number(amount) * 1e18);
     const borrowResult = await backendActor.borrow(asset, Number(amount));
     console.log("Borrow result", borrowResult);
+    window.location.reload()
     
     // You can handle the result here, e.g., showing success, updating UI, etc.
   } catch (error) {
@@ -47,9 +51,6 @@ const BorrowPopup = ({ asset, image,supplyRateAPR, balance }) => {
   }
 };
 
-  const handleAcknowledgeChange = (e) => {
-    setIsAcknowledged(e.target.checked);
-  };
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
   console.log("Fees:", fees); // Check the fees object
@@ -58,7 +59,7 @@ const BorrowPopup = ({ asset, image,supplyRateAPR, balance }) => {
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
-  const transferFee = fees[normalizedAsset] || fees.default; 
+  const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = 100;
 
   return (

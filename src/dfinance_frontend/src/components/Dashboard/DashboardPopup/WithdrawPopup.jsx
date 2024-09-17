@@ -47,10 +47,11 @@ const WithdrawPopup = ({ asset, image }) => {
 
     try {
 
-      const amountInUnits = BigInt(Number(amount) * 1e18); 
+      const amountInUnits = BigInt(amount); 
       // Call the withdraw function on the selected ledger actor
-      const withdrawResult = await backendActor.withdraw(asset, amountInUnits, undefined, true);
+      const withdrawResult = await backendActor.withdraw(asset, amountInUnits, [], true);
       console.log("Withdraw result", withdrawResult);
+      window.location.reload()
 
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {

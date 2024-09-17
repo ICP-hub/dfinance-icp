@@ -42,6 +42,7 @@ const handleBorrowETH = async () => {
     // const amountInUnits = BigInt(Number(amount) * 1e18);
     const borrowResult = await backendActor.borrow(asset, Number(amount));
     console.log("Borrow result", borrowResult);
+    window.location.reload()
     
     // You can handle the result here, e.g., showing success, updating UI, etc.
   } catch (error) {

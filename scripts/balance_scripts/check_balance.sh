@@ -6,7 +6,7 @@ set -e
 check_balance() {
     local principal=$1
     local label=$2
-    local canister_id="ckbtc_ledger"
+    local canister_id="cketh_ledger"
     local balance_method="icrc1_balance_of"
 
     # Check the balance
@@ -24,6 +24,7 @@ echo "Checking balance and principal for identities and backend canister..."
 
 check_balance $(dfx identity get-principal --identity anonymous) "Anonymous"
 check_balance $(dfx identity get-principal --identity default) "Default"
+check_balance "i33yh-4wqd6-4nept-op4lj-oqe6v-27zvz-o32nr-rnx64-wnht6-rzioe-lae"
 check_balance $(dfx identity get-principal --identity minter) "Minter"
 check_balance $(dfx identity get-principal --identity user1) "User1"
 check_balance $backend_canister_principal "Backend Canister"

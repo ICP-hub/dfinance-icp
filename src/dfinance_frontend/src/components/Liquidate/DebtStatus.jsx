@@ -200,7 +200,7 @@ const DebtStatus = () => {
       }
 
       <div className="w-full min-h-[400px] mt-6 lg:px-10 ">
-        {currentItems.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
+        {users.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>

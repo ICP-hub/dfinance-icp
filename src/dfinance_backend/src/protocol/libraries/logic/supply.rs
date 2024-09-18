@@ -8,7 +8,7 @@ use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
-use crate::declarations::asset_price::get_exchange_rate;
+// use crate::declarations::asset_price::get_exchange_rate;
 use crate::protocol::libraries::math::calculate::{UserPosition, calculate_health_factor, calculate_ltv};
 use crate::{
     api::functions::{asset_transfer, asset_transfer_from},
@@ -43,6 +43,9 @@ impl SupplyLogic {
                 return Err(e);
             }
         };
+        let ckbtc_to_usd_rate = 60554.70f64;
+        let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+
         user_data.total_collateral = Some(
             user_data.total_collateral.unwrap_or(0.0) + amount_in_usd
         );
@@ -56,8 +59,8 @@ impl SupplyLogic {
 
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
-            total_borrowed_value: user_data.total_debt.unwrap_or(0.0), // Assuming total_debt is stored in user_data
-            liquidation_threshold: 0.8, // Set to the desired liquidation threshold (80%)
+            total_borrowed_value: user_data.total_debt.unwrap_or(0.0), 
+            liquidation_threshold: 0.8, 
         };
     
         

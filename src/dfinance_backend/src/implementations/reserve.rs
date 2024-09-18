@@ -7,9 +7,9 @@ use crate::{
 use ic_cdk::update;
 
 #[update]
-pub fn initialize_reserve() {
+pub async fn initialize_reserve() {
 
-    let asset_data_map = get_asset_data();
+    let asset_data_map = get_asset_data().await;
 
     for (asset_name, (principal, reserve_data)) in asset_data_map {
         let mut data = reserve_data;

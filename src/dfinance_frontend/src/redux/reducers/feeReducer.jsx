@@ -6,8 +6,8 @@ const feeReducer = createSlice({
   initialState: {
     fees: {
       default: '5.00',  // Default fee for assets
-      ckbtc: '0.10',    // Fee for ckbtc
-      cketh: '0.05'     // Fee for cketh
+      ckbtc: '100',    // Fee for ckbtc
+      cketh: '110'     // Fee for cketh
     },
   },
   reducers: {

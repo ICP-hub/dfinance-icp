@@ -31,7 +31,7 @@ const Repay = ({ asset, image }) => {
     return <p>Error: Fees data not available.</p>;
   }
   const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = BigInt(100);
+  const transferfee = BigInt(transferFee);
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);
@@ -86,7 +86,7 @@ const Repay = ({ asset, image }) => {
       // Call the repay function on the selected ledger actor
       const repayResult = await backendActor.repay(asset, amountInUnits, []);
       console.log("Repay result", repayResult);
-      window.location.reload()
+      // window.location.reload()
   
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {

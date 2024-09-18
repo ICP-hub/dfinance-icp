@@ -361,7 +361,7 @@ const AssetDetails = () => {
                       handleModalOpen(
                         "supply",
                         id,
-                        (id === "ckBTC" && ckbtc) || (id === "ckETH" && cketh)
+                        (id === "ckBTC" && ckbtc) || (id === "ckETH" && cketh)  
                       )
                     } className={"my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"} />
                 </div>

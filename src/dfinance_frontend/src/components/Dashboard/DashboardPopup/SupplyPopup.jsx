@@ -27,12 +27,14 @@ const SupplyPopup = ({
   console.log("Fees:", fees); // Check the fees object
   const normalizedAsset = asset ? asset.toLowerCase() : 'default';
   console.log("SupplyPopup Props - Asset:", asset, "Supply Rate APR:", supplyRateAPR);
-
+  console.log("Balance in the component:", balance, typeof balance);
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
+  const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = BigInt(100);
+  const transferfee = Number(transferFee);
+  const supplyBalance = numericBalance - transferfee;
   const hasEnoughBalance = balance >= transactionFee;
   const value = 5.23;
   const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
@@ -41,7 +43,7 @@ const SupplyPopup = ({
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-
+  const [error, setError] = useState('');
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
@@ -90,23 +92,33 @@ const SupplyPopup = ({
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
-    setAmount(inputAmount); // Update the amount state
+    
+    // Convert input to a number
+    const numericAmount = parseFloat(inputAmount);
   
-    if (inputAmount && conversionRate) {
-      const convertedValue = parseFloat(inputAmount) * conversionRate;
-      setUsdValue(convertedValue); // Update the USD value state
+    if (!isNaN(numericAmount) && numericAmount >= 0) {
+      if (numericAmount <= supplyBalance) {
+        // Calculate and format the USD value
+        const convertedValue = numericAmount * conversionRate;
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
+        setAmount(inputAmount);
+        setError('');
+      } else {
+        setError('Amount exceeds the supply balance');
+        setUsdValue(0);
+      }
+    } else if (inputAmount === '') {
+      // Allow empty input and reset error
+      setAmount('');
+      setUsdValue(0);
+      setError('');
     } else {
-      setUsdValue(0); // Reset USD value if input is empty or invalid
+      setError('Amount must be a positive number');
+      setUsdValue(0);
     }
-
-    // if (!isNaN(inputAmount) && inputAmount <= balance) {
-    //   setAmount(inputAmount);
-    // } else if (inputAmount > balance) {
-    //   setAmount(balance); // If the input exceeds the balance, set it to the balance
-    // } else {
-    //   setAmount(''); // Reset to empty if the input is not a valid number
-    // }
   };
+  
+
   
   // Update the USD value whenever the amount changes or conversionRate is updated
   useEffect(() => {
@@ -134,7 +146,7 @@ const SupplyPopup = ({
     }
 
  // Convert amount and transferFee to numbers and add them
- const supplyAmount = BigInt(amount);
+ const supplyAmount =  Number(amount);
  const totalAmount = supplyAmount + transferfee;
 
     const approval = await ledgerActor.icrc2_approve({
@@ -180,7 +192,7 @@ const SupplyPopup = ({
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false)
-    window.location.reload()
+    // window.location.reload()
   };
   
 
@@ -203,7 +215,7 @@ const SupplyPopup = ({
                     className="text-lg focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />
-                   <p className="text-xs text-gray-500 mt-3">
+                   <p className="text-xs text-gray-500 ">
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
@@ -216,7 +228,7 @@ const SupplyPopup = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">Supply Balance {balance} Max</p>
+                  <p className="text-xs mt-4">{supplyBalance.toFixed(2)} Max </p>
                 </div>
               </div>
             </div>
@@ -283,7 +295,7 @@ const SupplyPopup = ({
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
               <Fuel className="w-4 h-4 mr-1" />
-              <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
+              <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
               <img
                 src={image}
                 alt="asset icon"

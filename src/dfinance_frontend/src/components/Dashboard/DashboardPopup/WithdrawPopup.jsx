@@ -19,7 +19,7 @@ const WithdrawPopup = ({ asset, image }) => {
     return <p>Error: Fees data not available.</p>;
   }
   const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = 100;
+  const transferfee = BigInt(transferFee);
 
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
@@ -51,7 +51,7 @@ const WithdrawPopup = ({ asset, image }) => {
       // Call the withdraw function on the selected ledger actor
       const withdrawResult = await backendActor.withdraw(asset, amountInUnits, [], true);
       console.log("Withdraw result", withdrawResult);
-      window.location.reload()
+      // window.location.reload()
 
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
@@ -111,7 +111,7 @@ const WithdrawPopup = ({ asset, image }) => {
       <div className="w-full flex  mt-3">
         <div className="flex items-center">
           <Fuel className="w-4 h-4 mr-1" />
-          <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
+          <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
           <img
             src={image}
             alt="asset icon"

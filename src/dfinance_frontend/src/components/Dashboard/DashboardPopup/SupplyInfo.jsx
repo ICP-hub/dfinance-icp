@@ -1,20 +1,12 @@
 import React from "react"
-import CircleProgess from "../../Common/CircleProgess"
 import LineGraph from "../../Common/LineGraph"
 import { Check } from 'lucide-react';
-import { useParams } from "react-router-dom";
 import { useState } from "react";
-import { useMemo } from "react";
-import { Principal } from "@dfinity/principal";
-import { useAuth } from "../../../utils/useAuthClient";
-import {
-  useCallback
-} from "react";
 import { useEffect } from "react";
 import { X } from 'lucide-react';
 import CircularProgress from "../../Common/CircularProgressbar";
 
-const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, supplyPercentage}) => {
+const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, supplyPercentage }) => {
   const [collateral, setCollateral] = useState(false);
 
 
@@ -25,8 +17,8 @@ const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
     }
   }, [filteredItems]);
 
-  console.log("filteredItems from borrow",filteredItems)
-  // Initialize variables to store the extracted values
+  console.log("filteredItems from borrow", filteredItems)
+
   let asset_name = "";
   let accrued_to_treasury = "0";
   let borrow_rate = "0";
@@ -41,13 +33,11 @@ const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
   let liquidity_index = "0";
   let d_token_canister = "";
   let debt_token_canister = "";
-  let liquidation_bonus =""
-  let liquidation_threshold=""
+  let liquidation_bonus = ""
+  let liquidation_threshold = ""
 
-  // Extract the required data from the filteredItems array
   if (filteredItems && filteredItems.length > 0) {
     const item = filteredItems[0][1].Ok;
-
     asset_name = item.asset_name ? item.asset_name[0] : "Unknown";
     accrued_to_treasury = item.accrued_to_treasury?.toString() || "0";
     borrow_rate = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
@@ -71,82 +61,73 @@ const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
 
 
     <div className="w-full lg:w-10/12 ">
-     
-          <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7">
-            <div className="w-full md:w-2/12 flex justify-center align-items-center">
-          
-            <CircularProgress  progessValue={supplyPercentage} />
-              
-            </div>
-            <div className="w-full lg:w-9/12 flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs md:text-sm lg:text-base mt-3 lg:mt-0 sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden md:gap-10 sxs3:gap-4">
 
-              <div className="relative text-[#5B62FE] dark:text-darkText">
-                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Total Supplied</h1>
-                <hr
-                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
-                />
-                 <p>  <span >{total_supplied}</span> of <span>{borrow_cap}</span></p>
-                 <p className="text-[11px]">${formatNumber(usdBalance)} of ${formatNumber(borrowCapUsd)}</p>
-              </div>
+      <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7">
+        <div className="w-full md:w-2/12 flex justify-center align-items-center">
+          <CircularProgress progessValue={supplyPercentage} />
+        </div>
+        <div className="w-full lg:w-9/12 flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs md:text-sm lg:text-base mt-3 lg:mt-0 sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden md:gap-10 sxs3:gap-4">
 
-              <hr
-                className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
-              />
-
-              <div className="relative text-[#5B62FE] dark:text-darkText">
-                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">APY, variable</h1>
-                <hr
-                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-                />
-                      <p>{supply_rate_apr}%</p>
-              </div>
-              {/* <div className="relative text-[#5B62FE] dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold  mb-[1px] dark:text-darkText">Total Borrowed</h1>
+          <div className="relative text-[#5B62FE] dark:text-darkText">
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Total Supplied</h1>
             <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5  mb-[1px]`}
+              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
             />
-              <p>  <span >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</span> of <span>{item[1].Ok.configuration.borrow_cap.toString()}</span></p>
-              <p className="text-[11px]">${usdBalance} of ${borrowCapUsd}</p>
-          </div> */}
-            </div>
+            <p>  <span >{total_supplied}</span> of <span>{borrow_cap}</span></p>
+            <p className="text-[11px]">${formatNumber(usdBalance)} of ${formatNumber(borrowCapUsd)}</p>
           </div>
-          <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
-            <div className="w-full flex gap-5 text-[#2A1F9D] mb-6 dark:text-darkText">
-              <button className='cursor-pointer hover:text-[#7369df]'>Supply APR</button>
-            </div>
-            <LineGraph />
 
-            <p className="mt-8 text-[#5B62FE] flex items-center gap-2 dark:text-darkText">
-              Collateral usage {collateral ? <Check /> : <X />} {collateral ? "Can be collateral" : "Cannot be collateral"}
-            </p>
+          <hr
+            className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
+          />
 
-            <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap">
-              <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
-                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Max LTV</h1>
-                <hr
-                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-                />
-                <p>{ltv}%</p>
-              </div>
-              <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
-                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
-                  Liquidation threshold
-                </h1>
-                <hr
-                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-                />
-                <p>{liquidation_threshold}%</p>
-              </div>
-              <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
-                <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Liquidation bonus</h1>
-                <hr
-                  className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-                />
-                <p>{liquidation_bonus}%</p>
-              </div>
-            </div>
+          <div className="relative text-[#5B62FE] dark:text-darkText">
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">APY, variable</h1>
+            <hr
+              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+            />
+            <p>{supply_rate_apr}%</p>
           </div>
-        
+
+        </div>
+      </div>
+      <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
+        <div className="w-full flex gap-5 text-[#2A1F9D] mb-6 dark:text-darkText">
+          <button className='cursor-pointer hover:text-[#7369df]'>Supply APR</button>
+        </div>
+        <LineGraph />
+
+        <p className="mt-8 text-[#5B62FE] flex items-center gap-2 dark:text-darkText">
+          Collateral usage {collateral ? <Check /> : <X />} {collateral ? "Can be collateral" : "Cannot be collateral"}
+        </p>
+
+        <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap">
+          <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Max LTV</h1>
+            <hr
+              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+            />
+            <p>{ltv}%</p>
+          </div>
+          <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
+              Liquidation threshold
+            </h1>
+            <hr
+              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+            />
+            <p>{liquidation_threshold}%</p>
+          </div>
+          <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Liquidation bonus</h1>
+            <hr
+              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
+            />
+            <p>{liquidation_bonus}%</p>
+          </div>
+        </div>
+      </div>
+
     </div>
 
 

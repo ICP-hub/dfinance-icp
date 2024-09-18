@@ -14,7 +14,6 @@ export default function App() {
     reloadLogin();
   }, []);
 
-
   useEffect(() => {
     if (localStorage.getItem('theme') === 'dark') {
       document.documentElement.classList.add('dark');
@@ -22,12 +21,9 @@ export default function App() {
     }
   }, [theme]);
 
-
-
   const isLoading = usePageLoading();
-
-
   const routes = useRoutes(routesList)
+
   if (isLoading) {
     return <Loading isLoading={isLoading} />
   }

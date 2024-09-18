@@ -8,11 +8,17 @@ import Button from "../Common/Button";
 import Vector from "../../../public/Helpers/Vector.png";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
+import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger"
+import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
+import { Principal } from "@dfinity/principal";
+import { useMemo } from "react";
 
 
-const UserInformationPopup = ({ onClose, asset, principal }) => {
-  const [rewardAmount, setRewardAmount] = useState(0);
-  const [amountToRepay, setAmountToRepay] = useState(100);
+
+const UserInformationPopup = ({ onClose, principal }) => {
+  const [rewardAmount, setRewardAmount] = useState(10);
+  const [amountToRepay, setAmountToRepay] = useState(200);
+  const [isApproved, setIsApproved] = useState(false);
   const popupRef = useRef(null);
   const [isDebtInfo, setIsDebtInfo] = useState(false); // State to manage content view
   const [isCollateralOverlay, setIsCollateralOverlay] = useState(false); // New state for Collateral Overlay
@@ -24,8 +30,8 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
   const defaultAsset = "cketh";
   const {
     isAuthenticated,
-   
-} = useAuth()
+    createLedgerActor, backendActor
+  } = useAuth()
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -33,6 +39,8 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
       document.body.style.overflow = "auto";
     };
   }, []);
+
+  
 
   const handleClickOutside = (e) => {
     if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -54,8 +62,8 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
       setIsDebtInfo(true); // Switch to Debt Information view
     }
   };
- 
-  
+
+
   const handleAssetSelection = (asset) => {
     setSelectedAsset(asset); // Set the selected asset (only one at a time)
     const assetRewardAmounts = {
@@ -63,7 +71,7 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
       ckbtc: 0.0010250,
       icp: 5.032560,
     };
-    
+
     setRewardAmount(assetRewardAmounts[asset] || 0);
   };
 
@@ -88,7 +96,7 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm mt-4">
               <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
-                 Reward Amount
+                Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">{rewardAmount}</p>
             </div>
@@ -152,10 +160,55 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
     setIsCheckboxChecked(e.target.checked);
   };
 
-  const handleConfirmLiquidation = () => {
-    // Simulate the liquidation function
+  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+
+  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
+
+  const asset = "ckBTC";
+
+  const handleApprove = async () => {
+    console.log("Approve function called for", asset);
+    let ledgerActor;
+    if (asset === "ckBTC") {
+      ledgerActor = ledgerActorckBTC;
+    } else if (asset === "ckETH") {
+      ledgerActor = ledgerActorckETH;
+    }
+
+const transferfee = BigInt(100);
+ // Convert amount and transferFee to numbers and add them
+ const supplyAmount = BigInt(amountToRepay);
+ const totalAmount = supplyAmount + transferfee;
+
+    const approval = await ledgerActor.icrc2_approve({
+      fee: [],
+      memo: [],
+      from_subaccount: [],
+      created_at_time: [],
+      amount: totalAmount,
+      expected_allowance: [],
+      expires_at: [],
+      spender: {
+        owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+        subaccount: [],
+      },
+    });
+
+    console.log("Approve", approval);
+    setIsApproved(true);
+    console.log("isApproved state after approval:", isApproved);
+  };
+
+  const handleConfirmLiquidation = async () => {
+    console.log("backend actor", backendActor)
     const isSuccess = isCheckboxChecked; // Determine success based on checkbox
     setTransactionResult(isSuccess ? "success" : "failure");
+   
+     
+      const result = await backendActor.liquidation_call("ckBTC", 200, "i33yh-4wqd6-4nept-op4lj-oqe6v-27zvz-o32nr-rnx64-wnht6-rzioe-lae");
+      console.log("Liquidation call result:", result);
+      setTransactionResult("success");
+    
     setShowWarningPopup(false);
   };
 
@@ -165,6 +218,7 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
 
   const handleCallLiquidation = () => {
     setShowWarningPopup(true);
+
   };
 
   const handleCancelOrConfirm = () => {
@@ -185,13 +239,13 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
     setTransactionResult(null); // Reset the transaction result and show warning popup
     setShowWarningPopup(true);
   };
-  
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-    {transactionResult ? (
+      {transactionResult ? (
         // Transaction result popup
         <div ref={popupRef}
-         className="bg-white dark:bg-[#1D1B40] dark:text-darkText p-6 rounded-md w-full max-w-md mx-4 text-center">
+          className="bg-white dark:bg-[#1D1B40] dark:text-darkText p-6 rounded-md w-full max-w-md mx-4 text-center">
           <div className="flex flex-col items-center">
             {transactionResult === "success" ? (
               <>
@@ -203,8 +257,8 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
                   Check Your wallet balance
                 </p>
                 <button
-                   className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
-                   onClick={handleClosePopup}
+                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
+                  onClick={handleClosePopup}
                 >
                   Close Now
                 </button>
@@ -215,10 +269,10 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
                 <h2 className="text-2xl font-bold text-[#2A1F9D] dark:text-darkText mb-2">
                   Liquidation Call Failed
                 </h2>
-               
+
                 <button
-                   className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
-                   onClick={handleRetry}
+                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
+                  onClick={handleRetry}
                 >
                   Try Again
                 </button>
@@ -235,21 +289,21 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
             Are you sure you want to liquidate on behalf of "<strong>{principal}</strong>"? <strong>{amountToRepay} ICP</strong> will be <strong>deducted</strong> from your account & <strong>{rewardAmount}</strong> will be rewarded.
           </p>
           <div className="mt-4 flex justify-center">
-  <label className="flex items-center text-[#989898]">
-    <input
-      type="checkbox"
-      className="mr-2 h-4 w-4 appearance-none border-2 border-gray-300 rounded bg-white checked:bg-gray-400 checked:border-gray-400 checked:text-white focus:outline-none checked:after:content-['✔'] checked:after:text-white checked:after:text-xs checked:after:flex checked:after:justify-center checked:after:items-center"
-      checked={isCheckboxChecked}
-      onChange={handleCheckboxClick}
-    />
-    Yes, call Liquidation
-  </label>
-</div>
+            <label className="flex items-center text-[#989898]">
+              <input
+                type="checkbox"
+                className="mr-2 h-4 w-4 appearance-none border-2 border-gray-300 rounded bg-white checked:bg-gray-400 checked:border-gray-400 checked:text-white focus:outline-none checked:after:content-['✔'] checked:after:text-white checked:after:text-xs checked:after:flex checked:after:justify-center checked:after:items-center"
+                checked={isCheckboxChecked}
+                onChange={handleCheckboxClick}
+              />
+              Yes, call Liquidation
+            </label>
+          </div>
 
 
           <div className="flex justify-center mt-6">
             <button
-              className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
+              className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
               onClick={handleCancelOrConfirm}
             >
               {isCheckboxChecked ? "Call Liquidation" : "Cancel"}
@@ -266,8 +320,8 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
               {isCollateralOverlay
                 ? "Collateral Information"
                 : isDebtInfo
-                ? "Debt Information"
-                : "User Information"}
+                  ? "Debt Information"
+                  : "User Information"}
             </h2>
             <button
               onClick={onClose}
@@ -303,7 +357,7 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
                       type="radio"
                       name="asset"
                       className="form-radio text-[#EB8863]"
-                       checked={selectedAsset === "ckbtc"}
+                      checked={selectedAsset === "ckbtc"}
                       onChange={() => handleAssetSelection("ckbtc")}
                     />
 
@@ -343,10 +397,13 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
                   Back
                 </button>
                 <button
-                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
-                  onClick={handleCallLiquidation}
+                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
+                  onClick={() => {
+                    console.log("Button clicked");
+                    isApproved ? handleCallLiquidation() : handleApprove();
+                  }}
                 >
-                  Call Liquidation
+                 {isApproved ? `Call Liquidation ${asset}` : `Approve ${asset} to continue`}
                 </button>
               </div>
             </div>
@@ -399,8 +456,8 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
                   Back
                 </button>
                 <button
-                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   
-                 onClick={handleNextClick}
+                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
+                  onClick={handleNextClick}
                 >
                   NEXT
                 </button>
@@ -419,7 +476,7 @@ const UserInformationPopup = ({ onClose, asset, principal }) => {
                       User Principal
                     </p>
                     <p className="text-xs font-semibold text-[#2A1F9D] dark:text-darkText dark:opacity-100 ">
-                    {` ${principal}`}
+                      {` ${principal}`}
                     </p>
                   </div>
                 </div>

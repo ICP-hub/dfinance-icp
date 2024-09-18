@@ -7,10 +7,6 @@ import { ASSET_DETAILS } from "../../utils/constants"
 import { setAssetDetailFilter } from "../../redux/reducers/utilityReducer"
 import SupplyInfo from "./DashboardPopup/SupplyInfo"
 import BorrowInfo from "./DashboardPopup/BorrowInfo"
-import EModeInfo from "./DashboardPopup/EModeInfo"
-import InterestRateModel from "./DashboardPopup/InterestRateModel"
-import LineGraph from "../Common/LineGraph"
-import CircleProgess from "../Common/CircleProgess"
 import { useParams } from "react-router-dom"
 import { Modal } from "@mui/material"
 import { useNavigate } from "react-router-dom"
@@ -36,10 +32,12 @@ import MySupplyModal from "./MySupplyModal"
 import SupplyPopup from "./DashboardPopup/SupplyPopup"
 import ckbtc from "../../../public/assests-icon/ckBTC.png"
 import cketh from '../../../public/assests-icon/cketh.png'
-
+import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger";
+import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
 
 
 const AssetDetails = () => {
+
   const [isFilter, setIsFilter] = React.useState(false)
   const { filteredItems } = useAssetData();
   const dispatch = useDispatch()
@@ -54,39 +52,29 @@ const AssetDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCollateral, setIsCollateral] = useState(true);
+  const { id } = useParams();
+  const {
+    isAuthenticated,
+    login,
+    principal,
+    createLedgerActor,
+  } = useAuth()
 
   const handleFilter = (value) => {
     setIsFilter(false)
     dispatch(setAssetDetailFilter(value))
   }
 
-  const {
-    isAuthenticated,
-    login,
-    logout,
-    updateClient,
-    authClient,
-    identity,
-    principal,
-    backendActor,
-    accountId,
-    createLedgerActor,
-    reloadLogin,
-    accountIdString,
-  } = useAuth()
-
-  const { id } = useParams();
-
-
-
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
-  const ledgerActor = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER), [createLedgerActor]);
+
+  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
   const fetchBalance = useCallback(async () => {
-    if (isAuthenticated && ledgerActor && principalObj) {
+    if (isAuthenticated && ledgerActorckBTC && principalObj) {
       try {
         const account = { owner: principalObj, subaccount: [] };
-        const balance = await ledgerActor.icrc1_balance_of(account);
+        const balance = await ledgerActorckBTC.icrc1_balance_of(account);
         setBalance(balance.toString());
         console.log("Fetched Balance:", balance.toString());
       } catch (error) {
@@ -94,7 +82,7 @@ const AssetDetails = () => {
         setError(error);
       }
     }
-  }, [isAuthenticated, ledgerActor, principalObj]);
+  }, [isAuthenticated, ledgerActorckBTC, principalObj]);
 
   const fetchConversionRate = useCallback(async () => {
     try {
@@ -127,7 +115,7 @@ const AssetDetails = () => {
   }, [fetchBalance, fetchConversionRate]);
 
   let supply_cap
-  let borrow_cap  
+  let borrow_cap
   let asset;
 
   filteredItems.map((item, index) => {
@@ -148,18 +136,12 @@ const AssetDetails = () => {
       setSupplyCapUsd(supplyCapUsd)
       setBorrowCapUsd(borrowCapUsd)
 
-
-      // Calculate the percentage
       const percentage = supplyCapUsd > 0
-      ? Math.round((parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100)
-      : 0;
-
+        ? Math.round((parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100)
+        : 0;
       setSupplyPercentage(percentage);
-
       console.log(`Balance as a percentage of Supply Cap: ${percentage}%`);
     }
-
-
   }, [balance, conversionRate, supply_cap]);
 
 
@@ -187,7 +169,6 @@ const AssetDetails = () => {
   const handleWalletConnect = () => {
     console.log("connrcterd");
     dispatch(setWalletModalOpen(!isWalletModalOpen))
-    // dispatch(setIsWalletCreated(true))
   }
 
   const handleWallet = () => {
@@ -204,8 +185,6 @@ const AssetDetails = () => {
 
   const loginHandler = async (val) => {
     await login(val);
-    // navigate("/");
-    // await existingUserHandler();
   };
 
   const [inputValue, setInputValue] = useState('');
@@ -241,19 +220,20 @@ const AssetDetails = () => {
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
             children={
-              <SupplyPopup //asset, image, balance, isModalOpen, handleModalOpen, setIsModalOpen
-                asset={isModalOpen.asset}
-                image={isModalOpen.image}
-                balance={0}
-                isModalOpen={isModalOpen.isOpen}
-                handleModalOpen={handleModalOpen}
-                setIsModalOpen={setIsModalOpen}
+              <SupplyPopup
+              asset={isModalOpen.asset}
+              image={isModalOpen.image}
+              supplyRateAPR={isModalOpen.supplyRateAPR}
+              balance={0}
+              isModalOpen={isModalOpen.isOpen}
+              handleModalOpen={handleModalOpen}
+              setIsModalOpen={setIsModalOpen}
               />
             }
           />
         );
-  
-     
+
+
       default:
         return null;
     }
@@ -263,13 +243,9 @@ const AssetDetails = () => {
   const renderFilterComponent = () => {
     switch (assetDetailFilter) {
       case "Supply Info":
-        return <SupplyInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd} supplyPercentage={supplyPercentage}/>
+        return <SupplyInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd} supplyPercentage={supplyPercentage} />
       case "Borrow Info":
-        return <BorrowInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd} supplyPercentage={supplyPercentage}/>
-      // case "E-Mode info":
-      //   return <EModeInfo  filteredItems={filteredItems}/>
-      // case "Interest rate model":
-      //   return <InterestRateModel filteredItems={filteredItems}/>
+        return <BorrowInfo filteredItems={filteredItems} formatNumber={formatNumber} usdBalance={usdBalance} borrowCapUsd={borrowCapUsd} supplyPercentage={supplyPercentage} />
       default:
         return <SupplyInfo filteredItems={filteredItems} />
     }
@@ -379,8 +355,8 @@ const AssetDetails = () => {
                   <p className="text-light text-[10px] text-gray-400">${formatNumber(usdBalance)}</p>
                 </div>
                 <div className="ml-auto">
-                  <Button 
-                  title={"Supply"}
+                  <Button
+                    title={"Supply"}
                     onClickHandler={() =>
                       handleModalOpen(
                         "supply",
@@ -390,25 +366,6 @@ const AssetDetails = () => {
                     } className={"my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"} />
                 </div>
               </div>
-
-
-              {/* <div className="flex items-center gap-2">
-                <p className=" text-[12px] my-1 text-darkTextSecondary1">
-                  Assets to Supply
-                </p>
-                <span><Info size={13} color="lightblue" /></span>
-              </div>
-              <div className="flex">
-                <div>
-                  <h1 className="font-semibold">{formatNumber(balance)} {id}</h1>
-                  <p className="text-light text-[10px] text-gray-400">${formatNumber(usdBalance)}</p>
-                </div>
-                <div className="ml-auto">
-                  <Button title={"Supply"} className={"my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"} />
-                </div>
-              </div> */}
-
-
             </div>
 
             {balance === "0" &&
@@ -418,10 +375,7 @@ const AssetDetails = () => {
                 </p>
               </div>}
 
-
-
           </div>
-
         </div>
       </div>}
 

@@ -161,7 +161,7 @@ export const useAuthClient = (options = defaultOptions) => {
   };
 
   // Function to create an actor for interacting with the ledger
-  const createLedgerActor = (canisterId) => {
+  const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== 'production') {
@@ -170,7 +170,7 @@ export const useAuthClient = (options = defaultOptions) => {
         console.error(err);
       });
     }
-    return Actor.createActor(ledgerIdlFactory, { agent, canisterId });
+    return Actor.createActor(IdlFac, { agent, canisterId });
   };
 
   // Function to refresh login without user interaction
@@ -214,6 +214,22 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
   
+  // Function to fetch all users
+const getAllUsers = async () => {
+  if (!backendActor) {
+    throw new Error("Backend actor not initialized");
+  }
+
+  try {
+    const allUsers = await backendActor.get_all_users();
+    console.log('get_all_users:', allUsers);
+    return allUsers;
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    throw error;
+  }
+};
+
 
   return {
     isAuthenticated,
@@ -230,6 +246,7 @@ export const useAuthClient = (options = defaultOptions) => {
     accountIdString,
     fetchReserveData, 
     checkUser,
+    getAllUsers,
   };
 };
 

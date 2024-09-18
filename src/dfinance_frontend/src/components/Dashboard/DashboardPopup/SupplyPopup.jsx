@@ -2,63 +2,187 @@ import React, { useState } from "react";
 import { Info, Check, Wallet, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
-import Vector from "../../../../public/Helpers/Vector.png"
-import Setting from "../../../../public/Helpers/settings.png"
-const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setIsModalOpen }) => {
-  const transactionFee = 0.01;
-  const hasEnoughBalance = balance >= transactionFee;
+import { Fuel } from "lucide-react";
+import { useSelector } from "react-redux";
+import Setting from "../../../../public/Helpers/settings.png";
+import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
+import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
+import { useMemo } from "react";
+import { useEffect } from "react";
+import axios from "axios";
 
-  const [amount, setAmount] = useState("0.00");
+const SupplyPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+}) => {
+
+  const transactionFee = 0.01;
+  const fees = useSelector((state) => state.fees.fees);
+  console.log("Asset:", asset); // Check what asset value is being passed
+  console.log("Fees:", fees); // Check the fees object
+  const normalizedAsset = asset ? asset.toLowerCase() : 'default';
+  console.log("SupplyPopup Props - Asset:", asset, "Supply Rate APR:", supplyRateAPR);
+
+  if (!fees) {
+    return <p>Error: Fees data not available.</p>;
+  }
+  const transferFee = fees[normalizedAsset] || fees.default;
+  const transferfee = BigInt(100);
+  const hasEnoughBalance = balance >= transactionFee;
+  const value = 5.23;
+  const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
+  const [usdValue, setUsdValue] = useState(0);
+  const [amount, setAmount] = useState(0);
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
+  useEffect(() => {
+    const fetchConversionRate = async () => {
+      try {
+        let coinId;
+        
+        // Map asset to CoinGecko coin IDs
+        if (asset === "ckBTC") {
+          coinId = "bitcoin";
+        } else if (asset === "ckETH") {
+          coinId = "ethereum";
+        } else {
+          console.error("Unsupported asset:", asset);
+          return;
+        }
+  
+        // Fetch conversion rate from CoinGecko
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
+        );
+  
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+  
+        const data = await response.json();
+        console.log("CoinGecko data", data);
+  
+        // Extract the conversion rate (price in USD)
+        const rate = data[coinId]?.usd;
+        if (rate) {
+          setConversionRate(rate);
+          console.log("Conversion rate:", rate);
+        } else {
+          console.error("Conversion rate not found for asset:", asset);
+        }
+      } catch (error) {
+        console.error("Error fetching conversion rate", error);
+      }
+    };
+  
+    if (asset) {
+      fetchConversionRate();
+    }
+  }, [asset]);
+  
+
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    const inputAmount = e.target.value;
+    setAmount(inputAmount); // Update the amount state
+  
+    if (inputAmount && conversionRate) {
+      const convertedValue = parseFloat(inputAmount) * conversionRate;
+      setUsdValue(convertedValue); // Update the USD value state
+    } else {
+      setUsdValue(0); // Reset USD value if input is empty or invalid
+    }
+
+    // if (!isNaN(inputAmount) && inputAmount <= balance) {
+    //   setAmount(inputAmount);
+    // } else if (inputAmount > balance) {
+    //   setAmount(balance); // If the input exceeds the balance, set it to the balance
+    // } else {
+    //   setAmount(''); // Reset to empty if the input is not a valid number
+    // }
   };
+  
+  // Update the USD value whenever the amount changes or conversionRate is updated
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const convertedValue = parseFloat(amount) * conversionRate;
+      setUsdValue(convertedValue); // Update USD value
+    } else {
+      setUsdValue(0); // Reset USD value if conditions are not met
+    }
+  }, [amount, conversionRate]);
 
-  const {
-    createLedgerActor,
-    backendActor
-  } = useAuth();
+  const { createLedgerActor, backendActor } = useAuth();
 
-  const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
+  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+
+  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);
-    console.log("Ledger Actor", ledgerActor);
+    let ledgerActor;
+    if (asset === "ckBTC") {
+      ledgerActor = ledgerActorckBTC;
+    } else if (asset === "ckETH") {
+      ledgerActor = ledgerActorckETH;
+    }
+
+ // Convert amount and transferFee to numbers and add them
+ const supplyAmount = BigInt(amount);
+ const totalAmount = supplyAmount + transferfee;
 
     const approval = await ledgerActor.icrc2_approve({
       fee: [],
       memo: [],
       from_subaccount: [],
       created_at_time: [],
-      amount: 100000,
+      amount: totalAmount,
       expected_allowance: [],
       expires_at: [],
-      spender: { owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND), subaccount: [] },
+      spender: {
+        owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+        subaccount: [],
+      },
     });
 
     console.log("Approve", approval);
     setIsApproved(true);
     console.log("isApproved state after approval:", isApproved);
   };
-
+  const isCollateral = true;
+  
   const handleSupplyETH = async () => {
-    console.log("Supply function called for", asset, "ETH:", amount);
-    // const supply = await 
-    console.log("Backend actor" ,backendActor)
-    const sup = await backendActor.deposit("ckbtc", 100 , "user", 0);
+    console.log("Supply function called for", asset, amount);
+    let ledgerActor;
+    if (asset === "ckBTC") {
+      ledgerActor = ledgerActorckBTC;
+    } else if (asset === "ckETH") {
+      ledgerActor = ledgerActorckETH;
+    }
+
+    const amountAsNat64 = BigInt(amount);
+
+    console.log("Backend actor", backendActor)
+    const sup = await backendActor.supply(asset, amountAsNat64, true);
     console.log("Supply", sup);
-    setIsPaymentDone(true); // Show payment done popup after successful transaction
-    setIsVisible(false); // Close SupplyPopup
+    setIsPaymentDone(true);
+    setIsVisible(false);
 
   };
 
+  
   const handleClosePaymentPopup = () => {
-    setIsPaymentDone(false); // Hide the payment done popup
+    setIsPaymentDone(false);
     setIsModalOpen(false)
+    window.location.reload()
   };
+  
 
   return (
     <>
@@ -69,29 +193,30 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
             <div className="w-full">
               <div className="w-full flex justify-between my-2 dark:text-darkText">
                 <h1>Amount</h1>
-                <h1>Slippage 0.10%</h1>
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                <div className="w-3/12">
+                <div className="w-5/12">
                   <input
-                    type="text"
+                    type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="0.00"
+                    className="text-lg focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder="Enter Amount"
                   />
-                  <p className="text-sm text-gray-500 mt-2">$0</p>
+                   <p className="text-xs text-gray-500 mt-3">
+                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                  </p>
                 </div>
-                <div className="w-9/12 flex flex-col items-end">
+                <div className="w-7/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
-                      className="object-cover w-8 h-8"
+                      className="object-cover w-6 h-6 rounded-full"
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-2">Supply Balance {balance} Max</p>
+                  <p className="text-xs mt-4">Supply Balance {balance} Max</p>
                 </div>
               </div>
             </div>
@@ -102,11 +227,17 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
               <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Supply APY</p>
-                  <p>24.04%</p>
+                  <p>{supplyRateAPR}%</p>
                 </div>
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
-                  <p>Enabled</p>
+                  <p
+                    className={`font-semibold ${
+                      isCollateral ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    {isCollateral ? "Enabled" : "Disabled"}
+                  </p>
                 </div>
                 <div className="w-full flex flex-col my-1">
                   <div className="w-full flex justify-between items-center">
@@ -114,11 +245,25 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
                     <p>
                       <span className="text-red-500">1.00</span>
                       <span className="text-gray-500 mx-1">→</span>
-                      <span className="text-green-500">5.23</span>
+                      <span
+                        className={`${
+                          value > 3
+                            ? "text-green-500"
+                            : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
+                      >
+                        {value}
+                      </span>
                     </p>
                   </div>
                   <div className="w-full flex justify-end items-center mt-1">
-                    <p className="text-gray-500">liquidation at &lt;1.5</p>
+                    <p className="text-gray-500">liquidation at &lt;1</p>
                   </div>
                 </div>
               </div>
@@ -127,29 +272,43 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
 
           {!hasEnoughBalance && (
             <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 mr-1 text-yellow-500">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01m-6.938 4h13.856c.72 0 1.392-.386 1.732-1l6.939-12a2 2 0 00-1.732-3H4.134a2 2 0 00-1.732 3l6.939 12c.34.614 1.012 1 1.732 1z" />
-              </svg>
               <p className="text-yellow-700">
-                You do not have enough ETH in your account to pay for transaction fees on the Ethereum Sepolia network. Please deposit ETH from another account.
+                You do not have enough {asset} in your account to pay for
+                transaction fees on the Ethereum Sepolia network. Please deposit{" "}
+                {asset} from another account.
               </p>
             </div>
           )}
 
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
-              <img src={Vector} alt="Vector Image" className="w-4 h-4 mr-1" />
-              <h1>$6.06</h1>
-              <Info size={16} className="ml-2" />
+              <Fuel className="w-4 h-4 mr-1" />
+              <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
+              <img
+                src={image}
+                alt="asset icon"
+                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+              />
+              <div className="relative group">
+                <Info size={16} className="ml-2 cursor-pointer" />
+
+                {/* Tooltip */}
+                <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
+                  Fees deducted on every transaction
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center ">
-              <p className="text-xs text-nowrap ">Approved with signed message</p>
-              <img
-                src={Setting}
-                alt="settings_icon"
-                className="object-contain w-[20px] h-[20px]"
-              />
+            <div className="flex items-center">
+              <p
+                className={`text-xs whitespace-nowrap ${
+                  isApproved ? "text-green-500" : "text-red-500"
+                }`}
+              >
+                {isApproved
+                  ? "Approved with signed message"
+                  : "Approve with signed message"}
+              </p>
             </div>
           </div>
 
@@ -160,7 +319,6 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
                 isApproved ? handleSupplyETH() : handleApprove();
               }}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
-            // disabled={!hasEnoughBalance} // Disable button if balance is not enough
             >
               {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
             </button>
@@ -169,19 +327,21 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
       )}
 
       {isPaymentDone && (
-
-        <div className="w-[325px] lg1:w-[420px]   h-[380px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
-            <button onClick={handleClosePaymentPopup} className="text-gray-400 hover:text-gray-600 focus:outline-none self-end">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
+            >
               <X size={24} />
             </button>
-            <div className='border rounded-full p-2 my-3 text-green-500 border-green-500'>
+            <div className="border rounded-full p-2 my-3 text-green-500 border-green-500">
               <Check />
             </div>
-            <h1 className='font-semibold text-xl'>All done!</h1>
-            <p>You received 0.00025 {asset}</p>
+            <h1 className="font-semibold text-xl">All done!</h1>
+            <p>You received {amount} d{asset}</p>
 
-            <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
+            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
               <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
                 <span>Add dToken to wallet to track your balance.</span>
               </div>
@@ -189,16 +349,15 @@ const SupplyPopup = ({ asset, image, balance, isModalOpen, handleModalOpen, setI
                 <Wallet />
                 Add to wallet
               </button>
-            </div>
+            </div> */}
             <button
               onClick={handleClosePaymentPopup}
-              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
+              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
             >
               Close Now
             </button>
           </div>
         </div>
-
       )}
     </>
   );

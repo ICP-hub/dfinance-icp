@@ -1,11 +1,10 @@
 import React from "react"
-import CircleProgess from "../../Common/CircleProgess"
 import LineGraph from "../../Common/LineGraph"
 import CircularProgress from "../../Common/CircularProgressbar"
 
 const BorrowInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, supplyPercentage }) => {
   console.log("filteredItems from borrow", filteredItems)
-  // Initialize variables to store the extracted values
+
   let asset_name = "";
   let accrued_to_treasury = "0";
   let borrow_rate = "0";
@@ -20,10 +19,8 @@ const BorrowInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
   let d_token_canister = "";
   let debt_token_canister = "";
 
-  // Extract the required data from the filteredItems array
   if (filteredItems && filteredItems.length > 0) {
     const item = filteredItems[0][1].Ok;
-
     asset_name = item.asset_name ? item.asset_name[0] : "Unknown";
     accrued_to_treasury = item.accrued_to_treasury?.toString() || "0";
     borrow_rate = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
@@ -70,15 +67,6 @@ const BorrowInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
             <p>{supply_rate_apr}%</p>
           </div>
 
-
-          {/* Borrow cap */}
-          {/* <div className="relative text-[#5B62FE] dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Borrow cap</h1>
-            <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-            />
-            <p>1.50M</p>
-          </div> */}
         </div>
       </div>
       <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
@@ -95,15 +83,6 @@ const BorrowInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
             />
             <p>60%</p>
           </div>
-          {/* <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
-              Collector Contract
-            </h1>
-            <hr
-              className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
-            />
-            <button>View Contract</button>
-          </div> */}
         </div>
       </div>
     </div>

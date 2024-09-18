@@ -20,8 +20,10 @@ const EModeButton = () => {
     setShowFinalPopup(true);
     setShowInitialPopup(false);
   };
+
   const theme = useSelector((state) => state.theme.theme);
   const fuelcolor = theme === "dark" ? "#8CC0D7" : "#233D63";
+
   useEffect(() => {
     if (showInitialPopup || showFinalPopup) {
       document.body.style.overflow = "hidden";
@@ -33,18 +35,17 @@ const EModeButton = () => {
       document.body.style.overflow = "auto";
     };
   }, [showInitialPopup, showFinalPopup]);
+
   const handleFinalEnableClick = () => {
     setIsEnabled(true);
     setShowFinalPopup(false);
 
-    // Dismiss previous toast if any
     if (currentToastId) {
       toast.dismiss(currentToastId);
     }
 
-    // Show new toast and store its id
     const toastId = toast.info("E-Mode enabled successfully!", {
-      className: 'custom-toast', // Add custom CSS class
+      className: 'custom-toast',
       position: "top-center",
       autoClose: 3000,
     });
@@ -55,14 +56,12 @@ const EModeButton = () => {
     setIsEnabled(false);
     setShowInitialPopup(false);
 
-    // Dismiss previous toast if any
     if (currentToastId) {
       toast.dismiss(currentToastId);
     }
 
-    // Show new toast and store its id
     const toastId = toast.info("E-Mode disabled successfully!", {
-      className: 'custom-toast', // Add custom CSS class
+      className: 'custom-toast',
       position: "top-center",
       autoClose: 3000,
     });
@@ -89,10 +88,10 @@ const EModeButton = () => {
             <div className="fixed inset-0 bg-black opacity-40 z-40" onClick={handleClickAway}></div>
             <div className="fixed inset-0 flex items-center justify-center z-50">
               <div className="bg-white border rounded-lg shadow-lg p-6 relative w-80 flex flex-col justify-between dark:border-none dark:bg-darkOverlayBackground dark:text-darkText">
-              <div
-          className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6"
-          onClick={handleClickAway}
-        >
+                <div
+                  className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6"
+                  onClick={handleClickAway}
+                >
                   <X className="text-black dark:text-darkText w-6 h-6" />
                 </div>
                 <div className="dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd dark:text-darkText">

@@ -8,6 +8,8 @@ use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
+use crate::declarations::asset_price::get_exchange_rate;
+use crate::protocol::libraries::math::calculate::{UserPosition, calculate_health_factor, calculate_ltv};
 use crate::{
     api::functions::{asset_transfer_from, get_balance},
     constants::asset_address::{
@@ -46,6 +48,20 @@ impl SupplyLogic {
         let amount_nat = Nat::from(params.amount);
 
         ic_cdk::println!("Canister ids, principal and amount successfully");
+        // let ckbtc_to_icp_rate = get_exchange_rate("CKBTC".to_string()).await;
+        let ckbtc_to_usd_rate = 60554.70f64;
+
+    // You don't need to use `?` since `get_exchange_rate` already handles errors and returns f64
+    if ckbtc_to_usd_rate == 0.0 {
+        return Err("Failed to fetch exchange rate for CKBTC".to_string());
+    }
+        // let ckbtc_to_icp_rate = 7_240f64;
+    ic_cdk::println!("ckBTC to USD conversion rate: {}", ckbtc_to_usd_rate);
+
+    // Convert the supplied amount (in ckBTC) to USD
+    let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+
+    ic_cdk::println!("Converted amount in USD: {}", amount_in_usd);
 
         // Reads the reserve data from the asset
         let reserve_data_result = mutate_state(|state| {
@@ -148,7 +164,33 @@ impl SupplyLogic {
                 return Err(e);
             }
         };
+        user_data.total_collateral = Some(
+            user_data.total_collateral.unwrap_or(0.0) + amount_in_usd
+        );
+        ic_cdk::println!(
+            "Converted ckBTC amount: {} to ICP amount: {} with rate: {}",
+            params.amount, amount_in_usd, ckbtc_to_usd_rate
+        );
+        user_data.net_worth = Some(
+            user_data.net_worth.unwrap_or(0.0) + amount_in_usd
+        );
 
+        let user_position = UserPosition {
+            total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
+            total_borrowed_value: user_data.total_debt.unwrap_or(0.0), // Assuming total_debt is stored in user_data
+            liquidation_threshold: 0.8, // Set to the desired liquidation threshold (80%)
+        };
+    
+        
+        let health_factor = calculate_health_factor(&user_position);
+        user_data.health_factor = Some(health_factor); 
+    
+        ic_cdk::println!("Updated user health factor: {}", health_factor);
+
+        let ltv= calculate_ltv(&user_position);
+        user_data.ltv = Some(ltv);
+
+    
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves

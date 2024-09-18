@@ -41,34 +41,3 @@ pub fn percent_div(value: u64, percentage: u64) -> u64 {
 
     (value * PERCENTAGE_FACTOR + percentage / 2) / percentage
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn test_percent_mul() {
-//         assert_eq!(percent_mul(10000, 5000), 5000);
-//         assert_eq!(percent_mul(12345, 6789), 8380);
-//         assert_eq!(percent_mul(987654321, 10000), 98765432);
-//     }
-
-//     #[test]
-//     fn test_percent_div() {
-//         assert_eq!(percent_div(10000, 5000), 20000);
-//         assert_eq!(percent_div(12345, 6789), 18182);
-//         assert_eq!(percent_div(987654321, 10000), 9876543210);
-//     }
-
-//     #[test]
-//     #[should_panic]
-//     fn test_percent_mul_overflow() {
-//         percent_mul(u64::MAX, 2);
-//     }
-
-//     #[test]
-//     #[should_panic]
-//     fn test_percent_div_overflow() {
-//         percent_div(u64::MAX, 1);
-//     }
-// }

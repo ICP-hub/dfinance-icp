@@ -7,8 +7,8 @@ source ../../.env
 
 # export MINTER=$(dfx identity get-principal)
 # echo $MINTER
-# export BACKEND= $CANISTER_ID_DFINANCE_BACKEND
-export BACKEND="bw4dl-smaaa-aaaaa-qaacq-cai"
+export BACKEND=$CANISTER_ID_DFINANCE_BACKEND
+# export BACKEND="bw4dl-smaaa-aaaaa-qaacq-cai"
 export TOKEN_NAME="debtckBTC"
 echo "token_name : $TOKEN_NAME"
 

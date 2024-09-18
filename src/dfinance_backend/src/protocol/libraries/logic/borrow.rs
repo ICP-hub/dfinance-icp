@@ -8,9 +8,11 @@ use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
+use crate::protocol::libraries::math::calculate::{UserPosition, calculate_health_factor, calculate_ltv};
 use candid::{Nat, Principal};
 use dotenv::dotenv;
 use ic_cdk::api::call::call;
+
 
 // -------------------------------------
 // ----------- BORROW LOGIC ------------
@@ -151,6 +153,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     )
     .await
     .map_err(|e| e.1)?;
+    
+    
 
     let user_data_result = mutate_state(|state| {
         let user_profile_data = &mut state.user_profile;
@@ -170,7 +174,29 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
             return Err(e);
         }
     };
+    let ckbtc_to_icp_rate = 7_240f64;
+    ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_icp_rate);
 
+    // Convert the supplied amount (in ckBTC) to ICP
+    let amount_in_icp = (params.amount as f64) * ckbtc_to_icp_rate;
+    user_data.total_debt = Some(
+        user_data.total_debt.unwrap_or(0.0) + amount_in_icp
+    );
+
+    let user_position = UserPosition {
+        total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
+        total_borrowed_value: user_data.total_debt.unwrap_or(0.0), // Assuming total_debt is stored in user_data
+        liquidation_threshold: 0.8, // Set to the desired liquidation threshold (80%)
+    };
+
+    
+    let health_factor = calculate_health_factor(&user_position);
+    user_data.health_factor = Some(health_factor); 
+
+    ic_cdk::println!("Updated user health factor: {}", health_factor);
+
+    let ltv= calculate_ltv(&user_position);
+    user_data.ltv = Some(ltv);
     // Checks if the reserve data for the asset already exists in the user's reserves
     let user_reserve = match user_data.reserves {
         Some(ref mut reserves) => reserves

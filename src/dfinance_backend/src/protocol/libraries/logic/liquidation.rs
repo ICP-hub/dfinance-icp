@@ -1,5 +1,5 @@
 use candid::Principal;
-
+use crate::api::state_handler::*;
 use crate::{
     api::functions::get_balance,
     constants::asset_address::{
@@ -18,16 +18,37 @@ impl LiquidationLogic {
         amount: u128,
         on_behalf_of: String,
     ) -> Result<(), String> {
-        let ckbtc_canister = Principal::from_text(CKBTC_LEDGER_CANISTER)
-            .map_err(|_| "Invalid ledger canister ID".to_string())?;
+        // let ckbtc_canister = Principal::from_text(CKBTC_LEDGER_CANISTER)
+        //     .map_err(|_| "Invalid ledger canister ID".to_string())?;
 
+        let ledger_canister_id = mutate_state(|state| {
+            let reserve_list = &state.reserve_list;
+            reserve_list
+                .get(&asset_name.to_string().clone())
+                .map(|principal| principal.clone())
+                .ok_or_else(|| format!("No canister ID found for asset: {}", asset_name))
+        })?;
+        let dtoken = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&asset_name.to_string().clone())
+                .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
+                .ok_or_else(|| format!("No d_token_canister found for asset: {}", asset_name))
+        })?;
+        let debttoken_canister = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&asset_name.to_string().clone())
+                .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
+                .ok_or_else(|| format!("No debt_token_canister found for asset: {}", asset_name))
+        })?;
         let backend_canister = Principal::from_text(BACKEND_CANISTER)
             .map_err(|_| "Invalid platform canister ID".to_string())?;
 
-        let dtoken_canister = Principal::from_text(DTOKEN_CANISTER)
+        let dtoken_canister = Principal::from_text(dtoken)
             .map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
-        let debt_canister = Principal::from_text(DEBTTOKEN_CANISTER)
+        let debt_canister = Principal::from_text(debttoken_canister)
             .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
         let user_principal = Principal::from_text(on_behalf_of)
@@ -42,9 +63,9 @@ impl LiquidationLogic {
 
         ic_cdk::println!("Checking balances before liquidation...");
 
-        let user_balance = get_balance(ckbtc_canister, user_principal).await;
-        let liquidator_balance = get_balance(ckbtc_canister, liquidator_principal).await;
-        let backend_balance = get_balance(ckbtc_canister, backend_canister_principal).await;
+        let user_balance = get_balance(ledger_canister_id, user_principal).await;
+        let liquidator_balance = get_balance(ledger_canister_id, liquidator_principal).await;
+        let backend_balance = get_balance(ledger_canister_id, backend_canister_principal).await;
         let user_debt_token_balance = get_balance(debt_canister, user_principal).await;
 
         ic_cdk::println!("User Balance: {}", user_balance);
@@ -60,9 +81,9 @@ impl LiquidationLogic {
             Ok(_) => ic_cdk::println!("Repayment successful"),
             Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
         }
-        let user_balance_after = get_balance(ckbtc_canister, user_principal).await;
-        let liquidator_balance_after = get_balance(ckbtc_canister, liquidator_principal).await;
-        let backend_balance_after = get_balance(ckbtc_canister, backend_canister_principal).await;
+        let user_balance_after = get_balance(ledger_canister_id, user_principal).await;
+        let liquidator_balance_after = get_balance(ledger_canister_id, liquidator_principal).await;
+        let backend_balance_after = get_balance(ledger_canister_id, backend_canister_principal).await;
         let user_debt_token_balance_after = get_balance(debt_canister, user_principal).await;
         ic_cdk::println!("User Balance after repay: {}", user_balance_after);
         ic_cdk::println!(
@@ -93,11 +114,11 @@ impl LiquidationLogic {
         }
 
         // Check balances after withdrawal
-        let user_balance_after_withdraw = get_balance(ckbtc_canister, user_principal).await;
+        let user_balance_after_withdraw = get_balance(ledger_canister_id, user_principal).await;
         let liquidator_balance_after_withdraw =
-            get_balance(ckbtc_canister, liquidator_principal).await;
+            get_balance(ledger_canister_id, liquidator_principal).await;
         let backend_balance_after_withdraw =
-            get_balance(ckbtc_canister, backend_canister_principal).await;
+            get_balance(ledger_canister_id, backend_canister_principal).await;
         let user_d_token_balance = get_balance(dtoken_canister, user_principal).await;
 
         ic_cdk::println!(

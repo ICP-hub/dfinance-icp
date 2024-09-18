@@ -23,12 +23,27 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     ic_cdk::println!("Starting execute_supply with params: {:?}", params);
 
     // Fetched canister ids, user principal and amount
-    let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
-        .map_err(|_| "Invalid ledger canister ID".to_string())?;
+    // let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
+    //     .map_err(|_| "Invalid ledger canister ID".to_string())?;
 
-    let debttoken_canister_id = Principal::from_text(DEBTTOKEN_CANISTER)
+    let ledger_canister_id = mutate_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&params.asset.to_string().clone())
+            .map(|principal| principal.clone())
+            .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+    })?;
+
+    
+    let debttoken_canister = mutate_state(|state| {
+        let asset_index = &mut state.asset_index;
+        asset_index
+            .get(&params.asset.to_string().clone())
+            .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
+            .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
+    })?;
+    let debttoken_canister_id = Principal::from_text(debttoken_canister)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
-
     let user_principal = ic_cdk::caller();
 
     let platform_principal = Principal::from_text(BACKEND_CANISTER)
@@ -270,13 +285,26 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
         (user_principal, None)
     };
 
-    let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
-        .map_err(|_| "Invalid ledger canister ID".to_string())?;
-
+    // let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
+    //     .map_err(|_| "Invalid ledger canister ID".to_string())?;
+    let ledger_canister_id = mutate_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&params.asset.to_string().clone())
+            .map(|principal| principal.clone())
+            .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+    })?;
     let platform_principal = Principal::from_text(BACKEND_CANISTER)
         .map_err(|_| "Invalid platform canister ID".to_string())?;
-
-    let debttoken_canister_id = Principal::from_text(DEBTTOKEN_CANISTER)
+    
+        let debttoken_canister = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
+                .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
+        })?;
+    let debttoken_canister_id = Principal::from_text(debttoken_canister)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
     // Reads the reserve data from the asset

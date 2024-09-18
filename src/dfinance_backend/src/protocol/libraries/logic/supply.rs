@@ -130,14 +130,20 @@ impl SupplyLogic {
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
-
+        let dtoken_canister = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
+                .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
+        })?;
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
         let platform_principal = Principal::from_text(BACKEND_CANISTER)
             .map_err(|_| "Invalid platform canister ID".to_string())?;
 
-        let dtoken_canister_principal = Principal::from_text(DTOKEN_CANISTER)
+        let dtoken_canister_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
         let amount_nat = Nat::from(params.amount);
@@ -152,7 +158,7 @@ impl SupplyLogic {
                 .map(|reserve| reserve.0.clone())
                 .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
         });
-
+    
         let mut reserve_data = match reserve_data_result {
             Ok(data) => {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
@@ -250,13 +256,25 @@ impl SupplyLogic {
             (user_principal, None)
         };
 
-        let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
-            .map_err(|_| "Invalid ledger canister ID".to_string())?;
+        let ledger_canister_id = mutate_state(|state| {
+            let reserve_list = &state.reserve_list;
+            reserve_list
+                .get(&params.asset.to_string().clone())
+                .map(|principal| principal.clone())
+                .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+        })?;
+        let dtoken_canister = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
+                .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
+        })?;
 
         let platform_principal = Principal::from_text(BACKEND_CANISTER)
             .map_err(|_| "Invalid platform canister ID".to_string())?;
 
-        let dtoken_canister_principal = Principal::from_text(DTOKEN_CANISTER)
+        let dtoken_canister_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
         // Reads the reserve data from the asset

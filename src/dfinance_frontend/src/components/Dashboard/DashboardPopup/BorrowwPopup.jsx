@@ -1,4 +1,4 @@
-import { Info, TriangleAlert } from "lucide-react";
+import { Info, Check, Wallet, X } from "lucide-react";
 import React, { useState } from "react";
 import Vector from "../../../../public/Helpers/Vector.png";
 import { Fuel } from "lucide-react";
@@ -8,12 +8,15 @@ import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/c
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 
-const BorrowPopup = ({ asset, image,supplyRateAPR, balance }) => {
+const BorrowPopup = ({ asset, image,supplyRateAPR, balance, setIsModalOpen }) => {
   const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
 console.log("jbsjxbsjxsxxsx",balance)
   const { createLedgerActor, backendActor } = useAuth();
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false); 
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
 
   const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
@@ -52,6 +55,7 @@ console.log("jbsjxbsjxsxxsx",balance)
 
 const handleBorrowETH = async () => {
   console.log("Borrow function called for", asset, amount);
+  setIsLoading(true);
   let ledgerActor;
 
   // Example logic to select the correct backend actor based on the asset
@@ -65,7 +69,8 @@ const handleBorrowETH = async () => {
     // const amountInUnits = BigInt(Number(amount) * 1e18);
     const borrowResult = await backendActor.borrow(asset, Number(amount));
     console.log("Borrow result", borrowResult);
-    window.location.reload()
+    setIsPaymentDone(true);
+    setIsVisible(false);
     
     // You can handle the result here, e.g., showing success, updating UI, etc.
   } catch (error) {
@@ -73,7 +78,11 @@ const handleBorrowETH = async () => {
     // Handle error state, e.g., show error message
   }
 };
-
+const handleClosePaymentPopup = () => {
+  setIsPaymentDone(false);
+  setIsModalOpen(false);
+  window.location.reload();
+};
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
   console.log("Fees:", fees); // Check the fees object
@@ -89,6 +98,8 @@ const handleBorrowETH = async () => {
   const supplyBalance = numericBalance - transferfee;
   return (
     <>
+     {isVisible && (
+      <div>
       <h1 className="font-semibold text-xl">Borrow {asset}</h1>
       <div className="flex flex-col gap-2 mt-5 text-sm">
         <div className="w-full">
@@ -165,7 +176,7 @@ const handleBorrowETH = async () => {
             </div>
           </div>
         </div>
-      </div>
+      
 
       <div className="w-full mt-3">
         <div className="w-full">
@@ -210,8 +221,57 @@ const handleBorrowETH = async () => {
           >
             Borrow {asset}
           </button>
+          {isLoading && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50"
+              style={{
+                background: "rgba(0, 0, 0, 0.4)", // Dim background
+                backdropFilter: "blur(1px)", // Blur effect
+              }}
+            >
+              <div className="loader"></div>
+            </div>
+          )}
         </div>
       </div>
+      </div>
+      </div>
+     )}
+      {isPaymentDone && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
+            >
+              <X size={24} />
+            </button>
+            <div className="border rounded-full p-2 my-3 text-green-500 border-green-500">
+              <Check />
+            </div>
+            <h1 className="font-semibold text-xl">All done!</h1>
+            <p>
+            You have borrowed {amount} d{asset}
+            </p>
+
+            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
+              <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
+                <span>Add dToken to wallet to track your balance.</span>
+              </div>
+              <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
+                <Wallet />
+                Add to wallet
+              </button>
+            </div> */}
+            <button
+              onClick={handleClosePaymentPopup}
+              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
+            >
+              Close Now
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

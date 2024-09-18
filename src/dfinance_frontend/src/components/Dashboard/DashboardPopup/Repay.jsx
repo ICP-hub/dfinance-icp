@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { Info, Check, Wallet, X } from "lucide-react";
 import React, { useState } from "react";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -8,19 +8,44 @@ import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
 
-const Repay = ({ asset, image }) => {
+const Repay = ({ asset, image ,balance ,  setIsModalOpen,  }) => {
   const [amount, setAmount] = useState(0);
   const { createLedgerActor, backendActor } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Loading state
-
+  const [error, setError] = useState('');
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
 
   const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
 
   const value = 5.23;
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    const inputAmount = e.target.value;
+    
+    // Convert input to a number
+    const numericAmount = parseFloat(inputAmount);
+  
+    if (!isNaN(numericAmount) && numericAmount >= 0) {
+      if (numericAmount <= supplyBalance) {
+        // Calculate and format the USD value
+       
+        setAmount(inputAmount);
+        setError('');
+      } else {
+        setError('Amount exceeds the supply balance');
+       
+      }
+    } else if (inputAmount === '') {
+      // Allow empty input and reset error
+      setAmount('');
+    
+      setError('');
+    } else {
+      setError('Amount must be a positive number');
+     
+    }
   };
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
@@ -30,8 +55,10 @@ const Repay = ({ asset, image }) => {
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
+  const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = BigInt(transferFee);
+  const transferfee = Number(transferFee);
+  const supplyBalance = numericBalance - transferfee;
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);
@@ -43,7 +70,7 @@ const Repay = ({ asset, image }) => {
     }
 
  // Convert amount and transferFee to numbers and add them
- const repayAmount = BigInt(amount);
+ const repayAmount = Number(amount);
  const totalAmount = repayAmount + transferfee;
 
     const approval = await ledgerActor.icrc2_approve({
@@ -81,12 +108,13 @@ const Repay = ({ asset, image }) => {
   
     try {
       // Convert the amount to the appropriate units, if necessary
-      const amountInUnits = BigInt(amount); // Example conversion to appropriate units
+      const amountInUnits = Number(amount); // Example conversion to appropriate units
   
       // Call the repay function on the selected ledger actor
       const repayResult = await backendActor.repay(asset, amountInUnits, []);
       console.log("Repay result", repayResult);
-      window.location.reload()
+      setIsPaymentDone(true);
+      setIsVisible(false);
   
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
@@ -94,9 +122,28 @@ const Repay = ({ asset, image }) => {
       // Handle error state, e.g., show error message
     }
   };
-  
+  const handleClosePaymentPopup = () => {
+    setIsPaymentDone(false);
+    setIsModalOpen(false);
+    window.location.reload();
+  };
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      if (isApproved) {
+        await handleRepayETH();
+      } else {
+        await handleApprove();
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
+    {isVisible && (
+      <div>
       <h1 className="font-semibold text-xl">Repay {asset} </h1>
 
       <div className="flex flex-col gap-2 mt-5 text-sm">
@@ -124,7 +171,7 @@ const Repay = ({ asset, image }) => {
                 />
                 <span className="text-lg">{asset}</span>
               </div>
-              <p className="text-xs mt-4"> Balance 0 Max</p>
+              <p className="text-xs mt-4">{supplyBalance.toFixed(2)} Max </p>
             </div>
           </div>
         </div>
@@ -183,7 +230,7 @@ const Repay = ({ asset, image }) => {
             </div>
           </div>
         </div>
-      </div>
+      
 
       <div className="w-full mt-3">
         <div className="w-full">
@@ -221,17 +268,65 @@ const Repay = ({ asset, image }) => {
         </div>
 
         <div className="w-full">
-          <button
-           onClick={() => {
-            console.log("Button clicked");
-            isApproved ? handleRepayETH() : handleApprove();
-          }}
-            className="bg-gradient-to-tr from-[#ffaf5a]  to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
-          >
-            {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
-          </button>
+        <button
+              onClick={handleClick}
+              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center"
+              disabled={isLoading}
+            >
+              {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
+            </button>
+           
         </div>
+        {isLoading && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50"
+              style={{
+                background: "rgba(0, 0, 0, 0.4)", // Dim background
+                backdropFilter: "blur(1px)", // Blur effect
+              }}
+            >
+              <div className="loader"></div>
+            </div>
+          )}
       </div>
+      </div>
+      </div>
+    )}
+      {isPaymentDone && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
+            >
+              <X size={24} />
+            </button>
+            <div className="border rounded-full p-2 my-3 text-green-500 border-green-500">
+              <Check />
+            </div>
+            <h1 className="font-semibold text-xl">All done!</h1>
+            <p>
+            You have repayed {amount} d{asset}
+            </p>
+
+            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
+              <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
+                <span>Add dToken to wallet to track your balance.</span>
+              </div>
+              <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
+                <Wallet />
+                Add to wallet
+              </button>
+            </div> */}
+            <button
+              onClick={handleClosePaymentPopup}
+              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
+            >
+              Close Now
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

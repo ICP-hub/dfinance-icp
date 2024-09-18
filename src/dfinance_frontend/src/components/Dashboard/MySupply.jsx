@@ -288,6 +288,7 @@ const MySupply = () => {
                 image={isModalOpen.image}
            balance={isModalOpen.balance}    
             supplyRateAPR={isModalOpen.supplyRateAPR}
+            setIsModalOpen={setIsModalOpen}
                 
               />
             }
@@ -306,6 +307,7 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance} 
                  supplyRateAPR={isModalOpen.supplyRateAPR}
+                 setIsModalOpen={setIsModalOpen}
                
               />
             }
@@ -340,6 +342,8 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
+                balance={isModalOpen.balance}
+                setIsModalOpen={setIsModalOpen}
               />
             }
           />
@@ -370,6 +374,8 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
+                balance={isModalOpen.balance}
+                setIsModalOpen={setIsModalOpen}
               />
             }
           />
@@ -632,7 +638,10 @@ const MySupply = () => {
                                       (reserveGroup[1]?.reserve ===
                                         "ckETH" &&
                                         ckETH),
-                                    supply_rate_apr
+                                    supply_rate_apr,
+                                    reserveGroup[1]?.reserve === "ckBTC"
+                                    ? ckBTCBalance
+                                    : ckETHBalance,
                                   )
                                 }
                                 className={`w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent`}
@@ -760,8 +769,12 @@ const MySupply = () => {
                                             ckBTC) ||
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
-                                              ckETH),
-                                          supply_rate_apr
+                                              ckETH), 
+                                              supply_rate_apr,
+                                              reserveGroup[1]?.reserve === "ckBTC"
+                                              ? ckBTCBalance
+                                              : ckETHBalance,
+                                         
                                         )
                                       }
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
@@ -1177,10 +1190,10 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
-                                          reserveGroup[1]?.reserve === "ckBTC"
+                                          supply_rate_apr,
+                                           reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
-                                          supply_rate_apr
                                     )
                                   }
                                   className={`w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter`}
@@ -1311,10 +1324,11 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
+                                              borrow_rate_apr,
                                           reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
-                                          borrow_rate_apr
+                                          
                                         )
                                       }
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"

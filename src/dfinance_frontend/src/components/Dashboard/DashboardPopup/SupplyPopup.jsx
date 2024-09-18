@@ -5,8 +5,8 @@ import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import Setting from "../../../../public/Helpers/settings.png";
-import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
-import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
 import { useMemo } from "react";
 import { useEffect } from "react";
 import axios from "axios";
@@ -20,13 +20,17 @@ const SupplyPopup = ({
   handleModalOpen,
   setIsModalOpen,
 }) => {
-
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
   console.log("Fees:", fees); // Check the fees object
-  const normalizedAsset = asset ? asset.toLowerCase() : 'default';
-  console.log("SupplyPopup Props - Asset:", asset, "Supply Rate APR:", supplyRateAPR);
+  const normalizedAsset = asset ? asset.toLowerCase() : "default";
+  console.log(
+    "SupplyPopup Props - Asset:",
+    asset,
+    "Supply Rate APR:",
+    supplyRateAPR
+  );
   console.log("Balance in the component:", balance, typeof balance);
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
@@ -43,12 +47,12 @@ const SupplyPopup = ({
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
         let coinId;
-        
+
         // Map asset to CoinGecko coin IDs
         if (asset === "ckBTC") {
           coinId = "bitcoin";
@@ -58,19 +62,19 @@ const SupplyPopup = ({
           console.error("Unsupported asset:", asset);
           return;
         }
-  
+
         // Fetch conversion rate from CoinGecko
         const response = await fetch(
           `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
         );
-  
+
         if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`);
         }
-  
+
         const data = await response.json();
         console.log("CoinGecko data", data);
-  
+
         // Extract the conversion rate (price in USD)
         const rate = data[coinId]?.usd;
         if (rate) {
@@ -83,43 +87,40 @@ const SupplyPopup = ({
         console.error("Error fetching conversion rate", error);
       }
     };
-  
+
     if (asset) {
       fetchConversionRate();
     }
   }, [asset]);
-  
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
-    
+
     // Convert input to a number
     const numericAmount = parseFloat(inputAmount);
-  
+
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
         // Calculate and format the USD value
         const convertedValue = numericAmount * conversionRate;
         setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
         setAmount(inputAmount);
-        setError('');
+        setError("");
       } else {
-        setError('Amount exceeds the supply balance');
+        setError("Amount exceeds the supply balance");
         setUsdValue(0);
       }
-    } else if (inputAmount === '') {
+    } else if (inputAmount === "") {
       // Allow empty input and reset error
-      setAmount('');
+      setAmount("");
       setUsdValue(0);
-      setError('');
+      setError("");
     } else {
-      setError('Amount must be a positive number');
+      setError("Amount must be a positive number");
       setUsdValue(0);
     }
   };
-  
 
-  
   // Update the USD value whenever the amount changes or conversionRate is updated
   useEffect(() => {
     if (amount && conversionRate) {
@@ -132,9 +133,23 @@ const SupplyPopup = ({
 
   const { createLedgerActor, backendActor } = useAuth();
 
-  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+  const ledgerActorckBTC = useMemo(
+    () =>
+      createLedgerActor(
+        process.env.CANISTER_ID_CKBTC_LEDGER,
+        ledgerIdlFactoryckBTC
+      ),
+    [createLedgerActor]
+  );
 
-  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
+  const ledgerActorckETH = useMemo(
+    () =>
+      createLedgerActor(
+        process.env.CANISTER_ID_CKETH_LEDGER,
+        ledgerIdlFactoryckETH
+      ),
+    [createLedgerActor]
+  );
 
   const handleApprove = async () => {
     console.log("Approve function called for", asset);
@@ -145,9 +160,9 @@ const SupplyPopup = ({
       ledgerActor = ledgerActorckETH;
     }
 
- // Convert amount and transferFee to numbers and add them
- const supplyAmount =  Number(amount);
- const totalAmount = supplyAmount + transferfee;
+    // Convert amount and transferFee to numbers and add them
+    const supplyAmount = Number(amount);
+    const totalAmount = supplyAmount + transferfee;
 
     const approval = await ledgerActor.icrc2_approve({
       fee: [],
@@ -168,7 +183,7 @@ const SupplyPopup = ({
     console.log("isApproved state after approval:", isApproved);
   };
   const isCollateral = true;
-  
+
   const handleSupplyETH = async () => {
     console.log("Supply function called for", asset, amount);
     let ledgerActor;
@@ -180,21 +195,33 @@ const SupplyPopup = ({
 
     const amountAsNat64 = BigInt(amount);
 
-    console.log("Backend actor", backendActor)
+    console.log("Backend actor", backendActor);
     const sup = await backendActor.supply(asset, amountAsNat64, true);
     console.log("Supply", sup);
     setIsPaymentDone(true);
     setIsVisible(false);
-
   };
 
-  
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
-    setIsModalOpen(false)
-    window.location.reload()
+    setIsModalOpen(false);
+    window.location.reload();
   };
-  
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      if (isApproved) {
+        await handleSupplyETH();
+      } else {
+        await handleApprove();
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -215,7 +242,7 @@ const SupplyPopup = ({
                     className="text-lg focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />
-                   <p className="text-xs text-gray-500 ">
+                  <p className="text-xs text-gray-500 ">
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
@@ -228,7 +255,9 @@ const SupplyPopup = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">{supplyBalance.toFixed(2)} Max </p>
+                  <p className="text-xs mt-4">
+                    {supplyBalance.toFixed(2)} Max{" "}
+                  </p>
                 </div>
               </div>
             </div>
@@ -324,17 +353,32 @@ const SupplyPopup = ({
             </div>
           </div>
 
-          <div className="w-full flex justify-between items-center mt-3">
+          <div
+            className={`relative w-full flex justify-between items-center mt-3 ${
+              isLoading ? "blur-md" : ""
+            }`}
+          >
             <button
-              onClick={() => {
-                console.log("Button clicked");
-                isApproved ? handleSupplyETH() : handleApprove();
-              }}
-              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
+              onClick={handleClick}
+              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center"
+              disabled={isLoading}
             >
               {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
             </button>
           </div>
+
+          {/* Fullscreen Loading Overlay with Dim Background */}
+          {isLoading && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50"
+              style={{
+                background: "rgba(0, 0, 0, 0.4)", // Dim background
+                backdropFilter: "blur(1px)", // Blur effect
+              }}
+            >
+              <div className="loader"></div>
+            </div>
+          )}
         </div>
       )}
 
@@ -351,7 +395,9 @@ const SupplyPopup = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p>You received {amount} d{asset}</p>
+            <p>
+              You received {amount} d{asset}
+            </p>
 
             {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
               <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">

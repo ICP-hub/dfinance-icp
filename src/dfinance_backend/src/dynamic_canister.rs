@@ -69,6 +69,12 @@ fn ledger_wasm() -> Cow<'static, [u8]> {
     ))
 }
 
+fn test_ledger_wasm() -> Cow<'static, [u8]> {
+    Cow::Borrowed(include_bytes!(
+        "../../../target/wasm32-unknown-unknown/release/token_ledger.wasm"
+    ))
+}
+
 #[update]
 async fn create_multiple_canisters() -> Vec<Principal> {
     let mut canister_ids = Vec::new();
@@ -276,7 +282,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     let install_config = ic_cdk::api::management_canister::main::InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id,
-        wasm_module: ledger_wasm().to_vec(),
+        wasm_module: test_ledger_wasm().to_vec(),
         arg: args,
     };
 

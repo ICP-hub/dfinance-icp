@@ -20,6 +20,12 @@
                 }
             }
         },
+    "token_ledger": {
+      "candid": "src/token_ledger/token_ledger.did",
+      "package": "token_ledger",
+      "type": "rust"
+    },
+    
     "dfinance_backend": {
       "candid": "src/dfinance_backend/dfinance_backend.did",
       "package": "dfinance_backend",

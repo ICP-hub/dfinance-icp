@@ -14,7 +14,6 @@ mod implementations;
 mod memory;
 mod protocol;
 mod state;
-mod utils;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;

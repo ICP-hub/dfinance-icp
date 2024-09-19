@@ -8,6 +8,8 @@ use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
+// use crate::declarations::asset_price::get_exchange_rate;
+use crate::protocol::libraries::math::calculate::{UserPosition, calculate_health_factor, calculate_ltv};
 use crate::{
     api::functions::{asset_transfer, asset_transfer_from},
     constants::asset_address::{
@@ -41,7 +43,36 @@ impl SupplyLogic {
                 return Err(e);
             }
         };
+        let ckbtc_to_usd_rate = 60554.70f64;
+        let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
 
+        user_data.total_collateral = Some(
+            user_data.total_collateral.unwrap_or(0.0) + amount_in_usd
+        );
+        ic_cdk::println!(
+            "Converted ckBTC amount: {} to ICP amount: {} with rate: {}",
+            params.amount, amount_in_usd, ckbtc_to_usd_rate
+        );
+        user_data.net_worth = Some(
+            user_data.net_worth.unwrap_or(0.0) + amount_in_usd
+        );
+
+        let user_position = UserPosition {
+            total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
+            total_borrowed_value: user_data.total_debt.unwrap_or(0.0), 
+            liquidation_threshold: 0.8, 
+        };
+    
+        
+        let health_factor = calculate_health_factor(&user_position);
+        user_data.health_factor = Some(health_factor); 
+    
+        ic_cdk::println!("Updated user health factor: {}", health_factor);
+
+        let ltv= calculate_ltv(&user_position);
+        user_data.ltv = Some(ltv);
+
+    
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -99,14 +130,20 @@ impl SupplyLogic {
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
-
+        let dtoken_canister = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
+                .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
+        })?;
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
         let platform_principal = Principal::from_text(BACKEND_CANISTER)
             .map_err(|_| "Invalid platform canister ID".to_string())?;
 
-        let dtoken_canister_principal = Principal::from_text(DTOKEN_CANISTER)
+        let dtoken_canister_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
         let amount_nat = Nat::from(params.amount);
@@ -121,7 +158,7 @@ impl SupplyLogic {
                 .map(|reserve| reserve.0.clone())
                 .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
         });
-
+    
         let mut reserve_data = match reserve_data_result {
             Ok(data) => {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
@@ -219,13 +256,25 @@ impl SupplyLogic {
             (user_principal, None)
         };
 
-        let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
-            .map_err(|_| "Invalid ledger canister ID".to_string())?;
+        let ledger_canister_id = mutate_state(|state| {
+            let reserve_list = &state.reserve_list;
+            reserve_list
+                .get(&params.asset.to_string().clone())
+                .map(|principal| principal.clone())
+                .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+        })?;
+        let dtoken_canister = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
+                .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
+        })?;
 
         let platform_principal = Principal::from_text(BACKEND_CANISTER)
             .map_err(|_| "Invalid platform canister ID".to_string())?;
 
-        let dtoken_canister_principal = Principal::from_text(DTOKEN_CANISTER)
+        let dtoken_canister_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
         // Reads the reserve data from the asset

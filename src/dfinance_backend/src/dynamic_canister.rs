@@ -7,6 +7,8 @@ use std::borrow::Cow;
 
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
+use icrc_ledger_types::icrc2::{allowance, approve, transfer_from};
+use crate::constants::asset_address::BACKEND_CANISTER;
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct InitArgs {
@@ -65,6 +67,227 @@ fn ledger_wasm() -> Cow<'static, [u8]> {
     Cow::Borrowed(include_bytes!(
         "../../../target/wasm32-unknown-unknown/release/dtoken.wasm"
     ))
+}
+
+#[update]
+async fn create_multiple_canisters() -> Vec<Principal> {
+    let mut canister_ids = Vec::new();
+
+    // Define different token names and symbols
+    let tokens = vec![
+        // ("ckBTC", "ckBTC"),
+        ("dckBTC", "dckBTC"),
+        ("debtckBTC", "debtckBTC"),
+    ];
+
+    for (token_name, token_symbol) in tokens {
+        let canister_id = create_token_canister(token_name, token_symbol).await;
+        canister_ids.push(canister_id);
+    }
+
+    canister_ids
+}
+
+pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Principal {
+    let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
+        settings: Some(CanisterSettings {
+            compute_allocation: None,
+            controllers: Some(vec![Principal::from_text(BACKEND_CANISTER).unwrap()]),
+            memory_allocation: None,
+            reserved_cycles_limit: None,
+            log_visibility: None,
+            wasm_memory_limit: None,
+            freezing_threshold: None,
+        }),
+    };
+
+    let minting_account = Account {
+        owner: Principal::from_text(BACKEND_CANISTER).unwrap(),
+        subaccount: None,
+    };
+
+    let fee_collector_account = Some(Account {
+        owner: Principal::from_text(BACKEND_CANISTER).unwrap(),
+        subaccount: None,
+    });
+
+    let transfer_fee = Nat::from(100u64);
+    let decimals = Some(8);
+    let max_memo_length = Some(256);
+    let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];
+
+    let initial_balances = vec![];
+    // vec![(
+    //     // Account {
+    //     //     owner: Principal::from_text("uj6by-mtpxf-dwssj-ai4xh-32ka3-hiuu7-cquzy-eszdh-k4apf-fq6wj-iae").unwrap(),
+    //     //     subaccount: None,
+    //     // },
+    //     // Nat::from(1000u64),
+    // )];
+
+    let feature_flags = Some(FeatureFlags { icrc2: true });
+    let maximum_number_of_accounts = Some(1000);
+    let accounts_overflow_trim_quantity = Some(100);
+
+    let archive_options = ArchiveOptions {
+        num_blocks_to_archive: 1000,
+        max_transactions_per_response: Some(200),
+        trigger_threshold: 2000,
+        max_message_size_bytes: Some(1024),
+        cycles_for_archive_creation: Some(100000000000),
+        node_max_memory_size_bytes: Some(2000),
+        controller_id: Principal::from_text(BACKEND_CANISTER).unwrap(),
+        more_controller_ids: Some(vec![Principal::anonymous()]),
+    };
+
+    let init_args = InitArgs {
+        minting_account,
+        fee_collector_account,
+        transfer_fee,
+        decimals,
+        max_memo_length,
+        token_symbol: token_symbol.to_string(),
+        token_name: token_name.to_string(),
+        metadata,
+        initial_balances,
+        feature_flags,
+        maximum_number_of_accounts,
+        accounts_overflow_trim_quantity,
+        archive_options,
+    };
+
+    let token = LedgerArg::Init(init_args);
+
+    let args = match Encode!(&(token)) {
+        Ok(args) => args,
+        Err(e) => {
+            ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
+            return Principal::anonymous();
+        }
+    };
+
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 100_000_000_000)
+        .await
+        .unwrap()
+        .0
+        .canister_id;
+
+    let install_config = ic_cdk::api::management_canister::main::InstallCodeArgument {
+        mode: CanisterInstallMode::Install,
+        canister_id,
+        wasm_module: ledger_wasm().to_vec(),
+        arg: args,
+    };
+
+    ic_cdk::api::management_canister::main::install_code(install_config)
+        .await
+        .unwrap();
+    ic_cdk::print(format!(
+        "Created canister for token '{}' with canister ID: {}",
+        token_name, canister_id
+    ));
+    canister_id
+}
+
+pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> Principal {
+    let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
+        settings: Some(CanisterSettings {
+            compute_allocation: None,
+            controllers: Some(vec![Principal::from_text(BACKEND_CANISTER).unwrap()]),
+            memory_allocation: None,
+            reserved_cycles_limit: None,
+            log_visibility: None,
+            wasm_memory_limit: None,
+            freezing_threshold: None,
+        }),
+    };
+
+    let minting_account = Account {
+        owner: Principal::from_text("xcbu3-qzwyu-iv3oj-2izdz-c6z3o-cmrsw-j66xq-wdu6q-qrjem-2pjji-pae").unwrap(),
+        subaccount: None,
+    };
+
+    let fee_collector_account = Some(Account {
+        owner: Principal::from_text(BACKEND_CANISTER).unwrap(),
+        subaccount: None,
+    });
+
+    let transfer_fee = Nat::from(100u64);
+    let decimals = Some(8);
+    let max_memo_length = Some(256);
+    let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];
+
+    let initial_balances = 
+    vec![(
+        Account {
+            owner: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
+            subaccount: None,
+        },
+        Nat::from(10_000_000_000u64),
+    )];
+
+    let feature_flags = Some(FeatureFlags { icrc2: true });
+    let maximum_number_of_accounts = Some(1000);
+    let accounts_overflow_trim_quantity = Some(100);
+
+    let archive_options = ArchiveOptions {
+        num_blocks_to_archive: 1000,
+        max_transactions_per_response: Some(200),
+        trigger_threshold: 2000,
+        max_message_size_bytes: Some(1024),
+        cycles_for_archive_creation: Some(100000000000),
+        node_max_memory_size_bytes: Some(2000),
+        controller_id: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
+        more_controller_ids: Some(vec![Principal::anonymous()]),
+    };
+
+    let init_args = InitArgs {
+        minting_account,
+        fee_collector_account,
+        transfer_fee,
+        decimals,
+        max_memo_length,
+        token_symbol: token_symbol.to_string(),
+        token_name: token_name.to_string(),
+        metadata,
+        initial_balances,
+        feature_flags,
+        maximum_number_of_accounts,
+        accounts_overflow_trim_quantity,
+        archive_options,
+    };
+
+    let token = LedgerArg::Init(init_args);
+
+    let args = match Encode!(&(token)) {
+        Ok(args) => args,
+        Err(e) => {
+            ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
+            return Principal::anonymous();
+        }
+    };
+
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 100_000_000_000)
+        .await
+        .unwrap()
+        .0
+        .canister_id;
+
+    let install_config = ic_cdk::api::management_canister::main::InstallCodeArgument {
+        mode: CanisterInstallMode::Install,
+        canister_id,
+        wasm_module: ledger_wasm().to_vec(),
+        arg: args,
+    };
+
+    ic_cdk::api::management_canister::main::install_code(install_config)
+        .await
+        .unwrap();
+    ic_cdk::print(format!(
+        "Created canister for token '{}' with canister ID: {}",
+        token_name, canister_id
+    ));
+    canister_id
 }
 
 #[update]

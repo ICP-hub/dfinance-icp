@@ -86,6 +86,7 @@ type UserReserveData = record {
 service : () -> {
   initialize_reserve : () -> ();
   new_canister : () -> (principal);
+  create_multiple_canisters : () -> (vec principal);
   configure_reserve_as_collateral : (text, nat16, nat16, nat16) -> (Result);
   get_reserve_data : (text) -> (variant { Ok : ReserveData; Err : text }) query;
   get_user_data : (text) -> (variant { Ok : UserData; Err : text }) query;

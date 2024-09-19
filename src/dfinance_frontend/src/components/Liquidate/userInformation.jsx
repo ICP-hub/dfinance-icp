@@ -8,14 +8,21 @@ import Button from "../Common/Button";
 import Vector from "../../../public/Helpers/Vector.png";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
-import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger"
-import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger"
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
+import ckBTC from "../../../public/assests-icon/ckBTC.png";
+import ckETH from "../../../public/assests-icon/cketh.png";
 
 
 
-const UserInformationPopup = ({ onClose, principal }) => {
+const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
+  const {
+    isAuthenticated,
+    createLedgerActor, backendActor
+  } = useAuth()
+  console.log("mappeditems", mappedItem)
   const [rewardAmount, setRewardAmount] = useState(10);
   const [amountToRepay, setAmountToRepay] = useState(200);
   const [isApproved, setIsApproved] = useState(false);
@@ -27,11 +34,51 @@ const UserInformationPopup = ({ onClose, principal }) => {
   const [transactionResult, setTransactionResult] = useState(null); // State to handle transaction result
   const [isSuccessful, setIsSuccessful] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
+
+  const [userdata, setUserData] = useState();
+  const [userHealthFactor, setUserHealthFactor] = useState();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (backendActor) {
+        try {
+          const result = await getUserData(principal.toString());
+          console.log("get_user_data:", result);
+          setUserData(result);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      } else {
+        console.error("Backend actor initialization failed.");
+      }
+    };
+    fetchUserData();
+  }, [principal, backendActor]);
+
+  const getUserData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_user_data(user);
+      console.log("get_user_data in mysupply:", result);
+      setUserHealthFactor(result.Ok.health_factor)
+      return result;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw error;
+    }
+  };
+
+  function roundToDecimal(value, decimalPlaces) {
+    const factor = Math.pow(10, decimalPlaces);
+    return Math.round(value * factor) / factor;
+  }
+
+  console.log("health factor", roundToDecimal(userHealthFactor, 2));
+
   const defaultAsset = "cketh";
-  const {
-    isAuthenticated,
-    createLedgerActor, backendActor
-  } = useAuth()
+
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -40,7 +87,7 @@ const UserInformationPopup = ({ onClose, principal }) => {
     };
   }, []);
 
-  
+
 
   const handleClickOutside = (e) => {
     if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -72,12 +119,12 @@ const UserInformationPopup = ({ onClose, principal }) => {
       icp: 5.032560,
     };
 
-    setRewardAmount(assetRewardAmounts[asset] || 0);
+    setRewardAmount(assetRewardAmounts[asset] || 10);
   };
 
   const renderAssetDetails = (asset) => {
     switch (asset) {
-      case "cketh":
+      case "ckETH":
         return (
           <div className="mt-4">
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText  rounded-md p-2 text-sm">
@@ -102,7 +149,7 @@ const UserInformationPopup = ({ onClose, principal }) => {
             </div>
           </div>
         );
-      case "ckbtc":
+      case "ckBTC":
         return (
           <div className="mt-4">
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
@@ -175,10 +222,10 @@ const UserInformationPopup = ({ onClose, principal }) => {
       ledgerActor = ledgerActorckETH;
     }
 
-const transferfee = BigInt(100);
- // Convert amount and transferFee to numbers and add them
- const supplyAmount = BigInt(amountToRepay);
- const totalAmount = supplyAmount + transferfee;
+    const transferfee = BigInt(100);
+    // Convert amount and transferFee to numbers and add them
+    const supplyAmount = BigInt(amountToRepay);
+    const totalAmount = supplyAmount + transferfee;
 
     const approval = await ledgerActor.icrc2_approve({
       fee: [],
@@ -203,12 +250,12 @@ const transferfee = BigInt(100);
     console.log("backend actor", backendActor)
     const isSuccess = isCheckboxChecked; // Determine success based on checkbox
     setTransactionResult(isSuccess ? "success" : "failure");
-   
-     
-      const result = await backendActor.liquidation_call("ckBTC", 200, "i33yh-4wqd6-4nept-op4lj-oqe6v-27zvz-o32nr-rnx64-wnht6-rzioe-lae");
-      console.log("Liquidation call result:", result);
-      setTransactionResult("success");
-    
+
+
+    const result = await backendActor.liquidation_call("ckBTC", "ckETH", 200, "f54eu-q6hkg-qqg2p-kebrt-77yli-ll6kg-7m3dn-ylqzn-2iufm-yluzl-vae");
+    console.log("Liquidation call result:", result);
+    setTransactionResult("success");
+
     setShowWarningPopup(false);
   };
 
@@ -339,42 +386,34 @@ const transferfee = BigInt(100);
                   Collateral Asset
                 </h3>
                 {/* Collateral Asset selection with checkboxes */}
-                <div className="flex items-center space-x-4 mb-4">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="asset"
-                      className="form-radio text-[#EB8863]"
-                      checked={selectedAsset === "cketh"}
-                      onChange={() => handleAssetSelection("cketh")}
-                    />
+                
+                  <div className="flex items-center space-x-4 mb-4">
+                    {mappedItem.reserves[0].map((item, index) => {
+                      const assetName = item[1]?.reserve
+                      const assetSupply = item[1]?.asset_supply
+                      if (assetSupply > 0) {
+                        return (
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name="asset"
+                              className="form-radio text-[#EB8863]"
+                              checked={selectedAsset === assetName}
+                              onChange={() => handleAssetSelection(assetName)}
+                            />
+                            <img
+                              key={index}
+                              src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : null}
+                              alt={assetName}
+                              className="rounded-[50%] w-7"
+                            />    </label>
 
-                    <img src={cketh} alt="ETH" className="w-9 h-10 cursor-pointer" />
-                  </label>
 
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="asset"
-                      className="form-radio text-[#EB8863]"
-                      checked={selectedAsset === "ckbtc"}
-                      onChange={() => handleAssetSelection("ckbtc")}
-                    />
-
-                    <img src={ckbtc} alt="BTC" className="w-9 h-10 cursor-pointer" />
-                  </label>
-
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="asset"
-                      className="form-radio text-[#EB8863]"
-                      checked={selectedAsset === "icp"}
-                      onChange={() => handleAssetSelection("icp")}
-                    />
-
-                    <img src={icp} alt="ICP" className="w-9 h-10 cursor-pointer" />
-                  </label>
+                        );
+                      }
+                      return null;
+                    })}
+                  
                 </div>
 
                 {/* Render asset details based on selected checkboxes */}
@@ -403,7 +442,7 @@ const transferfee = BigInt(100);
                     isApproved ? handleCallLiquidation() : handleApprove();
                   }}
                 >
-                 {isApproved ? `Call Liquidation ${asset}` : `Approve ${asset} to continue`}
+                  {isApproved ? `Call Liquidation ${asset}` : `Approve ${asset} to continue`}
                 </button>
               </div>
             </div>
@@ -414,23 +453,22 @@ const transferfee = BigInt(100);
                 <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
                   Debt Asset
                 </h3>
-                <div className="mb-4 relative w-10 h-10">
-                  {/* Icons representing debt assets - overlaying each other */}
-                  <img
-                    src={cketh}
-                    alt="ckETH"
-                    className="w-8 h-10 absolute top-0 left-0"
-                  />
-                  <img
-                    src={ckbtc}
-                    alt="ckBTC"
-                    className="w-8 h-10 absolute top-0 left-8"
-                  />
-                  <img
-                    src={icp}
-                    alt="ICP"
-                    className="w-8 h-10 absolute top-0 left-16"
-                  />
+                <div className="flex gap-2 items-center mb-3">
+                  {mappedItem.reserves[0].map((item, index) => {
+                    const assetName = item[1]?.reserve
+                    const assetBorrow = item[1]?.asset_borrow
+                    if (assetBorrow > 0) {
+                      return (
+                        <img
+                          key={index}
+                          src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : null}
+                          alt={assetName}
+                          className="rounded-[50%] w-7"
+                        />
+                      );
+                    }
+                    return null;
+                  })}
                 </div>
                 <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
                   <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText dark:opacity-50">
@@ -485,7 +523,7 @@ const transferfee = BigInt(100);
                     <p className="text-sm font-normal text-[#2A1F9D] dark:text-darkText opacity-50 mb-1 ">
                       User Health Factor
                     </p>
-                    <p className="text-xs font-medium text-[#F30606] ">0.8</p>
+                    <p className="text-xs font-medium text-[#F30606] ">{roundToDecimal(userHealthFactor, 2)}</p>
                   </div>
                 </div>
               </div>

@@ -21,6 +21,8 @@ import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
 import Pagination from "../../components/Common/pagination";
 import UserInformationPopup from "./userInformation"
+import ckBTC from "../../../public/assests-icon/ckBTC.png";
+import ckETH from "../../../public/assests-icon/cketh.png";
 
 const ITEMS_PER_PAGE = 8;
 const DebtStatus = () => {
@@ -44,7 +46,8 @@ const DebtStatus = () => {
   const {
     isAuthenticated,
     login,
-    getAllUsers
+    getAllUsers,
+    principal
   } = useAuth();
 
   const [users, setUsers] = useState([]);
@@ -61,8 +64,17 @@ const DebtStatus = () => {
       }
     };
 
+
+
     fetchUsers();
   }, [getAllUsers]);
+
+  useEffect(() => {
+    users.map((user, index) => {
+      const userr = user[0].toString();
+      console.log("user", userr)
+    })
+  }, [users])
 
   const handleDetailsClick = (item) => {
     setSelectedAsset(item); // Update selectedAsset with the clicked asset
@@ -149,6 +161,8 @@ const DebtStatus = () => {
     }
   }, [showPopup]);
 
+  
+
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
@@ -224,51 +238,114 @@ const DebtStatus = () => {
                 </tr>
               </thead>
               <tbody>
-                {currentItems.map((item, index) => (
-                  <tr
-                    key={index}
-                    className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
-                  >
-                    <td className="p-2 align-top py-8 ">
-                      <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
-                        <p> <p>{truncateText(item.user_principle, 20)}</p> </p>
-                      </div>
-                    </td>
-                    <td className="p-2 align-top py-8 ">
-                      <div className="flex flex-row ml-2 mt-2">
-                        <div>
-                          <p className="font-medium">${item.debt_amount}M</p>
+                {users
+                  .map((item) => {
+                    const mappedItem = {
+                      reserves: item[1].reserves,
+                      principal: item[0].toText(), 
+                      item, 
+                    };
+
+                    // Log mapped items
+                    console.log("Mapped Item:", mappedItem);
+
+                    return mappedItem;
+                  })
+                  .filter((mappedItem) => {
+                    const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
+
+                    // Log filtered items
+                    console.log("Filtered Item (valid):", isValid, mappedItem);
+
+                    return isValid;
+                  })
+                  .map((mappedItem, index) => (
+                    <tr
+                      key={index}
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== users.length - 1 ? "gradient-line-bottom" : ""
+                        }`}
+                    >
+                      <td className="p-2 align-top py-8 ">
+                        <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
+                          <p>{truncateText(mappedItem.principal, 20)}</p>
                         </div>
-                        <div className="md:hidden justify-center align-center mt-2 ml-5" onClick={() => handleChevronClick(item)}>
-                          <ChevronRight size={22} color={chevronColor} />
+                      </td>
+                      <td className="p-2 align-top py-8 ">
+                        <div className="flex flex-row ml-2 mt-2">
+                          <div>
+                            <p className="font-medium">${mappedItem.item[1].total_debt}</p>
+                          </div>
+                          <div
+                            className="md:hidden justify-center align-center mt-2 ml-5"
+                            onClick={() => handleChevronClick(mappedItem.item)}
+                          >
+                            <ChevronRight size={22} color={chevronColor} />
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-5 align-top hidden md:table-cell  py-8">
+                      </td>
+                      <td className="p-5 align-top hidden md:table-cell py-8">
+                        <div className="flex gap-2 items-center">
+                          {mappedItem.reserves[0].map((item, index) => {
+                            const assetName = item[1]?.reserve 
+                            const assetBorrow = item[1]?.asset_borrow 
+                            console.log("Asset Borrow:", assetBorrow);
+                            if (assetBorrow > 0) {
+                              return (
+                                <img
+                                  key={index}
+                                  src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : null}
+                                  alt={assetName}
+                                  className="rounded-[50%] w-7"
+                                />
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                      </td>
+
+                      <td className="p-5 align-top hidden md:table-cell py-8">
                       <div className="flex gap-2 items-center">
-                        <img src={item.debt_assets[0].image} alt="Asset 1" className="rounded-[50%] w-7" />
-                        <img src={item.debt_assets[1].image} alt="Asset 1" className="rounded-[50%] w-7" />
-                      </div>
-                    </td>
-                    <td className="p-5 align-top hidden md:table-cell py-8">
-                      <div className="flex gap-2 items-center">
-                        <img src={item.collateral_assets[0].image} alt="Asset 1" className="rounded-[50%] w-7" />
-                        <img src={item.collateral_assets[1].image} alt="Asset 1" className="rounded-[50%] w-7" />
-                        <img src={item.collateral_assets[2].image} alt="Asset 1" className="rounded-[50%] w-7" />
-                      </div>
-                    </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-5 py-8">{item.borrow_apy}</td>
-                    <td className="p-3 align-top flex py-8">
-                      <div className="w-full flex justify-end align-center">
-                        <Button
-                          title={"Liquidate"}
-                          className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-sm lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] font-inter"
-                          onClickHandler={() => handleDetailsClick(item)}
-                        /> </div>
-                    </td>
-                  </tr>
-                ))}
+                          {mappedItem.reserves[0].map((item, index) => {
+                            const assetName = item[1]?.reserve // Asset name (e.g., 'ckBTC', 'ckETH')
+                            const assetSupply = item[1]?.asset_supply  // Asset borrow amount
+
+                            console.log("itemss:", assetName);
+                            console.log("Asset Supply:", assetSupply);
+
+                            // Show the image if asset_borrow > 0
+                            if (assetSupply > 0) {
+                              return (
+                                <img
+                                  key={index}
+                                  src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : null}
+                                  alt={assetName}
+                                  className="rounded-[50%] w-7"
+                                />
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                      </td>
+                      <td className="p-3 align-top hidden md:table-cell pt-5 py-8">
+                        {mappedItem.item.borrow_apy}
+                      </td>
+                      <td className="p-3 align-top flex py-8">
+                        <div className="w-full flex justify-end align-center">
+                          <Button
+                            title={"Liquidate"}
+                            className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-sm lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] font-inter"
+                            onClickHandler={() => handleDetailsClick(mappedItem)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
+
+
+
             </table>
           </div>
 
@@ -278,8 +355,8 @@ const DebtStatus = () => {
       {showUserInfoPopup && selectedAsset && (
         <UserInformationPopup
           onClose={() => setShowUserInfoPopup(false)}
-          asset={selectedAsset.asset} // Pass the asset or other properties from the selected item
-          principal={selectedAsset.user_principle} // Pass the user_principle from the selected item
+          mappedItem={selectedAsset} // Pass the asset or other properties from the selected item
+          principal={selectedAsset.principal} // Pass the user_principle from the selected item
         />
       )}
 

@@ -3,22 +3,22 @@
 set -e
 
 # Set variables
-canister_id="ckbtc_ledger" 
+canister_id="c5kvi-uuaaa-aaaaa-qaaia-cai" 
 transfer_method="icrc1_transfer"
 
-dfx identity use abcd
-anonymous_principal=$(dfx identity get-principal)
-echo "Default Principal (Spender): $anonymous_principal"
+# dfx identity use anonymous
+# anonymous_principal=$(dfx identity get-principal)
+# echo "Default Principal (Spender): $anonymous_principal"
 # Get the principal for the default identity (spender)
 dfx identity use default
 default_principal=$(dfx identity get-principal)
 echo "Default Principal (Spender): $default_principal"
 
-user1_principal="otagv-o6ud2-xtsj6-7h5dd-6k2zc-gc2o2-4pviu-wpxpy-76q24-xtt3n-7qe"
+user1_principal="j2avn-zuxbn-dquew-sl6i5-njpcv-25key-g5xqi-y3ysx-bh63p-ztq2e-hqe"
 echo "User1 Principal (Recipient): $user1_principal"
 
 # Switch back to the default identity
-dfx identity use abcd
+# dfx identity use abcd
 
 transfer_amount=100000  # Set the amount to transfer to user1
 transfer_result=$(dfx canister call $canister_id $transfer_method "(record {

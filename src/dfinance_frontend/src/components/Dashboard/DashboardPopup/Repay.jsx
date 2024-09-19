@@ -8,9 +8,8 @@ import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
 import { useEffect } from "react";
-const Repay = ({ asset, image ,balance ,  setIsModalOpen,isModalOpen,
+const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, assetSupply, assetBorrow,   setIsModalOpen,isModalOpen,
   handleModalOpen,
-
   onLoadingChange  }) => {
   const [amount, setAmount] = useState(0);
   const modalRef = useRef(null); // Reference to the modal container
@@ -25,6 +24,49 @@ const Repay = ({ asset, image ,balance ,  setIsModalOpen,isModalOpen,
   const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
 
   const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
+  
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [currentHealthFactor, setCurrentHealthFactor] = useState(null); 
+  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
+  useEffect(() => {
+    console.log('Asset:', asset);
+    console.log('Liquidation Threshold:', liquidationThreshold);
+    console.log('Asset Supply:', assetSupply);
+    console.log('Asset Borrow:', assetBorrow, supplyRateAPR);
+
+    const healthFactor = calculateHealthFactor(assetSupply, assetBorrow, liquidationThreshold);
+    const healthf=0
+    console.log('Health Factor:', healthFactor);
+    const ltv = calculateLTV(assetSupply, assetBorrow);
+    const ltV=80;
+    console.log('LTV:', ltv);
+       // Store the previous health factor before updating
+       setPrevHealthFactor(currentHealthFactor);
+       // Update the current health factor
+       setCurrentHealthFactor(healthFactor);
+
+    if (healthFactor < 1 || ltv >= liquidationThreshold) {
+      setIsButtonDisabled(true); // Disable the button
+    } else {
+      setIsButtonDisabled(false); // Enable the button
+    }
+    
+  }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
+
+
+  const calculateHealthFactor = (totalCollateralValue, totalBorrowedValue, liquidationThreshold) => {
+    if (totalBorrowedValue === 0) {
+      return Infinity;
+    }
+    return (totalCollateralValue * liquidationThreshold) / totalBorrowedValue;
+  };
+
+  const calculateLTV = (totalCollateralValue, totalBorrowedValue) => {
+    if (totalCollateralValue === 0) {
+      return 0; 
+    }
+    return totalBorrowedValue / totalCollateralValue;
+  };
 
   const value = 5.23;
   const handleAmountChange = (e) => {
@@ -275,24 +317,28 @@ const Repay = ({ asset, image ,balance ,  setIsModalOpen,isModalOpen,
                 </p>
               </div>
               <div className="w-full flex justify-between items-center">
-                <p>Health Factor</p>
-                <p>
-                  <span
-                    className={`${
-                      value > 3
-                        ? "text-green-500"
-                        : value <= 1
-                        ? "text-red-500"
-                        : value <= 1.5
-                        ? "text-orange-600"
-                        : value <= 2
-                        ? "text-orange-400"
-                        : "text-orange-300"
-                    }`}
-                  >
-                    {value}
-                  </span>
-                </p>
+            <div className="w-full flex justify-between items-center">
+                    <p>Health Factor</p>
+                    <p>
+                      <span className="text-red-500">{prevHealthFactor}</span>
+                      <span className="text-gray-500 mx-1">→</span>
+                      <span
+                        className={`${
+                          value > 3
+                            ? "text-green-500"
+                            : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
+                      >
+                        {currentHealthFactor}
+                      </span>
+                    </p>
+                  </div>
               </div>
               <div className="w-full flex justify-end items-center mt-1 ">
                 <p className="text-[#909094]">liquidation at &lt;1</p>

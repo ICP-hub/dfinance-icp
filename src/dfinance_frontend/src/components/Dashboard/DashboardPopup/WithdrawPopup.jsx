@@ -153,9 +153,7 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen,isModalOpen,
         true
       );
       console.log("Withdraw result", withdrawResult);
-      setIsPaymentDone(true);
-      setIsVisible(false);
-      
+      window.location.reload()
 
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
@@ -253,7 +251,7 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen,isModalOpen,
         </div>
 
         
-        <Button title="Withdraw LINK" onClickHandler={handleWithdraw} />
+        <Button title={`Withdraw ${asset}`}  onClickHandler={handleWithdraw} />
 
 {isLoading && (
   <div

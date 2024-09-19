@@ -8,9 +8,11 @@ use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
+use crate::protocol::libraries::math::calculate::{UserPosition, calculate_health_factor, calculate_ltv};
 use candid::{Nat, Principal};
 use dotenv::dotenv;
 use ic_cdk::api::call::call;
+
 
 // -------------------------------------
 // ----------- BORROW LOGIC ------------
@@ -21,12 +23,27 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     ic_cdk::println!("Starting execute_supply with params: {:?}", params);
 
     // Fetched canister ids, user principal and amount
-    let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
-        .map_err(|_| "Invalid ledger canister ID".to_string())?;
+    // let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
+    //     .map_err(|_| "Invalid ledger canister ID".to_string())?;
 
-    let debttoken_canister_id = Principal::from_text(DEBTTOKEN_CANISTER)
+    let ledger_canister_id = mutate_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&params.asset.to_string().clone())
+            .map(|principal| principal.clone())
+            .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+    })?;
+
+    
+    let debttoken_canister = mutate_state(|state| {
+        let asset_index = &mut state.asset_index;
+        asset_index
+            .get(&params.asset.to_string().clone())
+            .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
+            .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
+    })?;
+    let debttoken_canister_id = Principal::from_text(debttoken_canister)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
-
     let user_principal = ic_cdk::caller();
 
     let platform_principal = Principal::from_text(BACKEND_CANISTER)
@@ -151,6 +168,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
     )
     .await
     .map_err(|e| e.1)?;
+    
+    
 
     let user_data_result = mutate_state(|state| {
         let user_profile_data = &mut state.user_profile;
@@ -170,7 +189,29 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
             return Err(e);
         }
     };
+    let ckbtc_to_icp_rate = 7_240f64;
+    ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_icp_rate);
 
+    // Convert the supplied amount (in ckBTC) to ICP
+    let amount_in_icp = (params.amount as f64) * ckbtc_to_icp_rate;
+    user_data.total_debt = Some(
+        user_data.total_debt.unwrap_or(0.0) + amount_in_icp
+    );
+
+    let user_position = UserPosition {
+        total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
+        total_borrowed_value: user_data.total_debt.unwrap_or(0.0), // Assuming total_debt is stored in user_data
+        liquidation_threshold: 0.8, // Set to the desired liquidation threshold (80%)
+    };
+
+    
+    let health_factor = calculate_health_factor(&user_position);
+    user_data.health_factor = Some(health_factor); 
+
+    ic_cdk::println!("Updated user health factor: {}", health_factor);
+
+    let ltv= calculate_ltv(&user_position);
+    user_data.ltv = Some(ltv);
     // Checks if the reserve data for the asset already exists in the user's reserves
     let user_reserve = match user_data.reserves {
         Some(ref mut reserves) => reserves
@@ -244,13 +285,26 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<(), String> {
         (user_principal, None)
     };
 
-    let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
-        .map_err(|_| "Invalid ledger canister ID".to_string())?;
-
+    // let ledger_canister_id = Principal::from_text(CKBTC_LEDGER_CANISTER)
+    //     .map_err(|_| "Invalid ledger canister ID".to_string())?;
+    let ledger_canister_id = mutate_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&params.asset.to_string().clone())
+            .map(|principal| principal.clone())
+            .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+    })?;
     let platform_principal = Principal::from_text(BACKEND_CANISTER)
         .map_err(|_| "Invalid platform canister ID".to_string())?;
-
-    let debttoken_canister_id = Principal::from_text(DEBTTOKEN_CANISTER)
+    
+        let debttoken_canister = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
+                .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
+        })?;
+    let debttoken_canister_id = Principal::from_text(debttoken_canister)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
     // Reads the reserve data from the asset

@@ -1,59 +1,65 @@
 use candid::{Nat, Principal};
 use core::panic;
-use ic_cdk::api::call::{call, CallResult};
-// use std::env;
 
+use crate::api::functions::{get_balance, get_fees};
 use crate::constants::errors::Error;
-use crate::declarations::assets::{ReserveCache, ReserveData};
+use crate::declarations::assets::ReserveData;
 
 pub struct ValidationLogic;
 
 impl ValidationLogic {
+    // -------------------------------------
+    // -------------- SUPPLY ---------------
+    // -------------------------------------
+
     pub async fn validate_supply(
-        reserve_cache: &ReserveCache,
         reserve: &ReserveData,
         amount: u128,
+        user: Principal,
+        ledger_canister: Principal,
     ) {
+        // validating amount
+        let user_balance = get_balance(ledger_canister, user).await;
+        ic_cdk::println!("User balance: {:?}", user_balance);
+
+        let transfer_fees = get_fees(ledger_canister).await;
+        ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
+
+        let final_amount = amount + transfer_fees;
+        ic_cdk::println!("final_amount : {:?}", final_amount);
+
         if amount == 0 {
             panic!("{:?}", Error::InvalidAmount);
         }
-        // let (is_active, is_frozen, _, _, is_paused) =
-        //     reserve_cache.reserve_configuration.get_flags(); // TODO
 
-        // if !is_active {
-        //     panic!("{:?}", Error::ReserveInactive);
-        // }
-        // if is_paused {
-        //     panic!("{:?}", Error::ReservePaused);
-        // }
-        // if is_frozen {
-        //     panic!("{:?}", Error::ReserveFrozen);
-        // }
-
-        // Supply cap limit 10 million
-        let supply_cap = Nat::from(10000000u64);
-
-        let dtoken_canister_id = "a4tbr-q4aaa-aaaaa-qaafq-cai".to_string();
-        let total_supply: CallResult<(Nat,)> = call(
-            Principal::from_text(dtoken_canister_id).expect("Invalid principal"),
-            "icrc1_total_supply",
-            (),
-        )
-        .await;
-
-        let mut current_total_supply = Nat::from(0u64);
-
-        match total_supply {
-            Ok((nat_value,)) => {
-                current_total_supply = nat_value.clone();
-                println!("{:?}", nat_value);
-            }
-            Err(err) => {
-                println!("{:?}", err);
-            }
+        if final_amount > user_balance {
+            panic!("{:?}", Error::InvalidAmount);
         }
 
-        if supply_cap == Nat::from(0u8) || (current_total_supply >= supply_cap) {
+        // validating reserve states
+        let (is_active, is_frozen, is_paused) = (true, false, false);
+
+        if !is_active {
+            panic!("{:?}", Error::ReserveInactive);
+        }
+        if is_paused {
+            panic!("{:?}", Error::ReservePaused);
+        }
+        if is_frozen {
+            panic!("{:?}", Error::ReserveFrozen);
+        }
+        ic_cdk::println!("is_active : {:?}", is_active);
+        ic_cdk::println!("is_paused : {:?}", is_paused);
+        ic_cdk::println!("is_frozen : {:?}", is_frozen);
+
+        // Validating supply cap limit
+        let supply_cap = Nat::from(100000u64);
+        ic_cdk::println!("supply_cap : {:?}", supply_cap);
+
+        let final_total_supply = final_amount + reserve.total_supply.unwrap_or(0.0) as u128;
+        ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
+
+        if final_total_supply >= supply_cap {
             panic!("{:?}", Error::SupplyCapExceeded);
         }
     }

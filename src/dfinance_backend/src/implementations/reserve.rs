@@ -1,16 +1,15 @@
 use crate::{
     api::state_handler::mutate_state,
     constants::asset_data::get_asset_data,
-    declarations::{assets::ReserveData, storable::Candid},
-    protocol::configuration::reserve_configuration::ReserveConfiguration,
+    declarations::storable::Candid,
 };
 
-use crate::get_all_assets;
 use ic_cdk::update;
 
 #[update]
-pub fn initialize_reserve() {
-    let asset_data_map = get_asset_data();
+pub async fn initialize_reserve() {
+
+    let asset_data_map = get_asset_data().await;
 
     for (asset_name, (principal, reserve_data)) in asset_data_map {
         let mut data = reserve_data;

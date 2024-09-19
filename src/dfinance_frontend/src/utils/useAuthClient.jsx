@@ -230,6 +230,7 @@ const getAllUsers = async () => {
   }
 };
 
+console.log("backned actor in useAuth", backendActor)
 
   return {
     isAuthenticated,

@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import { useEffect } from "react";
 import axios from "axios";
 
+
 const SupplyPopup = ({
   asset,
   image,
@@ -28,32 +29,32 @@ const SupplyPopup = ({
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
 
 
-  useEffect(() => {
-    const fetchAssetPrices = async () => {
-      try {
-        const response = await fetch(
-          'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd'
-        );
-        const data = await response.json();
-        const prices = {
-          ckbtc: data.bitcoin.usd,
-          cketh: data.ethereum.usd,
-          ckusdc: data['usd-coin'].usd,
-          icp: data['internet-computer'].usd,
-        };
-        const assetSupplyInUSD = convertToUSD(asset, assetSupply, prices);
-        dispatch(updateAssetValues({
-          asset,
-          assetSupplyInUSD,
-        }));
+  // useEffect(() => {
+  //   const fetchAssetPrices = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd'
+  //       );
+  //       const data = await response.json();
+  //       const prices = {
+  //         ckbtc: data.bitcoin.usd,
+  //         cketh: data.ethereum.usd,
+  //         ckusdc: data['usd-coin'].usd,
+  //         icp: data['internet-computer'].usd,
+  //       };
+  //       const assetSupplyInUSD = convertToUSD(asset, assetSupply, prices);
+  //       dispatch(updateAssetValues({
+  //         asset,
+  //         assetSupplyInUSD,
+  //       }));
 
-      } catch (error) {
-        console.error('Error fetching asset prices:', error);
-      }
-    };
+  //     } catch (error) {
+  //       console.error('Error fetching asset prices:', error);
+  //     }
+  //   };
 
-    fetchAssetPrices();
-  }, [asset, assetSupply, assetBorrow, dispatch]);
+  //   fetchAssetPrices();
+  // }, [asset, assetSupply, assetBorrow, dispatch]);
 
   const convertToUSD = (asset, value, prices) => {
     switch (asset) {

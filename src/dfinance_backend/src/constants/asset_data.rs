@@ -9,7 +9,6 @@ use crate::constants::asset_address::{
     CKETH_LEDGER_CANISTER, 
     DTOKEN_CANISTER, 
     DEBTTOKEN_CANISTER,
-    DCKETH_CANISTER
 };
 
 // Convert canister address strings into Principal type
@@ -17,8 +16,8 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     let mut assets = HashMap::new();
 
     // Reserve Data for ckBTC
-    let ckbtc_principal= create_testtoken_canister("ckBTC", "ckBTC").await;
-    // let ckbtc_principal = Principal::from_text(CKBTC_LEDGER_CANISTER).unwrap();
+    // let ckbtc_principal= create_testtoken_canister("ckBTC", "ckBTC").await;
+    let ckbtc_principal = Principal::from_text(CKBTC_LEDGER_CANISTER).unwrap();
     let dckbtc=create_token_canister("dckBTC", "dckBTC").await;
     let debtckbtc=create_token_canister("debtckBTC", "debtckBTC").await;
     assets.insert("ckBTC", (
@@ -42,9 +41,8 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     ));
 
     // Reserve Data for ckEth
-    // let cketh_principal = Principal::from_text(CKETH_LEDGER_CANISTER).unwrap();
-    let cketh_principal= create_testtoken_canister("ckETH", "ckETH").await;
-    // let ckbtc_principal = Principal::from_text(CKBTC_LEDGER_CANISTER).unwrap();
+    let cketh_principal = Principal::from_text(CKETH_LEDGER_CANISTER).unwrap();
+    // let cketh_principal= create_testtoken_canister("ckETH", "ckETH").await;
     let dcketh=create_token_canister("dckETH", "dckETH").await;
     let debtcketh=create_token_canister("debtckETH", "debtckETH").await;
     assets.insert("ckETH", (

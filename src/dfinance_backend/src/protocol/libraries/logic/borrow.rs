@@ -1,8 +1,8 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
-use crate::constants::asset_address::{
-    BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
-};
+use crate::constants::asset_address::
+    BACKEND_CANISTER;
+
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;

@@ -2,10 +2,9 @@ use candid::Principal;
 use crate::api::state_handler::*;
 use crate::{
     api::functions::get_balance,
-    constants::asset_address::{
-        BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
-        DTOKEN_CANISTER,
-    },
+    constants::asset_address::
+        BACKEND_CANISTER,
+   
 };
 use crate::{repay, withdraw};
 use ic_cdk::api;

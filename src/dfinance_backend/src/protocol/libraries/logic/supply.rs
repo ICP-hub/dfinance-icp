@@ -12,10 +12,9 @@ use crate::protocol::libraries::types::datatypes::UserReserveData;
 use crate::protocol::libraries::math::calculate::{UserPosition, calculate_health_factor, calculate_ltv};
 use crate::{
     api::functions::{asset_transfer, asset_transfer_from},
-    constants::asset_address::{
-        BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, CKETH_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
-        DTOKEN_CANISTER,
-    },
+    constants::asset_address::
+        BACKEND_CANISTER, 
+    
 };
 
 impl SupplyLogic {

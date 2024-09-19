@@ -21,6 +21,8 @@ const Borrow = ({  asset,
 console.log("jkbjkasbkjbdjk",balance)
   const { createLedgerActor, backendActor } = useAuth();
   const [error, setError] = useState('');
+  const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
+  const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false); 
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -36,28 +38,29 @@ console.log("jkbjkasbkjbdjk",balance)
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
-    
+
     // Convert input to a number
     const numericAmount = parseFloat(inputAmount);
-  
+
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
         // Calculate and format the USD value
-       
+        const convertedValue = numericAmount * conversionRate;
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
         setAmount(inputAmount);
-        setError('');
+        setError("");
       } else {
-        setError('Amount exceeds the supply balance');
-       
+        setError("Amount exceeds the supply balance");
+        setUsdValue(0);
       }
-    } else if (inputAmount === '') {
+    } else if (inputAmount === "") {
       // Allow empty input and reset error
-      setAmount('');
-    
-      setError('');
+      setAmount("");
+      setUsdValue(0);
+      setError("");
     } else {
-      setError('Amount must be a positive number');
-     
+      setError("Amount must be a positive number");
+      setUsdValue(0);
     }
   };
   const handleAcknowledgeChange = (e) => {
@@ -103,6 +106,50 @@ const handleClosePaymentPopup = () => {
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
+  useEffect(() => {
+    const fetchConversionRate = async () => {
+      try {
+        let coinId;
+
+        // Map asset to CoinGecko coin IDs
+        if (asset === "ckBTC") {
+          coinId = "bitcoin";
+        } else if (asset === "ckETH") {
+          coinId = "ethereum";
+        } else {
+          console.error("Unsupported asset:", asset);
+          return;
+        }
+
+        // Fetch conversion rate from CoinGecko
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("CoinGecko data", data);
+
+        // Extract the conversion rate (price in USD)
+        const rate = data[coinId]?.usd;
+        if (rate) {
+          setConversionRate(rate);
+          console.log("Conversion rate:", rate);
+        } else {
+          console.error("Conversion rate not found for asset:", asset);
+        }
+      } catch (error) {
+        console.error("Error fetching conversion rate", error);
+      }
+    };
+
+    if (asset) {
+      fetchConversionRate();
+    }
+  }, [asset]);
   const numericBalance = parseFloat(balance); // Convert balance to a number
 const transferFee = Number(fees[normalizedAsset] || fees.default); // Ensure transfer fee is a number
 const supplyBalance = numericBalance - transferFee; // Calculate supply balance
@@ -142,7 +189,9 @@ useEffect(() => {
                 className="text-lg focus:outline-none bg-gray-100  rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                 placeholder="Enter Amount"
               />
-              <p className=" text-xs">$0</p>
+               <p className="text-xs text-gray-500 ">
+                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                  </p>
             </div>
             <div className="w-7/12 flex flex-col items-end">
               <div className="w-auto flex items-center gap-2">

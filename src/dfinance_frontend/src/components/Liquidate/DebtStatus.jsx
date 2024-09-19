@@ -207,9 +207,9 @@ const DebtStatus = () => {
           <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
             No assets found!
           </p>
-        </div> : <div className="w-full">
+        </div> : <div className="w-full min-h-[390px] mt-6 p-0 lg:px-12 mb-20">
           <div className="w-full overflow-auto content">
-            <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText">
+            <table className="w-full text-[#2A1F9D] font-[500] text-sm md:text-sm lg:text-base dark:text-darkText">
               <thead>
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {LIQUIDATION_USERLIST_COL.slice(0, 2).map((item, index) => (
@@ -229,9 +229,9 @@ const DebtStatus = () => {
                     key={index}
                     className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
-                    <td className="p-2 align-top py-8 ">
+                    <td className="p-2 align-top py-8  ">
                       <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
-                        <p> <p>{truncateText(item.user_principle, 20)}</p> </p>
+                        <p> <p>{truncateText(item.user_principle, 14)}</p> </p>
                       </div>
                     </td>
                     <td className="p-2 align-top py-8 ">
@@ -239,9 +239,7 @@ const DebtStatus = () => {
                         <div>
                           <p className="font-medium">${item.debt_amount}M</p>
                         </div>
-                        <div className="md:hidden justify-center align-center mt-2 ml-5" onClick={() => handleChevronClick(item)}>
-                          <ChevronRight size={22} color={chevronColor} />
-                        </div>
+                        
                       </div>
                     </td>
                     <td className="p-5 align-top hidden md:table-cell  py-8">
@@ -261,8 +259,27 @@ const DebtStatus = () => {
                     <td className="p-3 align-top flex py-8">
                       <div className="w-full flex justify-end align-center">
                         <Button
-                          title={"Liquidate"}
-                          className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-sm lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[9px] font-inter"
+                          title={
+                            <>
+                              <span className="hidden lg:inline">Liquidate</span>
+                              <span className="inline lg:hidden">
+                                <svg
+                                  width="40"
+                                  height="46"
+                                  viewBox="0 0 42 42"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="w-6 h-6"
+                                >
+                                  <path
+                                    d="M27.7247 24.967L27.6958 13.8482L16.577 13.8193C16.4611 13.8036 16.3433 13.813 16.2314 13.8468C16.1195 13.8807 16.0161 13.9381 15.9284 14.0154C15.8406 14.0926 15.7705 14.1878 15.7227 14.2945C15.675 14.4012 15.6507 14.5169 15.6515 14.6338C15.6523 14.7507 15.6783 14.866 15.7276 14.972C15.7769 15.078 15.8483 15.1722 15.9372 15.2481C16.026 15.3241 16.1302 15.3801 16.2425 15.4123C16.3549 15.4445 16.4729 15.4522 16.5885 15.4349L24.9204 15.4695L13.8824 26.5076C13.7293 26.6606 13.6434 26.8682 13.6434 27.0846C13.6434 27.301 13.7293 27.5086 13.8824 27.6616C14.0354 27.8146 14.2429 27.9006 14.4594 27.9006C14.6758 27.9006 14.8833 27.8146 15.0364 27.6616L26.0744 16.6235L26.109 24.9555C26.1098 25.172 26.1966 25.3794 26.3502 25.5319C26.5039 25.6845 26.7119 25.7698 26.9284 25.769C27.1449 25.7683 27.3523 25.6815 27.5049 25.5279C27.6574 25.3742 27.7427 25.1662 27.742 24.9497L27.7247 24.967Z"
+                                    fill="white"
+                                  />
+                                </svg>
+                              </span>
+                            </>
+                          }
+                          className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-sm lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px] font-inter"
                           onClickHandler={() => handleDetailsClick(item)}
                         /> </div>
                     </td>

@@ -1650,7 +1650,7 @@ const MySupply = () => {
                                         item[0],
                                         (item[0] === "ckBTC" && ckBTC) ||
                                           (item[0] === "ckETH" && ckETH),
-                                        item[1]?.Ok.borrow_rate_apr, 
+                                        item[1]?.Ok.supply_rate_apr, 
                                         item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null,
                                       )
                                     }

@@ -16,6 +16,8 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen,isModalOpen,
   console.log("Fees:", fees); // Check the fees object
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const [amount, setAmount] = useState("");
+  const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
+  const [usdValue, setUsdValue] = useState(0);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false); 
   const [isPaymentDone, setIsPaymentDone] = useState(false);
@@ -23,6 +25,50 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen,isModalOpen,
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
+  useEffect(() => {
+    const fetchConversionRate = async () => {
+      try {
+        let coinId;
+
+        // Map asset to CoinGecko coin IDs
+        if (asset === "ckBTC") {
+          coinId = "bitcoin";
+        } else if (asset === "ckETH") {
+          coinId = "ethereum";
+        } else {
+          console.error("Unsupported asset:", asset);
+          return;
+        }
+
+        // Fetch conversion rate from CoinGecko
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("CoinGecko data", data);
+
+        // Extract the conversion rate (price in USD)
+        const rate = data[coinId]?.usd;
+        if (rate) {
+          setConversionRate(rate);
+          console.log("Conversion rate:", rate);
+        } else {
+          console.error("Conversion rate not found for asset:", asset);
+        }
+      } catch (error) {
+        console.error("Error fetching conversion rate", error);
+      }
+    };
+
+    if (asset) {
+      fetchConversionRate();
+    }
+  }, [asset]);
   const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
@@ -43,19 +89,22 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen,isModalOpen,
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
         // Calculate and format the USD value
-
+        const convertedValue = numericAmount * conversionRate;
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
         setAmount(inputAmount);
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
+        setUsdValue(0);
       }
     } else if (inputAmount === "") {
       // Allow empty input and reset error
       setAmount("");
-
+      setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
+      setUsdValue(0);
     }
   };
 
@@ -152,7 +201,9 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen,isModalOpen,
                 className="text-lg focus:outline-none bg-gray-100 rounded-md py-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                 placeholder="Enter Amount"
               />
-              <p className="">$0</p>
+              <p className="text-xs text-gray-500 ">
+                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                  </p>
             </div>
             <div className="w-7/12  flex flex-col items-end">
               <div className="w-auto flex items-center gap-2">

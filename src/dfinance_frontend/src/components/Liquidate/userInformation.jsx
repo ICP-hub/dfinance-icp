@@ -2,18 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { Info, X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import cketh from "../../../public/assests-icon/cketh.png";
-import ckbtc from '../../../public/assests-icon/ckbtc.png'
+import ckbtc from "../../../public/assests-icon/ckbtc.png";
 import icp from "../../../public/assests-icon/icpdark.png";
 import Button from "../Common/Button";
 import Vector from "../../../public/Helpers/Vector.png";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
-import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger"
-import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
-
-
 
 const UserInformationPopup = ({ onClose, principal }) => {
   const [rewardAmount, setRewardAmount] = useState(10);
@@ -28,10 +26,7 @@ const UserInformationPopup = ({ onClose, principal }) => {
   const [isSuccessful, setIsSuccessful] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
   const defaultAsset = "cketh";
-  const {
-    isAuthenticated,
-    createLedgerActor, backendActor
-  } = useAuth()
+  const { isAuthenticated, createLedgerActor, backendActor } = useAuth();
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -39,8 +34,6 @@ const UserInformationPopup = ({ onClose, principal }) => {
       document.body.style.overflow = "auto";
     };
   }, []);
-
-  
 
   const handleClickOutside = (e) => {
     if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -63,13 +56,12 @@ const UserInformationPopup = ({ onClose, principal }) => {
     }
   };
 
-
   const handleAssetSelection = (asset) => {
     setSelectedAsset(asset); // Set the selected asset (only one at a time)
     const assetRewardAmounts = {
-      cketh: 0.0032560,
-      ckbtc: 0.0010250,
-      icp: 5.032560,
+      cketh: 0.003256,
+      ckbtc: 0.001025,
+      icp: 5.03256,
     };
 
     setRewardAmount(assetRewardAmounts[asset] || 0);
@@ -84,9 +76,7 @@ const UserInformationPopup = ({ onClose, principal }) => {
               <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 ckETH Price
               </p>
-              <p className="text-sm font-medium">
-                0.0032560
-              </p>
+              <p className="text-sm font-medium">0.0032560</p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
               <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
@@ -98,7 +88,9 @@ const UserInformationPopup = ({ onClose, principal }) => {
               <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 Reward Amount
               </p>
-              <p className="text-sm font-medium text-green-500">{rewardAmount}</p>
+              <p className="text-sm font-medium text-green-500">
+                {rewardAmount}
+              </p>
             </div>
           </div>
         );
@@ -123,7 +115,9 @@ const UserInformationPopup = ({ onClose, principal }) => {
               <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 Reward Amount
               </p>
-              <p className="text-sm font-medium text-green-500">{rewardAmount}</p>
+              <p className="text-sm font-medium text-green-500">
+                {rewardAmount}
+              </p>
             </div>
           </div>
         );
@@ -142,13 +136,17 @@ const UserInformationPopup = ({ onClose, principal }) => {
               <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 ICP Liquidation Bonus %
               </p>
-              <p className="text-sm font-medium text-[#2A1F9D]   dark:text-darkText ">12%</p>
+              <p className="text-sm font-medium text-[#2A1F9D]   dark:text-darkText ">
+                12%
+              </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
               <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
                 Reward Amount
               </p>
-              <p className="text-sm font-medium text-green-500   ">{rewardAmount}</p>
+              <p className="text-sm font-medium text-green-500   ">
+                {rewardAmount}
+              </p>
             </div>
           </div>
         );
@@ -160,9 +158,23 @@ const UserInformationPopup = ({ onClose, principal }) => {
     setIsCheckboxChecked(e.target.checked);
   };
 
-  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+  const ledgerActorckBTC = useMemo(
+    () =>
+      createLedgerActor(
+        process.env.CANISTER_ID_CKBTC_LEDGER,
+        ledgerIdlFactoryckBTC
+      ),
+    [createLedgerActor]
+  );
 
-  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
+  const ledgerActorckETH = useMemo(
+    () =>
+      createLedgerActor(
+        process.env.CANISTER_ID_CKETH_LEDGER,
+        ledgerIdlFactoryckETH
+      ),
+    [createLedgerActor]
+  );
 
   const asset = "ckBTC";
 
@@ -175,10 +187,10 @@ const UserInformationPopup = ({ onClose, principal }) => {
       ledgerActor = ledgerActorckETH;
     }
 
-const transferfee = BigInt(100);
- // Convert amount and transferFee to numbers and add them
- const supplyAmount = BigInt(amountToRepay);
- const totalAmount = supplyAmount + transferfee;
+    const transferfee = BigInt(100);
+    // Convert amount and transferFee to numbers and add them
+    const supplyAmount = BigInt(amountToRepay);
+    const totalAmount = supplyAmount + transferfee;
 
     const approval = await ledgerActor.icrc2_approve({
       fee: [],
@@ -200,25 +212,40 @@ const transferfee = BigInt(100);
   };
 
   const handleConfirmLiquidation = async () => {
-    console.log("backend actor", backendActor)
+    console.log("backend actor", backendActor);
     const isSuccess = isCheckboxChecked; // Determine success based on checkbox
     setTransactionResult(isSuccess ? "success" : "failure");
-   
-     
-      const result = await backendActor.liquidation_call("ckBTC", 200, "i33yh-4wqd6-4nept-op4lj-oqe6v-27zvz-o32nr-rnx64-wnht6-rzioe-lae");
-      console.log("Liquidation call result:", result);
-      setTransactionResult("success");
-    
+
+    const result = await backendActor.liquidation_call(
+      "ckBTC",
+      200,
+      "i33yh-4wqd6-4nept-op4lj-oqe6v-27zvz-o32nr-rnx64-wnht6-rzioe-lae"
+    );
+    console.log("Liquidation call result:", result);
+    setTransactionResult("success");
+
     setShowWarningPopup(false);
   };
+  const [isLoading, setIsLoading] = useState(false);
 
+  const handleButtonClick = async () => {
+    try {
+      setIsLoading(true); // Start loading
+      if (isApproved) {
+        await handleCallLiquidation(); // Call the liquidation function
+      } else {
+        await handleApprove(); // Call the approve function
+      }
+    } finally {
+      setIsLoading(false); // Stop loading once the function is done
+    }
+  };
   const handleCloseWarningPopup = () => {
     setShowWarningPopup(false);
   };
 
   const handleCallLiquidation = () => {
     setShowWarningPopup(true);
-
   };
 
   const handleCancelOrConfirm = () => {
@@ -228,12 +255,18 @@ const transferfee = BigInt(100);
       handleCloseWarningPopup();
     }
   };
-
+  const handlebuttonClick = async () => {
+    try {
+      setIsLoading(true); // Start the loader
+      await handleCancelOrConfirm(); // Execute the function
+    } finally {
+      setIsLoading(false); // Stop the loader after the function finishes
+    }
+  };
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose(); // Close the transaction result popup
   };
-
 
   const handleRetry = () => {
     setTransactionResult(null); // Reset the transaction result and show warning popup
@@ -244,8 +277,10 @@ const transferfee = BigInt(100);
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       {transactionResult ? (
         // Transaction result popup
-        <div ref={popupRef}
-          className="bg-white dark:bg-[#1D1B40] dark:text-darkText p-6 rounded-md w-full max-w-md mx-4 text-center">
+        <div
+          ref={popupRef}
+          className="bg-white dark:bg-[#1D1B40] dark:text-darkText p-6 rounded-md w-full max-w-md mx-4 text-center"
+        >
           <div className="flex flex-col items-center">
             {transactionResult === "success" ? (
               <>
@@ -286,7 +321,10 @@ const transferfee = BigInt(100);
             Warning Pop Up
           </h2>
           <p className="text-sm text-[#989898] text-center dark:text-darkText mt-4">
-            Are you sure you want to liquidate on behalf of "<strong>{principal}</strong>"? <strong>{amountToRepay} ICP</strong> will be <strong>deducted</strong> from your account & <strong>{rewardAmount}</strong> will be rewarded.
+            Are you sure you want to liquidate on behalf of "
+            <strong>{principal}</strong>"? <strong>{amountToRepay} ICP</strong>{" "}
+            will be <strong>deducted</strong> from your account &{" "}
+            <strong>{rewardAmount}</strong> will be rewarded.
           </p>
           <div className="mt-4 flex justify-center">
             <label className="flex items-center text-[#989898]">
@@ -300,14 +338,22 @@ const transferfee = BigInt(100);
             </label>
           </div>
 
-
           <div className="flex justify-center mt-6">
             <button
-              className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
-              onClick={handleCancelOrConfirm}
+              className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              onClick={handlebuttonClick}
+              disabled={isLoading} // Disable the button while loading
             >
               {isCheckboxChecked ? "Call Liquidation" : "Cancel"}
             </button>
+
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
+                <div className="loader"></div> {/* Centered Loader */}
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -320,8 +366,8 @@ const transferfee = BigInt(100);
               {isCollateralOverlay
                 ? "Collateral Information"
                 : isDebtInfo
-                  ? "Debt Information"
-                  : "User Information"}
+                ? "Debt Information"
+                : "User Information"}
             </h2>
             <button
               onClick={onClose}
@@ -349,7 +395,11 @@ const transferfee = BigInt(100);
                       onChange={() => handleAssetSelection("cketh")}
                     />
 
-                    <img src={cketh} alt="ETH" className="w-9 h-10 cursor-pointer" />
+                    <img
+                      src={cketh}
+                      alt="ETH"
+                      className="w-9 h-10 cursor-pointer rounded-full"
+                    />
                   </label>
 
                   <label className="flex items-center space-x-2">
@@ -361,7 +411,11 @@ const transferfee = BigInt(100);
                       onChange={() => handleAssetSelection("ckbtc")}
                     />
 
-                    <img src={ckbtc} alt="BTC" className="w-9 h-10 cursor-pointer" />
+                    <img
+                      src={ckbtc}
+                      alt="BTC"
+                      className="w-9 h-10 cursor-pointer rounded-full"
+                    />
                   </label>
 
                   <label className="flex items-center space-x-2">
@@ -373,7 +427,11 @@ const transferfee = BigInt(100);
                       onChange={() => handleAssetSelection("icp")}
                     />
 
-                    <img src={icp} alt="ICP" className="w-9 h-10 cursor-pointer" />
+                    <img
+                      src={icp}
+                      alt="ICP"
+                      className="w-9 h-10 cursor-pointer rounded-full"
+                    />
                   </label>
                 </div>
 
@@ -385,26 +443,35 @@ const transferfee = BigInt(100);
                     alt="Vector Image"
                     className="w-4 h-4 mr-1"
                   />
-                  <h1 className="text-xs  text-[#233D63] dark:text-darkText font-medium">100 ICP</h1>
+                  <h1 className="text-xs  text-[#233D63] dark:text-darkText font-medium">
+                    100 ICP
+                  </h1>
                 </div>
               </div>
               <div className="flex justify-between mt-4">
-                <button
-                  title="Back"
-                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-darkText"
-                  onClick={() => setIsCollateralOverlay(false)}
-                >
-                  Back
-                </button>
-                <button
-                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
-                  onClick={() => {
-                    console.log("Button clicked");
-                    isApproved ? handleCallLiquidation() : handleApprove();
-                  }}
-                >
-                 {isApproved ? `Call Liquidation ${asset}` : `Approve ${asset} to continue`}
-                </button>
+              <button
+  title="Back"
+  className="py-2 px-6 md:py-2 md:px-6 focus:outline-none box bg-transparent shadow-lg text-xs md:text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-darkText"
+  onClick={() => setIsCollateralOverlay(false)}
+>
+  Back
+</button>
+<button
+  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-xs md:text-sm cursor-pointer px-4 py-2 md:px-6 md:py-2 relative ${
+    isLoading ? "opacity-50 cursor-not-allowed" : ""
+  }`}
+  onClick={handleButtonClick}
+  disabled={isLoading}
+>
+  {isApproved ? `Call Liquidation ${asset}` : `Approve ${asset} to continue`}
+</button>
+
+
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
+                    <div className="loader"></div> {/* Loader here */}
+                  </div>
+                )}
               </div>
             </div>
           ) : isDebtInfo ? (
@@ -419,17 +486,17 @@ const transferfee = BigInt(100);
                   <img
                     src={cketh}
                     alt="ckETH"
-                    className="w-8 h-10 absolute top-0 left-0"
+                    className="w-8 h-10 absolute top-0 left-0 rounded-full"
                   />
                   <img
                     src={ckbtc}
                     alt="ckBTC"
-                    className="w-8 h-10 absolute top-0 left-8"
+                    className="w-8 h-10 absolute top-0 left-8 rounded-full"
                   />
                   <img
                     src={icp}
                     alt="ICP"
-                    className="w-8 h-10 absolute top-0 left-16"
+                    className="w-8 h-10 absolute top-0 left-16 rounded-full"
                   />
                 </div>
                 <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm">
@@ -516,7 +583,8 @@ const transferfee = BigInt(100);
               <div className="flex justify-end mt-4">
                 <button
                   onClick={handleNextClick}
-                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"   >
+                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
+                >
                   NEXT
                 </button>
               </div>

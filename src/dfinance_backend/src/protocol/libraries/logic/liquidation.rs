@@ -15,6 +15,7 @@ pub struct LiquidationLogic;
 impl LiquidationLogic {
     pub async fn execute_liquidation(
         asset_name: String,
+        collateral_asset: String,
         amount: u128,
         on_behalf_of: String,
     ) -> Result<(), String> {
@@ -25,6 +26,13 @@ impl LiquidationLogic {
             let reserve_list = &state.reserve_list;
             reserve_list
                 .get(&asset_name.to_string().clone())
+                .map(|principal| principal.clone())
+                .ok_or_else(|| format!("No canister ID found for asset: {}", asset_name))
+        })?;
+        let withdraw_ledger_canister_id = mutate_state(|state| {
+            let reserve_list = &state.reserve_list;
+            reserve_list
+                .get(&collateral_asset.to_string().clone())
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", asset_name))
         })?;
@@ -102,7 +110,7 @@ impl LiquidationLogic {
         let collateral = true; //params
         let withdrawamount = amount + 210;
         let withdraw_response = withdraw(
-            asset.clone(),
+            collateral_asset.clone(),
             withdrawamount,
             Some(user_principal.to_string()),
             collateral,

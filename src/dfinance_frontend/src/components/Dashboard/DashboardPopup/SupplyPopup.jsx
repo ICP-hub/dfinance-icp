@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Info, Check, Wallet, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
@@ -19,6 +19,7 @@ const SupplyPopup = ({
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
+  onLoadingChange,
 }) => {
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
@@ -47,6 +48,8 @@ const SupplyPopup = ({
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const modalRef = useRef(null); // Reference to the modal container
+   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
     const fetchConversionRate = async () => {
@@ -92,6 +95,11 @@ const SupplyPopup = ({
       fetchConversionRate();
     }
   }, [asset]);
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
@@ -201,14 +209,29 @@ const SupplyPopup = ({
     setIsPaymentDone(true);
     setIsVisible(false);
   };
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
+        setIsModalOpen(false);
+      }
+    };
 
+    if (isModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+  
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
     window.location.reload();
   };
 
-  const [isLoading, setIsLoading] = useState(false);
+ 
 
   const handleClick = async () => {
     setIsLoading(true);
@@ -226,7 +249,7 @@ const SupplyPopup = ({
   return (
     <>
       {isVisible && (
-        <div className="supply-popup">
+        <div className="supply-popup" ref={modalRef}>
           <h1 className="font-semibold text-xl">Supply {asset}</h1>
           <div className="flex flex-col gap-2 mt-5 text-sm">
             <div className="w-full">
@@ -353,24 +376,18 @@ const SupplyPopup = ({
             </div>
           </div>
 
-          <div
-            className={`relative w-full flex justify-between items-center mt-3 ${
-              isLoading ? "blur-md" : ""
-            }`}
+          <button
+            onClick={handleClick}
+            className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center"
+            disabled={isLoading}
           >
-            <button
-              onClick={handleClick}
-              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center"
-              disabled={isLoading}
-            >
-              {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
-            </button>
-          </div>
+            {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
+          </button>
 
           {/* Fullscreen Loading Overlay with Dim Background */}
           {isLoading && (
             <div
-              className="fixed inset-0 flex items-center justify-center z-50"
+              className="absolute inset-0 flex items-center justify-center z-50"
               style={{
                 background: "rgba(0, 0, 0, 0.4)", // Dim background
                 backdropFilter: "blur(1px)", // Blur effect

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useRef } from "react";
 import Button from "../../Common/Button";
 import { Info, Check, Wallet, X } from "lucide-react";
 import { Fuel } from "lucide-react";
@@ -7,8 +7,10 @@ import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations
 import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
-
-const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen, }) => {
+import { useEffect } from "react";
+const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen,isModalOpen,
+  handleModalOpen,
+  onLoadingChange, }) => {
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
   console.log("Fees:", fees); // Check the fees object
@@ -25,6 +27,12 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen, }) => {
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
+  const modalRef = useRef(null); // Reference to the modal container
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
@@ -106,6 +114,20 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen, }) => {
       // Handle error state, e.g., show error message
     }
   };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
+        setIsModalOpen(false);
+      }
+    };
+  
+    if (isModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -114,7 +136,7 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen, }) => {
   return (
     <>
      {isVisible && (
-      <div>
+      <div className="withdraw-popup" ref={modalRef}>
       <h1 className="font-semibold text-xl">Withdraw {asset}</h1>
       <div className="flex flex-col gap-2 mt-5 text-sm">
         <div className="w-full">
@@ -179,22 +201,23 @@ const WithdrawPopup = ({ asset, image, balance ,  setIsModalOpen, }) => {
           </div>
         </div>
 
-        <div>
-          <Button title="Withdraw LINK" onClickHandler={handleWithdraw} />
-          {isLoading && (
-            <div
-              className="fixed inset-0 flex items-center justify-center z-50"
-              style={{
-                background: "rgba(0, 0, 0, 0.4)", // Dim background
-                backdropFilter: "blur(1px)", // Blur effect
-              }}
-            >
-              <div className="loader"></div>
-            </div>
-          )}
+        
+        <Button title="Withdraw LINK" onClickHandler={handleWithdraw} />
+
+{isLoading && (
+  <div
+    className="absolute inset-0 flex items-center justify-center z-50"
+    style={{
+      background: "rgba(0, 0, 0, 0.4)", // Dim background
+      backdropFilter: "blur(1px)", // Blur effect
+    }}
+  >
+    <div className="loader"></div>
+  </div>
+)}
         </div>
       </div>
-      </div>
+      
      )}
       {isPaymentDone && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">

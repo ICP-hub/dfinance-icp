@@ -20,7 +20,7 @@ import { Check, Eye, EyeOff, Info } from "lucide-react";
 import MySupplyModal from "./MySupplyModal";
 import WithdrawPopup from "./DashboardPopup/WithdrawPopup";
 import SupplyPopup from "./DashboardPopup/SupplyPopup";
-import BorrowPopup from "./DashboardPopup/BorrowwPopup";
+
 import PaymentDone from "./DashboardPopup/PaymentDone";
 import { useNavigate } from "react-router-dom";
 import Borrow from "./DashboardPopup/BorrowPopup";
@@ -251,6 +251,7 @@ const MySupply = () => {
       image: image,
       supplyRateAPR: supplyRateAPR,
       balance:balance,
+      
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -275,38 +276,22 @@ const MySupply = () => {
   const renderModalOpen = (type) => {
     console.log(type);
     switch (type) {
+     
       case "borrow":
         return (
           <MySupplyModal
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
-            children={
-              <BorrowPopup
-                isModalOpen={isModalOpen.isOpen}
-                handleModalOpen={handleModalOpen}
-                asset={isModalOpen.asset}
-                image={isModalOpen.image}
-           balance={isModalOpen.balance}    
-            supplyRateAPR={isModalOpen.supplyRateAPR}
             setIsModalOpen={setIsModalOpen}
-                
-              />
-            }
-          />
-        );
-      case "borroww":
-        return (
-          <MySupplyModal
-            isModalOpen={isModalOpen.isOpen}
-            handleModalOpen={handleModalOpen}
             children={
               <Borrow
                 isModalOpen={isModalOpen.isOpen}
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
+                supplyRateAPR={isModalOpen.supplyRateAPR}
                 balance={isModalOpen.balance} 
-                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                 
                  setIsModalOpen={setIsModalOpen}
                
               />
@@ -318,6 +303,7 @@ const MySupply = () => {
           <MySupplyModal
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
+            setIsModalOpen={setIsModalOpen}
             children={
               <SupplyPopup
                 asset={isModalOpen.asset}
@@ -336,6 +322,7 @@ const MySupply = () => {
           <MySupplyModal
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
+            setIsModalOpen={setIsModalOpen}
             children={
               <WithdrawPopup
                 isModalOpen={isModalOpen.isOpen}
@@ -368,6 +355,7 @@ const MySupply = () => {
           <MySupplyModal
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
+            setIsModalOpen={setIsModalOpen}
             children={
               <Repay
                 isModalOpen={isModalOpen.isOpen}
@@ -450,7 +438,7 @@ const MySupply = () => {
     supply_rate_apr = item.supply_rate_apr
       ? item.supply_rate_apr[0].toString()
       : "0";
-    borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
+      borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
   }
 
   return (
@@ -1144,7 +1132,7 @@ const MySupply = () => {
                                   APY:
                                 </p>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
-                                {borrow_rate_apr}%
+                                {supply_rate_apr}%
                                 </p>
                               </div>
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
@@ -1169,8 +1157,8 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
+                                               supply_rate_apr,
                                          
-                                          borrow_rate_apr,
                                            reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
@@ -1190,7 +1178,7 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
-                                          supply_rate_apr,
+                                          supply_rate_apr ,
                                            reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
@@ -1286,7 +1274,7 @@ const MySupply = () => {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="p-3">{borrow_rate_apr}%</div>
+                                  <div className="p-3">{supply_rate_apr}%</div>
                                   <div className="p-3">
                                     <div className="w-full flex">variable</div>
                                   </div>
@@ -1303,7 +1291,7 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
-                                               borrow_rate_apr,
+                                               supply_rate_apr,
                                           reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
@@ -1324,7 +1312,7 @@ const MySupply = () => {
                                             (reserveGroup[1]?.reserve ===
                                               "ckETH" &&
                                               ckETH),
-                                              borrow_rate_apr,
+                                              supply_rate_apr,
                                           reserveGroup[1]?.reserve === "ckBTC"
                                             ? ckBTCBalance
                                             : ckETHBalance,
@@ -1445,11 +1433,11 @@ const MySupply = () => {
                                 title={"Borrow"}
                                 onClickHandler={() =>
                                   handleModalOpen(
-                                    "borroww",
+                                    "borrow",
                                     item[0],
                                     (item[0] === "ckBTC" && ckBTC) ||
                                       (item[0] === "ckETH" && ckETH),
-                                     item[1]?.Ok.borrow_rate_apr,
+                                     item[1]?.Ok.supply_rate_apr,
                                    
                                     item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null,
                                     
@@ -1488,12 +1476,12 @@ const MySupply = () => {
                     userData?.Ok?.reserves[0].every(
                       (reserveGroup) => reserveGroup[1]?.asset_supply === 0
                     )) && (
-                    <div className="bg-[#AEADCB] opacity-80 mt-2 px-2 py-2 mb-2 rounded-lg flex items-center">
+                    <div className="bg-[#6d6c89] opacity-80 mt-2 px-2 py-2 mb-2 rounded-lg flex items-center">
                       <span className="text-white dark:text-darkText ms-4 text-sm">
                         To borrow, you need to supply any asset to be used as
                         collateral.
                       </span>
-                      <Info className="ml-4 text-[#2A1F9D]" />
+                      <Info className="ml-4 text-[#5d151c]" />
                     </div>
                   )}
 
@@ -1658,7 +1646,7 @@ const MySupply = () => {
                                     title={"Borrow"}
                                     onClickHandler={() =>
                                       handleModalOpen(
-                                        "borroww",
+                                        "borrow",
                                         item[0],
                                         (item[0] === "ckBTC" && ckBTC) ||
                                           (item[0] === "ckETH" && ckETH),

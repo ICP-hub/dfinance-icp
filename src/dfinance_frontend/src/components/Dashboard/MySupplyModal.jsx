@@ -1,11 +1,34 @@
 import { Modal } from '@mui/material';
 import React from 'react';
 
-const MySupplyModal = ({ isModalOpen, handleModalOpen, children }) => {
+
+const MySupplyModal = ({ isModalOpen, isLoading, children}) => {
+  
+  const handleModalOpen = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
+  const handleCloseModal = (event) => {
+    if (!isLoading) {
+      setIsModalOpen(false);
+    }
+  };
   return (
-    <Modal open={isModalOpen} onClose={handleModalOpen}>
-      <div className='w-[325px] lg1:w-[420px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 text-[#2A1F9D] dark:bg-darkOverlayBackground dark:text-darkText font-poppins'>
+    <Modal
+      open={isModalOpen}
+      onClose={isLoading ? null : handleModalOpen} // Prevent closing if loading is true
+      disableScrollLock={isLoading} // Optional: Disable scroll lock if needed
+      aria-labelledby="modal-title"
+      aria-describedby="modal-description"
+      className="flex items-center justify-center"
+    >
+      <div className={`relative w-[325px] lg1:w-[420px] bg-white shadow-xl rounded-xl p-6 text-[#2A1F9D] dark:bg-darkOverlayBackground dark:text-darkText font-poppins ${isLoading ? 'pointer-events-none opacity-50' : ''}`}>
         {children}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+            <div className="loader"></div>
+          </div>
+        )}
       </div>
     </Modal>
   );

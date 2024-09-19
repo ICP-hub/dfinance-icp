@@ -1,5 +1,5 @@
 import { Info, Check, Wallet, X } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState ,useRef } from "react";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
@@ -7,9 +7,13 @@ import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/c
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
+import { useEffect } from "react";
+const Repay = ({ asset, image ,balance ,  setIsModalOpen,isModalOpen,
+  handleModalOpen,
 
-const Repay = ({ asset, image ,balance ,  setIsModalOpen,  }) => {
+  onLoadingChange  }) => {
   const [amount, setAmount] = useState(0);
+  const modalRef = useRef(null); // Reference to the modal container
   const { createLedgerActor, backendActor } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Loading state
@@ -92,7 +96,11 @@ const Repay = ({ asset, image ,balance ,  setIsModalOpen,  }) => {
     console.log("isApproved state after approval:", isApproved);
   };
 
-
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
   const handleRepayETH = async () => {
     console.log("Repay function called for", asset, amount);
     let ledgerActor;
@@ -139,11 +147,24 @@ const Repay = ({ asset, image ,balance ,  setIsModalOpen,  }) => {
       setIsLoading(false);
     }
   };
-
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
+        setIsModalOpen(false);
+      }
+    };
+  
+    if (isModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
   return (
     <>
     {isVisible && (
-      <div>
+      <div className="repay-popup" ref={modalRef}>
       <h1 className="font-semibold text-xl">Repay {asset} </h1>
 
       <div className="flex flex-col gap-2 mt-5 text-sm">
@@ -267,22 +288,22 @@ const Repay = ({ asset, image ,balance ,  setIsModalOpen,  }) => {
           </div>
         </div>
 
-        <div className="w-full">
         <button
-              onClick={handleClick}
-              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center"
-              disabled={isLoading}
-            >
-              {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
-            </button>
-           
-        </div>
-        {isLoading && (
+            onClick={handleClick}
+            className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center"
+            disabled={isLoading}
+          >
+            {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
+          </button>
+
+          {/* Fullscreen Loading Overlay with Dim Background */}
+          {isLoading && (
             <div
-              className="fixed inset-0 flex items-center justify-center z-50"
+              className="absolute inset-0 flex items-center justify-center z-50"
               style={{
                 background: "rgba(0, 0, 0, 0.4)", // Dim background
                 backdropFilter: "blur(1px)", // Blur effect
+                pointerEvents: "all",
               }}
             >
               <div className="loader"></div>

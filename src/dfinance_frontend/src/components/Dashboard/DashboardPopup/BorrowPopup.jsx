@@ -1,5 +1,5 @@
 import { Info, Check, Wallet, X ,TriangleAlert} from "lucide-react";
-import React, { useState } from "react";
+import React, { useState ,useRef} from "react";
 import Vector from "../../../../public/Helpers/Vector.png";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -7,8 +7,15 @@ import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/c
 import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
-
-const Borrow = ({ asset, image,supplyRateAPR, balance ,setIsModalOpen }) => {
+import { useEffect } from "react";
+const Borrow = ({  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,}) => {
   const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
 console.log("jkbjkasbkjbdjk",balance)
@@ -17,10 +24,15 @@ console.log("jkbjkasbkjbdjk",balance)
   const [isLoading, setIsLoading] = useState(false); 
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const modalRef = useRef(null); // Reference to the modal container
   const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
 
   const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
-
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
@@ -96,11 +108,25 @@ const transferFee = Number(fees[normalizedAsset] || fees.default); // Ensure tra
 const supplyBalance = numericBalance - transferFee; // Calculate supply balance
 
 console.log("Supply Balance:", supplyBalance); // Debugging output
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
+      setIsModalOpen(false);
+    }
+  };
+
+  if (isModalOpen) {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }
+}, [isModalOpen, isLoading, setIsModalOpen]);
 
   return (
     <>
      {isVisible && (
-      <div>
+      <div className="borrow-popup" ref={modalRef}>
       <h1 className="font-semibold text-xl">Borrow {asset}</h1>
       <div className="flex flex-col gap-2 mt-5 text-sm">
         <div className="w-full">
@@ -136,8 +162,12 @@ console.log("Supply Balance:", supplyBalance); // Debugging output
             <h1>Transaction overview</h1>
           </div>
           <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
-            <div className="w-full flex flex-col my-1">
-              <div className="w-full flex justify-between items-center">
+            <div className="w-full flex flex-col my-1">  
+            <div className="w-full flex justify-between items-center my-1 mb-2">
+              <p>APY, borrow rate</p>
+              <p>{supplyRateAPR}%</p>
+            </div>
+            <div className="w-full flex justify-between items-center">
                 <p>Health Factor</p>
                 <p>
                   <span className="text-red-500">1.00</span>
@@ -222,7 +252,7 @@ console.log("Supply Balance:", supplyBalance); // Debugging output
     </div>
         </div>
 
-        <div className="w-full">
+       
         <button
           onClick={handleBorrowETH}
           className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
@@ -247,7 +277,7 @@ console.log("Supply Balance:", supplyBalance); // Debugging output
     
       </div>
       </div>
-      </div>
+    
      )}
       {isPaymentDone && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">

@@ -5,6 +5,7 @@ import themeReducer from "./reducers/themeReducer"
 import testnetReducer from "./reducers/testnetReducer";
 import feeReducer from "./reducers/feeReducer";
 import ledgerReducer from "./reducers/ledgerRedcuer";
+import assetReducer from "./reducers/assetReducer";
 
 export const store = configureStore({
     reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
         testnetMode: testnetReducer,
         fees: feeReducer ,
         ledger: ledgerReducer,
+        assets: assetReducer,  
     }
 });

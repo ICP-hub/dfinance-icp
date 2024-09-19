@@ -7,8 +7,34 @@ import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/c
 import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
+import { useEffect } from "react";
 
-const Borrow = ({ asset, image,supplyRateAPR, balance }) => {
+const Borrow = ({ asset, image,supplyRateAPR, balance, liquidationThreshold, assetSupply, assetBorrow }) => {
+  
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(assetSupply, assetBorrow, liquidationThreshold);
+    console.log('Health Factor:', healthFactor);
+    const ltv = calculateLTV(assetSupply, assetBorrow);
+    console.log('LTV:', ltv);
+    
+  }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
+
+
+  const calculateHealthFactor = (totalCollateralValue, totalBorrowedValue, liquidationThreshold) => {
+    if (totalBorrowedValue === 0) {
+      return Infinity;
+    }
+    return (totalCollateralValue * liquidationThreshold) / totalBorrowedValue;
+  };
+
+  const calculateLTV = (totalCollateralValue, totalBorrowedValue) => {
+    if (totalCollateralValue === 0) {
+      return 0; 
+    }
+    return totalBorrowedValue / totalCollateralValue;
+  };
+
+
   const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
 console.log("jkbjkasbkjbdjk",balance)

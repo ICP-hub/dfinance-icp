@@ -7,8 +7,17 @@ import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/c
 import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
+import { useEffect } from "react";
 
-const BorrowPopup = ({ asset, image,supplyRateAPR, balance }) => {
+const BorrowPopup = ({ asset, image,supplyRateAPR, balance, liquidationThreshold, assetSupply, assetBorrow }) => {
+
+  useEffect(() => {
+    console.log('Asset:', asset);
+    console.log('Liquidation Threshold:', liquidationThreshold);
+    console.log('Asset Supply:', assetSupply);
+    console.log('Asset Borrow:', assetBorrow);
+  }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
+
   const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
 console.log("jbsjxbsjxsxxsx",balance)
@@ -21,14 +30,10 @@ console.log("jbsjxbsjxsxxsx",balance)
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
-    
-    // Convert input to a number
     const numericAmount = parseFloat(inputAmount);
   
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
-        // Calculate and format the USD value
-       
         setAmount(inputAmount);
         setError('');
       } else {
@@ -36,9 +41,7 @@ console.log("jbsjxbsjxsxxsx",balance)
        
       }
     } else if (inputAmount === '') {
-      // Allow empty input and reset error
       setAmount('');
-    
       setError('');
     } else {
       setError('Amount must be a positive number');
@@ -54,7 +57,6 @@ const handleBorrowETH = async () => {
   console.log("Borrow function called for", asset, amount);
   let ledgerActor;
 
-  // Example logic to select the correct backend actor based on the asset
   if (asset === "ckBTC") {
     ledgerActor = ledgerActorckBTC;
   } else if (asset === "ckETH") {

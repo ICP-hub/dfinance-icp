@@ -229,6 +229,7 @@ const MySupply = () => {
   // }, [balance, conversionRate]);
 
   const { assets, reserveData, filteredItems } = useAssetData();
+  console.log("Filtered data", filteredItems)
   const filteredReserveData = Object.fromEntries(filteredItems);
   console.log(filteredReserveData);
 
@@ -290,7 +291,9 @@ const MySupply = () => {
     }
   };
 
-  const handleModalOpen = (type, asset, image, supplyRateAPR, balance) => {
+  const handleModalOpen = (type, asset, image, supplyRateAPR, balance,  liquidationThreshold,
+    assetSupply, 
+    assetBorrow ) => {
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -298,6 +301,9 @@ const MySupply = () => {
       image: image,
       supplyRateAPR: supplyRateAPR,
       balance: balance,
+      liquidationThreshold: liquidationThreshold,
+      assetSupply: assetSupply,
+      assetBorrow: assetBorrow
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -327,7 +333,7 @@ const MySupply = () => {
           <MySupplyModal
             isModalOpen={isModalOpen.isOpen}
             handleModalOpen={handleModalOpen}
-            children={
+            children={ 
               <BorrowPopup
                 isModalOpen={isModalOpen.isOpen}
                 handleModalOpen={handleModalOpen}
@@ -335,7 +341,9 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
-
+                liquidationThreshold={isModalOpen.liquidationThreshold}
+                assetSupply={isModalOpen.assetSupply}
+                assetBorrow={isModalOpen.assetBorrow}
               />
             }
           />
@@ -353,7 +361,9 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
-
+                liquidationThreshold={isModalOpen.liquidationThreshold}
+                assetSupply={isModalOpen.assetSupply}
+                assetBorrow={isModalOpen.assetBorrow}
               />
             }
           />
@@ -369,6 +379,9 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
                 balance={isModalOpen.balance}
+                liquidationThreshold={isModalOpen.liquidationThreshold}
+                assetSupply={isModalOpen.assetSupply}
+                assetBorrow={isModalOpen.assetBorrow}
                 isModalOpen={isModalOpen.isOpen}
                 handleModalOpen={handleModalOpen}
                 setIsModalOpen={setIsModalOpen}
@@ -493,6 +506,32 @@ const MySupply = () => {
       : "0";
     borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
   }
+
+  const [calculatedReserves, setCalculatedReserves] = useState([]);
+
+  useEffect(() => {
+    if (userData?.Ok?.reserves[0]) {
+      console.log("Aseet name", userData?.Ok?.reserves[0])
+      const reservesWithCalculations = userData.Ok.reserves[0].map((reserveGroup) => {
+        const totalCollateralValue = reserveGroup[1]?.asset_supply || 0;
+        const totalBorrowedValue = reserveGroup[1]?.asset_borrow || 0;
+        const liquidationThreshold = userData?.liquidation_threshold || 0.8;
+
+        const ltv = totalCollateralValue === 0 ? 0 : totalBorrowedValue / totalCollateralValue;
+
+        const healthFactor =
+          totalBorrowedValue === 0 ? Infinity : (totalCollateralValue * liquidationThreshold) / totalBorrowedValue;
+
+        return {
+          ...reserveGroup,
+          ltv: ltv.toFixed(2),
+          healthFactor: healthFactor === Infinity ? "∞" : healthFactor.toFixed(2),
+        };
+      });
+
+      setCalculatedReserves(reservesWithCalculations);
+    }
+  }, [userData]);
 
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6">
@@ -916,16 +955,30 @@ const MySupply = () => {
                             <div className="flex justify-center gap-2 mt-2">
                               <Button
                                 title={"Supply"}
-                                onClickHandler={() =>
+                                onClickHandler={() => {
+                                  const reserveData = userData?.Ok?.reserves[0]?.find(
+                                    (reserveGroup) => reserveGroup[0] === item[0]
+                                  );
+                                  const assetSupply = reserveData?.[1]?.asset_supply || 0;
+                                  const assetBorrow = reserveData?.[1]?.asset_borrow || 0;
+                                  // Logging data for debugging
+                                  console.log("Asset:", item[0]);
+                                  console.log("Borrow Rate APR:", item[1]?.Ok.borrow_rate);
+                                  console.log("Liquidation Threshold:", item[1]?.Ok.configuration.liquidation_threshold);
+                                  console.log("Asset Supply:", assetSupply);
+                                  console.log("Asset Borrow:", assetBorrow);
+                                  console.log("Balance:", item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null);
                                   handleModalOpen(
                                     "supply",
                                     item[0],
-                                    (item[0] === "ckBTC" && ckBTC) ||
-                                    (item[0] === "ckETH" && ckETH),
-                                    item[1]?.Ok.supply_rate_apr,
-                                    item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null
-                                  )
-                                }
+                                    (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                    item[1]?.Ok.borrow_rate,
+                                    item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null,
+                                    item[1]?.Ok.configuration.liquidation_threshold,
+                                    assetSupply,
+                                    assetBorrow
+                                  );
+                                }}
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-lg font-inter"
                               />
                               <Button
@@ -1023,16 +1076,30 @@ const MySupply = () => {
                               <div className="p-3 align-top flex gap-2 pt-2">
                                 <Button
                                   title={"Supply"}
-                                  onClickHandler={() =>
-                                    handleModalOpen(
-                                      "supply",
-                                      item[0],
-                                      (item[0] === "ckBTC" && ckBTC) ||
-                                      (item[0] === "ckETH" && ckETH),
-                                      item[1]?.Ok.supply_rate_apr,
-                                      item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null
-                                    )
-                                  }
+                                onClickHandler={() => {
+                                  const reserveData = userData?.Ok?.reserves[0]?.find(
+                                    (reserveGroup) => reserveGroup[0] === item[0]
+                                  );
+                                  const assetSupply = reserveData?.[1]?.asset_supply || 0;
+                                  const assetBorrow = reserveData?.[1]?.asset_borrow || 0;
+                                  // Logging data for debugging
+                                  console.log("Asset:", item[0]);
+                                  console.log("Borrow Rate APR:", item[1]?.Ok.borrow_rate);
+                                  console.log("Liquidation Threshold:", item[1]?.Ok.configuration.liquidation_threshold);
+                                  console.log("Asset Supply:", assetSupply);
+                                  console.log("Asset Borrow:", assetBorrow);
+                                  console.log("Balance:", item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null);
+                                  handleModalOpen(
+                                    "supply",
+                                    item[0],
+                                    (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                    item[1]?.Ok.borrow_rate,
+                                    item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null,
+                                    item[1]?.Ok.configuration.liquidation_threshold,
+                                    assetSupply,
+                                    assetBorrow
+                                  );
+                                }}
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
                                 />
                                 <Button
@@ -1463,18 +1530,30 @@ const MySupply = () => {
                             <div className="flex justify-center gap-2 mt-2 mb-2">
                               <Button
                                 title={"Borrow"}
-                                onClickHandler={() =>
+                                onClickHandler={() => {
+                                  const reserveData = userData?.Ok?.reserves[0]?.find(
+                                    (reserveGroup) => reserveGroup[0] === item[0]
+                                  );
+                                  const assetSupply = reserveData?.[1]?.asset_supply || 0;
+                                  const assetBorrow = reserveData?.[1]?.asset_borrow || 0;
+                                  // Logging data for debugging
+                                  console.log("Asset:", item[0]);
+                                  console.log("Borrow Rate APR:", item[1]?.Ok.borrow_rate);
+                                  console.log("Liquidation Threshold:", item[1]?.Ok.configuration.liquidation_threshold);
+                                  console.log("Asset Supply:", assetSupply);
+                                  console.log("Asset Borrow:", assetBorrow);
+                                  console.log("Balance:", item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null);
                                   handleModalOpen(
                                     "borroww",
                                     item[0],
-                                    (item[0] === "ckBTC" && ckBTC) ||
-                                    (item[0] === "ckETH" && ckETH),
-                                    item[1]?.Ok.borrow_rate_apr,
-
+                                    (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                    item[1]?.Ok.borrow_rate,
                                     item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null,
-
-                                  )
-                                }
+                                    item[1]?.Ok.configuration.liquidation_threshold,
+                                    assetSupply,
+                                    assetBorrow
+                                  );
+                                }}
                                 disabled={isTableDisabled}
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg"
                               />
@@ -1675,16 +1754,30 @@ const MySupply = () => {
                                 <div className="w-full flex gap-3 -mr-[3.8rem]">
                                   <Button
                                     title={"Borrow"}
-                                    onClickHandler={() =>
+                                    onClickHandler={() => {
+                                      const reserveData = userData?.Ok?.reserves[0]?.find(
+                                        (reserveGroup) => reserveGroup[0] === item[0]
+                                      );
+                                      const assetSupply = reserveData?.[1]?.asset_supply || 0;
+                                      const assetBorrow = reserveData?.[1]?.asset_borrow || 0;
+                                      // Logging data for debugging
+                                      console.log("Asset:", item[0]);
+                                      console.log("Borrow Rate APR:", item[1]?.Ok.borrow_rate);
+                                      console.log("Liquidation Threshold:", item[1]?.Ok.configuration.liquidation_threshold);
+                                      console.log("Asset Supply:", assetSupply);
+                                      console.log("Asset Borrow:", assetBorrow);
+                                      console.log("Balance:", item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null);
                                       handleModalOpen(
                                         "borroww",
                                         item[0],
-                                        (item[0] === "ckBTC" && ckBTC) ||
-                                        (item[0] === "ckETH" && ckETH),
-                                        item[1]?.Ok.borrow_rate_apr,
+                                        (item[0] === "ckBTC" && ckBTC) || (item[0] === "ckETH" && ckETH),
+                                        item[1]?.Ok.borrow_rate,
                                         item[0] === "ckBTC" ? ckBTCBalance : item[0] === "ckETH" ? ckETHBalance : null,
-                                      )
-                                    }
+                                        item[1]?.Ok.configuration.liquidation_threshold,
+                                        assetSupply,
+                                        assetBorrow
+                                      );
+                                    }}
                                     disabled={isTableDisabled}
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
                                   />

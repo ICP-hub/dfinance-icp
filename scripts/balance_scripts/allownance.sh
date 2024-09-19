@@ -1,8 +1,10 @@
+source ../../.env
+
 dfx identity use anonymous
 # Approve the transfer
-ckbtc_canister="bkyz2-fmaaa-aaaaa-qaaaq-cai"  
-backend_canister="bw4dl-smaaa-aaaaa-qaacq-cai"  
-dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
+ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
+dtoken_canister=$CANISTER_ID_DTOKEN
 approve_method="icrc2_approve"
 backend_canister_principal=$(dfx canister id $backend_canister)
 approve_amount=10000000  # Set the amount you want to approve

@@ -3,7 +3,7 @@
 set -e
 
 # Set variables
-canister_id="c5kvi-uuaaa-aaaaa-qaaia-cai" 
+canister_id="aax3a-h4aaa-aaaaa-qaahq-cai" 
 transfer_method="icrc1_transfer"
 
 # dfx identity use anonymous
@@ -20,7 +20,7 @@ echo "User1 Principal (Recipient): $user1_principal"
 # Switch back to the default identity
 # dfx identity use abcd
 
-transfer_amount=100000  # Set the amount to transfer to user1
+transfer_amount=200000  # Set the amount to transfer to user1
 transfer_result=$(dfx canister call $canister_id $transfer_method "(record {
     from_subaccount=null;
     to=record { owner=principal\"${user1_principal}\"; subaccount=null };

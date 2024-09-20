@@ -161,7 +161,7 @@ const DebtStatus = () => {
     }
   }, [showPopup]);
 
-  
+
 
   return (
     <div className="w-full">
@@ -214,7 +214,19 @@ const DebtStatus = () => {
       }
 
       <div className="w-full min-h-[400px] mt-6 lg:px-10 ">
-        {users.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
+        {!users
+          .map((item) => {
+            const mappedItem = {
+              reserves: item[1].reserves,
+              principal: item[0].toText(),
+              item,
+            };
+            return mappedItem;
+          })
+          .filter((mappedItem) => {
+            const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
+            return isValid;
+          }) ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>
@@ -242,21 +254,13 @@ const DebtStatus = () => {
                   .map((item) => {
                     const mappedItem = {
                       reserves: item[1].reserves,
-                      principal: item[0].toText(), 
-                      item, 
+                      principal: item[0].toText(),
+                      item,
                     };
-
-                    // Log mapped items
-                    console.log("Mapped Item:", mappedItem);
-
                     return mappedItem;
                   })
                   .filter((mappedItem) => {
                     const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
-
-                    // Log filtered items
-                    console.log("Filtered Item (valid):", isValid, mappedItem);
-
                     return isValid;
                   })
                   .map((mappedItem, index) => (
@@ -286,8 +290,8 @@ const DebtStatus = () => {
                       <td className="p-5 align-top hidden md:table-cell py-8">
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
-                            const assetName = item[1]?.reserve 
-                            const assetBorrow = item[1]?.asset_borrow 
+                            const assetName = item[1]?.reserve
+                            const assetBorrow = item[1]?.asset_borrow
                             console.log("Asset Borrow:", assetBorrow);
                             if (assetBorrow > 0) {
                               return (
@@ -305,7 +309,7 @@ const DebtStatus = () => {
                       </td>
 
                       <td className="p-5 align-top hidden md:table-cell py-8">
-                      <div className="flex gap-2 items-center">
+                        <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[1]?.reserve // Asset name (e.g., 'ckBTC', 'ckETH')
                             const assetSupply = item[1]?.asset_supply  // Asset borrow amount

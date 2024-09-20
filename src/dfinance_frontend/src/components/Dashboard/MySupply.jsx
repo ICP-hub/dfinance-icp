@@ -33,8 +33,10 @@ import { useMemo } from "react";
 import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+// import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
+// import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
+import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 import { useParams } from "react-router-dom";
 
 const MySupply = () => {
@@ -58,6 +60,7 @@ const MySupply = () => {
 
   const [ckBTCBalance, setCkBTCBalance] = useState(null);
   const [ckETHBalance, setCkETHBalance] = useState(null);
+  const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
 
@@ -69,53 +72,159 @@ const MySupply = () => {
   const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
   const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
 
+
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
 
-  const ledgerActorckBTC = useMemo(
-    () =>
-      createLedgerActor(
-        process.env.CANISTER_ID_CKBTC_LEDGER,
-        ledgerIdlFactoryckBTC
-      ),
-    [createLedgerActor]
-  );
 
-  const ledgerActorckETH = useMemo(
-    () =>
-      createLedgerActor(
-        process.env.CANISTER_ID_CKETH_LEDGER,
-        ledgerIdlFactoryckETH
-      ),
-    [createLedgerActor]
-  );
+  const [assetPrincipal, setAssetPrincipal ] = useState({});
 
-  const fetchBalance = useCallback(
-    async (assetType) => {
-      if (isAuthenticated && principalObj) {
+  useEffect(() => {
+    const fetchAssetPrinciple = async () => {
+      if (backendActor) {
         try {
-          const account = { owner: principalObj, subaccount: [] };
-          let balance;
-
-          if (assetType === "ckBTC" && ledgerActorckBTC) {
-            balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString());  // Set ckBTC balance
-          } else if (assetType === "ckETH" && ledgerActorckETH) {
-            balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString());  // Set ckETH balance
-          } else {
-            throw new Error(
-              "Unsupported asset type or ledger actor not initialized"
-            );
+          const assets = ["ckBTC", "ckETH", "ckUSDC"]; 
+          for (const asset of assets) {
+            const result = await getAssetPrinciple(asset);
+            console.log(`get_asset_principle (${asset}):`, result);
+            setAssetPrincipal((prev) => ({
+              ...prev,
+              [asset]: result,
+            }));
           }
-          console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
-          console.error(`Error fetching balance for ${assetType}:`, error);
-          setError(error);
+          console.error("Error fetching asset principal:", error);
         }
+      } else {
+        console.error("Backend actor initialization failed.");
       }
-    },
-    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, principalObj]
-  );
+    };
+    
+    fetchAssetPrinciple();
+  }, [principal, backendActor]);
+
+  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
+  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
+  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
+
+  const getAssetPrinciple = async (asset) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      let result;
+      switch (asset) {
+        case "ckBTC":
+          result = await backendActor.get_asset_principal("ckBTC");
+          break;
+        case "ckETH":
+          result = await backendActor.get_asset_principal("ckETH");
+          break;
+        case "ckUSDC":
+          result = await backendActor.get_asset_principal("ckUSDC");
+          break;
+        default:
+          throw new Error(`Unknown asset: ${asset}`);
+      }
+      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      return result.Ok.toText();
+    } catch (error) {
+      console.error(`Error fetching asset principal for ${asset}:`, error);
+      throw error;
+    }
+  };
+  
+  // const ledgerActorckBTC1 = useMemo(
+  //   () =>
+  //     createLedgerActor(
+  //       process.env.CANISTER_ID_CKBTC_LEDGER,
+  //       ledgerIdlFactoryckBTC
+  //     ),
+  //   [createLedgerActor]
+  // );
+
+const ledgerActorckBTC = useMemo(
+  () =>
+    assetPrincipal.ckBTC
+      ? createLedgerActor(
+        assetPrincipal.ckBTC, 
+        ledgerIdlFactory
+        )
+      : null, 
+  [createLedgerActor, assetPrincipal.ckBTC] 
+);
+
+const ledgerActorckETH = useMemo(
+  () =>
+    assetPrincipal.ckETH
+      ? createLedgerActor(
+        assetPrincipal.ckETH, 
+        ledgerIdlFactory
+        )
+      : null,
+  [createLedgerActor, assetPrincipal.ckETH] 
+);
+
+const ledgerActorckUSDC = useMemo(
+  () =>
+    assetPrincipal.ckUSDC
+      ? createLedgerActor(
+        assetPrincipal.ckUSDC, 
+        ledgerIdlFactory
+        )
+      : null, 
+  [createLedgerActor, assetPrincipal.ckUSDC] 
+);
+
+console.log("ckBTC ledger",   ledgerActorckBTC)
+console.log("ckUSDC ledger",  ledgerActorckUSDC)
+console.log("ckETH ledger",   ledgerActorckETH)
+
+
+const fetchBalance = useCallback(
+  async (assetType) => {
+    if (isAuthenticated && principalObj) {
+      try {
+        const account = { owner: principalObj, subaccount: [] };
+        let balance;
+
+        if (assetType === "ckBTC") {
+          if (!ledgerActorckBTC) {
+            console.warn("Ledger actor for ckBTC not initialized yet");
+            return;
+          }
+          balance = await ledgerActorckBTC.icrc1_balance_of(account);
+        setCkBTCBalance(balance.toString()); // Set ckBTC balance
+        } else if (assetType === "ckETH") {
+          if (!ledgerActorckETH) {
+            console.warn("Ledger actor for ckETH not initialized yet");
+            return;
+          }
+          balance = await ledgerActorckETH.icrc1_balance_of(account);
+          setCkETHBalance(balance.toString()); // Set ckETH balance
+        } else if (assetType === "ckUSDC") {
+          if (!ledgerActorckUSDC) {
+            console.warn("Ledger actor for ckUSDC not initialized yet");
+            return;
+          }
+          balance = await ledgerActorckUSDC.icrc1_balance_of(account);
+          setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+        } else {
+          throw new Error(
+            "Unsupported asset type or ledger actor not initialized"
+          );
+        }
+        console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+      } catch (error) {
+        console.error(`Error fetching balance for ${assetType}:`, error);
+        setError(error);
+      }
+    }
+  },
+  [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj] // Added ledgerActorckUSDC to dependencies
+);
+
+
+console.log("ckusdc balance", ckUSDCBalance)
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
@@ -160,6 +269,7 @@ const MySupply = () => {
         await Promise.all([
           fetchBalance('ckBTC'),
           fetchBalance('ckETH'),
+          fetchBalance('ckUSDC'),
           fetchConversionRate()  // Fetch ckBTC and ckETH rates
         ]);
       } catch (error) {
@@ -550,6 +660,13 @@ const MySupply = () => {
                                   className="w-8 h-8 rounded-full"
                                 />
                               )}
+                               {item[0] === "ckUSDC" && (
+                                <img
+                                  src={ckUSDC}
+                                  alt="ckUSDC logo"
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              )}
                               <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
                                 {item[0]}
                               </span>
@@ -568,6 +685,14 @@ const MySupply = () => {
                                   </>
                                 )}
                                 {item[0] === "ckETH" && (
+                                  <>
+                                    <p>{ckETHBalance}</p>
+                                    <p className="font-light">
+                                      ${formatNumber(ckETHUsdBalance)}
+                                    </p>
+                                  </>
+                                )}
+                                  {item[0] === "ckUSDC" && (
                                   <>
                                     <p>{ckETHBalance}</p>
                                     <p className="font-light">
@@ -920,6 +1045,13 @@ const MySupply = () => {
                                     className="w-8 h-8 rounded-full"
                                   />
                                 )}
+                                 {item[0] === "ckUSDC" && (
+                                  <img
+                                    src={ckUSDC}
+                                    alt="cketh logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
+                                )}
                                 {item[0]}
                               </div>
                               <div className="p-3 align-top flex flex-col">
@@ -936,6 +1068,14 @@ const MySupply = () => {
                                     <p>{ckETHBalance}</p>
                                     <p className="font-light">
                                       ${formatNumber(ckETHUsdBalance)}
+                                    </p>
+                                  </>
+                                )}
+                                  {item[0] === "ckUSDC" && (
+                                  <>
+                                    <p>{ckUSDCBalance}</p>
+                                    <p className="font-light">
+                                      ${formatNumber(ckUSDCBalance)}
                                     </p>
                                   </>
                                 )}
@@ -1504,6 +1644,13 @@ const MySupply = () => {
                                       className="w-8 h-8 rounded-full"
                                     />
                                   )}
+                                   {item[0] === "ckUSDC" && (
+                                  <img
+                                    src={ckUSDC}
+                                    alt="cketh logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
+                                )}
                                   {item[0]}
                                 </div>
                               </td>
@@ -1525,6 +1672,14 @@ const MySupply = () => {
                                       </p>
                                     </>
                                   )}
+                                    {item[0] === "ckUSDC" && (
+                                  <>
+                                    <p>{ckUSDCBalance}</p>
+                                    <p className="font-light">
+                                      ${formatNumber(ckUSDCBalance)}
+                                    </p>
+                                  </>
+                                )}
                                 </div>
                               </td>
                               <td className="p-3 align-center mt-1.5">

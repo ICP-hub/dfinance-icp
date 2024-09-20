@@ -6,7 +6,7 @@ set -e
 check_balance() {
     local principal=$1
     local label=$2
-    local canister_id="c5kvi-uuaaa-aaaaa-qaaia-cai"
+    local canister_id="aax3a-h4aaa-aaaaa-qaahq-cai"
     local balance_method="icrc1_balance_of"
 
     # Check the balance

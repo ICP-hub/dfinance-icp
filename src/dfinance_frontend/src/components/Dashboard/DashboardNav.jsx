@@ -74,17 +74,39 @@ const DashboardNav = () => {
     }
   };
 
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0';
+    }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toString();
+  }
+
   const updateWalletDetailTab = (data) => {
     if (!data || !data.Ok) return;
     const { net_worth, net_apy, health_factor } = data.Ok;
+    console.log("health factor", health_factor[0])
     const updatedTab = walletDetailTab.map((item) => {
       switch (item.id) {
         case 0:
-          return { ...item, count: `$${net_worth[0]}` };
+          return { ...item, count: `$${formatNumber(net_worth[0])}` };
         case 1:
           return { ...item, count: `${net_apy[0]}%` };
         case 2:
-          return { ...item, count: `${health_factor[0]}%` };
+          return {
+            ...item,
+            count: isFinite(health_factor[0])
+              ? `${parseFloat(health_factor[0]).toFixed(2)}`
+              : "♾️" // Return the heart emoji as a string here
+          };
         default:
           return item;
       }

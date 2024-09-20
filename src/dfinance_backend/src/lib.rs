@@ -142,6 +142,16 @@ pub fn get_all_assets() -> Vec<String> {
     })
 }
 
+#[query]
+pub fn get_asset_principal(asset_name: String) -> Result<Principal, String> {
+    read_state(|state| {
+        match state.reserve_list.get(&asset_name) {
+            Some(principal) => Ok(principal),
+            None => Err(format!("No principal found for asset: {}", asset_name)),
+        }
+    })
+}
+
 // Get all users
 #[query]
 fn get_all_users() -> Vec<(Principal, UserData)> {

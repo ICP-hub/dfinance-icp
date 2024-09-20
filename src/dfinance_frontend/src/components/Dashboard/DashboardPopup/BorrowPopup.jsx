@@ -48,6 +48,7 @@ const Borrow = ({  asset,
   
   
     const calculateHealthFactor = (totalCollateralValue, totalBorrowedValue, liquidationThreshold) => {
+      console.log("xjkbxjknkj",totalCollateralValue, totalBorrowedValue, liquidationThreshold)
       if (totalBorrowedValue === 0) {
         return Infinity;
       }

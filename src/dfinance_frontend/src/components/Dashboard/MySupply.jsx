@@ -661,7 +661,7 @@ const MySupply = () => {
                             const assetBorrow =
                               reserveGroup[1]?.asset_borrow || 0;
 
-                            if (assetBorrow <= 0) return null; // Skip if no borrow
+                            if (assetSupply <= 0) return null; // Skip if no borrow
 
                             const item = filteredItems.find(
                               (item) => item[0] === asset
@@ -832,7 +832,7 @@ const MySupply = () => {
                               const assetBorrow =
                                 reserveGroup[1]?.asset_borrow || 0;
 
-                              if (assetBorrow <= 0) return null; // Skip if no borrow
+                              if (assetSupply <= 0) return null; // Skip if no borrow
 
                               const item = filteredItems.find(
                                 (item) => item[0] === asset
@@ -903,7 +903,7 @@ const MySupply = () => {
                                           "supply",
                                           item[0],
                                           asset === "ckBTC" ? ckBTC : ckETH,
-                                          item[1]?.Ok?.borrow_rate,
+                                          supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
                                           assetSupply,

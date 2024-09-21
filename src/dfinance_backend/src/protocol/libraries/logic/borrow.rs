@@ -1,8 +1,8 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
-use crate::constants::asset_address::{
-    BACKEND_CANISTER, CKBTC_LEDGER_CANISTER, DEBTTOKEN_CANISTER,
-};
+use crate::constants::asset_address::
+    BACKEND_CANISTER;
+
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
@@ -189,13 +189,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<(), String> {
             return Err(e);
         }
     };
-    let ckbtc_to_icp_rate = 7_240f64;
-    ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_icp_rate);
+    let ckbtc_to_usd_rate = 60554.70f64;
+    let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+    ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
 
     // Convert the supplied amount (in ckBTC) to ICP
-    let amount_in_icp = (params.amount as f64) * ckbtc_to_icp_rate;
+    // let amount_in_icp = (params.amount as f64) * ckbtc_to_icp_rate;
     user_data.total_debt = Some(
-        user_data.total_debt.unwrap_or(0.0) + amount_in_icp
+        user_data.total_debt.unwrap_or(0.0) + amount_in_usd
     );
 
     let user_position = UserPosition {

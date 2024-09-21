@@ -5,10 +5,10 @@ set -e
 source ../../.env
 
 # Set token name and symbol
-export TOKEN_NAME="dckBTC"
+export TOKEN_NAME="dckETH"
 echo "Token Name: $TOKEN_NAME"
 
-export TOKEN_SYMBOL="dckBTC"
+export TOKEN_SYMBOL="dckETH"
 
 # Set default principal (used for minting account)
 export BACKEND=$CANISTER_ID_DFINANCE_BACKEND
@@ -28,7 +28,7 @@ export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
 export FEATURE_FLAGS=false
 
 # Deploy the token canister with the specified arguments
-dfx deploy dtoken --argument "(variant { Init = record {
+dfx deploy token_ledger --argument "(variant { Init = record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
      minting_account = record { owner = principal \"${BACKEND}\" };
@@ -44,4 +44,4 @@ dfx deploy dtoken --argument "(variant { Init = record {
      };
  }})"
 
-echo "dckBTC has been successfully deployed with initial circulation set to 0."
+echo "dckETH has been successfully deployed with initial circulation set to 0."

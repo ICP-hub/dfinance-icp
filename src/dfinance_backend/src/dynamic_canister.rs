@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::icrc2::{allowance, approve, transfer_from};
-use crate::constants::asset_address::BACKEND_CANISTER;
+use crate::constants::asset_address::{BACKEND_CANISTER, DEFAULT, MINTER};
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct InitArgs {
@@ -69,6 +69,12 @@ fn ledger_wasm() -> Cow<'static, [u8]> {
     ))
 }
 
+fn test_ledger_wasm() -> Cow<'static, [u8]> {
+    Cow::Borrowed(include_bytes!(
+        "../../../target/wasm32-unknown-unknown/release/token_ledger.wasm"
+    ))
+}
+
 #[update]
 async fn create_multiple_canisters() -> Vec<Principal> {
     let mut canister_ids = Vec::new();
@@ -111,7 +117,7 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         subaccount: None,
     });
 
-    let transfer_fee = Nat::from(100u64);
+    let transfer_fee = Nat::from(0u64);
     let decimals = Some(8);
     let max_memo_length = Some(256);
     let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];
@@ -203,7 +209,9 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     };
 
     let minting_account = Account {
-        owner: Principal::from_text("xcbu3-qzwyu-iv3oj-2izdz-c6z3o-cmrsw-j66xq-wdu6q-qrjem-2pjji-pae").unwrap(),
+        // owner: Principal::from_text("xcbu3-qzwyu-iv3oj-2izdz-c6z3o-cmrsw-j66xq-wdu6q-qrjem-2pjji-pae").unwrap(),
+        owner: Principal::from_text(MINTER).unwrap(),
+
         subaccount: None,
     };
 
@@ -212,7 +220,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         subaccount: None,
     });
 
-    let transfer_fee = Nat::from(100u64);
+    let transfer_fee = Nat::from(0u64);
     let decimals = Some(8);
     let max_memo_length = Some(256);
     let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];
@@ -220,7 +228,9 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     let initial_balances = 
     vec![(
         Account {
-            owner: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
+            // owner: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
+            owner: Principal::from_text(DEFAULT).unwrap(),
+
             subaccount: None,
         },
         Nat::from(10_000_000_000u64),
@@ -237,7 +247,9 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         max_message_size_bytes: Some(1024),
         cycles_for_archive_creation: Some(100000000000),
         node_max_memory_size_bytes: Some(2000),
-        controller_id: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
+        // controller_id: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
+        controller_id: Principal::from_text(DEFAULT).unwrap(),
+
         more_controller_ids: Some(vec![Principal::anonymous()]),
     };
 
@@ -276,7 +288,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     let install_config = ic_cdk::api::management_canister::main::InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id,
-        wasm_module: ledger_wasm().to_vec(),
+        wasm_module: test_ledger_wasm().to_vec(),
         arg: args,
     };
 

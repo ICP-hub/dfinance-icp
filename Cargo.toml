@@ -1,5 +1,5 @@
 [workspace]
-members = ["src/dfinance_backend", "src/dtoken", "src/debttoken"]
+members = ["src/dfinance_backend", "src/dtoken", "src/debttoken", "src/token_ledger"]
 resolver = "2"
 
 [workspace.dependencies]

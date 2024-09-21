@@ -97,5 +97,6 @@ service : () -> {
   borrow : (text, nat64) -> (Result_4);
   repay : (text, nat, opt text) -> (Result_4);
   withdraw : (text, nat, opt text, bool) -> (Result_4);
-  liquidation_call : (text, nat64, text) -> (Result_2);
+  liquidation_call : (text, text, nat64, text) -> (Result_2);
+  get_asset_principal: (text) -> (variant { Ok : principal; Err : text }) query;
 };

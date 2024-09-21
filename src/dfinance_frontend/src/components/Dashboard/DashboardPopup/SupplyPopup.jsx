@@ -5,12 +5,14 @@ import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import Setting from "../../../../public/Helpers/settings.png";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
+// import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
+// import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
+import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useMemo } from "react";
 import { useEffect } from "react";
 import axios from "axios";
-
+import { toast } from "react-toastify";  // Import Toastify if not already done
+import "react-toastify/dist/ReactToastify.css";
 
 const SupplyPopup = ({
   asset,
@@ -23,6 +25,8 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+
+  const { createLedgerActor, backendActor } = useAuth();
 
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -222,28 +226,100 @@ const SupplyPopup = ({
     }
   }, [amount, conversionRate]);
 
-  const { createLedgerActor, backendActor } = useAuth();
+  const [assetPrincipal, setAssetPrincipal ] = useState({});
+  useEffect(() => {
+    const fetchAssetPrinciple = async () => {
+      if (backendActor) {
+        try {
+          const assets = ["ckBTC", "ckETH", "ckUSDC"]; 
+          for (const asset of assets) {
+            const result = await getAssetPrinciple(asset);
+            console.log(`get_asset_principle (${asset}):`, result);
+            setAssetPrincipal((prev) => ({
+              ...prev,
+              [asset]: result,
+            }));
+          }
+        } catch (error) {
+          console.error("Error fetching asset principal:", error);
+        }
+      } else {
+        console.error("Backend actor initialization failed.");
+      }
+    };
+    
+    fetchAssetPrinciple();
+  }, [ backendActor]);
+
+  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
+  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
+  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
+
+  const getAssetPrinciple = async (asset) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      let result;
+      switch (asset) {
+        case "ckBTC":
+          result = await backendActor.get_asset_principal("ckBTC");
+          break;
+        case "ckETH":
+          result = await backendActor.get_asset_principal("ckETH");
+          break;
+        case "ckUSDC":
+          result = await backendActor.get_asset_principal("ckUSDC");
+          break;
+        default:
+          throw new Error(`Unknown asset: ${asset}`);
+      }
+      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      return result.Ok.toText();
+    } catch (error) {
+      console.error(`Error fetching asset principal for ${asset}:`, error);
+      throw error;
+    }
+  };
+
+ 
+
 
   const ledgerActorckBTC = useMemo(
     () =>
-      createLedgerActor(
-        process.env.CANISTER_ID_CKBTC_LEDGER,
-        ledgerIdlFactoryckBTC
-      ),
-    [createLedgerActor]
+      assetPrincipal.ckBTC
+        ? createLedgerActor(
+          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+          )
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
-
+  
+  // Memoized actor for ckETH using dynamic principal
   const ledgerActorckETH = useMemo(
     () =>
-      createLedgerActor(
-        process.env.CANISTER_ID_CKETH_LEDGER,
-        ledgerIdlFactoryckETH
-      ),
-    [createLedgerActor]
+      assetPrincipal.ckETH
+        ? createLedgerActor(
+          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+          )
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
+  );
+  
+  const ledgerActorckUSDC = useMemo(
+    () =>
+      assetPrincipal.ckUSDC
+        ? createLedgerActor(
+          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+          )
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
 
   const handleApprove = async () => {
-    console.log("Approve function called for", asset);
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActorckBTC;
@@ -255,42 +331,70 @@ const SupplyPopup = ({
     const supplyAmount = Number(amount);
     const totalAmount = supplyAmount + transferfee;
 
-    const approval = await ledgerActor.icrc2_approve({
-      fee: [],
-      memo: [],
-      from_subaccount: [],
-      created_at_time: [],
-      amount: totalAmount,
-      expected_allowance: [],
-      expires_at: [],
-      spender: {
-        owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
-        subaccount: [],
-      },
-    });
-
-    console.log("Approve", approval);
-    setIsApproved(true);
-    console.log("isApproved state after approval:", isApproved);
+    try {
+      // Call the approval function
+      const approval = await ledgerActor.icrc2_approve({
+        fee: [],
+        memo: [],
+        from_subaccount: [],
+        created_at_time: [],
+        amount: totalAmount,
+        expected_allowance: [],
+        expires_at: [],
+        spender: {
+          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+          subaccount: [],
+        },
+      });
+  
+      console.log("Approve", approval);
+      setIsApproved(true);
+      console.log("isApproved state after approval:", isApproved);
+  
+      // Show success notification
+      toast.success("Approval successful!");
+    } catch (error) {
+      // Log the error
+      console.error("Approval failed:", error);
+  
+      // Show error notification using Toastify
+      toast.error(`Error: ${error.message || "Approval failed!"}`);
+    }
   };
+
   const isCollateral = true;
 
   const handleSupplyETH = async () => {
-    console.log("Supply function called for", asset, amount);
-    let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
+    try {
+      console.log("Supply function called for", asset, amount);
+      
+      let ledgerActor;
+      if (asset === "ckBTC") {
+        ledgerActor = ledgerActorckBTC;
+      } else if (asset === "ckETH") {
+        ledgerActor = ledgerActorckETH;
+      }
+  
+      const amountAsNat64 = BigInt(amount);
+      console.log("Backend actor", backendActor);
+  
+      // Calling the backend actor for supply
+      const sup = await backendActor.supply(asset, amountAsNat64, true);
+      console.log("Supply", sup);
+  
+      // Set state on success
+      setIsPaymentDone(true);
+      setIsVisible(false);
+  
+      // Show success notification
+      toast.success("Supply successful!");
+    } catch (error) {
+      // Log the error for debugging
+      console.error("Supply failed:", error);
+  
+      // Show error notification using Toastify
+      toast.error(`Error: ${error.message || "Supply action failed!"}`);
     }
-
-    const amountAsNat64 = BigInt(amount);
-
-    console.log("Backend actor", backendActor);
-    const sup = await backendActor.supply(asset, amountAsNat64, true);
-    console.log("Supply", sup);
-    setIsPaymentDone(true);
-    setIsVisible(false);
   };
   
   useEffect(() => {

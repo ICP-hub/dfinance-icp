@@ -17,7 +17,7 @@ export TOKEN_SYMBOL="ckBTC"
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=100
 
-dfx identity use abcd
+dfx identity use default
 
 export USER=$(dfx identity get-principal)
 echo "User Principal: $USER"

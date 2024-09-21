@@ -7,7 +7,11 @@ import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/c
 import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
+import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useEffect } from "react";
+import { toast } from "react-toastify"; // Import Toastify if not already done
+import "react-toastify/dist/ReactToastify.css";
+
 
 const Borrow = ({  asset,
   image,
@@ -65,7 +69,7 @@ const Borrow = ({  asset,
 
   const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-console.log("jkbjkasbkjbdjk",balance)
+
   const { createLedgerActor, backendActor } = useAuth();
   const [error, setError] = useState('');
   const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
@@ -74,9 +78,98 @@ console.log("jkbjkasbkjbdjk",balance)
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null); // Reference to the modal container
-  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
 
-  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
+  const [assetPrincipal, setAssetPrincipal ] = useState({});
+
+  useEffect(() => {
+    const fetchAssetPrinciple = async () => {
+      if (backendActor) {
+        try {
+          const assets = ["ckBTC", "ckETH", "ckUSDC"]; 
+          for (const asset of assets) {
+            const result = await getAssetPrinciple(asset);
+            console.log(`get_asset_principle (${asset}):`, result);
+            setAssetPrincipal((prev) => ({
+              ...prev,
+              [asset]: result,
+            }));
+          }
+        } catch (error) {
+          console.error("Error fetching asset principal:", error);
+        }
+      } else {
+        console.error("Backend actor initialization failed.");
+      }
+    };
+    
+    fetchAssetPrinciple();
+  }, [ backendActor]);
+
+  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
+  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
+  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
+
+  const getAssetPrinciple = async (asset) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      let result;
+      switch (asset) {
+        case "ckBTC":
+          result = await backendActor.get_asset_principal("ckBTC");
+          break;
+        case "ckETH":
+          result = await backendActor.get_asset_principal("ckETH");
+          break;
+        case "ckUSDC":
+          result = await backendActor.get_asset_principal("ckUSDC");
+          break;
+        default:
+          throw new Error(`Unknown asset: ${asset}`);
+      }
+      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      return result.Ok.toText();
+    } catch (error) {
+      console.error(`Error fetching asset principal for ${asset}:`, error);
+      throw error;
+    }
+  };
+
+
+  const ledgerActorckBTC = useMemo(
+    () =>
+      assetPrincipal.ckBTC
+        ? createLedgerActor(
+          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+          )
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
+  );
+  
+
+  const ledgerActorckETH = useMemo(
+    () =>
+      assetPrincipal.ckETH
+        ? createLedgerActor(
+          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+          )
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
+  );
+  const ledgerActorckUSDC = useMemo(
+    () =>
+      assetPrincipal.ckUSDC
+        ? createLedgerActor(
+          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+          )
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
+  );
+
   useEffect(() => {
     if (onLoadingChange) {
       onLoadingChange(isLoading);
@@ -133,10 +226,11 @@ const handleBorrowETH = async () => {
     console.log("Borrow result", borrowResult);
     setIsPaymentDone(true);
     setIsVisible(false);
-    
+    toast.success("Borrow successful!");
     // You can handle the result here, e.g., showing success, updating UI, etc.
   } catch (error) {
     console.error("Error borrowing:", error);
+    toast.error(`Error: ${error.message || "Borrow action failed!"}`);
     // Handle error state, e.g., show error message
   }
 };

@@ -117,7 +117,7 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         subaccount: None,
     });
 
-    let transfer_fee = Nat::from(100u64);
+    let transfer_fee = Nat::from(0u64);
     let decimals = Some(8);
     let max_memo_length = Some(256);
     let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];
@@ -220,7 +220,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         subaccount: None,
     });
 
-    let transfer_fee = Nat::from(100u64);
+    let transfer_fee = Nat::from(0u64);
     let decimals = Some(8);
     let max_memo_length = Some(256);
     let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];

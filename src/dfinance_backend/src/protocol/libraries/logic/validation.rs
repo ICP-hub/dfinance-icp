@@ -64,6 +64,54 @@ impl ValidationLogic {
         }
     }
 
+    // -------------------------------------
+    // ------------- WITHDRAW --------------
+    // -------------------------------------
+
+    pub async fn validate_withdraw(
+        reserve: &ReserveData,
+        amount: u128,
+        user: Principal,
+        ledger_canister: Principal,
+    ) {
+    }
+
+    // --------------------------------------
+    // --------------- BORROW ---------------
+    // --------------------------------------
+
+    pub async fn validate_borrow(
+        reserve: &ReserveData,
+        amount: u128,
+        user: Principal,
+        ledger_canister: Principal,
+    ) {
+    }
+
+    // --------------------------------------
+    // ---------------- REPAY ---------------
+    // --------------------------------------
+
+    pub async fn validate_repay(
+        reserve: &ReserveData,
+        amount: u128,
+        user: Principal,
+        ledger_canister: Principal,
+    ) {
+    }
+
+    // --------------------------------------
+    // ---------------- LIQUIDATION ---------------
+    // --------------------------------------
+
+    pub async fn validate_liquidation(
+        reserve: &ReserveData,
+        amount: u128,
+        user: Principal,
+        ledger_canister: Principal,
+    ) {
+    }
+
     // pub fn validate_withdraw(reserve_cache: &ReserveCache, amount: u128, user_balance: u128) {
     //     if amount == 0 {
     //         panic!("{:?}", Error::InvalidAmount);

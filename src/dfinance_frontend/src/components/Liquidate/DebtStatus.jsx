@@ -23,6 +23,7 @@ import Pagination from "../../components/Common/pagination";
 import UserInformationPopup from "./userInformation"
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 
 const ITEMS_PER_PAGE = 8;
 const DebtStatus = () => {
@@ -297,7 +298,7 @@ const DebtStatus = () => {
                               return (
                                 <img
                                   key={index}
-                                  src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : null}
+                                  src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : ckUSDC}
                                   alt={assetName}
                                   className="rounded-[50%] w-7"
                                 />
@@ -322,7 +323,7 @@ const DebtStatus = () => {
                               return (
                                 <img
                                   key={index}
-                                  src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : null}
+                                  src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : ckUSDC}
                                   alt={assetName}
                                   className="rounded-[50%] w-7"
                                 />

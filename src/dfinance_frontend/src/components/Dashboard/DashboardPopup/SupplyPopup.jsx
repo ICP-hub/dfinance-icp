@@ -101,7 +101,8 @@ const SupplyPopup = ({
     
   }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
 
-
+// totalCollaterl + totalSUpplyUSD;
+// amoutn added, amiunt taken args
   const calculateHealthFactor = (totalCollateralValue, totalBorrowedValue, liquidationThreshold) => {
     if (totalBorrowedValue === 0) {
       return Infinity;

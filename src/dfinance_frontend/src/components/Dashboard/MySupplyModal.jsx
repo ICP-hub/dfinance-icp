@@ -2,7 +2,7 @@ import { Modal } from '@mui/material';
 import React from 'react';
 
 
-const MySupplyModal = ({ isModalOpen, isLoading, children}) => {
+const MySupplyModal = ({ isModalOpen, isLoading, setIsModalOpen, children}) => {
   
   const handleModalOpen = () => {
     setIsModalOpen(!isModalOpen);

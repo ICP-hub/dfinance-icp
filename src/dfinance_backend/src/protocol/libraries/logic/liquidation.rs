@@ -1,155 +1,11 @@
-// use candid::Principal;
-// use crate::api::state_handler::*;
-// use crate::{
-//     api::functions::get_balance,
-//     constants::asset_address::
-//         BACKEND_CANISTER,
-   
-// };
-// use crate::{repay, withdraw};
-// use ic_cdk::api;
-
-// pub struct LiquidationLogic;
-
-// impl LiquidationLogic {
-//     pub async fn execute_liquidation(
-//         asset_name: String,
-//         collateral_asset: String,
-//         amount: u128,
-//         on_behalf_of: String,
-//     ) -> Result<(), String> {
-//         // let ckbtc_canister = Principal::from_text(CKBTC_LEDGER_CANISTER)
-//         //     .map_err(|_| "Invalid ledger canister ID".to_string())?;
-
-//         let ledger_canister_id = mutate_state(|state| {
-//             let reserve_list = &state.reserve_list;
-//             reserve_list
-//                 .get(&asset_name.to_string().clone())
-//                 .map(|principal| principal.clone())
-//                 .ok_or_else(|| format!("No canister ID found for asset: {}", asset_name))
-//         })?;
-//         let withdraw_ledger_canister_id = mutate_state(|state| {
-//             let reserve_list = &state.reserve_list;
-//             reserve_list
-//                 .get(&collateral_asset.to_string().clone())
-//                 .map(|principal| principal.clone())
-//                 .ok_or_else(|| format!("No canister ID found for asset: {}", asset_name))
-//         })?;
-//         let dtoken = mutate_state(|state| {
-//             let asset_index = &mut state.asset_index;
-//             asset_index
-//                 .get(&asset_name.to_string().clone())
-//                 .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
-//                 .ok_or_else(|| format!("No d_token_canister found for asset: {}", asset_name))
-//         })?;
-//         let debttoken_canister = mutate_state(|state| {
-//             let asset_index = &mut state.asset_index;
-//             asset_index
-//                 .get(&asset_name.to_string().clone())
-//                 .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
-//                 .ok_or_else(|| format!("No debt_token_canister found for asset: {}", asset_name))
-//         })?;
-//         let backend_canister = Principal::from_text(BACKEND_CANISTER)
-//             .map_err(|_| "Invalid platform canister ID".to_string())?;
-
-//         let dtoken_canister = Principal::from_text(dtoken)
-//             .map_err(|_| "Invalid dtoken canister ID".to_string())?;
-
-//         let debt_canister = Principal::from_text(debttoken_canister)
-//             .map_err(|_| "Invalid debttoken canister ID".to_string())?;
-
-//         let user_principal = Principal::from_text(on_behalf_of)
-//             .map_err(|_| "Invalid user canister ID".to_string())?;
-//         ic_cdk::println!("User Principal (Debt User): {}", user_principal);
-
-//         let liquidator_principal = api::caller();
-//         ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
-
-//         let backend_canister_principal = backend_canister;
-//         ic_cdk::println!("Backend Canister Principal: {}", backend_canister_principal);
-
-//         ic_cdk::println!("Checking balances before liquidation...");
-
-//         let user_balance = get_balance(ledger_canister_id, user_principal).await;
-//         let liquidator_balance = get_balance(ledger_canister_id, liquidator_principal).await;
-//         let backend_balance = get_balance(ledger_canister_id, backend_canister_principal).await;
-//         let user_debt_token_balance = get_balance(debt_canister, user_principal).await;
-
-//         ic_cdk::println!("User Balance: {}", user_balance);
-//         ic_cdk::println!("Liquidator Balance: {}", liquidator_balance);
-//         ic_cdk::println!("Backend Canister Balance: {}", backend_balance);
-//         ic_cdk::println!("User Debt Token Balance: {}", user_debt_token_balance);
-
-//         let asset = asset_name.clone();
-
-//         let repay_response = repay(asset.clone(), amount, Some(user_principal.to_string())).await;
-
-//         match repay_response {
-//             Ok(_) => ic_cdk::println!("Repayment successful"),
-//             Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
-//         }
-//         let user_balance_after = get_balance(ledger_canister_id, user_principal).await;
-//         let liquidator_balance_after = get_balance(ledger_canister_id, liquidator_principal).await;
-//         let backend_balance_after = get_balance(ledger_canister_id, backend_canister_principal).await;
-//         let user_debt_token_balance_after = get_balance(debt_canister, user_principal).await;
-//         ic_cdk::println!("User Balance after repay: {}", user_balance_after);
-//         ic_cdk::println!(
-//             "Liquidator Balance after repay: {}",
-//             liquidator_balance_after
-//         );
-//         ic_cdk::println!(
-//             "Backend Canister Balance after repay: {}",
-//             backend_balance_after
-//         );
-//         ic_cdk::println!(
-//             "User Debt Token Balance after repay: {}",
-//             user_debt_token_balance_after
-//         );
-//         // Withdraw the collateral
-//         let collateral = true; //params
-//         let withdrawamount = amount + 10;
-//         let withdraw_response = withdraw(
-//             collateral_asset.clone(),
-//             withdrawamount,
-//             Some(user_principal.to_string()),
-//             collateral,
-//         )
-//         .await;
-//         match withdraw_response {
-//             Ok(_) => ic_cdk::println!("Withdraw successful"),
-//             Err(e) => ic_cdk::trap(&format!("Withdraw failed: {}", e)),
-//         }
-
-//         // Check balances after withdrawal
-//         let user_balance_after_withdraw = get_balance(ledger_canister_id, user_principal).await;
-//         let liquidator_balance_after_withdraw =
-//             get_balance(ledger_canister_id, liquidator_principal).await;
-//         let backend_balance_after_withdraw =
-//             get_balance(ledger_canister_id, backend_canister_principal).await;
-//         let user_d_token_balance = get_balance(dtoken_canister, user_principal).await;
-
-//         ic_cdk::println!(
-//             "User Balance after withdraw: {}",
-//             user_balance_after_withdraw
-//         );
-//         ic_cdk::println!(
-//             "Liquidator Balance after withdraw: {}",
-//             liquidator_balance_after_withdraw
-//         );
-//         ic_cdk::println!(
-//             "Backend Canister Balance after withdraw: {}",
-//             backend_balance_after_withdraw
-//         );
-//         ic_cdk::println!("User DToken Balance: {}", user_d_token_balance);
-//         Ok(())
-//     }
-// }
-
-
-use crate::api::state_handler::*;
-use crate::{api::functions::get_balance, constants::asset_address::BACKEND_CANISTER};
-use crate::{repay, withdraw};
-use candid::Principal;
+use crate::{
+    api::{functions::asset_transfer, state_handler::mutate_state},
+    constants::asset_address::BACKEND_CANISTER,
+    declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
+    protocol::libraries::logic::update::UpdateLogic,
+    repay,
+};
+use candid::{Nat, Principal};
 use ic_cdk::api;
 
 pub struct LiquidationLogic;
@@ -160,94 +16,135 @@ impl LiquidationLogic {
         collateral_asset: String,
         amount: u128,
         on_behalf_of: String,
-    ) -> Result<(), String> {
+    ) -> Result<Nat, String> {
+        // Reads the reserve data from the asset
+        let reserve_data_result = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&collateral_asset.to_string().clone())
+                .map(|reserve| reserve.0.clone())
+                .ok_or_else(|| {
+                    format!(
+                        "Reserve not found for asset: {}",
+                        collateral_asset.to_string()
+                    )
+                })
+        });
 
-        let ledger_canister_id = mutate_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&asset_name.to_string().clone())
-                .map(|principal| principal.clone())
-                .ok_or_else(|| format!("No canister ID found for asset: {}", asset_name))
-        })?;
-        // let dtoken = mutate_state(|state| {
-        //     let asset_index = &mut state.asset_index;
-        //     asset_index
-        //         .get(&asset_name.to_string().clone())
-        //         .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
-        //         .ok_or_else(|| format!("No d_token_canister found for asset: {}", asset_name))
-        // })?;
-
-        // let dtoken_canister =
-        // Principal::from_text(dtoken).map_err(|_| "Invalid dtoken canister ID".to_string())?;
-
-        // let debttoken_canister = mutate_state(|state| {
-        //     let asset_index = &mut state.asset_index;
-        //     asset_index
-        //         .get(&asset_name.to_string().clone())
-        //         .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
-        //         .ok_or_else(|| format!("No debt_token_canister found for asset: {}", asset_name))
-        // })?;
-
-        // let debt_canister = Principal::from_text(debttoken_canister)
-        // .map_err(|_| "Invalid debttoken canister ID".to_string())?;
-
-        let backend_canister = Principal::from_text(BACKEND_CANISTER)
-            .map_err(|_| "Invalid platform canister ID".to_string())?;
-
-        let user_principal = Principal::from_text(on_behalf_of)
-            .map_err(|_| "Invalid user canister ID".to_string())?;
-        ic_cdk::println!("User Principal (Debt User): {}", user_principal);
-
-        let liquidator_principal = api::caller();
-        ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
-
-        ic_cdk::println!("Checking balances before liquidation...");
-
-        let asset = asset_name.clone();
-
-        // Repaying debt
-        let repay_response = repay(asset.clone(), amount, Some(user_principal.to_string())).await;
-
-        match repay_response {
-            Ok(_) => ic_cdk::println!("Repayment successful"),
-            Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
+    let mut reserve_data = match reserve_data_result {
+        Ok(data) => {
+            ic_cdk::println!("Reserve data found for asset: {:?}", data);
+            data
         }
-    
-        // Withdrawing the reward
-        let reward_amount = amount + 10;
-        let reward_response = withdraw(
-            collateral_asset.clone(),
-            reward_amount,
-            Some(user_principal.to_string()),
-            true,
-        )
-        .await;
-        match reward_response {
-            Ok(_) => ic_cdk::println!("Withdraw successful"),
-            Err(e) => ic_cdk::trap(&format!("Withdraw failed: {}", e)),
+        Err(e) => {
+            ic_cdk::println!("Error: {}", e);
+            return Err(e);
         }
+    };
 
-        // Check balances after withdrawal
-        // let user_balance_after_withdraw = get_balance(ledger_canister_id, user_principal).await;
-        // let liquidator_balance_after_withdraw =
-        //     get_balance(ledger_canister_id, liquidator_principal).await;
-        // let backend_balance_after_withdraw =
-        //     get_balance(ledger_canister_id, backend_canister).await;
-        // let user_d_token_balance = get_balance(dtoken_canister, user_principal).await;
+    let dtoken_canister = mutate_state(|state| {
+        let asset_index = &mut state.asset_index;
+        asset_index
+            .get(&collateral_asset.to_string().clone())
+            .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
+            .ok_or_else(|| format!("No d_token_canister found for asset: {}", collateral_asset))
+    })?;
 
-        // ic_cdk::println!(
-        //     "User Balance after withdraw: {}",
-        //     user_balance_after_withdraw
-        // );
-        // ic_cdk::println!(
-        //     "Liquidator Balance after withdraw: {}",
-        //     liquidator_balance_after_withdraw
-        // );
-        // ic_cdk::println!(
-        //     "Backend Canister Balance after withdraw: {}",
-        //     backend_balance_after_withdraw
-        // );
-        // ic_cdk::println!("User DToken Balance: {}", user_d_token_balance);
-        Ok(())
+    let dtoken_canister_principal = Principal::from_text(dtoken_canister)
+        .map_err(|_| "Invalid dtoken canister ID".to_string())?;
+
+    let platform_principal = Principal::from_text(BACKEND_CANISTER)
+        .map_err(|_| "Invalid platform canister ID".to_string())?;
+
+    let user_principal = Principal::from_text(on_behalf_of)
+        .map_err(|_| "Invalid user canister ID".to_string())?;
+    ic_cdk::println!("User Principal (Debt User): {}", user_principal);
+
+    let liquidator_principal = api::caller();
+    ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
+
+    ic_cdk::println!("Checking balances before liquidation...");
+
+    let asset = asset_name.clone();
+
+    // Repaying debt
+    let repay_response = repay(asset.clone(), amount, Some(user_principal.to_string())).await;
+
+    match repay_response {
+        Ok(_) => ic_cdk::println!("Repayment successful"),
+        Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
     }
+
+    let bonus = (amount as f64 * (5f64 / 100f64)).round() as u64; // reserve_data.configuration.liquidation_penalty
+    let reward_amount = Nat::from(amount) + Nat::from(bonus);
+
+    let reward_amount_param = amount + bonus as u128;
+
+    let supply_param = ExecuteSupplyParams {
+        asset: collateral_asset.to_string(),
+        amount: reward_amount_param,
+        is_collateral: true,
+    };
+
+    let withdraw_param = ExecuteWithdrawParams {
+        asset: collateral_asset.to_string(),
+        is_collateral: true,
+        on_behalf_of: None,
+        amount: reward_amount_param,
+    };
+
+    // Burning dtoken
+    match asset_transfer(
+        platform_principal,
+        dtoken_canister_principal,
+        user_principal,
+        reward_amount.clone(),
+    )
+    .await
+    {
+        Ok(balance) => {
+            ic_cdk::println!(
+                "Dtoken Asset transfer from user to backend canister executed successfully"
+            );
+            balance
+        }
+        Err(err) => {
+            return Err(format!("Burn failed. Error: {:?}", err));
+        }
+    };
+
+    // Minting dtoken
+    match asset_transfer(
+        liquidator_principal,
+        dtoken_canister_principal,
+        platform_principal,
+        reward_amount.clone(),
+    )
+    .await
+    {
+        Ok(balance) => {
+            ic_cdk::println!(
+                "Dtoken Asset transfer from backend to liquidator executed successfully"
+            );
+            let _ =
+                UpdateLogic::update_user_data_withdraw(user_principal, withdraw_param).await;
+            let _ =
+                UpdateLogic::update_user_data_supply(liquidator_principal, supply_param).await;
+            Ok(balance)
+        }
+        Err(err) => {
+            asset_transfer(
+                user_principal,
+                dtoken_canister_principal,
+                platform_principal,
+                reward_amount.clone(),
+            )
+            .await?;
+            return Err(format!(
+                "Mint to liquidator failed, minted dtoken to user. Error: {:?}",
+                err
+            ));
+        }
+    }
+}
 }

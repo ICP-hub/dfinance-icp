@@ -3,7 +3,7 @@
 set -e
 
 # Set variables
-canister_id="a3shf-5eaaa-aaaaa-qaafa-cai" 
+canister_id="dccg7-xmaaa-aaaaa-qaamq-cai" 
 transfer_method="icrc1_transfer"
 
 # dfx identity use anonymous
@@ -14,11 +14,11 @@ dfx identity use default
 default_principal=$(dfx identity get-principal)
 echo "Default Principal (Spender): $default_principal"
 
-user1_principal="d47ty-vkvv4-ni465-35oax-6zwih-24y2m-2zvpq-mawru-vjmzw-ydn2q-zqe"
+user1_principal="t2xyf-hbzxb-bbtqt-ie773-ogpoy-hzzi4-6lnnf-6wwwf-n2m6f-le5oo-aae"
 echo "User1 Principal (Recipient): $user1_principal"
 
 # Switch back to the default identity
-# dfx identity use abcd
+# dfx identity use anonymous
 
 transfer_amount=200000  # Set the amount to transfer to user1
 transfer_result=$(dfx canister call $canister_id $transfer_method "(record {

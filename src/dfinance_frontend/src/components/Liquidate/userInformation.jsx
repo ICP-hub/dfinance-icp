@@ -15,6 +15,7 @@ import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import { useCallback } from "react";
 import { toast } from "react-toastify";  // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
@@ -35,7 +36,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const [selectedAsset, setSelectedAsset] = useState(); // Default selected asset
   const [selectedDebtAsset, setSelectedDebtAsset] = useState(); // Default selected asset
   const [showWarningPopup, setShowWarningPopup] = useState(false);
-  const [transactionResult, setTransactionResult] = useState(null); // State to handle transaction result
+  const [transactionResult, setTransactionResult] = useState(null); // State to handle transaction
+  const [isLoading, setIsLoading] = useState(false); 
   const [isSuccessful, setIsSuccessful] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
 
@@ -47,6 +49,15 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -314,6 +325,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       ledgerActor = ledgerActorckBTC;
     } else if (selectedDebtAsset === "ckETH") {
       ledgerActor = ledgerActorckETH;
+    }
+    else if (selectedDebtAsset === "ckUSDC") {
+      ledgerActor = ledgerActorckUSDC;
     }
 
     const transferfee = BigInt(100);
@@ -635,7 +649,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
                 isLoading ? "opacity-50 cursor-not-allowed" : ""
               }`}
-              onClick={handlebuttonClick}
+              onClick={handleCancelOrConfirm}
               disabled={isLoading} // Disable the button while loading
             >
               {isCheckboxChecked ? "Call Liquidation" : "Cancel"}
@@ -694,7 +708,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                           />
                           <img
                             key={index}
-                            src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : null}
+                            src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : ckUSDC}
                             alt={assetName}
                             className="rounded-[50%] w-7"
                           />    </label>
@@ -764,7 +778,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                           />
                           <img
                             key={index}
-                            src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : null}
+                            src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : ckUSDC}
                             alt={assetName}
                             className="rounded-[50%] w-7"
                           />    </label>

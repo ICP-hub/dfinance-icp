@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Button from "../../Common/Button";
 import { Info } from "lucide-react";
 import { Fuel } from "lucide-react";
@@ -11,31 +11,124 @@ import { useMemo } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
 
-const WithdrawPopup = ({ asset, image }) => {
+const WithdrawPopup = ({ asset,
+  image,
+  supplyRateAPR,
+  balance, 
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,liquidationThreshold, assetSupply, assetBorrow, }) => {
+
   const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset); // Check what asset value is being passed
-  console.log("Fees:", fees); // Check the fees object
+  console.log("Asset:", asset);
+  console.log("Fees:", fees);
+  console.log("assetSupply:", assetSupply);
   const normalizedAsset = asset ? asset.toLowerCase() : 'default';
   const [amount, setAmount] = useState("");
+  const [conversionRate, setConversionRate] = useState(0);
+  const [usdValue, setUsdValue] = useState(0);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
+
+  useEffect(() => {
+    const fetchConversionRate = async () => {
+      try {
+        let coinId;
+
+        // Map asset to CoinGecko coin IDs
+        if (asset === "ckBTC") {
+          coinId = "bitcoin";
+        } else if (asset === "ckETH") {
+          coinId = "ethereum";
+        } else {
+          console.error("Unsupported asset:", asset);
+          return;
+        }
+
+        // Fetch conversion rate from CoinGecko
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("CoinGecko data", data);
+
+        // Extract the conversion rate (price in USD)
+        const rate = data[coinId]?.usd;
+        if (rate) {
+          setConversionRate(rate);
+          console.log("Conversion rate:", rate);
+        } else {
+          console.error("Conversion rate not found for asset:", asset);
+        }
+      } catch (error) {
+        console.error("Error fetching conversion rate", error);
+      }
+    };
+
+    if (asset) {
+      fetchConversionRate();
+    }
+  }, [asset]);
+
+  const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = 100;
+  const transferfee = Number(transferFee);
+  const supplyBalance = numericBalance - transferfee;
+  const modalRef = useRef(null); // Reference to the modal container
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    const inputAmount = e.target.value;
+
+    // Convert input to a number
+    const numericAmount = parseFloat(inputAmount);
+
+    if (!isNaN(numericAmount) && numericAmount >= 0) {
+      if (numericAmount <= assetSupply) {
+        // Calculate and format the USD value
+        const convertedValue = numericAmount * conversionRate;
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
+        setAmount(inputAmount);
+        setError("");
+      } else {
+        setError("Amount exceeds the supply balance");
+        setUsdValue(0);
+      }
+    } else if (inputAmount === "") {
+      // Allow empty input and reset error
+      setAmount("");
+      setUsdValue(0);
+      setError("");
+    } else {
+      setError("Amount must be a positive number");
+      setUsdValue(0);
+    }
   };
 
   const { createLedgerActor, backendActor } = useAuth();
 
-  const [assetPrincipal, setAssetPrincipal ] = useState({});
+  const [assetPrincipal, setAssetPrincipal] = useState({});
 
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"]; 
+          const assets = ["ckBTC", "ckETH", "ckUSDC"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
             console.log(`get_asset_principle (${asset}):`, result);
@@ -51,9 +144,9 @@ const WithdrawPopup = ({ asset, image }) => {
         console.error("Backend actor initialization failed.");
       }
     };
-    
+
     fetchAssetPrinciple();
-  }, [ backendActor]);
+  }, [backendActor]);
 
   console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
   console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
@@ -94,11 +187,11 @@ const WithdrawPopup = ({ asset, image }) => {
         ? createLedgerActor(
           assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
-          )
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
-  
+
   // Memoized actor for ckETH using dynamic principal
   const ledgerActorckETH = useMemo(
     () =>
@@ -106,24 +199,25 @@ const WithdrawPopup = ({ asset, image }) => {
         ? createLedgerActor(
           assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
-          )
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
-  
+
   const ledgerActorckUSDC = useMemo(
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
           assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
-          )
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
 
   const handleWithdraw = async () => {
     console.log("Withdraw function called for", asset, amount);
+    setIsLoading(true);
     let ledgerActor;
 
     // Example logic to select the correct backend actor based on the asset
@@ -138,18 +232,40 @@ const WithdrawPopup = ({ asset, image }) => {
 
     try {
 
-      const amountInUnits = BigInt(amount); 
+
+      const amountInUnits = BigInt(amount);
       // Call the withdraw function on the selected ledger actor
       const withdrawResult = await backendActor.withdraw(asset, amountInUnits, [], true);
       console.log("Withdraw result", withdrawResult);
-      window.location.reload()
       toast.success("Supply successful!");
+      window.location.reload()
+
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
       console.error("Error withdrawing:", error);
       // Handle error state, e.g., show error message
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
     }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+  const handleClosePaymentPopup = () => {
+    setIsPaymentDone(false);
+    setIsModalOpen(false);
+    window.location.reload();
   };
 
   return (
@@ -167,10 +283,12 @@ const WithdrawPopup = ({ asset, image }) => {
                 type="number"
                 value={amount}
                 onChange={handleAmountChange}
-                 className="text-md focus:outline-none bg-gray-100 rounded-md py-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                className="text-md focus:outline-none bg-gray-100 rounded-md py-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                 placeholder="Enter Amount"
               />
-              <p className="">$0</p>
+             <p className="text-xs text-gray-500 ">
+                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                  </p>
             </div>
             <div className="w-7/12 md:w-8/12 flex flex-col items-end">
               <div className="w-auto flex items-center gap-2">
@@ -181,7 +299,7 @@ const WithdrawPopup = ({ asset, image }) => {
                 />
                 <span className="text-lg">{asset}</span>
               </div>
-              <p className="text-xs mt-4">Supply Balance 0 Max</p>
+              <p className="text-xs mt-4">{assetSupply.toFixed(2)} Max</p>
             </div>
           </div>
         </div>
@@ -194,7 +312,7 @@ const WithdrawPopup = ({ asset, image }) => {
               <p className="text-sm">Remaining supply</p>
             </div>
             <div className="w-4/12 flex flex-col items-end">
-              <p className="text-xs mt-2">0 Max</p>
+              <p className="text-xs mt-2">{assetSupply-amount} Max</p>
             </div>
           </div>
         </div>

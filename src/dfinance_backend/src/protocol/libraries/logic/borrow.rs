@@ -37,6 +37,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
             .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
             .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
     })?;
+
+    ic_cdk::println!("Debt caniser id {:?}", debttoken_canister);
     let debttoken_canister_id = Principal::from_text(debttoken_canister)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
@@ -111,7 +113,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     .await
     {
         Ok(new_balance) => {
-            println!("Asset transfer from backend to user executed successfully");
+            ic_cdk::println!("Asset transfer from backend to user executed successfully");
             // ----------- Update logic here -------------
             let _ = UpdateLogic::update_user_data_borrow(user_principal, params).await;
             Ok(new_balance)

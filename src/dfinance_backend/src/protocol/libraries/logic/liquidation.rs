@@ -1,6 +1,8 @@
 use crate::{
     api::{functions::asset_transfer, state_handler::mutate_state},
     constants::asset_address::BACKEND_CANISTER,
+    declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
+    protocol::libraries::logic::update::UpdateLogic,
     repay,
 };
 use candid::{Nat, Principal};
@@ -14,14 +16,31 @@ impl LiquidationLogic {
         collateral_asset: String,
         amount: u128,
         on_behalf_of: String,
-    ) -> Result<(), String> {
-        let ledger_canister_id = mutate_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&asset_name.to_string().clone())
-                .map(|principal| principal.clone())
-                .ok_or_else(|| format!("No canister ID found for asset: {}", asset_name))
-        })?;
+    ) -> Result<Nat, String> {
+        // Reads the reserve data from the asset
+        let reserve_data_result = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&collateral_asset.to_string().clone())
+                .map(|reserve| reserve.0.clone())
+                .ok_or_else(|| {
+                    format!(
+                        "Reserve not found for asset: {}",
+                        collateral_asset.to_string()
+                    )
+                })
+        });
+
+        let mut reserve_data = match reserve_data_result {
+            Ok(data) => {
+                ic_cdk::println!("Reserve data found for asset: {:?}", data);
+                data
+            }
+            Err(e) => {
+                ic_cdk::println!("Error: {}", e);
+                return Err(e);
+            }
+        };
 
         let dtoken_canister = mutate_state(|state| {
             let asset_index = &mut state.asset_index;
@@ -56,9 +75,25 @@ impl LiquidationLogic {
             Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
         }
 
-         let reward_amount = Nat::from(amount) + Nat::from(10u64);
+        let bonus = (amount as f64 * (5f64 / 100f64)).round() as u64; // reserve_data.configuration.liquidation_penalty
+        let reward_amount = Nat::from(amount) + Nat::from(bonus);
 
-        // Burn dtoken
+        let reward_amount_param = amount + bonus as u128;
+
+        let supply_param = ExecuteSupplyParams {
+            asset: collateral_asset.to_string(),
+            amount: reward_amount_param,
+            is_collateral: true,
+        };
+
+        let withdraw_param = ExecuteWithdrawParams {
+            asset: collateral_asset.to_string(),
+            is_collateral: true,
+            on_behalf_of: None,
+            amount: reward_amount_param,
+        };
+
+        // Burning dtoken
         match asset_transfer(
             platform_principal,
             dtoken_canister_principal,
@@ -78,8 +113,8 @@ impl LiquidationLogic {
             }
         };
 
-         // Mint dtoken
-         match asset_transfer(
+        // Minting dtoken
+        match asset_transfer(
             liquidator_principal,
             dtoken_canister_principal,
             platform_principal,
@@ -91,34 +126,25 @@ impl LiquidationLogic {
                 ic_cdk::println!(
                     "Dtoken Asset transfer from backend to liquidator executed successfully"
                 );
-                balance
+                let _ =
+                    UpdateLogic::update_user_data_withdraw(user_principal, withdraw_param).await;
+                let _ =
+                    UpdateLogic::update_user_data_supply(liquidator_principal, supply_param).await;
+                Ok(balance)
             }
             Err(err) => {
                 asset_transfer(
-                    platform_principal,
-                    dtoken_canister_principal,
                     user_principal,
+                    dtoken_canister_principal,
+                    platform_principal,
                     reward_amount.clone(),
                 )
                 .await?;
-                return Err(format!("Mint failed, min. Error: {:?}", err));
+                return Err(format!(
+                    "Mint to liquidator failed, minted dtoken to user. Error: {:?}",
+                    err
+                ));
             }
-        };
-
-        // Withdrawing the reward
-        // let reward_amount = amount + 10;
-        // let reward_response = withdraw(
-        //     collateral_asset.clone(),
-        //     reward_amount,
-        //     Some(user_principal.to_string()),
-        //     true,
-        // )
-        // .await;
-        // match reward_response {
-        //     Ok(_) => ic_cdk::println!("Withdraw successful"),
-        //     Err(e) => ic_cdk::trap(&format!("Withdraw failed: {}", e)),
-        // }
-
-        Ok(())
+        }
     }
 }

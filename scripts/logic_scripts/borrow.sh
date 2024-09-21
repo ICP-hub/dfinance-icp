@@ -8,7 +8,7 @@ source ../../.env
 # Set variables
 ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-debt_canister=$CANISTER_ID_DEBTTOKEN
+debt_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
 approve_method="icrc2_approve"
 borrow_method="borrow"
 reserve_data_method="get_reserve_data"
@@ -59,8 +59,10 @@ echo "user data: $user_data"
 # echo "Allowance Set: $allow"
 # echo "--------------------------------------"
 
+dfx identity use default
+
 # Call the borrow function on the backend canister
-borrow_amount=3000  
+borrow_amount=2000  
 currency="ckBTC" 
 interest_rate=0  
 

@@ -11,7 +11,8 @@ import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/toke
 import { useEffect } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
-const Repay = ({ asset,
+const Repay = ({
+  asset,
   image,
   supplyRateAPR,
   balance,
@@ -23,13 +24,14 @@ const Repay = ({ asset,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
-  onLoadingChange, }) => {
+  onLoadingChange,
+}) => {
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null); // Reference to the modal container
   const { createLedgerActor, backendActor } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Loading state
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
@@ -61,9 +63,9 @@ const Repay = ({ asset,
     fetchAssetPrinciple();
   }, [backendActor]);
 
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
+  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
+  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
+  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -92,15 +94,13 @@ const Repay = ({ asset,
     }
   };
 
-
-
   const ledgerActorckBTC = useMemo(
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
@@ -110,9 +110,9 @@ const Repay = ({ asset,
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
@@ -121,9 +121,9 @@ const Repay = ({ asset,
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
@@ -225,8 +225,7 @@ const Repay = ({ asset,
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
-    }
-    else if (asset === "ckUSDC") {
+    } else if (asset === "ckUSDC") {
       ledgerActor = ledgerActorckUSDC;
     }
 
@@ -293,7 +292,7 @@ const Repay = ({ asset,
       console.log("Repay result", repayResult);
       setIsPaymentDone(true);
       setIsVisible(false);
-      window.location.reload()
+
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
       console.error("Error repaying:", error);
@@ -320,41 +319,51 @@ const Repay = ({ asset,
   };
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
         setIsModalOpen(false);
       }
     };
 
     if (isModalOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
   useEffect(() => {
-    const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
-    console.log('Health Factor:', healthFactor);
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold
+    );
+    console.log("Health Factor:", healthFactor);
     const ltv = calculateLTV(totalCollateral, totalDebt);
-    console.log('LTV:', ltv);
+    console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1 ) {
+    if (healthFactor < 1) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
     }
-
   }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
 
-
-  const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
-    const amountTaken = 0
+  const calculateHealthFactor = (
+    totalCollateral,
+    totalDebt,
+    liquidationThreshold
+  ) => {
+    const amountTaken = 0;
     const amountAdded = parseFloat(usdValue) || 0;
     const totalCollateralValue = parseFloat(totalCollateral) + amountTaken;
-    const totalDeptValue = parseFloat(totalDebt) - amountAdded; 
+    const totalDeptValue = parseFloat(totalDebt) - amountAdded;
     console.log("totalDebt before minus", totalDebt);
 
     console.log("totalDeptValue", totalDeptValue);
@@ -362,7 +371,9 @@ const Repay = ({ asset,
     if (totalDeptValue === 0) {
       return Infinity;
     }
-    return (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
+    return (
+      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+    );
   };
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
@@ -415,68 +426,56 @@ const Repay = ({ asset,
               </div>
               <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-full flex flex-col my-1">
-                  <div className="w-full flex justify-between items-center mt-2">
-                    <p className="text-nowrap -mt-12">Remaining debt</p>
-                    <p>
-                      <span className="text-[#2A1F9D] text-nowrap mt-2 dark:text-darkText">
-                        0.00001250 ETH
-                      </span>
-                      <span className="text-[#2A1F9D] dark:text-darkText">→</span>
-                      <div className="w-full flex justify-end items-center mt-1 ">
-                        <p className="text-[#2A1F9D] mb-2 dark:text-darkText">
-                          0.00002010 ETH
-                        </p>
-                      </div>
-                      <div className="w-full flex justify-end items-center ">
-                        <span className="text-[#909094] text-nowrap -mt-2">
-                          $6.0
-                        </span>
-                        <span className="text-[#909094] -mt-2 ">→</span>
-                        <span className="text-[#909094] text-nowrap -mt-2">
-                          $6.0
-                        </span>
-                      </div>
-                    </p>
+                  <div className="w-full flex justify-between items-center ">
+                    <p className="text-nowrap">Remaining debt</p>
+                    <div className="w-4/12 flex flex-col items-end">
+                      <p className="text-xs mt-2">{assetBorrow - amount} Max</p>
+                    </div>
                   </div>
 
-                  <div className="w-full flex justify-between items-center">
+                  <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
-                      <span lassName={`${prevHealthFactor > 3
-                        ? "text-green-500"
-                        : prevHealthFactor <= 1
-                          ? "text-red-500"
-                          : prevHealthFactor <= 1.5
+                      <span
+                        className={`${
+                          prevHealthFactor > 3
+                            ? "text-green-500"
+                            : prevHealthFactor <= 1
+                            ? "text-red-500"
+                            : prevHealthFactor <= 1.5
                             ? "text-orange-600"
                             : prevHealthFactor <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                        }`}>{prevHealthFactor}</span>
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
+                      >
+                        {prevHealthFactor}
+                      </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
+                        className={`${
+                          currentHealthFactor > 3
+                            ? "text-green-500"
+                            : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
                     </p>
                   </div>
 
-                  <div className="w-full flex justify-end items-center mt-1 ">
+                  <div className="w-full flex justify-end items-center mt-1">
                     <p className="text-[#909094]">liquidation at &lt;1</p>
                   </div>
                 </div>
               </div>
             </div>
-
 
             <div className="w-full mt-3">
               <div className="w-full">
@@ -497,27 +496,32 @@ const Repay = ({ asset,
                     </div>
                   </div>
                 </div>
-                {balance <= 0 && <div className="w-full flex flex-col my-3 space-y-2">
-                  <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">
-                    <div className="w-1/12 flex items-center justify-center">
-                      <div className="warning-icon-container">
-                        <Info className=" text-[#f6ba43]" />
+                {balance <= 0 && (
+                  <div className="w-full flex flex-col my-3 space-y-2">
+                    <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">
+                      <div className="w-1/12 flex items-center justify-center">
+                        <div className="warning-icon-container">
+                          <Info className=" text-[#f6ba43]" />
+                        </div>
+                      </div>
+                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                        You do not have enough {asset} in your account to pay
+                        for transaction fees on Ethereum Sepolia network. Please
+                        deposit {asset} from another account.
                       </div>
                     </div>
-                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                      You do not have enough {asset} in your account to pay for
-                      transaction fees on Ethereum Sepolia network. Please deposit {' '} {asset} {' '}
-                      from another account.
-                    </div>
                   </div>
-                </div>}
+                )}
               </div>
 
               <button
                 onClick={handleClick}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                disabled={isLoading || (amount <= 0 || null) || isButtonDisabled}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
+                  isLoading || amount <= 0 || isButtonDisabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
               </button>

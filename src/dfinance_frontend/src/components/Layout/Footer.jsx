@@ -65,15 +65,15 @@ const Footer = () => {
           <div className="w-full md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-2">
             <h1 className="font-semibold">Follow us on</h1>
             <div className="flex gap-2 mt-6">
-              <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
+              {/* <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/discord.svg" alt="discord" className="w-full h-full object-contain" />
-              </span>
+              </span> */}
               <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/in.svg" alt="Linkedin" className="w-full h-full object-contain" />
               </span>
-              <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
+              {/* <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/instagram.svg" alt="instagram" className="w-full h-full object-contain" />
-              </span>
+              </span> */}
               <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/twitter.svg" alt="twitter" className="w-full h-full object-contain" />
               </span>

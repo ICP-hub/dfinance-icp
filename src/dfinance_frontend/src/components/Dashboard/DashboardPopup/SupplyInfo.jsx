@@ -95,7 +95,7 @@ const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
         <div className="w-full flex gap-5 text-[#2A1F9D] mb-6 dark:text-darkText">
           <button className='cursor-pointer hover:text-[#7369df]'>Supply APR</button>
         </div>
-        <LineGraph />
+        {/* <LineGraph /> */}
 
         <p className="mt-8 text-[#5B62FE] flex items-center gap-2 dark:text-darkText">
           Collateral usage {collateral ? <Check /> : <X />} {collateral ? "Can be collateral" : "Cannot be collateral"}
@@ -119,7 +119,7 @@ const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
             <p>{liquidation_threshold}%</p>
           </div>
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Liquidation bonus</h1>
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Liquidation Penalty</h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />

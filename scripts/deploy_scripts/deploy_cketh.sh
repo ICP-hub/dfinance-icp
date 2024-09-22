@@ -3,9 +3,9 @@
 
 set -e
 
-dfx identity new newminter || true
+dfx identity new minter || true
 
-dfx identity use newminter
+dfx identity use minter
 
 export MINTER=$(dfx identity get-principal)
 echo "Minter Principal: $MINTER"

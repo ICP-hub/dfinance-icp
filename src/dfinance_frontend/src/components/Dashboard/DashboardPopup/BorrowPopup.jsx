@@ -365,7 +365,10 @@ const Borrow = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">{assetSupply.toFixed(2)} Max </p>
+                  <p className="text-xs mt-4">
+  {parseFloat(assetSupply)?.toFixed(2) || "0.00"} Max
+</p>
+
                 </div>
               </div>
             </div>

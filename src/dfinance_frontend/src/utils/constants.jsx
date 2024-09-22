@@ -35,30 +35,30 @@ const TabPanel = ({ items }) => {
 };
 
 export const FOOTER_LINK_1 = [
-  {
-    id: 0,
-    title: "Governance",
-    route: "/#",
-    icon: "",
-  },
+  // {
+  //   id: 0,
+  //   title: "Governance",
+  //   route: "/#",
+  //   icon: "",
+  // },
   {
     id: 1,
     title: "Liquidate",
     route: "/Liquidate",
     icon: "",
   },
-  {
-    id: 2,
-    title: "Security",
-    route: "/#",
-    icon: "",
-  },
-  {
-    id: 3,
-    title: "Docs",
-    route: "/#",
-    icon: "",
-  },
+  // {
+  //   id: 2,
+  //   title: "Security",
+  //   route: "/#",
+  //   icon: "",
+  // },
+  // {
+  //   id: 3,
+  //   title: "Docs",
+  //   route: "/#",
+  //   icon: "",
+  // },
   {
     id: 4,
     title: "FAQ",

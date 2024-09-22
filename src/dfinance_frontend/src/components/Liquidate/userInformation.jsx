@@ -390,7 +390,19 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   };
 
-
+ 
+  const handleButtonClick = async () => {
+    try {
+      setIsLoading(true); // Start loading
+      if (isApproved) {
+        await handleCallLiquidation(); // Call the liquidation function
+      } else {
+        await handleApprove(); // Call the approve function
+      }
+    } finally {
+      setIsLoading(false); // Stop loading once the function is done
+    }
+  };
   const handleCloseWarningPopup = () => {
     setShowWarningPopup(false);
   };
@@ -407,7 +419,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       handleCloseWarningPopup();
     }
   };
-
+  
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose(); // Close the transaction result popup
@@ -743,14 +755,19 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
-                  onClick={() => {
-                    console.log("Button clicked");
-                    isApproved ? handleCallLiquidation() : handleApprove();
-                  }}
-                >
-                  {isApproved ? `Call Liquidation ${selectedDebtAsset}` : `Approve ${selectedDebtAsset} to continue`}
-                </button>
+  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-xs md:text-sm cursor-pointer px-4 py-2 md:px-6 md:py-2 relative ${
+    isLoading ? "opacity-50 cursor-not-allowed" : ""
+  }`}
+  onClick={handleButtonClick}
+  disabled={isLoading}
+>
+  {isApproved ? `Call Liquidation ${asset}` : `Approve ${asset} to continue`}
+</button>
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
+                    <div className="loader"></div> {/* Loader here */}
+                  </div>
+                )}
               </div>
             </div>
           ) : isDebtInfo ? (

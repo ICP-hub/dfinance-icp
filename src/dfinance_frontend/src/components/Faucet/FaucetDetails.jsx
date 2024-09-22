@@ -9,6 +9,7 @@ import Pagination from "../Common/pagination";
 import useAssetData from "../Common/useAssets";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import cekTH from '../../../public/assests-icon/cekTH.png';
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
 import { useAuth } from "../../utils/useAuthClient";
@@ -188,6 +189,13 @@ const FaucetDetails = () => {
                         {item[0] === "ckETH" && (
                           <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full mr-2"/>
                         )}
+                         {item[0] === "ckUSDC" && (
+                                    <img
+                                      src={ckUSDC}
+                                      alt="cketh logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                         {item[0]}
                     </div>
                   </td>

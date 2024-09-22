@@ -22,6 +22,7 @@ import nfid from "../../../public/wallet/nfid.png"
 import Pagination from "../../components/Common/pagination";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import cekTH from '../../../public/assests-icon/cekTH.png';
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import useAssets from "../../components/Common/useAssets"
 import useAssetData from "../../components/Common/useAssets"
 
@@ -235,6 +236,13 @@ const WalletDetails = () => {
                         {item[0] === "ckETH" && (
                           <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full"/>
                         )}
+                        {item[0] === "ckUSDC" && (
+                                    <img
+                                      src={ckUSDC}
+                                      alt="cketh logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                         {item[0]}
                       </div>
                     </td>

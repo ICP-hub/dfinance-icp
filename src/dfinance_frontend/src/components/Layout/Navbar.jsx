@@ -384,7 +384,7 @@ export default function Navbar({ isHomeNav }) {
               />
               {!isHomeNav && isTestnetMode && (
                 <button
-                  className="bg-[#4659CF] z-50   hover:bg-blue-700 text-white font-bold p-2 rounded flex items-center text-[12px] w-20 h-6 lg:ml-3 -mt-1 sxs3:ml-10"
+                  className="bg-[#4659CF] z-50   hover:bg-blue-700 text-white font-bold p-2 rounded flex items-center text-[12px] w-20 h-5 lg:ml-3 mt-0.5 sxs3:ml-10"
                   onClick={handleButtonClick}
                 >
                   TESTNET
@@ -410,7 +410,7 @@ export default function Navbar({ isHomeNav }) {
                 transition:Bounce
                 pauseOnHover
                 theme={isDarkMode ? "dark" : "light"}
-                className="z-50 mt-6 "
+                className="z-60 mt-6 "
               />
             </div>
             {!isMobile && (

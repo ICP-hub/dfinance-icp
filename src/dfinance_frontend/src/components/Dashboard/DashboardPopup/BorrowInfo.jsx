@@ -73,7 +73,7 @@ const BorrowInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
         <div className="w-full flex gap-5 text-[#2A1F9D] mb-6 dark:text-darkText">
           <button className='cursor-pointer hover:text-[#7369df]'>Borrow APR, variable</button>
         </div>
-        <LineGraph />
+        {/* <LineGraph /> */}
 
         <div className="w-full flex flex-wrap gap-8 mt-6 whitespace-nowrap">
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText">

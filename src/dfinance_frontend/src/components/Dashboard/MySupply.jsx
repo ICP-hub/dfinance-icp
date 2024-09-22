@@ -405,8 +405,8 @@ const MySupply = () => {
       liquidationThreshold: liquidationThreshold,
       assetSupply: assetSupply,
       assetBorrow: assetBorrow,
-      totalCollateral:totalCollateral,
-      totalDebt:totalDebt
+      totalCollateral: totalCollateral,
+      totalDebt: totalDebt
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -449,7 +449,7 @@ const MySupply = () => {
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
-                totalDebt={ isModalOpen.totalDebt }
+                totalDebt={isModalOpen.totalDebt}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -463,15 +463,17 @@ const MySupply = () => {
             setIsModalOpen={setIsModalOpen}
             children={
               <SupplyPopup
+                isModalOpen={isModalOpen.isOpen}
+                handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
-                supplyRateAPR={isModalOpen.supplyRateAPR}
                 balance={isModalOpen.balance}
+                supplyRateAPR={isModalOpen.supplyRateAPR}
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
-                isModalOpen={isModalOpen.isOpen}
-                handleModalOpen={handleModalOpen}
+                totalCollateral={isModalOpen.totalCollateral}
+                totalDebt={isModalOpen.totalDebt}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -494,6 +496,8 @@ const MySupply = () => {
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
+                totalCollateral={isModalOpen.totalCollateral}
+                totalDebt={isModalOpen.totalDebt}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -522,14 +526,17 @@ const MySupply = () => {
             setIsModalOpen={setIsModalOpen}
             children={
               <Repay
+                isModalOpen={isModalOpen.isOpen}
+                handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
+                supplyRateAPR={isModalOpen.supplyRateAPR}
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
-                isModalOpen={isModalOpen.isOpen}
-                handleModalOpen={handleModalOpen}
+                totalCollateral={isModalOpen.totalCollateral}
+                totalDebt={isModalOpen.totalDebt}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -821,7 +828,7 @@ const MySupply = () => {
 
                                 <div className="flex justify-between text-xs text-[#233D63] font-semibold mt-3 mb-4">
                                   <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                    Can Be Collateral
+                                    Is Collateral
                                   </p>
                                   <div className="-mr-3 -mt-4 mb-4">
                                     <CustomizedSwitches />
@@ -896,7 +903,7 @@ const MySupply = () => {
                           <div className="p-5">Asset</div>
                           <div className="p-5">Wallet Balance</div>
                           <div className="p-5">Apy</div>
-                          <div className="p-5">Can be Collateral</div>
+                          <div className="p-5 whitespace-nowrap">Is Collateral</div>
                           <div className="p-5"></div>
                         </div>
                       </div>
@@ -934,7 +941,9 @@ const MySupply = () => {
                                   ? ckBTCBalance
                                   : asset === "ckETH"
                                     ? ckETHBalance
-                                    : null;
+                                    : asset === "ckUSDC"
+                                      ? ckUSDCBalance
+                                      : null;
 
                               return (
                                 <div
@@ -952,6 +961,13 @@ const MySupply = () => {
                                     {asset === "ckETH" && (
                                       <img
                                         src={ckETH}
+                                        alt="cketh logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    {asset === "ckUSDC" && (
+                                      <img
+                                        src={ckUSDC}
                                         alt="cketh logo"
                                         className="w-8 h-8 rounded-full"
                                       />
@@ -975,6 +991,14 @@ const MySupply = () => {
                                         </p>
                                       </>
                                     )}
+                                    {asset === "ckUSDC" && (
+                                      <>
+                                        <p>{ckUSDCBalance}</p>
+                                        <p className="font-light">
+                                          ${formatNumber(ckUSDCUsdBalance)}
+                                        </p>
+                                      </>
+                                    )}
                                   </div>
                                   <div className="ml-4 align-top">
                                     {supplyRateApr}%
@@ -986,33 +1010,64 @@ const MySupply = () => {
                                     <Button
                                       title={"Supply"}
                                       onClickHandler={() => {
+                                        const reserveData =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0]
+                                          );
+                                        const assetSupply =
+                                          reserveData?.[1]?.asset_supply || 0;
+                                        const assetBorrow =
+                                          reserveData?.[1]?.asset_borrow || 0;
+                                        // Logging data for debugging
+                                        const totalCollateral = userData?.Ok?.total_collateral || 0;
+                                        const totalDebt = userData?.Ok?.total_debt || 0;
                                         handleModalOpen(
                                           "supply",
-                                          item[0],
-                                          asset === "ckBTC" ? ckBTC : ckETH,
+                                          asset,
+                                          (asset === "ckBTC" && ckBTC) ||
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
                                           assetSupply,
-                                          assetBorrow
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt
                                         );
                                       }}
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
                                     />
                                     <Button
                                       title={"Withdraw"}
-                                      onClickHandler={() =>
+                                      onClickHandler={() => {
+                                        const reserveData =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0]
+                                          );
+                                        const totalCollateral = userData?.Ok?.total_collateral || 0;
+                                        const totalDebt = userData?.Ok?.total_debt || 0;
+                                        const assetSupply =
+                                          reserveData?.[1]?.asset_supply || 0;
+                                        const assetBorrow =
+                                          reserveData?.[1]?.asset_borrow || 0;
                                         handleModalOpen(
                                           "withdraw",
                                           asset,
-                                          asset === "ckBTC" ? ckBTC : ckETH,
+                                          (asset === "ckBTC" && ckBTC) ||
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
                                           assetSupply,
-                                          assetBorrow
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt
                                         )
-                                      }
+                                      }}
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                     />
                                   </div>
@@ -1104,6 +1159,14 @@ const MySupply = () => {
                                     </p>
                                   </>
                                 )}
+                                {item[0] === "ckUSDC" && (
+                                  <>
+                                    <p>{ckUSDCBalance}</p>
+                                    <p className="font-light">
+                                      ${formatNumber(ckUSDCUsdRate)}
+                                    </p>
+                                  </>
+                                )}
                               </p>
                             </div>
 
@@ -1136,47 +1199,28 @@ const MySupply = () => {
                                     reserveData?.[1]?.asset_supply || 0;
                                   const assetBorrow =
                                     reserveData?.[1]?.asset_borrow || 0;
-                                  // Logging data for debugging
                                   const totalCollateral = userData?.Ok?.total_collateral || 0;
                                   const totalDebt = userData?.Ok?.total_debt || 0;
-                                  console.log("Asset:", item[0]);
-                                  console.log(
-                                    "Borrow Rate APR:",
-                                    item[1]?.Ok.borrow_rate
-                                  );
-                                  console.log(
-                                    "Liquidation Threshold:",
-                                    item[1]?.Ok.configuration
-                                      .liquidation_threshold
-                                  );
-                                  console.log("Asset Supply:", assetSupply);
-                                  console.log("Asset Borrow:", assetBorrow);
-                                  console.log("Total Collateral:", totalCollateral);
-                                  console.log("Total Debt:", totalDebt);
-                                  console.log(
-                                    "Balance:",
-                                    item[0] === "ckBTC"
-                                      ? ckBTCBalance
-                                      : item[0] === "ckETH"
-                                        ? ckETHBalance
-                                        : null
-                                  );
+
                                   handleModalOpen(
                                     "supply",
                                     item[0],
                                     (item[0] === "ckBTC" && ckBTC) ||
-                                    (item[0] === "ckETH" && ckETH),
+                                    (item[0] === "ckETH" && ckETH) ||
+                                    (item[0] === "ckUSDC" && ckUSDC),
                                     item[1]?.Ok.borrow_rate,
                                     item[0] === "ckBTC"
                                       ? ckBTCBalance
                                       : item[0] === "ckETH"
                                         ? ckETHBalance
-                                        : null,
+                                        : item[0] === "ckUSDC"
+                                          ? ckUSDCBalance
+                                          : null,
                                     item[1]?.Ok.configuration
                                       .liquidation_threshold,
                                     assetSupply,
                                     assetBorrow,
-                                    totalCollateral, // Pass total collateral
+                                    totalCollateral,
                                     totalDebt
                                   );
                                 }}
@@ -1329,13 +1373,16 @@ const MySupply = () => {
                                       "supply",
                                       item[0],
                                       (item[0] === "ckBTC" && ckBTC) ||
-                                      (item[0] === "ckETH" && ckETH),
+                                      (item[0] === "ckETH" && ckETH) ||
+                                      (item[0] === "ckUSDC" && ckUSDC),
                                       item[1]?.Ok.borrow_rate,
                                       item[0] === "ckBTC"
                                         ? ckBTCBalance
                                         : item[0] === "ckETH"
                                           ? ckETHBalance
-                                          : null,
+                                          : item[0] === "ckUSDC"
+                                            ? ckUSDCBalance
+                                            : null,
                                       item[1]?.Ok.configuration
                                         .liquidation_threshold,
                                       assetSupply,
@@ -1444,9 +1491,11 @@ const MySupply = () => {
                                   ? ckBTCBalance
                                   : asset === "ckETH"
                                     ? ckETHBalance
-                                    : null;
-                              const supplyRateApr =
-                                item?.[1]?.Ok?.supply_rate_apr || 0;
+                                    : asset === "ckUSDC"
+                                      ? ckUSDCBalance
+                                      : null;
+                              const borrowRateAPR =
+                                item?.[1]?.Ok?.borrow_rate || 0;
                               const liquidationThreshold =
                                 item?.[1]?.Ok?.configuration
                                   ?.liquidation_threshold || 0;
@@ -1467,6 +1516,13 @@ const MySupply = () => {
                                     {asset === "ckETH" && (
                                       <img
                                         src={ckETH}
+                                        alt="cketh logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    {asset === "ckUSDC" && (
+                                      <img
+                                        src={ckUSDC}
                                         alt="cketh logo"
                                         className="w-8 h-8 rounded-full"
                                       />
@@ -1494,6 +1550,14 @@ const MySupply = () => {
                                           </p>
                                         </>
                                       )}
+                                      {asset === "ckUSDC" && (
+                                        <>
+                                          <p>{ckUSDCBalance}</p>
+                                          <p className="font-light">
+                                            ${formatNumber(ckUSDCUsdBalance)}
+                                          </p>
+                                        </>
+                                      )}
                                     </div>
                                   </div>
 
@@ -1502,7 +1566,7 @@ const MySupply = () => {
                                       APY:
                                     </p>
                                     <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
-                                      {supplyRateApr}%
+                                      {borrowRateAPR}%
                                     </p>
                                   </div>
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
@@ -1518,38 +1582,65 @@ const MySupply = () => {
                                     <Button
                                       title={"Borrow"}
                                       onClickHandler={() => {
-                                        console.log("Asset:", asset);
+                                        const reserveData =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0]
+                                          );
+                                        const assetSupply =
+                                          reserveData?.[1]?.asset_supply || 0;
+                                        const assetBorrow =
+                                          reserveData?.[1]?.asset_borrow || 0;
+                                        // Logging data for debugging
+                                        const totalCollateral = userData?.Ok?.total_collateral || 0;
+                                        const totalDebt = userData?.Ok?.total_debt || 0;
+
+                                        console.log("collateral and totaldebt", totalCollateral, totalDebt)
+
+                                        console.log("Asset:", item[0]);
                                         console.log(
                                           "Borrow Rate APR:",
-                                          item?.[1]?.Ok.borrow_rate
+                                          item[1]?.Ok.borrow_rate
                                         );
                                         console.log(
                                           "Liquidation Threshold:",
-                                          liquidationThreshold
+                                          item[1]?.Ok.configuration
+                                            .liquidation_threshold
                                         );
+                                        console.log("Asset Supply:", assetSupply);
+                                        console.log("Asset Borrow:", assetBorrow);
                                         console.log(
-                                          "Asset Supply:",
-                                          assetSupply
+                                          "Balance:",
+                                          item[0] === "ckBTC"
+                                            ? ckBTCBalance
+                                            : item[0] === "ckETH"
+                                              ? ckETHBalance
+                                              : null
                                         );
-                                        console.log(
-                                          "Asset Borrow:",
-                                          assetBorrow
-                                        );
-                                        console.log("Balance:", ckBalance);
-
                                         handleModalOpen(
                                           "borrow",
-                                          asset,
-                                          (asset === "ckBTC" && ckBTC) ||
-                                          (asset === "ckETH" && ckETH),
-                                          supplyRateApr,
-                                          ckBalance,
-                                          liquidationThreshold,
+                                          item[0],
+                                          (item[0] === "ckBTC" && ckBTC) ||
+                                          (item[0] === "ckETH" && ckETH) ||
+                                          (item[0] === "ckUSDC" && ckUSDC),
+                                          item[1]?.Ok.borrow_rate,
+                                          item[0] === "ckBTC"
+                                            ? ckBTCBalance
+                                            : item[0] === "ckETH"
+                                              ? ckETHBalance
+                                              : item[0] === "ckUSDC"
+                                                ? ckUSDCBalance
+                                                : null,
+                                          item[1]?.Ok.configuration
+                                            .liquidation_threshold,
                                           assetSupply,
-                                          assetBorrow
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt
                                         );
                                       }}
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg"
+                                      disabled={isTableDisabled}
+                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
                                     />
                                     <Button
                                       title={"Repay"}
@@ -1577,8 +1668,9 @@ const MySupply = () => {
                                           "repay",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                          (asset === "ckETH" && ckETH),
-                                          supplyRateApr,
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC),
+                                          borrowRateAPR,
                                           ckBalance,
                                           liquidationThreshold,
                                           assetSupply,
@@ -1655,9 +1747,11 @@ const MySupply = () => {
                                   ? ckBTCBalance
                                   : asset === "ckETH"
                                     ? ckETHBalance
-                                    : null;
-                              const supplyRateApr =
-                                item?.[1]?.Ok?.supply_rate_apr || 0;
+                                    : asset === "ckUSDC"
+                                      ? ckUSDCBalance
+                                      : null;
+                              const borrowRateApr =
+                                item?.[1]?.Ok?.borrow_rate || 0;
                               const liquidationThreshold =
                                 item?.[1]?.Ok?.configuration
                                   ?.liquidation_threshold || 0;
@@ -1682,6 +1776,13 @@ const MySupply = () => {
                                         className="w-8 h-8 rounded-full"
                                       />
                                     )}
+                                    {asset === "ckUSDC" && (
+                                      <img
+                                        src={ckUSDC}
+                                        alt="cketh logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
                                     {asset}
                                   </div>
                                   <div className="p-3">
@@ -1702,9 +1803,17 @@ const MySupply = () => {
                                           </p>
                                         </>
                                       )}
+                                      {asset === "ckUSDC" && (
+                                        <>
+                                          <p>{ckUSDCBalance}</p>
+                                          <p className="font-light">
+                                            ${formatNumber(ckUSDCUsdBalance)}
+                                          </p>
+                                        </>
+                                      )}
                                     </div>
                                   </div>
-                                  <div className="p-3">{supplyRateApr}%</div>
+                                  <div className="p-3">{borrowRateApr}%</div>
                                   <div className="p-3">
                                     <div className="w-full flex">variable</div>
                                   </div>
@@ -1712,43 +1821,71 @@ const MySupply = () => {
                                     <Button
                                       title={"Borrow"}
                                       onClickHandler={() => {
+                                        const reserveData =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0]
+                                          );
+                                        const assetSupply =
+                                          reserveData?.[1]?.asset_supply || 0;
+                                        const assetBorrow =
+                                          reserveData?.[1]?.asset_borrow || 0;
                                         // Logging data for debugging
-                                        console.log("Asset:", asset);
+                                        const totalCollateral = userData?.Ok?.total_collateral || 0;
+                                        const totalDebt = userData?.Ok?.total_debt || 0;
+                                        console.log("Asset:", item[0]);
                                         console.log(
                                           "Borrow Rate APR:",
-                                          item?.[1]?.Ok.borrow_rate
+                                          item[1]?.Ok.borrow_rate
                                         );
                                         console.log(
                                           "Liquidation Threshold:",
-                                          liquidationThreshold
+                                          item[1]?.Ok.configuration
+                                            .liquidation_threshold
                                         );
+                                        console.log("Asset Supply:", assetSupply);
+                                        console.log("Asset Borrow:", assetBorrow);
                                         console.log(
-                                          "Asset Supply:",
-                                          assetSupply
+                                          "Balance:",
+                                          item[0] === "ckBTC"
+                                            ? ckBTCBalance
+                                            : item[0] === "ckETH"
+                                              ? ckETHBalance
+                                              : null
                                         );
-                                        console.log(
-                                          "Asset Borrow:",
-                                          assetBorrow
-                                        );
-                                        console.log("Balance:", ckBalance);
-
                                         handleModalOpen(
                                           "borrow",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                          (asset === "ckETH" && ckETH),
-                                          supplyRateApr,
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC),
+                                          borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
                                           assetSupply,
-                                          assetBorrow
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt
                                         );
                                       }}
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
+                                      disabled={isTableDisabled}
+                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
                                     />
                                     <Button
                                       title={"Repay"}
                                       onClickHandler={() => {
+                                        const reserveData =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0]
+                                          );
+                                        const assetSupply =
+                                          reserveData?.[1]?.asset_supply || 0;
+                                        const assetBorrow =
+                                          reserveData?.[1]?.asset_borrow || 0;
+                                        // Logging data for debugging
+                                        const totalCollateral = userData?.Ok?.total_collateral || 0;
+                                        const totalDebt = userData?.Ok?.total_debt || 0;
                                         console.log("Asset:", asset);
                                         console.log(
                                           "Borrow Rate APR:",
@@ -1772,12 +1909,15 @@ const MySupply = () => {
                                           "repay",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                          (asset === "ckETH" && ckETH),
-                                          supplyRateApr,
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC),
+                                          borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
                                           assetSupply,
-                                          assetBorrow
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt
                                         );
                                       }}
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
@@ -2200,13 +2340,16 @@ const MySupply = () => {
                                         "borrow",
                                         item[0],
                                         (item[0] === "ckBTC" && ckBTC) ||
-                                        (item[0] === "ckETH" && ckETH) || (item[0] === "ckUSDC" && ckUSDC),
-                                        item[1]?.Ok.supply_rate_apr,
+                                        (item[0] === "ckETH" && ckETH) ||
+                                        (item[0] === "ckUSDC" && ckUSDC),
+                                        item[1]?.Ok.borrow_rate,
                                         item[0] === "ckBTC"
                                           ? ckBTCBalance
                                           : item[0] === "ckETH"
                                             ? ckETHBalance
-                                            : ckUSDCBalance,
+                                            : item[0] === "ckUSDC"
+                                              ? ckUSDCBalance
+                                              : null,
                                         item[1]?.Ok.configuration
                                           .liquidation_threshold,
                                         assetSupply,

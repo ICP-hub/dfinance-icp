@@ -13,7 +13,8 @@ import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
 
 
-const Borrow = ({ asset,
+const Borrow = ({
+  asset,
   image,
   supplyRateAPR,
   balance,
@@ -31,7 +32,7 @@ const Borrow = ({ asset,
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(null);
 
 
   const handleAmountChange = (e) => {
@@ -41,7 +42,7 @@ const Borrow = ({ asset,
     const numericAmount = parseFloat(inputAmount);
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
-      if (numericAmount <= supplyBalance) {
+      if (numericAmount <= assetSupply) {
         // Calculate and format the USD value
         const convertedValue = numericAmount * conversionRate;
         setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
@@ -191,6 +192,8 @@ const Borrow = ({ asset,
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
+    } else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActorckUSDC; // Add ckUSDC ledger actor
     }
 
     try {
@@ -207,6 +210,7 @@ const Borrow = ({ asset,
       // Handle error state, e.g., show error message
     }
   };
+
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -224,12 +228,13 @@ const Borrow = ({ asset,
     const fetchConversionRate = async () => {
       try {
         let coinId;
-
         // Map asset to CoinGecko coin IDs
         if (asset === "ckBTC") {
           coinId = "bitcoin";
         } else if (asset === "ckETH") {
           coinId = "ethereum";
+        } else if (asset === "ckUSDC") {
+          coinId = "usd-coin"; // Add ckUSDC mapping to CoinGecko's USDC
         } else {
           console.error("Unsupported asset:", asset);
           return;
@@ -284,7 +289,7 @@ const Borrow = ({ asset,
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
-  
+
 
   useEffect(() => {
     const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
@@ -294,7 +299,7 @@ const Borrow = ({ asset,
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1 || ltv >= liquidationThreshold) {
+    if (healthFactor < 1 ) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
@@ -302,30 +307,29 @@ const Borrow = ({ asset,
 
   }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
 
-
+  const amountTaken = parseFloat(usdValue) || 0; // Ensure usdValue is treated as a number
+  const amountAdded = 0;
   const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
-    const amountTaken = parseFloat(usdValue) || 0; // Ensure usdValue is treated as a number
-    const amountAdded = 0; // No amount added for now, but keeping it in case of future use
+    // No amount added for now, but keeping it in case of future use
 
     // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
     const totalCollateralValue = parseFloat(totalCollateral) + amountAdded;
     const totalDeptValue = parseFloat(totalDebt) + amountTaken;
-    console.log("totalCollateralValue",totalCollateralValue)
-    console.log("totalDeptValue",totalDeptValue)
-    console.log("amountTaken",amountTaken)
-    console.log("liquidationThreshold",liquidationThreshold)
-    console.log("totalDebt",totalDebt)
     if (totalDeptValue === 0) {
       return Infinity;
     }
-    return (totalCollateralValue * (liquidationThreshold/100)) / totalDeptValue;
+    return (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
   };
 
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
+
+  const totalDeptValueLTV = parseFloat(totalDebt) + amountTaken;
+
+
+  const calculateLTV = (totalCollateralValue, totalDeptValueLTV) => {
     if (totalCollateralValue === 0) {
       return 0;
     }
-    return totalDeptValue / totalCollateralValue;
+    return (totalDeptValueLTV / totalCollateralValue) * 100;
   };
 
 
@@ -361,7 +365,7 @@ const Borrow = ({ asset,
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">{supplyBalance.toFixed(2)} Max </p>
+                  <p className="text-xs mt-4">{assetSupply.toFixed(2)} Max </p>
                 </div>
               </div>
             </div>
@@ -375,29 +379,38 @@ const Borrow = ({ asset,
                     <p>APY, borrow rate</p>
                     <p>{supplyRateAPR}%</p>
                   </div>
+
                   <div className="w-full flex justify-between items-center">
-                    <div className="w-full flex justify-between items-center">
-                      <p>Health Factor</p>
-                      <p>
-                        <span className="text-red-500">{prevHealthFactor}</span>
-                        <span className="text-gray-500 mx-1">→</span>
-                        <span
-                          className={`${value > 3
-                            ? "text-green-500"
-                            : value <= 1
-                              ? "text-red-500"
-                              : value <= 1.5
-                                ? "text-orange-600"
-                                : value <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
-                            }`}
-                        >
-                          {currentHealthFactor}
-                        </span>
-                      </p>
-                    </div>
+                    <p>Health Factor</p>
+                    <p>
+                      <span lassName={`${prevHealthFactor > 3
+                        ? "text-green-500"
+                        : prevHealthFactor <= 1
+                          ? "text-red-500"
+                          : prevHealthFactor <= 1.5
+                            ? "text-orange-600"
+                            : prevHealthFactor <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
+                        }`}>{prevHealthFactor}</span>
+                      <span className="text-gray-500 mx-1">→</span>
+                      <span
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
+                      >
+                        {currentHealthFactor}
+                      </span>
+                    </p>
                   </div>
+
                   <div className="w-full flex justify-end items-center mt-1 ">
                     <p className="text-gray-500">liquidation at &lt;1</p>
                   </div>
@@ -464,9 +477,9 @@ const Borrow = ({ asset,
 
               <button
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${value <= 1 && !isAcknowledged ? "opacity-50 cursor-not-allowed" : ""
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
-                disabled={value <= 1 && !isAcknowledged}
+                disabled={isLoading || (amount <= 0 || null) || isButtonDisabled}
               >
                 Borrow {asset}
               </button>

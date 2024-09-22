@@ -545,12 +545,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             </div>
           </div>
         );
-      case "icp":
+      case "ckUSDC":
         return (
           <div className="mt-4">
             <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm">
               <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
-                ICP Price
+              ckUSDC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D]   dark:text-darkText ">
                 5.032560
@@ -558,7 +558,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm mt-4">
               <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
-                ICP Liquidation Bonus %
+              ckUSDC Liquidation Bonus %
               </p>
               <p className="text-sm font-medium text-[#2A1F9D]   dark:text-darkText ">
                 12%

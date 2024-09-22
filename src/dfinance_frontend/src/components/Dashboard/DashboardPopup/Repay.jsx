@@ -1,9 +1,9 @@
 import { Info, Check, Wallet, X } from "lucide-react";
-import React, { useState ,useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
-import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
-import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
@@ -11,10 +11,20 @@ import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/toke
 import { useEffect } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
-const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, assetSupply, assetBorrow,   setIsModalOpen,isModalOpen,
+const Repay = ({ asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  isModalOpen,
   handleModalOpen,
-  onLoadingChange  }) => {
-  const [amount, setAmount] = useState(0);
+  setIsModalOpen,
+  onLoadingChange, }) => {
+  const [amount, setAmount] = useState(null);
   const modalRef = useRef(null); // Reference to the modal container
   const { createLedgerActor, backendActor } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
@@ -23,15 +33,15 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
-  const [usdValue, setUsdValue] = useState(0);  
+  const [usdValue, setUsdValue] = useState(0);
 
-  const [assetPrincipal, setAssetPrincipal ] = useState({});
+  const [assetPrincipal, setAssetPrincipal] = useState({});
 
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"]; 
+          const assets = ["ckBTC", "ckETH", "ckUSDC"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
             console.log(`get_asset_principle (${asset}):`, result);
@@ -47,9 +57,9 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
         console.error("Backend actor initialization failed.");
       }
     };
-    
+
     fetchAssetPrinciple();
-  }, [ backendActor]);
+  }, [backendActor]);
 
   console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
   console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
@@ -90,11 +100,11 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
         ? createLedgerActor(
           assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
-          )
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
-  
+
   // Memoized actor for ckETH using dynamic principal
   const ledgerActorckETH = useMemo(
     () =>
@@ -102,64 +112,25 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
         ? createLedgerActor(
           assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
-          )
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
-  
+
   const ledgerActorckUSDC = useMemo(
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
           assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
-          )
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
-  
+
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [currentHealthFactor, setCurrentHealthFactor] = useState(null); 
+  const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
-  useEffect(() => {
-    console.log('Asset:', asset);
-    console.log('Liquidation Threshold:', liquidationThreshold);
-    console.log('Asset Supply:', assetSupply);
-    console.log('Asset Borrow:', assetBorrow, supplyRateAPR);
-
-    const healthFactor = calculateHealthFactor(assetSupply, assetBorrow, liquidationThreshold);
-    const healthf=0
-    console.log('Health Factor:', healthFactor);
-    const ltv = calculateLTV(assetSupply, assetBorrow);
-    const ltV=80;
-    console.log('LTV:', ltv);
-       // Store the previous health factor before updating
-       setPrevHealthFactor(currentHealthFactor);
-       // Update the current health factor
-       setCurrentHealthFactor(healthFactor);
-
-    if (healthFactor < 1 || ltv >= liquidationThreshold) {
-      setIsButtonDisabled(true); // Disable the button
-    } else {
-      setIsButtonDisabled(false); // Enable the button
-    }
-    
-  }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
-
-
-  const calculateHealthFactor = (totalCollateralValue, totalBorrowedValue, liquidationThreshold) => {
-    if (totalBorrowedValue === 0) {
-      return Infinity;
-    }
-    return (totalCollateralValue * liquidationThreshold) / totalBorrowedValue;
-  };
-
-  const calculateLTV = (totalCollateralValue, totalBorrowedValue) => {
-    if (totalCollateralValue === 0) {
-      return 0; 
-    }
-    return totalBorrowedValue / totalCollateralValue;
-  };
 
   const value = 5.23;
   const handleAmountChange = (e) => {
@@ -169,7 +140,7 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
     const numericAmount = parseFloat(inputAmount);
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
-      if (numericAmount <= supplyBalance) {
+      if (numericAmount <= assetBorrow) {
         // Calculate and format the USD value
         const convertedValue = numericAmount * conversionRate;
         setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
@@ -199,6 +170,8 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
           coinId = "bitcoin";
         } else if (asset === "ckETH") {
           coinId = "ethereum";
+        } else if (asset === "ckUSDC") {
+          coinId = "usd-coin"; // Add ckUSDC mapping to CoinGecko's USDC
         } else {
           console.error("Unsupported asset:", asset);
           return;
@@ -253,41 +226,44 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
     }
+    else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActorckUSDC;
+    }
 
- // Convert amount and transferFee to numbers and add them
- const repayAmount = Number(amount);
- const totalAmount = repayAmount + transferfee;
+    // Convert amount and transferFee to numbers and add them
+    const repayAmount = Number(amount);
+    const totalAmount = repayAmount + transferfee;
 
- try {
-  // Call the approval function
-  const approval = await ledgerActor.icrc2_approve({
-    fee: [],
-    memo: [],
-    from_subaccount: [],
-    created_at_time: [],
-    amount: totalAmount,
-    expected_allowance: [],
-    expires_at: [],
-    spender: {
-      owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
-      subaccount: [],
-    },
-  });
+    try {
+      // Call the approval function
+      const approval = await ledgerActor.icrc2_approve({
+        fee: [],
+        memo: [],
+        from_subaccount: [],
+        created_at_time: [],
+        amount: totalAmount,
+        expected_allowance: [],
+        expires_at: [],
+        spender: {
+          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+          subaccount: [],
+        },
+      });
 
-  console.log("Approve", approval);
-  setIsApproved(true);
-  console.log("isApproved state after approval:", isApproved);
+      console.log("Approve", approval);
+      setIsApproved(true);
+      console.log("isApproved state after approval:", isApproved);
 
-  // Show success notification
-  toast.success("Approval successful!");
-} catch (error) {
-  // Log the error
-  console.error("Approval failed:", error);
+      // Show success notification
+      toast.success("Approval successful!");
+    } catch (error) {
+      // Log the error
+      console.error("Approval failed:", error);
 
-  // Show error notification using Toastify
-  toast.error(`Error: ${error.message || "Approval failed!"}`);
-}
-};
+      // Show error notification using Toastify
+      toast.error(`Error: ${error.message || "Approval failed!"}`);
+    }
+  };
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -297,27 +273,27 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
   const handleRepayETH = async () => {
     console.log("Repay function called for", asset, amount);
     let ledgerActor;
-  
+
     // Example logic to select the correct backend actor based on the asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
     }
-  
+
     console.log("Backend actor", ledgerActor);
-  
+
     try {
       // Convert the amount to the appropriate units, if necessary
       const amountInUnits = Number(amount); // Example conversion to appropriate units
-  
+
       // Call the repay function on the selected ledger actor
       const repayResult = await backendActor.repay(asset, amountInUnits, []);
       toast.success("Repay successful!");
       console.log("Repay result", repayResult);
       setIsPaymentDone(true);
       setIsVisible(false);
-  
+      window.location.reload()
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
       console.error("Error repaying:", error);
@@ -348,7 +324,7 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
         setIsModalOpen(false);
       }
     };
-  
+
     if (isModalOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => {
@@ -356,164 +332,213 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
       };
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
+    console.log('Health Factor:', healthFactor);
+    const ltv = calculateLTV(totalCollateral, totalDebt);
+    console.log('LTV:', ltv);
+    setPrevHealthFactor(currentHealthFactor);
+    setCurrentHealthFactor(healthFactor.toFixed(2));
+
+    if (healthFactor < 1 ) {
+      setIsButtonDisabled(true); // Disable the button
+    } else {
+      setIsButtonDisabled(false); // Enable the button
+    }
+
+  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
+
+
+  const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
+    const amountTaken = 0
+    const amountAdded = parseFloat(usdValue) || 0;
+    const totalCollateralValue = parseFloat(totalCollateral) + amountTaken;
+    const totalDeptValue = parseFloat(totalDebt) - amountAdded; 
+    console.log("totalDebt before minus", totalDebt);
+
+    console.log("totalDeptValue", totalDeptValue);
+    console.log("amountAdded", amountAdded);
+    if (totalDeptValue === 0) {
+      return Infinity;
+    }
+    return (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
+  };
+
+  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
+    if (totalCollateralValue === 0) {
+      return 0;
+    }
+    return totalDeptValue / totalCollateralValue;
+  };
+
   return (
     <>
-    {isVisible && (
-      <div className="repay-popup" ref={modalRef}>
-      <h1 className="font-semibold text-xl">Repay {asset} </h1>
+      {isVisible && (
+        <div className="repay-popup" ref={modalRef}>
+          <h1 className="font-semibold text-xl">Repay {asset} </h1>
 
-      <div className="flex flex-col gap-2 mt-5 text-sm">
-        <div className="w-full">
-          <div className="w-full flex justify-between my-2">
-            <h1>Amount</h1>
-          </div>
-          <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-            <div className="w-5/12">
-              <input
-                type="number"
-                value={amount}
-                onChange={handleAmountChange}
-                className="text-lg focus:outline-none bg-gray-100  rounded-md py-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                placeholder="Enter Amount"
-              />
-              <p className="text-xs text-gray-500 ">
+          <div className="flex flex-col gap-2 mt-5 text-sm">
+            <div className="w-full">
+              <div className="w-full flex justify-between my-2">
+                <h1>Amount</h1>
+              </div>
+              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="w-5/12">
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={handleAmountChange}
+                    className="text-lg focus:outline-none bg-gray-100  rounded-md py-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder="Enter Amount"
+                  />
+                  <p className="text-xs text-gray-500 ">
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
-            </div>
-            <div className="w-7/12 flex flex-col items-end">
-              <div className="w-auto flex items-center gap-2">
-                <img
-                  src={image}
-                  alt="Item Image"
-                  className="object-fill w-6 h-6 rounded-full"
-                />
-                <span className="text-lg">{asset}</span>
+                </div>
+                <div className="w-7/12 flex flex-col items-end">
+                  <div className="w-auto flex items-center gap-2">
+                    <img
+                      src={image}
+                      alt="Item Image"
+                      className="object-fill w-6 h-6 rounded-full"
+                    />
+                    <span className="text-lg">{asset}</span>
+                  </div>
+                  <p className="text-xs mt-4">{assetBorrow.toFixed(2)} Max </p>
+                </div>
               </div>
-              <p className="text-xs mt-4">{supplyBalance.toFixed(2)} Max </p>
             </div>
-          </div>
-        </div>
-        <div className="w-full ">
-          <div className="w-full flex justify-between my-2">
-            <h1>Transaction overview</h1>
-          </div>
-          <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
-            <div className="w-full flex flex-col my-1">
-              <div className="w-full flex justify-between items-center mt-2">
-                <p className="text-nowrap -mt-12">Remaining debt</p>
-                <p>
-                  <span className="text-[#2A1F9D] text-nowrap mt-2 dark:text-darkText">
-                    0.00001250 ETH
-                  </span>
-                  <span className="text-[#2A1F9D] dark:text-darkText">→</span>
-                  <div className="w-full flex justify-end items-center mt-1 ">
-                    <p className="text-[#2A1F9D] mb-2 dark:text-darkText">
-                      0.00002010 ETH
+            <div className="w-full ">
+              <div className="w-full flex justify-between my-2">
+                <h1>Transaction overview</h1>
+              </div>
+              <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="w-full flex flex-col my-1">
+                  <div className="w-full flex justify-between items-center mt-2">
+                    <p className="text-nowrap -mt-12">Remaining debt</p>
+                    <p>
+                      <span className="text-[#2A1F9D] text-nowrap mt-2 dark:text-darkText">
+                        0.00001250 ETH
+                      </span>
+                      <span className="text-[#2A1F9D] dark:text-darkText">→</span>
+                      <div className="w-full flex justify-end items-center mt-1 ">
+                        <p className="text-[#2A1F9D] mb-2 dark:text-darkText">
+                          0.00002010 ETH
+                        </p>
+                      </div>
+                      <div className="w-full flex justify-end items-center ">
+                        <span className="text-[#909094] text-nowrap -mt-2">
+                          $6.0
+                        </span>
+                        <span className="text-[#909094] -mt-2 ">→</span>
+                        <span className="text-[#909094] text-nowrap -mt-2">
+                          $6.0
+                        </span>
+                      </div>
                     </p>
                   </div>
-                  <div className="w-full flex justify-end items-center ">
-                    <span className="text-[#909094] text-nowrap -mt-2">
-                      $6.0
-                    </span>
-                    <span className="text-[#909094] -mt-2 ">→</span>
-                    <span className="text-[#909094] text-nowrap -mt-2">
-                      $6.0
-                    </span>
-                  </div>
-                </p>
-              </div>
-              <div className="w-full flex justify-between items-center">
-            <div className="w-full flex justify-between items-center">
+
+                  <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>
-                      <span className="text-red-500">{prevHealthFactor}</span>
+                      <span lassName={`${prevHealthFactor > 3
+                        ? "text-green-500"
+                        : prevHealthFactor <= 1
+                          ? "text-red-500"
+                          : prevHealthFactor <= 1.5
+                            ? "text-orange-600"
+                            : prevHealthFactor <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
+                        }`}>{prevHealthFactor}</span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          value > 3
-                            ? "text-green-500"
-                            : value <= 1
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                             ? "text-red-500"
-                            : value <= 1.5
-                            ? "text-orange-600"
-                            : value <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
                     </p>
                   </div>
+
+                  <div className="w-full flex justify-end items-center mt-1 ">
+                    <p className="text-[#909094]">liquidation at &lt;1</p>
+                  </div>
+                </div>
               </div>
-              <div className="w-full flex justify-end items-center mt-1 ">
-                <p className="text-[#909094]">liquidation at &lt;1</p>
+            </div>
+
+
+            <div className="w-full mt-3">
+              <div className="w-full">
+                <div className="flex items-center">
+                  <Fuel className="w-4 h-4 mr-1" />
+                  <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
+                  <img
+                    src={image}
+                    alt="asset icon"
+                    className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                  />
+                  <div className="relative group">
+                    <Info size={16} className="ml-2 cursor-pointer" />
+
+                    {/* Tooltip */}
+                    <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
+                      Fees deducted on every transaction
+                    </div>
+                  </div>
+                </div>
+                {balance <= 0 && <div className="w-full flex flex-col my-3 space-y-2">
+                  <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">
+                    <div className="w-1/12 flex items-center justify-center">
+                      <div className="warning-icon-container">
+                        <Info className=" text-[#f6ba43]" />
+                      </div>
+                    </div>
+                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                      You do not have enough {asset} in your account to pay for
+                      transaction fees on Ethereum Sepolia network. Please deposit {' '} {asset} {' '}
+                      from another account.
+                    </div>
+                  </div>
+                </div>}
               </div>
+
+              <button
+                onClick={handleClick}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                disabled={isLoading || (amount <= 0 || null) || isButtonDisabled}
+              >
+                {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
+              </button>
+
+              {/* Fullscreen Loading Overlay with Dim Background */}
+              {isLoading && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center z-50"
+                  style={{
+                    background: "rgba(0, 0, 0, 0.4)", // Dim background
+                    backdropFilter: "blur(1px)", // Blur effect
+                    pointerEvents: "all",
+                  }}
+                >
+                  <div className="loader"></div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      
-
-      <div className="w-full mt-3">
-        <div className="w-full">
-          <div className="flex items-center">
-            <Fuel className="w-4 h-4 mr-1" />
-            <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
-              <img
-                src={image}
-                alt="asset icon"
-                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
-              />
-              <div className="relative group">
-                <Info size={16} className="ml-2 cursor-pointer" />
-
-                {/* Tooltip */}
-                <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-                  Fees deducted on every transaction
-                </div>
-              </div>
-          </div>
-          <div className="w-full flex flex-col my-3 space-y-2">
-            <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">
-              <div className="w-1/12 flex items-center justify-center">
-                <div className="warning-icon-container">
-                  <Info className=" text-[#f6ba43]" />
-                </div>
-              </div>
-              <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                You do not have enough {asset} in your account to pay for
-                transaction fees on Ethereum Sepolia network. Please deposit {' '} {asset} {' '}
-                from another account.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button
-            onClick={handleClick}
-            className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center"
-            disabled={isLoading}
-          >
-            {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
-          </button>
-
-          {/* Fullscreen Loading Overlay with Dim Background */}
-          {isLoading && (
-            <div
-              className="absolute inset-0 flex items-center justify-center z-50"
-              style={{
-                background: "rgba(0, 0, 0, 0.4)", // Dim background
-                backdropFilter: "blur(1px)", // Blur effect
-                pointerEvents: "all",
-              }}
-            >
-              <div className="loader"></div>
-            </div>
-          )}
-      </div>
-      </div>
-      </div>
-    )}
+      )}
       {isPaymentDone && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
@@ -528,7 +553,7 @@ const Repay = ({ asset, image ,balance ,supplyRateAPR ,liquidationThreshold, ass
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-            You have repayed {amount} d{asset}
+              You have repayed {amount} d{asset}
             </p>
 
             {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">

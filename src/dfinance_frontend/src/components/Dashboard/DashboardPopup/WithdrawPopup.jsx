@@ -14,11 +14,20 @@ import "react-toastify/dist/ReactToastify.css";
 const WithdrawPopup = ({ asset,
   image,
   supplyRateAPR,
-  balance, 
+  balance,
+  liquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
-  onLoadingChange,liquidationThreshold, assetSupply, assetBorrow, }) => {
+  onLoadingChange, }) => {
+
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
+  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
 
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset);
@@ -36,6 +45,8 @@ const WithdrawPopup = ({ asset,
     return <p>Error: Fees data not available.</p>;
   }
 
+  const isCollateral = true;
+
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
@@ -46,11 +57,12 @@ const WithdrawPopup = ({ asset,
           coinId = "bitcoin";
         } else if (asset === "ckETH") {
           coinId = "ethereum";
+        } else if (asset === "ckUSDC") {
+          coinId = "usd-coin"; // Add ckUSDC mapping to CoinGecko's USDC
         } else {
           console.error("Unsupported asset:", asset);
           return;
         }
-
         // Fetch conversion rate from CoinGecko
         const response = await fetch(
           `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
@@ -225,9 +237,8 @@ const WithdrawPopup = ({ asset,
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
-    } else {
-      console.error("Unknown asset:", asset);
-      return;
+    } else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActorckUSDC; // Add ckUSDC ledger actor
     }
 
     try {
@@ -237,7 +248,7 @@ const WithdrawPopup = ({ asset,
       // Call the withdraw function on the selected ledger actor
       const withdrawResult = await backendActor.withdraw(asset, amountInUnits, [], true);
       console.log("Withdraw result", withdrawResult);
-      toast.success("Supply successful!");
+      toast.success("Withdraw successful!");
       window.location.reload()
 
       // Handle success, e.g., show success message, update UI, etc.
@@ -268,6 +279,48 @@ const WithdrawPopup = ({ asset,
     window.location.reload();
   };
 
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
+    console.log('Health Factor:', healthFactor);
+    const ltv = calculateLTV(assetSupply, assetBorrow);
+    console.log('LTV:', ltv);
+    setPrevHealthFactor(currentHealthFactor);
+    setCurrentHealthFactor(healthFactor.toFixed(2));
+
+    if (healthFactor < 1 ) {
+      setIsButtonDisabled(true);
+    } else {
+      setIsButtonDisabled(false);
+    }
+
+  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
+
+
+  const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
+    const amountTaken =  parseFloat(usdValue) || 0; // Ensure usdValue is treated as a number
+    const amountAdded = 0// No amount added for now, but keeping it in case of future use
+
+    // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
+    const totalCollateralValue = parseFloat(totalCollateral) - amountTaken;
+    const totalDeptValue = parseFloat(totalDebt) + amountAdded;
+    console.log("totalCollateralValue", totalCollateralValue)
+    console.log("totalDeptValue", totalDeptValue)
+    console.log("amountAdded", amountAdded)
+    console.log("liquidationThreshold", liquidationThreshold)
+    console.log("totalDebt", totalDebt)
+    if (totalDeptValue === 0) {
+      return Infinity;
+    }
+    return (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
+  };
+
+  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
+    if (totalCollateralValue === 0) {
+      return 0;
+    }
+    return totalDeptValue / totalCollateralValue;
+  };
+
   return (
     <>
       <h1 className="font-semibold text-xl">Withdraw {asset}</h1>
@@ -286,9 +339,9 @@ const WithdrawPopup = ({ asset,
                 className="text-md focus:outline-none bg-gray-100 rounded-md py-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                 placeholder="Enter Amount"
               />
-             <p className="text-xs text-gray-500 ">
-                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
-                  </p>
+              <p className="text-xs text-gray-500 ">
+                {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+              </p>
             </div>
             <div className="w-7/12 md:w-8/12 flex flex-col items-end">
               <div className="w-auto flex items-center gap-2">
@@ -312,7 +365,62 @@ const WithdrawPopup = ({ asset,
               <p className="text-sm">Remaining supply</p>
             </div>
             <div className="w-4/12 flex flex-col items-end">
-              <p className="text-xs mt-2">{assetSupply-amount} Max</p>
+              <p className="text-xs mt-2">{assetSupply - amount} Max</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="w-full">
+        <div className="w-full flex justify-between my-2">
+
+        </div>
+        <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+          <div className="w-full flex justify-between items-center my-1">
+            <p>Supply APY</p>
+            <p>{supplyRateAPR}%</p>
+          </div>
+          <div className="w-full flex justify-between items-center my-1">
+            <p>Collateralization</p>
+            <p
+              className={`font-semibold ${isCollateral ? "text-green-500" : "text-red-500"
+                }`}
+            >
+              {isCollateral ? "Enabled" : "Disabled"}
+            </p>
+          </div>
+          <div className="w-full flex flex-col my-1">
+            <div className="w-full flex justify-between items-center">
+              <p>Health Factor</p>
+              <p>
+                <span lassName={`${prevHealthFactor > 3
+                    ? "text-green-500"
+                    : prevHealthFactor <= 1
+                      ? "text-red-500"
+                      : prevHealthFactor <= 1.5
+                        ? "text-orange-600"
+                        : prevHealthFactor <= 2
+                          ? "text-orange-400"
+                          : "text-orange-300"
+                  }`}>{prevHealthFactor}</span>
+                <span className="text-gray-500 mx-1">→</span>
+                <span
+                  className={`${currentHealthFactor > 3
+                      ? "text-green-500"
+                      : currentHealthFactor <= 1
+                        ? "text-red-500"
+                        : currentHealthFactor <= 1.5
+                          ? "text-orange-600"
+                          : currentHealthFactor <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                    }`}
+                >
+                  {currentHealthFactor}
+                </span>
+              </p>
+            </div>
+            <div className="w-full flex justify-end items-center mt-1">
+              <p className="text-gray-500">liquidation at &lt;1</p>
             </div>
           </div>
         </div>
@@ -339,8 +447,25 @@ const WithdrawPopup = ({ asset,
 
       </div>
       <div>
-        <Button title="Withdraw" onClickHandler={handleWithdraw} />
+        <Button
+         className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
+          isLoading  || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
+        }`}title="Withdraw" 
+        onClickHandler={handleWithdraw} 
+        disabled={isLoading || (amount <= 0 || null) || isButtonDisabled}
+        />
       </div>
+      {isLoading && (
+            <div
+              className="absolute inset-0 flex items-center justify-center z-50"
+              style={{
+                background: "rgba(0, 0, 0, 0.4)", // Dim background
+                backdropFilter: "blur(1px)", // Blur effect
+              }}
+            >
+              <div className="loader"></div>
+            </div>
+          )}
     </>
   );
 };

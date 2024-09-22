@@ -19,7 +19,11 @@ const SupplyPopup = ({
   image,
   supplyRateAPR,
   balance,
-  liquidationThreshold, assetSupply, assetBorrow,
+  liquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
@@ -32,34 +36,6 @@ const SupplyPopup = ({
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null); 
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
-
-
-  // useEffect(() => {
-  //   const fetchAssetPrices = async () => {
-  //     try {
-  //       const response = await fetch(
-  //         'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd'
-  //       );
-  //       const data = await response.json();
-  //       const prices = {
-  //         ckbtc: data.bitcoin.usd,
-  //         cketh: data.ethereum.usd,
-  //         ckusdc: data['usd-coin'].usd,
-  //         icp: data['internet-computer'].usd,
-  //       };
-  //       const assetSupplyInUSD = convertToUSD(asset, assetSupply, prices);
-  //       dispatch(updateAssetValues({
-  //         asset,
-  //         assetSupplyInUSD,
-  //       }));
-
-  //     } catch (error) {
-  //       console.error('Error fetching asset prices:', error);
-  //     }
-  //   };
-
-  //   fetchAssetPrices();
-  // }, [asset, assetSupply, assetBorrow, dispatch]);
 
   const convertToUSD = (asset, value, prices) => {
     switch (asset) {
@@ -101,22 +77,6 @@ const SupplyPopup = ({
     
   }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
 
-// totalCollaterl + totalSUpplyUSD;
-// amoutn added, amiunt taken args
-  const calculateHealthFactor = (totalCollateralValue, totalBorrowedValue, liquidationThreshold) => {
-    if (totalBorrowedValue === 0) {
-      return Infinity;
-    }
-    return (totalCollateralValue * liquidationThreshold) / totalBorrowedValue;
-  };
-
-  const calculateLTV = (totalCollateralValue, totalBorrowedValue) => {
-    if (totalCollateralValue === 0) {
-      return 0; 
-    }
-    return totalBorrowedValue / totalCollateralValue;
-  };
-
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : 'default';
@@ -132,7 +92,7 @@ const SupplyPopup = ({
   const value = currentHealthFactor
   const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
   const [usdValue, setUsdValue] = useState(0);
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -327,6 +287,9 @@ const SupplyPopup = ({
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
     }
+    else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActorckUSDC;
+    }
 
     // Convert amount and transferFee to numbers and add them
     const supplyAmount = Number(amount);
@@ -374,6 +337,9 @@ const SupplyPopup = ({
         ledgerActor = ledgerActorckBTC;
       } else if (asset === "ckETH") {
         ledgerActor = ledgerActorckETH;
+      }
+      else if (asset === "ckUSDC") {
+        ledgerActor = ledgerActorckUSDC;
       }
   
       const amountAsNat64 = BigInt(amount);
@@ -432,6 +398,48 @@ const SupplyPopup = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
+    console.log('Health Factor:', healthFactor);
+    const ltv = calculateLTV(assetSupply, assetBorrow);
+    console.log('LTV:', ltv);
+    setPrevHealthFactor(currentHealthFactor);
+    setCurrentHealthFactor(healthFactor.toFixed(2));
+
+    if (healthFactor < 1 ) {
+      setIsButtonDisabled(true); 
+    } else {
+      setIsButtonDisabled(false); 
+    }
+
+  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
+
+
+  const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
+    const amountTaken = 0; // Ensure usdValue is treated as a number
+    const amountAdded = parseFloat(usdValue) || 0; // No amount added for now, but keeping it in case of future use
+
+    // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
+    const totalCollateralValue = parseFloat(totalCollateral) + amountAdded;
+    const totalDeptValue = parseFloat(totalDebt) + amountTaken;
+    console.log("totalCollateralValue",totalCollateralValue)
+    console.log("totalDeptValue",totalDeptValue)
+    console.log("amountAdded",amountAdded)
+    console.log("liquidationThreshold",liquidationThreshold)
+    console.log("totalDebt",totalDebt)
+    if (totalDeptValue === 0) {
+      return Infinity;
+    }
+    return (totalCollateralValue * (liquidationThreshold/100)) / totalDeptValue;
+  };
+
+  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
+    if (totalCollateralValue === 0) {
+      return 0;
+    }
+    return totalDeptValue / totalCollateralValue;
   };
 
   return (
@@ -495,7 +503,17 @@ const SupplyPopup = ({
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>
-                      <span className="text-red-500">{prevHealthFactor}</span>
+                      <span lassName={`${
+                          prevHealthFactor > 3
+                            ? "text-green-500"
+                            : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}>{prevHealthFactor}</span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${
@@ -566,8 +584,10 @@ const SupplyPopup = ({
 
           <button
             onClick={handleClick}
-            className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center"
-            disabled={isLoading}
+            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
+              isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={isLoading || (amount <= 0 || null) || isButtonDisabled}
           >
             {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
           </button>

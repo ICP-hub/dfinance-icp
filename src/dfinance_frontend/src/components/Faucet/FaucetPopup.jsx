@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Info, X } from 'lucide-react';
 import FaucetPayment from "./FaucetPayment"; // Import FaucetPayment component
 import Vector from "../../../public/Helpers/Vector.png"
+import { Fuel } from "lucide-react";
+import { useSelector } from "react-redux";
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [amount, setAmount] = useState("");
   const [showFaucetPayment, setShowFaucetPayment] = useState(false); // State for showing/hiding FaucetPayment popup
@@ -19,11 +21,16 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     setShowFaucetPayment(false);
     onClose();
   };
-
+  const fees = useSelector((state) => state.fees.fees);
+  console.log("Asset:", asset); // Check what asset value is being passed
+  console.log("Fees:", fees); // Check the fees object
+  const normalizedAsset = asset ? asset.toLowerCase() : 'default';
+  const transferFee = fees[normalizedAsset] || fees.default;
+  const transferfee = Number(transferFee);
   return (
     <>
       {!showFaucetPayment && (
-        <div className="w-[325px] lg1:w-[420px] h-[290px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-[1rem] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-7 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="flex justify-between items-center mb-4">
             <h1 className="font-semibold text-xl">Faucet {asset}</h1>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none">
@@ -37,39 +44,26 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="w-3/12">
-                  <input
-                    type="text"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    className="text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-[#1D1B40] dark:text-darkText"
-                    placeholder="Amount"
-                  />
+                <p>Amount</p>
                 </div>
                 <div className="w-9/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={assetImage}
                       alt="connect_wallet_icon"
-                      className="object-cover w-8 h-8"
+                      className="object-cover w-8 h-8 rounded-full"
                     />
-                    <span className="text-lg">1,00000 {asset}</span>
+                    <span className="text-lg">1,000 {asset}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="w-full flex justify-between items-center mt-3">
-            <div className="flex items-center">
-              <img
-                src={Vector}
-                alt="Vector Image"
-                className="w-4 h-4 mr-1"
-              />
-              <h1>$6.06</h1>
-              <Info size={16} className="ml-2" />
-            </div>
-          </div>
+          <div className="w-full flex  mt-3">
+        
+
+      </div>
           <div>
             <button
               onClick={handleFaucetETH}

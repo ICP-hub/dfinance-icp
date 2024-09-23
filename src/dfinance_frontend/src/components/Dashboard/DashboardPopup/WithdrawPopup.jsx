@@ -3,6 +3,7 @@ import Button from "../../Common/Button";
 import { Info } from "lucide-react";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
+import {  Check, Wallet, X } from "lucide-react";
 import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
 import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
 import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
@@ -249,7 +250,10 @@ const WithdrawPopup = ({ asset,
       const withdrawResult = await backendActor.withdraw(asset, amountInUnits, [], true);
       console.log("Withdraw result", withdrawResult);
       toast.success("Withdraw successful!");
-      window.location.reload()
+      setIsPaymentDone(true);
+      setIsVisible(false);
+      
+      
 
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
@@ -323,6 +327,8 @@ const WithdrawPopup = ({ asset,
 
   return (
     <>
+     {isVisible && (
+      <div className="withdraw-popup" ref={modalRef}>
       <h1 className="font-semibold text-xl">Withdraw {asset}</h1>
       <div className="flex flex-col gap-2 mt-5 text-sm">
         <div className="w-full">
@@ -466,6 +472,43 @@ const WithdrawPopup = ({ asset,
               <div className="loader"></div>
             </div>
           )}
+          </div>
+     )}
+      {isPaymentDone && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
+            >
+              <X size={24} />
+            </button>
+            <div className="border rounded-full p-2 my-3 text-green-500 border-green-500">
+              <Check />
+            </div>
+            <h1 className="font-semibold text-xl">All done!</h1>
+            <p className="mt-2"> 
+            You have withdrawn {amount} d{asset}
+            </p>
+
+            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
+              <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
+                <span>Add dToken to wallet to track your balance.</span>
+              </div>
+              <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
+                <Wallet />
+                Add to wallet
+              </button>
+            </div> */}
+            <button
+              onClick={handleClosePaymentPopup}
+              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
+            >
+              Close Now
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

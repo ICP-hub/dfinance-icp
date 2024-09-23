@@ -88,7 +88,7 @@ const RiskPopup = ({ onClose, userData }) => {
                         <h3 className="text-lg font-semibold text-center w-full text-[#4659CF] dark:text-darkText">Liquidation Risk Parameters</h3>
                     </div>
                     <div className="mt-2 text-sm text-gray-500 dark:text-darkText">
-                        Your health factor and loan to value determine the assurance of your collateral. To avoid liquidations, you can supply more collateral or repay borrow positions. <a href="#" className="text-blue-500 underline">Learn more</a>
+                        Your health factor and loan to value determine the assurance of your collateral. To avoid liquidations, you can supply more collateral or repay borrow positions. 
                     </div>
                     <div className="mt-4 space-y-6">
                         <div className="border border-gray-600 rounded-lg p-4">
@@ -108,11 +108,13 @@ const RiskPopup = ({ onClose, userData }) => {
                                     <rect className="transition-bar" x="0" y="15" width="100%" height="2" fill="url(#lineGradient)" />
                                     <rect className="transition-bar" x={`${healthFactorMinPosition}%`} y="12" width="0.25%" height="9" fill="red" />
                                     <rect className="transition-bar" x={`${healthFactorPosition}%`} y="12" width="0.25%" height="9" fill={healthFactorColor} />
-                                    <text className="transition-text" x={`${healthFactorPosition}%`} y="9" fill="gray" fontSize="12" textAnchor="middle" dx="0.3em" dy=".07em">{health_Factor_Value}</text>
+                                    <text className="transition-text" x={`${healthFactorPosition}%`} y="9" fill="gray" fontSize="12" textAnchor="middle" dx="0.3em" dy=".07em">{parseFloat(health_Factor_Value)?.toFixed(2) || "0.00"}</text>
                                     <text className='transition-text' x={`${healthFactorMinPosition}%`} y="35" fill="red" fontSize="12" textAnchor="middle">{healthFactorMinValue}</text>
                                 </svg>
-                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">{health_Factor_Value}</span>
-                            </div>
+                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded">
+  {parseFloat(health_Factor_Value)?.toFixed(2) || "0.00"}
+</span>
+    </div>
                             <p className="text-xs text-gray-400 mt-1 dark:text-darkTextSecondary">
                                 If the health factor goes below {healthFactorMinValue}, the {liquidationThresholdLabel.toLowerCase()} of your collateral might be triggered.
                             </p>
@@ -134,11 +136,11 @@ const RiskPopup = ({ onClose, userData }) => {
                                     <rect className="transition-bar" x="0" y="15" width="100%" height="2" fill="url(#lineGradientt)" />
                                     <rect className="transition-bar" x={`${currentLTVThresholdPosition}%`} y="12" width="0.25%" height="9" fill="yellow" />
                                     <rect className="transition-bar" x={`${currentLTVPosition}%`} y="12" width="0.25%" height="9" fill={ltvColor} />
-                                    <text className="transition-text" x={`${currentLTVPosition}%`} y="30" fill="gray" fontSize="12" textAnchor="left" dx="0.1em" dy=".2em">{Ltv_Value}</text>
+                                    <text className="transition-text" x={`${currentLTVPosition}%`} y="30" fill="gray" fontSize="12" textAnchor="left" dx="0.1em" dy=".2em"> {parseFloat(Ltv_Value)?.toFixed(2) || "0.00"}</text>
                                     <text className="transition-text" x={`${currentLTVThresholdPosition}%`} y="10" fill="red" fontSize="12" textAnchor="middle">{liquidationThreshold_Value}</text>
                                     <text className="transition-text" x={`${currentLTVThresholdPosition}%`} y="40" fill="red" fontSize="12" textAnchor="middle">{liquidationThresholdLabel}</text>
                                 </svg>
-                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded cursor-pointer">{Ltv_Value}</span>
+                                <span className="ml-2 px-2 py-1 bg-green-100 text-green-500 font-bold rounded cursor-pointer"> {parseFloat(Ltv_Value)?.toFixed(2) || "0.00"}</span>
                             </div>
                             <p className="text-xs text-gray-400 mt-6 dark:text-darkTextSecondary">
                                 If your loan to value goes above {liquidationThreshold_Value}, your collateral may be liquidated.

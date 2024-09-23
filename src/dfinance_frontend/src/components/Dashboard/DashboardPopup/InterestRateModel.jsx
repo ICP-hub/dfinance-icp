@@ -20,7 +20,7 @@ const InterestRateModel = () => {
           <button className='cursor-pointer hover:text-[#7369df]'>Borrow APR, variable</button>
           <button className='cursor-pointer hover:text-[#7369df]'>Utilization Rate</button>
         </div>
-        <LineGraph />
+        {/* <LineGraph /> */}
       </div>
     </div>
   )

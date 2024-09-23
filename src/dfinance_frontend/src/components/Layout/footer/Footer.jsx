@@ -21,14 +21,14 @@ export const Footer = () => {
 
     let community = [
         { href: '#', text: 'Help Center' },
-        { href: '#', text: 'Partners' }, { href: '#', text: 'Suggestion' }, 
+        { href: '#', text: 'Partners' }, { href: '#', text: 'Suggestion' },
         { href: '#', text: 'Blog' }];
 
     let socials = [
-        { name: 'Facebook', url: '#', icon: <GrFacebookOption />},
-        { name: 'Linked', url: '#', icon: <FaLinkedinIn />},
-        { name: 'Instagram', url: '#', icon: <IoLogoInstagram />},
-        { name: 'Twitter', url: '#', icon: <IoLogoTwitter />}
+        { name: 'Facebook', url: '#', icon: <GrFacebookOption /> },
+        { name: 'Linked', url: 'https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all', icon: <FaLinkedinIn /> },
+        { name: 'Instagram', url: '#', icon: <IoLogoInstagram /> },
+        { name: 'Twitter', url: '#', icon: <IoLogoTwitter /> }
     ];
 
     return (

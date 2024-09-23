@@ -299,7 +299,7 @@ const Borrow = ({
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1 ) {
+    if (healthFactor < 1) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
@@ -365,7 +365,10 @@ const Borrow = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">{assetSupply.toFixed(2)} Max </p>
+                  <p className="text-xs mt-4">
+                    {parseFloat(assetSupply)?.toFixed(2) || "0.00"} Max
+                  </p>
+
                 </div>
               </div>
             </div>

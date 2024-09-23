@@ -328,7 +328,7 @@ const DashboardNav = () => {
           {isPopupOpen && <RiskPopup onClose={handleClosePopup} userData={userData} />}
 
         </div>
-        <div className="ml-auto hidden lg:flex">
+        {/* <div className="ml-auto hidden lg:flex">
           {isAuthenticated && shouldRenderTransactionHistoryButton && (
             <a href="/dashboard/transaction-history" className="block">
               <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-md shadow-md hover:shadow-[#00000040] font-medium text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
@@ -336,7 +336,7 @@ const DashboardNav = () => {
               </button>
             </a>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );

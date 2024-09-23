@@ -21,6 +21,8 @@ import { toast } from "react-toastify";  // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import useAssetData from "../Common/useAssets";
+import { Fuel } from "lucide-react";
+import { useSelector } from "react-redux";
 
 
 const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
@@ -28,6 +30,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     isAuthenticated,
     createLedgerActor, backendActor
   } = useAuth()
+
+
+
+
   console.log("mappeditems", mappedItem)
   const [rewardAmount, setRewardAmount] = useState(10);
   const [amountToRepay, setAmountToRepay] = useState();
@@ -63,7 +69,17 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     };
   }, []);
 
+  const transactionFee = 0.01;
+  const fees = useSelector((state) => state.fees.fees);
+  const normalizedAsset = selectedAsset ? selectedAsset.toLowerCase() : 'default';
 
+
+  if (!fees) {
+    return <p>Error: Fees data not available.</p>;
+  }
+
+  const transferFee = fees[normalizedAsset] || fees.default;
+  const transferfee = Number(transferFee);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -137,7 +153,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   };
   const [amountBorrowUSD, setAmountBorrowUSD] = useState(null)
+
+  const [isCollateralAssetSelected, setIsCollateralAssetSelected] = useState(false)
   const handleAssetSelection = (asset) => {
+    setIsCollateralAssetSelected(true);
     setSelectedAsset(asset); // Set the selected asset (only one at a time)
     const assetRewardAmounts = {
       cketh: 0.0032560,
@@ -148,7 +167,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     setRewardAmount(assetRewardAmounts[asset] || 10);
   };
 
+  const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
+
   const handleDebtAssetSelection = (asset, assetBorrowAmount) => {
+    setIsDebtAssetSelected(true);
     setSelectedDebtAsset(asset); // Set the selected asset (only one at a time)
     setAmountToRepay(assetBorrowAmount ? assetBorrowAmount : 0);
 
@@ -381,8 +403,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   };
 
   const handleConfirmLiquidation = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
+
       const supplyAmount = BigInt(Math.floor(amountToRepay));
       console.log("backend actor", backendActor);
 
@@ -407,19 +430,35 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   };
 
 
+  // const handleButtonClick = async () => {
+  //   try {
+  //     setIsLoading(true); // Start loading
+  //     if (isApproved) {
+  //       await handleCallLiquidation(); // Call the liquidation function
+  //     } else {
+  //       await handleApprove(); // Call the approve function
+  //     }
+  //   } finally {
+  //     setIsLoading(false); // Stop loading once the function is done
+  //   }
+  // };
+
   const handleCloseWarningPopup = () => {
     setShowWarningPopup(false);
   };
 
   const handleCallLiquidation = () => {
+
     setShowWarningPopup(true);
 
   };
 
   const handleCancelOrConfirm = () => {
     if (isCheckboxChecked) {
+      setIsLoading(true);
       handleConfirmLiquidation();
     } else {
+      setIsLoading(false);
       handleCloseWarningPopup();
     }
   };
@@ -524,7 +563,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
 
 
+
   const renderDebtAssetDetails = (asset) => {
+
     switch (asset) {
       case "ckETH":
         return (
@@ -619,7 +660,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {rewardAmount}
+                {(amountToRepay * (liquidation_bonus / 100)).toFixed(2)}
               </p>
             </div>
           </div>
@@ -649,7 +690,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {rewardAmount}
+                {(amountToRepay * (liquidation_bonus / 100)).toFixed(2)}
               </p>
             </div>
           </div>
@@ -681,7 +722,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {rewardAmount}
+                {(amountToRepay * (liquidation_bonus / 100)).toFixed(2)}
               </p>
             </div>
           </div>
@@ -747,6 +788,26 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     total_borrowed = item.total_borrowed ? formatNumber(item.total_borrowed) : "0";
     total_supplied = item.total_supplied ? formatNumber(item.total_supplied) : "0";
   }
+
+
+  const [selectedAssetBalance, setSelectedAssetBalance] = useState(0);
+
+  // When an asset is selected, update the balance accordingly
+  useEffect(() => {
+    switch (selectedDebtAsset) {
+      case "ckETH":
+        setSelectedAssetBalance(ckETHBalance);
+        break;
+      case "ckBTC":
+        setSelectedAssetBalance(ckBTCBalance);
+        break;
+      case "ckUSDC":
+        setSelectedAssetBalance(ckUSDCBalance);
+        break;
+      default:
+        setSelectedAssetBalance(0);
+    }
+  }, [selectedDebtAsset, ckETHBalance, ckBTCBalance, ckUSDCBalance]);
 
 
   return (
@@ -815,14 +876,27 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
           </div>
 
           <div className="flex justify-center mt-6">
-            <button
-              className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              onClick={handleCancelOrConfirm}
-              disabled={isLoading} // Disable the button while loading
-            >
-              {isCheckboxChecked ? "Call Liquidation" : "Cancel"}
-            </button>
+            {isCheckboxChecked ? (
+              // Button for "Call Liquidation"
+              <button
+                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={handleConfirmLiquidation}
+                disabled={isLoading} // Disable the button while loading
+              >
+                {"Call Liquidation"}
+              </button>
+            ) : (
+              // Button for "Cancel"
+              <button
+                className="bg-gray-400 dark:bg-gray-500 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2"
+                onClick={handleCloseWarningPopup}
+                disabled={isLoading} // Disable the button while loading
+              >
+                Cancel
+              </button>
+            )}
+
+
 
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
@@ -881,12 +955,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
                     console.log("assetBorrowAmountInUSD", assetBorrowAmountInUSD)
 
-                    const assetBalanceUSD = assetName === "ckBTC" ? ckBTCUsdBalance
-                      : assetName === "ckETH" ? ckETHUsdBalance
-                        : assetName === "ckUSDC" ? ckUSDCUsdBalance
+                    const assetBalance = assetName === "ckBTC" ? ckBTCBalance
+                      : assetName === "ckETH" ? ckETHBalance
+                        : assetName === "ckUSDC" ? ckUSDCBalance
                           : 0;
 
-                    if (assetSupply > 0 && assetBorrowAmountInUSD > assetBalanceUSD) {
+                    if (assetSupply > 0 && assetBorrowAmount < assetBalance) {
                       return (
                         <label className="flex items-center space-x-2">
                           <input
@@ -914,14 +988,31 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 {/* Render asset details based on selected checkboxes */}
                 {renderAssetDetails(selectedAsset)}
                 <div className="flex items-center mt-2">
-                  <img
-                    src={Vector}
-                    alt="Vector Image"
-                    className="w-4 h-4 mr-1"
-                  />
-                  <h1 className="text-xs  text-[#233D63] dark:text-darkText font-medium">
-                    100 ICP
-                  </h1>
+                  <Fuel className="w-4 h-4 mr-1" />
+                  <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
+                  {selectedAsset === "ckBTC" && (
+                    <img
+                      src={ckBTC}
+                      alt="ckBTC icon"
+                      className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                    />
+                  )}
+
+                  {selectedAsset === "ckETH" && (
+                    <img
+                      src={ckETH}
+                      alt="ckETH icon"
+                      className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                    />
+                  )}
+
+                  {selectedAsset === "ckUSDC" && (
+                    <img
+                      src={ckUSDC}
+                      alt="ckUSDC icon"
+                      className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                    />
+                  )}
                 </div>
               </div>
               <div className="flex justify-between mt-4">
@@ -933,12 +1024,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isCollateralAssetSelected ? "opacity-100" : "opacity-50 cursor-not-allowed"
+                    }`}
                   onClick={() => {
                     console.log("Button clicked");
                     isApproved ? handleCallLiquidation() : handleApprove();
                   }}
-                  disabled={isLoading}
+                  disabled={isLoading || !isCollateralAssetSelected}
                 >
                   {isApproved ? `Call Liquidation ${selectedDebtAsset}` : `Approve ${selectedDebtAsset} to continue`}
                 </button>
@@ -979,7 +1071,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                             name="asset"
                             className="form-radio text-[#EB8863]"
                             checked={selectedDebtAsset === assetName}
-                            onChange={() => handleDebtAssetSelection(assetName, assetBorrowAmountInUSD)}
+                            onChange={() => handleDebtAssetSelection(assetName, assetBorrowAmount)}
                           />
                           <img
                             key={index}
@@ -1011,7 +1103,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   <p className="text-base font-bold text-[#2A1F9D] dark:text-darkText ">
                     Amount to Repay
                   </p>
-                  <p className="text-base font-bold">$ {amountToRepay}</p>
+                  <p className="text-base font-bold">{amountToRepay}</p>
                 </div>
 
                 {renderDebtAssetDetails(selectedDebtAsset)}
@@ -1025,8 +1117,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance ? "opacity-100" : "opacity-50 cursor-not-allowed"
+                    }`}
                   onClick={handleNextClick}
+                  disabled={!isDebtAssetSelected}
                 >
                   NEXT
                 </button>

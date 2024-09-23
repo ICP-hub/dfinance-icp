@@ -8,26 +8,104 @@ import Button from "../../components/Common/Button"
 import { useNavigate } from "react-router-dom"
 import { Modal } from "@mui/material"
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  setIsWalletConnected,
-  setWalletModalOpen
-} from '../../redux/reducers/utilityReducer'
 import { useAuth } from "../../utils/useAuthClient"
 import { useRef } from "react"
 
 import icplogo from '../../../public/wallet/icp.png'
-import plug from "../../../public/wallet/plug.png"
-import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
 import Pagination from "../../components/Common/pagination";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import cekTH from '../../../public/assests-icon/cekTH.png';
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import useAssets from "../../components/Common/useAssets"
 import useAssetData from "../../components/Common/useAssets"
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import { setUserData } from '../../redux/reducers/userReducer'
+import {
+  setIsWalletConnected,
+  setWalletModalOpen,
+  setConnectedWallet
+} from "../../redux/reducers/utilityReducer"
+import { Principal } from "@dfinity/principal";
+import { useMemo } from "react"
 
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
+
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
+  
+  console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
+
+  const {
+      isAuthenticated,
+      login,
+      logout,
+      principal,
+      createLedgerActor,
+  } = useAuth()
+
+  const handleWalletConnect = () => {
+      console.log("connrcterd");
+      dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
+  }
+
+  const handleWallet = () => {
+      dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
+      dispatch(setIsWalletConnected(true))
+      navigate('/dashboard/my-supply')
+  }
+
+  useEffect(() => {
+      if (isWalletCreated) {
+          navigate('/dashboard/wallet-details')
+      }
+  }, [isWalletCreated]);
+
+
+  const loginHandlerIsSwitch = async (val) => {
+      dispatch(setUserData(null));
+      await logout();
+      await login(val);
+      dispatch(setConnectedWallet(val));
+      dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
+
+  };
+
+  const loginHandler = async (val) => {
+      await login(val);
+      dispatch(setConnectedWallet(val));
+  };
+
+  const handleLogout = () => {
+      dispatch(setUserData(null));
+      logout();
+  };
+
+  const [inputValue, setInputValue] = useState('');
+
+  const handleInputChange = (event) => {
+      setInputValue(event.target.value);
+  };
+
+  
+
+  const walletDisplayName = (wallet) => {
+      switch (wallet) {
+          case 'ii':
+              return "Internet Identity";
+          case 'plug':
+              return "Plug";
+          case 'bifinity':
+              return "Bitfinity";
+          case 'nfid':
+              return "NFID";
+          default:
+              return "Unknown Wallet";
+      }
+  };
+
+ 
 
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -39,24 +117,22 @@ const WalletDetails = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeChevron, setActiveChevron] = useState(null);
   const itemsPerPage = 8; // Number of items per page
-  const navigate = useNavigate();
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  const {
-    isAuthenticated,
-    login,
-    fetchReserveData,
-    backendActor
-  } = useAuth();
+
+
+
+const principalObj = Principal.fromText(principal);
+
 
 
 
   const handleDetailsClick = (asset) => {
-    setSelectedAsset(asset); 
-    console.log("Selected Asset:", asset); 
-    navigate(`/dashboard/asset-details/${asset}`); 
+    setSelectedAsset(asset);
+    console.log("Selected Asset:", asset);
+    navigate(`/dashboard/asset-details/${asset}`);
   };
 
 
@@ -72,19 +148,7 @@ const WalletDetails = () => {
     setShowPopup(false);
   };
 
-  const dispatch = useDispatch()
-  const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
 
-  const handleWalletConnect = () => {
-    console.log("connected");
-    dispatch(setWalletModalOpen(!isWalletModalOpen))
-  }
-
-  const handleWallet = () => {
-    dispatch(setWalletModalOpen(!isWalletModalOpen))
-    dispatch(setIsWalletConnected(true))
-    navigate('/dashboard/my-supply')
-  }
 
   useEffect(() => {
     if (isWalletCreated) {
@@ -92,15 +156,7 @@ const WalletDetails = () => {
     }
   }, [isWalletCreated]);
 
-  const loginHandler = async (val) => {
-    await login(val);
-  };
-
-  const [inputValue, setInputValue] = useState('');
-
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
+  
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
@@ -109,7 +165,7 @@ const WalletDetails = () => {
 
   const { assets, reserveData, filteredItems, error } = useAssetData(searchQuery);
 
-    const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
 
 
   const filteredReserveData = Object.fromEntries(filteredItems);
@@ -120,7 +176,7 @@ const WalletDetails = () => {
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
 
-  const popupRef = useRef(null); 
+  const popupRef = useRef(null);
 
 
 
@@ -204,22 +260,22 @@ const WalletDetails = () => {
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                     <td key={index} className=" whitespace-nowrap">
-                    <div className={`flex ${index === 0 ? 'justify-start' : 'justify-center'}`}>
-                      {item.header}
-                    </div>
-                  </td>
+                      <div className={`flex ${index === 0 ? 'justify-start' : 'justify-center'}`}>
+                        {item.header}
+                      </div>
+                    </td>
                   ))}
                   <td className="p-3 hidden md:table-cell"><div className="flex justify-center">
-                  {WALLET_ASSETS_TABLE_COL[2]?.header}</div></td>
+                    {WALLET_ASSETS_TABLE_COL[2]?.header}</div></td>
                   <td className="p-3 hidden md:table-cell">
                     <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[3]?.header}</div>
-                    </td>
-                    <td className="p-3 hidden md:table-cell">
+                  </td>
+                  <td className="p-3 hidden md:table-cell">
                     <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[4]?.header}</div>
-                    </td>
-               <td className="p-3 ">
+                  </td>
+                  <td className="p-3 ">
                     <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[5]?.header}</div>
-                    </td>
+                  </td>
                 </tr>
               </thead>
               <tbody>
@@ -231,13 +287,13 @@ const WalletDetails = () => {
                     <td className=" align-top py-4">
                       <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
                         {item[0] === "ckBTC" && (
-                          <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full"/>
+                          <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
                         )}
                         {item[0] === "ckETH" && (
-                          <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full"/>
+                          <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full" />
                         )}
                         {item[0] === "ckUSDC" && (
-                          <img src={ckUSDC} alt="cketh logo" className="w-8 h-8 rounded-full"/>
+                          <img src={ckUSDC} alt="cketh logo" className="w-8 h-8 rounded-full" />
                         )}
                         {item[0]}
                       </div>
@@ -254,24 +310,24 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-3 align-top hidden md:table-cell pt-5"><div className="flex justify-center">
-                    {item[1].Ok.supply_rate_apr}%</div></td>
+                      {item[1].Ok.supply_rate_apr}%</div></td>
                     <td className="p-3 align-top hidden md:table-cell">
                       <div className="flex justify-center flex-row mt-1">
 
-                      <div>
-                        {/* <p>{item.total_borrow_count}</p> */}
-                        <p >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</p> 
+                        <div>
+                          {/* <p>{item.total_borrow_count}</p> */}
+                          <p >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</p>
+                        </div>
                       </div>
-                      </div>
-                     
+
                     </td>
                     <td className="p-3 align-top hidden md:table-cell pt-5">
                       <div className="flex justify-center">{item[1].Ok.borrow_rate}%</div>
-                      </td>
+                    </td>
                     <td className="p-3 align-top flex">
                       <div className="w-full flex justify-end align-center">
                         <Button title={"Details"} className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-sm
-                               lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]     font-inter" onClickHandler={() => handleDetailsClick(  `${item[0]}`)} />
+                               lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]     font-inter" onClickHandler={() => handleDetailsClick(`${item[0]}`)} />
                       </div>
                     </td>
                   </tr>
@@ -350,59 +406,70 @@ const WalletDetails = () => {
           )}
 
 
-          {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
-            <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
-              <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
-              <div className='flex flex-col gap-2 mt-3 text-sm'>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
-                  Internet Identity
-                  <div className='w-8 h-8'>
-                    <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                  </div>
-                </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
-                  Plug
-                  <div className='w-8 h-8'>
-                    <img src={plug} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                  </div>
-                </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
-                  Bifinity
-                  <div className='w-8 h-8'>
-                    <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                  </div>
-                </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
-                  NFID
-                  <div className='w-8 h-8'>
-                    <img src={nfid} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                  </div>
-                </div>
-              </div>
-              <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
+          {(isSwitchingWallet || !isAuthenticated) && (
+            <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+              <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
+                {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
+                <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">
+                  {connectedWallet && (
+                    <>
+                      <span className="text-[#2A1F9D] dark:text-blue-400 font-semibold" >{walletDisplayName(connectedWallet)}</span>
+                      <span> is connected</span>
+                    </>
+                  )}
+                </h1>
+                <div className='flex flex-col gap-2 mt-3 text-sm'>
 
-              <div className="w-full">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-                  placeholder="Enter ethereum address or username"
-                />
-              </div>
+                  {connectedWallet !== "ii" && (
+                    <div
+                      className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
+                      onClick={() => { isSwitchingWallet ? loginHandlerIsSwitch("ii") : loginHandler("ii") }}
+                    >
+                      Internet Identity
+                      <div className='w-8 h-8'>
+                        <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
+                      </div>
+                    </div>
+                  )}
 
-              {inputValue && (
-                <div className="w-full flex mt-3">
-                  <Button
-                    title="Connect"
-                    onClickHandler={handleWallet}
-                    className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                  {connectedWallet !== "nfid" && (
+                    <div
+                      className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
+                      onClick={() => { isSwitchingWallet ? loginHandlerIsSwitch("nfid") : loginHandler("nfid") }}
+                    >
+                      NFID
+                      <div className='w-8 h-8'>
+                        <img src={nfid} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
+                      </div>
+                    </div>
+                  )}
+
+
+                </div>
+                <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
+
+                <div className="w-full">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
+                    placeholder="Enter ethereum address or username"
                   />
                 </div>
-              )}
 
-            </div>
-          </Modal>}
+                {inputValue && (
+                  <div className="w-full flex mt-3">
+                    <Button
+                      title="Connect"
+                      onClickHandler={handleWallet}
+                      className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </Modal>
+          )}
 
 
         </div>}

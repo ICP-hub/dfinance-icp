@@ -15,8 +15,8 @@ import icplogo from '../../../public/wallet/icp.png'
 import nfid from "../../../public/wallet/nfid.png"
 import { Principal } from "@dfinity/principal";
 import { setUserData } from '../../redux/reducers/userReducer'
-import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger";
-import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { useMemo } from 'react'
 
 const CreateWallet = () => {
@@ -76,6 +76,24 @@ const CreateWallet = () => {
         setInputValue(event.target.value);
     };
 
+    
+
+    const walletDisplayName = (wallet) => {
+        switch (wallet) {
+            case 'ii':
+                return "Internet Identity";
+            case 'plug':
+                return "Plug";
+            case 'bifinity':
+                return "Bitfinity";
+            case 'nfid':
+                return "NFID";
+            default:
+                return "Unknown Wallet";
+        }
+    };
+
+
     const principalObj = Principal.fromText(principal);
 
     const [balance, setBalance] = useState(null);
@@ -100,21 +118,6 @@ const CreateWallet = () => {
 
         fetchBalance();
     }, [isAuthenticated, ledgerActorckBTC, principalObj]);
-
-    const walletDisplayName = (wallet) => {
-        switch (wallet) {
-            case 'ii':
-                return "Internet Identity";
-            case 'plug':
-                return "Plug";
-            case 'bifinity':
-                return "Bitfinity";
-            case 'nfid':
-                return "NFID";
-            default:
-                return "Unknown Wallet";
-        }
-    };
 
     return (
         <>

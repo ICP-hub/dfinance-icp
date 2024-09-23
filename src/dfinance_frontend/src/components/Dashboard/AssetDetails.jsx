@@ -840,7 +840,7 @@ const AssetDetails = () => {
                 value={inputValue}
                 onChange={handleInputChange}
                 className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-                placeholder="Enter ethereum address or username"
+                placeholder="Enter wallet address or username"
               />
             </div>
 

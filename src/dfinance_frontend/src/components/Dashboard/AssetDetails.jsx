@@ -36,8 +36,8 @@ import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cket
 import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
 
 
-const AssetDetails = () => {
-
+const AssetDetails = (props) => {
+console.log("props", props)
   const [isFilter, setIsFilter] = React.useState(false)
   const { filteredItems } = useAssetData();
   const dispatch = useDispatch()

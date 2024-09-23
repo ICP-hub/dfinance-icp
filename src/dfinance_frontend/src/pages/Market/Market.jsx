@@ -24,6 +24,7 @@ import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import cekTH from '../../../public/assests-icon/cekTH.png';
 import useAssets from "../../components/Common/useAssets"
 import useAssetData from "../../components/Common/useAssets"
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
@@ -234,6 +235,9 @@ const WalletDetails = () => {
                         )}
                         {item[0] === "ckETH" && (
                           <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full"/>
+                        )}
+                        {item[0] === "ckUSDC" && (
+                          <img src={ckUSDC} alt="cketh logo" className="w-8 h-8 rounded-full"/>
                         )}
                         {item[0]}
                       </div>

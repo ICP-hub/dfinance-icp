@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Info, X } from 'lucide-react';
 import FaucetPayment from "./FaucetPayment"; // Import FaucetPayment component
 import Vector from "../../../public/Helpers/Vector.png"
-const FaucetPopup = ({ asset, image, onClose }) => {
+const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [amount, setAmount] = useState("");
   const [showFaucetPayment, setShowFaucetPayment] = useState(false); // State for showing/hiding FaucetPayment popup
 
@@ -48,11 +48,11 @@ const FaucetPopup = ({ asset, image, onClose }) => {
                 <div className="w-9/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
-                      src={image}
+                      src={assetImage}
                       alt="connect_wallet_icon"
                       className="object-cover w-8 h-8"
                     />
-                    <span className="text-lg">1,00000{asset}</span>
+                    <span className="text-lg">1,00000 {asset}</span>
                   </div>
                 </div>
               </div>

@@ -2,46 +2,50 @@
 
 set -e
 
-source ../../.env
+dfx identity new newminter  || true
 
-# Set token name and symbol
-export TOKEN_NAME="dckBTC"
+dfx identity use newminter 
+
+export MINTER=$(dfx identity get-principal)
+echo "Minter Principal: $MINTER"
+
+export TOKEN_NAME="dToken"
 echo "Token Name: $TOKEN_NAME"
 
-export TOKEN_SYMBOL="dckBTC"
+export TOKEN_SYMBOL="dToken"
 
-# Set default principal (used for minting account)
-export BACKEND=$CANISTER_ID_DFINANCE_BACKEND
-
-# Set pre-minted tokens and transfer fee (initial circulation is set to 0)
-export PRE_MINTED_TOKENS=0
+export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=0
 
-export 
+dfx identity use default
 
-# Set archive-related parameters
+export USER=$(dfx identity get-principal)
+echo "User Principal: $USER"
+
+export ARCHIVE_CONTROLLER=$USER
+
 export TRIGGER_THRESHOLD=2000
 export NUM_OF_BLOCK_TO_ARCHIVE=1000
 export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
+export FEATURE_FLAGS=true
 
-# Set feature flags (optional)
-export FEATURE_FLAGS=false
-
-# Deploy the token canister with the specified arguments
-dfx deploy dtoken --argument "(variant { Init = record {
+dfx deploy dtoken --argument "(variant {Init =
+record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
-     minting_account = record { owner = principal \"${BACKEND}\" };
+     minting_account = record { owner = principal \"${MINTER}\" };
      transfer_fee = ${TRANSFER_FEE};
      metadata = vec {};
      feature_flags = opt record { icrc2 = ${FEATURE_FLAGS} };
-     initial_balances = vec {};  
+    
+     initial_balances = vec { record { record { owner = principal \"${USER}\"; }; ${PRE_MINTED_TOKENS}; }; };
      archive_options = record {
          num_blocks_to_archive = ${NUM_OF_BLOCK_TO_ARCHIVE};
          trigger_threshold = ${TRIGGER_THRESHOLD};
-         controller_id = principal \"${BACKEND}\";
+         controller_id = principal \"${ARCHIVE_CONTROLLER}\";
          cycles_for_archive_creation = opt ${CYCLE_FOR_ARCHIVE_CREATION};
      };
- }})"
+ }
+})"
 
-echo "dckBTC has been successfully deployed with initial circulation set to 0."
+echo "ckBTC got deployed with a transfer fee of ${TRANSFER_FEE}"

@@ -27,8 +27,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     let user_principal = ic_cdk::caller();
 
-    let platform_principal = Principal::from_text(BACKEND_CANISTER)
-        .map_err(|_| "Invalid platform canister ID".to_string())?;
+    let platform_principal = ic_cdk::api::id();
+        // .map_err(|_| "Invalid platform canister ID".to_string())?;
 
     let debttoken_canister = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -161,8 +161,8 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
             .map(|principal| principal.clone())
             .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
     })?;
-    let platform_principal = Principal::from_text(BACKEND_CANISTER)
-        .map_err(|_| "Invalid platform canister ID".to_string())?;
+    let platform_principal = ic_cdk::api::id();
+        // .map_err(|_| "Invalid platform canister ID".to_string())?;
 
     let debttoken_canister = mutate_state(|state| {
         let asset_index = &mut state.asset_index;

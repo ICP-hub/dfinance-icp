@@ -7,7 +7,7 @@ use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::{
     api::functions::{asset_transfer, asset_transfer_from},
-    constants::asset_address::BACKEND_CANISTER,
+    // constants::asset_address::BACKEND_CANISTER,
 };
 
 impl SupplyLogic {
@@ -38,8 +38,8 @@ impl SupplyLogic {
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
-        let platform_principal = Principal::from_text(BACKEND_CANISTER)
-            .map_err(|_| "Invalid platform canister ID".to_string())?;
+        let platform_principal = ic_cdk::api::id();
+            // .map_err(|_| "Invalid platform canister ID".to_string())?;
 
         let amount_nat = Nat::from(params.amount);
 
@@ -166,8 +166,8 @@ impl SupplyLogic {
                 .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
         })?;
 
-        let platform_principal = Principal::from_text(BACKEND_CANISTER)
-            .map_err(|_| "Invalid platform canister ID".to_string())?;
+        let platform_principal = ic_cdk::api::id();
+            // .map_err(|_| "Invalid platform canister ID".to_string())?;
 
         let dtoken_canister_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| "Invalid dtoken canister ID".to_string())?;

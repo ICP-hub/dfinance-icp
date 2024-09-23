@@ -2,45 +2,43 @@
 
 set -e
 
-# dfx identity use minter
-source ../../.env
+dfx identity new newminter  || true
 
-# export MINTER=$(dfx identity get-principal)
-# echo $MINTER
-export BACKEND=$CANISTER_ID_DFINANCE_BACKEND
-export TOKEN_NAME="debtckBTC"
-echo "token_name : $TOKEN_NAME"
+dfx identity use newminter 
 
-export TOKEN_SYMBOL="debtckBTC"
+export MINTER=$(dfx identity get-principal)
+echo "Minter Principal: $MINTER"
 
-#dfx identity use default
+export TOKEN_NAME="debtToken"
+echo "Token Name: $TOKEN_NAME"
 
-export DEFAULT="2vxsx-fae"
+export TOKEN_SYMBOL="debtToken"
 
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=0
 
 dfx identity use default
 
-export ARCHIVE_CONTROLLER=$(dfx identity get-principal)
+export USER=$(dfx identity get-principal)
+echo "User Principal: $USER"
+
+export ARCHIVE_CONTROLLER=$USER
 
 export TRIGGER_THRESHOLD=2000
-
 export NUM_OF_BLOCK_TO_ARCHIVE=1000
-
 export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
-
-export FEATURE_FLAGS=false
+export FEATURE_FLAGS=true
 
 dfx deploy debttoken --argument "(variant {Init =
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
-     minting_account = record { owner = principal \"${BACKEND}\" };
+     minting_account = record { owner = principal \"${MINTER}\" };
      transfer_fee = ${TRANSFER_FEE};
      metadata = vec {};
-     feature_flags = opt record{icrc2 = ${FEATURE_FLAGS}};
-     initial_balances = vec { record { record { owner = principal \"${DEFAULT}\"; }; ${PRE_MINTED_TOKENS}; }; };
+     feature_flags = opt record { icrc2 = ${FEATURE_FLAGS} };
+    
+     initial_balances = vec { record { record { owner = principal \"${USER}\"; }; ${PRE_MINTED_TOKENS}; }; };
      archive_options = record {
          num_blocks_to_archive = ${NUM_OF_BLOCK_TO_ARCHIVE};
          trigger_threshold = ${TRIGGER_THRESHOLD};
@@ -50,4 +48,4 @@ record {
  }
 })"
 
-echo "debtckbtc got deployed"
+echo "ckBTC got deployed with a transfer fee of ${TRANSFER_FEE}"

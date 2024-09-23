@@ -1,0 +1,17 @@
+{
+  "debttoken": {
+    "ic": "p3baa-iyaaa-aaaap-akfmq-cai"
+  },
+  "dfinance_backend": {
+    "ic": "pvdni-tiaaa-aaaap-akfnq-cai"
+  },
+  "dfinance_frontend": {
+    "ic": "pae4f-saaaa-aaaap-akfoa-cai"
+  },
+  "dtoken": {
+    "ic": "pscl4-6qaaa-aaaap-akfna-cai"
+  },
+  "token_ledger": {
+    "ic": "phf2r-7yaaa-aaaap-akfoq-cai"
+  }
+}

@@ -31,7 +31,7 @@ impl LiquidationLogic {
                 })
         });
 
-        let mut reserve_data = match reserve_data_result {
+        let reserve_data = match reserve_data_result {
             Ok(data) => {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
                 data
@@ -75,7 +75,7 @@ impl LiquidationLogic {
             Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
         }
 
-        let bonus = (amount as f64 * (5f64 / 100f64)).round() as u64; // reserve_data.configuration.liquidation_penalty
+        let bonus = (amount as f64 * (5f64 / 100f64)).round() as u64;
         let reward_amount = Nat::from(amount) + Nat::from(bonus);
 
         let reward_amount_param = amount + bonus as u128;
@@ -129,7 +129,7 @@ impl LiquidationLogic {
                 let _ =
                     UpdateLogic::update_user_data_withdraw(user_principal, withdraw_param).await;
                 let _ =
-                    UpdateLogic::update_user_data_supply(liquidator_principal, supply_param).await;
+                    UpdateLogic::update_user_data_supply(liquidator_principal, supply_param, &reserve_data).await;
                 Ok(balance)
             }
             Err(err) => {

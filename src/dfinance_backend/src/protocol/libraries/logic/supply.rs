@@ -113,7 +113,7 @@ impl SupplyLogic {
             Ok(new_balance) => {
                 println!("Asset transfer from user to backend canister executed successfully");
                 // ----------- Update logic here -------------
-                let _ = UpdateLogic::update_user_data_supply(user_principal, params).await;
+                let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data).await;
                 Ok(new_balance)
             }
             Err(e) => {

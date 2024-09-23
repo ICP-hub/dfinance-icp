@@ -5,6 +5,7 @@ use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
+use crate::protocol::libraries::math::calculate::exchange_rate;
 use candid::{Nat, Principal};
 use dotenv::dotenv;
 
@@ -75,12 +76,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
+    let borrow_amount_to_usd = exchange_rate(&params.asset, params.amount as f64).unwrap();
+    ic_cdk::println!("borrow to usd {:?}", borrow_amount_to_usd);
+
     // Validates supply using the reserve_data
     ValidationLogic::validate_borrow(
         &reserve_data,
-        params.amount,
+        borrow_amount_to_usd,
         user_principal,
-        ledger_canister_id,
     )
     .await;
     ic_cdk::println!("Borrow validated successfully");

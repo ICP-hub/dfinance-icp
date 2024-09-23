@@ -6,16 +6,16 @@ set -e
 source ../../.env
 
 # Set variables
-ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+ckbtc_canister="cuj6u-c4aaa-aaaaa-qaajq-cai" 
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-debt_canister=$CANISTER_ID_DEBTTOKEN
+debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
 approve_method="icrc2_approve"
 borrow_method="borrow"
 reserve_data_method="get_reserve_data"
 
 # Get the principal for the user1 identity (borrower)
 dfx identity use default
-user1_principal=$(dfx identity get-principal)
+user1_principal="gg5nv-qb4pa-goksu-z7rp7-gqpoj-rocpi-mtb74-vvvpp-osops-2wvnl-zqe"
 echo "User1 Principal (Borrower): $user1_principal"
 
 # Get the principal for the backend_canister (lender)
@@ -60,7 +60,7 @@ echo "user data: $user_data"
 # echo "--------------------------------------"
 
 # Call the borrow function on the backend canister
-borrow_amount=3000  
+borrow_amount=3  
 currency="ckBTC" 
 interest_rate=0  
 

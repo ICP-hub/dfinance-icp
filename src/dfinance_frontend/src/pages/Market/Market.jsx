@@ -34,78 +34,78 @@ const WalletDetails = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
-  
+
   console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
 
   const {
-      isAuthenticated,
-      login,
-      logout,
-      principal,
-      createLedgerActor,
+    isAuthenticated,
+    login,
+    logout,
+    principal,
+    createLedgerActor,
   } = useAuth()
 
   const handleWalletConnect = () => {
-      console.log("connrcterd");
-      dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
+    console.log("connrcterd");
+    dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
   }
 
   const handleWallet = () => {
-      dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
-      dispatch(setIsWalletConnected(true))
-      navigate('/dashboard/my-supply')
+    dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
+    dispatch(setIsWalletConnected(true))
+    navigate('/dashboard/my-supply')
   }
 
   useEffect(() => {
-      if (isWalletCreated) {
-          navigate('/dashboard/wallet-details')
-      }
+    if (isWalletCreated) {
+      navigate('/dashboard/wallet-details')
+    }
   }, [isWalletCreated]);
 
 
   const loginHandlerIsSwitch = async (val) => {
-      dispatch(setUserData(null));
-      await logout();
-      await login(val);
-      dispatch(setConnectedWallet(val));
-      dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
+    dispatch(setUserData(null));
+    await logout();
+    await login(val);
+    dispatch(setConnectedWallet(val));
+    dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
 
   };
 
   const loginHandler = async (val) => {
-      await login(val);
-      dispatch(setConnectedWallet(val));
+    await login(val);
+    dispatch(setConnectedWallet(val));
   };
 
   const handleLogout = () => {
-      dispatch(setUserData(null));
-      logout();
+    dispatch(setUserData(null));
+    logout();
   };
 
   const [inputValue, setInputValue] = useState('');
 
   const handleInputChange = (event) => {
-      setInputValue(event.target.value);
+    setInputValue(event.target.value);
   };
 
-  
+
 
   const walletDisplayName = (wallet) => {
-      switch (wallet) {
-          case 'ii':
-              return "Internet Identity";
-          case 'plug':
-              return "Plug";
-          case 'bifinity':
-              return "Bitfinity";
-          case 'nfid':
-              return "NFID";
-          default:
-              return "Unknown Wallet";
-      }
+    switch (wallet) {
+      case 'ii':
+        return "Internet Identity";
+      case 'plug':
+        return "Plug";
+      case 'bifinity':
+        return "Bitfinity";
+      case 'nfid':
+        return "NFID";
+      default:
+        return "Unknown Wallet";
+    }
   };
 
- 
+
 
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -124,7 +124,7 @@ const WalletDetails = () => {
 
 
 
-const principalObj = Principal.fromText(principal);
+  const principalObj = Principal.fromText(principal);
 
 
 
@@ -139,10 +139,7 @@ const principalObj = Principal.fromText(principal);
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === 'dark' ? '#ffffff' : '#3739b4';
 
-  const handleChevronClick = (asset) => {
-    setSelectedAsset(asset);
-    setShowPopup(true);
-  };
+
 
   const closePopup = () => {
     setShowPopup(false);
@@ -156,7 +153,7 @@ const principalObj = Principal.fromText(principal);
     }
   }, [isWalletCreated]);
 
-  
+
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
@@ -174,6 +171,19 @@ const principalObj = Principal.fromText(principal);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
+  const [selectedAssetData, setSelectedAssetData] = useState(null)
+
+  const handleChevronClick = (assetName) => {
+    const selectedAssetData = currentItems.find(item => item[0] === assetName);
+
+    if (selectedAssetData) {
+      setSelectedAssetData(selectedAssetData);
+    }
+
+    console.log("Selected Asset Data:", selectedAssetData); // Debugging
+    setShowPopup(true);
+  };
 
 
   const popupRef = useRef(null);
@@ -193,6 +203,18 @@ const principalObj = Principal.fromText(principal);
         document.removeEventListener('mousedown', handleOutsideClick);
       };
     }
+  }, [showPopup]);
+
+  useEffect(() => {
+    if (showPopup) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
   }, [showPopup]);
 
   return (
@@ -245,7 +267,7 @@ const principalObj = Principal.fromText(principal);
         />
       }
 
-      <div className="w-full min-h-[400px] mt-6 lg:px-10 mb-20">
+      <div className="w-full mt-6 lg:px-10">
         {currentItems.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
@@ -335,7 +357,7 @@ const principalObj = Principal.fromText(principal);
               </tbody>
             </table>
           </div>
-          <div className="w-full flex justify-center mt-6">
+          <div className="w-full flex justify-center mt-10">
             <div id="pagination" className="flex gap-2">
               <Pagination
                 currentPage={currentPage}
@@ -354,40 +376,48 @@ const principalObj = Principal.fromText(principal);
                   className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                   onClick={closePopup}
                 >
-                  <X size={40} />
+                  <X size={30} />
                 </button>
                 <div >
                   <div className="flex gap-2 justify-start items-center ">
-                    <img src={selectedAsset.image} alt={selectedAsset.asset} className="rounded-[50%]" />
-                    <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">{selectedAsset}</p>
+                    {selectedAssetData[0] === "ckBTC" && (
+                      <img src={ckBTC} alt="ckBTC logo" className="w-8 h-8 rounded-full" />
+                    )}
+                    {selectedAssetData[0] === "ckETH" && (
+                      <img src={cekTH} alt="ckETH logo" className="w-8 h-8 rounded-full" />
+                    )}
+                    {selectedAssetData[0] === "ckUSDC" && (
+                      <img src={ckUSDC} alt="ckUSDC logo" className="w-8 h-8 rounded-full" />
+                    )}
+                    <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">{selectedAssetData[0]}</p>
                   </div>
 
                   <div className="flex flex-col gap-5 mt-8">
                     <div className="flex justify-between">
                       <p className="text-sm dark:text-darkTextSecondary">Total Supply:</p>
                       <div className="flex flex-col">
-                        <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_supply_count}M</p>
-                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">${selectedAsset.total_supply}M</p>
+                        {/* <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAssetData[1].Ok.total_supply }M</p> */}
+                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">{selectedAssetData[1].Ok.total_supply}</p>
                       </div>
                     </div>
-                    <div className="flex justify-between mb-4">
+                    <div className="flex justify-between">
                       <p className="text-sm dark:text-darkTextSecondary">Supply APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.supply_apy}</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.supply_rate_apr}%</p>
                     </div>
 
 
                     <div className="flex justify-between">
                       <p className="text-sm  dark:text-darkTextSecondary">Total Borrow:</p>
                       <div className="flex flex-col">
-                        <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_borrow_count}M</p>
+                        {/* <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAssetData[1].Ok.supply_apy}M</p> */}
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          ${selectedAsset.total_borrow}M
+                          {selectedAssetData[1].Ok.total_borrow > 0 ? selectedAssetData[1].Ok.total_borrow : "0"}
                         </p>
                       </div>
                     </div>
                     <div className="flex justify-between mb-4">
                       <p className="text-sm dark:text-darkTextSecondary">Borrow APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.borrow_apy}</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.borrow_rate}%</p>
                     </div>
                   </div>
 
@@ -395,8 +425,8 @@ const principalObj = Principal.fromText(principal);
                 </div>
                 <div className="flex w-full justify-center">
                   <button
-                    className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-3 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
-                    onClick={() => handleDetailsClick(selectedAsset.asset)}
+                    className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
+                    onClick={() => handleDetailsClick(`${selectedAssetData[0]}`)}
                   >
                     Details
                   </button>

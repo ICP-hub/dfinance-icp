@@ -380,15 +380,17 @@ export default function Navbar({ isHomeNav }) {
               <img
                 src={theme === "dark" ? DFinanceDark : DFinanceLight}
                 alt="DFinance"
-                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] sxs3:mb-3 md:mb-1"
+                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0"
               />
               {!isHomeNav && isTestnetMode && (
                 <button
-                  className="bg-[#4659CF] z-50   hover:bg-blue-700 text-white font-bold p-2 rounded flex items-center text-[12px] w-20 h-5 lg:ml-3 mt-0.5 sxs3:ml-10"
+                  className="bg-[#4659CF] z-50  hover:bg-blue-700 text-white font-bold rounded  text-[12px] px-2 py-[1px] pt-[2px] lg:ml-[63px] dxl:ml-3  sxs3:ml-10"
                   onClick={handleButtonClick}
                 >
-                  TESTNET
-                  <Info size={20} className="ml-1" />
+                  <div className="flex items-center justify-center">
+                  <p >TESTNET</p>
+                  <Info size={10} className="ml-1 -mt-[1px]" />
+                  </div>
                 </button>
               )}
 
@@ -958,6 +960,7 @@ export default function Navbar({ isHomeNav }) {
                                 checked={isTestnetMode}
                                 onChange={handleTestnetModeToggle}
                               />
+                             
                             </div>
                           </div>
                         </div>

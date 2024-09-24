@@ -54,7 +54,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
             }`}
             disabled={currentPage === 1}
           >
-            Previous
+              PREV
           </button>
         </li>
         {Array.from({ length: endPage - startPage + 1 }, (_, index) => {
@@ -85,7 +85,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
             }`}
             disabled={currentPage === totalPages}
           >
-            Next
+            NEXT
           </button>
         </li>
       </ul>

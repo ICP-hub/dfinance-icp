@@ -7,11 +7,12 @@ use crate::{
         storable::Candid,
     },
     protocol::libraries::{
-        math::calculate::{calculate_health_factor, calculate_ltv, UserPosition},
+        math::calculate::{calculate_health_factor, calculate_ltv, UserPosition, calculate_average_threshold},
         types::datatypes::UserReserveData,
     },
 };
-use candid::Principal;
+use candid::{Principal,Nat};
+use crate::declarations::assets::ReserveData;
 
 pub struct UpdateLogic;
 
@@ -20,6 +21,7 @@ impl UpdateLogic {
     pub async fn update_user_data_supply(
         user_principal: Principal,
         params: ExecuteSupplyParams,
+        reserve: &ReserveData,
     ) -> Result<(), String> {
         // Fetchs user data
         let user_data_result = mutate_state(|state| {
@@ -29,6 +31,7 @@ impl UpdateLogic {
                 .map(|user| user.0.clone())
                 .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
         });
+
 
         let mut user_data = match user_data_result {
             Ok(data) => {
@@ -40,6 +43,8 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
+
+        let user_prof = user_data.clone();
         let ckbtc_to_usd_rate = 60554.70f64;
         let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
 
@@ -74,6 +79,11 @@ impl UpdateLogic {
                 .find(|(asset_name, _)| *asset_name == params.asset),
             None => None,
         };
+
+        let user_thrs = calculate_average_threshold(params.amount as f64, reserve, user_prof);
+        ic_cdk::println!("user_thr {:?}", user_thrs);
+
+        user_data.liquidation_threshold = Some(user_thrs);
 
         if let Some((_, reserve_data)) = user_reserve {
             // If Reserve data exists, it will update asset supply

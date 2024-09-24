@@ -15,7 +15,7 @@ echo "Token Name: $TOKEN_NAME"
 export TOKEN_SYMBOL="ckBTC"
 
 export PRE_MINTED_TOKENS=10_000_000_000
-export TRANSFER_FEE=100
+export TRANSFER_FEE=0
 
 dfx identity use default
 

@@ -7,8 +7,8 @@ source ../../.env
 # Set variables
 ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-debt_canister=$CANISTER_ID_DEBTTOKEN
-dtoken_canister=$CANISTER_ID_DTOKEN
+debt_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
+dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
 reserve_data_method="get_reserve_data"
 
 # Use the default identity

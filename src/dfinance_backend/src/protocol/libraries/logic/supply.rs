@@ -315,7 +315,9 @@ impl SupplyLogic {
         let platform_principal = Principal::from_text(BACKEND_CANISTER)
             .map_err(|_| "Invalid platform canister ID".to_string())?;
 
-        let amount_nat = Nat::from(params.amount.clone());
+        let amount_nat = Nat::from(params.amount);
+        let ckbtc_to_usd_rate = 60554.70f64;
+        let amount_in_usd = (params.amount.clone() as f64) * ckbtc_to_usd_rate;
 
         ic_cdk::println!("Canister ids, principal and amount successfully");
 
@@ -387,9 +389,8 @@ impl SupplyLogic {
             Ok(new_balance) => {
                 println!("Asset transfer from user to backend canister executed successfully");
                 // ----------- Update logic here -------------
-                let _ = UpdateLogic::update_user_data_supply(user_principal, params.clone()).await;
-                let ckbtc_to_usd_rate = 60554.70f64;
-        let amount_in_usd = (params.amount.clone() as f64) * ckbtc_to_usd_rate;
+                let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data).await;
+                
         let liquidity_taken=0f64;
                 let _= reserve::update_interest_rates(&mut reserve_data, &reserve_cache,amount_in_usd , liquidity_taken);
                 Ok(new_balance)
@@ -530,7 +531,6 @@ impl SupplyLogic {
                 println!("Asset transfer from backend to user executed successfully");
                 // ----------- Update logic here -------------
                 let _ = UpdateLogic::update_user_data_withdraw(user_principal, params).await;
-                
                 Ok(new_balance)
             }
             Err(e) => {

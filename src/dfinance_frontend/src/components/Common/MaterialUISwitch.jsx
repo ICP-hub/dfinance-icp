@@ -38,10 +38,6 @@ const IOSSwitch = styled((props) => (
 
 export default function CustomizedSwitches({ checked, onChange }) {
 
-  const handleChange = (event) => {
-    setChecked(event.target.checked); // Update state when the switch is toggled
-  };
-
   return (
     <FormGroup>
       <FormControlLabel

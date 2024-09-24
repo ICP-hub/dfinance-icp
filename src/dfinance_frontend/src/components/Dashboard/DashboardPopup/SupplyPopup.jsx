@@ -30,11 +30,7 @@ const SupplyPopup = ({
   onLoadingChange,
 }) => {
 
-  // console.log("props", props)
-
   const { createLedgerActor, backendActor } = useAuth();
-
-
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null); 
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -46,11 +42,11 @@ const SupplyPopup = ({
       case 'cketh':
         return value * prices.cketh;
       case 'ckusdc':
-        return value * prices.ckusdc; // ckusdc is already pegged to 1 USD
+        return value * prices.ckusdc; 
       case 'icp':
         return value * prices.icp;
       default:
-        return value; // If asset is unknown, just return the value as is
+        return value;
     }
   };
 
@@ -66,15 +62,15 @@ const SupplyPopup = ({
     const ltv = calculateLTV(assetSupply, assetBorrow);
     const ltV=80;
     console.log('LTV:', ltv);
-       // Store the previous health factor before updating
+   
        setPrevHealthFactor(currentHealthFactor);
-       // Update the current health factor
+ 
        setCurrentHealthFactor(healthFactor);
 
     if (healthFactor < 1 || ltv >= liquidationThreshold) {
-      setIsButtonDisabled(true); // Disable the button
+      setIsButtonDisabled(true); 
     } else {
-      setIsButtonDisabled(false); // Enable the button
+      setIsButtonDisabled(false); 
     }
     
   }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
@@ -92,59 +88,136 @@ const SupplyPopup = ({
   const supplyBalance = numericBalance - transferfee;
   const hasEnoughBalance = balance >= transactionFee;
   const value = currentHealthFactor
-  const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
+  const [conversionRate, setConversionRate] = useState(0); 
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const modalRef = useRef(null); // Reference to the modal container
+  const modalRef = useRef(null);
    const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
         let coinId;
 
-        // Map asset to CoinGecko coin IDs
-        if (asset === "ckBTC") {
-          coinId = "bitcoin";
-        } else if (asset === "ckETH") {
-          coinId = "ethereum";
-        } else {
-          console.error("Unsupported asset:", asset);
-          return;
+        switch (asset) {
+          case "ckBTC":
+            coinId = {
+              coingecko: "bitcoin",
+              coincap: "bitcoin",
+              coinapi: "BTC",
+              cryptocompare: "BTC",
+              nomics: "BTC"
+            };
+            break;
+          case "ckETH":
+            coinId = {
+              coingecko: "ethereum",
+              coincap: "ethereum",
+              coinapi: "ETH",
+              cryptocompare: "ETH",
+              nomics: "ETH"
+            };
+            break;
+          case "ckUSDC":
+            coinId = {
+              coingecko: "usd-coin",
+              coincap: "usd-coin",
+              coinapi: "USDC",
+              cryptocompare: "USDC",
+              nomics: "USDC"
+            };
+            break;
+          case "ckICP":
+            coinId = {
+              coingecko: "internet-computer",
+              coincap: "internet-computer",
+              coinapi: "ICP",
+              cryptocompare: "ICP",
+              nomics: "ICP"
+            };
+            break;
+          default:
+            console.error(`Unsupported asset: ${asset}`);
+            return;
         }
 
-        // Fetch conversion rate from CoinGecko
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
-        );
-
-        if (!response.ok) {
-          throw new Error(`Error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("CoinGecko data", data);
-
-        // Extract the conversion rate (price in USD)
-        const rate = data[coinId]?.usd;
+        const apiEndpoints = [
+          {
+            name: 'CoinGecko',
+            url: `https://api.coingecko.com/api/v3/simple/price?ids=${coinId.coingecko}&vs_currencies=usd`,
+            extractRate: (data) => data[coinId.coingecko]?.usd,
+          },
+          {
+            name: 'CoinCap',
+            url: `https://api.coincap.io/v2/assets/${coinId.coincap}`,
+            extractRate: (data) => data.data?.priceUsd,
+          },
+          {
+            name: 'CoinAPI',
+            url: `https://rest.coinapi.io/v1/exchangerate/${coinId.coinapi}/USD`,
+            headers: { 'X-CoinAPI-Key': 'YOUR_COINAPI_KEY' }, // Use your CoinAPI key here
+            extractRate: (data) => data?.rate,
+          },
+          {
+            name: 'CryptoCompare',
+            url: `https://min-api.cryptocompare.com/data/price?fsym=${coinId.cryptocompare}&tsyms=USD`,
+            extractRate: (data) => data?.USD,
+          },
+          {
+            name: 'Nomics',
+            url: `https://api.nomics.com/v1/currencies/ticker?key=YOUR_NOMICS_KEY&ids=${coinId.nomics}&convert=USD`,
+            extractRate: (data) => data[0]?.price,
+          }
+        ];
+  
+        const tryMultipleApis = async (apiList) => {
+          for (const api of apiList) {
+            try {
+              const response = await fetch(api.url, {
+                headers: api.headers || {},
+              });
+  
+              if (response.ok) {
+                const data = await response.json();
+                const rate = api.extractRate(data);
+  
+                if (rate) {
+                  console.log(`${api.name} rate for ${asset}:`, rate);
+                  return rate;
+                }
+              } else {
+                console.error(`${api.name} failed:`, response.statusText);
+              }
+            } catch (error) {
+              console.error(`${api.name} error:`, error.message);
+            }
+          }
+          throw new Error("All API requests failed.");
+        };
+  
+        const rate = await tryMultipleApis(apiEndpoints);
+  
         if (rate) {
           setConversionRate(rate);
-          console.log("Conversion rate:", rate);
         } else {
           console.error("Conversion rate not found for asset:", asset);
         }
+  
       } catch (error) {
-        console.error("Error fetching conversion rate", error);
+        console.error("Error fetching conversion rate:", error.message);
       }
     };
-
+  
     if (asset) {
       fetchConversionRate();
     }
   }, [asset]);
+  
+
   useEffect(() => {
     if (onLoadingChange) {
       onLoadingChange(isLoading);
@@ -154,32 +227,28 @@ const SupplyPopup = ({
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
 
-    // Convert input to a number
     const numericAmount = parseFloat(inputAmount);
-
-    if (!isNaN(numericAmount) && numericAmount >= 0) {
+    
+    if (!isNaN(numericAmount) && numericAmount >= 0 && supplyBalance >=0) {
       if (numericAmount <= supplyBalance) {
-        // Calculate and format the USD value
         const convertedValue = numericAmount * conversionRate;
         setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
         setAmount(inputAmount);
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-        setUsdValue(0);
+        // setUsdValue(0);
       }
     } else if (inputAmount === "") {
-      // Allow empty input and reset error
       setAmount("");
-      setUsdValue(0);
+      // setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-      setUsdValue(0);
+      // setUsdValue(0);
     }
   };
 
-  // Update the USD value whenever the amount changes or conversionRate is updated
   useEffect(() => {
     if (amount && conversionRate) {
       const convertedValue = parseFloat(amount) * conversionRate;
@@ -244,10 +313,7 @@ const SupplyPopup = ({
       throw error;
     }
   };
-
  
-
-
   const ledgerActorckBTC = useMemo(
     () =>
       assetPrincipal.ckBTC
@@ -259,7 +325,6 @@ const SupplyPopup = ({
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
   
-  // Memoized actor for ckETH using dynamic principal
   const ledgerActorckETH = useMemo(
     () =>
       assetPrincipal.ckETH
@@ -293,7 +358,6 @@ const SupplyPopup = ({
       ledgerActor = ledgerActorckUSDC;
     }
 
-    // Convert amount and transferFee to numbers and add them
     const supplyAmount = Number(amount);
     const totalAmount = supplyAmount + transferfee;
 
@@ -454,16 +518,17 @@ const SupplyPopup = ({
               <div className="w-full flex justify-between my-2 dark:text-darkText">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+              <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="w-5/12">
                   <input
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="text-lg focus:outline-none bg-gray-100 rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    disabled={supplyBalance === 0}
+                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />
-                  <p className="text-xs text-gray-500 ">
+                  <p className="text-xs text-gray-500 px-2">
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
@@ -486,7 +551,7 @@ const SupplyPopup = ({
               <div className="w-full flex justify-between my-2">
                 <h1>Transaction overview</h1>
               </div>
-              <div className="w-full bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+              <div className="w-full bg-gray-100 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Supply APY</p>
                   <p>{supplyRateAPR}%</p>
@@ -614,7 +679,7 @@ const SupplyPopup = ({
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
-              className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
+              className="text-gray-400 focus:outline-none self-end"
             >
               <X size={24} />
             </button>

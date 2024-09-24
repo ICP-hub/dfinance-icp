@@ -512,6 +512,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   }, [ckUSDCBalance, ckUSDCUsdRate]);
 
+  const pollInterval = 10000; // 10 seconds
 
   const fetchConversionRate = useCallback(async () => {
     try {
@@ -539,7 +540,19 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, []);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance]);
+
+  useEffect(() => {
+    // Start polling at regular intervals
+    const intervalId = setInterval(() => {
+      fetchConversionRate();
+    }, pollInterval);
+
+    // Clear the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [fetchConversionRate]);
+  
+
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -559,7 +572,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
+  }, [fetchBalance, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance]);
 
 
 

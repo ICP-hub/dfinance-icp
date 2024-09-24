@@ -339,7 +339,7 @@ const DebtStatus = () => {
                       <td className="p-3 align-top flex py-8">
                         <div className="w-full flex justify-end align-center">
                           <Button
-                             title={
+                            title={
                               <>
                                 <span className="hidden lg:inline">Liquidate</span>
                                 <span className="inline lg:hidden">

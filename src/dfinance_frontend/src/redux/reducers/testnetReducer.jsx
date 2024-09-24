@@ -1,26 +1,28 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  isTestnetMode: JSON.parse(localStorage.getItem("isTestnetMode")) || false,
+  // Always set to true for now, ignoring localStorage
+  isTestnetMode: true,
 };
 
 const testnetSlice = createSlice({
   name: 'testnet',
   initialState,
   reducers: {
+    // Force isTestnetMode to be true, even when toggle is called
     toggleTestnetMode: (state) => {
-      state.isTestnetMode = !state.isTestnetMode;
-      localStorage.setItem("isTestnetMode", JSON.stringify(state.isTestnetMode));
+      state.isTestnetMode = true; // Ensure it's always true
+      localStorage.setItem("isTestnetMode", JSON.stringify(true));
     },
-    setTestnetMode: (state, action) => {
-      state.isTestnetMode = action.payload;
-      localStorage.setItem("isTestnetMode", JSON.stringify(state.isTestnetMode));
+    // Set isTestnetMode to true directly
+    setTestnetMode: (state) => {
+      state.isTestnetMode = true; // Always true
+      localStorage.setItem("isTestnetMode", JSON.stringify(true));
     },
+    // Initialize isTestnetMode, but always force it to true
     initializeTestnetMode: (state) => {
-      const storedIsTestnetMode = JSON.parse(localStorage.getItem("isTestnetMode"));
-      if (storedIsTestnetMode !== undefined) {
-        state.isTestnetMode = storedIsTestnetMode;
-      }
+      state.isTestnetMode = true; // Always true on initialization
+      localStorage.setItem("isTestnetMode", JSON.stringify(true));
     },
   },
 });

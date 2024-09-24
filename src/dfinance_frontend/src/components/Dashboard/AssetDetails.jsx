@@ -699,33 +699,28 @@ const AssetDetails = () => {
                 </div>
                 <div className="flex">
                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 ">
-                    <p className="text-gray-300 dark:text-darkText dark:opacity-50">
-                      Wallet Balance:
-                    </p>
-                    <p className="text-right ml-1 text-[#eeeef0] dark:text-darkText">
+                    <div className="text-sm text-[#eeeef0] dark:text-darkText flex flex-col justify-center">
                       {id === "ckBTC" && (
                         <>
                           <p>{ckBTCBalance} {id}</p>
-
+                         <p className="text-[11px] font-light">${formatNumber(ckBTCUsdBalance)}</p>
                         </>
                       )}
                       {id === "ckETH" && (
                         <>
                           <p>{ckETHBalance} {id}</p>
-
+                          <p className="text-[11px] font-light">${formatNumber(ckETHUsdBalance)}</p>
                         </>
                       )}
                       {id === "ckUSDC" && (
                         <>
                           <p>{ckUSDCBalance} {id}</p>
-
+                          <p className="text-[11px] font-light">${formatNumber(ckUSDCUsdBalance)}</p>
                         </>
                       )}
-                    </p>
+                    </div>
                   </div>
-                  
-                </div>
-                <div className="flex justify-center align-items">
+                  <div className="ml-auto">
                     <Button
                       title={"Supply"}
                       onClickHandler={() => {
@@ -777,6 +772,8 @@ const AssetDetails = () => {
                       }
                     />
                   </div>
+                </div>
+                
               </div>
 
               {balance === "0" && (

@@ -237,6 +237,8 @@ const FaucetDetails = () => {
     }
   }, [ckICPBalance, ckICPUsdRate]);
 
+  const pollInterval = 10000; // 10 seconds
+
   const fetchConversionRate = useCallback(async () => {
     try {
       const response = await fetch(
@@ -264,7 +266,17 @@ const FaucetDetails = () => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, []);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance]);
+
+  useEffect(() => {
+    // Start polling at regular intervals
+    const intervalId = setInterval(() => {
+      fetchConversionRate();
+    }, pollInterval);
+
+    // Clear the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [fetchConversionRate]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -284,7 +296,7 @@ const FaucetDetails = () => {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
+  }, [fetchBalance, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance]);
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -457,7 +469,7 @@ const FaucetDetails = () => {
             </tbody>
           </table>
         </div>
-        <div className="w-full flex justify-center mt-6">
+        <div className="w-full flex justify-center mt-10">
           <div id="pagination" className="flex gap-2">
             <Pagination
               currentPage={currentPage}

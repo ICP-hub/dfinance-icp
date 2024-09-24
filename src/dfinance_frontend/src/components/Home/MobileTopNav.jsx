@@ -408,34 +408,34 @@ const MobileTopNav = ({
               </label>
               <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
                 {isDarkMode ? "On" : "Off"}
-            
-            <div className="-mr-4">
-            <CustomizedSwitches
-                  checked={isDarkMode}
-                  onChange={handleDarkModeToggle}
-                />
-            </div>
-      
+
+                <div className="-mr-4">
+                  <CustomizedSwitches
+                    checked={isDarkMode}
+                    onChange={handleDarkModeToggle}
+                  />
+                </div>
+
               </div>
-             
+
             </div>
 
             {isAuthenticated && (
-              <div className="flex items-center">
+              <div className="flex items-center justify-between">
                 <label
                   htmlFor="testnetMode"
                   className="ml-1 text-lg text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
                 >
                   Testnet Mode
                 </label>
-                <span className="ml-4 text-[#2A1F9D] dark:text-darkTextSecondary">
-                  {isTestnetMode ? "On" : "Off"}
-                </span>
-                <div className="flex align-center justify-center ml-3">
+                <div className="flex items-center gap-3 dark:text-darkTextSecondar">
+                {isTestnetMode ? "On" : "Off"}
+                <div className="-mr-4">
                   <CustomizedSwitches
                     checked={isTestnetMode}
                     onChange={handleTestnetModeToggle}
                   />
+                  </div>
                 </div>
               </div>
             )}

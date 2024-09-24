@@ -177,48 +177,7 @@ const MySupply = () => {
   console.log("ckUSDC ledger", ledgerActorckUSDC);
   console.log("ckETH ledger", ledgerActorckETH);
 
-  const fetchBalance = useCallback(
-    async (assetType) => {
-      if (isAuthenticated && principalObj) {
-        try {
-          const account = { owner: principalObj, subaccount: [] };
-          let balance;
-
-          if (assetType === "ckBTC") {
-            if (!ledgerActorckBTC) {
-              console.warn("Ledger actor for ckBTC not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString()); // Set ckBTC balance
-          } else if (assetType === "ckETH") {
-            if (!ledgerActorckETH) {
-              console.warn("Ledger actor for ckETH not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString()); // Set ckETH balance
-          } else if (assetType === "ckUSDC") {
-            if (!ledgerActorckUSDC) {
-              console.warn("Ledger actor for ckUSDC not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
-          } else {
-            throw new Error(
-              "Unsupported asset type or ledger actor not initialized"
-            );
-          }
-          console.log(`Fetched Balance for ${assetType}:`, balance.toString());
-        } catch (error) {
-          console.error(`Error fetching balance for ${assetType}:`, error);
-          setError(error);
-        }
-      }
-    },
-    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj]
-  );
+ 
 
 
   console.log("ckusdc balance", ckUSDCBalance);
@@ -253,6 +212,8 @@ const MySupply = () => {
     }
   }, [ckICPBalance, ckICPUsdRate]);
 
+  const pollInterval = 10000; // 10 seconds
+  
   const fetchConversionRate = useCallback(async () => {
     try {
       const response = await fetch(
@@ -280,7 +241,68 @@ const MySupply = () => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, []);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance]);
+  
+
+  useEffect(() => {
+    // Start polling at regular intervals
+    const intervalId = setInterval(() => {
+      fetchConversionRate();
+    }, pollInterval);
+
+    // Clear the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [fetchConversionRate]);
+  
+
+
+  const fetchBalance = useCallback(
+    async (assetType) => {
+      if (isAuthenticated && principalObj) {
+        try {
+          const account = { owner: principalObj, subaccount: [] };
+          let balance;
+
+          if (assetType === "ckBTC") {
+            if (!ledgerActorckBTC) {
+              console.warn("Ledger actor for ckBTC not initialized yet");
+              return;
+            }
+            // balance = await ledgerActorckBTC.icrc1_balance_of(account);
+             balance = 2500
+            setCkBTCBalance(balance.toString()); // Set ckBTC balance
+          } else if (assetType === "ckETH") {
+            if (!ledgerActorckETH) {
+              console.warn("Ledger actor for ckETH not initialized yet");
+              return;
+            }
+            // balance = await ledgerActorckETH.icrc1_balance_of(account);
+             balance = 3500
+            setCkETHBalance(balance.toString()); // Set ckETH balance
+          } else if (assetType === "ckUSDC") {
+            if (!ledgerActorckUSDC) {
+              console.warn("Ledger actor for ckUSDC not initialized yet");
+              return;
+            }
+            // balance = await ledgerActorckUSDC.icrc1_balance_of(account);
+             balance = 1300
+            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+          } else {
+            throw new Error(
+              "Unsupported asset type or ledger actor not initialized"
+            );
+          }
+          console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+        } catch (error) {
+          console.error(`Error fetching balance for ${assetType}:`, error);
+          setError(error);
+        }
+      }
+    },
+    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj]
+  );
+  
+  
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -300,7 +322,7 @@ const MySupply = () => {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
+  }, [fetchBalance, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance]);
 
   // useEffect(() => {
   //   if (balance && conversionRate) {
@@ -667,7 +689,7 @@ const MySupply = () => {
           &#8226; Borrow
         </button>
 
-        <div className="ml-auto lg:hidden sxs3:flex align-center justify-center">
+        {/* <div className="ml-auto lg:hidden sxs3:flex align-center justify-center">
           {isAuthenticated && shouldRenderTransactionHistoryButton && (
             <a href="/dashboard/transaction-history" className="block">
               <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-lg shadow-md hover:shadow-[#00000040] font-semibold text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none">
@@ -675,7 +697,7 @@ const MySupply = () => {
               </button>
             </a>
           )}
-        </div>
+        </div> */}
       </div>
 
       <div className="w-full lg:w-6/12 mt-6 md:mt-4 lg:mt-20">
@@ -807,7 +829,7 @@ const MySupply = () => {
                                       <>
                                         <p>{ckUSDCBalance}</p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDCBalance)}
+                                          ${formatNumber(ckUSDCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -1187,7 +1209,7 @@ const MySupply = () => {
                                   <>
                                     <p>{ckUSDCBalance}</p>
                                     <p className="font-light">
-                                      ${formatNumber(ckUSDCUsdRate)}
+                                      ${formatNumber(ckUSDCUsdBalance)}
                                     </p>
                                   </>
                                 )}
@@ -1350,7 +1372,7 @@ const MySupply = () => {
                                   <>
                                     <p>{ckUSDCBalance}</p>
                                     <p className="font-light">
-                                      ${formatNumber(ckUSDCBalance)}
+                                      ${formatNumber(ckUSDCUsdBalance)}
                                     </p>
                                   </>
                                 )}
@@ -2084,7 +2106,7 @@ const MySupply = () => {
                                   <>
                                     <p>{ckUSDCBalance}</p>
                                     <p className="font-light">
-                                      ${formatNumber(ckUSDCUsdRate)}
+                                      ${formatNumber(ckUSDCUsdBalance)}
                                     </p>
                                   </>
                                 )}
@@ -2371,7 +2393,7 @@ const MySupply = () => {
                                     <>
                                       <p>{ckUSDCBalance}</p>
                                       <p className="font-light">
-                                        ${formatNumber(ckUSDCBalance)}
+                                        ${formatNumber(ckUSDCUsdBalance)}
                                       </p>
                                     </>
                                   )}

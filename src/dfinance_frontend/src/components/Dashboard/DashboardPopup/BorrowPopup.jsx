@@ -50,16 +50,16 @@ const Borrow = ({
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-        setUsdValue(0);
+        // setUsdValue(0);
       }
     } else if (inputAmount === "") {
       // Allow empty input and reset error
       setAmount("");
-      setUsdValue(0);
+      // setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-      setUsdValue(0);
+      // setUsdValue(0);
     }
   };
 
@@ -79,7 +79,133 @@ const Borrow = ({
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
 
+  useEffect(() => {
+    const fetchConversionRate = async () => {
+      try {
+        let coinId;
 
+        // Map asset to coin IDs for each API
+        switch (asset) {
+          case "ckBTC":
+            coinId = {
+              coingecko: "bitcoin",
+              coincap: "bitcoin",
+              coinapi: "BTC",
+              cryptocompare: "BTC",
+              nomics: "BTC"
+            };
+            break;
+          case "ckETH":
+            coinId = {
+              coingecko: "ethereum",
+              coincap: "ethereum",
+              coinapi: "ETH",
+              cryptocompare: "ETH",
+              nomics: "ETH"
+            };
+            break;
+          case "ckUSDC":
+            coinId = {
+              coingecko: "usd-coin",
+              coincap: "usd-coin",
+              coinapi: "USDC",
+              cryptocompare: "USDC",
+              nomics: "USDC"
+            };
+            break;
+          case "ckICP":
+            coinId = {
+              coingecko: "internet-computer",
+              coincap: "internet-computer",
+              coinapi: "ICP",
+              cryptocompare: "ICP",
+              nomics: "ICP"
+            };
+            break;
+          default:
+            console.error(`Unsupported asset: ${asset}`);
+            return;
+        }
+
+        // API Endpoints and Fetch Functions
+        const apiEndpoints = [
+          // CoinGecko
+          {
+            name: 'CoinGecko',
+            url: `https://api.coingecko.com/api/v3/simple/price?ids=${coinId.coingecko}&vs_currencies=usd`,
+            extractRate: (data) => data[coinId.coingecko]?.usd,
+          },
+          // CoinCap
+          {
+            name: 'CoinCap',
+            url: `https://api.coincap.io/v2/assets/${coinId.coincap}`,
+            extractRate: (data) => data.data?.priceUsd,
+          },
+          // CoinAPI
+          {
+            name: 'CoinAPI',
+            url: `https://rest.coinapi.io/v1/exchangerate/${coinId.coinapi}/USD`,
+            headers: { 'X-CoinAPI-Key': 'YOUR_COINAPI_KEY' }, // Use your CoinAPI key here
+            extractRate: (data) => data?.rate,
+          },
+          // CryptoCompare
+          {
+            name: 'CryptoCompare',
+            url: `https://min-api.cryptocompare.com/data/price?fsym=${coinId.cryptocompare}&tsyms=USD`,
+            extractRate: (data) => data?.USD,
+          },
+          // Nomics
+          {
+            name: 'Nomics',
+            url: `https://api.nomics.com/v1/currencies/ticker?key=YOUR_NOMICS_KEY&ids=${coinId.nomics}&convert=USD`,
+            extractRate: (data) => data[0]?.price,
+          }
+        ];
+
+        // Function to attempt fetching from multiple APIs
+        const tryMultipleApis = async (apiList) => {
+          for (const api of apiList) {
+            try {
+              const response = await fetch(api.url, {
+                headers: api.headers || {},
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                const rate = api.extractRate(data);
+
+                if (rate) {
+                  console.log(`${api.name} rate for ${asset}:`, rate);
+                  return rate;
+                }
+              } else {
+                console.error(`${api.name} failed:`, response.statusText);
+              }
+            } catch (error) {
+              console.error(`${api.name} error:`, error.message);
+            }
+          }
+          throw new Error("All API requests failed.");
+        };
+
+        // Fetch the rate from any available API
+        const rate = await tryMultipleApis(apiEndpoints);
+
+        if (rate) {
+          setConversionRate(rate);
+        } else {
+          console.error("Conversion rate not found for asset:", asset);
+        }
+
+      } catch (error) {
+        console.error("Error fetching conversion rate:", error.message);
+      }
+    };
+
+    if (asset) {
+      fetchConversionRate();
+    }
+  }, [asset]);
 
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
@@ -224,51 +350,7 @@ const Borrow = ({
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
-  useEffect(() => {
-    const fetchConversionRate = async () => {
-      try {
-        let coinId;
-        // Map asset to CoinGecko coin IDs
-        if (asset === "ckBTC") {
-          coinId = "bitcoin";
-        } else if (asset === "ckETH") {
-          coinId = "ethereum";
-        } else if (asset === "ckUSDC") {
-          coinId = "usd-coin"; // Add ckUSDC mapping to CoinGecko's USDC
-        } else {
-          console.error("Unsupported asset:", asset);
-          return;
-        }
 
-        // Fetch conversion rate from CoinGecko
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`
-        );
-
-        if (!response.ok) {
-          throw new Error(`Error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("CoinGecko data", data);
-
-        // Extract the conversion rate (price in USD)
-        const rate = data[coinId]?.usd;
-        if (rate) {
-          setConversionRate(rate);
-          console.log("Conversion rate:", rate);
-        } else {
-          console.error("Conversion rate not found for asset:", asset);
-        }
-      } catch (error) {
-        console.error("Error fetching conversion rate", error);
-      }
-    };
-
-    if (asset) {
-      fetchConversionRate();
-    }
-  }, [asset]);
   const numericBalance = parseFloat(balance); // Convert balance to a number
   const transferFee = Number(fees[normalizedAsset] || fees.default); // Ensure transfer fee is a number
   const supplyBalance = numericBalance - transferFee; // Calculate supply balance
@@ -343,16 +425,17 @@ const Borrow = ({
               <div className="w-full flex justify-between my-2">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+              <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-5/12">
                   <input
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="text-lg focus:outline-none bg-gray-100  rounded-md py-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    disabled={supplyBalance === 0}
+                    className="lg:text-lg focus:outline-none bg-gray-100  rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />
-                  <p className="text-xs text-gray-500 ">
+                  <p className="text-xs text-gray-500 px-2">
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
@@ -376,7 +459,7 @@ const Borrow = ({
               <div className="w-full flex justify-between my-2">
                 <h1>Transaction overview</h1>
               </div>
-              <div className="w-full bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+              <div className="w-full bg-gray-100  cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-full flex flex-col my-1">
                   <div className="w-full flex justify-between items-center my-1 mb-2">
                     <p>APY, borrow rate</p>

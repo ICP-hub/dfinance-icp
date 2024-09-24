@@ -5,3 +5,4 @@ pub mod validation;
 pub mod liquidation;
 pub mod update;
 pub mod interest_rate;
+pub mod XRC;

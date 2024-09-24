@@ -17,7 +17,7 @@ reserve_data_method="get_reserve_data"
 dfx identity use default
 user_principal=$(dfx identity get-principal)
 echo "User1 Principal (Debt User): $user_principal"
-dfx identity new liquidator || true
+dfx identity new liquidator --disable-encryption || true
 dfx identity use liquidator
 liquidator_principal=$(dfx identity get-principal)
 echo "Liquidator Principal (Liquidator): $liquidator_principal"

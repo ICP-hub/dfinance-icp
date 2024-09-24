@@ -2,7 +2,7 @@
 
 set -e
 
-dfx identity new newminter  || true
+dfx identity new newminter --disable-encryption || true
 
 dfx identity use newminter 
 

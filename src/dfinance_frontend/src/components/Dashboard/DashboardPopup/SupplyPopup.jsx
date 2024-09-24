@@ -30,6 +30,8 @@ const SupplyPopup = ({
   onLoadingChange,
 }) => {
 
+  // console.log("props", props)
+
   const { createLedgerActor, backendActor } = useAuth();
 
 

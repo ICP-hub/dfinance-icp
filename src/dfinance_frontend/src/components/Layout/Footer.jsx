@@ -16,7 +16,7 @@ const Footer = () => {
       navigate('/dashboard');
       setTimeout(() => {
         window.scrollTo(0, 0);
-      }, 100); 
+      }, 100);
     }
   };
 
@@ -32,11 +32,11 @@ const Footer = () => {
         </div>
         <div className="w-full flex flex-wrap p-4">
           <div className="w-full md:w-3/12 text-white mb-10 md:mb-0 lg:mb-0">
-            <img 
+            <img
               src={DFinanceDark}
-              alt="DFinance" 
+              alt="DFinance"
               onClick={handleLogoClick}
-              style={{ cursor: 'pointer' }} 
+              style={{ cursor: 'pointer' }}
             />
             <p className="mt-6 font-light text-[13px]">
               DFinance is a decentralized lending and borrowing protocol on ICP. The protocol uniquely combines liquidity mining with deflationary buy and burn mechanics.
@@ -68,15 +68,19 @@ const Footer = () => {
               {/* <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/discord.svg" alt="discord" className="w-full h-full object-contain" />
               </span> */}
-              <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
-                <img src="./social/in.svg" alt="Linkedin" className="w-full h-full object-contain" />
-              </span>
+              <a target="_blank" href="https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all">
+                <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
+                  <img src="./social/in.svg" alt="Linkedin" className="w-full h-full object-contain" />
+                </span>
+              </a>
               {/* <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/instagram.svg" alt="instagram" className="w-full h-full object-contain" />
               </span> */}
+               <a target="_blank" href="https://x.com/dfinance_app">
               <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/twitter.svg" alt="twitter" className="w-full h-full object-contain" />
               </span>
+              </a>
             </div>
           </div>
         </div>

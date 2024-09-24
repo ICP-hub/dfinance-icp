@@ -98,7 +98,8 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
-            controllers: Some(vec![Principal::from_text(BACKEND_CANISTER).unwrap()]),
+            // controllers: Some(vec![Principal::from_text(BACKEND_CANISTER).unwrap()]),
+            controllers: Some(vec![ic_cdk::api::id()]),
             memory_allocation: None,
             reserved_cycles_limit: None,
             log_visibility: None,
@@ -108,12 +109,12 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
     };
 
     let minting_account = Account {
-        owner: Principal::from_text(BACKEND_CANISTER).unwrap(),
+        owner: ic_cdk::api::id(),
         subaccount: None,
     };
 
     let fee_collector_account = Some(Account {
-        owner: Principal::from_text(BACKEND_CANISTER).unwrap(),
+        owner: ic_cdk::api::id(),
         subaccount: None,
     });
 
@@ -142,7 +143,7 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         max_message_size_bytes: Some(1024),
         cycles_for_archive_creation: Some(100000000000),
         node_max_memory_size_bytes: Some(2000),
-        controller_id: Principal::from_text(BACKEND_CANISTER).unwrap(),
+        controller_id: ic_cdk::api::id(),
         more_controller_ids: Some(vec![Principal::anonymous()]),
     };
 
@@ -199,7 +200,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
-            controllers: Some(vec![Principal::from_text(BACKEND_CANISTER).unwrap()]),
+            controllers: Some(vec![ic_cdk::api::id()]),
             memory_allocation: None,
             reserved_cycles_limit: None,
             log_visibility: None,
@@ -216,7 +217,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     };
 
     let fee_collector_account = Some(Account {
-        owner: Principal::from_text(BACKEND_CANISTER).unwrap(),
+        owner: ic_cdk::api::id(),
         subaccount: None,
     });
 

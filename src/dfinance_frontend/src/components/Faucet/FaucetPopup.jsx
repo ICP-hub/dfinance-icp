@@ -4,7 +4,7 @@ import FaucetPayment from "./FaucetPayment"; // Import FaucetPayment component
 import Vector from "../../../public/Helpers/Vector.png"
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
-const FaucetPopup = ({ asset, image, onClose }) => {
+const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [amount, setAmount] = useState("");
   const [showFaucetPayment, setShowFaucetPayment] = useState(false); // State for showing/hiding FaucetPayment popup
 
@@ -30,7 +30,7 @@ const FaucetPopup = ({ asset, image, onClose }) => {
   return (
     <>
       {!showFaucetPayment && (
-        <div className="w-[325px] lg1:w-[420px] h-[290px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-[1rem] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-7 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="flex justify-between items-center mb-4">
             <h1 className="font-semibold text-xl">Faucet {asset}</h1>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none">
@@ -49,11 +49,11 @@ const FaucetPopup = ({ asset, image, onClose }) => {
                 <div className="w-9/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
-                      src={image}
+                      src={assetImage}
                       alt="connect_wallet_icon"
-                      className="object-cover w-8 h-8"
+                      className="object-cover w-8 h-8 rounded-full"
                     />
-                    <span className="text-lg">1,000{asset}</span>
+                    <span className="text-lg">1,000 {asset}</span>
                   </div>
                 </div>
               </div>
@@ -61,23 +61,7 @@ const FaucetPopup = ({ asset, image, onClose }) => {
           </div>
 
           <div className="w-full flex  mt-3">
-        <div className="flex items-center">
-          <Fuel className="w-4 h-4 mr-1" />
-          <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
-          <img
-            src={image}
-            alt="asset icon"
-            className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
-          />
-          <div className="relative group">
-            <Info size={16} className="ml-2 cursor-pointer" />
-
-            {/* Tooltip */}
-            <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-              Fees deducted on every transaction
-            </div>
-          </div>
-        </div>
+        
 
       </div>
           <div>

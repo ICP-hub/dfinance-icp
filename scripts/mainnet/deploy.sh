@@ -2,22 +2,22 @@
 
 set -e
 
-dfx identity new newminter  || true
+# dfx identity new newminter  || true
 
-dfx identity use newminter 
+# dfx identity use newminter 
 
 export MINTER=$(dfx identity get-principal)
 echo "Minter Principal: $MINTER"
 
-export TOKEN_NAME="ckBTC"
+export TOKEN_NAME="dToken"
 echo "Token Name: $TOKEN_NAME"
 
-export TOKEN_SYMBOL="ckBTC"
+export TOKEN_SYMBOL="dToken"
 
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=0
 
-dfx identity use default
+# dfx identity use default
 
 export USER=$(dfx identity get-principal)
 echo "User Principal: $USER"
@@ -29,7 +29,7 @@ export NUM_OF_BLOCK_TO_ARCHIVE=1000
 export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
 export FEATURE_FLAGS=true
 
-dfx deploy ckbtc_ledger --argument "(variant {Init =
+dfx deploy dtoken --ic --argument "(variant {Init =
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";

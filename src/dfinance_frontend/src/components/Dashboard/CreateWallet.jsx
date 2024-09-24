@@ -15,8 +15,8 @@ import icplogo from '../../../public/wallet/icp.png'
 import nfid from "../../../public/wallet/nfid.png"
 import { Principal } from "@dfinity/principal";
 import { setUserData } from '../../redux/reducers/userReducer'
-import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger";
-import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { useMemo } from 'react'
 
 const CreateWallet = () => {
@@ -76,6 +76,24 @@ const CreateWallet = () => {
         setInputValue(event.target.value);
     };
 
+    
+
+    const walletDisplayName = (wallet) => {
+        switch (wallet) {
+            case 'ii':
+                return "Internet Identity";
+            case 'plug':
+                return "Plug";
+            case 'bifinity':
+                return "Bitfinity";
+            case 'nfid':
+                return "NFID";
+            default:
+                return "Unknown Wallet";
+        }
+    };
+
+
     const principalObj = Principal.fromText(principal);
 
     const [balance, setBalance] = useState(null);
@@ -100,21 +118,6 @@ const CreateWallet = () => {
 
         fetchBalance();
     }, [isAuthenticated, ledgerActorckBTC, principalObj]);
-
-    const walletDisplayName = (wallet) => {
-        switch (wallet) {
-            case 'ii':
-                return "Internet Identity";
-            case 'plug':
-                return "Plug";
-            case 'bifinity':
-                return "Bitfinity";
-            case 'nfid':
-                return "NFID";
-            default:
-                return "Unknown Wallet";
-        }
-    };
 
     return (
         <>
@@ -184,7 +187,7 @@ const CreateWallet = () => {
                                 value={inputValue}
                                 onChange={handleInputChange}
                                 className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-                                placeholder="Enter ethereum address or username"
+                                placeholder="Enter wallet address or username"
                             />
                         </div>
 

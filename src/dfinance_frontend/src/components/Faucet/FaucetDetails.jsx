@@ -17,6 +17,8 @@ import { useEffect } from "react";
 import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger";
 import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
 
+import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
+
 const ITEMS_PER_PAGE = 8; // Number of items per page
 
 const FaucetDetails = () => {
@@ -34,11 +36,255 @@ const FaucetDetails = () => {
     reloadLogin,
     accountIdString,
   } = useAuth()
-
+  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+
+  const [ckBTCBalance, setCkBTCBalance] = useState(null);
+  const [ckETHBalance, setCkETHBalance] = useState(null);
+  const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
+  const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
+  const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
+
+
+  const [ckICPBalance, setCkICPBalance] = useState(null);
+  const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
+  const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
+  const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
+  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
+
+  const [balance, setBalance] = useState(null);
+  const [usdBalance, setUsdBalance] = useState(null);
+  const [conversionRate, setConversionRate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
+  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
+
+  const [assetPrincipal, setAssetPrincipal] = useState({});
+
+  useEffect(() => {
+    const fetchAssetPrinciple = async () => {
+      if (backendActor) {
+        try {
+          const assets = ["ckBTC", "ckETH", "ckUSDC"];
+          for (const asset of assets) {
+            const result = await getAssetPrinciple(asset);
+            console.log(`get_asset_principle (${asset}):`, result);
+            setAssetPrincipal((prev) => ({
+              ...prev,
+              [asset]: result,
+            }));
+          }
+        } catch (error) {
+          console.error("Error fetching asset principal:", error);
+        }
+      } else {
+        console.error("Backend actor initialization failed.");
+      }
+    };
+
+    fetchAssetPrinciple();
+  }, [principal, backendActor]);
+
+  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
+  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
+  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
+
+
+  const getAssetPrinciple = async (asset) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      let result;
+      switch (asset) {
+        case "ckBTC":
+          result = await backendActor.get_asset_principal("ckBTC");
+          break;
+        case "ckETH":
+          result = await backendActor.get_asset_principal("ckETH");
+          break;
+        case "ckUSDC":
+          result = await backendActor.get_asset_principal("ckUSDC");
+          break;
+        default:
+          throw new Error(`Unknown asset: ${asset}`);
+      }
+      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      return result.Ok.toText();
+    } catch (error) {
+      console.error(`Error fetching asset principal for ${asset}:`, error);
+      throw error;
+    }
+  };
+
+
+  const ledgerActorckBTC = useMemo(
+    () =>
+      assetPrincipal.ckBTC
+        ? createLedgerActor(
+          assetPrincipal.ckBTC,
+          ledgerIdlFactory
+        )
+        : null,
+    [createLedgerActor, assetPrincipal.ckBTC]
+  );
+
+  const ledgerActorckETH = useMemo(
+    () =>
+      assetPrincipal.ckETH
+        ? createLedgerActor(
+          assetPrincipal.ckETH,
+          ledgerIdlFactory
+        )
+        : null,
+    [createLedgerActor, assetPrincipal.ckETH]
+  );
+
+  const ledgerActorckUSDC = useMemo(
+    () =>
+      assetPrincipal.ckUSDC
+        ? createLedgerActor(
+          assetPrincipal.ckUSDC,
+          ledgerIdlFactory
+        )
+        : null,
+    [createLedgerActor, assetPrincipal.ckUSDC]
+  );
+
+  console.log("ckBTC ledger", ledgerActorckBTC)
+  console.log("ckUSDC ledger", ledgerActorckUSDC)
+  console.log("ckETH ledger", ledgerActorckETH)
+
+
+
+  const fetchBalance = useCallback(
+    async (assetType) => {
+      if (isAuthenticated && principalObj) {
+        try {
+          const account = { owner: principalObj, subaccount: [] };
+          let balance;
+
+          if (assetType === "ckBTC") {
+            if (!ledgerActorckBTC) {
+              console.warn("Ledger actor for ckBTC not initialized yet");
+              return;
+            }
+            balance = await ledgerActorckBTC.icrc1_balance_of(account);
+            setCkBTCBalance(balance.toString()); // Set ckBTC balance
+          } else if (assetType === "ckETH") {
+            if (!ledgerActorckETH) {
+              console.warn("Ledger actor for ckETH not initialized yet");
+              return;
+            }
+            balance = await ledgerActorckETH.icrc1_balance_of(account);
+            setCkETHBalance(balance.toString()); // Set ckETH balance
+          } else if (assetType === "ckUSDC") {
+            if (!ledgerActorckUSDC) {
+              console.warn("Ledger actor for ckUSDC not initialized yet");
+              return;
+            }
+            balance = await ledgerActorckUSDC.icrc1_balance_of(account);
+            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+          } else {
+            throw new Error(
+              "Unsupported asset type or ledger actor not initialized"
+            );
+          }
+          console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+        } catch (error) {
+          console.error(`Error fetching balance for ${assetType}:`, error);
+          setError(error);
+        }
+      }
+    },
+    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj] 
+  );
+
+
+  console.log("ckusdc balance", ckUSDCBalance)
+
+  useEffect(() => {
+    if (ckBTCBalance && ckBTCUsdRate) {
+      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
+      setCkBTCUsdBalance(balanceInUsd);
+    }
+  }, [ckBTCBalance, ckBTCUsdRate]);
+
+  useEffect(() => {
+    if (ckETHBalance && ckETHUsdRate) {
+      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
+      setCkETHUsdBalance(balanceInUsd);
+    }
+  }, [ckETHBalance, ckETHUsdRate]);
+
+  useEffect(() => {
+    if (ckUSDCBalance && ckUSDCUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(
+        2
+      );
+      setCkUSDCUsdBalance(balanceInUsd);
+    }
+  }, [ckUSDCBalance, ckUSDCUsdRate]);
+
+  useEffect(() => {
+    if (ckICPBalance && ckICPUsdRate) {
+      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+      setCkICPUsdBalance(balanceInUsd);
+    }
+  }, [ckICPBalance, ckICPUsdRate]);
+
+  const fetchConversionRate = useCallback(async () => {
+    try {
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd"
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      setCkBTCUsdRate(data.bitcoin.usd);
+      setCkETHUsdRate(data.ethereum.usd);
+      setCkUSDCUsdRate(data["usd-coin"].usd);
+      setCkICPUsdRate(data["internet-computer"].usd);
+      console.log(
+        "Fetched Conversion Rates - ckBTC:",
+        data.bitcoin.usd,
+        "ckETH:",
+        data.ethereum.usd,
+        "ckUSDC:",
+        data["usd-coin"].usd,
+        "ICP:",
+        data["internet-computer"].usd
+      );
+    } catch (error) {
+      console.error("Error fetching conversion rates:", error);
+      setError(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchBalance('ckBTC'),
+          fetchBalance('ckETH'),
+          fetchBalance('ckUSDC'),
+          fetchConversionRate()  // Fetch ckBTC and ckETH rates
+        ]);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -52,8 +298,22 @@ const FaucetDetails = () => {
     }
   };
 
-  const handleFaucetClick = (asset, image) => {
-    setSelectedAsset(asset);
+  const handleFaucetClick = (asset) => {
+    let assetImage;
+    switch (asset) {
+      case "ckBTC":
+        assetImage = ckBTC;
+        break;
+      case "ckETH":
+        assetImage = cekTH;
+        break;
+      case "ckUSDC":
+        assetImage = ckUSDC;
+        break;
+      default:
+        assetImage = null;
+    }
+    setSelectedAsset({ asset, assetImage });
     setShowPopup(true);
   };
 
@@ -69,70 +329,6 @@ const FaucetDetails = () => {
 
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-
-  
-  const [balance, setBalance] = useState(null);
-  const [usdBalance, setUsdBalance] = useState(null);
-  const [conversionRate, setConversionRate] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
-
-  const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
-
-  const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
-
-  const fetchBalance = useCallback(async () => {
-    if (isAuthenticated && ledgerActorckBTC && principalObj) {
-      try {
-        const account = { owner: principalObj, subaccount: [] };
-        const balance = await ledgerActorckBTC.icrc1_balance_of(account);
-        setBalance(balance.toString());
-        console.log("Fetched Balance:", balance.toString());
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-        setError(error);
-      }
-    }
-  }, [isAuthenticated, ledgerActorckBTC, principalObj]);
-
-  const fetchConversionRate = useCallback(async () => {
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      setConversionRate(data['internet-computer'].usd);
-      console.log("Fetched Conversion Rate:", data['internet-computer'].usd);
-    } catch (error) {
-      console.error("Error fetching conversion rate:", error);
-      setError(error);
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([fetchBalance(), fetchConversionRate()]);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
-
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
-      setUsdBalance(balanceInUsd);
-    }
-  }, [balance, conversionRate]);
 
   const filteredReserveData = Object.fromEntries(filteredItems);
   console.log(filteredReserveData)
@@ -190,12 +386,8 @@ const FaucetDetails = () => {
                           <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full mr-2"/>
                         )}
                          {item[0] === "ckUSDC" && (
-                                    <img
-                                      src={ckUSDC}
-                                      alt="cketh logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
+                          <img src={ckUSDC} alt="cketh logo" className="w-8 h-8 rounded-full mr-2"/>
+                        )}
                         {item[0]}
                     </div>
                   </td>
@@ -204,8 +396,30 @@ const FaucetDetails = () => {
                       <div>
                      
                         <center>
-                        <p>{balance}</p>
-                          <p className="font-light"> ${formatNumber(usdBalance)}</p>
+                        {item[0] === "ckBTC" && (
+                                  <>
+                                    <p>{ckBTCBalance}</p>
+                                    <p className="font-light">
+                                      ${formatNumber(ckBTCUsdBalance)}
+                                    </p>
+                                  </>
+                                )}
+                                {item[0] === "ckETH" && (
+                                  <>
+                                    <p>{ckETHBalance}</p>
+                                    <p className="font-light">
+                                      ${formatNumber(ckETHUsdBalance)}
+                                    </p>
+                                  </>
+                                )}
+                                {item[0] === "ckUSDC" && (
+                                  <>
+                                    <p>{ckUSDCBalance}</p>
+                                    <p className="font-light">
+                                      ${formatNumber(ckUSDCUsdBalance)}
+                                    </p>
+                                  </>
+                                )}
                         </center>
                       </div>
                     </div>
@@ -234,7 +448,7 @@ const FaucetDetails = () => {
                           </>
                         }
                         className="mb-7 bg-gradient-to-tr md:from-[#4659CF] md:from-20% md:via-[#D379AB] md:via-60% md:to-[#FCBD78] md:to-90% text-white rounded-lg md:px-3 md:py-1 shadow-md shadow-black/40 font-semibold text-sm sxs3:px-1 font-inter md:bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60"
-                        onClickHandler={() => handleFaucetClick(item.asset, item.image)}
+                        onClickHandler={() => handleFaucetClick(item[0], item.image)}
                       />
                     </div>
                   </td>
@@ -258,10 +472,10 @@ const FaucetDetails = () => {
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-gray-800 opacity-50" />
           <FaucetPopup
-            asset={selectedAsset}
-            image={currentItems.find((item) => item.asset === selectedAsset)?.image}
-            balance={currentItems.find((item) => item.asset === selectedAsset)?.WalletBalance}
+            isOpen={showPopup}
             onClose={closePopup}
+            asset={selectedAsset?.asset}
+            assetImage={selectedAsset?.assetImage}
           />
         </div>
       )}

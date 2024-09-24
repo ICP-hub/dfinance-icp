@@ -53,8 +53,8 @@ impl LiquidationLogic {
         let dtoken_canister_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
-        let platform_principal = Principal::from_text(BACKEND_CANISTER)
-            .map_err(|_| "Invalid platform canister ID".to_string())?;
+    let platform_principal = ic_cdk::api::id();
+        // .map_err(|_| "Invalid platform canister ID".to_string())?;
 
     let user_principal = Principal::from_text(on_behalf_of)
         .map_err(|_| "Invalid user canister ID".to_string())?;

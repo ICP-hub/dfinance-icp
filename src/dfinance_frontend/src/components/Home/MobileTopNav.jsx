@@ -212,9 +212,9 @@ const MobileTopNav = ({
         </div>
 
         {isAuthenticated && isMobile2 && (
-          <div className="flex items-center gap-1 my-2 mx-2 mb-4 p-1 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 ">
+          <div className="flex items-center gap-1 my-2 mx-2 mb-4 p-1 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
             <div
-              className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
+              className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden button"
               onClick={() => {
                 handleSwitchWallet();
               }}

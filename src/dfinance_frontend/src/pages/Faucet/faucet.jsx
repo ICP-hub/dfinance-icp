@@ -108,10 +108,6 @@ const Faucet = () => {
         }
     }, [isWalletCreated]);
 
-
-
-
-
     return (
         <>
             {isTestnetMode && (

@@ -4,9 +4,12 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-/* Example of importing Google Fonts in CSS */
 @import url('https://fonts.googleapis.com/css2?family=Vampiro+One&display=swap');
 
+
+html {
+  scroll-behavior: smooth;
+}
 body{
     background: rgba(255, 255, 255, 1);
 }
@@ -22,18 +25,15 @@ body{
     animation-timing-function: ease-in-out;
   }
   50% {
-    transform: translateY(-20px); /* Adjust the bounce height as needed */
+    transform: translateY(-20px);
     animation-timing-function: ease-in-out;
   }
 }
 
 .subtle-bounce {
-  animation: subtle-bounce 4s infinite; /* Adjust duration as needed */
+  animation: subtle-bounce 4s infinite; 
 }
-// learn more buton
 
-
-// search and all buttons in dark mode for dashboard 
   .box {
     border-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='none'%3e%3cpath stroke='url(%23a)' stroke-width='2' d='M8 1h84a7 7 0 0 1 7 7v84a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7Z'/%3e%3cdefs%3e%3clinearGradient id='a' x1='20.27' x2='120.715' y1='125' y2='113.589' gradientUnits='userSpaceOnUse'%3e%3cstop stop-color='%23EFAF68'/%3e%3cstop offset='.367' stop-color='%23CC69A0'/%3e%3cstop offset='.682' stop-color='%23C15CB9'/%3e%3cstop offset='1' stop-color='%235B6BCC'/%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e") 8 / 10px stretch;
   }
@@ -186,6 +186,7 @@ body{
 }
 
 .animate-fade-in-left {
+  transition: all 400ms ease !important;
   animation: fadeInLeft 0.5s ease forwards; 
 }
 
@@ -323,3 +324,34 @@ input[type='number'] {
     transform: rotate(360deg);
   }
 }
+
+a, input, button, .button, input{
+  transition: all 400ms !important;
+}
+a, button, .button, img, svg{
+  user-select: none;
+}
+
+// input:hover{
+//   transform: scale(0.96);
+// }
+
+input:active{
+  transform: scale(0.8);
+}
+
+a:hover{
+  letter-spacing: 0.1rem;
+}
+
+button:hover, .button:hover{
+  transform: scale(0.96);
+  opacity: 0.5;
+}
+a:active{
+  transform: scale(0.9);
+}
+button:active, .button:active{
+  transform: scale(0.9);
+}
+

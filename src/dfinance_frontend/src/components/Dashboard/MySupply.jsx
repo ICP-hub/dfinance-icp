@@ -177,7 +177,7 @@ const MySupply = () => {
   console.log("ckUSDC ledger", ledgerActorckUSDC);
   console.log("ckETH ledger", ledgerActorckETH);
 
- 
+
 
 
   console.log("ckusdc balance", ckUSDCBalance);
@@ -213,7 +213,7 @@ const MySupply = () => {
   }, [ckICPBalance, ckICPUsdRate]);
 
   const pollInterval = 10000; // 10 seconds
-  
+
   const fetchConversionRate = useCallback(async () => {
     try {
       const response = await fetch(
@@ -242,7 +242,7 @@ const MySupply = () => {
       setError(error);
     }
   }, [ckBTCBalance, ckETHBalance, ckUSDCBalance]);
-  
+
 
   useEffect(() => {
     // Start polling at regular intervals
@@ -253,7 +253,7 @@ const MySupply = () => {
     // Clear the interval on component unmount
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
-  
+
 
 
   const fetchBalance = useCallback(
@@ -268,24 +268,24 @@ const MySupply = () => {
               console.warn("Ledger actor for ckBTC not initialized yet");
               return;
             }
-            // balance = await ledgerActorckBTC.icrc1_balance_of(account);
-             balance = 2500
+            balance = await ledgerActorckBTC.icrc1_balance_of(account);
+            //  balance = 2500
             setCkBTCBalance(balance.toString()); // Set ckBTC balance
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
               console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
-            // balance = await ledgerActorckETH.icrc1_balance_of(account);
-             balance = 3500
+            balance = await ledgerActorckETH.icrc1_balance_of(account);
+            //  balance = 3500
             setCkETHBalance(balance.toString()); // Set ckETH balance
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
               console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
-            // balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-             balance = 1300
+            balance = await ledgerActorckUSDC.icrc1_balance_of(account);
+            //  balance = 1300
             setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
           } else {
             throw new Error(
@@ -301,8 +301,8 @@ const MySupply = () => {
     },
     [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj]
   );
-  
-  
+
+
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -595,7 +595,7 @@ const MySupply = () => {
     </div>
   );
   const noAssetsToBorrowMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center pb-6 pt-2">
       <div className="w-20 h-15">
         <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
       </div>
@@ -672,8 +672,8 @@ const MySupply = () => {
       <div className="flex justify-center -mb-38 lg:hidden">
         <button
           className={`w-1/2 py-2  ${activeSection === "supply"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
-              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
+            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
             }`}
           onClick={() => setActiveSection("supply")}
         >
@@ -681,8 +681,8 @@ const MySupply = () => {
         </button>
         <button
           className={`w-1/2 py-1  ${activeSection === "borrow"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
-              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
+            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
             }`}
           onClick={() => setActiveSection("borrow")}
         >
@@ -739,8 +739,8 @@ const MySupply = () => {
                   ) : (
                     <div
                       className={`relative mt-4 overflow-y-auto scrollbar-custom ${filteredItems.length > 1
-                          ? "max-h-[280px]"
-                          : "max-h-auto"
+                        ? "max-h-[280px]"
+                        : "max-h-auto"
                         }`}
                     >
                       <div
@@ -948,8 +948,8 @@ const MySupply = () => {
                         className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_supply > 0
                         ).length > 3
-                            ? "h-[260px]"
-                            : ""
+                          ? "h-[260px]"
+                          : ""
                           }`}
                       >
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
@@ -1707,7 +1707,7 @@ const MySupply = () => {
                                         );
                                       }}
                                       disabled={isTableDisabled}
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
+                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg font-inter"
                                     />
                                     <Button
                                       title={"Repay"}
@@ -1795,8 +1795,8 @@ const MySupply = () => {
                         className={`w-full h-auto max-h-[calc(100%-40px)] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_borrow > 0
                         ).length > 3
-                            ? "h-[260px]"
-                            : ""
+                          ? "h-[260px]"
+                          : ""
                           }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
@@ -1831,7 +1831,7 @@ const MySupply = () => {
                               return (
                                 <div
                                   key={index}
-                                  className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-1"
+                                  className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-2"
                                 >
                                   <div className="p-3 flex items-center gap-2">
                                     {asset === "ckBTC" && (
@@ -2051,8 +2051,8 @@ const MySupply = () => {
                           <div
                             key={index}
                             className={`p-3 rounded-lg dark:bg-darkSurface mb-4 dark:text-darkText ${isTableDisabled
-                                ? "opacity-50 pointer-events-none"
-                                : ""
+                              ? "opacity-50 pointer-events-none"
+                              : ""
                               }`}
                           >
                             <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
@@ -2234,7 +2234,7 @@ const MySupply = () => {
                     )}
 
                   {/* Combined Borrow and Supply sections with a max height of 260px */}
-                  <div className="w-full max-h-[250px] overflow-y-auto scrollbar-custom">
+                  <div className="w-full max-h-[280px] overflow-y-auto scrollbar-custom">
                     {/* Borrow Section */}
                     {/* {MY_ASSET_TO_BORROW_TABLE_ROW.length === 0 ? (
                       noAssetsToBorrowMessage
@@ -2326,14 +2326,14 @@ const MySupply = () => {
                     ) : (
                       <table
                         className={`w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4 ${isTableDisabled
-                            ? "opacity-50 pointer-events-none"
-                            : ""
+                          ? "opacity-50 pointer-events-none"
+                          : ""
                           }`}
                       >
                         <thead>
-                          <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
+                          <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-5">
                             {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
-                              <td key={index} className="p-3 whitespace-nowrap">
+                              <td key={index} className="p-3 py-6 whitespace-nowrap">
                                 {index === 2 ? item.header1 : item.header}
                               </td>
                             ))}
@@ -2346,7 +2346,7 @@ const MySupply = () => {
                               className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                             >
                               <td className="p-3 align-top">
-                                <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
+                                <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap mt-2">
                                   {item[0] === "ckBTC" && (
                                     <img
                                       src={ckBTC}

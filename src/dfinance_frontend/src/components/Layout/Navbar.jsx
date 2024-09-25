@@ -425,7 +425,7 @@ export default function Navbar({ isHomeNav }) {
                           <NavLink
                             key={index}
                             to={link.route}
-                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
                           >
                             {link.title}
                           </NavLink>
@@ -518,10 +518,10 @@ export default function Navbar({ isHomeNav }) {
                 )}
               </div>
             ) : isAuthenticated ? (
-              <div className="hidden lg:flex gap-2 sxs3:flex  md:flex ">
+              <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
                 <div className="my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 py-[11px] px-3 md:py-[10px]"
+                    className="flex items-center gap-1 py-[11px] px-3 md:py-[10px] button"
                     onClick={handleSwitchToken}
                   >
                     <span className="hidden lg1:flex">Switch Token</span>
@@ -770,7 +770,7 @@ export default function Navbar({ isHomeNav }) {
                 </div>
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                   {!isMobile2 && <div
-                    className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
+                    className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden button"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -903,7 +903,7 @@ export default function Navbar({ isHomeNav }) {
                       <img
                         src={settingsIcon}
                         alt="settings_icon"
-                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1  button"
                         onClick={handleDropdownToggle}
                       />
                     )}
@@ -997,7 +997,7 @@ export default function Navbar({ isHomeNav }) {
                       <img
                         src={settingsIcon}
                         alt="settings_icon"
-                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1 button"
                         onClick={handleDropdownToggle}
                       />
                     ) : (

@@ -3,7 +3,7 @@ import Button from "../../Common/Button";
 import { Info } from "lucide-react";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
-import {  Check, Wallet, X } from "lucide-react";
+import { Check, Wallet, X } from "lucide-react";
 import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
 import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
 import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
@@ -52,7 +52,7 @@ const WithdrawPopup = ({ asset,
     const fetchConversionRate = async () => {
       try {
         let coinId;
-  
+
         // Map asset to coin IDs for each API
         switch (asset) {
           case "ckBTC":
@@ -95,7 +95,7 @@ const WithdrawPopup = ({ asset,
             console.error(`Unsupported asset: ${asset}`);
             return;
         }
-  
+
         // API Endpoints and Fetch Functions
         const apiEndpoints = [
           // CoinGecko
@@ -130,7 +130,7 @@ const WithdrawPopup = ({ asset,
             extractRate: (data) => data[0]?.price,
           }
         ];
-  
+
         // Function to attempt fetching from multiple APIs
         const tryMultipleApis = async (apiList) => {
           for (const api of apiList) {
@@ -138,11 +138,11 @@ const WithdrawPopup = ({ asset,
               const response = await fetch(api.url, {
                 headers: api.headers || {},
               });
-  
+
               if (response.ok) {
                 const data = await response.json();
                 const rate = api.extractRate(data);
-  
+
                 if (rate) {
                   console.log(`${api.name} rate for ${asset}:`, rate);
                   return rate;
@@ -156,21 +156,21 @@ const WithdrawPopup = ({ asset,
           }
           throw new Error("All API requests failed.");
         };
-  
+
         // Fetch the rate from any available API
         const rate = await tryMultipleApis(apiEndpoints);
-  
+
         if (rate) {
           setConversionRate(rate);
         } else {
           console.error("Conversion rate not found for asset:", asset);
         }
-  
+
       } catch (error) {
         console.error("Error fetching conversion rate:", error.message);
       }
     };
-  
+
     if (asset) {
       fetchConversionRate();
     }
@@ -334,8 +334,8 @@ const WithdrawPopup = ({ asset,
       toast.success("Withdraw successful!");
       setIsPaymentDone(true);
       setIsVisible(false);
-      
-      
+
+
 
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
@@ -373,7 +373,7 @@ const WithdrawPopup = ({ asset,
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1 ) {
+    if (healthFactor < 1) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -383,7 +383,7 @@ const WithdrawPopup = ({ asset,
 
 
   const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
-    const amountTaken =  parseFloat(usdValue) || 0; // Ensure usdValue is treated as a number
+    const amountTaken = parseFloat(usdValue) || 0; // Ensure usdValue is treated as a number
     const amountAdded = 0// No amount added for now, but keeping it in case of future use
 
     // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
@@ -407,144 +407,146 @@ const WithdrawPopup = ({ asset,
     return totalDeptValue / totalCollateralValue;
   };
 
+
+
   return (
     <>
-     {isVisible && (
-      <div className="withdraw-popup" ref={modalRef}>
-      <h1 className="font-semibold text-xl">Withdraw {asset}</h1>
-      <div className="flex flex-col gap-2 mt-5 text-sm">
-        <div className="w-full">
-          <div className="w-full flex justify-between my-2">
-            <h1>Amount</h1>
+      {isVisible && (
+        <div className="withdraw-popup" ref={modalRef}>
+          <h1 className="font-semibold text-xl">Withdraw {asset}</h1>
+          <div className="flex flex-col gap-2 mt-5 text-sm">
+            <div className="w-full">
+              <div className="w-full flex justify-between my-2">
+                <h1>Amount</h1>
 
-          </div>
-          <div className="w-full flex items-center justify-between bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-3 rounded-md">
-            <div className="w-5/12 md:w-4/12">
-              <input
-                type="number"
-                value={amount}
-                onChange={handleAmountChange}
-                disabled={supplyBalance === 0}
-                className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                placeholder="Enter Amount"
-              />
-              <p className="text-xs text-gray-500 px-2">
-                {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
-              </p>
-            </div>
-            <div className="w-7/12 md:w-8/12 flex flex-col items-end">
-              <div className="w-auto flex items-center gap-2">
-                <img
-                  src={image}
-                  alt="connect_wallet_icon"
-                  className="object-fill w-6 h-6 rounded-full"
-                />
-                <span className="text-lg">{asset}</span>
               </div>
-              <p className="text-xs mt-4">{assetSupply.toFixed(2)} Max</p>
+              <div className="w-full flex items-center justify-between bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-3 rounded-md">
+                <div className="w-5/12 md:w-4/12">
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={handleAmountChange}
+                    disabled={supplyBalance === 0}
+                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder="Enter Amount"
+                  />
+                  <p className="text-xs text-gray-500 px-2">
+                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                  </p>
+                </div>
+                <div className="w-7/12 md:w-8/12 flex flex-col items-end">
+                  <div className="w-auto flex items-center gap-2">
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-fill w-6 h-6 rounded-full"
+                    />
+                    <span className="text-lg">{asset}</span>
+                  </div>
+                  <p className="text-xs mt-4">{assetSupply.toFixed(2)} Max</p>
+                </div>
+              </div>
+            </div>
+            <div className="w-full ">
+              <div className="w-full flex justify-between my-2 dark:text-darkText">
+                <h1>Transaction overview</h1>
+              </div>
+              <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="w-8/12">
+                  <p className="text-sm">Remaining supply</p>
+                </div>
+                <div className="w-4/12 flex flex-col items-end">
+                  <p className="text-xs mt-2">{assetSupply - amount} Max</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="w-full ">
-          <div className="w-full flex justify-between my-2 dark:text-darkText">
-            <h1>Transaction overview</h1>
-          </div>
-          <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-            <div className="w-8/12">
-              <p className="text-sm">Remaining supply</p>
-            </div>
-            <div className="w-4/12 flex flex-col items-end">
-              <p className="text-xs mt-2">{assetSupply - amount} Max</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="w-full">
-        <div className="w-full flex justify-between my-2">
+          <div className="w-full">
+            <div className="w-full flex justify-between my-2">
 
-        </div>
-        <div className="w-full bg-gray-100 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
-          <div className="w-full flex justify-between items-center my-1">
-            <p>Supply APY</p>
-            <p>{supplyRateAPR}%</p>
-          </div>
-          <div className="w-full flex justify-between items-center my-1">
-            <p>Collateralization</p>
-            <p
-              className={`font-semibold ${isCollateral ? "text-green-500" : "text-red-500"
-                }`}
-            >
-              {isCollateral ? "Enabled" : "Disabled"}
-            </p>
-          </div>
-          <div className="w-full flex flex-col my-1">
-            <div className="w-full flex justify-between items-center">
-              <p>Health Factor</p>
-              <p>
-                <span lassName={`${prevHealthFactor > 3
-                    ? "text-green-500"
-                    : prevHealthFactor <= 1
-                      ? "text-red-500"
-                      : prevHealthFactor <= 1.5
-                        ? "text-orange-600"
-                        : prevHealthFactor <= 2
-                          ? "text-orange-400"
-                          : "text-orange-300"
-                  }`}>{prevHealthFactor}</span>
-                <span className="text-gray-500 mx-1">→</span>
-                <span
-                  className={`${currentHealthFactor > 3
-                      ? "text-green-500"
-                      : currentHealthFactor <= 1
-                        ? "text-red-500"
-                        : currentHealthFactor <= 1.5
-                          ? "text-orange-600"
-                          : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
+            </div>
+            <div className="w-full bg-gray-100 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+              <div className="w-full flex justify-between items-center my-1">
+                <p>Supply APY</p>
+                <p>{supplyRateAPR}%</p>
+              </div>
+              <div className="w-full flex justify-between items-center my-1">
+                <p>Collateralization</p>
+                <p
+                  className={`font-semibold ${isCollateral ? "text-green-500" : "text-red-500"
                     }`}
                 >
-                  {currentHealthFactor}
-                </span>
-              </p>
-            </div>
-            <div className="w-full flex justify-end items-center mt-1">
-              <p className="text-gray-500">liquidation at &lt;1</p>
+                  {isCollateral ? "Enabled" : "Disabled"}
+                </p>
+              </div>
+              <div className="w-full flex flex-col my-1">
+                <div className="w-full flex justify-between items-center">
+                  <p>Health Factor</p>
+                  <p>
+                    <span lassName={`${prevHealthFactor > 3
+                      ? "text-green-500"
+                      : prevHealthFactor <= 1
+                        ? "text-red-500"
+                        : prevHealthFactor <= 1.5
+                          ? "text-orange-600"
+                          : prevHealthFactor <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                      }`}>{prevHealthFactor}</span>
+                    <span className="text-gray-500 mx-1">→</span>
+                    <span
+                      className={`${currentHealthFactor > 3
+                        ? "text-green-500"
+                        : currentHealthFactor <= 1
+                          ? "text-red-500"
+                          : currentHealthFactor <= 1.5
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
+                        }`}
+                    >
+                      {currentHealthFactor}
+                    </span>
+                  </p>
+                </div>
+                <div className="w-full flex justify-end items-center mt-1">
+                  <p className="text-gray-500">liquidation at &lt;1</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="w-full flex  mt-3">
-        <div className="flex items-center">
-          <Fuel className="w-4 h-4 mr-1" />
-          <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
-          <img
-            src={image}
-            alt="asset icon"
-            className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
-          />
-          <div className="relative group">
-            <Info size={16} className="ml-2 cursor-pointer" />
+          <div className="w-full flex  mt-3">
+            <div className="flex items-center">
+              <Fuel className="w-4 h-4 mr-1" />
+              <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
+              <img
+                src={image}
+                alt="asset icon"
+                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+              />
+              <div className="relative group">
+                <Info size={16} className="ml-2 cursor-pointer" />
 
-            {/* Tooltip */}
-            <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-              Fees deducted on every transaction
+                {/* Tooltip */}
+                <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
+                  Fees deducted on every transaction
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-      </div>
-      <div>
-        <Button
-         className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
-          isLoading  || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
-        }`}title="Withdraw" 
-        onClickHandler={handleWithdraw} 
-        disabled={isLoading || (amount <= 0 || null) || isButtonDisabled}
-        />
-      </div>
-      {isLoading && (
+          </div>
+          <div>
+            <Button
+              onClickHandler={isLoading || amount <= 0 || isButtonDisabled ? null : handleWithdraw}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              title="Withdraw"
+            />
+
+          </div>
+          {isLoading && (
             <div
               className="absolute inset-0 flex items-center justify-center z-50"
               style={{
@@ -555,8 +557,8 @@ const WithdrawPopup = ({ asset,
               <div className="loader"></div>
             </div>
           )}
-          </div>
-     )}
+        </div>
+      )}
       {isPaymentDone && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
@@ -570,8 +572,8 @@ const WithdrawPopup = ({ asset,
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p className="mt-2"> 
-            You have withdrawn {amount} d{asset}
+            <p className="mt-2">
+              You have withdrawn {amount} d{asset}
             </p>
 
             {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">

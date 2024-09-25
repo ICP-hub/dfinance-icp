@@ -211,7 +211,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
 
     let minting_account = Account {
         // owner: Principal::from_text("xcbu3-qzwyu-iv3oj-2izdz-c6z3o-cmrsw-j66xq-wdu6q-qrjem-2pjji-pae").unwrap(),
-        owner: Principal::from_text(MINTER).unwrap(),
+        owner: Principal::from_text(DEFAULT).unwrap(),
 
         subaccount: None,
     };
@@ -230,7 +230,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     vec![(
         Account {
             // owner: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
-            owner: Principal::from_text(DEFAULT).unwrap(),
+            owner: ic_cdk::api::id(),
 
             subaccount: None,
         },
@@ -249,9 +249,9 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         cycles_for_archive_creation: Some(100000000000),
         node_max_memory_size_bytes: Some(2000),
         // controller_id: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
-        controller_id: Principal::from_text(DEFAULT).unwrap(),
+        controller_id: ic_cdk::api::id(),
 
-        more_controller_ids: Some(vec![Principal::anonymous()]),
+        more_controller_ids: Some(vec![Principal::from_text(DEFAULT).unwrap()]),
     };
 
     let init_args = InitArgs {

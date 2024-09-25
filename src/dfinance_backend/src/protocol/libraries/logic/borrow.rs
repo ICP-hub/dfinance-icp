@@ -121,6 +121,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
             let _ = UpdateLogic::update_user_data_borrow(user_principal, params).await;
             let liquidity_added=0f64;
             let _= reserve::update_interest_rates(&mut reserve_data, &reserve_cache , liquidity_added, borrow_amount_to_usd);
+            reserve_data.configuration.total_borrowed += borrow_amount_to_usd;
             Ok(new_balance)
         }
         Err(e) => {

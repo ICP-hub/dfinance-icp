@@ -118,7 +118,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             debt_token_canister: Some(debtckbtc.to_string()),
             total_supply: Some(0.0),
             can_be_collateral: Some(true),
-            liquidity_index: 1,
+            liquidity_index: 0,
             id: 1,
             configuration: ReserveConfiguration {
                 ltv:75, liquidation_threshold:80, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:100000, supply_cap:100000, liquidation_protocol_fee:0, total_supplies:0.0, total_borrowed:0.0
@@ -145,7 +145,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             debt_token_canister: Some(debtcketh.to_string()),
             total_supply: Some(0.0),
             can_be_collateral: Some(false),
-            liquidity_index: 1,
+            liquidity_index: 0,
             id: 2,
             configuration: ReserveConfiguration {
                 ltv:60, liquidation_threshold:70, liquidation_bonus:10, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:50000, supply_cap:70000, liquidation_protocol_fee:0, total_supplies:0.0, total_borrowed:0.0
@@ -171,7 +171,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             debt_token_canister: Some(debtckusdc.to_string()),
             total_supply: Some(0.0),
             can_be_collateral: Some(true),
-            liquidity_index: 1,
+            liquidity_index: 0,
             id: 3,
             configuration: ReserveConfiguration{
                 ltv:75, liquidation_threshold:80, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:100000, supply_cap:100000, liquidation_protocol_fee:0, total_supplies:0.0, total_borrowed:0.0,

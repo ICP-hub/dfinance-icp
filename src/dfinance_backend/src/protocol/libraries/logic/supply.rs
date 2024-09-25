@@ -393,6 +393,7 @@ impl SupplyLogic {
                 
         let liquidity_taken=0f64;
                 let _= reserve::update_interest_rates(&mut reserve_data, &reserve_cache,amount_in_usd , liquidity_taken);
+                reserve_data.configuration.total_supplies += amount_in_usd;
                 Ok(new_balance)
             }
             Err(e) => {

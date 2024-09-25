@@ -175,7 +175,6 @@ pub fn calculate_interest_rates(
     // reserve_factor: f64,
     if total_debt == 0.0 {
         return (0.0, params.base_variable_borrow_rate);
-        return (0.0, params.base_variable_borrow_rate);
     }
 
     let utilization_rate = calculate_utilization_rate(total_supply + total_debt, total_borrowed);

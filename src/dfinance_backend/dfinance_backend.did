@@ -29,10 +29,11 @@ type ReserveData = record {
 };
 type Result = variant { Ok; Err : text };
 type Result_1 = variant { Ok : text; Err : text };
-type Result_2 = variant { Ok : principal; Err : text };
-type Result_3 = variant { Ok : record { float64; nat64 }; Err : text };
-type Result_4 = variant { Ok : ReserveData; Err : text };
-type Result_5 = variant { Ok : UserData; Err : text };
+type Result_2 = variant { Ok : nat; Err : text };
+type Result_3 = variant { Ok : principal; Err : text };
+type Result_4 = variant { Ok : record { float64; nat64 }; Err : text };
+type Result_5 = variant { Ok : ReserveData; Err : text };
+type Result_6 = variant { Ok : UserData; Err : text };
 type UserData = record {
   ltv : opt float64;
   available_borrow : opt float64;
@@ -63,12 +64,13 @@ service : () -> {
   borrow : (text, nat64) -> (Result);
   check_user : (text) -> (Result_1);
   create_multiple_canisters : () -> (vec principal);
+  faucet : (text, nat64) -> (Result_2);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
-  get_asset_principal : (text) -> (Result_2) query;
-  get_exchange_rates : (text) -> (Result_3);
-  get_reserve_data : (text) -> (Result_4) query;
-  get_user_data : (text) -> (Result_5) query;
+  get_asset_principal : (text) -> (Result_3) query;
+  get_exchange_rates : (text) -> (Result_4);
+  get_reserve_data : (text) -> (Result_5) query;
+  get_user_data : (text) -> (Result_6) query;
   initialize_reserve : () -> ();
   liquidation_call : (text, text, nat64, text) -> (Result);
   repay : (text, nat, opt text) -> (Result);

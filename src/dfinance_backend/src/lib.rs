@@ -5,6 +5,7 @@ use declarations::assets::{
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
+use candid::Nat;
 mod api;
 mod constants;
 pub mod declarations;

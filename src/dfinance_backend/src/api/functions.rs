@@ -2,6 +2,8 @@ use crate::declarations::transfer::*;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::call;
+use crate::api::state_handler::{mutate_state, read_state};
+use ic_cdk_macros::update;
 use serde::Serialize;
 
 // Icrc2_transfer_from inter canister call
@@ -106,5 +108,47 @@ pub async fn asset_transfer(
     match new_result {
         TransferFromResult::Ok(balance) => Ok(balance),
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+    }
+}
+
+
+#[update]
+pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
+   
+    ic_cdk::println!("Starting fraucet with params: {:?} {:?}", asset, amount );
+
+    // Fetched canister ids, user principal and amount
+    let ledger_canister_id = mutate_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&asset.to_string().clone())
+            .map(|principal| principal.clone())
+            .ok_or_else(|| format!("No canister ID found for asset: {}", asset))
+    })?;
+
+    let user_principal = ic_cdk::caller();
+
+    let platform_principal = ic_cdk::api::id();
+    let amount_nat = Nat::from(amount);
+
+    match asset_transfer_from(
+        ledger_canister_id,
+        platform_principal,
+        user_principal,
+        amount_nat.clone(),
+    )
+    .await
+    {
+        Ok(new_balance) => {
+            ic_cdk::println!("Asset transfer from backend to user executed successfully");
+            Ok(new_balance)
+        }
+        Err(e) => {
+            
+            return Err(format!(
+                "Asset transfer failed, burned debttoken. Error: {:?}",
+                e
+            ));
+        }
     }
 }

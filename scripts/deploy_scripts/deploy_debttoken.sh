@@ -17,7 +17,7 @@ export TOKEN_SYMBOL="debtToken"
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=0
 
-dfx identity use default
+export 
 
 export USER=$(dfx identity get-principal)
 echo "User Principal: $USER"
@@ -29,8 +29,8 @@ export NUM_OF_BLOCK_TO_ARCHIVE=1000
 export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
 export FEATURE_FLAGS=true
 
-dfx deploy debttoken --argument "(variant {Init =
-record {
+# Deploy the token canister with the specified arguments
+dfx deploy dtoken --argument "(variant { Init = record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
      minting_account = record { owner = principal \"${MINTER}\" };
@@ -42,10 +42,9 @@ record {
      archive_options = record {
          num_blocks_to_archive = ${NUM_OF_BLOCK_TO_ARCHIVE};
          trigger_threshold = ${TRIGGER_THRESHOLD};
-         controller_id = principal \"${ARCHIVE_CONTROLLER}\";
+         controller_id = principal \"${BACKEND}\";
          cycles_for_archive_creation = opt ${CYCLE_FOR_ARCHIVE_CREATION};
      };
- }
-})"
+ }})"
 
 echo "ckBTC got deployed with a transfer fee of ${TRANSFER_FEE}"

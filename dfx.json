@@ -31,6 +31,18 @@
       "package": "dfinance_backend",
       "type": "rust"
     },
+    "xrc": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/THLO/xrc_demo/refs/heads/main/xrc/xrc.did",
+      "id": "uf6dk-hyaaa-aaaaq-qaaaq-cai",
+      "wasm": "https://github.com/THLO/xrc_demo/raw/refs/heads/main/xrc/xrc.wasm.gz",
+      "remote": {
+        "candid": "https://raw.githubusercontent.com/THLO/xrc_demo/refs/heads/main/xrc/xrc.did",
+        "id": {
+          "ic": "uf6dk-hyaaa-aaaaq-qaaaq-cai"
+        }
+      }
+    },
     "dtoken": {
       "candid": "src/dtoken/dtoken.did",
       "package": "dtoken",

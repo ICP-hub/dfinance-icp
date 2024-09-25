@@ -8,7 +8,7 @@ source ../../.env
 # Set variables
 ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-dtoken_canister=$CANISTER_ID_DTOKEN
+dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 reserve_data_method="get_reserve_data"

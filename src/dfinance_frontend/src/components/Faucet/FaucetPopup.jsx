@@ -4,7 +4,11 @@ import FaucetPayment from "./FaucetPayment"; // Import FaucetPayment component
 import Vector from "../../../public/Helpers/Vector.png"
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useAuth } from "../../utils/useAuthClient";
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
+  const {
+    backendActor,
+  } = useAuth()
   const [amount, setAmount] = useState("");
   const [showFaucetPayment, setShowFaucetPayment] = useState(false); // State for showing/hiding FaucetPayment popup
 
@@ -12,9 +16,19 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     setAmount(e.target.value);
   };
 
-  const handleFaucetETH = () => {
+  const handleFaucetETH = (asset) => {
     console.log("Faucet", asset, "ETH:", amount);
     setShowFaucetPayment(true); // Show FaucetPayment popup after faucet action
+
+
+    try {
+      if (backendActor) {
+        const result = backendActor.faucet(asset, 1000);
+        console.log("Faucet result.", result);
+      }
+    } catch (error) {
+      console.error("Error:", error)
+    }
   };
 
   const handleClose = () => {
@@ -44,7 +58,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="w-3/12">
-                <p>Amount</p>
+                  <p>Amount</p>
                 </div>
                 <div className="w-9/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -61,12 +75,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           </div>
 
           <div className="w-full flex  mt-3">
-        
 
-      </div>
+
+          </div>
           <div>
             <button
-              onClick={handleFaucetETH}
+              onClick={() => handleFaucetETH(asset)}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
             >
               Faucet {asset}

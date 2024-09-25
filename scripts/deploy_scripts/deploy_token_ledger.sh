@@ -9,10 +9,10 @@ dfx identity use newminter
 export MINTER=$(dfx identity get-principal)
 echo "Minter Principal: $MINTER"
 
-export TOKEN_NAME="dckETH"
+export TOKEN_NAME="token_ledger"
 echo "Token Name: $TOKEN_NAME"
 
-export TOKEN_SYMBOL="dckETH"
+export TOKEN_SYMBOL="token_ledger"
 
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=0

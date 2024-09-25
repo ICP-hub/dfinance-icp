@@ -7,6 +7,8 @@ pub enum Error {
     ReserveFrozen,
     SupplyCapExceeded,
     NotEnoughAvailableUserBalance,
+    LTVGreaterThanThreshold,
+    BorrowCapExceeded
 }
 
 impl Error {
@@ -20,7 +22,9 @@ impl Error {
             Error::SupplyCapExceeded => "Supply cap is exceeded",
             Error::NotEnoughAvailableUserBalance => {
                 "User cannot withdraw more than the available balance"
-            }
+            },
+            Error::BorrowCapExceeded => "Borrow cap is exceeded",
+            Error::LTVGreaterThanThreshold => "LTV should be less than Liquidation Threshold",
         }
     }
 }

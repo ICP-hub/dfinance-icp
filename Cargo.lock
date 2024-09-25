@@ -1590,6 +1590,7 @@ dependencies = [
  "ic-cdk-macros 0.15.0",
  "ic-cdk-timers",
  "ic-stable-structures",
+ "ic-xrc-types",
  "icrc-ledger-types",
  "once_cell",
  "pocket-ic",
@@ -4904,6 +4905,16 @@ source = "git+https://github.com/dfinity/ic.git#731eb5a09a38ea781ac37e08ddf9eb17
 dependencies = [
  "http 0.2.12",
  "ic-types",
+]
+
+[[package]]
+name = "ic-xrc-types"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1a2b2eaa332201f4abbd1192a307f7a5b6ea55d077a7f489ac62bf8e358b5a2"
+dependencies = [
+ "candid",
+ "serde",
 ]
 
 [[package]]

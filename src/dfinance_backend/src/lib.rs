@@ -5,6 +5,7 @@ use declarations::assets::{
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
+use candid::Nat;
 mod api;
 mod constants;
 pub mod declarations;
@@ -17,21 +18,17 @@ mod state;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
-use crate::protocol::libraries::logic::borrow;
-use crate::protocol::libraries::logic::supply::SupplyLogic;
-use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
-use crate::protocol::libraries::types::datatypes::UserData;
 use crate::implementations::reserve::initialize_reserve;
-
+use crate::protocol::libraries::logic::borrow;
+use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
+use crate::protocol::libraries::logic::supply::SupplyLogic;
+use crate::protocol::libraries::types::datatypes::UserData;
 
 #[init]
 fn init() {
-    
-    initialize_reserve();
+    // initialize_reserve();
     ic_cdk::println!("function called");
 }
-
-
 
 // Function to call the execute_supply logic
 #[update]
@@ -62,9 +59,14 @@ async fn liquidation_call(
     amount: u64,
     on_behalf_of: String,
 ) -> Result<(), String> {
-    
-   
-    match LiquidationLogic::execute_liquidation(asset, collateral_asset, amount as u128, on_behalf_of).await {
+    match LiquidationLogic::execute_liquidation(
+        asset,
+        collateral_asset,
+        amount as u128,
+        on_behalf_of,
+    )
+    .await
+    {
         Ok(_) => {
             ic_cdk::println!("execute_liquidation function called successfully");
             Ok(())

@@ -60,9 +60,9 @@ impl ValidationLogic {
         let final_total_supply = final_amount + reserve.total_supply as u128;
         ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
 
-        if final_total_supply >= supply_cap {
-            panic!("{:?}", Error::SupplyCapExceeded);
-        }
+        // if final_total_supply >= supply_cap {
+        //     panic!("{:?}", Error::SupplyCapExceeded);
+        // }
     }
 
     // -------------------------------------
@@ -153,9 +153,9 @@ impl ValidationLogic {
         let final_total_borrow = amount + reserve.total_supply; // total_borrowed
         ic_cdk::println!("final_total_supply : {:?}", final_total_borrow);
 
-        if final_total_borrow >= borrow_cap {
-            panic!("{:?}", Error::BorrowCapExceeded);
-        };
+        // if final_total_borrow >= borrow_cap {
+        //     panic!("{:?}", Error::BorrowCapExceeded);
+        // };
     }
 
     // --------------------------------------

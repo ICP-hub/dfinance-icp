@@ -6,10 +6,8 @@ type ReserveConfiguration = record {
   borrow_cap : nat64;
   borrowing_enabled : bool;
   frozen : bool;
-  total_supplies : float64;
   liquidation_bonus : nat16;
   liquidation_threshold : nat16;
-  total_borrowed : float64;
   paused : bool;
 };
 type ReserveData = record {
@@ -18,14 +16,15 @@ type ReserveData = record {
   can_be_collateral : opt bool;
   debt_token_canister : opt text;
   last_update_timestamp : nat64;
-  liquidity_index : nat;
+  liquidity_index : float64;
   d_token_canister : opt text;
-  current_liquidity_rate : nat;
+  current_liquidity_rate : float64;
   borrow_rate : float64;
   supply_rate_apr : opt float64;
   configuration : ReserveConfiguration;
   debt_index : float64;
-  total_supply : opt float64;
+  total_borrowed : float64;
+  total_supply : float64;
 };
 type Result = variant { Ok; Err : text };
 type Result_1 = variant { Ok : text; Err : text };

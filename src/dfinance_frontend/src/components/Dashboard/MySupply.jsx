@@ -627,9 +627,9 @@ const MySupply = () => {
   if (filteredItems && filteredItems.length > 0) {
     const item = filteredItems[0][1].Ok;
     supply_rate_apr = item.supply_rate_apr
-      ? item.supply_rate_apr[0].toString()
+      ? item.supply_rate_apr[0]
       : "0";
-    borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
+    borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0] : "0";
   }
 
   const [calculatedReserves, setCalculatedReserves] = useState([]);

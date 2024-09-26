@@ -11,7 +11,7 @@ use crate::{
         types::datatypes::UserReserveData,
     },
 };
-use candid::{Principal,Nat};
+use candid::Principal;
 use crate::declarations::assets::ReserveData;
 
 pub struct UpdateLogic;
@@ -80,6 +80,7 @@ impl UpdateLogic {
             None => None,
         };
 
+        // Calculate average threshold
         let user_thrs = calculate_average_threshold(params.amount as f64, reserve, user_prof);
         ic_cdk::println!("user_thr {:?}", user_thrs);
 

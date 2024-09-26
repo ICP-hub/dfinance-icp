@@ -103,7 +103,6 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
 
     
     let ckbtc_principal= create_testtoken_canister("ckBTC", "ckBTC").await;
-    // let ckbtc_principal = Principal::from_text(CKBTC_LEDGER_CANISTER).unwrap();
     let dckbtc=create_token_canister("dckBTC", "dckBTC").await;
     let debtckbtc=create_token_canister("debtckBTC", "debtckBTC").await;
     assets.insert("ckBTC", (
@@ -117,6 +116,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             d_token_canister: Some(dckbtc.to_string()),
             debt_token_canister: Some(debtckbtc.to_string()),
             total_supply: Some(0.0),
+            total_borrow: Some(0.0),
             can_be_collateral: Some(true),
             liquidity_index: 1,
             id: 1,
@@ -128,9 +128,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     ));
 
     
-    // let cketh_principal = Principal::from_text(CKETH_LEDGER_CANISTER).unwrap();
     let cketh_principal= create_testtoken_canister("ckETH", "ckETH").await;
-    // let ckbtc_principal = Principal::from_text(CKBTC_LEDGER_CANISTER).unwrap();
     let dcketh=create_token_canister("dckETH", "dckETH").await;
     let debtcketh=create_token_canister("debtckETH", "debtckETH").await;
     assets.insert("ckETH", (
@@ -144,6 +142,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             d_token_canister: Some(dcketh.to_string()),
             debt_token_canister: Some(debtcketh.to_string()),
             total_supply: Some(0.0),
+            total_borrow: Some(0.0),
             can_be_collateral: Some(false),
             liquidity_index: 1,
             id: 2,
@@ -156,7 +155,6 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     ));
     
     let ckusdc_principal= create_testtoken_canister("ckUSDC", "ckUSDC").await;
-    // let ckbtc_principal = Principal::from_text(CKBTC_LEDGER_CANISTER).unwrap();
     let dckusdc=create_token_canister("dckUSDC", "dckUSDC").await;
     let debtckusdc=create_token_canister("debtckUSDC", "debtckUSDC").await;
     assets.insert("ckUSDC", (
@@ -170,6 +168,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             d_token_canister: Some(dckusdc.to_string()),
             debt_token_canister: Some(debtckusdc.to_string()),
             total_supply: Some(0.0),
+            total_borrow: Some(0.0),
             can_be_collateral: Some(true),
             liquidity_index: 1,
             id: 3,

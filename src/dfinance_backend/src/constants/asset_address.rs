@@ -1,5 +1,2 @@
-pub const BACKEND_CANISTER: &str = "by6od-j4aaa-aaaaa-qaadq-cai";
-pub const DEFAULT: &str = "gkp7z-c6wd4-ijr7g-xnjqj-lpu4t-eoqoo-sryxa-4bvu4-rpxdl-rztqa-yae";
-pub const MINTER: &str = "gkp7z-c6wd4-ijr7g-xnjqj-lpu4t-eoqoo-sryxa-4bvu4-rpxdl-rztqa-yae";
-pub const FRONTEND_CANISTER: &str = "by6od-j4aaa-aaaaa-qaadq-cai";
-pub const CANISTER_ID_XRC: &str = "asrmz-lmaaa-aaaaa-qaaeq-cai";
+pub const DEFAULT: &str = "gsyb3-neiyj-ybncb-5xjnt-nh2kf-u3h3b-bvtqm-4uyzh-uqkvk-yrvqd-oae";
+pub const MINTER: &str = "yvwvx-czed3-rcerj-wo76o-d2kwp-gqxj3-yfdmf-jntmi-x3oau-ds3pe-fae";

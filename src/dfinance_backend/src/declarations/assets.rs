@@ -5,9 +5,10 @@ use serde::Serialize;
 pub struct ReserveData {
     pub asset_name: Option<String>,
     pub id: u16,
-    pub borrow_rate: f64, //8.25
-    pub supply_rate_apr: Option<f64>, //8.25
+    pub borrow_rate: f64,
+    pub supply_rate_apr: Option<f64>,
     pub total_supply: Option<f64>,
+    pub total_borrow: Option<f64>,
     pub last_update_timestamp: u64,
     pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,

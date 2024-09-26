@@ -26,6 +26,7 @@ type ReserveData = record {
   configuration : ReserveConfiguration;
   debt_index : float64;
   total_supply : opt float64;
+  total_borrow : opt float64;
 };
 type Result = variant { Ok; Err : text };
 type Result_1 = variant { Ok : text; Err : text };
@@ -66,7 +67,7 @@ service : () -> {
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_2) query;
-  get_exchange_rates : (text) -> (Result_3);
+  get_exchange_rates : (text, float64) -> (Result_3);
   get_reserve_data : (text) -> (Result_4) query;
   get_user_data : (text) -> (Result_5) query;
   initialize_reserve : () -> ();

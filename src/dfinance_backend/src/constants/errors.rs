@@ -6,9 +6,11 @@ pub enum Error {
     ReservePaused,
     ReserveFrozen,
     SupplyCapExceeded,
-    NotEnoughAvailableUserBalance,
     LTVGreaterThanThreshold,
-    BorrowCapExceeded
+    BorrowCapExceeded,
+    HealthFactorLess,
+    WithdrawMoreThanSupply,
+    RepayMoreThanDebt,
 }
 
 impl Error {
@@ -20,11 +22,11 @@ impl Error {
             Error::ReservePaused => "Action cannot be performed because the reserve is paused",
             Error::ReserveFrozen => "Action cannot be performed because the reserve is frozen",
             Error::SupplyCapExceeded => "Supply cap is exceeded",
-            Error::NotEnoughAvailableUserBalance => {
-                "User cannot withdraw more than the available balance"
-            },
             Error::BorrowCapExceeded => "Borrow cap is exceeded",
             Error::LTVGreaterThanThreshold => "LTV should be less than Liquidation Threshold",
+            Error::HealthFactorLess => "Health factor is falling below 1, will lead to liquidation",
+            Error::WithdrawMoreThanSupply => "Withdraw cannot be more than supply",
+            Error::RepayMoreThanDebt => "Repay cannot be more than debt",
         }
     }
 }

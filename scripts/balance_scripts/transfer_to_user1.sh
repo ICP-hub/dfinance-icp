@@ -14,13 +14,13 @@ dfx identity use default
 default_principal=$(dfx identity get-principal)
 echo "Default Principal (Spender): $default_principal"
 
-user1_principal="csh2e-dh7ad-a7d43-7ipcu-g2ir2-coxfu-yclgo-brck4-ebgbj-y7ef3-6ae"
+user1_principal="br5f7-7uaaa-aaaaa-qaaca-cai"
 echo "User1 Principal (Recipient): $user1_principal"
 
 # Switch back to the default identity
 # dfx identity use anonymous
 
-transfer_amount=1000  # Set the amount to transfer to user1
+transfer_amount=1000000  # Set the amount to transfer to user1
 transfer_result=$(dfx canister call $canister_id $transfer_method "(record {
     from_subaccount=null;
     to=record { owner=principal\"${user1_principal}\"; subaccount=null };

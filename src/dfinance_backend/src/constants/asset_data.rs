@@ -97,7 +97,7 @@ use crate::declarations::assets::{ReserveData, ReserveConfiguration};
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 
 
-
+//pss all values by mul it by 10^8
 pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)> {
     let mut assets = HashMap::new();
 
@@ -111,17 +111,18 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
         ReserveData {
             asset_name: Some("ckBTC".to_string()),
             last_update_timestamp: time(),
-            current_liquidity_rate: 0,
+            current_liquidity_rate: 0.0,
             borrow_rate: 0.0,
-            supply_rate_apr: Some(8.25),
+            supply_rate_apr: Some(0.0),
             d_token_canister: Some(dckbtc.to_string()),
             debt_token_canister: Some(debtckbtc.to_string()),
-            total_supply: Some(0.0),
+            total_supply: 0.0,
+            total_borrowed:0.0,
             can_be_collateral: Some(true),
-            liquidity_index: 0,
+            liquidity_index: 1.0,
             id: 1,
             configuration: ReserveConfiguration {
-                ltv:75, liquidation_threshold:80, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:100000, supply_cap:100000, liquidation_protocol_fee:0, total_supplies:0.0, total_borrowed:0.0
+                ltv:75, liquidation_threshold:80, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:100000, supply_cap:100000, liquidation_protocol_fee:0
             },
             debt_index: 0.0,
         }
@@ -138,17 +139,18 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
         ReserveData {
             asset_name: Some("ckEth".to_string()),
             last_update_timestamp: time(),
-            current_liquidity_rate: 0,
+            current_liquidity_rate: 0.0,
             borrow_rate: 0.0,
-            supply_rate_apr: Some(7.50),
+            supply_rate_apr: Some(0.0),
             d_token_canister: Some(dcketh.to_string()),
             debt_token_canister: Some(debtcketh.to_string()),
-            total_supply: Some(0.0),
+            total_supply: 0.0,
+            total_borrowed:0.0,
             can_be_collateral: Some(false),
-            liquidity_index: 0,
+            liquidity_index: 1.0,
             id: 2,
             configuration: ReserveConfiguration {
-                ltv:60, liquidation_threshold:70, liquidation_bonus:10, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:50000, supply_cap:70000, liquidation_protocol_fee:0, total_supplies:0.0, total_borrowed:0.0
+                ltv:60, liquidation_threshold:70, liquidation_bonus:10, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:50000, supply_cap:70000, liquidation_protocol_fee:0
                 
             },
             debt_index: 0.0,
@@ -164,17 +166,18 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
         ReserveData {
             asset_name: Some("ckUSDC".to_string()),
             last_update_timestamp: time(),
-            current_liquidity_rate: 0,
+            current_liquidity_rate: 0.0,
             borrow_rate: 0.0,
-            supply_rate_apr: Some(8.25),
+            supply_rate_apr: Some(0.0),
             d_token_canister: Some(dckusdc.to_string()),
             debt_token_canister: Some(debtckusdc.to_string()),
-            total_supply: Some(0.0),
+            total_supply: 0.0,
+            total_borrowed:0.0,
             can_be_collateral: Some(true),
-            liquidity_index: 0,
+            liquidity_index: 1.0,
             id: 3,
             configuration: ReserveConfiguration{
-                ltv:75, liquidation_threshold:80, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:100000, supply_cap:100000, liquidation_protocol_fee:0, total_supplies:0.0, total_borrowed:0.0,
+                ltv:75, liquidation_threshold:80, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:100000, supply_cap:100000, liquidation_protocol_fee:0
                 
             },
             debt_index: 0.0,

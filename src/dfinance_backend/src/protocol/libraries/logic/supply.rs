@@ -275,6 +275,8 @@
 use candid::{Nat, Principal};
 pub struct SupplyLogic;
 use crate::api::state_handler::mutate_state;
+use crate::declarations::storable::Candid;
+
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::update::UpdateLogic;
@@ -359,6 +361,18 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Supply validated successfully");
 
+        let liquidity_taken=0f64;
+        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,amount_in_usd , liquidity_taken).await;
+               
+
+        ic_cdk::println!("Interest rates updated successfully");
+        
+        mutate_state(|state| {
+                    let asset_index = &mut state.asset_index;
+                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+        });
+        
+
         // Minting dtoken
         match asset_transfer(
             user_principal,
@@ -391,9 +405,7 @@ impl SupplyLogic {
                 // ----------- Update logic here -------------
                 let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data).await;
                 
-        let liquidity_taken=0f64;
-                let _= reserve::update_interest_rates(&mut reserve_data, &reserve_cache,amount_in_usd , liquidity_taken);
-                reserve_data.configuration.total_supplies += amount_in_usd;
+        
                 Ok(new_balance)
             }
             Err(e) => {

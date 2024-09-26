@@ -125,9 +125,10 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
             .map(|principal| principal.clone())
             .ok_or_else(|| format!("No canister ID found for asset: {}", asset))
     })?;
+    ic_cdk::println!("ledger id {:?}", ledger_canister_id.to_string());
 
     let user_principal = ic_cdk::caller();
-
+    ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
     let platform_principal = ic_cdk::api::id();
     let amount_nat = Nat::from(amount as u128);
 

@@ -6,9 +6,9 @@ set -e
 source ../../.env
 
 # Set variables
-ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
+dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 reserve_data_method="get_reserve_data"
@@ -64,9 +64,8 @@ echo "--------------------------------------"
 dfx identity use default
 
 # Get the principal of the default identity
-deposit_amount=5000
+deposit_amount=50
 currency="ckBTC"  
-referral_code=0  
 is_collateral=true
 
 # call the execute supply function

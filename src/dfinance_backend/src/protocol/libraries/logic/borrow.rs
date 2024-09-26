@@ -71,7 +71,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
     ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
+    
 
+    if reserve_data.total_borrowed == 0.0 {
+        reserve_data.debt_index=1.0;
+    }
     // Updates the liquidity and borrow index
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
@@ -120,8 +124,9 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
             // ----------- Update logic here -------------
             let _ = UpdateLogic::update_user_data_borrow(user_principal, params).await;
             let liquidity_added=0f64;
-            let _= reserve::update_interest_rates(&mut reserve_data, &reserve_cache , liquidity_added, borrow_amount_to_usd);
-            reserve_data.configuration.total_borrowed += borrow_amount_to_usd;
+            let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, borrow_amount_to_usd);
+          
+
             Ok(new_balance)
         }
         Err(e) => {

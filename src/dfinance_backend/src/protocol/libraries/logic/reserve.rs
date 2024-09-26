@@ -234,6 +234,7 @@ use crate::declarations::assets::ReserveData;
 use crate::protocol::libraries::math::percentage_maths::percent_mul;
 use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
 use crate::protocol::libraries::logic::interest_rate::{calculate_interest_rates, initialize_interest_rate_params};
+use crate::protocol::libraries::math::math_utils::ScalingMath;
 
 
 
@@ -278,24 +279,27 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
 }
 
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
-    if reserve_cache.curr_liquidity_rate != 0 {
+    if reserve_cache.curr_liquidity_rate != 0.0 {
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_cache.curr_liquidity_rate,
             reserve_cache.reserve_last_update_timestamp,
         );
+        let interest= cumulated_liquidity_interest.scaled_to_float();
         reserve_cache.next_liquidity_index = 
-            cumulated_liquidity_interest * reserve_cache.curr_liquidity_index;
+            interest * reserve_cache.curr_liquidity_index;
         
         reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
     }
 
     if reserve_cache.curr_debt_index != 0.0 {
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
-            reserve_cache.curr_debt_rate as u128,
+            reserve_cache.curr_debt_rate,
             reserve_cache.reserve_last_update_timestamp,
             current_timestamp(),
         );
-        reserve_cache.next_debt_index = cumulated_borrow_interest as f64 * reserve_cache.curr_debt_index;
+        let interest = cumulated_borrow_interest.scaled_to_float();
+        ic_cdk::println!("interest on debt {:?}", interest);
+        reserve_cache.next_debt_index = interest * reserve_cache.curr_debt_index;
         reserve_data.debt_index = reserve_cache.next_debt_index;
     }
 }
@@ -304,13 +308,13 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
 
 pub async fn update_interest_rates(
         reserve_data: &mut ReserveData,
-        reserve_cache: &ReserveCache,
+        reserve_cache: &mut ReserveCache,
         liquidity_added: f64,
         liquidity_taken: f64,
     ){
-        let total_debt = (reserve_data.configuration.total_borrowed +liquidity_taken ) * reserve_cache.curr_debt_index as f64;
-        let total_supply= (reserve_data.configuration.total_supplies + liquidity_added) * reserve_cache.curr_liquidity_index as f64;
-        let total_borrowed= reserve_data.configuration.total_borrowed +liquidity_taken;
+        let total_debt = (reserve_data.total_borrowed +liquidity_taken ) * reserve_cache.curr_debt_index as f64;
+        let total_supply= (reserve_data.total_supply + liquidity_added) * reserve_cache.curr_liquidity_index as f64;
+        let total_borrowed= reserve_data.total_borrowed +liquidity_taken;
         let interest_rate_params = initialize_interest_rate_params();
 
         let (next_liquidity_rate, next_debt_rate) =
@@ -322,9 +326,9 @@ pub async fn update_interest_rates(
             &interest_rate_params,               // InterestRateParams struct
            
         );
-        reserve_data.configuration.total_borrowed= total_borrowed;
-        reserve_data.configuration.total_supplies= total_supply;
-        reserve_data.current_liquidity_rate = next_liquidity_rate as u128;
+        reserve_data.total_borrowed= total_borrowed;
+        reserve_data.total_supply= total_supply;
+        reserve_data.current_liquidity_rate = next_liquidity_rate;
         reserve_data.borrow_rate = next_debt_rate;
 
 

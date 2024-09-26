@@ -57,7 +57,7 @@ impl ValidationLogic {
         let supply_cap = Nat::from(100000u64);
         ic_cdk::println!("supply_cap : {:?}", supply_cap);
 
-        let final_total_supply = final_amount + reserve.total_supply.unwrap_or(0.0) as u128;
+        let final_total_supply = final_amount + reserve.total_supply as u128;
         ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
 
         if final_total_supply >= supply_cap {
@@ -150,7 +150,7 @@ impl ValidationLogic {
         let borrow_cap = 100000f64; // reserve.config
         ic_cdk::println!("borrow_cap : {:?}", borrow_cap);
 
-        let final_total_borrow = amount + reserve.total_supply.unwrap_or(0.0); // total_borrowed
+        let final_total_borrow = amount + reserve.total_supply; // total_borrowed
         ic_cdk::println!("final_total_supply : {:?}", final_total_borrow);
 
         if final_total_borrow >= borrow_cap {

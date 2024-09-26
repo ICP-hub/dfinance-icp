@@ -431,7 +431,7 @@ const Repay = ({
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1) {
+    if (healthFactor < 1 || ltv>liquidationThreshold) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button

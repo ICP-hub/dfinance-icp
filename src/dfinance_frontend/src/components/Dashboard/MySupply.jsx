@@ -241,7 +241,7 @@ const MySupply = () => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance]);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance,pollInterval]);
 
 
   useEffect(() => {
@@ -858,6 +858,16 @@ const MySupply = () => {
                                   <Button
                                     title={"Supply"}
                                     onClickHandler={() => {
+                                      const reserveData =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0]
+                                        );
+                                      const assetSupply =
+                                        reserveData?.[1]?.asset_supply || 0;
+                                      const assetBorrow =
+                                        reserveData?.[1]?.asset_borrow || 0;
+                                      // Logging data for debugging
                                       const totalCollateral =
                                         userData?.Ok?.total_collateral || 0;
                                       const totalDebt =
@@ -883,14 +893,25 @@ const MySupply = () => {
                                   <Button
                                     title={"Withdraw"}
                                     onClickHandler={() => {
+                                      const reserveData =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0]
+                                        );
                                       const totalCollateral =
                                         userData?.Ok?.total_collateral || 0;
                                       const totalDebt =
                                         userData?.Ok?.total_debt || 0;
+                                      const assetSupply =
+                                        reserveData?.[1]?.asset_supply || 0;
+                                      const assetBorrow =
+                                        reserveData?.[1]?.asset_borrow || 0;
                                       handleModalOpen(
                                         "withdraw",
                                         asset,
-                                        asset === "ckBTC" ? ckBTC : ckETH,
+                                        (asset === "ckBTC" && ckBTC) ||
+                                        (asset === "ckETH" && ckETH) ||
+                                        (asset === "ckUSDC" && ckUSDC),
                                         supplyRateApr,
                                         ckBalance,
                                         liquidationThreshold,
@@ -1397,31 +1418,11 @@ const MySupply = () => {
                                       reserveData?.[1]?.asset_supply || 0;
                                     const assetBorrow =
                                       reserveData?.[1]?.asset_borrow || 0;
-                                    // Logging data for debugging
                                     const totalCollateral =
                                       userData?.Ok?.total_collateral || 0;
                                     const totalDebt =
                                       userData?.Ok?.total_debt || 0;
-                                    console.log("Asset:", item[0]);
-                                    console.log(
-                                      "Borrow Rate APR:",
-                                      item[1]?.Ok.borrow_rate
-                                    );
-                                    console.log(
-                                      "Liquidation Threshold:",
-                                      item[1]?.Ok.configuration
-                                        .liquidation_threshold
-                                    );
-                                    console.log("Asset Supply:", assetSupply);
-                                    console.log("Asset Borrow:", assetBorrow);
-                                    console.log(
-                                      "Balance:",
-                                      item[0] === "ckBTC"
-                                        ? ckBTCBalance
-                                        : item[0] === "ckETH"
-                                          ? ckETHBalance
-                                          : null
-                                    );
+
                                     handleModalOpen(
                                       "supply",
                                       item[0],
@@ -1549,7 +1550,7 @@ const MySupply = () => {
                                     : asset === "ckUSDC"
                                       ? ckUSDCBalance
                                       : null;
-                              const borrowRateAPR =
+                              const borrowRateApr =
                                 item?.[1]?.Ok?.borrow_rate || 0;
                               const liquidationThreshold =
                                 item?.[1]?.Ok?.configuration
@@ -1621,7 +1622,7 @@ const MySupply = () => {
                                       APY:
                                     </p>
                                     <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
-                                      {borrowRateAPR}%
+                                      {borrowRateApr}%
                                     </p>
                                   </div>
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
@@ -1652,54 +1653,15 @@ const MySupply = () => {
                                         const totalDebt =
                                           userData?.Ok?.total_debt || 0;
 
-                                        console.log(
-                                          "collateral and totaldebt",
-                                          totalCollateral,
-                                          totalDebt
-                                        );
-
-                                        console.log("Asset:", item[0]);
-                                        console.log(
-                                          "Borrow Rate APR:",
-                                          item[1]?.Ok.borrow_rate
-                                        );
-                                        console.log(
-                                          "Liquidation Threshold:",
-                                          item[1]?.Ok.configuration
-                                            .liquidation_threshold
-                                        );
-                                        console.log(
-                                          "Asset Supply:",
-                                          assetSupply
-                                        );
-                                        console.log(
-                                          "Asset Borrow:",
-                                          assetBorrow
-                                        );
-                                        console.log(
-                                          "Balance:",
-                                          item[0] === "ckBTC"
-                                            ? ckBTCBalance
-                                            : item[0] === "ckETH"
-                                              ? ckETHBalance
-                                              : null
-                                        );
                                         handleModalOpen(
                                           "borrow",
-                                          item[0],
-                                          (item[0] === "ckBTC" && ckBTC) ||
-                                          (item[0] === "ckETH" && ckETH) ||
-                                          (item[0] === "ckUSDC" && ckUSDC),
-                                          item[1]?.Ok.borrow_rate,
-                                          item[0] === "ckBTC"
-                                            ? ckBTCBalance
-                                            : item[0] === "ckETH"
-                                              ? ckETHBalance
-                                              : item[0] === "ckUSDC"
-                                                ? ckUSDCBalance
-                                                : null,
-                                          item[1]?.Ok.configuration
-                                            .liquidation_threshold,
+                                          asset,
+                                          (asset === "ckBTC" && ckBTC) ||
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC),
+                                          borrowRateApr,
+                                          ckBalance,
+                                          liquidationThreshold,
                                           assetSupply,
                                           assetBorrow,
                                           totalCollateral,
@@ -1712,35 +1674,28 @@ const MySupply = () => {
                                     <Button
                                       title={"Repay"}
                                       onClickHandler={() => {
-                                        console.log("Asset:", asset);
-                                        console.log(
-                                          "Borrow Rate APR:",
-                                          item?.[1]?.Ok.borrow_rate
-                                        );
-                                        console.log(
-                                          "Liquidation Threshold:",
-                                          liquidationThreshold
-                                        );
-                                        console.log(
-                                          "Asset Supply:",
-                                          assetSupply
-                                        );
-                                        console.log(
-                                          "Asset Borrow:",
-                                          assetBorrow
-                                        );
-                                        console.log("Balance:", ckBalance);
+                                        const reserveData =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0]
+                                          );
+                                        const assetSupply =
+                                          reserveData?.[1]?.asset_supply || 0;
+                                        const assetBorrow =
+                                          reserveData?.[1]?.asset_borrow || 0;
+                                        // Logging data for debugging
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
                                           userData?.Ok?.total_debt || 0;
+
                                         handleModalOpen(
                                           "repay",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC),
-                                          borrowRateAPR,
+                                          borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
                                           assetSupply,
@@ -1907,32 +1862,7 @@ const MySupply = () => {
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
                                           userData?.Ok?.total_debt || 0;
-                                        console.log("Asset:", item[0]);
-                                        console.log(
-                                          "Borrow Rate APR:",
-                                          item[1]?.Ok.borrow_rate
-                                        );
-                                        console.log(
-                                          "Liquidation Threshold:",
-                                          item[1]?.Ok.configuration
-                                            .liquidation_threshold
-                                        );
-                                        console.log(
-                                          "Asset Supply:",
-                                          assetSupply
-                                        );
-                                        console.log(
-                                          "Asset Borrow:",
-                                          assetBorrow
-                                        );
-                                        console.log(
-                                          "Balance:",
-                                          item[0] === "ckBTC"
-                                            ? ckBTCBalance
-                                            : item[0] === "ckETH"
-                                              ? ckETHBalance
-                                              : null
-                                        );
+
                                         handleModalOpen(
                                           "borrow",
                                           asset,
@@ -1968,24 +1898,6 @@ const MySupply = () => {
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
                                           userData?.Ok?.total_debt || 0;
-                                        console.log("Asset:", asset);
-                                        console.log(
-                                          "Borrow Rate APR:",
-                                          item?.[1]?.Ok.borrow_rate
-                                        );
-                                        console.log(
-                                          "Liquidation Threshold:",
-                                          liquidationThreshold
-                                        );
-                                        console.log(
-                                          "Asset Supply:",
-                                          assetSupply
-                                        );
-                                        console.log(
-                                          "Asset Borrow:",
-                                          assetBorrow
-                                        );
-                                        console.log("Balance:", ckBalance);
 
                                         handleModalOpen(
                                           "repay",
@@ -2044,7 +1956,7 @@ const MySupply = () => {
                   {filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
-                    <div className="relative mt-4 max-h-[290px] overflow-y-auto scrollbar-none">
+                    <div className="relative mt-4 max-h-[280px] overflow-y-auto scrollbar-custom">
                       {/* Container for the content */}
                       <div className="w-full">
                         {filteredItems.slice(0, 8).map((item, index) => (
@@ -2146,41 +2058,21 @@ const MySupply = () => {
                                     userData?.Ok?.total_collateral || 0;
                                   const totalDebt =
                                     userData?.Ok?.total_debt || 0;
-                                  // Logging data for debugging
-                                  console.log("Asset:", item[0]);
-                                  console.log(
-                                    "Borrow Rate APR:",
-                                    item[1]?.Ok.borrow_rate
-                                  );
-                                  console.log(
-                                    "Liquidation Threshold:",
-                                    item[1]?.Ok.configuration
-                                      .liquidation_threshold
-                                  );
-                                  console.log("Asset Supply:", assetSupply);
-                                  console.log("Asset Borrow:", assetBorrow);
-                                  console.log(
-                                    "Balance:",
-                                    item[0] === "ckBTC"
-                                      ? ckBTCBalance
-                                      : item[0] === "ckETH"
-                                        ? ckETHBalance
-                                        : null
-                                  );
+
                                   handleModalOpen(
                                     "borrow",
                                     item[0],
                                     (item[0] === "ckBTC" && ckBTC) ||
                                     (item[0] === "ckETH" && ckETH) ||
                                     (item[0] === "ckUSDC" && ckUSDC),
-                                    item[1]?.Ok.supply_rate_apr,
-
+                                    item[1]?.Ok.borrow_rate,
                                     item[0] === "ckBTC"
                                       ? ckBTCBalance
                                       : item[0] === "ckETH"
                                         ? ckETHBalance
-                                        : null,
-                                    item[0] === "ckUSDC" ? ckUSDCBalance : null,
+                                        : item[0] === "ckUSDC"
+                                          ? ckUSDCBalance
+                                          : null,
                                     item[1]?.Ok.configuration
                                       .liquidation_threshold,
                                     assetSupply,
@@ -2416,31 +2308,11 @@ const MySupply = () => {
                                         reserveData?.[1]?.asset_supply || 0;
                                       const assetBorrow =
                                         reserveData?.[1]?.asset_borrow || 0;
-                                      // Logging data for debugging
                                       const totalCollateral =
                                         userData?.Ok?.total_collateral || 0;
                                       const totalDebt =
                                         userData?.Ok?.total_debt || 0;
-                                      console.log("Asset:", item[0]);
-                                      console.log(
-                                        "Borrow Rate APR:",
-                                        item[1]?.Ok.borrow_rate
-                                      );
-                                      console.log(
-                                        "Liquidation Threshold:",
-                                        item[1]?.Ok.configuration
-                                          .liquidation_threshold
-                                      );
-                                      console.log("Asset Supply:", assetSupply);
-                                      console.log("Asset Borrow:", assetBorrow);
-                                      console.log(
-                                        "Balance:",
-                                        item[0] === "ckBTC"
-                                          ? ckBTCBalance
-                                          : item[0] === "ckETH"
-                                            ? ckETHBalance
-                                            : null
-                                      );
+
                                       handleModalOpen(
                                         "borrow",
                                         item[0],

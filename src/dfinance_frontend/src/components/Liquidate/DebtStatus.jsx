@@ -162,13 +162,25 @@ const DebtStatus = () => {
     }
   }, [showPopup]);
 
-
+  const filteredUsers = users
+  .map((item) => {
+    const mappedItem = {
+      reserves: item[1].reserves,
+      principal: item[0].toText(),
+      item,
+    };
+    return mappedItem;
+  })
+  .filter((mappedItem) => {
+    const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
+    return isValid;
+  });
 
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Users List</h1>
-        <div className="ml-auto   ">
+        {/* <div className="ml-auto   ">
           {Showsearch && (
             <input
               type="text"
@@ -197,9 +209,9 @@ const DebtStatus = () => {
               <stop stop-color="#C88A9B" />
             </linearGradient>
           </defs>
-        </svg>
+        </svg> */}
       </div>
-      {Showsearch &&
+      {/* {Showsearch &&
         <input
           type="text"
           name="search"
@@ -212,27 +224,15 @@ const DebtStatus = () => {
           value={searchQuery}
           onChange={handleSearchInputChange}
         />
-      }
+      } */}
 
       <div className="w-full min-h-[400px] mt-6 lg:px-10 ">
-        {!users
-          .map((item) => {
-            const mappedItem = {
-              reserves: item[1].reserves,
-              principal: item[0].toText(),
-              item,
-            };
-            return mappedItem;
-          })
-          .filter((mappedItem) => {
-            const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
-            return isValid;
-          }) ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
+      {filteredUsers.length === 0  ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>
           <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
-            No assets found!
+            No users found!
           </p>
         </div> : <div className="w-full min-h-[390px] mt-6 p-0 lg:px-12 mb-20">
           <div className="w-full overflow-auto content">
@@ -280,12 +280,12 @@ const DebtStatus = () => {
                           <div>
                             <p className="font-medium">${mappedItem.item[1].total_debt}</p>
                           </div>
-                          <div
+                          {/* <div
                             className="md:hidden justify-center align-center mt-2 ml-5"
                             onClick={() => handleChevronClick(mappedItem.item)}
                           >
                             <ChevronRight size={22} color={chevronColor} />
-                          </div>
+                          </div> */}
                         </div>
                       </td>
                       <td className="p-5 align-top hidden md:table-cell py-8">

@@ -727,18 +727,18 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     const item = filteredItems[0][1].Ok;
     asset_name = item.asset_name ? item.asset_name[0] : "Unknown";
     accrued_to_treasury = item.accrued_to_treasury?.toString() || "0";
-    borrow_rate = item.borrow_rate ? item.borrow_rate[0].toString() : "0";
-    supply_cap = item.configuration.supply_cap?.toString() || "0";
+    borrow_rate = item.borrow_rate ? item.borrow_rate[0] : "0";
+    supply_cap = item.configuration.supply_cap || "0";
     borrow_cap = formatNumber(item.configuration.borrow_cap?.toString()) || "0";
     ltv = item.configuration.ltv?.toString() || "0";
     liquidation_threshold =
-      item.configuration.liquidation_threshold?.toString() || "0";
-    liquidation_bonus = item.configuration.liquidation_bonus?.toString() || "0";
+      item.configuration.liquidation_threshold || "0";
+    liquidation_bonus = item.configuration.liquidation_bonus || "0";
     supply_rate_apr = item.supply_rate_apr
-      ? item.supply_rate_apr[0].toString()
+      ? item.supply_rate_apr[0]
       : "0";
     total_supply = item.total_supply ? formatNumber(item.total_supply) : "0";
-    current_liquidity_rate = item.current_liquidity_rate?.toString() || "0";
+    current_liquidity_rate = item.current_liquidity_rate || "0";
     liquidity_index = item.liquidity_index?.toString() || "0";
     d_token_canister = item.d_token_canister ? item.d_token_canister[0] : "N/A";
     debt_token_canister = item.debt_token_canister

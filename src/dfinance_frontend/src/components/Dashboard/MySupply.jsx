@@ -841,7 +841,7 @@ const MySupply = () => {
                                     APY:
                                   </p>
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                    {supplyRateApr}%
+                                    {supplyRateApr <0.1 && "< 0.1"}%
                                   </p>
                                 </div>
 
@@ -1057,7 +1057,7 @@ const MySupply = () => {
                                     )}
                                   </div>
                                   <div className="ml-4 align-top">
-                                    {supplyRateApr}%
+                                    {supplyRateApr <0.1 && "<0.1"}%
                                   </div>
                                   <div className=" align-top flex items-center justify-center ml-5 -mr-4">
                                     <CustomizedSwitches checked={true} />
@@ -2292,7 +2292,7 @@ const MySupply = () => {
                                 </div>
                               </td>
                               <td className="p-3 align-center mt-1.5">
-                                <p>{item[1].Ok.borrow_rate}%</p>
+                                <p>{item[1].Ok.borrow_rate*100}%</p>
                               </td>
                               <td className="p-3 align-top">
                                 <div className="w-full flex gap-3 -mr-[3.8rem]">

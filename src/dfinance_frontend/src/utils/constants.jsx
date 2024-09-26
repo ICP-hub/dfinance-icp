@@ -157,28 +157,36 @@ export const error = [
     route: "*",
     
   },]
-export const MAIN_NAV_LINK = [
-  {
-    id: 0,
-    title: "Supply",
-    content: "Supply into the protocol and watch your assets grow as a liquidity provider",
-  },
-  {
-    id: 1,
-    title: "Stake",
-    content: "Deposit your DFinance into the protocol and earn rewards for securing the protocol",
-  },
-  {
-    id: 2,
-    title: "Borrow",
-    content: "Borrow against your collateral from across multiple networks and assets",
-  },
-  {
-    id: 3,
-    title: "Vote",
-    content: "Participate in DFinance governance and vote on new proposals, new assets, and protocol upgrades",
-  },
-];
+  export const MAIN_NAV_LINK = [
+    {
+      id: 0,
+      title: "Supply",
+      content: "Supply assets to earn yield and to use as collateral",
+    },
+    {
+      id: 1,
+      title: "Liquidity",
+      content:
+        "Provide Liquidity with $DFIN and earn exponential rewards (phase 2)",
+    },
+    {
+      id: 2,
+      title: "Borrow",
+      content: "Borrow assets against your supplied collateral",
+    },
+    {
+      id: 3,
+      title: "Stake",
+      content:
+        "Deposit your DFinance into the protocol and earn rewards for securing the protocol",
+    },
+    {
+      id: 4,
+      title: "Vote",
+      content:
+        "Participate in DFinance governance and vote on new proposals, new assets, and protocol upgrades",
+    },
+  ];
 export const TAB_CARD_DATA = [
   {
     id: 0,
@@ -331,34 +339,33 @@ export const FAQ_QUESTION = [
     id: 0,
     question: "What is DFinance?",
     answer:
-      "DFinance is a decentralized lending protocol that allows users to borrow and lend crypto assets. The protocol is designed to be user-friendly, transparent, and easy to use.",
+      "DFinance is the first decentralized lending protocol on ICP that allows users to borrow and lend crypto assets. The protocol is designed to be user-friendly, transparent, and easy to use.",
   },
   {
     id: 1,
     question: "How do I borrow?",
     answer:
-      "To borrow, users need to deposit their crypto assets into the protocol. Once they deposit, they can choose from a range of borrowing options, including stablecoins, interest-bearing tokens, and other crypto assets.",
+      "To borrow, users need to deposit their crypto assets into the protocol. Once they deposit, they can choose from the available market assets, including stablecoins, ICP, ckBTC, ckETH, and other crypto assets.",
   },
   {
     id: 2,
-    question: "What platforms does ACME payment gateway support?",
+    question: "Will there be an airdrop?",
     answer:
-      "ACME payment gateway supports all major crypto platforms, including Bitcoin, Ethereum, and other cryptocurrencies.",
+      "Yes, phase 1, before the official $DFIN token is live, users can accumulate points according to our points system. ",
   },
   {
     id: 3,
-    question: "Does ACME provide international payments support?",
+    question: "What is the planned full functionality of the platform?",
     answer:
-      "ACME does not provide international payments support. All payments are made in the country of origin.",
+      "The platform will role out carefully, with security as our number 1 priority. For a full understanding of our phased roll out, take a look at the road map here. ",
   },
   {
     id: 4,
-    question:
-      "Is there any setup fee or annual maintainance fee that I need to pay regularly?",
+    question: "Why are you launching on ICP?",
     answer:
-      "No, there is no setup fee or annual maintainance fee that I need to pay regularly.",
+      "ICP is long overdue for a robust DeFi ecosystem. DFinance will be the first borrow lend protocol on ICP and will be a key player in unlocking new opportunities for yield as well as attracting liquidity from outside ICP through innovative incentive structures that take the best from other successful borrow and lend protocols and improve upon them with ICP infrastructure. For a full understanding of the DFinance economy, click here.",
   },
-]
+];
 
 export const WALLET_DETAILS_TABS = [
   {

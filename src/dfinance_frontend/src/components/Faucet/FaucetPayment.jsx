@@ -30,6 +30,7 @@ const FaucetPayment = ({ asset, onClose }) => {
     const handleClose = () => {
         setIsVisible(false);
         onClose(); // Also call onClose to close the parent popup
+        window.location.reload()
     };
 
     if (!isVisible) {
@@ -37,7 +38,7 @@ const FaucetPayment = ({ asset, onClose }) => {
     }
 
     return (
-        <div ref={modalRef} className="w-[325px] lg1:w-[420px] h-[350px] lg1:h-[340px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div ref={modalRef} className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
             <div className="w-full flex flex-col items-center">
                 <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 focus:outline-none self-end">
                     <X size={24} />
@@ -46,14 +47,10 @@ const FaucetPayment = ({ asset, onClose }) => {
                     <Check />
                 </div>
                 <h1 className='font-semibold text-xl'>All done!</h1>
-                <p>You received 0.00025 {asset}</p>
+                <p>You received 1,000 {asset}</p>
 
-                <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
-                    <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2">
-                        Review Tx details
-                    </button>
-                </div>
-                <button 
+
+                <button
                     onClick={handleClose}
                     className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
                 >

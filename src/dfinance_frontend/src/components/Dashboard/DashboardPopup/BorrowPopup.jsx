@@ -333,6 +333,9 @@ const Borrow = ({
     } catch (error) {
       console.error("Error borrowing:", error);
       toast.error(`Error: ${error.message || "Borrow action failed!"}`);
+      setIsPaymentDone(false);
+      setIsVisible(true);
+      setIsLoading(false)
       // Handle error state, e.g., show error message
     }
   };
@@ -376,18 +379,24 @@ const Borrow = ({
   useEffect(() => {
     const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
     console.log('Health Factor:', healthFactor);
+
+
     const ltv = calculateLTV(assetSupply, assetBorrow);
     console.log('LTV:', ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1) {
+    if (healthFactor < 1 || ltv>liquidationThreshold ) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
     }
 
-  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
+    if(isAcknowledged){
+      setIsButtonDisabled(false);
+    }
+
+  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue, isAcknowledged, setIsAcknowledged]);
 
   const amountTaken = parseFloat(usdValue) || 0; // Ensure usdValue is treated as a number
   const amountAdded = 0;
@@ -406,12 +415,14 @@ const Borrow = ({
 
   const totalDeptValueLTV = parseFloat(totalDebt) + amountTaken;
 
+  const nextTotalDebt = amountTaken + totalDebt;
 
-  const calculateLTV = (totalCollateralValue, totalDeptValueLTV) => {
-    if (totalCollateralValue === 0) {
+
+  const calculateLTV = (nextTotalDebt, totalCollateral) => {
+    if (totalCollateral === 0) {
       return 0;
     }
-    return (totalDeptValueLTV / totalCollateralValue) * 100;
+    return (nextTotalDebt / totalCollateral);
   };
 
 
@@ -526,7 +537,7 @@ const Borrow = ({
                   </div>
                 </div>
                 <div>
-                  {value <= 2 && (
+                  {value < 1 && (
                     <div>
                       <div className="flex items-center mt-2">
                         <input

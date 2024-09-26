@@ -50,30 +50,30 @@ const SupplyPopup = ({
     }
   };
 
-  useEffect(() => {
-    console.log('Asset:', asset);
-    console.log('Liquidation Threshold:', liquidationThreshold);
-    console.log('Asset Supply:', assetSupply);
-    console.log('Asset Borrow:', assetBorrow, supplyRateAPR);
+  // useEffect(() => {
+  //   console.log('Asset:', asset);
+  //   console.log('Liquidation Threshold:', liquidationThreshold);
+  //   console.log('Asset Supply:', assetSupply);
+  //   console.log('Asset Borrow:', assetBorrow, supplyRateAPR);
 
-    const healthFactor = calculateHealthFactor(assetSupply, assetBorrow, liquidationThreshold);
-    const healthf=0
-    console.log('Health Factor:', healthFactor);
-    const ltv = calculateLTV(assetSupply, assetBorrow);
-    const ltV=80;
-    console.log('LTV:', ltv);
+  //   const healthFactor = calculateHealthFactor(assetSupply, assetBorrow, liquidationThreshold);
+  //   const healthf=0
+  //   console.log('Health Factor:', healthFactor);
+  //   const ltv = calculateLTV(assetSupply, assetBorrow);
+  //   const ltV=80;
+  //   console.log('LTV:', ltv);
    
-       setPrevHealthFactor(currentHealthFactor);
+  //      setPrevHealthFactor(currentHealthFactor);
  
-       setCurrentHealthFactor(healthFactor);
+  //      setCurrentHealthFactor(healthFactor);
 
-    if (healthFactor < 1 || ltv >= liquidationThreshold) {
-      setIsButtonDisabled(true); 
-    } else {
-      setIsButtonDisabled(false); 
-    }
+  //   if (healthFactor < 1 || ltv >= liquidationThreshold) {
+  //     setIsButtonDisabled(true); 
+  //   } else {
+  //     setIsButtonDisabled(false); 
+  //   }
     
-  }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
+  // }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
 
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
@@ -473,8 +473,8 @@ const SupplyPopup = ({
     console.log('LTV:', ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
-
-    if (healthFactor < 1 ) {
+//|| liquidationThreshold>ltv
+    if (healthFactor < 1 || ltv>liquidationThreshold) {
       setIsButtonDisabled(true); 
     } else {
       setIsButtonDisabled(false); 

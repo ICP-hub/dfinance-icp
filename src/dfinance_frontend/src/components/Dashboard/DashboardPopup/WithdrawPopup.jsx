@@ -373,7 +373,7 @@ const WithdrawPopup = ({ asset,
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1) {
+    if (healthFactor < 1|| ltv>liquidationThreshold ) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);

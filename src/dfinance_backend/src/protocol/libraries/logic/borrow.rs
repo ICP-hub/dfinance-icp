@@ -84,13 +84,13 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     ic_cdk::println!("borrow to usd {:?}", borrow_amount_to_usd);
 
     // Validates supply using the reserve_data
-    ValidationLogic::validate_borrow(
-        &reserve_data,
-        borrow_amount_to_usd,
-        user_principal,
-    )
-    .await;
-    ic_cdk::println!("Borrow validated successfully");
+    // ValidationLogic::validate_borrow(
+    //     &reserve_data,
+    //     borrow_amount_to_usd,
+    //     user_principal,
+    // )
+    // .await;
+    // ic_cdk::println!("Borrow validated successfully");
 
     // Minting debttoken
     match asset_transfer(

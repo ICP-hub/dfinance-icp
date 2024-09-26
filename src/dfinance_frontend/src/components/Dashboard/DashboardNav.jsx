@@ -47,7 +47,7 @@ const DashboardNav = () => {
       if (backendActor) {
         try {
           const result = await getUserData(principal.toString());
-          console.log('get_user_data:', result);
+          // console.log('get_user_data:', result);
           setUserData(result);
           updateWalletDetailTab(result);
         } catch (error) {
@@ -66,7 +66,7 @@ const DashboardNav = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
-      console.log('get_user_data in dashboardnav:', result);
+      // console.log('get_user_data in dashboardnav:', result);
       return result;
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -93,7 +93,7 @@ const DashboardNav = () => {
   const updateWalletDetailTab = (data) => {
     if (!data || !data.Ok) return;
     const { net_worth, net_apy, health_factor } = data.Ok;
-    console.log("health factor", health_factor[0])
+    // console.log("health factor", health_factor[0])
     const updatedTab = walletDetailTab.map((item) => {
       switch (item.id) {
         case 0:
@@ -114,6 +114,54 @@ const DashboardNav = () => {
 
     setWalletDetailTab(updatedTab);
   };
+
+
+  const [netSupplyApy, setNetSupplyApy] = useState(0);
+  const [netDebtApy, setNetDebtApy] = useState(0);
+  const [netApy, setNetApy] = useState(0);
+
+  const calculateNetSupplyApy = (reserves) => {
+    let totalSuppliedInUSD = 0;
+    let weightedApySum = 0;
+
+    reserves.forEach((reserve) => {
+      const assetSupplyInUSD = reserve[1]?.asset_supp * reserve.asset_price_when_supplied;
+      totalSuppliedInUSD += assetSupplyInUSD;
+      weightedApySum += assetSupplyInUSD * reserve.supply_apy;
+    });
+
+    const netApy = totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
+    return netApy * 100; // Return APY as percentage (no need for toFixed here)
+  };
+
+  // Function to calculate Net Debt APY
+  const calculateNetDebtApy = (reserves) => {
+    let totalBorrowedInUSD = 0;
+    let weightedDebtApySum = 0;
+
+    reserves.forEach((reserve) => {
+      const assetBorrowedInUSD = reserve.asset_borrow * reserve.asset_price_when_borrowed;
+      totalBorrowedInUSD += assetBorrowedInUSD;
+      weightedDebtApySum += assetBorrowedInUSD * reserve.debt_apy;
+    });
+
+    const netDebtApy = totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
+    return netDebtApy * 100; // Return APY as percentage (no need for toFixed here)
+  };
+
+  // Function to calculate Net APY
+  const calculateNetApy = (reserves) => {
+    const supplyApy = calculateNetSupplyApy(reserves);
+    const debtApy = calculateNetDebtApy(reserves);
+    return (supplyApy - debtApy).toFixed(2); // Net APY = Supply APY - Debt APY
+  };
+
+  useEffect(() => {
+    if (userData && userData?.Ok?.reserves[0]) {
+      const calculatedNetApy = calculateNetApy(userData?.Ok?.reserves[0]);
+      setNetApy(calculatedNetApy);
+    }
+  }, [userData]);
 
   const updateWalletDetailTabs = () => {
     const updatedTabs = walletDetailTabs.map((item) => {
@@ -228,6 +276,8 @@ const DashboardNav = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
+
+
 
   return (
     <div className="w-full ">

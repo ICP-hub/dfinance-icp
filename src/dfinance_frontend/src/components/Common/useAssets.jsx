@@ -20,7 +20,7 @@ const useAssetData = (searchQuery = '') => {
 
       try {
         const assetNames = await backendActor.get_all_assets();
-        console.log("Asset names:", assetNames);
+        // console.log("Asset names:", assetNames);
         setAssets(assetNames);
       } catch (error) {
         console.error('Error fetching asset names:', error);
@@ -42,16 +42,16 @@ const useAssetData = (searchQuery = '') => {
         for (const asset of assets) {
           const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
-          console.log(`${asset} reserve data:`, reserveDataForAsset);
+          // console.log(`${asset} reserve data:`, reserveDataForAsset);
           const supplyCap = parseFloat(reserveDataForAsset.Ok.configuration.supply_cap);
           const totalSupply = parseFloat(reserveDataForAsset.Ok.total_supply);
-          console.log("supplyCap", supplyCap)
-          console.log("TotalSupplies", totalSupply)
+          // console.log("supplyCap", supplyCap)
+          // console.log("TotalSupplies", totalSupply)
           totalMarketSizeTemp += supplyCap;
           totalSupplies += totalSupply;
         }
 
-        console.log("All reserve data before setting state:", data);
+        // console.log("All reserve data before setting state:", data);
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies))
@@ -65,8 +65,8 @@ const useAssetData = (searchQuery = '') => {
   }, [assets, fetchReserveData]);
 
   useEffect(() => {
-    console.log("Updated reserveData state:", reserveData);
-    console.log("Total market size", totalMarketSize);
+    // console.log("Updated reserveData state:", reserveData);
+    // console.log("Total market size", totalMarketSize);
   }, [reserveData]);
 
 

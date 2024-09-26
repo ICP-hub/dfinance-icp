@@ -92,7 +92,7 @@ const MySupply = () => {
           const assets = ["ckBTC", "ckETH", "ckUSDC"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            console.log(`get_asset_principle (${asset}):`, result);
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -109,9 +109,9 @@ const MySupply = () => {
     fetchAssetPrinciple();
   }, [principal, backendActor]);
 
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
+  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
+  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
+  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -132,7 +132,7 @@ const MySupply = () => {
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -173,14 +173,14 @@ const MySupply = () => {
     [createLedgerActor, assetPrincipal.ckUSDC]
   );
 
-  console.log("ckBTC ledger", ledgerActorckBTC);
-  console.log("ckUSDC ledger", ledgerActorckUSDC);
-  console.log("ckETH ledger", ledgerActorckETH);
+  // console.log("ckBTC ledger", ledgerActorckBTC);
+  // console.log("ckUSDC ledger", ledgerActorckUSDC);
+  // console.log("ckETH ledger", ledgerActorckETH);
 
 
 
 
-  console.log("ckusdc balance", ckUSDCBalance);
+  // console.log("ckusdc balance", ckUSDCBalance);
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
@@ -227,21 +227,21 @@ const MySupply = () => {
       setCkETHUsdRate(data.ethereum.usd);
       setCkUSDCUsdRate(data["usd-coin"].usd);
       setCkICPUsdRate(data["internet-computer"].usd);
-      console.log(
-        "Fetched Conversion Rates - ckBTC:",
-        data.bitcoin.usd,
-        "ckETH:",
-        data.ethereum.usd,
-        "ckUSDC:",
-        data["usd-coin"].usd,
-        "ICP:",
-        data["internet-computer"].usd
-      );
+      // console.log(
+      //   "Fetched Conversion Rates - ckBTC:",
+      //   data.bitcoin.usd,
+      //   "ckETH:",
+      //   data.ethereum.usd,
+      //   "ckUSDC:",
+      //   data["usd-coin"].usd,
+      //   "ICP:",
+      //   data["internet-computer"].usd
+      // );
     } catch (error) {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance,pollInterval]);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, pollInterval]);
 
 
   useEffect(() => {
@@ -292,7 +292,7 @@ const MySupply = () => {
               "Unsupported asset type or ledger actor not initialized"
             );
           }
-          console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
@@ -333,9 +333,9 @@ const MySupply = () => {
 
   const { assets, reserveData, filteredItems } = useAssetData();
 
-  console.log("Filtered data", filteredItems);
+  // console.log("Filtered data", filteredItems);
   const filteredReserveData = Object.fromEntries(filteredItems);
-  console.log(filteredReserveData);
+  // console.log(filteredReserveData);
   const [isCollateral, setIsCollateral] = useState(true);
   function formatNumber(num) {
     if (num === null || num === undefined) {
@@ -362,14 +362,14 @@ const MySupply = () => {
     image: "",
     balance: "",
   });
-  console.log("hello", isModalOpen);
+  // console.log("hello", isModalOpen);
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (backendActor) {
         try {
           const result = await getUserData(principal.toString());
-          console.log("get_user_data:", result);
+          // console.log("get_user_data:", result);
           setUserData(result);
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -442,11 +442,11 @@ const MySupply = () => {
   };
   const handleDetailsClick = (asset) => {
     setSelectedAsset(asset);
-    console.log("Selected Asset:", asset);
+    // console.log("Selected Asset:", asset);
     navigate(`/dashboard/asset-details/${asset}`);
   };
   const renderModalOpen = (type) => {
-    console.log(type);
+    // console.log(type);
     switch (type) {
       case "borrow":
         return (
@@ -636,7 +636,7 @@ const MySupply = () => {
 
   useEffect(() => {
     if (userData?.Ok?.reserves[0]) {
-      console.log("Aseet name", userData?.Ok?.reserves[0]);
+      // console.log("Aseet name", userData?.Ok?.reserves[0]);
       const reservesWithCalculations = userData.Ok.reserves[0].map(
         (reserveGroup) => {
           const totalCollateralValue = reserveGroup[1]?.asset_supply || 0;
@@ -841,7 +841,7 @@ const MySupply = () => {
                                     APY:
                                   </p>
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                    {supplyRateApr <0.1 && "< 0.1"}%
+                                    {(supplyRateApr * 100) < 0.1 ? '<0.1%' : `${(supplyRateApr * 100)}%`}
                                   </p>
                                 </div>
 
@@ -1057,7 +1057,7 @@ const MySupply = () => {
                                     )}
                                   </div>
                                   <div className="ml-4 align-top">
-                                    {supplyRateApr <0.1 && "<0.1"}%
+                                    {(supplyRateApr * 100) < 0.1 ? '<0.1%' : `${(supplyRateApr * 100)}%`}
                                   </div>
                                   <div className=" align-top flex items-center justify-center ml-5 -mr-4">
                                     <CustomizedSwitches checked={true} />
@@ -1242,7 +1242,7 @@ const MySupply = () => {
                                 APY:
                               </p>
                               <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
-                                {item[1].Ok.supply_rate_apr}%
+                                {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100)}%`}
                               </p>
                             </div>
                             <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
@@ -1277,7 +1277,7 @@ const MySupply = () => {
                                     (item[0] === "ckBTC" && ckBTC) ||
                                     (item[0] === "ckETH" && ckETH) ||
                                     (item[0] === "ckUSDC" && ckUSDC),
-                                    item[1]?.Ok.borrow_rate,
+                                    item[1]?.Ok.supply_rate_apr,
                                     item[0] === "ckBTC"
                                       ? ckBTCBalance
                                       : item[0] === "ckETH"
@@ -1400,7 +1400,7 @@ const MySupply = () => {
                               </div>
 
                               <div className="ml-2 align-top">
-                                {item[1].Ok.supply_rate_apr}%
+                                {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100)}%`}
                               </div>
                               <div className="-ml-3 align-top flex items-center justify-center dark:text-darkText">
                                 <Check color={checkColor} size={16} />
@@ -1429,7 +1429,7 @@ const MySupply = () => {
                                       (item[0] === "ckBTC" && ckBTC) ||
                                       (item[0] === "ckETH" && ckETH) ||
                                       (item[0] === "ckUSDC" && ckUSDC),
-                                      item[1]?.Ok.borrow_rate,
+                                      item[1]?.Ok.supply_rate_apr,
                                       item[0] === "ckBTC"
                                         ? ckBTCBalance
                                         : item[0] === "ckETH"
@@ -1622,7 +1622,7 @@ const MySupply = () => {
                                       APY:
                                     </p>
                                     <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
-                                      {borrowRateApr}%
+                                      {(borrowRateApr * 100) < 0.1 ? '<0.1%' : `${(borrowRateApr * 100)}%`}
                                     </p>
                                   </div>
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
@@ -1736,7 +1736,7 @@ const MySupply = () => {
                     <div className="w-full h-auto mt-6 relative max-h-[260px] overflow-hidden">
                       {/* Container for the fixed header */}
                       <div className="w-full sticky top-0 z-10">
-                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-3 ml-1">Asset</div>
                           <div className="p-3 -ml-[1px]">Debt</div>
                           <div className="p-3">Apy</div>
@@ -1840,7 +1840,7 @@ const MySupply = () => {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="p-3">{borrowRateApr}%</div>
+                                  <div className="p-3 ml-1">  {(borrowRateApr * 100) < 0.1 ? '<0.1%' : `${(borrowRateApr * 100)}%`}</div>
                                   <div className="p-3">
                                     <div className="w-full flex">variable</div>
                                   </div>
@@ -1935,7 +1935,7 @@ const MySupply = () => {
               } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-2">
-              <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
+              <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText mb-3">
                 Assets to borrow
               </h1>
               <button
@@ -1956,7 +1956,7 @@ const MySupply = () => {
                   {filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
-                    <div className="relative mt-4 max-h-[280px] overflow-y-auto scrollbar-custom">
+                    <div className="relative mt-4 max-h-[290px] overflow-y-auto scrollbar-custom">
                       {/* Container for the content */}
                       <div className="w-full">
                         {filteredItems.slice(0, 8).map((item, index) => (
@@ -2030,7 +2030,7 @@ const MySupply = () => {
                                 APY:
                               </p>
                               <p className="text-right text-[#2A1F9D] dark:text-darkText  mb-4">
-                                {item[1].Ok.supply_rate_apr}%
+                              {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100)}%`}
                               </p>
                             </div>
                             <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-3 mb-4">
@@ -2225,8 +2225,8 @@ const MySupply = () => {
                         <thead>
                           <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-5">
                             {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
-                              <td key={index} className="p-3 py-6 whitespace-nowrap">
-                                {index === 2 ? item.header1 : item.header}
+                              <td key={index} className="p-2 whitespace-nowrap">
+                                <p className="mb-5">{index === 2 ? item.header1 : item.header}</p>
                               </td>
                             ))}
                           </tr>
@@ -2263,7 +2263,7 @@ const MySupply = () => {
                                   {item[0]}
                                 </div>
                               </td>
-                              <td className="p-3 align-top">
+                              <td className="p-3 align-bottom">
                                 <div className="flex flex-col">
                                   {item[0] === "ckBTC" && (
                                     <>
@@ -2291,10 +2291,10 @@ const MySupply = () => {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-3 align-center mt-1.5">
-                                <p>{item[1].Ok.borrow_rate*100}%</p>
+                              <td className="p-3 align-center">
+                                <p className="mt-1.5"> {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100)}%`}</p>
                               </td>
-                              <td className="p-3 align-top">
+                              <td className="p-3 align-center">
                                 <div className="w-full flex gap-3 -mr-[3.8rem]">
                                   <Button
                                     title={"Borrow"}

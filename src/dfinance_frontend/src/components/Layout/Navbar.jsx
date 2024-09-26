@@ -232,7 +232,7 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleViewOnExplorerClick = () => {
-    console.log("View on Explorer clicked");
+    // console.log("View on Explorer clicked");
   };
 
   const handleLaunchApp = () => {
@@ -242,7 +242,7 @@ export default function Navbar({ isHomeNav }) {
     setSwitchTokenDrop(false);
   };
   const handleWalletConnect = () => {
-    console.log("connrcterd");
+    // console.log("connrcterd");
     dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
     // dispatch(setIsWalletCreated(true))
   };

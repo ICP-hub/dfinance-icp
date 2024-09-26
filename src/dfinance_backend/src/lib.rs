@@ -18,7 +18,6 @@ mod state;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
-use crate::implementations::reserve::initialize_reserve;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
 use crate::protocol::libraries::logic::supply::SupplyLogic;

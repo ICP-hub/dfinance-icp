@@ -38,8 +38,8 @@ const TabPanel = () => {
                 className=""
             >
                 {TAB_CARD_DATA.map((item, index) =>
-                    <SwiperSlide>
-                        <TabCards key={index} data={item} />
+                    <SwiperSlide key={index} >
+                        <TabCards data={item} />
                     </SwiperSlide>
                 )}
             </Swiper>

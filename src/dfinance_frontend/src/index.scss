@@ -80,7 +80,7 @@ body{
     left: 0;
     margin-left: 0.5rem; /* Adjust margin as needed */
     width: calc(100% - 1.5rem); /* Adjust padding if needed */
-    height: 1px;
+    height: 1.5px;
     background: linear-gradient(to right, #4659CF, #FCBD78);
     transition: background 0.3s ease-in-out;
     z-index: 4; /* Ensure the line is on top of other content */

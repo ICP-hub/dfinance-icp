@@ -35,7 +35,7 @@ const WalletDetails = () => {
   const dispatch = useDispatch()
   const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
 
-  console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
+  // console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
 
   const {
     isAuthenticated,
@@ -46,7 +46,7 @@ const WalletDetails = () => {
   } = useAuth()
 
   const handleWalletConnect = () => {
-    console.log("connrcterd");
+    // console.log("connrcterd");
     dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
   }
 
@@ -131,7 +131,7 @@ const WalletDetails = () => {
 
   const handleDetailsClick = (asset) => {
     setSelectedAsset(asset);
-    console.log("Selected Asset:", asset);
+    // console.log("Selected Asset:", asset);
     navigate(`/dashboard/asset-details/${asset}`);
   };
 
@@ -166,7 +166,7 @@ const WalletDetails = () => {
 
 
   const filteredReserveData = Object.fromEntries(filteredItems);
-  console.log("filtered data", filteredReserveData);
+  // console.log("filtered data", filteredReserveData);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -181,7 +181,7 @@ const WalletDetails = () => {
       setSelectedAssetData(selectedAssetData);
     }
 
-    console.log("Selected Asset Data:", selectedAssetData); // Debugging
+    // console.log("Selected Asset Data:", selectedAssetData); // Debugging
     setShowPopup(true);
   };
 
@@ -306,7 +306,7 @@ const WalletDetails = () => {
                     key={index}
                     className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
-                    <td className=" align-top py-4">
+                    <td className=" align-center py-6">
                       <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
                         {item[0] === "ckBTC" && (
                           <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
@@ -320,8 +320,8 @@ const WalletDetails = () => {
                         {item[0]}
                       </div>
                     </td>
-                    <td className="p-2 align-top py-4">
-                      <div className="flex justify-center flex-row mt-1">
+                    <td className="p-2 align-center py-6">
+                      <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_supply_count}</p> */}
                           <p >{item[1].Ok.total_supply.length > 0 ? item[1].Ok.total_supply : "0"}</p>
@@ -331,11 +331,10 @@ const WalletDetails = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-5"><div className="flex justify-center">
-                      {item[1].Ok.supply_rate_apr}%</div></td>
-                    <td className="p-3 align-top hidden md:table-cell">
-                      <div className="flex justify-center flex-row mt-1">
-
+                    <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
+                    {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100)}%`}</div></td>
+                    <td className="p-3 align-center hidden md:table-cell">
+                      <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_borrow_count}</p> */}
                           <p >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</p>
@@ -343,10 +342,10 @@ const WalletDetails = () => {
                       </div>
 
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-5">
-                      <div className="flex justify-center">{item[1].Ok.borrow_rate}%</div>
+                    <td className="p-3 align-center hidden md:table-cell">
+                      <div className="flex justify-center"> {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100)}%`}</div>
                     </td>
-                    <td className="p-3 align-top flex">
+                    <td className="p-3 align-center">
                       <div className="w-full flex justify-end align-center">
                         <Button title={"Details"} className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-sm
                                lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]     font-inter" onClickHandler={() => handleDetailsClick(`${item[0]}`)} />

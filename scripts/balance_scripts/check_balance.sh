@@ -6,7 +6,7 @@ set -e
 check_balance() {
     local principal=$1
     local label=$2
-    local canister_id="cuj6u-c4aaa-aaaaa-qaajq-cai"
+    local canister_id="a3shf-5eaaa-aaaaa-qaafa-cai"
     local balance_method="icrc1_balance_of"
 
     # Check the balance
@@ -19,7 +19,7 @@ check_balance() {
 # Get the principal for backend_canister
 backend_canister_principal=$(dfx canister id dfinance_backend)
 # dtoken_canister=$(dfx canister id dcketh)
-user3="ajuq4-ruaaa-aaaaa-qaaga-cai"
+user3="br5f7-7uaaa-aaaaa-qaaca-cai"
 # Check balance and principal for each identity
 echo "Checking balance and principal for identities and backend canister..."
 

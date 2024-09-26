@@ -23,7 +23,7 @@ const CreateWallet = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
-    console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
+    // console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
 
     const {
         isAuthenticated,
@@ -34,7 +34,7 @@ const CreateWallet = () => {
     } = useAuth()
 
     const handleWalletConnect = () => {
-        console.log("connrcterd");
+        // console.log("connrcterd");
         dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
     }
 
@@ -109,7 +109,7 @@ const CreateWallet = () => {
                     const account = { owner: principalObj, subaccount: [] };
                     const balance = await ledgerActorckBTC.icrc1_balance_of(account);
                     setBalance(balance.toString());
-                    console.log("Fetched Balance:", balance.toString());
+                    // console.log("Fetched Balance:", balance.toString());
                 } catch (error) {
                     console.error("Error fetching balance:", error);
                 }

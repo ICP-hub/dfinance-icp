@@ -44,7 +44,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   return (
     <>
       {!showFaucetPayment && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl filter backdrop-blur-lg rounded-[1rem] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-7 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl rounded-[1rem] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-7 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="flex justify-between items-center mb-4">
             <h1 className="font-semibold text-xl">Faucet {asset}</h1>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none">

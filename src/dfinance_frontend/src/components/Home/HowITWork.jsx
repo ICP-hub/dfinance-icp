@@ -1,64 +1,174 @@
-import React, { useEffect } from 'react'
+import React, { useEffect } from "react";
 import { GoArrowRight } from "react-icons/go";
-import Aos from 'aos'
-import 'aos/dist/aos.css'
-import ICPRequest from '../../../public/howitworks/ICP-request.png'
-import Calculator from '../../../public/howitworks/calculator.png'
-import SubmitICPRequest from '../../../public/howitworks/Submit-ICPRequest.png'
+import Aos from "aos";
+import "aos/dist/aos.css";
+import ICPRequest from "../../../public/howitworks/ICP-request.png";
+import Calculator from "../../../public/howitworks/calculator.png";
+import Button from "../../components/Common/Button";
+import SubmitICPRequest from "../../../public/howitworks/Submit-ICPRequest.png";
 const HowITWork = () => {
+  useEffect(() => {
+    Aos.init();
+  
 
-    useEffect(() => {
-        Aos.init();
-    }, [])
+  // https://i.ibb.co/bb4YGbN/ICP-request.png
+  // https://i.ibb.co/Bw2dGRz/Submit-ICPRequest.png
+  // https://i.ibb.co/j8jGcgd/calculator.png
+  const updateAosAttributes = () => {
+    const elements = document.querySelectorAll(".aos-card");
+    elements.forEach((el) => {
+      if (window.innerWidth >= 1024) {
+        el.setAttribute("data-aos", "fade-right");
+      } else {
+        el.setAttribute("data-aos", "fade-left");
+      }
+    });
+  };
 
-    // https://i.ibb.co/bb4YGbN/ICP-request.png
-    // https://i.ibb.co/Bw2dGRz/Submit-ICPRequest.png
-    // https://i.ibb.co/j8jGcgd/calculator.png
-    return (
-        <section className="mt-20 font-poppins " id="HowItWorks">
-            <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
-                <h1 className="text-[32px] md:text-[45px] font-extralight">How it Works</h1>
+  updateAosAttributes(); // Set initial values
+  window.addEventListener("resize", updateAosAttributes); // Update on resize
+
+  return () => {
+    window.removeEventListener("resize", updateAosAttributes); // Cleanup
+  };
+}, []);
+  return (
+    <section className="mt-20 font-poppins" id="HowItWorks">
+      <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
+        <h1 className="text-[32px] md:text-[45px] font-extralight">
+          How it Works
+        </h1>
+      </div>
+
+      {/* Container for grid items */}
+      <div className="mt-[21px] lg:mt-[53px]">
+        {/* Custom grid layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-20 max-w-full">
+          {/* First card */}
+          <div
+            // lg:data-aos="fade-right"
+            // data-aos="fade-left"
+            data-aos-duration="2000"
+            className="w-full aos-card mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+          >
+            <div className="flex items-center justify-center gap-4 mt-[35px]">
+              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+                1
+              </p>
+              <img
+                className="w-[120px] h-[120px] object-contain"
+                src={ICPRequest}
+                draggable="false"
+              />
             </div>
-           <div className='mt-[21px] lg:mt-[53px] grid grid-cols-1 gap-4 lg:gap-0 lg:grid-cols-3 '>
-
-           <div data-aos="fade-left" data-aos-duration="2000" className='lg:mr-0 mr-auto ml-auto w-[309px] rounded-3xl lg:my-auto border p-[15px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]'>
-                <div className='flex gap-4 mt-[35px]'>
-                    <p className='text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText'>1</p>
-                    <div className='text-[16px] '>
-                <p className='text-[#517687] font-[700] font-poppins dark:text-darkText'>Submit ICP </p>
-              <p className='text-[#737373] font-[400] mt-2 dark:text-darkText'>Request for comment Discuss with community members and receive feedback.</p>
-              <p className='text-[#233D63] flex gap-3 text-[12px] mt-[14px] items-center font-[700] dark:text-darkText'>Visit Docs <GoArrowRight size={20} /></p>
-              </div>
-              </div>
-              <img className='mx-auto mt-[16px] mb-[21px] w-[120px] ' src={ICPRequest} draggable="false" />
+            <div className="text-[16px] text-center mt-[16px]">
+              <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
+                Supply assets to earn yield and to use as collateral
+              </p>
             </div>
+          </div>
 
-            <div className='mx-auto w-[309px] rounded-3xl border p-[15px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]'>
-                <div className='flex gap-4 mt-[35px] '>
-                    <p className='text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText'>2</p>
-                    <div className='text-[16px] '>
-                <p className='text-[#517687] font-[700] font-poppins dark:text-darkText'>Create a snapshot</p>
-              <p className='text-[#737373] font-[400] mt-2 dark:text-darkText'>Gauge community sentiment on a new proposal through a Snapshot.</p>
-              <p className='text-[#233D63] flex gap-3 text-[12px] mt-[14px] items-center font-[700] dark:text-darkText'>How to create Snapshot <GoArrowRight size={20} /></p>
-              </div>
-              </div>
-              <img className='mx-auto mt-[36px] mb-[21px] w-[157px]  ' src={Calculator} draggable="false" />
+          {/* Second card */}
+          <div
+            data-aos="fade-right"
+            data-aos-duration="2000"
+            className="w-full mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+          >
+            <div className="flex items-center justify-center gap-4 mt-[35px]">
+              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+                2
+              </p>
+              <img
+                className="w-[120px] h-[120px] object-contain"
+                src={Calculator}
+                draggable="false"
+              />
             </div>
-         
-
-           <div data-aos="fade-right" data-aos-duration="2000" className='lg:ml-0 ml-auto mr-auto w-[309px] rounded-3xl border lg:my-auto p-[15px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0]  dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]'>
-                <div className='flex gap-4 mt-[25px]'>
-                    <p className='text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText'>3</p>
-                    <div className='text-[16px] dark:text-darkText'>
-                <p className='text-[#517687] font-[700] font-poppins dark:text-darkText'>Submit an DFinance Request for Improvement</p>
-              <p className='text-[#737373] font-[400] mt-2 dark:text-darkText'>The proposal is submitted through a GitHub pull request, & community votes on approvals</p>
-              </div>
-              </div>
-              <img className='mx-auto mt-[16px] mb-[21px] w-[153px]  ' src={SubmitICPRequest} draggable="false" />
+            <div className="text-[16px] text-center mt-[16px]">
+              <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
+                Borrow assets against your deposited collateral
+              </p>
             </div>
-            </div> 
-        </section>
-    )
-}
+          </div>
 
-export default HowITWork
+          {/* Third card */}
+          <div
+           
+            data-aos-duration="2000"
+            className="w-full  aos-card mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+          >
+            <div className="flex items-center justify-center gap-4 mt-[35px]">
+              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+                3
+              </p>
+              <img
+                className="w-[120px] h-[120px] object-contain"
+                src={ICPRequest}
+                draggable="false"
+              />
+            </div>
+            <div className="text-[16px] text-center mt-[16px]">
+              <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
+                Borrow up to Maximum loan-to-value (LTV) ratio, which is
+                calculated using your specific Collateral x Debt combination
+              </p>
+            </div>
+          </div>
+
+          {/* Fourth card with slight shift */}
+          <div
+            data-aos="fade-right"
+            data-aos-duration="2000"
+            className="w-full mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)] lg:col-span-2 lg:row-start-2 lg:transform lg:translate-x-12 lg:translate-y-5"
+          >
+            <div className="flex items-center justify-center gap-4 mt-[35px]">
+              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+                4
+              </p>
+              <img
+                className="w-[120px] h-[120px] object-contain"
+                src={ICPRequest}
+                draggable="false"
+              />
+            </div>
+            <div className="text-[16px] text-center mt-[16px]">
+              <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
+                If you reach Liquidation LTV (&gt;Max LTV), you can lose your
+                collateral via liquidation - while retaining your borrowed
+                assets
+              </p>
+            </div>
+          </div>
+
+          {/* Fifth card with slight shift */}
+          <div
+            data-aos="fade-left"
+            data-aos-duration="2000"
+            className="w-full mx-auto max-w-[309px] lg:-ml-44 rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)] lg:col-span-1 lg:row-start-2 lg:transform lg:translate-x-20 lg:translate-y-10"
+          >
+            <div className="flex items-center justify-center gap-2 mt-[35px]">
+              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+                5
+              </p>
+              <img
+                className="w-[120px] h-[120px] object-contain"
+                src={ICPRequest}
+                draggable="false"
+              />
+            </div>
+            <div className="text-[16px] text-center mt-[16px]">
+              <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
+                Earn points on the actions you take
+              </p>
+              <div className="w-full flex justify-center mt-3">
+                <Button title="LEARN MORE" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default HowITWork;

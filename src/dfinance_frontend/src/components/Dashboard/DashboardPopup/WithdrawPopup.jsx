@@ -215,7 +215,7 @@ const WithdrawPopup = ({ asset,
     }
   };
 
-  const { createLedgerActor, backendActor } = useAuth();
+  const { createLedgerActor, backendActor, principal } = useAuth();
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
 
@@ -340,6 +340,7 @@ const WithdrawPopup = ({ asset,
       // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
       console.error("Error withdrawing:", error);
+      setIsLoading(false)
       // Handle error state, e.g., show error message
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
     }
@@ -408,6 +409,48 @@ const WithdrawPopup = ({ asset,
   };
 
 
+  const [healthFactorBackend, setHealthFactorBackend] = useState(null);
+  const [userData, setUserData] = useState();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (backendActor) {
+        try {
+          const result = await getUserData(principal.toString());
+          console.log('get_user_data:', result);
+          setUserData(result);
+          updateWalletDetailTab(result);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        console.error('Backend actor initialization failed.');
+      }
+    };
+    fetchUserData();
+  }, [principal, backendActor]);
+
+  const getUserData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_user_data(user);
+      console.log('get_user_data in supplypopup:', result);
+
+      // Check if the result is in the expected format (Ok.health_factor)
+      if (result && result.Ok && result.Ok.health_factor) {
+        setHealthFactorBackend(result.Ok.health_factor);  // Store health_factor in state
+      } else {
+        setError("Health factor not found");
+      }
+      return result;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setError(error.message);
+    }
+  };
+
 
   return (
     <>
@@ -421,7 +464,7 @@ const WithdrawPopup = ({ asset,
 
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-3 rounded-md">
-                <div className="w-5/12 md:w-4/12">
+                <div className="w-[50%]">
                   <input
                     type="number"
                     value={amount}
@@ -434,7 +477,7 @@ const WithdrawPopup = ({ asset,
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
-                <div className="w-7/12 md:w-8/12 flex flex-col items-end">
+                <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={image}
@@ -468,7 +511,7 @@ const WithdrawPopup = ({ asset,
             <div className="w-full bg-gray-100 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
               <div className="w-full flex justify-between items-center my-1">
                 <p>Supply APY</p>
-                <p>{supplyRateAPR}%</p>
+                <p>{(supplyRateAPR * 100) < 0.1 ? '<0.1%' : `${(supplyRateAPR * 100)}%`}</p>
               </div>
               <div className="w-full flex justify-between items-center my-1">
                 <p>Collateralization</p>
@@ -483,16 +526,16 @@ const WithdrawPopup = ({ asset,
                 <div className="w-full flex justify-between items-center">
                   <p>Health Factor</p>
                   <p>
-                    <span lassName={`${prevHealthFactor > 3
-                      ? "text-green-500"
-                      : prevHealthFactor <= 1
-                        ? "text-red-500"
-                        : prevHealthFactor <= 1.5
-                          ? "text-orange-600"
-                          : prevHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                      }`}>{prevHealthFactor}</span>
+                  <span className={`${healthFactorBackend > 3
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                        }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
                     <span className="text-gray-500 mx-1">→</span>
                     <span
                       className={`${currentHealthFactor > 3

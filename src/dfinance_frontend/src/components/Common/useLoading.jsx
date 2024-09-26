@@ -5,14 +5,12 @@ export function usePageLoading() {
 
   useEffect(() => {
     const handleLoad = () => {
-      console.log('Page fully loaded');
       setTimeout(() => {
         setIsLoading(false);
       }, 1000);
     };
 
     const handleBeforeUnload = () => {
-      console.log('Page is about to unload');
       setIsLoading(true);
     };
 
@@ -20,7 +18,6 @@ export function usePageLoading() {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     if (document.readyState === 'complete') {
-      console.log('Document is already fully loaded');
       setTimeout(() => {
         setIsLoading(false);
       }, 1000); 

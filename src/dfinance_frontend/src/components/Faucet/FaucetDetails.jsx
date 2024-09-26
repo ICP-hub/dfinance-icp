@@ -366,11 +366,11 @@ const FaucetDetails = () => {
 
   return (
     <div className="w-full">
-      <div className="w-full flex items-center px-6 mt-4 md:px-12">
+      <div className="w-full flex items-center px-6 mt-4 md:px-9">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Test Assets</h1>
       </div>
   
-      <div className="w-full mt-6 p-0 lg:px-12">
+      <div className="w-full mt-9 p-0 lg:px-9">
         {currentItems.length === 0 ? (
           <div className="mt-[50px] flex flex-col justify-center align-center place-items-center ">
             <div className="w-20 h-15">
@@ -383,11 +383,11 @@ const FaucetDetails = () => {
         ) : (
           <>
             <div className="w-full overflow-auto content">
-              <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
+              <table className="w-full text-[#2A1F9D] font-[500] text-sm md:text-sm lg:text-base dark:text-darkText">
                 <thead>
-                  <tr className="text-left text-[#233D63] dark:text-darkTextSecondary text-[12px]">
+                  <tr className="placeholder:text-[#233D63] dark:text-darkTextSecondary text-sm">
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
-                      <td key={index} className="p-1 whitespace-nowrap">{item.header}</td>
+                      <td key={index} className="p-1 pl-2 pb-3 whitespace-nowrap">{item.header}</td>
                     ))}
                     <td className="p-3 hidden md:table-cell">{FAUCET_ASSETS_TABLE_COL[2]?.header}</td>
                   </tr>
@@ -396,11 +396,11 @@ const FaucetDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] rounded-lg text-sm ${
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${
                         index !== currentItems.length - 1 ? "gradient-line-bottom" : ""
                       }`}
                     >
-                      <td className="p-3 align-top">
+                      <td className="p-3 align-center py-7">
                         <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
                           {item[0] === "ckBTC" && (
                             <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full mr-2" />
@@ -414,8 +414,8 @@ const FaucetDetails = () => {
                           {item[0]}
                         </div>
                       </td>
-                      <td className="p-3 align-top">
-                        <div className="flex flex-row ml-5">
+                      <td className="p-3 align-center">
+                        <div className="flex flex-row ml-7">
                           <div>
                             <center>
                               {item[0] === "ckBTC" && (
@@ -440,7 +440,7 @@ const FaucetDetails = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 align-top flex">
+                      <td className="p-3 align-center -pb-5">
                         <div className="w-full flex justify-end align-center">
                           <Button
                             title={
@@ -463,7 +463,7 @@ const FaucetDetails = () => {
                                 </span>
                               </>
                             }
-                            className="mb-7 bg-gradient-to-tr md:from-[#4659CF] md:from-20% md:via-[#D379AB] md:via-60% md:to-[#FCBD78] md:to-90% text-white rounded-lg md:px-3 md:py-1 shadow-md shadow-black/40 font-semibold text-sm sxs3:px-1 font-inter md:bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60"
+                            className="bg-gradient-to-tr md:from-[#4659CF] md:from-20% md:via-[#D379AB] md:via-60% md:to-[#FCBD78] md:to-90% text-white rounded-lg md:px-3 md:py-1 shadow-md shadow-black/40 font-semibold text-sm sxs3:px-1 font-inter md:bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60"
                             onClickHandler={() => handleFaucetClick(item[0], item.image)}
                           />
                         </div>

@@ -28,7 +28,7 @@ const Repay = ({
 }) => {
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null); // Reference to the modal container
-  const { createLedgerActor, backendActor } = useAuth();
+  const { createLedgerActor, backendActor, principal } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [error, setError] = useState("");
@@ -466,6 +466,49 @@ const Repay = ({
     return totalDeptValue / totalCollateralValue;
   };
 
+
+  const [healthFactorBackend, setHealthFactorBackend] = useState(null);
+  const [userData, setUserData] = useState();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (backendActor) {
+        try {
+          const result = await getUserData(principal.toString());
+          console.log('get_user_data:', result);
+          setUserData(result);
+          updateWalletDetailTab(result);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        console.error('Backend actor initialization failed.');
+      }
+    };
+    fetchUserData();
+  }, [principal, backendActor]);
+
+  const getUserData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_user_data(user);
+      console.log('get_user_data in supplypopup:', result);
+
+      // Check if the result is in the expected format (Ok.health_factor)
+      if (result && result.Ok && result.Ok.health_factor) {
+        setHealthFactorBackend(result.Ok.health_factor);  // Store health_factor in state
+      } else {
+        setError("Health factor not found");
+      }
+      return result;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setError(error.message);
+    }
+  };
+
   return (
     <>
       {isVisible && (
@@ -478,7 +521,7 @@ const Repay = ({
                 <h1>Amount</h1>
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="w-5/12">
+                <div className="w-[50%]">
                   <input
                     type="number"
                     value={amount}
@@ -491,7 +534,7 @@ const Repay = ({
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
-                <div className="w-7/12 flex flex-col items-end">
+                <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={image}
@@ -520,21 +563,16 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
-                      <span
-                        className={`${
-                          prevHealthFactor > 3
-                            ? "text-green-500"
-                            : prevHealthFactor <= 1
+                    <span className={`${healthFactorBackend > 3
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
                             ? "text-red-500"
-                            : prevHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : prevHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
-                      >
-                        {prevHealthFactor}
-                      </span>
+                            : healthFactorBackend <= 1.5
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                        }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${

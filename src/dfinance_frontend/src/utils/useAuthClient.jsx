@@ -137,7 +137,7 @@ export const useAuthClient = (options = defaultOptions) => {
 
       const principal = identity.getPrincipal();
       setPrincipal(principal.toString());
-      console.log('principal', principal.toString());
+      // console.log('principal', principal.toString());
 
       const accountId = AccountIdentifier.fromPrincipal({ principal });
       setAccountId(toHexString(accountId.bytes));
@@ -177,7 +177,6 @@ export const useAuthClient = (options = defaultOptions) => {
   const reloadLogin = async () => {
     try {
       if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
-        console.log("Called");
         updateClient(authClient);
       }
     } catch (error) {
@@ -191,7 +190,6 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     try {
       const result = await backendActor.check_user(user);
-      console.log('check_user result:', result);
       return result;
     } catch (error) {
       console.error('Error checking user:', error);
@@ -206,7 +204,7 @@ export const useAuthClient = (options = defaultOptions) => {
   
     try {
       const reserveData = await backendActor.get_reserve_data(asset);
-      console.log('Reserve Data:', reserveData);
+      // console.log('Reserve Data:', reserveData);
       return reserveData;
     } catch (error) {
       console.error('Error fetching reserve data:', error);
@@ -229,8 +227,6 @@ const getAllUsers = async () => {
     throw error;
   }
 };
-
-console.log("backned actor in useAuth", backendActor)
 
   return {
     isAuthenticated,

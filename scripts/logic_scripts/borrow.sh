@@ -6,7 +6,7 @@ set -e
 source ../../.env
 
 # Set variables
-ckbtc_canister="cuj6u-c4aaa-aaaaa-qaajq-cai" 
+ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai" 
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
 debt_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
 approve_method="icrc2_approve"

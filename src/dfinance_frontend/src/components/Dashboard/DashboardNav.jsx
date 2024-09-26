@@ -13,10 +13,11 @@ import { ChevronLeft } from 'lucide-react';
 import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
 import useAssetData from "../Common/useAssets";
+import { useCallback } from "react";
 
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } = useAuth();
-  const { totalMarketSize, totalSupplySize } = useAssetData();
+  const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
   const [userData, setUserData] = useState();
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
@@ -115,6 +116,56 @@ const DashboardNav = () => {
     setWalletDetailTab(updatedTab);
   };
 
+  const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
+  const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
+  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
+  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
+  const [error, setError] = useState(null);
+
+  const fetchConversionRate = useCallback(async () => {
+    try {
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd"
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+
+      // Set the conversion rates for all assets
+      setCkBTCUsdRate(data.bitcoin.usd);
+      setCkETHUsdRate(data.ethereum.usd);
+      setCkUSDCUsdRate(data["usd-coin"].usd);
+      setCkICPUsdRate(data["internet-computer"].usd);
+    } catch (error) {
+      console.error("Error fetching conversion rates:", error);
+      setError(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConversionRate();
+  }, [fetchConversionRate]);
+
+  // Function to get conversion rate based on asset
+  const getConversionRate = (asset) => {
+    switch (asset) {
+      case "ckBTC":
+        return ckBTCUsdRate;
+      case "ckETH":
+        return ckETHUsdRate;
+      case "ckUSDC":
+        return ckUSDCUsdRate;
+      case "ckICP":
+        return ckICPUsdRate;
+      default:
+        return null;
+    }
+  };
+
+  useEffect(() => {
+    fetchConversionRate();
+  }, [fetchConversionRate]);
 
   const [netSupplyApy, setNetSupplyApy] = useState(0);
   const [netDebtApy, setNetDebtApy] = useState(0);
@@ -124,8 +175,11 @@ const DashboardNav = () => {
     let totalSuppliedInUSD = 0;
     let weightedApySum = 0;
 
+    // const asset_price_when_supplied1 = 60850
+    // const supply_apy1
     reserves.forEach((reserve) => {
-      const assetSupplyInUSD = reserve[1]?.asset_supp * reserve.asset_price_when_supplied;
+      console.log("conversionrateCall", getConversionRate(reserve[0]), "asset_supply", reserve[0])
+      const assetSupplyInUSD = reserve[1]?.asset_supply * getConversionRate(reserve[0]);
       totalSuppliedInUSD += assetSupplyInUSD;
       weightedApySum += assetSupplyInUSD * reserve.supply_apy;
     });
@@ -171,6 +225,7 @@ const DashboardNav = () => {
         case 1:
           return { ...item, count: `${isNaN(totalSupplySize) ? '0' : totalSupplySize}` };
         case 2:
+          return { ...item, count: `${isNaN(totalBorrowSize) ? '0' : totalBorrowSize}` };
         default:
           return item;
       }

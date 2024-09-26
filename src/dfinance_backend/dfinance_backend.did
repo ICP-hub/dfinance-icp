@@ -46,18 +46,17 @@ type UserData = record {
   net_worth : opt float64;
 };
 type UserReserveData = record {
+  supply_rate : float64;
   asset_price_when_supplied : float64;
   principal_stable_debt : nat64;
   asset_borrow : float64;
-  total_variable_debt : nat64;
   last_update_timestamp : nat64;
   asset_price_when_borrowed : float64;
   liquidity_index : float64;
   variable_borrow_index : float64;
   reserve : text;
   asset_supply : float64;
-  total_stable_debt : nat64;
-  avg_stable_borrow_rate : float64;
+  borrow_rate : float64;
 };
 service : () -> {
   borrow : (text, nat64) -> (Result);
@@ -67,7 +66,7 @@ service : () -> {
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_3) query;
-  get_exchange_rates : (text, float64) -> (Result_4); 
+  get_exchange_rates : (text, float64) -> (Result_4);
   get_reserve_data : (text) -> (Result_5) query;
   get_user_data : (text) -> (Result_6) query;
   initialize_reserve : () -> ();

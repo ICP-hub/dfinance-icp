@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   setIsWalletConnected,
-  setWalletModalOpen,setConnectedWallet
+  setWalletModalOpen, setConnectedWallet
 } from "../../redux/reducers/utilityReducer";
 import { WalletMinimal } from "lucide-react";
 import { Info } from "lucide-react";
@@ -43,72 +43,72 @@ const AssetDetails = () => {
   console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
 
   const {
-      isAuthenticated,
-      login,
-      logout,
-      principal,
-      createLedgerActor,
-      backendActor
+    isAuthenticated,
+    login,
+    logout,
+    principal,
+    createLedgerActor,
+    backendActor
   } = useAuth()
 
   const handleWalletConnect = () => {
-      console.log("connrcterd");
-      dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
+    console.log("connrcterd");
+    dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
   }
 
   const handleWallet = () => {
-      dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
-      dispatch(setIsWalletConnected(true))
-      navigate('/dashboard/my-supply')
+    dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
+    dispatch(setIsWalletConnected(true))
+    navigate('/dashboard/my-supply')
   }
 
   useEffect(() => {
-      if (isWalletCreated) {
-          navigate('/dashboard/wallet-details')
-      }
+    if (isWalletCreated) {
+      navigate('/dashboard/wallet-details')
+    }
   }, [isWalletCreated]);
 
 
   const loginHandlerIsSwitch = async (val) => {
-      dispatch(setUserData(null));
-      await logout();
-      await login(val);
-      dispatch(setConnectedWallet(val));
-      dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
+    dispatch(setUserData(null));
+    await logout();
+    await login(val);
+    dispatch(setConnectedWallet(val));
+    dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
 
   };
 
   const loginHandler = async (val) => {
-      await login(val);
-      dispatch(setConnectedWallet(val));
+    await login(val);
+    dispatch(setConnectedWallet(val));
   };
 
   const handleLogout = () => {
-      dispatch(setUserData(null));
-      logout();
+    dispatch(setUserData(null));
+    logout();
   };
 
   const [inputValue, setInputValue] = useState('');
 
   const handleInputChange = (event) => {
-      setInputValue(event.target.value);
+    setInputValue(event.target.value);
   };
 
-  
+
 
   const walletDisplayName = (wallet) => {
-      switch (wallet) {
-          case 'ii':
-              return "Internet Identity";
-          case 'plug':
-              return "Plug";
-          case 'bifinity':
-              return "Bitfinity";
-          case 'nfid':
-              return "NFID";
-          default:
-              return "Unknown Wallet";
-      }
+    switch (wallet) {
+      case 'ii':
+        return "Internet Identity";
+      case 'plug':
+        return "Plug";
+      case 'bifinity':
+        return "Bitfinity";
+      case 'nfid':
+        return "NFID";
+      default:
+        return "Unknown Wallet";
+    }
   };
 
 
@@ -157,6 +157,9 @@ const AssetDetails = () => {
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
+  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
+  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
+
 
   const [ckICPBalance, setCkICPBalance] = useState(null);
   const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
@@ -266,80 +269,89 @@ const AssetDetails = () => {
   console.log("ckUSDC ledger", ledgerActorckUSDC);
   console.log("ckETH ledger", ledgerActorckETH);
 
+
+  useEffect(() => {
+    if (ckBTCBalance && ckBTCUsdRate) {
+      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
+      setCkBTCUsdBalance(balanceInUsd);
+    }
+  }, [ckBTCBalance, ckBTCUsdRate]);
+
+  useEffect(() => {
+    if (ckETHBalance && ckETHUsdRate) {
+      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
+      setCkETHUsdBalance(balanceInUsd);
+    }
+  }, [ckETHBalance, ckETHUsdRate]);
+
+  useEffect(() => {
+    if (ckUSDCBalance && ckUSDCUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(
+        2
+      );
+      setCkUSDCUsdBalance(balanceInUsd);
+    }
+  }, [ckUSDCBalance, ckUSDCUsdRate]);
+
+  useEffect(() => {
+    if (ckICPBalance && ckICPUsdRate) {
+      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+      setCkICPUsdBalance(balanceInUsd);
+    }
+  }, [ckICPBalance, ckICPUsdRate]);
+
+
   useEffect(() => {
     console.log("Asset ID from URL parameters:", id); // Log the asset ID from URL
   }, [id]);
 
-  const fetchBalance = useCallback(
-    async (id) => {
-      if (!id) {
-        console.error("Asset ID is undefined. Cannot fetch balance."); // Log if ID is missing
-        return;
-      }
 
+
+
+  const fetchBalance = useCallback(
+    async (assetType) => {
       if (isAuthenticated && principalObj) {
         try {
           const account = { owner: principalObj, subaccount: [] };
           let balance;
 
-          // Fetch ckBTC balance
-          if (id === "ckBTC") {
+          if (assetType === "ckBTC") {
             if (!ledgerActorckBTC) {
-              console.warn("Ledger actor for ckBTC not initialized yet"); // Log ledger actor warning
+              console.warn("Ledger actor for ckBTC not initialized yet");
               return;
             }
-            console.log("Fetching ckBTC balance..."); // Log balance fetching process
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            console.log("Raw ckBTC Balance:", balance); // Log raw balance response
+            //  balance = 2500
             setCkBTCBalance(balance.toString()); // Set ckBTC balance
-            console.log("ckBTC Balance fetched:", balance.toString()); // Log stringified balance
-          }
-
-          // Fetch ckETH balance
-          else if (id === "ckETH") {
+          } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
-              console.warn("Ledger actor for ckETH not initialized yet"); // Log ledger actor warning
+              console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
-            console.log("Fetching ckETH balance..."); // Log balance fetching process
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            console.log("Raw ckETH Balance:", balance); // Log raw balance response
+            //  balance = 3500
             setCkETHBalance(balance.toString()); // Set ckETH balance
-            console.log("ckETH Balance fetched:", balance.toString()); // Log stringified balance
-          }
-
-          // Fetch ckUSDC balance
-          else if (id === "ckUSDC") {
+          } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
-              console.warn("Ledger actor for ckUSDC not initialized yet"); // Log ledger actor warning
+              console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
-            console.log("Fetching ckUSDC balance..."); // Log balance fetching process
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            console.log("Raw ckUSDC Balance:", balance); // Log raw balance response
+            //  balance = 1300
             setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
-            console.log("ckUSDC Balance fetched:", balance.toString()); // Log stringified balance
+          } else {
+            throw new Error(
+              "Unsupported asset type or ledger actor not initialized"
+            );
           }
-
-          // Unsupported asset type
-          else {
-            console.error("Unsupported asset type:", id); // Log unsupported asset type
-            return;
-          }
-
+          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
-          console.error(`Error fetching balance for ${id}:`, error); // Log any errors during fetching
+          console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
         }
       }
     },
-    [
-      isAuthenticated,
-      ledgerActorckBTC,
-      ledgerActorckETH,
-      ledgerActorckUSDC,
-      principalObj,
-    ]
+    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj]
   );
 
   // Log balances using useEffect after state updates
@@ -383,28 +395,56 @@ const AssetDetails = () => {
     }
   }, [id, fetchBalance]);
 
+  const pollInterval = 10000; // 10 seconds
   const fetchConversionRate = useCallback(async () => {
     try {
       const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=internet-computer&vs_currencies=usd"
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd"
       );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      setConversionRate(data["internet-computer"].usd);
-      console.log("Fetched Conversion Rate:", data["internet-computer"].usd);
+      setCkBTCUsdRate(data.bitcoin.usd);
+      setCkETHUsdRate(data.ethereum.usd);
+      setCkUSDCUsdRate(data["usd-coin"].usd);
+      setCkICPUsdRate(data["internet-computer"].usd);
+      // console.log(
+      //   "Fetched Conversion Rates - ckBTC:",
+      //   data.bitcoin.usd,
+      //   "ckETH:",
+      //   data.ethereum.usd,
+      //   "ckUSDC:",
+      //   data["usd-coin"].usd,
+      //   "ICP:",
+      //   data["internet-computer"].usd
+      // );
     } catch (error) {
-      console.error("Error fetching conversion rate:", error);
+      console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, []);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, pollInterval]);
 
   useEffect(() => {
+    // Start polling at regular intervals
+    const intervalId = setInterval(() => {
+      fetchConversionRate();
+    }, pollInterval);
+
+    // Clear the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [fetchConversionRate]);
+
+ useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        await Promise.all([fetchBalance(), fetchConversionRate()]);
+        await Promise.all([
+          fetchBalance("ckBTC"),
+          fetchBalance("ckETH"),
+          fetchBalance("ckUSDC"),
+          fetchConversionRate(), // Fetch ckBTC and ckETH rates
+        ]);
       } catch (error) {
         setError(error);
       } finally {
@@ -413,7 +453,7 @@ const AssetDetails = () => {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
+  }, [fetchBalance, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance]);
 
   let supply_cap;
   let borrow_cap;
@@ -470,7 +510,7 @@ const AssetDetails = () => {
     }
   }, [isWalletCreated]);
 
- 
+
 
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
@@ -703,7 +743,7 @@ const AssetDetails = () => {
                       {id === "ckBTC" && (
                         <>
                           <p>{ckBTCBalance} {id}</p>
-                         <p className="text-[11px] font-light">${formatNumber(ckBTCUsdBalance)}</p>
+                          <p className="text-[11px] font-light">${formatNumber(ckBTCUsdBalance)}</p>
                         </>
                       )}
                       {id === "ckETH" && (
@@ -773,7 +813,7 @@ const AssetDetails = () => {
                     />
                   </div>
                 </div>
-                
+
               </div>
 
               {balance === "0" && (

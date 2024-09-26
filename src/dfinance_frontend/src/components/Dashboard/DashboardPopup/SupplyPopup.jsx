@@ -474,7 +474,7 @@ const SupplyPopup = ({
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
     //|| liquidationThreshold>ltv
-    if (healthFactor < 1 || ltv > liquidationThreshold) {
+    if (healthFactor <= 1 || ltv*100 >= liquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -485,11 +485,11 @@ const SupplyPopup = ({
 
   const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
     const amountTaken = 0; // Ensure usdValue is treated as a number
-    const amountAdded = parseFloat(usdValue) || 0; // No amount added for now, but keeping it in case of future use
+    const amountAdded = usdValue || 0; // No amount added for now, but keeping it in case of future use
 
     // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
-    const totalCollateralValue = parseFloat(totalCollateral) + amountAdded;
-    const totalDeptValue = parseFloat(totalDebt) + amountTaken;
+    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
+    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
     console.log("totalCollateralValue", totalCollateralValue)
     console.log("totalDeptValue", totalDeptValue)
     console.log("amountAdded", amountAdded)

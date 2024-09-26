@@ -26,16 +26,29 @@ pub fn calculate_ltv(position: &UserPosition) -> f64 {
     position.total_borrowed_value / position.total_collateral_value
 }
 
-pub fn calculate_average_threshold(amount: f64, reserve: &ReserveData, user: UserData) -> f64 {
-    let reserve_liq_thres = reserve.configuration.liquidation_threshold;
-    let user_liq_thres = user.liquidation_threshold.unwrap();
-    let user_total_collateral = user.total_collateral.unwrap();
+// pub fn calculate_average_threshold(amount: f64, reserve: &ReserveData, user: UserData) -> f64 {
+//     let reserve_liq_thres = reserve.configuration.liquidation_threshold;
+//     let user_liq_thres = user.liquidation_threshold.unwrap();
+//     let user_total_collateral = user.total_collateral.unwrap();
 
-    let num = (amount * reserve_liq_thres as f64) + (user_total_collateral * user_liq_thres);
+//     let num = (amount * reserve_liq_thres as f64) + (user_total_collateral * user_liq_thres);
 
-    let deno = reserve_liq_thres as f64 * user_liq_thres;
+//     let deno = reserve_liq_thres as f64 * user_liq_thres;
 
-    num / deno
+//     num / deno
+// }
+
+pub fn cal_average_threshold(
+    amount: f64, 
+    reserve_liq_thres: u16, 
+    user_total_collateral: f64, 
+    user_liq_thres: f64
+) -> f64 {
+    // Perform the calculation as per the formula
+    let result = (amount * (reserve_liq_thres/100) as f64 + user_total_collateral * user_liq_thres) 
+        / ((reserve_liq_thres/100 )as f64 * user_liq_thres);
+    
+    result
 }
 
 // ------------ Real time asset data using XRC ------------
@@ -69,7 +82,7 @@ pub async fn get_exchange_rates(
 
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
-            Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai").unwrap(),
+            Principal::from_text("asrmz-lmaaa-aaaaa-qaaeq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
             1_000_000_000,

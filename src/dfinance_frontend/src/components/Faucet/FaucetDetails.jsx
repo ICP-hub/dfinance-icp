@@ -387,7 +387,7 @@ const FaucetDetails = () => {
                 <thead>
                   <tr className="placeholder:text-[#233D63] dark:text-darkTextSecondary text-sm">
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
-                      <td key={index} className="p-1 pl-2 pb-3 whitespace-nowrap">{item.header}</td>
+                      <td key={index} className="p-1 pl-2 -pr-7 pb-3 whitespace-nowrap">{item.header}</td>
                     ))}
                     <td className="p-3 hidden md:table-cell">{FAUCET_ASSETS_TABLE_COL[2]?.header}</td>
                   </tr>
@@ -415,25 +415,25 @@ const FaucetDetails = () => {
                         </div>
                       </td>
                       <td className="p-3 align-center">
-                        <div className="flex flex-row ml-7">
+                        <div className="flex flex-row ml-[30px]">
                           <div>
                             <center>
                               {item[0] === "ckBTC" && (
                                 <>
-                                  <p>{ckBTCBalance}</p>
-                                  <p className="font-light">${formatNumber(ckBTCUsdBalance)}</p>
+                                  <p className="text-left">{ckBTCBalance}</p>
+                                  <p className="font-light text-left text-[11px]">${formatNumber(ckBTCUsdBalance)}</p>
                                 </>
                               )}
                               {item[0] === "ckETH" && (
                                 <>
-                                  <p>{ckETHBalance}</p>
-                                  <p className="font-light">${formatNumber(ckETHUsdBalance)}</p>
+                                  <p className="text-left">{ckETHBalance}</p>
+                                  <p className="font-light text-left text-[11px]">${formatNumber(ckETHUsdBalance)}</p>
                                 </>
                               )}
                               {item[0] === "ckUSDC" && (
                                 <>
-                                  <p>{ckUSDCBalance}</p>
-                                  <p className="font-light">${formatNumber(ckUSDCUsdBalance)}</p>
+                                  <p className="text-left">{ckUSDCBalance}</p>
+                                  <p className="font-light text-left text-[11px]">${formatNumber(ckUSDCUsdBalance)}</p>
                                 </>
                               )}
                             </center>

@@ -12,6 +12,7 @@ const useAssetData = (searchQuery = '') => {
   const [reserveData, setReserveData] = useState(null);
   const [totalMarketSize, setTotalMarketSize] = useState(0);
   const [totalSupplySize, setTotalSupplySize] = useState(0);
+  const [totalBorrowSize, setTotalBorrowSize] = useState(0);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -38,23 +39,27 @@ const useAssetData = (searchQuery = '') => {
         const data = {};
         let totalMarketSizeTemp = 0;
         let totalSupplies = 0
+        let totalBorrowes = 0;
 
         for (const asset of assets) {
           const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
-          // console.log(`${asset} reserve data:`, reserveDataForAsset);
+          console.log(`${asset} reserve data:`, reserveDataForAsset);
           const supplyCap = parseFloat(reserveDataForAsset.Ok.configuration.supply_cap);
           const totalSupply = parseFloat(reserveDataForAsset.Ok.total_supply);
+          const totalBorrow = parseFloat(reserveDataForAsset.Ok.total_borrowed);
           // console.log("supplyCap", supplyCap)
           // console.log("TotalSupplies", totalSupply)
           totalMarketSizeTemp += supplyCap;
           totalSupplies += totalSupply;
+          totalBorrowes +=totalBorrow
         }
 
         // console.log("All reserve data before setting state:", data);
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies))
+        setTotalBorrowSize(formatNumber(totalBorrowes))
       } catch (err) {
         console.error('Error fetching reserve data:', err);
         setError(err.message);
@@ -94,7 +99,7 @@ const useAssetData = (searchQuery = '') => {
     return num.toString();
   }
 
-  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize };
+  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize };
 };
 
 export default useAssetData;

@@ -23,6 +23,7 @@ const Borrow = ({
   assetBorrow,
   totalCollateral,
   totalDebt,
+  Ltv,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
@@ -33,38 +34,6 @@ const Borrow = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
-
-
-  const handleAmountChange = (e) => {
-    const inputAmount = e.target.value;
-
-    // Convert input to a number
-    const numericAmount = parseFloat(inputAmount);
-
-    if (!isNaN(numericAmount) && numericAmount >= 0) {
-      if (numericAmount <= assetSupply) {
-        // Calculate and format the USD value
-        const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
-        setAmount(inputAmount);
-        setError("");
-      } else {
-        setError("Amount exceeds the supply balance");
-        // setUsdValue(0);
-      }
-    } else if (inputAmount === "") {
-      // Allow empty input and reset error
-      setAmount("");
-      // setUsdValue(0);
-      setError("");
-    } else {
-      setError("Amount must be a positive number");
-      // setUsdValue(0);
-    }
-  };
-
-
-
 
   const [isAcknowledged, setIsAcknowledged] = useState(false);
 
@@ -379,33 +348,34 @@ const Borrow = ({
   useEffect(() => {
     const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
     console.log('Health Factor:', healthFactor);
-
-
-    const ltv = calculateLTV(assetSupply, assetBorrow);
-    console.log('LTV:', ltv);
+    const amountTaken = usdValue || 0;
+    const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
+    console.log("NextTotalDebt", nextTotalDebt, "TOtal Collateral", totalCollateral, "threshold", liquidationThreshold)
+    const ltv = calculateLTV(nextTotalDebt, totalCollateral);
+    console.log('LTV:', ltv * 100);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1 || ltv>liquidationThreshold ) {
+    if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
     }
 
-    if(isAcknowledged){
+    if (isAcknowledged) {
       setIsButtonDisabled(false);
     }
 
   }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue, isAcknowledged, setIsAcknowledged]);
 
-  const amountTaken = parseFloat(usdValue) || 0; // Ensure usdValue is treated as a number
+  const amountTaken = usdValue || 0; // Ensure usdValue is treated as a number
   const amountAdded = 0;
   const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
     // No amount added for now, but keeping it in case of future use
 
     // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
-    const totalCollateralValue = parseFloat(totalCollateral) + amountAdded;
-    const totalDeptValue = parseFloat(totalDebt) + amountTaken;
+    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
+    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
     if (totalDeptValue === 0) {
       return Infinity;
     }
@@ -413,9 +383,8 @@ const Borrow = ({
   };
 
 
-  const totalDeptValueLTV = parseFloat(totalDebt) + amountTaken;
+  const totalDeptValueLTV = parseFloat(totalDebt) + parseFloat(amountTaken);
 
-  const nextTotalDebt = amountTaken + totalDebt;
 
 
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
@@ -467,6 +436,60 @@ const Borrow = ({
     }
   };
 
+
+  const [availableBorrows, setAvailableBorrows] = useState(0);
+
+  // Function to perform percentage multiplication
+  // const percentMul = (amount, percentage) => {
+  //   return (amount * percentage) / 10000; // Assuming LTV is in basis points (10000 = 100%)
+  // };
+
+  // Function to calculate available borrows
+  const ltv2=0.7;
+  
+  // const calculateAvailableBorrows = (totalCollateral, totalDebt, Ltv) => {
+  //   console.log("ltv2", Ltv,)
+  //   let availableBorrowsInBaseCurrency = totalCollateral* Ltv*100;
+  //   console.log("availableBorrowsInBaseCurrency", availableBorrowsInBaseCurrency)
+  //   if (availableBorrowsInBaseCurrency < totalDebt) {
+  //     return 0;
+  //   }
+
+  //   availableBorrowsInBaseCurrency -= totalDebt;
+  //   setAvailableBorrows(availableBorrowsInBaseCurrency);
+  // };
+
+  // useEffect(() => {
+  //   calculateAvailableBorrows(totalCollateral, totalDebt, Ltv);
+  // }, [totalCollateral, totalDebt, Ltv]); // Dependencies
+
+  // console.log("Available borrows", availableBorrows)
+
+
+  const handleAmountChange = (e) => {
+    const inputAmount = e.target.value;
+
+    // Convert input to a number
+    const numericAmount = parseFloat(inputAmount);
+
+    if (!isNaN(numericAmount) && numericAmount >= 0) {
+     
+        // Calculate and format the USD value
+        const convertedValue = numericAmount * conversionRate;
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
+        setAmount(inputAmount);
+        setError("");
+     
+    } else if (inputAmount === "") {
+      // Allow empty input and reset error
+      setAmount("");
+      // setUsdValue(0);
+      setError("");
+    } else {
+      setError("Amount must be a positive number");
+      // setUsdValue(0);
+    }
+  };
   return (
     <>
       {isVisible && (
@@ -483,7 +506,7 @@ const Borrow = ({
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0}
+                    disabled={totalCollateral === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100  rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />
@@ -501,7 +524,7 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p className="text-xs mt-4">
-                    {parseFloat(assetSupply)?.toFixed(2) || "0.00"} Max
+                    ${parseFloat(totalCollateral)?.toFixed(2) || "0.00"} Max
                   </p>
 
                 </div>
@@ -521,15 +544,15 @@ const Borrow = ({
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>
-                    <span className={`${healthFactorBackend > 3
-                          ? "text-green-500"
-                          : healthFactorBackend <= 1
-                            ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                              ? "text-orange-600"
-                              : healthFactorBackend <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                      <span className={`${healthFactorBackend > 3
+                        ? "text-green-500"
+                        : healthFactorBackend <= 1
+                          ? "text-red-500"
+                          : healthFactorBackend <= 1.5
+                            ? "text-orange-600"
+                            : healthFactorBackend <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -578,7 +601,7 @@ const Borrow = ({
                   </div>
                 </div>
                 <div>
-                  {value < 1 && (
+                  {value < 2 && value > 1 && (
                     <div>
                       <div className="flex items-center mt-2">
                         <input

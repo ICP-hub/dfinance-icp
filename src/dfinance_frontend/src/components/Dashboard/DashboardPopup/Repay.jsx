@@ -431,7 +431,7 @@ const Repay = ({
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1 || ltv>liquidationThreshold) {
+    if (healthFactor <= 1 || ltv>=liquidationThreshold) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
@@ -444,10 +444,12 @@ const Repay = ({
     liquidationThreshold
   ) => {
     const amountTaken = 0;
-    const amountAdded = parseFloat(usdValue) || 0;
-    const totalCollateralValue = parseFloat(totalCollateral) + amountTaken;
-    const totalDeptValue = parseFloat(totalDebt) - amountAdded;
-    console.log("totalDebt before minus", totalDebt);
+    const amountAdded = usdValue || 0;
+    console.log("THreshold", liquidationThreshold)
+    console.log("totalDebt before minus", totalDebt, "collateral", totalCollateral, "amount added", amountAdded);
+    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountTaken);
+    const totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
+   
 
     console.log("totalDeptValue", totalDeptValue);
     console.log("amountAdded", amountAdded);

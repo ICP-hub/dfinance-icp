@@ -1,7 +1,7 @@
 use crate::{
     api::{functions::asset_transfer, state_handler::mutate_state},
     declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
-    protocol::libraries::logic::{update::UpdateLogic, validation::ValidationLogic},
+    protocol::libraries::logic::update::UpdateLogic,
     repay,
 };
 use candid::{Nat, Principal};

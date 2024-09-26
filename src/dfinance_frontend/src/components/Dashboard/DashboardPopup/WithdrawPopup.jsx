@@ -374,7 +374,7 @@ const WithdrawPopup = ({ asset,
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor < 1|| ltv>liquidationThreshold ) {
+    if (healthFactor <= 1|| ltv>=liquidationThreshold ) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -384,12 +384,12 @@ const WithdrawPopup = ({ asset,
 
 
   const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
-    const amountTaken = parseFloat(usdValue) || 0; // Ensure usdValue is treated as a number
+    const amountTaken = usdValue || 0; // Ensure usdValue is treated as a number
     const amountAdded = 0// No amount added for now, but keeping it in case of future use
 
     // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
-    const totalCollateralValue = parseFloat(totalCollateral) - amountTaken;
-    const totalDeptValue = parseFloat(totalDebt) + amountAdded;
+    const totalCollateralValue = parseFloat(totalCollateral) - parseFloat(amountTaken);
+    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
     console.log("totalCollateralValue", totalCollateralValue)
     console.log("totalDeptValue", totalDeptValue)
     console.log("amountAdded", amountAdded)

@@ -3,7 +3,7 @@ use crate::api::state_handler::*;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::update::UpdateLogic;
-use crate::protocol::libraries::logic::validation::ValidationLogic;
+// use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use candid::{Nat, Principal};
 use dotenv::dotenv;

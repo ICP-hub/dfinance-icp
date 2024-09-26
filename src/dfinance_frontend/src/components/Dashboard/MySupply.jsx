@@ -405,7 +405,8 @@ const MySupply = () => {
     assetSupply,
     assetBorrow,
     totalCollateral,
-    totalDebt
+    totalDebt,
+    Ltv
   ) => {
     setIsModalOpen({
       isOpen: true,
@@ -419,6 +420,7 @@ const MySupply = () => {
       assetBorrow: assetBorrow,
       totalCollateral: totalCollateral,
       totalDebt: totalDebt,
+      Ltv: Ltv
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -467,6 +469,7 @@ const MySupply = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
+                Ltv={isModalOpen.Ltv}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -989,6 +992,7 @@ const MySupply = () => {
                               );
                               const supplyRateApr =
                                 item?.[1]?.Ok?.supply_rate_apr || 0;
+                              // console.log("filteredItems", filteredItems)
                               const liquidationThreshold =
                                 item?.[1]?.Ok?.configuration
                                   ?.liquidation_threshold || 0;
@@ -1652,6 +1656,9 @@ const MySupply = () => {
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
                                           userData?.Ok?.total_debt || 0;
+                                        const Ltv =
+                                          userData?.Ok?.ltv || 0;
+                                        console.log("LTV1", Ltv)
 
                                         handleModalOpen(
                                           "borrow",
@@ -1665,7 +1672,8 @@ const MySupply = () => {
                                           assetSupply,
                                           assetBorrow,
                                           totalCollateral,
-                                          totalDebt
+                                          totalDebt,
+                                          Ltv
                                         );
                                       }}
                                       disabled={isTableDisabled}
@@ -1862,6 +1870,9 @@ const MySupply = () => {
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
                                           userData?.Ok?.total_debt || 0;
+                                        const Ltv =
+                                          userData?.Ok?.ltv || 0;
+                                        console.log("LTV1", Ltv)
 
                                         handleModalOpen(
                                           "borrow",
@@ -1875,7 +1886,8 @@ const MySupply = () => {
                                           assetSupply,
                                           assetBorrow,
                                           totalCollateral,
-                                          totalDebt
+                                          totalDebt,
+                                          Ltv
                                         );
                                       }}
                                       disabled={isTableDisabled}
@@ -2030,7 +2042,7 @@ const MySupply = () => {
                                 APY:
                               </p>
                               <p className="text-right text-[#2A1F9D] dark:text-darkText  mb-4">
-                              {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100)}%`}
+                                {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100)}%`}
                               </p>
                             </div>
                             <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-3 mb-4">
@@ -2058,7 +2070,9 @@ const MySupply = () => {
                                     userData?.Ok?.total_collateral || 0;
                                   const totalDebt =
                                     userData?.Ok?.total_debt || 0;
-
+                                  const Ltv =
+                                    userData?.Ok?.ltv || 0;
+                                  console.log("LTV1", Ltv)
                                   handleModalOpen(
                                     "borrow",
                                     item[0],
@@ -2078,7 +2092,8 @@ const MySupply = () => {
                                     assetSupply,
                                     assetBorrow,
                                     totalCollateral,
-                                    totalDebt
+                                    totalDebt,
+                                    Ltv
                                   );
                                 }}
                                 disabled={isTableDisabled}
@@ -2312,6 +2327,9 @@ const MySupply = () => {
                                         userData?.Ok?.total_collateral || 0;
                                       const totalDebt =
                                         userData?.Ok?.total_debt || 0;
+                                      const Ltv =
+                                        userData?.Ok?.ltv || 0;
+                                      console.log("LTV1", Ltv)
 
                                       handleModalOpen(
                                         "borrow",
@@ -2332,7 +2350,8 @@ const MySupply = () => {
                                         assetSupply,
                                         assetBorrow,
                                         totalCollateral,
-                                        totalDebt
+                                        totalDebt,
+                                        Ltv
                                       );
                                     }}
                                     disabled={isTableDisabled}

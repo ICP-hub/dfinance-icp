@@ -204,13 +204,13 @@ impl UpdateLogic {
             match asset_rate_result {
                 Ok((rate, _)) => {
                     // Assign the `f64` rate to `reserve_data.asset_price_when_supplied`
-                    reserve_data.asset_price_when_supplied = rate;
+                    reserve_data.asset_price_when_borrowed = rate;
                 }
                 Err(e) => {
                     
                     ic_cdk::println!("Failed to get asset rate: {}", e);
                     
-                    reserve_data.asset_price_when_supplied = 0.0; // Default value in case of an error
+                    reserve_data.asset_price_when_borrowed = 0.0; // Default value in case of an error
                 }
             }
             let asset_reserve_data = match asset_reserve {

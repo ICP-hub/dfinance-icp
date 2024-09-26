@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::icrc2::{allowance, approve, transfer_from};
-use crate::constants::asset_address::{BACKEND_CANISTER, DEFAULT, MINTER};
+use crate::constants::asset_address::{DEFAULT, MINTER};
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct InitArgs {

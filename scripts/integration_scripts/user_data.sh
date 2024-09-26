@@ -19,3 +19,5 @@ user=$(dfx canister call $backend_canister check_user "(\"$liquidator_principal\
 user_data=$(dfx canister call $backend_canister $get_user_method "(\"$liquidator_principal\")")
 echo "User data for the liquidator principal $liquidator_principal is: $user_data" 
 echo "--------------------------------------"
+
+dfx identity use default

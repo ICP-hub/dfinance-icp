@@ -7,6 +7,7 @@ source ../../.env
 
 # Set variables
 ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
+ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
 dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 approve_method="icrc2_approve"
@@ -45,7 +46,7 @@ user_data=$(../integration_scripts/user_data.sh)
 echo "user data: $user_data"
 
 # Approve the transfer
-approve_amount=10000000  # Set the amount you want to approve
+approve_amount=10000  # Set the amount you want to approve
 echo "Approving transfer of $approve_amount from user1 to backend_canister..."
 allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
     from_subaccount=null;

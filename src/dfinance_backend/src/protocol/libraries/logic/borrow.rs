@@ -1,11 +1,10 @@
 use crate::api::functions::{asset_transfer, asset_transfer_from};
 use crate::api::state_handler::*;
-use crate::constants::asset_address::BACKEND_CANISTER;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::protocol::libraries::logic::reserve;
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::exchange_rate;
+use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use candid::{Nat, Principal};
 use dotenv::dotenv;
 
@@ -29,7 +28,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     let user_principal = ic_cdk::caller();
 
     let platform_principal = ic_cdk::api::id();
-        // .map_err(|_| "Invalid platform canister ID".to_string())?;
 
     let debttoken_canister = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -80,16 +78,25 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-    let borrow_amount_to_usd = exchange_rate(&params.asset, params.amount as f64).unwrap();
-    ic_cdk::println!("borrow to usd {:?}", borrow_amount_to_usd);
+    // Converting asset to usdt value
+    let mut usd_amount = params.amount as f64;
+    let borrow_amount_to_usd = get_exchange_rates(params.asset.clone(), params.amount as f64).await;
+    match borrow_amount_to_usd {
+        Ok((amount_in_usd, _timestamp)) => {
+            // Extracted the amount in USD
+            usd_amount = amount_in_usd;
+            ic_cdk::println!("Borrow amount in USD: {:?}", amount_in_usd);
+        }
+        Err(e) => {
+            // Handling the error
+            ic_cdk::println!("Error getting exchange rate: {:?}", e);
+        }
+    }
+
+    ic_cdk::println!("Borrow amount in USD: {:?}", usd_amount);
 
     // Validates supply using the reserve_data
-    ValidationLogic::validate_borrow(
-        &reserve_data,
-        borrow_amount_to_usd,
-        user_principal,
-    )
-    .await;
+    ValidationLogic::validate_borrow(&reserve_data, usd_amount, user_principal).await;
     ic_cdk::println!("Borrow validated successfully");
 
     // Minting debttoken
@@ -173,7 +180,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
             .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
     })?;
     let platform_principal = ic_cdk::api::id();
-        // .map_err(|_| "Invalid platform canister ID".to_string())?;
+    // .map_err(|_| "Invalid platform canister ID".to_string())?;
 
     let debttoken_canister = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -186,6 +193,24 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
     let repay_amount = Nat::from(params.amount);
+
+    // Converting asset value to usdt
+    let mut usd_amount = params.amount as f64;
+    let repay_amount_to_usd =
+        get_exchange_rates(params.asset.clone(), params.amount as f64).await;
+    match repay_amount_to_usd {
+        Ok((amount_in_usd, _timestamp)) => {
+            // Extracted the amount in USD
+            usd_amount = amount_in_usd;
+            ic_cdk::println!("Repay amount in USD: {:?}", amount_in_usd);
+        }
+        Err(e) => {
+            // Handling the error
+            ic_cdk::println!("Error getting exchange rate: {:?}", e);
+        }
+    }
+
+    ic_cdk::println!("Repay amount in USD: {:?}", usd_amount);
 
     // Determines the sender principal
     let transfer_from_principal = if let Some(liquidator) = liquidator_principal {

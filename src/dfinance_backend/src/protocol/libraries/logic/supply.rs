@@ -99,7 +99,7 @@ impl SupplyLogic {
         ic_cdk::println!("Supply validated successfully");
 
         let liquidity_taken=0f64;
-        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,amount_in_usd , liquidity_taken).await;
+        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,usd_amount , liquidity_taken).await;
                
 
         ic_cdk::println!("Interest rates updated successfully");

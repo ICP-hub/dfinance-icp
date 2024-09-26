@@ -265,6 +265,14 @@ impl SupplyLogic {
         // .await;
         // ic_cdk::println!("Withdraw validated successfully");
 
+        reserve_data.total_supply-=usd_amount;
+
+        mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+    });
+
+
         // Burn dtoken
         match asset_transfer(
             platform_principal,

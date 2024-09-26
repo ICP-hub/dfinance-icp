@@ -1,5 +1,5 @@
 use crate::{
-    api::state_handler::mutate_state,
+    api::state_handler::{mutate_state, read_state},
     declarations::{
         assets::{
             ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
@@ -7,11 +7,12 @@ use crate::{
         storable::Candid,
     },
     protocol::libraries::{
-        math::calculate::{calculate_health_factor, calculate_ltv, UserPosition, calculate_average_threshold},
+        math::calculate::{calculate_average_threshold, calculate_health_factor, calculate_ltv, get_exchange_rates, UserPosition},
         types::datatypes::UserReserveData,
     },
 };
 use candid::Principal;
+use ic_xrc_types::Asset;
 use crate::declarations::assets::ReserveData;
 
 pub struct UpdateLogic;
@@ -43,7 +44,10 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
+        let asset_rate_result = get_exchange_rates(reserve.asset_name.clone().expect("REASON"), 1.0).await;
 
+       
+      
         let user_prof = user_data.clone();
         let ckbtc_to_usd_rate = 60554.70f64;
         let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
@@ -79,7 +83,7 @@ impl UpdateLogic {
                 .find(|(asset_name, _)| *asset_name == params.asset),
             None => None,
         };
-
+        
         // Calculate average threshold
         let user_thrs = calculate_average_threshold(params.amount as f64, reserve, user_prof);
         ic_cdk::println!("user_thr {:?}", user_thrs);
@@ -88,6 +92,19 @@ impl UpdateLogic {
 
         if let Some((_, reserve_data)) = user_reserve {
             // If Reserve data exists, it will update asset supply
+            match asset_rate_result {
+                Ok((rate, _)) => {
+                    // Assign the `f64` rate to `reserve_data.asset_price_when_supplied`
+                    reserve_data.asset_price_when_supplied = rate;
+                }
+                Err(e) => {
+                    
+                    ic_cdk::println!("Failed to get asset rate: {}", e);
+                    
+                    reserve_data.asset_price_when_supplied = 0.0; // Default value in case of an error
+                }
+            }
+            reserve_data.supply_rate = reserve.current_liquidity_rate; 
             reserve_data.asset_supply += params.amount as f64;
             ic_cdk::println!(
                 "Updated asset supply for existing reserve: {:?}",
@@ -126,6 +143,14 @@ impl UpdateLogic {
         user_principal: Principal,
         params: ExecuteBorrowParams,
     ) -> Result<(), String> {
+        let asset_reserve = read_state(|state| {
+            let asset_index = & state.asset_index;
+            asset_index
+                .get(&params.asset.to_string())
+                .map(|reserve| reserve.0.clone())
+                .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
+        });
+        
         let user_data_result = mutate_state(|state| {
             let user_profile_data = &mut state.user_profile;
             user_profile_data
@@ -174,6 +199,31 @@ impl UpdateLogic {
 
         if let Some((_, reserve_data)) = user_reserve {
             // If Reserve data exists, it updates asset supply
+            let asset_rate_result = get_exchange_rates(params.asset.clone(), 1.0).await;
+
+            match asset_rate_result {
+                Ok((rate, _)) => {
+                    // Assign the `f64` rate to `reserve_data.asset_price_when_supplied`
+                    reserve_data.asset_price_when_supplied = rate;
+                }
+                Err(e) => {
+                    
+                    ic_cdk::println!("Failed to get asset rate: {}", e);
+                    
+                    reserve_data.asset_price_when_supplied = 0.0; // Default value in case of an error
+                }
+            }
+            let asset_reserve_data = match asset_reserve {
+                Ok(data) => {
+                    ic_cdk::println!("Reserve data found for asset: {:?}", data);
+                    data
+                }
+                Err(e) => {
+                    ic_cdk::println!("Error: {}", e);
+                    return Err(e);
+                }
+            };
+            reserve_data.borrow_rate=asset_reserve_data.borrow_rate;
             reserve_data.asset_borrow += params.amount as f64;
             ic_cdk::println!(
                 "Updated asset borrow for existing reserve: {:?}",

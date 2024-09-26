@@ -7,6 +7,7 @@ use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use candid::{Nat, Principal};
 use dotenv::dotenv;
+use crate::declarations::storable::Candid;
 
 // -------------------------------------
 // ----------- BORROW LOGIC ------------
@@ -94,7 +95,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     }
 
     ic_cdk::println!("Borrow amount in USD: {:?}", usd_amount);
-
+    
     // Validates supply using the reserve_data
     // ValidationLogic::validate_borrow(
     //     &reserve_data,
@@ -104,6 +105,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     // .await;
     // ic_cdk::println!("Borrow validated successfully");
 
+    let liquidity_added=0f64;
+    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount);
+    ic_cdk::println!("Interest rates updated successfully");
+        
+    mutate_state(|state| {
+                let asset_index = &mut state.asset_index;
+                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+    });
     // Minting debttoken
     match asset_transfer(
         user_principal,
@@ -135,8 +144,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
             ic_cdk::println!("Asset transfer from backend to user executed successfully");
             // ----------- Update logic here -------------
             let _ = UpdateLogic::update_user_data_borrow(user_principal, params).await;
-            let liquidity_added=0f64;
-            let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount);
+            
           
 
             Ok(new_balance)
@@ -251,7 +259,8 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     // Updates the liquidity and borrow index
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
-
+ 
+    reserve_data.total_borrowed-=usd_amount;
     // Validates supply using the reserve_data
     // ValidationLogic::validate_repay(
     //     &reserve_data,
@@ -261,7 +270,11 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     // )
     // .await;
     // ic_cdk::println!("Repay validated successfully");
-
+    
+    mutate_state(|state| {
+        let asset_index = &mut state.asset_index;
+        asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+});
     // Burn debttoken
     match asset_transfer(
         platform_principal,

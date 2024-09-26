@@ -11,7 +11,7 @@ pub struct UserPosition {
 }
 pub fn calculate_health_factor(position: &UserPosition) -> f64 {
     if position.total_borrowed_value == 0.0 {
-        return f64::INFINITY; // No debt, hence infinitely safe
+        return f64::INFINITY; 
     }
 
     (position.total_collateral_value * position.liquidation_threshold)
@@ -20,7 +20,7 @@ pub fn calculate_health_factor(position: &UserPosition) -> f64 {
 
 pub fn calculate_ltv(position: &UserPosition) -> f64 {
     if position.total_collateral_value == 0.0 {
-        return 0.0; // No collateral, LTV is 0
+        return 0.0; 
     }
 
     position.total_borrowed_value / position.total_collateral_value

@@ -9,29 +9,9 @@ import SubmitICPRequest from "../../../public/howitworks/Submit-ICPRequest.png";
 const HowITWork = () => {
   useEffect(() => {
     Aos.init();
-  
 
-  // https://i.ibb.co/bb4YGbN/ICP-request.png
-  // https://i.ibb.co/Bw2dGRz/Submit-ICPRequest.png
-  // https://i.ibb.co/j8jGcgd/calculator.png
-  const updateAosAttributes = () => {
-    const elements = document.querySelectorAll(".aos-card");
-    elements.forEach((el) => {
-      if (window.innerWidth >= 1024) {
-        el.setAttribute("data-aos", "fade-right");
-      } else {
-        el.setAttribute("data-aos", "fade-left");
-      }
-    });
-  };
-
-  updateAosAttributes(); // Set initial values
-  window.addEventListener("resize", updateAosAttributes); // Update on resize
-
-  return () => {
-    window.removeEventListener("resize", updateAosAttributes); // Cleanup
-  };
-}, []);
+ 
+  }, []);
   return (
     <section className="mt-20 font-poppins" id="HowItWorks">
       <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
@@ -46,10 +26,9 @@ const HowITWork = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-20 max-w-full">
           {/* First card */}
           <div
-            // lg:data-aos="fade-right"
-            // data-aos="fade-left"
+            data-aos="fade-right"
             data-aos-duration="2000"
-            className="w-full aos-card mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+            className="w-full md:hidden lg:block mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
             <div className="flex items-center justify-center gap-4 mt-[35px]">
               <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
@@ -67,7 +46,28 @@ const HowITWork = () => {
               </p>
             </div>
           </div>
-
+            {/* First card Mobile */}
+          <div
+            data-aos="fade-left"
+            data-aos-duration="2000"
+            className="w-full mx-auto md:block lg:hidden max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+          >
+            <div className="flex items-center justify-center gap-4 mt-[35px]">
+              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+                1
+              </p>
+              <img
+                className="w-[120px] h-[120px] object-contain"
+                src={ICPRequest}
+                draggable="false"
+              />
+            </div>
+            <div className="text-[16px] text-center mt-[16px]">
+              <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
+                Supply assets to earn yield and to use as collateral
+              </p>
+            </div>
+          </div>
           {/* Second card */}
           <div
             data-aos="fade-right"
@@ -93,9 +93,32 @@ const HowITWork = () => {
 
           {/* Third card */}
           <div
-           
+            data-aos="fade-right"
             data-aos-duration="2000"
-            className="w-full  aos-card mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+            className="w-full md:hidden lg:block mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+          >
+            <div className="flex items-center justify-center gap-4 mt-[35px]">
+              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+                3
+              </p>
+              <img
+                className="w-[120px] h-[120px] object-contain"
+                src={ICPRequest}
+                draggable="false"
+              />
+            </div>
+            <div className="text-[16px] text-center mt-[16px]">
+              <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
+                Borrow up to Maximum loan-to-value (LTV) ratio, which is
+                calculated using your specific Collateral x Debt combination
+              </p>
+            </div>
+          </div>
+          {/* Third card Mobile  */}
+          <div
+            data-aos="fade-left"
+            data-aos-duration="2000"
+            className="w-full mx-auto md:block lg:hidden max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
             <div className="flex items-center justify-center gap-4 mt-[35px]">
               <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
@@ -115,7 +138,7 @@ const HowITWork = () => {
             </div>
           </div>
 
-          {/* Fourth card with slight shift */}
+          {/* Fourth card  */}
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -140,7 +163,7 @@ const HowITWork = () => {
             </div>
           </div>
 
-          {/* Fifth card with slight shift */}
+          {/* Fifth card  */}
           <div
             data-aos="fade-left"
             data-aos-duration="2000"

@@ -933,7 +933,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                         ? ckUSDCBalance
                         : 0;
 
-                    if (assetSupply > 0 && assetBorrowAmount < assetBalance) {
+                    if (assetSupply > 0) {
                       return (
                         <label className="flex items-center space-x-2">
                           <input

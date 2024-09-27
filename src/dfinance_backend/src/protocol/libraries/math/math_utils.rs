@@ -18,7 +18,7 @@ pub fn calculate_compounded_interest(
     current_timestamp: u64,
 ) -> u128 {
     let exp = current_timestamp - last_update_timestamp;
-    let rate = (0.02 * SCALING_FACTOR as f64) as u128;
+    let rate = (rate * SCALING_FACTOR as f64) as u128;
     if exp == 0 {
         return SCALING_FACTOR;
     }

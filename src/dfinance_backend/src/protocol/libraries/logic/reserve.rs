@@ -312,9 +312,10 @@ pub async fn update_interest_rates(
         liquidity_added: f64,
         liquidity_taken: f64,
     ){
+        ic_cdk::println!("Borrow liquidity_taken (in USD): {}", liquidity_taken);
         let total_debt = (reserve_data.total_borrowed +liquidity_taken ) * reserve_cache.curr_debt_index as f64;
         let total_supply= (reserve_data.total_supply + liquidity_added) * reserve_cache.curr_liquidity_index as f64;
-        let total_borrowed= reserve_data.total_borrowed +liquidity_taken;
+        let total_borrowed= reserve_data.total_borrowed + liquidity_taken;
         let interest_rate_params = initialize_interest_rate_params();
 
         let (next_liquidity_rate, next_debt_rate) =
@@ -326,7 +327,7 @@ pub async fn update_interest_rates(
             &interest_rate_params,               // InterestRateParams struct
            
         );
-        reserve_data.total_borrowed= total_borrowed;
+        reserve_data.total_borrowed = total_borrowed;
         reserve_data.total_supply= total_supply;
         reserve_data.current_liquidity_rate = next_liquidity_rate;
         reserve_data.borrow_rate = next_debt_rate;

@@ -23,6 +23,7 @@ dfx canister create ckbtc_ledger
 dfx canister create cketh_ledger
 
 
+
 dfx build dtoken
 dfx build debttoken
 dfx build token_ledger
@@ -209,5 +210,7 @@ export TOKEN_SYMBOL="debttoken"
      };
  }})"
 
+dfx canister create xrc
+dfx build xrc
 
 dfx deploy

@@ -37,16 +37,18 @@ pub fn calculate_ltv(position: &UserPosition) -> f64 {
 
 //     num / deno
 // }
-
 pub fn cal_average_threshold(
     amount: f64, 
     reserve_liq_thres: u16, 
     user_total_collateral: f64, 
     user_liq_thres: f64
 ) -> f64 {
-    // Perform the calculation as per the formula
-    let result = (amount * (reserve_liq_thres/100) as f64 + user_total_collateral * user_liq_thres) 
-        / ((reserve_liq_thres/100 )as f64 * user_liq_thres);
+    
+    let reserve_liq_thres_f64 = reserve_liq_thres as f64 / 100.0;
+    
+    // Perform the calculation
+    let result = (amount * reserve_liq_thres_f64 + user_total_collateral * user_liq_thres) 
+        / (amount + user_total_collateral);
     
     result
 }
@@ -82,7 +84,7 @@ pub async fn get_exchange_rates(
 
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
-            Principal::from_text("asrmz-lmaaa-aaaaa-qaaeq-cai").unwrap(),
+            Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
             1_000_000_000,
@@ -118,25 +120,25 @@ pub async fn get_exchange_rates(
 
 // ------------ Manual exchange rate ------------
 
-// const CONVERSION_RATE_CKBTC_TO_USD: f64 = 62353.75;
-// const CONVERSION_RATE_CKETH_TO_USD: f64 = 2617.19;
-// const CONVERSION_RATE_CKUSDC_TO_USD: f64 = 1.0;
+const CONVERSION_RATE_CKBTC_TO_USD: f64 = 62353.75;
+const CONVERSION_RATE_CKETH_TO_USD: f64 = 2617.19;
+const CONVERSION_RATE_CKUSDC_TO_USD: f64 = 1.0;
 
-// fn get_conversion_rate_to_usd(asset: &str) -> Option<f64> {
-//     match asset {
-//         "ckBTC" => Some(CONVERSION_RATE_CKBTC_TO_USD),
-//         "ckETH" => Some(CONVERSION_RATE_CKETH_TO_USD),
-//         "ckUSDC" => Some(CONVERSION_RATE_CKUSDC_TO_USD),
-//         _ => None,
-//     }
-// }
+fn get_conversion_rate_to_usd(asset: &str) -> Option<f64> {
+    match asset {
+        "ckBTC" => Some(CONVERSION_RATE_CKBTC_TO_USD),
+        "ckETH" => Some(CONVERSION_RATE_CKETH_TO_USD),
+        "ckUSDC" => Some(CONVERSION_RATE_CKUSDC_TO_USD),
+        _ => None,
+    }
+}
 
-// pub fn exchange_rate(asset_from: &str, amount: f64) -> Result<f64, String> {
+pub fn exchange_rate_usd(asset_from: &str, amount: f64) -> Result<f64, String> {
 
-//     let rate_from_usd = get_conversion_rate_to_usd(asset_from)
-//         .ok_or(format!("Unsupported asset: {}", asset_from))?;
+    let rate_from_usd = get_conversion_rate_to_usd(asset_from)
+        .ok_or(format!("Unsupported asset: {}", asset_from))?;
 
-//     let amount_in_usd = amount * rate_from_usd;
+    let amount_in_usd = amount * rate_from_usd;
 
-//     Ok(amount_in_usd)
-// }
+    Ok(amount_in_usd)
+}

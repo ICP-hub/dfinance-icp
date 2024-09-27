@@ -17,7 +17,7 @@ import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
-  const { isAuthenticated, createLedgerActor, backendActor } = useAuth();
+  const { isAuthenticated, createLedgerActor, backendActor, principal: currentUserPrincipal } = useAuth();
 
   console.log("mappeditems", mappedItem);
   const [rewardAmount, setRewardAmount] = useState(10);
@@ -256,8 +256,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   );
 
   const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
+    () => Principal.fromText(currentUserPrincipal),
+    [currentUserPrincipal]
   );
 
   const fetchBalance = useCallback(

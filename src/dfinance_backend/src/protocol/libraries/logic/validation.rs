@@ -3,7 +3,7 @@
 // use crate::constants::errors::Error;
 // use crate::declarations::assets::ReserveData;
 // use crate::protocol::libraries::math::calculate::{
-//     calculate_average_threshold, calculate_health_factor, calculate_ltv, UserPosition,
+//     cal_average_threshold, calculate_health_factor, calculate_ltv, UserPosition,
 // };
 // use candid::Principal;
 // use core::panic;

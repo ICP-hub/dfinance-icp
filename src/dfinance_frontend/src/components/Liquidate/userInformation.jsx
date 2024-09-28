@@ -17,7 +17,7 @@ import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
-  const { isAuthenticated, createLedgerActor, backendActor } = useAuth();
+  const { isAuthenticated, createLedgerActor, backendActor, principal: currentUserPrincipal } = useAuth();
 
   console.log("mappeditems", mappedItem);
   const [rewardAmount, setRewardAmount] = useState(10);
@@ -256,8 +256,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   );
 
   const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
+    () => Principal.fromText(currentUserPrincipal),
+    [currentUserPrincipal]
   );
 
   const fetchBalance = useCallback(
@@ -899,6 +899,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
+                    console.log("mappedItesm", mappedItem.reserves[0])
                     const assetName = item[1]?.reserve;
                     const assetSupply = item[1]?.asset_supply;
                     const assetBorrow = item[1]?.asset_borrow;
@@ -924,6 +925,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       assetBorrowAmountInUSD
                     );
 
+                    const rewardAmount = (amountToRepay * (liquidation_bonus / 100));
+                    
                     const assetBalance =
                       assetName === "ckBTC"
                         ? ckBTCBalance
@@ -933,7 +936,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                         ? ckUSDCBalance
                         : 0;
 
-                    if (assetSupply > 0 && assetBorrowAmount < assetBalance) {
+                    if (assetSupply > 0) {
                       return (
                         <label className="flex items-center space-x-2">
                           <input

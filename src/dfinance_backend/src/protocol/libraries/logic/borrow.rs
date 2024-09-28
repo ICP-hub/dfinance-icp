@@ -42,7 +42,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     let debttoken_canister_id = Principal::from_text(debttoken_canister)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
-    let amount_nat = Nat::from(params.amount);
+    let amount_nat = Nat::from(params.amount); ////
 
     ic_cdk::println!("Canister ids, principal and amount successfully");
 

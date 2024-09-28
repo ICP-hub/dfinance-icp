@@ -23,11 +23,11 @@ use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
 
-#[init]
-fn init() {
-    // initialize_reserve();
-    ic_cdk::println!("function called");
-}
+// #[init]
+// fn init() {
+//     // initialize_reserve();
+//     ic_cdk::println!("function called");
+// }
 
 // Function to call the execute_supply logic
 #[update]

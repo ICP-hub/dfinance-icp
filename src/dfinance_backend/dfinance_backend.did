@@ -70,6 +70,11 @@ service : () -> {
   get_reserve_data : (text) -> (Result_5) query;
   get_user_data : (text) -> (Result_6) query;
   initialize_reserve : () -> ();
+
+
+   timer_active : () -> (text) query; 
+   start_timer : () -> () ; 
+    stop_timer : () -> ();
   liquidation_call : (text, text, nat64, text) -> (Result);
   repay : (text, nat, opt text) -> (Result);
   supply : (text, nat64, bool) -> (Result);

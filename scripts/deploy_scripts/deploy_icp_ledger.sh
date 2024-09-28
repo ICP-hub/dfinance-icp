@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 set -e
@@ -10,10 +9,10 @@ dfx identity use newminter
 export MINTER=$(dfx identity get-principal)
 echo "Minter Principal: $MINTER"
 
-export TOKEN_NAME="ckUSDC"
+export TOKEN_NAME="ICP"
 echo "Token Name: $TOKEN_NAME"
 
-export TOKEN_SYMBOL="ckUSDC"
+export TOKEN_SYMBOL="ICP"
 
 export PRE_MINTED_TOKENS=10_000_000_000
 export TRANSFER_FEE=0
@@ -30,7 +29,7 @@ export NUM_OF_BLOCK_TO_ARCHIVE=1000
 export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
 export FEATURE_FLAGS=true
 
-dfx deploy ckUSDC_ledger --argument "(variant {Init =
+dfx deploy icp_ledger --argument "(variant {Init =
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
@@ -49,4 +48,4 @@ record {
  }
 })"
 
-echo "ckUSDC got deployed with a transfer fee of ${TRANSFER_FEE}"
+echo "ICP got deployed with a transfer fee of ${TRANSFER_FEE}"

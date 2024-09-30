@@ -1524,24 +1524,6 @@ const MySupply = () => {
               </button>
             </div>
 
-            {/* E-Mode section for mobile screens only */}
-            {/* <div className="md:block lgx:block xl:hidden flex flex-col items-start mt-2 ml-2">
-              <div className="flex items-center space-x-4">
-                <span className="text-[#2A1F9D] opacity-50 font-semibold dark:text-darkText">
-                  E-Mode
-                </span>
-                <EModeButton />
-              </div>
-            </div>
-            <div className="hidden xl:flex items-center space-x-4  ml-40 -mt-8">
-              <div className="flex items-center space-x-4">
-                <span className="text-[#2A1F9D] opacity-50 font-semibold dark:text-darkText">
-                  E-Mode
-                </span>
-                <EModeButton />
-              </div>
-            </div> */}
-
             {/* mobile screen for borrow */}
             <div className="block xl:hidden">
               {isborrowVisible && (
@@ -1559,11 +1541,9 @@ const MySupply = () => {
                         <div className="w-full">
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
-                              const asset = reserveGroup[1]?.reserve; // Extract asset from reserveGroup
+                              const asset = reserveGroup[1]?.reserve;
                               if (reserveGroup[1]?.asset_borrow <= 0)
-                                return null; // Skip if no borrow
-
-                              // Find corresponding item from filteredItems
+                                return null;
                               const item = filteredItems.find(
                                 (item) => item[0] === asset
                               );
@@ -1680,7 +1660,6 @@ const MySupply = () => {
                                           reserveData?.[1]?.asset_supply || 0;
                                         const assetBorrow =
                                           reserveData?.[1]?.asset_borrow || 0;
-                                        // Logging data for debugging
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1719,7 +1698,6 @@ const MySupply = () => {
                                           reserveData?.[1]?.asset_supply || 0;
                                         const assetBorrow =
                                           reserveData?.[1]?.asset_borrow || 0;
-                                        // Logging data for debugging
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1778,7 +1756,6 @@ const MySupply = () => {
                           <div className="p-3">Apy</div>
                           <div className="p-3">Apy type</div>
                           <div className="p-3"></div>{" "}
-                          {/* Empty for the action buttons */}
                         </div>
                       </div>
                       {/* Scrollable table body */}
@@ -1794,11 +1771,9 @@ const MySupply = () => {
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
-                              const asset = reserveGroup[1]?.reserve; // Extract asset from reserveGroup
+                              const asset = reserveGroup[1]?.reserve;
                               if (reserveGroup[1]?.asset_borrow <= 0)
-                                return null; // Skip if no borrow
-
-                              // Find corresponding item from filteredItems
+                                return null;
                               const item = filteredItems.find(
                                 (item) => item[0] === asset
                               );
@@ -1899,7 +1874,6 @@ const MySupply = () => {
                                           reserveData?.[1]?.asset_supply || 0;
                                         const assetBorrow =
                                           reserveData?.[1]?.asset_borrow || 0;
-                                        // Logging data for debugging
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1938,7 +1912,6 @@ const MySupply = () => {
                                           reserveData?.[1]?.asset_supply || 0;
                                         const assetBorrow =
                                           reserveData?.[1]?.asset_borrow || 0;
-                                        // Logging data for debugging
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -2178,93 +2151,7 @@ const MySupply = () => {
                     </div>
                   )}
 
-                  {/* Combined Borrow and Supply sections with a max height of 260px */}
                   <div className="w-full max-h-[280px] overflow-y-auto scrollbar-custom">
-                    {/* Borrow Section */}
-                    {/* {MY_ASSET_TO_BORROW_TABLE_ROW.length === 0 ? (
-                      noAssetsToBorrowMessage
-                    ) : (
-                      <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText">
-                        <thead>
-                          <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1">
-                            {MY_ASSET_TO_BORROW_TABLE_COL.map((item, index) => (
-                              <td key={index} className="p-3 whitespace-nowrap">
-                                {index === 2 ? item.header2 : item.header}
-                              </td>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {MY_ASSET_TO_BORROW_TABLE_ROW.slice(0, 8).map(
-                            (item, index) => (
-                              <tr
-                                key={index}
-                                className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
-                              >
-                                <td className="p-3 align-top">
-                                  <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap">
-                                    <img
-                                      src={item.image}
-                                      alt={item.asset}
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                    {item.asset}
-                                  </div>
-                                </td>
-                                <td className="p-3 align-top">
-                                  <div className="flex flex-col">
-                                    <p>{item.wallet_balance_count}</p>
-                                    <p className="font-light">
-                                      ${item.wallet_balance}M
-                                    </p>
-                                  </div>
-                                </td>
-                                <td className="p-3 align-top">
-                                  <div className="flex flex-col">
-                                    <p>{item.apy}</p>
-                                    <p className="font-light break-words">
-                                      {item.apy_desc.slice(0, 18)}
-                                      <br />
-                                      {item.apy_desc.slice(18, 32)}
-                                      <br />
-                                      {item.apy_desc.slice(32)}
-                                    </p>
-                                  </div>
-                                </td>
-                                <td className="p-3 align-top">
-                                  <div className="w-full flex gap-3">
-                                    <Button
-                                      title={"Borrow"}
-                                      onClickHandler={() =>
-                                        handleModalOpen(
-                                          "borrow",
-                                          item.asset,
-                                          item.image
-                                        )
-                                      }
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
-                                    />
-                                    <Button
-                                      title={"Details"}
-                                      onClickHandler={() =>
-                                        handleModalOpen("payment")
-                                      }
-                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
-                                    />
-                                  </div>
-                                </td>
-                              </tr>
-                            )
-                          )}
-                        </tbody>
-                      </table>
-                    )} */}
-
-                    {/* Gradient border line after the borrow section */}
-                    {/* <div className="relative">
-                      <div className="absolute left-0 w-full h-0.5 bg-gradient-to-r from-[#4659CF] via-[#D379AB] to-[#FCBD78] opacity-50" />
-                    </div> */}
-
                     {/* Supply Section */}
                     {filteredItems.length === 0 ? (
                       noAssetsToBorrowMessage

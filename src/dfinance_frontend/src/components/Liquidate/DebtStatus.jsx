@@ -180,51 +180,8 @@ const DebtStatus = () => {
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Users List</h1>
-        {/* <div className="ml-auto   ">
-          {Showsearch && (
-            <input
-              type="text"
-              name="search"
-              id="search"
-              placeholder="Search assets"
-              style={{ fontSize: '0.75rem' }}
-              className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
-                ? "animate-fade-left flex"
-                : "animate-fade-right hidden"
-                }`}
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-            />
-          )}
-        </div>
-        <svg onClick={showSearchBar} className="cursor-pointer button" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <defs>
-            <linearGradient id="paint0_linear_293_865" x1="3.5" y1="3.5" x2="13.5" y2="14" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#2E28A5" />
-              <stop offset="1" stop-color="#FAAA98" />
-            </linearGradient>
-            <linearGradient id="paint1_linear_293_865" x1="12.3625" y1="11.5531" x2="12.3625" y2="13.75" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#C88A9B" />
-            </linearGradient>
-          </defs>
-        </svg> */}
+        
       </div>
-      {/* {Showsearch &&
-        <input
-          type="text"
-          name="search"
-          id="search"
-          placeholder="Search assets"
-          className={`placeholder-gray-500 w-[300px] block md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
-            ? "animate-fade-left flex"
-            : "animate-fade-right hidden"
-            }`}
-          value={searchQuery}
-          onChange={handleSearchInputChange}
-        />
-      } */}
 
       <div className="w-full min-h-[400px] mt-6 lg:px-10 ">
       {filteredUsers.length === 0  ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
@@ -247,7 +204,7 @@ const DebtStatus = () => {
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[2]?.header}</td>
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[3]?.header}</td>
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[4]?.header}</td>
-                  {/* <td className="p-3">{LIQUIDATION_USERLIST_COL[5]?.header}</td> */}
+                  
                 </tr>
               </thead>
               <tbody>
@@ -280,12 +237,6 @@ const DebtStatus = () => {
                           <div>
                             <p className="font-medium">${mappedItem.item[1].total_debt}</p>
                           </div>
-                          {/* <div
-                            className="md:hidden justify-center align-center mt-2 ml-5"
-                            onClick={() => handleChevronClick(mappedItem.item)}
-                          >
-                            <ChevronRight size={22} color={chevronColor} />
-                          </div> */}
                         </div>
                       </td>
                       <td className="p-5 align-top hidden md:table-cell py-8">

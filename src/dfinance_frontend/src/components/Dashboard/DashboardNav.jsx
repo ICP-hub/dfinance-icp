@@ -150,16 +150,14 @@ const DashboardNav = () => {
   }, [pollInterval]);
 
   useEffect(() => {
-    // Start polling at regular intervals
     const intervalId = setInterval(() => {
       fetchConversionRate();
     }, pollInterval);
 
-    // Clear the interval on component unmount
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
-  // Function to get conversion rate based on asset
+ 
   const getConversionRate = (asset) => {
     switch (asset) {
       case "ckBTC":
@@ -186,9 +184,6 @@ const DashboardNav = () => {
   const calculateNetSupplyApy = (reserves) => {
     let totalSuppliedInUSD = 0;
     let weightedApySum = 0;
-
-    // const asset_price_when_supplied1 = 60850
-    // const supply_apy1
     reserves.forEach((reserve) => {
       console.log("conversionrateCall", getConversionRate(reserve[0]), "asset_supply", reserve[0])
       const assetSupplyInUSD = reserve[1]?.asset_supply * getConversionRate(reserve[0]);
@@ -197,10 +192,9 @@ const DashboardNav = () => {
     });
 
     const netApy = totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
-    return netApy * 100; // Return APY as percentage (no need for toFixed here)
+    return netApy * 100; 
   };
 
-  // Function to calculate Net Debt APY
   const calculateNetDebtApy = (reserves) => {
     let totalBorrowedInUSD = 0;
     let weightedDebtApySum = 0;
@@ -212,10 +206,10 @@ const DashboardNav = () => {
     });
 
     const netDebtApy = totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
-    return netDebtApy * 100; // Return APY as percentage (no need for toFixed here)
+    return netDebtApy * 100; 
   };
 
-  // Function to calculate Net APY
+ 
   const calculateNetApy = (reserves) => {
     const supplyApy = calculateNetSupplyApy(reserves);
     const debtApy = calculateNetDebtApy(reserves);

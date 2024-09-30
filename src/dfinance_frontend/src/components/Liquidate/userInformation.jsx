@@ -1102,7 +1102,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               <div className="flex justify-between mt-4">
                 <button
                   title="Back"
-                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-darkText"
+                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-darkText button2"
                   onClick={() => setIsCollateralOverlay(false)}
                 >
                   Back
@@ -1236,7 +1236,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               <div className="flex justify-between mt-4">
                 <button
                   title="Back"
-                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white"
+                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2"
                   onClick={() => setIsDebtInfo(false)} // Go back to User Info view
                 >
                   Back

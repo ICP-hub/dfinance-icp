@@ -336,7 +336,7 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
-                    {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100)}%`}</div></td>
+                    {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100).toFixed(2)}%`}</div></td>
                     <td className="p-3 align-center hidden md:table-cell">
                       <div className="flex justify-center flex-row">
                         <div>
@@ -347,7 +347,7 @@ const WalletDetails = () => {
 
                     </td>
                     <td className="p-3 align-center hidden md:table-cell">
-                      <div className="flex justify-center"> {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100)}%`}</div>
+                      <div className="flex justify-center"> {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100).toFixed(2)}%`}</div>
                     </td>
                     <td className="p-3 align-center">
                       <div className="w-full flex justify-end align-center">

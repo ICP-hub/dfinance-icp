@@ -459,8 +459,8 @@ const FaucetDetails = () => {
                               )}
                                {item[0] === "ICP" && (
                                   <>
-                                    <p>{ckICPBalance}</p>
-                                    <p className="font-light">
+                                    <p className="text-left">{ckICPBalance}</p>
+                                    <p className="font-light text-left text-[11px]">
                                       ${formatNumber(ckICPUsdBalance)}
                                     </p>
                                   </>

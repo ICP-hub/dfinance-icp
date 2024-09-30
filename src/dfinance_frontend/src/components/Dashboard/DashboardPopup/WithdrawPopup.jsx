@@ -202,12 +202,12 @@ const WithdrawPopup = ({ asset,
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-        // setUsdValue(0);
+         setUsdValue(0);
       }
     } else if (inputAmount === "") {
       // Allow empty input and reset error
       setAmount("");
-      // setUsdValue(0);
+      setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");

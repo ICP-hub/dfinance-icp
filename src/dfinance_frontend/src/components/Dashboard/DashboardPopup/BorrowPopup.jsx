@@ -483,12 +483,20 @@ const Borrow = ({
     } else if (inputAmount === "") {
       // Allow empty input and reset error
       setAmount("");
-      // setUsdValue(0);
+       setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-      // setUsdValue(0);
+       setUsdValue(0);
     }
+    useEffect(() => {
+      if (amount && conversionRate) {
+        const convertedValue = parseFloat(amount) * conversionRate;
+        setUsdValue(convertedValue); // Update USD value
+      } else {
+        setUsdValue(0); // Reset USD value if conditions are not met
+      }
+    }, [amount, conversionRate]);
   };
   return (
     <>
@@ -511,7 +519,7 @@ const Borrow = ({
                     placeholder="Enter Amount"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                  {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end">

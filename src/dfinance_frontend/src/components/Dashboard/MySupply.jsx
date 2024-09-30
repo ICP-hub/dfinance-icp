@@ -1017,7 +1017,7 @@ const MySupply = () => {
                               return (
                                 <div
                                   key={index}
-                                  className="grid grid-cols-[2.1fr_1.1fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                                  className="grid grid-cols-[2.2fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                                 >
                                   <div className="p-3 align-top flex items-center gap-2">
                                     {asset === "ckBTC" && (
@@ -1823,7 +1823,7 @@ const MySupply = () => {
                               return (
                                 <div
                                   key={index}
-                                  className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-2"
+                                  className="grid grid-cols-[1.95fr_0.9fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-2"
                                 >
                                   <div className="p-3 flex items-center gap-2">
                                     {asset === "ckBTC" && (

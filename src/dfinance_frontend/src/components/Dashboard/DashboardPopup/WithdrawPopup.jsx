@@ -9,7 +9,7 @@ import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations
 import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
-import { toast } from "react-toastify"; // Import Toastify if not already done
+import { toast } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css";
 
 const WithdrawPopup = ({ asset,
@@ -98,7 +98,7 @@ const WithdrawPopup = ({ asset,
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
-  const modalRef = useRef(null); // Reference to the modal container
+  const modalRef = useRef(null); 
   useEffect(() => {
     if (onLoadingChange) {
       onLoadingChange(isLoading);
@@ -108,14 +108,14 @@ const WithdrawPopup = ({ asset,
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
 
-    // Convert input to a number
+   
     const numericAmount = parseFloat(inputAmount);
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
-        // Calculate and format the USD value
+        
         const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); 
         setAmount(inputAmount);
         setError("");
       } else {
@@ -123,13 +123,13 @@ const WithdrawPopup = ({ asset,
          setUsdValue(0);
       }
     } else if (inputAmount === "") {
-      // Allow empty input and reset error
+     
       setAmount("");
       setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-      // setUsdValue(0);
+      setUsdValue(0);
     }
   };
 
@@ -144,7 +144,7 @@ const WithdrawPopup = ({ asset,
           const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            // console.log(`get_asset_principle (${asset}):`, result);
+           
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -161,9 +161,6 @@ const WithdrawPopup = ({ asset,
     fetchAssetPrinciple();
   }, [principal, backendActor]);
 
-  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
-  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
-  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -187,7 +184,6 @@ const WithdrawPopup = ({ asset,
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -201,34 +197,33 @@ const WithdrawPopup = ({ asset,
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+          assetPrincipal.ckBTC, 
           ledgerIdlFactory
         )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
+        : null, 
+    [createLedgerActor, assetPrincipal.ckBTC] 
   );
 
-  // Memoized actor for ckETH using dynamic principal
   const ledgerActorckETH = useMemo(
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+          assetPrincipal.ckETH, 
           ledgerIdlFactory
         )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
+        : null, 
+    [createLedgerActor, assetPrincipal.ckETH] 
   );
 
   const ledgerActorckUSDC = useMemo(
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+          assetPrincipal.ckUSDC, 
           ledgerIdlFactory
         )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
+        : null, 
+    [createLedgerActor, assetPrincipal.ckUSDC] 
   );
 
   const ledgerActorICP = useMemo(

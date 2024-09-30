@@ -213,33 +213,33 @@ const Borrow = ({
     setIsLoading(true);
     let ledgerActor;
 
-    // Example logic to select the correct backend actor based on the asset
+    
     if (asset === "ckBTC") {
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
     } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC; // Add ckUSDC ledger actor
+      ledgerActor = ledgerActorckUSDC; 
     }
     else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP; // Add ckUSDC ledger actor
+      ledgerActor = ledgerActorICP; 
     }
 
     try {
-      // const amountInUnits = BigInt(Number(amount) * 1e18);
+     
       const borrowResult = await backendActor.borrow(asset, Number(amount));
       console.log("Borrow result", borrowResult);
       setIsPaymentDone(true);
       setIsVisible(false);
       toast.success("Borrow successful!");
-      // You can handle the result here, e.g., showing success, updating UI, etc.
+     
     } catch (error) {
       console.error("Error borrowing:", error);
       toast.error(`Error: ${error.message || "Borrow action failed!"}`);
       setIsPaymentDone(false);
       setIsVisible(true);
       setIsLoading(false)
-      // Handle error state, e.g., show error message
+      
     }
   };
 
@@ -249,19 +249,19 @@ const Borrow = ({
     window.location.reload();
   };
   const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset); // Check what asset value is being passed
-  console.log("Fees:", fees); // Check the fees object
+  console.log("Asset:", asset); 
+  console.log("Fees:", fees); 
   const normalizedAsset = asset ? asset.toLowerCase() : 'default';
 
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
 
-  const numericBalance = parseFloat(balance); // Convert balance to a number
-  const transferFee = Number(fees[normalizedAsset] || fees.default); // Ensure transfer fee is a number
-  const supplyBalance = numericBalance - transferFee; // Calculate supply balance
+  const numericBalance = parseFloat(balance); 
+  const transferFee = Number(fees[normalizedAsset] || fees.default);
+  const supplyBalance = numericBalance - transferFee; 
 
-  console.log("Supply Balance:", supplyBalance); // Debugging output
+  console.log("Supply Balance:", supplyBalance); 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
@@ -291,9 +291,9 @@ const Borrow = ({
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
     if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
-      setIsButtonDisabled(true); // Disable the button
+      setIsButtonDisabled(true); 
     } else {
-      setIsButtonDisabled(false); // Enable the button
+      setIsButtonDisabled(false); 
     }
 
     if (isAcknowledged) {
@@ -302,7 +302,7 @@ const Borrow = ({
 
   }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue, isAcknowledged, setIsAcknowledged]);
 
-  const amountTaken = usdValue || 0; // Ensure usdValue is treated as a number
+  const amountTaken = usdValue || 0; 
   const amountAdded = 0;
   const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
     const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
@@ -354,9 +354,9 @@ const Borrow = ({
       const result = await backendActor.get_user_data(user);
       console.log('get_user_data in supplypopup:', result);
 
-      // Check if the result is in the expected format (Ok.health_factor)
+      
       if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor);  // Store health_factor in state
+        setHealthFactorBackend(result.Ok.health_factor);  
       } else {
         setError("Health factor not found");
       }
@@ -370,49 +370,27 @@ const Borrow = ({
 
   const [availableBorrows, setAvailableBorrows] = useState(0);
 
-  // Function to perform percentage multiplication
-  // const percentMul = (amount, percentage) => {
-  //   return (amount * percentage) / 10000; // Assuming LTV is in basis points (10000 = 100%)
-  // };
-
-  // Function to calculate available borrows
+ 
   const ltv2 = 0.7;
 
-  // const calculateAvailableBorrows = (totalCollateral, totalDebt, Ltv) => {
-  //   console.log("ltv2", Ltv,)
-  //   let availableBorrowsInBaseCurrency = totalCollateral* Ltv*100;
-  //   console.log("availableBorrowsInBaseCurrency", availableBorrowsInBaseCurrency)
-  //   if (availableBorrowsInBaseCurrency < totalDebt) {
-  //     return 0;
-  //   }
-
-  //   availableBorrowsInBaseCurrency -= totalDebt;
-  //   setAvailableBorrows(availableBorrowsInBaseCurrency);
-  // };
-
-  // useEffect(() => {
-  //   calculateAvailableBorrows(totalCollateral, totalDebt, Ltv);
-  // }, [totalCollateral, totalDebt, Ltv]); // Dependencies
-
-  // console.log("Available borrows", availableBorrows)
 
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
 
-    // Convert input to a number
+    
     const numericAmount = parseFloat(inputAmount);
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
 
-      // Calculate and format the USD value
+     
       const convertedValue = numericAmount * conversionRate;
-      setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
+      setUsdValue(parseFloat(convertedValue.toFixed(2))); 
       setAmount(inputAmount);
       setError("");
 
     } else if (inputAmount === "") {
-      // Allow empty input and reset error
+     
       setAmount("");
        setUsdValue(0);
       setError("");
@@ -423,9 +401,9 @@ const Borrow = ({
     useEffect(() => {
       if (amount && conversionRate) {
         const convertedValue = parseFloat(amount) * conversionRate;
-        setUsdValue(convertedValue); // Update USD value
+        setUsdValue(convertedValue);
       } else {
-        setUsdValue(0); // Reset USD value if conditions are not met
+        setUsdValue(0); 
       }
     }, [amount, conversionRate]);
   };
@@ -528,7 +506,7 @@ const Borrow = ({
                   <img
                     src={image}
                     alt="asset icon"
-                    className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                    className="object-cover w-5 h-5 rounded-full" 
                   />
                   <div className="relative group">
                     <Info size={16} className="ml-2 cursor-pointer" />
@@ -587,8 +565,8 @@ const Borrow = ({
                 <div
                   className="fixed inset-0 flex items-center justify-center z-50"
                   style={{
-                    background: "rgba(0, 0, 0, 0.4)", // Dim background
-                    backdropFilter: "blur(1px)", // Blur effect
+                    background: "rgba(0, 0, 0, 0.4)", 
+                    backdropFilter: "blur(1px)", 
                   }}
                 >
                   <div className="loader"></div>
@@ -616,16 +594,6 @@ const Borrow = ({
             <p>
               You have borrowed {amount} d{asset}
             </p>
-
-            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
-              <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
-                <span>Add dToken to wallet to track your balance.</span>
-              </div>
-              <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
-                <Wallet />
-                Add to wallet
-              </button>
-            </div> */}
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

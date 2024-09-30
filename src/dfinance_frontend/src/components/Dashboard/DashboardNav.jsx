@@ -213,7 +213,7 @@ const DashboardNav = () => {
   const calculateNetApy = (reserves) => {
     const supplyApy = calculateNetSupplyApy(reserves);
     const debtApy = calculateNetDebtApy(reserves);
-    return (supplyApy - debtApy).toFixed(2); // Net APY = Supply APY - Debt APY
+    return (supplyApy - debtApy).toFixed(2); 
   };
 
   useEffect(() => {

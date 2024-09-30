@@ -32,8 +32,6 @@ import ckbtc from "../../../public/assests-icon/ckBTC.png";
 import cketh from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 
 const AssetDetails = () => {
@@ -197,7 +195,6 @@ const AssetDetails = () => {
           const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -213,11 +210,6 @@ const AssetDetails = () => {
 
     fetchAssetPrinciple();
   }, [principal, backendActor]);
-
-  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
-  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
-  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
-
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -240,7 +232,7 @@ const AssetDetails = () => {
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
+     
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -313,7 +305,7 @@ const AssetDetails = () => {
 
 
   useEffect(() => {
-    console.log("Asset ID from URL parameters:", id); // Log the asset ID from URL
+    console.log("Asset ID from URL parameters:", id); 
   }, [id]);
 
 
@@ -330,21 +322,21 @@ const AssetDetails = () => {
               return;
             }
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString()); // Set ckBTC balance
+            setCkBTCBalance(balance.toString()); 
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
               console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString()); // Set ckETH balance
+            setCkETHBalance(balance.toString());
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
               console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+            setCKUSDCBalance(balance.toString()); 
           }
           else if (assetType === "ICP") {
             if (!ledgerActorICP) {
@@ -352,14 +344,14 @@ const AssetDetails = () => {
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
-            setCkICPBalance(balance.toString()); // Set ICP balance
+            setCkICPBalance(balance.toString()); 
           }
           else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
           }
-          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+         
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
@@ -376,48 +368,40 @@ const AssetDetails = () => {
     ]
   );
 
-  // Log balances using useEffect after state updates
+  
   useEffect(() => {
     if (ckBTCBalance !== null) {
-      console.log("Updated ckBTC Balance:", ckBTCBalance); // Log updated ckBTC balance
+      console.log("Updated ckBTC Balance:", ckBTCBalance); 
     }
   }, [ckBTCBalance]);
 
   useEffect(() => {
     if (ckETHBalance !== null) {
-      console.log("Updated ckETH Balance:", ckETHBalance); // Log updated ckETH balance
+      console.log("Updated ckETH Balance:", ckETHBalance); 
     }
   }, [ckETHBalance]);
 
   useEffect(() => {
     if (ckUSDCBalance !== null) {
-      console.log("Updated ckUSDC Balance:", ckUSDCBalance); // Log updated ckUSDC balance
+      console.log("Updated ckUSDC Balance:", ckUSDCBalance); 
     }
   }, [ckUSDCBalance]);
 
   useEffect(() => {
     if (error) {
-      console.error("Error detected:", error); // Log any errors
+      console.error("Error detected:", error); 
     }
   }, [error]);
 
-  // Ensure ledger actors are initialized correctly
-  // useEffect(() => {
-  //   console.log("Ledger Actor for ckBTC:", ledgerActorckBTC); // Log the ledger actor for ckBTC
-  //   console.log("Ledger Actor for ckETH:", ledgerActorckETH); // Log the ledger actor for ckETH
-  //   console.log("Ledger Actor for ckUSDC:", ledgerActorckUSDC); // Log the ledger actor for ckUSDC
-  // }, [ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC]);
-
-  // Fetch balance when `id` is defined
   useEffect(() => {
     if (id) {
       fetchBalance(id);
     } else {
-      console.error("No valid asset ID found in URL parameters."); // Log missing asset ID
+      console.error("No valid asset ID found in URL parameters."); 
     }
   }, [id, fetchBalance]);
 
-  const pollInterval = 10000; // 10 seconds
+  const pollInterval = 10000; 
   const fetchConversionRate = useCallback(async () => {
     try {
       const response = await fetch("http://localhost:5000/conversion-rates");
@@ -444,12 +428,12 @@ const AssetDetails = () => {
   }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
 
   useEffect(() => {
-    // Start polling at regular intervals
+    
     const intervalId = setInterval(() => {
       fetchConversionRate();
     }, pollInterval);
 
-    // Clear the interval on component unmount
+   
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
@@ -462,7 +446,7 @@ const AssetDetails = () => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
-          fetchConversionRate(), // Fetch ckBTC and ckETH rates
+          fetchConversionRate(), 
         ]);
       } catch (error) {
         setError(error);
@@ -812,8 +796,8 @@ const AssetDetails = () => {
                         const totalDebt = userData?.Ok?.total_debt || 0;
 
                         const filteredData = filteredItems?.find((item) => {
-                          console.log("itemsitems", item[1]?.Ok?.asset_name); // You can console.log here
-                          return item[1]?.Ok // Still need to return the condition
+                          console.log("itemsitems", item[1]?.Ok?.asset_name); 
+                          return item[1]?.Ok 
                         });
 
                         const supplyRateApr = filteredData[1]?.Ok.supply_rate_apr || 0;

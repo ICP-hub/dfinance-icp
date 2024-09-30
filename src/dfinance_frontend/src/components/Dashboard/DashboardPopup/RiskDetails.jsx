@@ -12,7 +12,10 @@ const RiskPopup = ({ onClose, userData }) => {
   const popupRef = useRef(null);
 
   console.log("userdata in risk", userData);
-  const health_Factor_Value = parseFloat(userData.Ok.health_factor);
+  const health_Factor_Value = parseFloat(userData.Ok.health_factor) > 100
+  ? Infinity
+  : parseFloat(userData.Ok.health_factor);
+
   const Ltv_Value = parseFloat(userData.Ok.ltv);
 
   const liquidationThreshold_Value = 76.5;
@@ -136,7 +139,7 @@ const RiskPopup = ({ onClose, userData }) => {
                 Safety of your deposited collateral against the borrowed assets
                 and its underlying value.
               </p>
-              <div className="flex items-center mt-4">
+              <div className="flex items-center mt-6">
                 <svg width="100%" height="40">
                   <defs>
                     <linearGradient
@@ -189,19 +192,20 @@ const RiskPopup = ({ onClose, userData }) => {
                     x={`${healthFactorPosition}%`}
                     y="9"
                     fill="gray"
-                    fontSize="12"
-                    textAnchor="right"
-                    // dx="0.3em"
-                    dy=".07em"
+                    fontSize="13"
+                    textAnchor={healthFactorPosition > 50 ? "left" : "right"}
+                    dx={healthFactorPosition > 50 ? "-3.4em" : "-0.3em"}
+                    dy=".04em"
                   >
                     {parseFloat(health_Factor_Value)?.toFixed(2) || "0.00"}
                   </text>
+
                   <text
                     className="transition-text"
                     x={`${healthFactorMinPosition}%`}
                     y="35"
                     fill="red"
-                    fontSize="12"
+                    fontSize="14"
                     textAnchor="middle"
                   >
                     {healthFactorMinValue}
@@ -277,7 +281,7 @@ const RiskPopup = ({ onClose, userData }) => {
                     x={`${currentLTVPosition}%`}
                     y="30"
                     fill="gray"
-                    fontSize="12"
+                    fontSize="14"
                     textAnchor="left"
                     dx="0.1em"
                     dy=".2em"
@@ -299,6 +303,7 @@ const RiskPopup = ({ onClose, userData }) => {
                     className="transition-text"
                     x={`${currentLTVThresholdPosition}%`}
                     y="40"
+                    dy="-0.2em"
                     fill="red"
                     fontSize="12"
                     textAnchor="middle"

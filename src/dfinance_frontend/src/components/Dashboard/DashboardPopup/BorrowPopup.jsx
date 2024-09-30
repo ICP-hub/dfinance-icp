@@ -70,7 +70,7 @@ const Borrow = ({
           case "ckUSDC":
             rate = data['usd-coin']?.usd;
             break;
-          case "ckICP":
+          case "ICP":
             rate = data['internet-computer']?.usd;
             break;
           default:
@@ -100,10 +100,10 @@ const Borrow = ({
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            console.log(`get_asset_principle (${asset}):`, result);
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -118,7 +118,7 @@ const Borrow = ({
     };
 
     fetchAssetPrinciple();
-  }, [backendActor]);
+  }, [principal, backendActor]);
 
   console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
   console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
@@ -140,10 +140,13 @@ const Borrow = ({
         case "ckUSDC":
           result = await backendActor.get_asset_principal("ckUSDC");
           break;
+        case "ICP":
+          result = await backendActor.get_asset_principal("ICP");
+          break;
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -185,6 +188,14 @@ const Borrow = ({
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
 
+  const ledgerActorICP = useMemo(
+    () =>
+      assetPrincipal.ICP
+        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
+        : null,
+    [createLedgerActor, assetPrincipal.ICP]
+  );
+
   useEffect(() => {
     if (onLoadingChange) {
       onLoadingChange(isLoading);
@@ -209,6 +220,9 @@ const Borrow = ({
       ledgerActor = ledgerActorckETH;
     } else if (asset === "ckUSDC") {
       ledgerActor = ledgerActorckUSDC; // Add ckUSDC ledger actor
+    }
+    else if (asset === "ICP") {
+      ledgerActor = ledgerActorICP; // Add ckUSDC ledger actor
     }
 
     try {

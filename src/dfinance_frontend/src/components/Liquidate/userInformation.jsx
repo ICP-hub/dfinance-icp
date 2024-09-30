@@ -15,9 +15,15 @@ import "react-toastify/dist/ReactToastify.css";
 import useAssetData from "../Common/useAssets";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
 
 const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
-  const { isAuthenticated, createLedgerActor, backendActor, principal: currentUserPrincipal } = useAuth();
+  const {
+    isAuthenticated,
+    createLedgerActor,
+    backendActor,
+    principal: currentUserPrincipal,
+  } = useAuth();
 
   console.log("mappeditems", mappedItem);
   const [rewardAmount, setRewardAmount] = useState(10);
@@ -32,6 +38,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const [transactionResult, setTransactionResult] = useState(null); // State to handle transaction
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
+  const [ckICPBalance, setCkICPBalance] = useState(null);
+  const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
+  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
 
   const [userdata, setUserData] = useState();
   const [userHealthFactor, setUserHealthFactor] = useState();
@@ -134,12 +143,15 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   };
   const [amountBorrowUSD, setAmountBorrowUSD] = useState(null);
+  const [selectedAssetSupply, setSelectedAssetSupply] = useState(null);
 
   const [isCollateralAssetSelected, setIsCollateralAssetSelected] =
     useState(false);
-  const handleAssetSelection = (asset) => {
+  const handleAssetSelection = (asset, assetBorrowAmountInUSD, assetSupply) => {
     setIsCollateralAssetSelected(true);
-    setSelectedAsset(asset); // Set the selected asset (only one at a time)
+    setSelectedAsset(asset);
+    // Set the selected asset (only one at a time)
+    setSelectedAssetSupply(assetSupply);
     const assetRewardAmounts = {
       cketh: 0.003256,
       ckbtc: 0.001025,
@@ -148,6 +160,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
     setRewardAmount(assetRewardAmounts[asset] || 10);
   };
+  console.log("selectedAsstSUplly", selectedAssetSupply);
 
   const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
 
@@ -170,10 +183,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            console.log(`get_asset_principle (${asset}):`, result);
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -210,10 +223,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
         case "ckUSDC":
           result = await backendActor.get_asset_principal("ckUSDC");
           break;
+        case "ICP":
+          result = await backendActor.get_asset_principal("ICP");
+          break;
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -255,6 +271,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
 
+  const ledgerActorICP = useMemo(
+    () =>
+      assetPrincipal.ICP
+        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
+        : null,
+    [createLedgerActor, assetPrincipal.ICP]
+  );
+
   const principalObj = useMemo(
     () => Principal.fromText(currentUserPrincipal),
     [currentUserPrincipal]
@@ -288,12 +312,21 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
             setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
-          } else {
+          }
+          else if (assetType === "ICP") {
+            if (!ledgerActorICP) {
+              console.warn("Ledger actor for ICP not initialized yet");
+              return;
+            }
+            balance = await ledgerActorICP.icrc1_balance_of(account);
+            setCkICPBalance(balance.toString()); // Set ICP balance
+          }
+          else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
           }
-          console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
@@ -306,29 +339,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       ledgerActorckETH,
       ledgerActorckUSDC,
       principalObj,
-    ] // Added ledgerActorckUSDC to dependencies
+      ledgerActorICP
+    ]
   );
 
   const [loading, setLoading] = useState();
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([
-          fetchBalance("ckBTC"),
-          fetchBalance("ckETH"),
-          fetchBalance("ckUSDC"),
-        ]);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-  }, [fetchBalance]);
 
   const handleApprove = async () => {
     let ledgerActor;
@@ -338,6 +354,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       ledgerActor = ledgerActorckETH;
     } else if (selectedDebtAsset === "ckUSDC") {
       ledgerActor = ledgerActorckUSDC;
+    } else if (selectedDebtAsset === "ICP") {
+      ledgerActor = ledgerActorICP;
     }
 
     const transferfee = BigInt(100);
@@ -459,8 +477,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   }, [ckUSDCBalance, ckUSDCUsdRate]);
 
-  const pollInterval = 10000;
+  useEffect(() => {
+    if (ckICPBalance && ckICPUsdRate) {
+      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+      setCkICPUsdBalance(balanceInUsd);
+    }
+  }, [ckICPBalance, ckICPUsdRate]);
 
+  const pollInterval = 10000;
   const fetchConversionRate = useCallback(async () => {
     try {
       const response = await fetch("http://localhost:5000/conversion-rates");
@@ -484,7 +508,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, pollInterval]);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
 
   useEffect(() => {
     // Start polling at regular intervals
@@ -496,6 +520,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
+
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -504,6 +529,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
           fetchBalance("ckBTC"),
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
           fetchConversionRate(), // Fetch ckBTC and ckETH rates
         ]);
       } catch (error) {
@@ -521,6 +547,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     ckETHBalance,
     ckUSDCBalance,
   ]);
+
 
   const renderDebtAssetDetails = (asset) => {
     switch (asset) {
@@ -581,6 +608,27 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
                     {ckUSDCBalance}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      case "ICP":
+        return (
+          <>
+            <div className="w-full h-[0.8px] bg-gradient-to-r from-[#EB8863] to-[#81198E] my-4 "></div>
+            <div>
+              <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
+                My Section
+              </h3>
+              <div className="mb-4">
+                <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm text-gray-900 ">
+                  <p className="text-sm font-normal font-Poppins text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
+                    My Wallet Balance
+                  </p>
+                  <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
+                    {ckICPBalance}
                   </p>
                 </div>
               </div>
@@ -680,6 +728,37 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
         );
 
         return null;
+      case "ICP":
+        return (
+          <div className="mt-4">
+            <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+                ICP Price
+              </p>
+              <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
+                5.032560
+              </p>
+            </div>
+            <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+                ICP Liquidation Bonus %
+              </p>
+              <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
+                {liquidation_bonus}%
+              </p>
+            </div>
+            <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+                Reward Amount
+              </p>
+              <p className="text-sm font-medium text-green-500">
+                {(amountToRepay * (liquidation_bonus / 100)).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        );
+
+        return null;
       default:
         return null;
     }
@@ -728,12 +807,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     supply_cap = item.configuration.supply_cap || "0";
     borrow_cap = formatNumber(item.configuration.borrow_cap?.toString()) || "0";
     ltv = item.configuration.ltv?.toString() || "0";
-    liquidation_threshold =
-      item.configuration.liquidation_threshold || "0";
+    liquidation_threshold = item.configuration.liquidation_threshold || "0";
     liquidation_bonus = item.configuration.liquidation_bonus || "0";
-    supply_rate_apr = item.supply_rate_apr
-      ? item.supply_rate_apr[0]
-      : "0";
+    supply_rate_apr = item.supply_rate_apr ? item.supply_rate_apr[0] : "0";
     total_supply = item.total_supply ? formatNumber(item.total_supply) : "0";
     current_liquidity_rate = item.current_liquidity_rate || "0";
     liquidity_index = item.liquidity_index?.toString() || "0";
@@ -763,10 +839,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       case "ckUSDC":
         setSelectedAssetBalance(ckUSDCBalance);
         break;
+      case "ICP":
+        setSelectedAssetBalance(ckICPBalance);
+        break;
       default:
         setSelectedAssetBalance(0);
     }
-  }, [selectedDebtAsset, ckETHBalance, ckBTCBalance, ckUSDCBalance]);
+  }, [selectedDebtAsset, ckETHBalance, ckBTCBalance, ckUSDCBalance, ckICPBalance]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -856,9 +935,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             )}
 
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
-                {/* Centered Loader with Tailwind animation */}
-                <div className="loader border-t-transparent border-solid rounded-full animate-spin border-white border-4 h-8 w-8"></div>
+              <div
+                className="fixed inset-0 flex items-center justify-center z-50"
+                style={{
+                  background: "rgba(0, 0, 0, 0.4)", // Dim background
+                  backdropFilter: "blur(1px)", // Blur effect
+                }}
+              >
+                <div className="loader"></div>
               </div>
             )}
           </div>
@@ -915,6 +999,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                         assetBorrowAmount * ckUSDCUsdRate
                       ).toFixed(2);
                     }
+                    else if (assetName === "ICP" && ckICPUsdRate) {
+                      assetBorrowAmountInUSD = (
+                        assetBorrowAmount * ckICPUsdRate
+                      ).toFixed(2);
+                    }
 
                     console.log(
                       "assetBorrowAmountInUSD",
@@ -930,7 +1019,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                           ? ckETHBalance
                           : assetName === "ckUSDC"
                             ? ckUSDCBalance
-                            : 0;
+                            : assetName === "ICP"
+                              ? ckICPBalance
+                              : 0;
 
                     if (assetSupply > 0) {
                       return (
@@ -943,7 +1034,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                             onChange={() =>
                               handleAssetSelection(
                                 assetName,
-                                assetBorrowAmountInUSD
+                                assetBorrowAmountInUSD,
+                                assetSupply
                               )
                             }
                           />
@@ -954,7 +1046,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                                 ? ckBTC
                                 : assetName === "ckETH"
                                   ? ckETH
-                                  : ckUSDC
+                                  : assetName === "ckUSDC"
+                                    ? ckUSDC
+                                    : assetName === "ICP"
+                                      ? icp
+                                      : undefined
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -994,6 +1090,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
                     />
                   )}
+                  {selectedAsset === "ICP" && (
+                    <img
+                      src={icp}
+                      alt="ICP icon"
+                      className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                    />
+                  )}
                 </div>
               </div>
               <div className="flex justify-between mt-4">
@@ -1005,23 +1108,39 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isCollateralAssetSelected
-                      ? "opacity-100"
-                      : "opacity-50 cursor-not-allowed"
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm  px-6 py-2 relative ${isCollateralAssetSelected &&
+                    amountToRepay + amountToRepay * (liquidation_bonus / 100) <
+                    selectedAssetSupply
+                    ? "opacity-100 cursor-pointer"
+                    : "opacity-50 cursor-not-allowed"
                     }`}
                   onClick={() => {
                     console.log("Button clicked");
                     isApproved ? handleCallLiquidation() : handleApprove();
                   }}
-                  disabled={isLoading || !isCollateralAssetSelected}
+                  disabled={
+                    isLoading ||
+                    !isCollateralAssetSelected ||
+                    !(
+                      amountToRepay +
+                      amountToRepay * (liquidation_bonus / 100) <
+                      selectedAssetSupply
+                    )
+                  }
                 >
                   {isApproved
                     ? `Call Liquidation ${selectedDebtAsset}`
                     : `Approve ${selectedDebtAsset} to continue`}
                 </button>
                 {isLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
-                    <div className="loader"></div> {/* Loader here */}
+                  <div
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    style={{
+                      background: "rgba(0, 0, 0, 0.4)", // Dim background
+                      backdropFilter: "blur(1px)", // Blur effect
+                    }}
+                  >
+                    <div className="loader"></div>
                   </div>
                 )}
               </div>
@@ -1053,6 +1172,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                         assetBorrowAmount * ckUSDCUsdRate
                       ).toFixed(2);
                     }
+                    else if (assetName === "ICP" && ckICPUsdRate) {
+                      assetBorrowAmountInUSD = (
+                        assetBorrowAmount * ckICPUsdRate
+                      ).toFixed(2);
+                    }
 
                     if (assetBorrow > 0) {
                       return (
@@ -1076,7 +1200,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                                 ? ckBTC
                                 : assetName === "ckETH"
                                   ? ckETH
-                                  : ckUSDC
+                                  : assetName === "ckUSDC"
+                                    ? ckUSDC
+                                    : assetName === "ICP"
+                                      ? icp
+                                      : undefined
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -1115,11 +1243,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 </button>
                 <button
                   className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
-                      ? "opacity-100"
-                      : "opacity-50 cursor-not-allowed"
+                    ? "opacity-100"
+                    : "opacity-50 cursor-not-allowed"
                     }`}
                   onClick={handleNextClick}
-                  disabled={!isDebtAssetSelected || !(amountToRepay <= selectedAssetBalance)}
+                  disabled={
+                    !isDebtAssetSelected ||
+                    !(amountToRepay <= selectedAssetBalance)
+                  }
                 >
                   NEXT
                 </button>

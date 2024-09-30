@@ -31,6 +31,7 @@ import SupplyPopup from "./DashboardPopup/SupplyPopup";
 import ckbtc from "../../../public/assests-icon/ckBTC.png";
 import cketh from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
 import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
@@ -193,10 +194,10 @@ const AssetDetails = () => {
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            console.log(`get_asset_principle (${asset}):`, result);
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -213,9 +214,9 @@ const AssetDetails = () => {
     fetchAssetPrinciple();
   }, [principal, backendActor]);
 
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
+  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
+  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
+  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -233,16 +234,21 @@ const AssetDetails = () => {
         case "ckUSDC":
           result = await backendActor.get_asset_principal("ckUSDC");
           break;
+        case "ICP":
+          result = await backendActor.get_asset_principal("ICP");
+          break;
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
       throw error;
     }
   };
+
+
   const ledgerActorckBTC = useMemo(
     () =>
       assetPrincipal.ckBTC
@@ -265,9 +271,14 @@ const AssetDetails = () => {
         : null,
     [createLedgerActor, assetPrincipal.ckUSDC]
   );
-  console.log("ckBTC ledger", ledgerActorckBTC);
-  console.log("ckUSDC ledger", ledgerActorckUSDC);
-  console.log("ckETH ledger", ledgerActorckETH);
+  const ledgerActorICP = useMemo(
+    () =>
+      assetPrincipal.ICP
+        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
+        : null,
+    [createLedgerActor, assetPrincipal.ICP]
+  );
+
 
 
   useEffect(() => {
@@ -306,8 +317,6 @@ const AssetDetails = () => {
   }, [id]);
 
 
-
-
   const fetchBalance = useCallback(
     async (assetType) => {
       if (isAuthenticated && principalObj) {
@@ -321,7 +330,6 @@ const AssetDetails = () => {
               return;
             }
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            //  balance = 2500
             setCkBTCBalance(balance.toString()); // Set ckBTC balance
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
@@ -329,7 +337,6 @@ const AssetDetails = () => {
               return;
             }
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            //  balance = 3500
             setCkETHBalance(balance.toString()); // Set ckETH balance
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
@@ -337,9 +344,17 @@ const AssetDetails = () => {
               return;
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            //  balance = 1300
             setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
-          } else {
+          }
+          else if (assetType === "ICP") {
+            if (!ledgerActorICP) {
+              console.warn("Ledger actor for ICP not initialized yet");
+              return;
+            }
+            balance = await ledgerActorICP.icrc1_balance_of(account);
+            setCkICPBalance(balance.toString()); // Set ICP balance
+          }
+          else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
@@ -351,7 +366,14 @@ const AssetDetails = () => {
         }
       }
     },
-    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj]
+    [
+      isAuthenticated,
+      ledgerActorckBTC,
+      ledgerActorckETH,
+      ledgerActorckUSDC,
+      principalObj,
+      ledgerActorICP
+    ]
   );
 
   // Log balances using useEffect after state updates
@@ -380,11 +402,11 @@ const AssetDetails = () => {
   }, [error]);
 
   // Ensure ledger actors are initialized correctly
-  useEffect(() => {
-    console.log("Ledger Actor for ckBTC:", ledgerActorckBTC); // Log the ledger actor for ckBTC
-    console.log("Ledger Actor for ckETH:", ledgerActorckETH); // Log the ledger actor for ckETH
-    console.log("Ledger Actor for ckUSDC:", ledgerActorckUSDC); // Log the ledger actor for ckUSDC
-  }, [ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC]);
+  // useEffect(() => {
+  //   console.log("Ledger Actor for ckBTC:", ledgerActorckBTC); // Log the ledger actor for ckBTC
+  //   console.log("Ledger Actor for ckETH:", ledgerActorckETH); // Log the ledger actor for ckETH
+  //   console.log("Ledger Actor for ckUSDC:", ledgerActorckUSDC); // Log the ledger actor for ckUSDC
+  // }, [ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC]);
 
   // Fetch balance when `id` is defined
   useEffect(() => {
@@ -403,14 +425,14 @@ const AssetDetails = () => {
         throw new Error("Network response was not ok");
       }
       const text = await response.text();
-  
+
       let data;
       try {
         data = JSON.parse(text);
       } catch (jsonError) {
         throw new Error("Response was not valid JSON");
       }
-  
+
       setCkBTCUsdRate(data.bitcoin.usd);
       setCkETHUsdRate(data.ethereum.usd);
       setCkUSDCUsdRate(data["usd-coin"].usd);
@@ -419,7 +441,7 @@ const AssetDetails = () => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, pollInterval]);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
 
   useEffect(() => {
     // Start polling at regular intervals
@@ -431,7 +453,7 @@ const AssetDetails = () => {
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
- useEffect(() => {
+  useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
@@ -439,6 +461,7 @@ const AssetDetails = () => {
           fetchBalance("ckBTC"),
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
           fetchConversionRate(), // Fetch ckBTC and ckETH rates
         ]);
       } catch (error) {
@@ -449,7 +472,13 @@ const AssetDetails = () => {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance]);
+  }, [
+    fetchBalance,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+  ]);
 
   let supply_cap;
   let borrow_cap;
@@ -719,6 +748,12 @@ const AssetDetails = () => {
 
                     </>
                   )}
+                  {id === "ICP" && (
+                    <>
+                      <p>{ckICPBalance} {id}</p>
+
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -754,6 +789,12 @@ const AssetDetails = () => {
                           <p className="text-[11px] font-light">${formatNumber(ckUSDCUsdBalance)}</p>
                         </>
                       )}
+                       {id === "ICP" && (
+                        <>
+                          <p>{ckICPBalance} {id}</p>
+                          <p className="text-[11px] font-light">${formatNumber(ckICPUsdBalance)}</p>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="ml-auto">
@@ -778,13 +819,15 @@ const AssetDetails = () => {
                         const supplyRateApr = filteredData[1]?.Ok.supply_rate_apr || 0;
                         const liquidationThreshold = filteredData[1]?.Ok.configuration.liquidation_threshold || 0;
                         const ckBalance =
-                          id === "ckBTC"
-                            ? ckBTCBalance
-                            : asset === "ckETH"
-                              ? ckETHBalance
-                              : asset === "ckUSDC"
-                                ? ckUSDCBalance
-                                : null;
+                        id === "ckBTC"
+                        ? ckBTCBalance
+                        : id === "ckETH"
+                          ? ckETHBalance
+                          : id === "ckUSDC"
+                            ? ckUSDCBalance
+                            : id === "ICP"
+                              ? ckICPBalance
+                              : null;
 
                         console.log("ckBalance", ckBalance, "assetSupply", assetSupply, "assetBorrow", assetBorrow, "totalCollateral", totalCollateral, "totalDebt", totalDebt, "supplyRateApr", supplyRateApr, "liquidationThreshold", liquidationThreshold);
 
@@ -793,7 +836,8 @@ const AssetDetails = () => {
                           id,
                           (id === "ckBTC" && ckbtc) ||
                           (id === "ckETH" && cketh) ||
-                          (id === "ckUSDC" && ckUSDC),
+                          (id === "ckUSDC" && ckUSDC) ||
+                          (id === "ICP" && icp),
                           supplyRateApr,
                           ckBalance,
                           liquidationThreshold,

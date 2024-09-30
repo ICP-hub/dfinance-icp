@@ -212,7 +212,14 @@ const FaucetDetails = () => {
         }
       }
     },
-    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj]
+    [
+      isAuthenticated,
+      ledgerActorckBTC,
+      ledgerActorckETH,
+      ledgerActorckUSDC,
+      principalObj,
+      ledgerActorICP
+    ]
   );
 
 
@@ -274,7 +281,7 @@ const FaucetDetails = () => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, pollInterval]);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance,ckICPBalance, pollInterval]);
 
   useEffect(() => {
     // Start polling at regular intervals

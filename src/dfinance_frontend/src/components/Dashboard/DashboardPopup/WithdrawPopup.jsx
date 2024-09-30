@@ -70,7 +70,7 @@ const WithdrawPopup = ({ asset,
           case "ckUSDC":
             rate = data['usd-coin']?.usd;
             break;
-          case "ckICP":
+          case "ICP":
             rate = data['internet-computer']?.usd;
             break;
           default:
@@ -141,10 +141,10 @@ const WithdrawPopup = ({ asset,
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            console.log(`get_asset_principle (${asset}):`, result);
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -159,11 +159,11 @@ const WithdrawPopup = ({ asset,
     };
 
     fetchAssetPrinciple();
-  }, [backendActor]);
+  }, [principal, backendActor]);
 
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
+  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
+  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
+  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -181,10 +181,13 @@ const WithdrawPopup = ({ asset,
         case "ckUSDC":
           result = await backendActor.get_asset_principal("ckUSDC");
           break;
+        case "ICP":
+          result = await backendActor.get_asset_principal("ICP");
+          break;
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -228,6 +231,14 @@ const WithdrawPopup = ({ asset,
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
 
+  const ledgerActorICP = useMemo(
+    () =>
+      assetPrincipal.ICP
+        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
+        : null,
+    [createLedgerActor, assetPrincipal.ICP]
+  );
+
   const handleWithdraw = async () => {
     console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
@@ -238,8 +249,12 @@ const WithdrawPopup = ({ asset,
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC; // Add ckUSDC ledger actor
+    }
+    else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActorckUSDC;
+    }
+    else if (asset === "ICP") {
+      ledgerActor = ledgerActorICP;
     }
 
     try {
@@ -508,16 +523,16 @@ const WithdrawPopup = ({ asset,
 
           </div>
           {isLoading && (
-            <div
-              className="absolute inset-0 flex items-center justify-center z-50"
-              style={{
-                background: "rgba(0, 0, 0, 0.4)", // Dim background
-                backdropFilter: "blur(1px)", // Blur effect
-              }}
-            >
-              <div className="loader"></div>
-            </div>
-          )}
+                <div
+                  className="fixed inset-0 flex items-center justify-center z-50"
+                  style={{
+                    background: "rgba(0, 0, 0, 0.4)", // Dim background
+                    backdropFilter: "blur(1px)", // Blur effect
+                  }}
+                >
+                  <div className="loader"></div>
+                </div>
+              )}
         </div>
       )}
       {isPaymentDone && (

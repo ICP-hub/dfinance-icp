@@ -43,10 +43,10 @@ const Repay = ({
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            console.log(`get_asset_principle (${asset}):`, result);
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -61,11 +61,11 @@ const Repay = ({
     };
 
     fetchAssetPrinciple();
-  }, [backendActor]);
+  }, [principal, backendActor]);
 
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
+  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
+  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
+  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -83,10 +83,13 @@ const Repay = ({
         case "ckUSDC":
           result = await backendActor.get_asset_principal("ckUSDC");
           break;
+        case "ICP":
+          result = await backendActor.get_asset_principal("ICP");
+          break;
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -126,6 +129,15 @@ const Repay = ({
         )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
+  );
+
+
+  const ledgerActorICP = useMemo(
+    () =>
+      assetPrincipal.ICP
+        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
+        : null,
+    [createLedgerActor, assetPrincipal.ICP]
   );
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -183,7 +195,7 @@ const Repay = ({
           case "ckUSDC":
             rate = data['usd-coin']?.usd;
             break;
-          case "ckICP":
+          case "ICP":
             rate = data['internet-computer']?.usd;
             break;
           default:
@@ -226,8 +238,12 @@ const Repay = ({
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
-    } else if (asset === "ckUSDC") {
+    }
+    else if (asset === "ckUSDC") {
       ledgerActor = ledgerActorckUSDC;
+    }
+    else if (asset === "ICP") {
+      ledgerActor = ledgerActorICP;
     }
 
     // Convert amount and transferFee to numbers and add them
@@ -279,6 +295,12 @@ const Repay = ({
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
+    }
+    else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActorckUSDC;
+    }
+    else if (asset === "ICP") {
+      ledgerActor = ledgerActorICP;
     }
 
     console.log("Backend actor", ledgerActor);
@@ -569,11 +591,10 @@ const Repay = ({
               {/* Fullscreen Loading Overlay with Dim Background */}
               {isLoading && (
                 <div
-                  className="absolute inset-0 flex items-center justify-center z-50"
+                  className="fixed inset-0 flex items-center justify-center z-50"
                   style={{
                     background: "rgba(0, 0, 0, 0.4)", // Dim background
                     backdropFilter: "blur(1px)", // Blur effect
-                    pointerEvents: "all",
                   }}
                 >
                   <div className="loader"></div>

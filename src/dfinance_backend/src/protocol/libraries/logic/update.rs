@@ -152,6 +152,7 @@ impl UpdateLogic {
         user_principal: Principal,
         params: ExecuteSupplyParams,
         reserve: &ReserveData,
+        usd_amount: f64,
     ) -> Result<(), String> {
         // Fetch user data
         let user_data_result = mutate_state(|state| {
@@ -172,9 +173,9 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-    
+        
         // Get the exchange rate of the asset
-        let asset_rate_result = get_exchange_rates(reserve.asset_name.clone().expect("REASON"), 1.0).await;
+        // let asset_rate_result = get_exchange_rates(reserve.asset_name.clone().expect("REASON"), 1.0).await;
         // let amount_in_usd = match exchange_rate_usd(params.asset.clone(), params.amount).await {
         //     Ok(value) => value,
         //     Err(e) => {
@@ -182,20 +183,21 @@ impl UpdateLogic {
         //         return Err(format!("Failed to fetch exchange rate: {}", e));
         //     }
         // };
-        let ckbtc_to_usd_rate = 60554.70f64;
-        let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
-    
+        // let ckbtc_to_usd_rate = 60554.70f64;
+        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+        let mut usd_rate = usd_amount/params.amount as f64;
         ic_cdk::println!(
             "Converted ckBTC amount: {} to USD amount: {} with rate: {}",
             params.amount,
-            amount_in_usd,
-            ckbtc_to_usd_rate
+            usd_amount,
+            usd_rate
         );
     
         // Update user's net worth and collateral
-        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0.0) + amount_in_usd);
+        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0.0) + usd_amount);
         let user_thrs = cal_average_threshold(
-            amount_in_usd,
+            usd_amount,
+            0.0,
             reserve.configuration.liquidation_threshold,
             user_data.total_collateral.unwrap_or(0.0),
             user_data.liquidation_threshold.unwrap_or(0.0),
@@ -203,7 +205,7 @@ impl UpdateLogic {
         ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
     
         user_data.liquidation_threshold = Some(user_thrs);
-        user_data.total_collateral = Some(user_data.total_collateral.unwrap_or(0.0) + amount_in_usd);
+        user_data.total_collateral = Some(user_data.total_collateral.unwrap_or(0.0) + usd_amount);
     
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
@@ -228,22 +230,23 @@ impl UpdateLogic {
             None => None,
         };
     
-        let mut usd_rate = 0.0;
+        
         if let Some((_, reserve_data)) = user_reserve {
             // If Reserve data exists, update the asset supply and rates
-            match asset_rate_result {
-                Ok((rate, _)) => {
-                    reserve_data.asset_price_when_supplied = rate;
-                    usd_rate = rate;
-                }
-                Err(e) => {
-                    ic_cdk::println!("Failed to get asset rate: {}", e);
-                    reserve_data.asset_price_when_supplied = 0.0; // Default in case of error
-                }
-            }
+            // match asset_rate_result {
+            //     Ok((rate, _)) => {
+            //         reserve_data.asset_price_when_supplied = rate;
+            //         usd_rate = rate;
+            //     }
+            //     Err(e) => {
+            //         ic_cdk::println!("Failed to get asset rate: {}", e);
+            //         reserve_data.asset_price_when_supplied = 0.0; // Default in case of error
+            //     }
+            // }
     
-            reserve_data.supply_rate = reserve.current_liquidity_rate;
+            reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.asset_supply += params.amount as f64;
+            reserve_data.asset_price_when_supplied = usd_rate;
     
             ic_cdk::println!(
                 "Updated asset supply for existing reserve: {:?}",
@@ -284,6 +287,7 @@ impl UpdateLogic {
     pub async fn update_user_data_borrow(
         user_principal: Principal,
         params: ExecuteBorrowParams,
+        usd_amount: f64,
     ) -> Result<(), String> {
         let asset_reserve = read_state(|state| {
             let asset_index = & state.asset_index;
@@ -311,12 +315,12 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-        let ckbtc_to_usd_rate = 60554.70f64;
-        ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
+        // let ckbtc_to_usd_rate = 60554.70f64;
+        // ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
 
-        // Convert the supplied amount (in ckBTC) to ICP
-        let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
-        user_data.total_debt = Some(user_data.total_debt.unwrap_or(0.0) + amount_in_usd);
+        // // Convert the supplied amount (in ckBTC) to ICP
+        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+        user_data.total_debt = Some(user_data.total_debt.unwrap_or(0.0) + usd_amount);
 
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
@@ -360,24 +364,24 @@ impl UpdateLogic {
 
 
 
-        let mut usd_rate = 0.0;
+        let usd_rate = usd_amount/params.amount as f64;
         if let Some((_, reserve_data)) = user_reserve {
             // If Reserve data exists, it updates asset supply
-            let asset_rate_result = get_exchange_rates(params.asset.clone(), 1.0).await;
+            // let asset_rate_result = get_exchange_rates(params.asset.clone(), 1.0).await;
 
-            match asset_rate_result {
-                Ok((rate, _)) => {
-                    // Assign the `f64` rate to `reserve_data.asset_price_when_supplied`
-                    usd_rate = rate;
+            // match asset_rate_result {
+            //     Ok((rate, _)) => {
+            //         // Assign the `f64` rate to `reserve_data.asset_price_when_supplied`
+            //         usd_rate = rate;
                     
-                }
-                Err(e) => {
+            //     }
+            //     Err(e) => {
                     
-                    ic_cdk::println!("Failed to get asset rate: {}", e);
+            //         ic_cdk::println!("Failed to get asset rate: {}", e);
                     
-                    reserve_data.asset_price_when_borrowed = 0.0; // Default value in case of an error
-                }
-            }
+            //         reserve_data.asset_price_when_borrowed = 0.0; // Default value in case of an error
+            //     }
+            // }
            
             reserve_data.borrow_rate=asset_reserve_data.borrow_rate;
             reserve_data.asset_price_when_borrowed = usd_rate;
@@ -422,6 +426,8 @@ impl UpdateLogic {
     pub async fn update_user_data_withdraw(
         user_principal: Principal,
         params: ExecuteWithdrawParams,
+        reserve: &ReserveData,
+        usd_amount: f64
     ) -> Result<(), String> {
         // Fetchs user data
         let user_data_result = mutate_state(|state| {
@@ -443,18 +449,30 @@ impl UpdateLogic {
             }
         };
 
-        let ckbtc_to_usd_rate = 60554.70f64;
-        let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+        // let ckbtc_to_usd_rate = 60554.70f64;
+        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
         // let user_thrs = cal_average_threshold(amount_in_usd, reserve.configuration.liquidation_threshold, user_prof.total_collateral.unwrap_or(0.0), user_prof.liquidation_threshold.unwrap_or(0.0));
         // ic_cdk::println!("user_thr {:?}", user_thrs);
 
         // user_data.liquidation_threshold = Some(user_thrs);
+        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0.0) - usd_amount);
+        let user_thrs = cal_average_threshold(
+            0.0,
+            usd_amount.clone(),
+            reserve.configuration.liquidation_threshold,
+            user_data.total_collateral.unwrap_or(0.0),
+            user_data.liquidation_threshold.unwrap_or(0.0),
+        );
+        ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
+        user_data.liquidation_threshold = Some(user_thrs);
+        if params.is_collateral {
         user_data.total_collateral =
-            Some(user_data.total_collateral.unwrap_or(0.0) - amount_in_usd);
+            Some(user_data.total_collateral.unwrap_or(0.0) - usd_amount);
+        }
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
             total_borrowed_value: user_data.total_debt.unwrap_or(0.0),
-            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0.0),
+            liquidation_threshold: user_thrs,
         };
 
         let health_factor = calculate_health_factor(&user_position);

@@ -14,7 +14,7 @@ use crate::declarations::storable::Candid;
 // -------------------------------------
 
 pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> {
-    dotenv().ok();
+   
     ic_cdk::println!("Starting execute_borrow with params: {:?}", params);
 
     // Fetched canister ids, user principal and amount
@@ -30,6 +30,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     let platform_principal = ic_cdk::api::id();
 
+    //read_state
     let debttoken_canister = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
@@ -39,10 +40,28 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     })?;
 
     ic_cdk::println!("Debt caniser id {:?}", debttoken_canister);
+
     let debttoken_canister_id = Principal::from_text(debttoken_canister)
         .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
     let amount_nat = Nat::from(params.amount);
+
+    let mut usd_amount = params.amount as f64;
+    let borrow_amount_to_usd = get_exchange_rates(params.asset.clone(), params.amount as f64).await;
+    match borrow_amount_to_usd {
+        Ok((amount_in_usd, _timestamp)) => {
+            // Extracted the amount in USD
+            usd_amount = amount_in_usd;
+            ic_cdk::println!("Borrow amount in USD: {:?}", amount_in_usd);
+        }
+        Err(e) => {
+            // Handling the error
+            ic_cdk::println!("Error getting exchange rate: {:?}", e);
+        }
+    }
+
+    ic_cdk::println!("Borrow amount in USD: {:?}", usd_amount);
+
 
     ic_cdk::println!("Canister ids, principal and amount successfully");
 
@@ -66,35 +85,24 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
             return Err(e);
         }
     };
+     
+
+    if reserve_data.total_borrowed == 0.0 {
+        *&mut reserve_data.debt_index = 1.0;
+    }
 
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
     ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
     
 
-    if reserve_data.total_borrowed == 0.0 {
-        reserve_data.debt_index=1.0;
-    }
+    
     // Updates the liquidity and borrow index
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
     // Converting asset to usdt value
-    let mut usd_amount = params.amount as f64;
-    let borrow_amount_to_usd = get_exchange_rates(params.asset.clone(), params.amount as f64).await;
-    match borrow_amount_to_usd {
-        Ok((amount_in_usd, _timestamp)) => {
-            // Extracted the amount in USD
-            usd_amount = amount_in_usd;
-            ic_cdk::println!("Borrow amount in USD: {:?}", amount_in_usd);
-        }
-        Err(e) => {
-            // Handling the error
-            ic_cdk::println!("Error getting exchange rate: {:?}", e);
-        }
-    }
-
-    ic_cdk::println!("Borrow amount in USD: {:?}", usd_amount);
+   
     
     // Validates supply using the reserve_data
     // ValidationLogic::validate_borrow(
@@ -106,9 +114,9 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     // ic_cdk::println!("Borrow validated successfully");
 
     let liquidity_added=0f64;
-    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount);
+    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount.clone());
     ic_cdk::println!("Interest rates updated successfully");
-        
+    *&mut reserve_data.total_borrowed+=usd_amount;  
     mutate_state(|state| {
                 let asset_index = &mut state.asset_index;
                 asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
@@ -143,7 +151,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         Ok(new_balance) => {
             ic_cdk::println!("Asset transfer from backend to user executed successfully");
             // ----------- Update logic here -------------
-            let _ = UpdateLogic::update_user_data_borrow(user_principal, params).await;
+            let _ = UpdateLogic::update_user_data_borrow(user_principal, params, usd_amount).await;
             
           
 

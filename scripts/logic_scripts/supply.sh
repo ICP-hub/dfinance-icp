@@ -6,7 +6,7 @@ set -e
 source ../../.env
 
 # Set variables
-ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
+# ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
 ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
 dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"

@@ -8,14 +8,14 @@ source ../../.env
 # Set variables
 ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai" 
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-debt_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
+debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
 approve_method="icrc2_approve"
 borrow_method="borrow"
 reserve_data_method="get_reserve_data"
 
 # Get the principal for the user1 identity (borrower)
 dfx identity use default
-user1_principal="gg5nv-qb4pa-goksu-z7rp7-gqpoj-rocpi-mtb74-vvvpp-osops-2wvnl-zqe"
+user1_principal=$(dfx identity get-principal)
 echo "User1 Principal (Borrower): $user1_principal"
 
 # Get the principal for the backend_canister (lender)

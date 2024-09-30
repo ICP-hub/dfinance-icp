@@ -5,10 +5,10 @@ set -e
 source ../../.env
 
 # Set variables
-ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai" 
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-debt_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
-dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
+debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
+dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 reserve_data_method="get_reserve_data"
 
 # Use the default identity

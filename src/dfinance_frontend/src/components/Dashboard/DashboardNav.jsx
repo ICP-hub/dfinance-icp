@@ -229,9 +229,9 @@ const DashboardNav = () => {
         case 0:
           return { ...item, count: `${totalMarketSize}` };
         case 1:
-          return { ...item, count: `${isNaN(totalSupplySize) ? '0' : totalSupplySize}` };
+          return { ...item, count: `${totalSupplySize}` };
         case 2:
-          return { ...item, count: `${isNaN(totalBorrowSize) ? '0' : totalBorrowSize}` };
+          return { ...item, count: `${totalBorrowSize}` };
         default:
           return item;
       }

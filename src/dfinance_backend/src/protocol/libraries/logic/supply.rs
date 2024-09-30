@@ -32,7 +32,7 @@ impl SupplyLogic {
                 .and_then(|reserve_data| reserve_data.d_token_canister.clone())
                 .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
         })?;
-
+        
         let dtoken_canister_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| "Invalid dtoken canister ID".to_string())?;
         let user_principal = ic_cdk::caller();
@@ -140,7 +140,7 @@ impl SupplyLogic {
             Ok(new_balance) => {
                 println!("Asset transfer from user to backend canister executed successfully");
                 // ----------- Update logic here -------------
-                let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data).await;
+                let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data, usd_amount.clone()).await;
                 
         
                 Ok(new_balance)
@@ -305,7 +305,7 @@ impl SupplyLogic {
             Ok(new_balance) => {
                 println!("Asset transfer from backend to user executed successfully");
                 // ----------- Update logic here -------------
-                let _ = UpdateLogic::update_user_data_withdraw(user_principal, params).await;
+                let _ = UpdateLogic::update_user_data_withdraw(user_principal, params, &reserve_data, usd_amount.clone()).await;
                 Ok(new_balance)
             }
             Err(e) => {

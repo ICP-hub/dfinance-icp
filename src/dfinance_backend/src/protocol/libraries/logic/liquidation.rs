@@ -115,7 +115,7 @@ impl LiquidationLogic {
                 return Err(format!("Burn failed. Error: {:?}", err));
             }
         };
-
+        let usd_amount=60812.2;
         // Minting dtoken
         match asset_transfer(
             liquidator_principal,
@@ -130,11 +130,12 @@ impl LiquidationLogic {
                     "Dtoken Asset transfer from backend to liquidator executed successfully"
                 );
                 let _ =
-                    UpdateLogic::update_user_data_withdraw(user_principal, withdraw_param).await;
+                    UpdateLogic::update_user_data_withdraw(user_principal, withdraw_param, &reserve_data, 0.0).await;
                 let _ = UpdateLogic::update_user_data_supply(
                     liquidator_principal,
                     supply_param,
                     &reserve_data,
+                    usd_amount,
                 )
                 .await;
                 Ok(balance)

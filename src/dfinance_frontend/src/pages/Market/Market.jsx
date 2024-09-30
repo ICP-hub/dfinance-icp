@@ -217,7 +217,21 @@ const WalletDetails = () => {
       document.body.style.overflow = 'auto';
     };
   }, [showPopup]);
-
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0';
+    }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toFixed(2).toString();
+  }
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
@@ -328,7 +342,7 @@ const WalletDetails = () => {
                       <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_supply_count}</p> */}
-                          <p >{item[1].Ok.total_supply.length > 0 ? item[1].Ok.total_supply : "0"}</p>
+                          <p >{formatNumber(item[1].Ok.total_supply)}</p>
                         </div>
                         <div className="md:hidden justify-center ml-6" onClick={() => handleChevronClick(item[0])}>
                           <ChevronRight size={22} color={chevronColor} />
@@ -341,7 +355,7 @@ const WalletDetails = () => {
                       <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_borrow_count}</p> */}
-                          <p >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</p>
+                          <p >{formatNumber(item[1].Ok.total_borrowed)}</p>
                         </div>
                       </div>
 

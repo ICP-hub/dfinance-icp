@@ -39,6 +39,7 @@ pub fn calculate_ltv(position: &UserPosition) -> f64 {
 // }
 pub fn cal_average_threshold(
     amount: f64, 
+    amount_taken: f64,
     reserve_liq_thres: u16, 
     user_total_collateral: f64, 
     user_liq_thres: f64
@@ -47,8 +48,8 @@ pub fn cal_average_threshold(
     let reserve_liq_thres_f64 = reserve_liq_thres as f64 / 100.0;
     
     // Perform the calculation
-    let result = (amount * reserve_liq_thres_f64 + user_total_collateral * user_liq_thres) 
-        / (amount + user_total_collateral);
+    let result = ((amount * reserve_liq_thres_f64 )+ (user_total_collateral * user_liq_thres) - (amount_taken * reserve_liq_thres_f64)) 
+        / (amount + user_total_collateral - amount_taken);
     
     result
 }

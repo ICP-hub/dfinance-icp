@@ -163,8 +163,8 @@ pub fn calculate_interest_rates(
         return (0.0, params.base_variable_borrow_rate);
     }
 
-    let utilization_rate = calculate_utilization_rate(total_supply + total_debt, total_borrowed);
-    let mut current_variable_borrow_rate = params.base_variable_borrow_rate;
+    let utilization_rate = calculate_utilization_rate(total_supply.clone() + total_debt.clone(), total_borrowed.clone());
+    let mut current_variable_borrow_rate = params.base_variable_borrow_rate.clone();
 
 
     if utilization_rate > params.optimal_usage_ratio {

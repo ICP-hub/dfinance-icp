@@ -43,10 +43,10 @@ const Repay = ({
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            console.log(`get_asset_principle (${asset}):`, result);
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -61,11 +61,11 @@ const Repay = ({
     };
 
     fetchAssetPrinciple();
-  }, [backendActor]);
+  }, [principal, backendActor]);
 
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
+  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
+  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
+  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -83,10 +83,13 @@ const Repay = ({
         case "ckUSDC":
           result = await backendActor.get_asset_principal("ckUSDC");
           break;
+        case "ICP":
+          result = await backendActor.get_asset_principal("ICP");
+          break;
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -98,9 +101,9 @@ const Repay = ({
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
@@ -110,9 +113,9 @@ const Repay = ({
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
@@ -121,11 +124,20 @@ const Repay = ({
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
+  );
+
+
+  const ledgerActorICP = useMemo(
+    () =>
+      assetPrincipal.ICP
+        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
+        : null,
+    [createLedgerActor, assetPrincipal.ICP]
   );
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -164,126 +176,44 @@ const Repay = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        let coinId;
-  
-        // Map asset to coin IDs for each API
+        const response = await fetch('http://localhost:5000/conversion-rates');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch conversion rates from server');
+        }
+
+        const data = await response.json();
+
+        let rate;
         switch (asset) {
           case "ckBTC":
-            coinId = {
-              coingecko: "bitcoin",
-              coincap: "bitcoin",
-              coinapi: "BTC",
-              cryptocompare: "BTC",
-              nomics: "BTC"
-            };
+            rate = data.bitcoin?.usd;
             break;
           case "ckETH":
-            coinId = {
-              coingecko: "ethereum",
-              coincap: "ethereum",
-              coinapi: "ETH",
-              cryptocompare: "ETH",
-              nomics: "ETH"
-            };
+            rate = data.ethereum?.usd;
             break;
           case "ckUSDC":
-            coinId = {
-              coingecko: "usd-coin",
-              coincap: "usd-coin",
-              coinapi: "USDC",
-              cryptocompare: "USDC",
-              nomics: "USDC"
-            };
+            rate = data['usd-coin']?.usd;
             break;
-          case "ckICP":
-            coinId = {
-              coingecko: "internet-computer",
-              coincap: "internet-computer",
-              coinapi: "ICP",
-              cryptocompare: "ICP",
-              nomics: "ICP"
-            };
+          case "ICP":
+            rate = data['internet-computer']?.usd;
             break;
           default:
             console.error(`Unsupported asset: ${asset}`);
             return;
         }
-  
-        // API Endpoints and Fetch Functions
-        const apiEndpoints = [
-          // CoinGecko
-          {
-            name: 'CoinGecko',
-            url: `https://api.coingecko.com/api/v3/simple/price?ids=${coinId.coingecko}&vs_currencies=usd`,
-            extractRate: (data) => data[coinId.coingecko]?.usd,
-          },
-          // CoinCap
-          {
-            name: 'CoinCap',
-            url: `https://api.coincap.io/v2/assets/${coinId.coincap}`,
-            extractRate: (data) => data.data?.priceUsd,
-          },
-          // CoinAPI
-          {
-            name: 'CoinAPI',
-            url: `https://rest.coinapi.io/v1/exchangerate/${coinId.coinapi}/USD`,
-            headers: { 'X-CoinAPI-Key': 'YOUR_COINAPI_KEY' }, // Use your CoinAPI key here
-            extractRate: (data) => data?.rate,
-          },
-          // CryptoCompare
-          {
-            name: 'CryptoCompare',
-            url: `https://min-api.cryptocompare.com/data/price?fsym=${coinId.cryptocompare}&tsyms=USD`,
-            extractRate: (data) => data?.USD,
-          },
-          // Nomics
-          {
-            name: 'Nomics',
-            url: `https://api.nomics.com/v1/currencies/ticker?key=YOUR_NOMICS_KEY&ids=${coinId.nomics}&convert=USD`,
-            extractRate: (data) => data[0]?.price,
-          }
-        ];
-  
-        // Function to attempt fetching from multiple APIs
-        const tryMultipleApis = async (apiList) => {
-          for (const api of apiList) {
-            try {
-              const response = await fetch(api.url, {
-                headers: api.headers || {},
-              });
-  
-              if (response.ok) {
-                const data = await response.json();
-                const rate = api.extractRate(data);
-  
-                if (rate) {
-                  console.log(`${api.name} rate for ${asset}:`, rate);
-                  return rate;
-                }
-              } else {
-                console.error(`${api.name} failed:`, response.statusText);
-              }
-            } catch (error) {
-              console.error(`${api.name} error:`, error.message);
-            }
-          }
-          throw new Error("All API requests failed.");
-        };
-  
-        // Fetch the rate from any available API
-        const rate = await tryMultipleApis(apiEndpoints);
-  
         if (rate) {
+          console.log(`Rate for ${asset}:`, rate);
           setConversionRate(rate);
         } else {
           console.error("Conversion rate not found for asset:", asset);
         }
-  
+
       } catch (error) {
-        console.error("Error fetching conversion rate:", error.message);
+        console.error("Error fetching conversion rate from server:", error.message);
       }
     };
-  
+
     if (asset) {
       fetchConversionRate();
     }
@@ -308,8 +238,12 @@ const Repay = ({
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
-    } else if (asset === "ckUSDC") {
+    }
+    else if (asset === "ckUSDC") {
       ledgerActor = ledgerActorckUSDC;
+    }
+    else if (asset === "ICP") {
+      ledgerActor = ledgerActorICP;
     }
 
     // Convert amount and transferFee to numbers and add them
@@ -361,6 +295,12 @@ const Repay = ({
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
+    }
+    else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActorckUSDC;
+    }
+    else if (asset === "ICP") {
+      ledgerActor = ledgerActorICP;
     }
 
     console.log("Backend actor", ledgerActor);
@@ -431,7 +371,7 @@ const Repay = ({
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor <= 1 || ltv>=liquidationThreshold) {
+    if (healthFactor <= 1 || ltv >= liquidationThreshold) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
@@ -449,7 +389,7 @@ const Repay = ({
     console.log("totalDebt before minus", totalDebt, "collateral", totalCollateral, "amount added", amountAdded);
     const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
-   
+
 
     console.log("totalDeptValue", totalDeptValue);
     console.log("amountAdded", amountAdded);
@@ -565,29 +505,28 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
-                    <span className={`${healthFactorBackend > 3
-                          ? "text-green-500"
-                          : healthFactorBackend <= 1
-                            ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                              ? "text-orange-600"
-                              : healthFactorBackend <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                      <span className={`${healthFactorBackend > 3
+                        ? "text-green-500"
+                        : healthFactorBackend <= 1
+                          ? "text-red-500"
+                          : healthFactorBackend <= 1.5
+                            ? "text-orange-600"
+                            : healthFactorBackend <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -640,11 +579,10 @@ const Repay = ({
 
               <button
                 onClick={handleClick}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+                  }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}

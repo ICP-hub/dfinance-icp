@@ -24,6 +24,7 @@ import UserInformationPopup from "./userInformation"
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
 
 const ITEMS_PER_PAGE = 8;
 const DebtStatus = () => {
@@ -163,18 +164,18 @@ const DebtStatus = () => {
   }, [showPopup]);
 
   const filteredUsers = users
-  .map((item) => {
-    const mappedItem = {
-      reserves: item[1].reserves,
-      principal: item[0].toText(),
-      item,
-    };
-    return mappedItem;
-  })
-  .filter((mappedItem) => {
-    const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
-    return isValid;
-  });
+    .map((item) => {
+      const mappedItem = {
+        reserves: item[1].reserves,
+        principal: item[0].toText(),
+        item,
+      };
+      return mappedItem;
+    })
+    .filter((mappedItem) => {
+      const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
+      return isValid;
+    });
 
   return (
     <div className="w-full">
@@ -184,7 +185,7 @@ const DebtStatus = () => {
       </div>
 
       <div className="w-full min-h-[400px] mt-6 lg:px-10 ">
-      {filteredUsers.length === 0  ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
+        {filteredUsers.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>
@@ -249,7 +250,13 @@ const DebtStatus = () => {
                               return (
                                 <img
                                   key={index}
-                                  src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : ckUSDC}
+                                  src={
+                                    assetName === "ckBTC" ? ckBTC
+                                      : assetName === "ckETH" ? ckETH
+                                        : assetName === "ckUSDC" ? ckUSDC
+                                          : assetName === "ICP" ? icp
+                                            : undefined
+                                  }
                                   alt={assetName}
                                   className="rounded-[50%] w-7"
                                 />
@@ -274,7 +281,13 @@ const DebtStatus = () => {
                               return (
                                 <img
                                   key={index}
-                                  src={assetName === "ckBTC" ? ckBTC : assetName === "ckETH" ? ckETH : ckUSDC}
+                                  src={
+                                    assetName === "ckBTC" ? ckBTC 
+                                    : assetName === "ckETH" ? ckETH 
+                                    : assetName === "ckUSDC" ? ckUSDC 
+                                    : assetName === "ICP" ? icp 
+                                    : undefined
+                                  }
                                   alt={assetName}
                                   className="rounded-[50%] w-7"
                                 />

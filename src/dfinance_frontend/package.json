@@ -5,6 +5,7 @@
     "@dfinity/principal": "^0.15.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "cors": "^2.8.5",
     "lucide-react": "^0.367.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -40,5 +41,10 @@
     "test": "vitest run"
   },
   "type": "module",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "main": "postcss.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }

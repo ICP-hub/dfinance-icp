@@ -53,7 +53,7 @@ const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
     d_token_canister = item.d_token_canister ? item.d_token_canister[0] : "N/A";
     debt_token_canister = item.debt_token_canister ? item.debt_token_canister[0] : "N/A";
     total_borrowed = item.total_borrowed ? formatNumber(item.total_borrowed) : "0";
-    total_supplied = item.total_supplied ? formatNumber(item.total_supplied) : "0";
+    total_supplied = item.total_supplied ? formatNumber(item.total_supply) : "0";
   }
 
   return (
@@ -73,7 +73,7 @@ const SupplyInfo = ({ filteredItems, formatNumber, usdBalance, borrowCapUsd, sup
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5 mb-[1px]`}
             />
-            <p>  <span >{total_supplied}</span> of <span>{borrow_cap}</span></p>
+            <p>  <span >{total_supply}</span> of <span>{borrow_cap}</span></p>
             <p className="text-[11px]">${formatNumber(usdBalance)} of ${formatNumber(borrowCapUsd)}</p>
           </div>
 

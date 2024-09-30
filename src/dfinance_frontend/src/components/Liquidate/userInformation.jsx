@@ -225,9 +225,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
@@ -237,9 +237,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
@@ -248,9 +248,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
@@ -459,35 +459,32 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   }, [ckUSDCBalance, ckUSDCUsdRate]);
 
-  const pollInterval = 10000; // 10 seconds
+  const pollInterval = 10000;
 
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd"
-      );
+      const response = await fetch("http://localhost:5000/conversion-rates");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      const data = await response.json();
+      const text = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+        throw new Error("Response was not valid JSON");
+      }
+
       setCkBTCUsdRate(data.bitcoin.usd);
       setCkETHUsdRate(data.ethereum.usd);
       setCkUSDCUsdRate(data["usd-coin"].usd);
-      console.log(
-        "Fetched Conversion Rates - ckBTC:",
-        data.bitcoin.usd,
-        "ckETH:",
-        data.ethereum.usd,
-        "ckUSDC:",
-        data["usd-coin"].usd,
-        "ICP:",
-        data["internet-computer"].usd
-      );
+      setCkICPUsdRate(data["internet-computer"].usd);
     } catch (error) {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance]);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, pollInterval]);
 
   useEffect(() => {
     // Start polling at regular intervals
@@ -840,9 +837,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             {isCheckboxChecked ? (
               // Button for "Call Liquidation"
               <button
-                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 onClick={handleConfirmLiquidation}
                 disabled={isLoading} // Disable the button while loading
               >
@@ -877,8 +873,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               {isCollateralOverlay
                 ? "Collateral Information"
                 : isDebtInfo
-                ? "Debt Information"
-                : "User Information"}
+                  ? "Debt Information"
+                  : "User Information"}
             </h2>
             <button
               onClick={onClose}
@@ -926,15 +922,15 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     );
 
                     const rewardAmount = (amountToRepay * (liquidation_bonus / 100));
-                    
+
                     const assetBalance =
                       assetName === "ckBTC"
                         ? ckBTCBalance
                         : assetName === "ckETH"
-                        ? ckETHBalance
-                        : assetName === "ckUSDC"
-                        ? ckUSDCBalance
-                        : 0;
+                          ? ckETHBalance
+                          : assetName === "ckUSDC"
+                            ? ckUSDCBalance
+                            : 0;
 
                     if (assetSupply > 0) {
                       return (
@@ -957,8 +953,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                               assetName === "ckBTC"
                                 ? ckBTC
                                 : assetName === "ckETH"
-                                ? ckETH
-                                : ckUSDC
+                                  ? ckETH
+                                  : ckUSDC
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -1009,11 +1005,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
-                    isCollateralAssetSelected
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isCollateralAssetSelected
                       ? "opacity-100"
                       : "opacity-50 cursor-not-allowed"
-                  }`}
+                    }`}
                   onClick={() => {
                     console.log("Button clicked");
                     isApproved ? handleCallLiquidation() : handleApprove();
@@ -1080,8 +1075,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                               assetName === "ckBTC"
                                 ? ckBTC
                                 : assetName === "ckETH"
-                                ? ckETH
-                                : ckUSDC
+                                  ? ckETH
+                                  : ckUSDC
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -1119,13 +1114,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${
-                    isDebtAssetSelected && amountToRepay <= selectedAssetBalance
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
                       ? "opacity-100"
                       : "opacity-50 cursor-not-allowed"
-                  }`}
+                    }`}
                   onClick={handleNextClick}
-                  disabled={!isDebtAssetSelected}
+                  disabled={!isDebtAssetSelected || !(amountToRepay <= selectedAssetBalance)}
                 >
                   NEXT
                 </button>

@@ -398,27 +398,23 @@ const AssetDetails = () => {
   const pollInterval = 10000; // 10 seconds
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd"
-      );
+      const response = await fetch("http://localhost:5000/conversion-rates");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      const data = await response.json();
+      const text = await response.text();
+  
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+        throw new Error("Response was not valid JSON");
+      }
+  
       setCkBTCUsdRate(data.bitcoin.usd);
       setCkETHUsdRate(data.ethereum.usd);
       setCkUSDCUsdRate(data["usd-coin"].usd);
       setCkICPUsdRate(data["internet-computer"].usd);
-      // console.log(
-      //   "Fetched Conversion Rates - ckBTC:",
-      //   data.bitcoin.usd,
-      //   "ckETH:",
-      //   data.ethereum.usd,
-      //   "ckUSDC:",
-      //   data["usd-coin"].usd,
-      //   "ICP:",
-      //   data["internet-computer"].usd
-      // );
     } catch (error) {
       console.error("Error fetching conversion rates:", error);
       setError(error);

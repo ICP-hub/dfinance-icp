@@ -485,10 +485,10 @@ export default function Navbar({ isHomeNav }) {
 
             {isHomeNav ? (
               <div className="flex gap-2">
-                <div className=" text-nowrap">
+                <div className="text-nowrap">
                   {isMobile2 ? (
                     <div
-                      className="w-10 h-10 border-b-[0.3px] border-gray-400 dark:border-gray-600 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/90 dark:to-[#81198E]/90 flex items-center justify-center rounded-lg shadow-[#00000040] shadow-sm cursor-pointer mr-1"
+                      className="w-10 h-10 border-b-[0.3px] border-gray-400 dark:border-gray-600 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/90 dark:to-[#81198E]/90 flex items-center justify-center rounded-lg shadow-[#00000040] shadow-sm cursor-pointer mr-1 button1"
                       onClick={handleLaunchApp}
                     >
                       <IoIosRocket color="white" size={28} />
@@ -521,7 +521,7 @@ export default function Navbar({ isHomeNav }) {
               <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
                 <div className="my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
                   <div
-                    className="flex items-center gap-1 py-[11px] px-3 md:py-[10px] button"
+                    className="flex items-center gap-1 py-[11px] px-3 md:py-[10px] button1"
                     onClick={handleSwitchToken}
                   >
                     <span className="hidden lg1:flex">Switch Token</span>
@@ -770,7 +770,7 @@ export default function Navbar({ isHomeNav }) {
                 </div>
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                   {!isMobile2 && <div
-                    className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden button"
+                    className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden button1"
                     onClick={handleSwitchWallet}
                   >
                     <img
@@ -807,7 +807,7 @@ export default function Navbar({ isHomeNav }) {
                           <div className="w-full flex flex-col lg1:flex-row justify-center mt-3  gap-3">
                             <Button
                               title="Switch Wallet"
-                              className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
+                              className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2"
                               onClickHandler={switchWallet}
 
                             />
@@ -874,14 +874,14 @@ export default function Navbar({ isHomeNav }) {
                                 style={{ height: "70px", width: "160px" }}
                               >
                                 <button
-                                  className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary"
+                                  className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary button1"
                                   onClick={copyToClipboard}
                                 >
                                   <GrCopy className="h-5 w-4 ml-3 lg1:ml-0" />
                                   <span className="ml-1">Copy principal</span>
                                 </button>
                                 <button
-                                  className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday"
+                                  className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday button1"
                                   onClick={handleViewOnExplorerClick}
                                 >
                                   <CiShare1 className="h-5 w-[18px] -ml-1 dark:text-darkText " />
@@ -903,7 +903,7 @@ export default function Navbar({ isHomeNav }) {
                       <img
                         src={settingsIcon}
                         alt="settings_icon"
-                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1  button"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1  button1"
                         onClick={handleDropdownToggle}
                       />
                     )}
@@ -997,7 +997,7 @@ export default function Navbar({ isHomeNav }) {
                       <img
                         src={settingsIcon}
                         alt="settings_icon"
-                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1 button"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1 button1"
                         onClick={handleDropdownToggle}
                       />
                     ) : (

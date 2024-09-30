@@ -101,121 +101,49 @@ const SupplyPopup = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        let coinId;
-
+        const response = await fetch('http://localhost:5000/conversion-rates'); 
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch conversion rates from server');
+        }
+  
+        const data = await response.json();
+  
+        let rate;
         switch (asset) {
           case "ckBTC":
-            coinId = {
-              coingecko: "bitcoin",
-              coincap: "bitcoin",
-              coinapi: "BTC",
-              cryptocompare: "BTC",
-              nomics: "BTC"
-            };
+            rate = data.bitcoin?.usd;
             break;
           case "ckETH":
-            coinId = {
-              coingecko: "ethereum",
-              coincap: "ethereum",
-              coinapi: "ETH",
-              cryptocompare: "ETH",
-              nomics: "ETH"
-            };
+            rate = data.ethereum?.usd;
             break;
           case "ckUSDC":
-            coinId = {
-              coingecko: "usd-coin",
-              coincap: "usd-coin",
-              coinapi: "USDC",
-              cryptocompare: "USDC",
-              nomics: "USDC"
-            };
+            rate = data['usd-coin']?.usd;
             break;
           case "ckICP":
-            coinId = {
-              coingecko: "internet-computer",
-              coincap: "internet-computer",
-              coinapi: "ICP",
-              cryptocompare: "ICP",
-              nomics: "ICP"
-            };
+            rate = data['internet-computer']?.usd;
             break;
           default:
             console.error(`Unsupported asset: ${asset}`);
             return;
         }
-
-        const apiEndpoints = [
-          {
-            name: 'CoinGecko',
-            url: `https://api.coingecko.com/api/v3/simple/price?ids=${coinId.coingecko}&vs_currencies=usd`,
-            extractRate: (data) => data[coinId.coingecko]?.usd,
-          },
-          {
-            name: 'CoinCap',
-            url: `https://api.coincap.io/v2/assets/${coinId.coincap}`,
-            extractRate: (data) => data.data?.priceUsd,
-          },
-          {
-            name: 'CoinAPI',
-            url: `https://rest.coinapi.io/v1/exchangerate/${coinId.coinapi}/USD`,
-            headers: { 'X-CoinAPI-Key': 'YOUR_COINAPI_KEY' }, // Use your CoinAPI key here
-            extractRate: (data) => data?.rate,
-          },
-          {
-            name: 'CryptoCompare',
-            url: `https://min-api.cryptocompare.com/data/price?fsym=${coinId.cryptocompare}&tsyms=USD`,
-            extractRate: (data) => data?.USD,
-          },
-          {
-            name: 'Nomics',
-            url: `https://api.nomics.com/v1/currencies/ticker?key=YOUR_NOMICS_KEY&ids=${coinId.nomics}&convert=USD`,
-            extractRate: (data) => data[0]?.price,
-          }
-        ];
-
-        const tryMultipleApis = async (apiList) => {
-          for (const api of apiList) {
-            try {
-              const response = await fetch(api.url, {
-                headers: api.headers || {},
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                const rate = api.extractRate(data);
-
-                if (rate) {
-                  console.log(`${api.name} rate for ${asset}:`, rate);
-                  return rate;
-                }
-              } else {
-                console.error(`${api.name} failed:`, response.statusText);
-              }
-            } catch (error) {
-              console.error(`${api.name} error:`, error.message);
-            }
-          }
-          throw new Error("All API requests failed.");
-        };
-
-        const rate = await tryMultipleApis(apiEndpoints);
-
         if (rate) {
+          console.log(`Rate for ${asset}:`, rate);
           setConversionRate(rate);
         } else {
           console.error("Conversion rate not found for asset:", asset);
         }
-
+  
       } catch (error) {
-        console.error("Error fetching conversion rate:", error.message);
+        console.error("Error fetching conversion rate from server:", error.message);
       }
     };
-
+  
     if (asset) {
       fetchConversionRate();
     }
   }, [asset]);
+  
 
 
   useEffect(() => {
@@ -717,7 +645,7 @@ const SupplyPopup = ({
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end"
+              className="text-gray-400 focus:outline-none self-end button1"
             >
               <X size={24} />
             </button>

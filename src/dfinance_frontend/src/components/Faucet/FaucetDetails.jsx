@@ -4,39 +4,33 @@ import { useSelector } from "react-redux";
 import Button from "../Common/Button";
 import { FAUCET_ASSETS_TABLE_ROW, FAUCET_ASSETS_TABLE_COL } from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
-import FaucetPopup from "./FaucetPopup"; // Import your FaucetPopup component here
+import FaucetPopup from "./FaucetPopup";
 import Pagination from "../Common/pagination";
 import useAssetData from "../Common/useAssets";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import cekTH from '../../../public/assests-icon/cekTH.png';
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
 import { useAuth } from "../../utils/useAuthClient";
 import { useEffect } from "react";
-import {idlFactory as ledgerIdlFactoryckETH} from "../../../../declarations/cketh_ledger";
-import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../declarations/ckbtc_ledger";
-
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 
-const ITEMS_PER_PAGE = 8; // Number of items per page
+const ITEMS_PER_PAGE = 8; 
 
 const FaucetDetails = () => {
   const {
     isAuthenticated,
-    login,
-    logout,
-    updateClient,
-    authClient,
-    identity,
     principal,
     backendActor,
-    accountId,
     createLedgerActor,
-    reloadLogin,
-    accountIdString,
   } = useAuth()
+
   const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,7 +41,6 @@ const FaucetDetails = () => {
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
-
 
   const [ckICPBalance, setCkICPBalance] = useState(null);
   const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
@@ -69,10 +62,10 @@ const FaucetDetails = () => {
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            console.log(`get_asset_principle (${asset}):`, result);
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -89,9 +82,9 @@ const FaucetDetails = () => {
     fetchAssetPrinciple();
   }, [principal, backendActor]);
 
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
+  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
+  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
+  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
 
 
   const getAssetPrinciple = async (asset) => {
@@ -110,10 +103,13 @@ const FaucetDetails = () => {
         case "ckUSDC":
           result = await backendActor.get_asset_principal("ckUSDC");
           break;
+        case "ICP":
+          result = await backendActor.get_asset_principal("ICP");
+          break;
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -155,11 +151,17 @@ const FaucetDetails = () => {
     [createLedgerActor, assetPrincipal.ckUSDC]
   );
 
-  console.log("ckBTC ledger", ledgerActorckBTC)
-  console.log("ckUSDC ledger", ledgerActorckUSDC)
-  console.log("ckETH ledger", ledgerActorckETH)
+  const ledgerActorICP = useMemo(
+    () =>
+      assetPrincipal.ICP
+        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
+        : null,
+    [createLedgerActor, assetPrincipal.ICP]
+  );
 
-
+  // console.log("ckBTC ledger", ledgerActorckBTC)
+  // console.log("ckUSDC ledger", ledgerActorckUSDC)
+  // console.log("ckETH ledger", ledgerActorckETH)
 
   const fetchBalance = useCallback(
     async (assetType) => {
@@ -189,23 +191,32 @@ const FaucetDetails = () => {
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
             setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
-          } else {
+          }
+          else if (assetType === "ICP") {
+            if (!ledgerActorICP) {
+              console.warn("Ledger actor for ICP not initialized yet");
+              return;
+            }
+            balance = await ledgerActorICP.icrc1_balance_of(account);
+            setCkICPBalance(balance.toString()); // Set ICP balance
+          }
+          else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
           }
-          console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
         }
       }
     },
-    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj] 
+    [isAuthenticated, ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC, principalObj]
   );
 
 
-  console.log("ckusdc balance", ckUSDCBalance)
+  // console.log("ckusdc balance", ckUSDCBalance)
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
@@ -241,32 +252,29 @@ const FaucetDetails = () => {
 
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd"
-      );
+      const response = await fetch("http://localhost:5000/conversion-rates");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      const data = await response.json();
+
+      const text = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+        throw new Error("Response was not valid JSON");
+      }
+
       setCkBTCUsdRate(data.bitcoin.usd);
       setCkETHUsdRate(data.ethereum.usd);
       setCkUSDCUsdRate(data["usd-coin"].usd);
       setCkICPUsdRate(data["internet-computer"].usd);
-      console.log(
-        "Fetched Conversion Rates - ckBTC:",
-        data.bitcoin.usd,
-        "ckETH:",
-        data.ethereum.usd,
-        "ckUSDC:",
-        data["usd-coin"].usd,
-        "ICP:",
-        data["internet-computer"].usd
-      );
     } catch (error) {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance]);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, pollInterval]);
 
   useEffect(() => {
     // Start polling at regular intervals
@@ -283,10 +291,11 @@ const FaucetDetails = () => {
       setLoading(true);
       try {
         await Promise.all([
-          fetchBalance('ckBTC'),
-          fetchBalance('ckETH'),
-          fetchBalance('ckUSDC'),
-          fetchConversionRate()  // Fetch ckBTC and ckETH rates
+          fetchBalance("ckBTC"),
+          fetchBalance("ckETH"),
+          fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
+          fetchConversionRate(), // Fetch ckBTC and ckETH rates
         ]);
       } catch (error) {
         setError(error);
@@ -322,6 +331,9 @@ const FaucetDetails = () => {
       case "ckUSDC":
         assetImage = ckUSDC;
         break;
+      case "ICP":
+        assetImage = icp;
+        break;
       default:
         assetImage = null;
     }
@@ -333,7 +345,7 @@ const FaucetDetails = () => {
     setShowPopup(false);
   };
 
-  const {filteredItems} = useAssetData();
+  const { filteredItems } = useAssetData();
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
@@ -369,7 +381,7 @@ const FaucetDetails = () => {
       <div className="w-full flex items-center px-6 mt-4 md:px-9">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Test Assets</h1>
       </div>
-  
+
       <div className="w-full mt-9 p-0 lg:px-9">
         {currentItems.length === 0 ? (
           <div className="mt-[50px] flex flex-col justify-center align-center place-items-center ">
@@ -396,9 +408,8 @@ const FaucetDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${
-                        index !== currentItems.length - 1 ? "gradient-line-bottom" : ""
-                      }`}
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""
+                        }`}
                     >
                       <td className="p-3 align-center py-7">
                         <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
@@ -410,6 +421,9 @@ const FaucetDetails = () => {
                           )}
                           {item[0] === "ckUSDC" && (
                             <img src={ckUSDC} alt="cketh logo" className="w-8 h-8 rounded-full mr-2" />
+                          )}
+                          {item[0] === "ICP" && (
+                            <img src={icp} alt="cketh logo" className="w-8 h-8 rounded-full mr-2" />
                           )}
                           {item[0]}
                         </div>
@@ -436,6 +450,14 @@ const FaucetDetails = () => {
                                   <p className="font-light text-left text-[11px]">${formatNumber(ckUSDCUsdBalance)}</p>
                                 </>
                               )}
+                               {item[0] === "ICP" && (
+                                  <>
+                                    <p>{ckICPBalance}</p>
+                                    <p className="font-light">
+                                      ${formatNumber(ckICPUsdBalance)}
+                                    </p>
+                                  </>
+                                )}
                             </center>
                           </div>
                         </div>
@@ -484,7 +506,7 @@ const FaucetDetails = () => {
             </div>
           </>
         )}
-  
+
         {showPopup && (
           <div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-gray-800 opacity-50" />
@@ -499,7 +521,6 @@ const FaucetDetails = () => {
       </div>
     </div>
   );
-  
+
 }
-  export default FaucetDetails;
-  
+export default FaucetDetails;

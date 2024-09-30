@@ -51,123 +51,41 @@ const WithdrawPopup = ({ asset,
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        let coinId;
+        const response = await fetch('http://localhost:5000/conversion-rates');
 
-        // Map asset to coin IDs for each API
+        if (!response.ok) {
+          throw new Error('Failed to fetch conversion rates from server');
+        }
+
+        const data = await response.json();
+
+        let rate;
         switch (asset) {
           case "ckBTC":
-            coinId = {
-              coingecko: "bitcoin",
-              coincap: "bitcoin",
-              coinapi: "BTC",
-              cryptocompare: "BTC",
-              nomics: "BTC"
-            };
+            rate = data.bitcoin?.usd;
             break;
           case "ckETH":
-            coinId = {
-              coingecko: "ethereum",
-              coincap: "ethereum",
-              coinapi: "ETH",
-              cryptocompare: "ETH",
-              nomics: "ETH"
-            };
+            rate = data.ethereum?.usd;
             break;
           case "ckUSDC":
-            coinId = {
-              coingecko: "usd-coin",
-              coincap: "usd-coin",
-              coinapi: "USDC",
-              cryptocompare: "USDC",
-              nomics: "USDC"
-            };
+            rate = data['usd-coin']?.usd;
             break;
           case "ckICP":
-            coinId = {
-              coingecko: "internet-computer",
-              coincap: "internet-computer",
-              coinapi: "ICP",
-              cryptocompare: "ICP",
-              nomics: "ICP"
-            };
+            rate = data['internet-computer']?.usd;
             break;
           default:
             console.error(`Unsupported asset: ${asset}`);
             return;
         }
-
-        // API Endpoints and Fetch Functions
-        const apiEndpoints = [
-          // CoinGecko
-          {
-            name: 'CoinGecko',
-            url: `https://api.coingecko.com/api/v3/simple/price?ids=${coinId.coingecko}&vs_currencies=usd`,
-            extractRate: (data) => data[coinId.coingecko]?.usd,
-          },
-          // CoinCap
-          {
-            name: 'CoinCap',
-            url: `https://api.coincap.io/v2/assets/${coinId.coincap}`,
-            extractRate: (data) => data.data?.priceUsd,
-          },
-          // CoinAPI
-          {
-            name: 'CoinAPI',
-            url: `https://rest.coinapi.io/v1/exchangerate/${coinId.coinapi}/USD`,
-            headers: { 'X-CoinAPI-Key': 'YOUR_COINAPI_KEY' }, // Use your CoinAPI key here
-            extractRate: (data) => data?.rate,
-          },
-          // CryptoCompare
-          {
-            name: 'CryptoCompare',
-            url: `https://min-api.cryptocompare.com/data/price?fsym=${coinId.cryptocompare}&tsyms=USD`,
-            extractRate: (data) => data?.USD,
-          },
-          // Nomics
-          {
-            name: 'Nomics',
-            url: `https://api.nomics.com/v1/currencies/ticker?key=YOUR_NOMICS_KEY&ids=${coinId.nomics}&convert=USD`,
-            extractRate: (data) => data[0]?.price,
-          }
-        ];
-
-        // Function to attempt fetching from multiple APIs
-        const tryMultipleApis = async (apiList) => {
-          for (const api of apiList) {
-            try {
-              const response = await fetch(api.url, {
-                headers: api.headers || {},
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                const rate = api.extractRate(data);
-
-                if (rate) {
-                  console.log(`${api.name} rate for ${asset}:`, rate);
-                  return rate;
-                }
-              } else {
-                console.error(`${api.name} failed:`, response.statusText);
-              }
-            } catch (error) {
-              console.error(`${api.name} error:`, error.message);
-            }
-          }
-          throw new Error("All API requests failed.");
-        };
-
-        // Fetch the rate from any available API
-        const rate = await tryMultipleApis(apiEndpoints);
-
         if (rate) {
+          console.log(`Rate for ${asset}:`, rate);
           setConversionRate(rate);
         } else {
           console.error("Conversion rate not found for asset:", asset);
         }
 
       } catch (error) {
-        console.error("Error fetching conversion rate:", error.message);
+        console.error("Error fetching conversion rate from server:", error.message);
       }
     };
 
@@ -374,7 +292,7 @@ const WithdrawPopup = ({ asset,
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(healthFactor.toFixed(2));
 
-    if (healthFactor <= 1|| ltv>=liquidationThreshold ) {
+    if (healthFactor <= 1 || ltv >= liquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -526,16 +444,16 @@ const WithdrawPopup = ({ asset,
                 <div className="w-full flex justify-between items-center">
                   <p>Health Factor</p>
                   <p>
-                  <span className={`${healthFactorBackend > 3
-                          ? "text-green-500"
-                          : healthFactorBackend <= 1
-                            ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                              ? "text-orange-600"
-                              : healthFactorBackend <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                        }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
+                    <span className={`${healthFactorBackend > 3
+                      ? "text-green-500"
+                      : healthFactorBackend <= 1
+                        ? "text-red-500"
+                        : healthFactorBackend <= 1.5
+                          ? "text-orange-600"
+                          : healthFactorBackend <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                      }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
                     <span className="text-gray-500 mx-1">→</span>
                     <span
                       className={`${currentHealthFactor > 3

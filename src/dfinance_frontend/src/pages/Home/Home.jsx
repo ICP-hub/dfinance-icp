@@ -151,6 +151,7 @@ const Home = () => {
                     label={item.title}
                     disableRipple={true}
                     disableFocusRipple={true}
+                    className="button1"
                     sx={{
                       textTransform: "capitalize",
                       fontStyle: "normal",

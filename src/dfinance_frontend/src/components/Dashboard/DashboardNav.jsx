@@ -122,17 +122,23 @@ const DashboardNav = () => {
   const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
   const [error, setError] = useState(null);
 
+  const pollInterval = 10000;
+
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,usd-coin,internet-computer&vs_currencies=usd"
-      );
+      const response = await fetch("http://localhost:5000/conversion-rates");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      const data = await response.json();
+      const text = await response.text();
 
-      // Set the conversion rates for all assets
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+        throw new Error("Response was not valid JSON");
+      }
+
       setCkBTCUsdRate(data.bitcoin.usd);
       setCkETHUsdRate(data.ethereum.usd);
       setCkUSDCUsdRate(data["usd-coin"].usd);
@@ -141,13 +147,17 @@ const DashboardNav = () => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, []);
+  }, [pollInterval]);
 
   useEffect(() => {
-    fetchConversionRate();
+    const intervalId = setInterval(() => {
+      fetchConversionRate();
+    }, pollInterval);
+
+    return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
-  // Function to get conversion rate based on asset
+ 
   const getConversionRate = (asset) => {
     switch (asset) {
       case "ckBTC":
@@ -174,9 +184,6 @@ const DashboardNav = () => {
   const calculateNetSupplyApy = (reserves) => {
     let totalSuppliedInUSD = 0;
     let weightedApySum = 0;
-
-    // const asset_price_when_supplied1 = 60850
-    // const supply_apy1
     reserves.forEach((reserve) => {
       console.log("conversionrateCall", getConversionRate(reserve[0]), "asset_supply", reserve[0])
       const assetSupplyInUSD = reserve[1]?.asset_supply * getConversionRate(reserve[0]);
@@ -185,10 +192,9 @@ const DashboardNav = () => {
     });
 
     const netApy = totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
-    return netApy * 100; // Return APY as percentage (no need for toFixed here)
+    return netApy * 100; 
   };
 
-  // Function to calculate Net Debt APY
   const calculateNetDebtApy = (reserves) => {
     let totalBorrowedInUSD = 0;
     let weightedDebtApySum = 0;
@@ -200,10 +206,10 @@ const DashboardNav = () => {
     });
 
     const netDebtApy = totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
-    return netDebtApy * 100; // Return APY as percentage (no need for toFixed here)
+    return netDebtApy * 100; 
   };
 
-  // Function to calculate Net APY
+ 
   const calculateNetApy = (reserves) => {
     const supplyApy = calculateNetSupplyApy(reserves);
     const debtApy = calculateNetDebtApy(reserves);
@@ -354,7 +360,7 @@ const DashboardNav = () => {
         </h1>
 
         <div className="md:hidden flex ml-auto -mt-1">
-          <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
+          <button onClick={toggleMenu} className="p-4 mt-4 rounded-md button1">
             <EllipsisVertical color={checkColor} size={18} />
           </button>
         </div>
@@ -382,7 +388,7 @@ const DashboardNav = () => {
                         className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                         style={{ minWidth: "220px", flex: "1 0 220px" }}
                       >
-                        <button className="relative w-full text-left flex justify-between items-center">
+                        <button className="relative w-full text-left flex justify-between items-center button1">
                           <span>{data.title}</span>
                           <span className="font-bold">{data.count}</span>
                           <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
@@ -412,7 +418,7 @@ const DashboardNav = () => {
                 : walletDetailTabs
               ).map((data, index) => (
                 <div key={index} className="relative group">
-                  <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80">
+                  <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80 button1">
                     {data.title}
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                     <span className="absolute top-full mt-1 left-0 font-bold py-1 opacity-100 transition-opacity text-[20px] text-[#2A1F9D] dark:text-darkBlue dark:opacity-100">
@@ -423,7 +429,7 @@ const DashboardNav = () => {
               ))}
             {isAuthenticated && shouldRenderRiskDetailsButton && (
               <button
-                className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md font-normal dark:text-darkTextSecondary"
+                className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md font-normal dark:text-darkTextSecondary button1"
                 onClick={handleOpenPopup}
               >
                 Risk Details

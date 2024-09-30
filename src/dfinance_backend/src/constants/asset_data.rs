@@ -182,6 +182,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     let icp_principal = create_testtoken_canister("ICP", "ICP").await;;
     let dicp=create_token_canister("dICP", "dICP").await;
     let debticp=create_token_canister("debtICP", "debtICP").await;
+
     assets.insert("ICP", (
         icp_principal,
         ReserveData {

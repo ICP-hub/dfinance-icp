@@ -325,16 +325,12 @@ input[type='number'] {
   }
 }
 
-a, input, button, .button, input{
+a, input, button, .button1,.button2, input{
   transition: all 400ms !important;
 }
-a, button, .button, img, svg{
+a, button, .button1, img, svg{
   user-select: none;
 }
-
-// input:hover{
-//   transform: scale(0.96);
-// }
 
 input:active{
   transform: scale(0.8);
@@ -344,14 +340,29 @@ a:hover{
   transform: scale(0.95);
 }
 
-button:hover, .button:hover{
+button:hover{
   transform: scale(0.96);
-  opacity: 0.5;
+  background: linear-gradient(45deg, #e59792, #0642a9);
+  border-radius: 8px;
+}
+
+.button1:hover{
+  transform: scale(0.96);
+  background: none;
+}
+.button2:hover{
+  transform: scale(0.96);
+  background: none;
+  color:gray;
 }
 a:active{
   transform: scale(0.9);
 }
-button:active, .button:active{
+button:active{
+  transform: scale(0.9);
+}
+
+.button1:active{
   transform: scale(0.9);
 }
 

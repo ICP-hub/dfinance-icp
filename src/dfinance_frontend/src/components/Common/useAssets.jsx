@@ -38,8 +38,8 @@ const useAssetData = (searchQuery = '') => {
       try {
         const data = {};
         let totalMarketSizeTemp = 0;
-        let totalSupplies = 0
-        let totalBorrowes = 0;
+        let totalSupplies = parseInt(0);
+        let totalBorrowes = parseFloat(0.0);
 
         for (const asset of assets) {
           const reserveDataForAsset = await fetchReserveData(asset);
@@ -48,13 +48,14 @@ const useAssetData = (searchQuery = '') => {
           const supplyCap = parseFloat(reserveDataForAsset.Ok.configuration.supply_cap);
           const totalSupply = parseFloat(reserveDataForAsset.Ok.total_supply);
           const totalBorrow = parseFloat(reserveDataForAsset.Ok.total_borrowed);
-          // console.log("supplyCap", supplyCap)
-          // console.log("TotalSupplies", totalSupply)
+          console.log("supplyCap", supplyCap)
+          console.log("TotalSupplies", totalSupply)
+          console.log("TotalBorrow", totalBorrow)
           totalMarketSizeTemp += supplyCap;
-          totalSupplies += totalSupply;
+          totalSupplies += parseInt(totalSupply);
           totalBorrowes +=totalBorrow
         }
-
+        console.log("TotalSupplies ::", totalSupplies);
         // console.log("All reserve data before setting state:", data);
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));

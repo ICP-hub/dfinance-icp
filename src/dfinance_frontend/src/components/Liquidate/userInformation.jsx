@@ -17,7 +17,12 @@ import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
-  const { isAuthenticated, createLedgerActor, backendActor, principal: currentUserPrincipal } = useAuth();
+  const {
+    isAuthenticated,
+    createLedgerActor,
+    backendActor,
+    principal: currentUserPrincipal,
+  } = useAuth();
 
   console.log("mappeditems", mappedItem);
   const [rewardAmount, setRewardAmount] = useState(10);
@@ -134,12 +139,15 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   };
   const [amountBorrowUSD, setAmountBorrowUSD] = useState(null);
+  const [selectedAssetSupply, setSelectedAssetSupply] = useState(null);
 
   const [isCollateralAssetSelected, setIsCollateralAssetSelected] =
     useState(false);
-  const handleAssetSelection = (asset) => {
+  const handleAssetSelection = (asset, assetBorrowAmountInUSD, assetSupply) => {
     setIsCollateralAssetSelected(true);
-    setSelectedAsset(asset); // Set the selected asset (only one at a time)
+    setSelectedAsset(asset);
+    // Set the selected asset (only one at a time)
+    setSelectedAssetSupply(assetSupply);
     const assetRewardAmounts = {
       cketh: 0.003256,
       ckbtc: 0.001025,
@@ -148,6 +156,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
     setRewardAmount(assetRewardAmounts[asset] || 10);
   };
+  console.log("selectedAsstSUplly", selectedAssetSupply);
 
   const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
 
@@ -731,12 +740,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     supply_cap = item.configuration.supply_cap || "0";
     borrow_cap = formatNumber(item.configuration.borrow_cap?.toString()) || "0";
     ltv = item.configuration.ltv?.toString() || "0";
-    liquidation_threshold =
-      item.configuration.liquidation_threshold || "0";
+    liquidation_threshold = item.configuration.liquidation_threshold || "0";
     liquidation_bonus = item.configuration.liquidation_bonus || "0";
-    supply_rate_apr = item.supply_rate_apr
-      ? item.supply_rate_apr[0]
-      : "0";
+    supply_rate_apr = item.supply_rate_apr ? item.supply_rate_apr[0] : "0";
     total_supply = item.total_supply ? formatNumber(item.total_supply) : "0";
     current_liquidity_rate = item.current_liquidity_rate || "0";
     liquidity_index = item.liquidity_index?.toString() || "0";
@@ -860,9 +866,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             )}
 
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
-                {/* Centered Loader with Tailwind animation */}
-                <div className="loader border-t-transparent border-solid rounded-full animate-spin border-white border-4 h-8 w-8"></div>
+              <div
+                className="fixed inset-0 flex items-center justify-center z-50"
+                style={{
+                  background: "rgba(0, 0, 0, 0.4)", // Dim background
+                  backdropFilter: "blur(1px)", // Blur effect
+                }}
+              >
+                <div className="loader"></div>
               </div>
             )}
           </div>
@@ -944,7 +955,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                             onChange={() =>
                               handleAssetSelection(
                                 assetName,
-                                assetBorrowAmountInUSD
+                                assetBorrowAmountInUSD,
+                                assetSupply
                               )
                             }
                           />
@@ -1006,24 +1018,40 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
-                    isCollateralAssetSelected
-                      ? "opacity-100"
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm  px-6 py-2 relative ${
+                    isCollateralAssetSelected &&
+                    amountToRepay + amountToRepay * (liquidation_bonus / 100) <
+                      selectedAssetSupply
+                      ? "opacity-100 cursor-pointer"
                       : "opacity-50 cursor-not-allowed"
                   }`}
                   onClick={() => {
                     console.log("Button clicked");
                     isApproved ? handleCallLiquidation() : handleApprove();
                   }}
-                  disabled={isLoading || !isCollateralAssetSelected}
+                  disabled={
+                    isLoading ||
+                    !isCollateralAssetSelected ||
+                    !(
+                      amountToRepay +
+                        amountToRepay * (liquidation_bonus / 100) <
+                      selectedAssetSupply
+                    )
+                  }
                 >
                   {isApproved
                     ? `Call Liquidation ${selectedDebtAsset}`
                     : `Approve ${selectedDebtAsset} to continue`}
                 </button>
                 {isLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center z-50 bg-gray-500 bg-opacity-50">
-                    <div className="loader"></div> {/* Loader here */}
+                  <div
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    style={{
+                      background: "rgba(0, 0, 0, 0.4)", // Dim background
+                      backdropFilter: "blur(1px)", // Blur effect
+                    }}
+                  >
+                    <div className="loader"></div>
                   </div>
                 )}
               </div>
@@ -1122,7 +1150,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       : "opacity-50 cursor-not-allowed"
                   }`}
                   onClick={handleNextClick}
-                  disabled={!isDebtAssetSelected}
+                  disabled={
+                    !isDebtAssetSelected ||
+                    !(amountToRepay <= selectedAssetBalance)
+                  }
                 >
                   NEXT
                 </button>

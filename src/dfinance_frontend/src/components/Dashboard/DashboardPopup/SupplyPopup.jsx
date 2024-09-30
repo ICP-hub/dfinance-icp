@@ -699,16 +699,16 @@ const SupplyPopup = ({
 
           {/* Fullscreen Loading Overlay with Dim Background */}
           {isLoading && (
-            <div
-              className="absolute inset-0 flex items-center justify-center z-50"
-              style={{
-                background: "rgba(0, 0, 0, 0.4)", // Dim background
-                backdropFilter: "blur(1px)", // Blur effect
-              }}
-            >
-              <div className="loader"></div>
-            </div>
-          )}
+                <div
+                  className="fixed inset-0 flex items-center justify-center z-50"
+                  style={{
+                    background: "rgba(0, 0, 0, 0.4)", // Dim background
+                    backdropFilter: "blur(1px)", // Blur effect
+                  }}
+                >
+                  <div className="loader"></div>
+                </div>
+              )}
         </div>
       )}
 

@@ -1,5 +1,4 @@
 import React from 'react'
-import LineGraph from '../../Common/LineGraph'
 import { Zap } from 'lucide-react'
 
 const EModeInfo = () => {

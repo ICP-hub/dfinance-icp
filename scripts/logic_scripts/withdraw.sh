@@ -2,10 +2,12 @@
 
 set -e
 
+source ../../.env
+
 # Set variables
-ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"
-debt_canister="cuj6u-c4aaa-aaaaa-qaajq-cai"
+ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
+debt_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
 dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
 reserve_data_method="get_reserve_data"
 
@@ -33,7 +35,7 @@ on_behalf_of=null
 
 # Call the withdraw function
 echo "Withdrawing $amount of ckbtc..."
-withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckbtc\", $amount:nat, ${on_behalf_of}, $collateral:bool)")
+withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckBTC\", $amount:nat, ${on_behalf_of}, $collateral:bool)")
 echo "Withdraw Execution Result: $withdraw"
 
 # Fetch and display balances after withdraw
@@ -48,6 +50,10 @@ echo "--------------------------------------"
 
 # Fetching reserve data after withdraw
 echo "Fetching reserve data after withdraw..."
-reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"ckbtc\")")
+reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"ckBTC\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
+
+echo "Fetching user data..."
+user_data=$(../integration_scripts/user_data.sh)
+echo "user data: $user_data"

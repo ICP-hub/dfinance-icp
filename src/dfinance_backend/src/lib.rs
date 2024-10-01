@@ -1,4 +1,3 @@
-use candid::Nat;
 use candid::Principal;
 use declarations::assets::{
     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
@@ -6,22 +5,21 @@ use declarations::assets::{
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
+use candid::Nat;
 mod api;
 mod constants;
-mod declarations;
+pub mod declarations;
 mod dynamic_canister;
 mod guards;
 mod implementations;
 mod memory;
 mod protocol;
 mod state;
-mod tests;
-mod utils;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
-// use crate::implementations::reserve::initialize_reserve;
 use crate::protocol::libraries::logic::borrow;
+use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
 
@@ -31,31 +29,13 @@ fn init() {
     ic_cdk::println!("function called");
 }
 
-#[update]
-fn initialize_reserve_list(ledger_tokens: Vec<(String, Principal)>) -> Result<(), String> {
-    ic_cdk::println!("Initialize reserve list function called");
-
-    mutate_state(|state| {
-        for (token_name, principal) in ledger_tokens {
-            state.reserve_list.insert(token_name.to_string(), principal);
-        }
-        Ok(())
-    })
-}
-
 // Function to call the execute_supply logic
 #[update]
-async fn deposit(
-    asset: String,
-    amount: u64,
-    on_behalf_of: String,
-    is_collateral: bool,
-) -> Result<(), String> {
+async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), String> {
     ic_cdk::println!("Starting deposit function");
     let params = ExecuteSupplyParams {
         asset,
         amount: amount as u128,
-        on_behalf_of,
         is_collateral,
     };
     ic_cdk::println!("Parameters for execute_supply: {:?}", params);
@@ -71,6 +51,31 @@ async fn deposit(
     }
 }
 
+#[update]
+async fn liquidation_call(
+    asset: String,
+    collateral_asset: String,
+    amount: u64,
+    on_behalf_of: String,
+) -> Result<(), String> {
+    match LiquidationLogic::execute_liquidation(
+        asset,
+        collateral_asset,
+        amount as u128,
+        on_behalf_of,
+    )
+    .await
+    {
+        Ok(_) => {
+            ic_cdk::println!("execute_liquidation function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
+            Err(e)
+        }
+    }
+}
 // Function to fetch the reserve-data based on the asset
 #[query]
 fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
@@ -85,20 +90,11 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
 
 // Function to call the execute_borrow logic
 #[update]
-async fn borrow(
-    asset: String,
-    amount: u64,
-    user: String,
-    on_behalf_of: String,
-    interest_rate: Nat,
-) -> Result<(), String> {
+async fn borrow(asset: String, amount: u64) -> Result<(), String> {
     ic_cdk::println!("Starting borrow function");
     let params = ExecuteBorrowParams {
         asset,
-        user,
-        on_behalf_of,
         amount: amount as u128,
-        interest_rate,
     };
     ic_cdk::println!("Parameters for execute_borrow: {:?}", params);
 
@@ -144,6 +140,16 @@ pub fn get_all_assets() -> Vec<String> {
             asset_names.push(key.clone());
         }
         asset_names
+    })
+}
+
+#[query]
+pub fn get_asset_principal(asset_name: String) -> Result<Principal, String> {
+    read_state(|state| {
+        match state.reserve_list.get(&asset_name) {
+            Some(principal) => Ok(principal),
+            None => Err(format!("No principal found for asset: {}", asset_name)),
+        }
     })
 }
 
@@ -204,7 +210,7 @@ async fn repay(asset: String, amount: u128, on_behalf: Option<String>) -> Result
 
 // Withdraws amount from the collateral/supply
 #[update]
-async fn withdraw(
+pub async fn withdraw(
     asset: String,
     amount: u128,
     on_behalf: Option<String>,

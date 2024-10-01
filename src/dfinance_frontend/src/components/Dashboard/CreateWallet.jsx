@@ -7,45 +7,32 @@ import {
     setWalletModalOpen,
     setConnectedWallet
 } from '../../redux/reducers/utilityReducer'
-
 import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/element/Elements.svg"
 import MySupply from './MySupply'
 import icplogo from '../../../public/wallet/icp.png'
-import plug from "../../../public/wallet/plug.png"
-import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
 import { Principal } from "@dfinity/principal";
 import { setUserData } from '../../redux/reducers/userReducer'
+import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
+import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
+import { useMemo } from 'react'
 
 const CreateWallet = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
-
-    console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
     const {
         isAuthenticated,
         login,
         logout,
-        updateClient,
-        authClient,
-        identity,
         principal,
-        backendActor,
-        accountId,
         createLedgerActor,
-        reloadLogin,
-        accountIdString,
     } = useAuth()
 
-    const [walletSwitching, setWalletSwitching] = useState(false);
-
     const handleWalletConnect = () => {
-        console.log("connrcterd");
         dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
-        // dispatch(setIsWalletCreated(true))
     }
 
     const handleWallet = () => {
@@ -60,7 +47,6 @@ const CreateWallet = () => {
         }
     }, [isWalletCreated]);
 
-    const [loading, setLoading] = useState(false);
 
     const loginHandlerIsSwitch = async (val) => {
         dispatch(setUserData(null));
@@ -72,10 +58,6 @@ const CreateWallet = () => {
     };
 
     const loginHandler = async (val) => {
-        // if (isSwitchingWallet) {
-        //     await logout();
-        //    
-        // }
         await login(val);
         dispatch(setConnectedWallet(val));
     };
@@ -84,36 +66,11 @@ const CreateWallet = () => {
         dispatch(setUserData(null));
         logout();
     };
-
     const [inputValue, setInputValue] = useState('');
 
     const handleInputChange = (event) => {
         setInputValue(event.target.value);
     };
-
-    const principalObj = Principal.fromText(principal);
-
-    const [balance, setBalance] = useState(null);
-
-    const ledgerActor = createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER);
-
-    useEffect(() => {
-        const fetchBalance = async () => {
-            if (isAuthenticated && ledgerActor && principalObj) {
-                try {
-                    const account = { owner: principalObj, subaccount: [] };
-                    const balance = await ledgerActor.icrc1_balance_of(account);
-                    setBalance(balance.toString());
-                    console.log("Fetched Balance:", balance.toString());
-                } catch (error) {
-                    console.error("Error fetching balance:", error);
-                }
-            }
-        };
-
-        fetchBalance();
-    }, [isAuthenticated, ledgerActor, principalObj]);
-
     const walletDisplayName = (wallet) => {
         switch (wallet) {
             case 'ii':
@@ -128,6 +85,30 @@ const CreateWallet = () => {
                 return "Unknown Wallet";
         }
     };
+
+    const principalObj = Principal.fromText(principal);
+
+    const [balance, setBalance] = useState(null);
+
+    const ledgerActorckBTC = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKBTC_LEDGER, ledgerIdlFactoryckBTC), [createLedgerActor]);
+
+    const ledgerActorckETH = useMemo(() => createLedgerActor(process.env.CANISTER_ID_CKETH_LEDGER, ledgerIdlFactoryckETH), [createLedgerActor]);
+
+    useEffect(() => {
+        const fetchBalance = async () => {
+            if (isAuthenticated && ledgerActorckBTC && principalObj) {
+                try {
+                    const account = { owner: principalObj, subaccount: [] };
+                    const balance = await ledgerActorckBTC.icrc1_balance_of(account);
+                    setBalance(balance.toString());
+                } catch (error) {
+                    console.error("Error fetching balance:", error);
+                }
+            }
+        };
+
+        fetchBalance();
+    }, [isAuthenticated, ledgerActorckBTC, principalObj]);
 
     return (
         <>
@@ -146,25 +127,23 @@ const CreateWallet = () => {
                     Please connect your wallet to see your supplies, borrowings anf
                     open positions.
                 </p>
-
                 <Button title="Connect Wallet" onClickHandler={handleWalletConnect} />
-
-
             </div>}
 
             {(isSwitchingWallet || !isAuthenticated) && (
                 <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
                     <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
-                       {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1>: <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
+                        {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
                         <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">
                             {connectedWallet && (
                                 <>
-                                    <span  className="text-[#2A1F9D] dark:text-blue-400 font-semibold" >{walletDisplayName(connectedWallet)}</span>
+                                    <span className="text-[#2A1F9D] dark:text-blue-400 font-semibold" >{walletDisplayName(connectedWallet)}</span>
                                     <span> is connected</span>
                                 </>
                             )}
                         </h1>
                         <div className='flex flex-col gap-2 mt-3 text-sm'>
+
                             {connectedWallet !== "ii" && (
                                 <div
                                     className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
@@ -173,30 +152,6 @@ const CreateWallet = () => {
                                     Internet Identity
                                     <div className='w-8 h-8'>
                                         <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
-                                    </div>
-                                </div>
-                            )}
-
-                            {connectedWallet !== "plug" && (
-                                <div
-                                    className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
-                                    onClick={() => loginHandler("plug")}
-                                >
-                                    Plug
-                                    <div className='w-8 h-8'>
-                                        <img src={plug} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
-                                    </div>
-                                </div>
-                            )}
-
-                            {connectedWallet !== "bifinity" && (
-                                <div
-                                    className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
-                                    onClick={() => loginHandler("bifinity")}
-                                >
-                                    Bifinity
-                                    <div className='w-8 h-8'>
-                                        <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
                                     </div>
                                 </div>
                             )}
@@ -223,7 +178,7 @@ const CreateWallet = () => {
                                 value={inputValue}
                                 onChange={handleInputChange}
                                 className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-                                placeholder="Enter ethereum address or username"
+                                placeholder="Enter wallet address or username"
                             />
                         </div>
 
@@ -239,8 +194,6 @@ const CreateWallet = () => {
                     </div>
                 </Modal>
             )}
-
-
         </>
     )
 }

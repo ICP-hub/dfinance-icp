@@ -1,6 +1,4 @@
-// src/context/AssetContext.js
 import React, { createContext, useState, useContext } from 'react';
-
 const AssetContext = createContext();
 
 export const AssetProvider = ({ children }) => {

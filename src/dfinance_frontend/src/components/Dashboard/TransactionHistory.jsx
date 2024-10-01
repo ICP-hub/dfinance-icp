@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react"
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom"
-import { transactionHistory } from "../../utils/constants"; // Adjust the path as per your project structure
-import { MdContentCopy } from "react-icons/md"; // Import MdContentCopy icon
-import { toast } from 'react-toastify'; // Import toast from react-toastify
-import 'react-toastify/dist/ReactToastify.css'; // Import toast styles
+import { transactionHistory } from "../../utils/constants";
+import { MdContentCopy } from "react-icons/md";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from "../../utils/useAuthClient"
-import { Modal } from "@mui/material"
 import { useDispatch, useSelector } from 'react-redux'
 import Element from "../../../public/element/Elements.svg"
 import {
@@ -14,12 +13,8 @@ import {
   setWalletModalOpen
 } from '../../redux/reducers/utilityReducer'
 import Pagination from "../Common/pagination";
-import {
-  WALLET_ASSETS_TABLE_ROW,
-  WALLET_ASSETS_TABLE_COL,
-} from "../../utils/constants"
-import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 const ITEMS_PER_PAGE = 10;
+
 const TransactionHistory = () => {
   const [Showsearch, setShowSearch] = useState(false);
   const [filteredTransactionHistory, setFilteredTransactionHistory] = useState(transactionHistory);
@@ -30,16 +25,14 @@ const TransactionHistory = () => {
     login,
   } = useAuth();
   const navigate = useNavigate();
-  const shouldRenderTransactionHistory =
-    location.pathname === "/dashboard/transaction-history";
+  const shouldRenderTransactionHistory = location.pathname === "/dashboard/transaction-history";
   const dispatch = useDispatch()
   const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
+
   const handleWalletConnect = () => {
     console.log("connrcterd");
     dispatch(setWalletModalOpen(!isWalletModalOpen))
-    // dispatch(setIsWalletCreated(true))
   }
-
 
   const [inputValue, setInputValue] = useState('');
   const handleInputChange = (event) => {
@@ -47,10 +40,10 @@ const TransactionHistory = () => {
   };
 
   const [searchQuery, setSearchQuery] = useState("");
+
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   }
-
 
   const handleWallet = () => {
     dispatch(setWalletModalOpen(!isWalletModalOpen))
@@ -64,7 +57,7 @@ const TransactionHistory = () => {
   }, [isWalletCreated]);
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/dashboard'); // Navigate to dashboard when wallet is disconnected
+      navigate('/dashboard');
     }
   }, [isAuthenticated, history]);
 
@@ -74,7 +67,6 @@ const TransactionHistory = () => {
   };
 
   useEffect(() => {
-    // Filter transactions based on the search query
     const filtered = transactionHistory.filter(tx =>
       tx.method.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -83,15 +75,12 @@ const TransactionHistory = () => {
 
   const loginHandler = async (val) => {
     await login(val);
-    // navigate("/");
-
-    // await existingUserHandler();
   };
-  // Function to handle copy action
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success(`Copied ${text} to clipboard!`, {
-      className: 'custom-toast', // Add your custom class here
+      className: 'custom-toast',
       position: "top-center",
       autoClose: 3000,
       hideProgressBar: false,
@@ -101,6 +90,7 @@ const TransactionHistory = () => {
       progress: undefined,
     });
   };
+
   const totalPages = Math.ceil(filteredTransactionHistory.length / ITEMS_PER_PAGE);
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -146,7 +136,7 @@ const TransactionHistory = () => {
                   onChange={handleSearchInputChange}
                 />
               )}
-              <svg onClick={showSearchBar} className="cursor-pointer" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg onClick={showSearchBar} className="cursor-pointer button" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 <defs>
@@ -178,7 +168,6 @@ const TransactionHistory = () => {
             />
           }
 
-
           {filteredTransactionHistory.length === 0 ? (
             <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
               <div className="w-20 h-15">
@@ -195,13 +184,11 @@ const TransactionHistory = () => {
                   <thead>
                     <tr className="text-left text-[#2A1F9D] dark:text-darkText">
                       <th className="py-3 px-4">Transaction Hash</th>
-                      {/* <th className="py-3 px-4">Block</th> */}
                       <th className="py-3 ps-6">Methods</th>
                       <th className="py-3 px-8">Time</th>
                       <th className="py-3 px-4">From</th>
                       <th className="py-3 px-4">To</th>
                       <th className="py-3 px-4">Value</th>
-                      {/* <th className="py-3 px-4">Txn Fee</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -220,7 +207,6 @@ const TransactionHistory = () => {
                           </button>
                         </div>
                       </td>
-                        {/* <td className="py-2 px-4 dark:text-darkTextSecondary mr-7">{tx.block}</td> */}
                         <td className="py-2 px-4">
                           <div className="bg-[#ADB0FF]  text-[#2A1F9D] rounded-full px-1 py-1 mr-10">
                             <center><span className="text-[12px] dark:text-darkText">{tx.method}</span></center>
@@ -256,7 +242,6 @@ const TransactionHistory = () => {
                           </div>
                         </td>
                         <td className="py-2 px-4 dark:text-darkTextSecondary">{tx.value}</td>
-                        {/* <td className="py-2 px-4 dark:text-darkTextSecondary">{tx.fee}</td> */}
                       </tr>
                     ))}
                   </tbody>

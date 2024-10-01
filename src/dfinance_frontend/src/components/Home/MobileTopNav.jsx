@@ -212,9 +212,9 @@ const MobileTopNav = ({
         </div>
 
         {isAuthenticated && isMobile2 && (
-          <div className="flex items-center gap-1 my-2 mx-2 mb-4 p-1 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 ">
+          <div className="flex items-center gap-1 my-2 mx-2 mb-4 p-1 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
             <div
-              className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden"
+              className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden button1"
               onClick={() => {
                 handleSwitchWallet();
               }}
@@ -408,34 +408,34 @@ const MobileTopNav = ({
               </label>
               <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
                 {isDarkMode ? "On" : "Off"}
-            
-            <div className="-mr-4">
-            <CustomizedSwitches
-                  checked={isDarkMode}
-                  onChange={handleDarkModeToggle}
-                />
-            </div>
-      
+
+                <div className="-mr-4">
+                  <CustomizedSwitches
+                    checked={isDarkMode}
+                    onChange={handleDarkModeToggle}
+                  />
+                </div>
+
               </div>
-             
+
             </div>
 
             {isAuthenticated && (
-              <div className="flex items-center">
+              <div className="flex items-center justify-between">
                 <label
                   htmlFor="testnetMode"
                   className="ml-1 text-lg text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
                 >
                   Testnet Mode
                 </label>
-                <span className="ml-4 text-[#2A1F9D] dark:text-darkTextSecondary">
-                  {isTestnetMode ? "On" : "Off"}
-                </span>
-                <div className="flex align-center justify-center ml-3">
+                <div className="flex items-center gap-3 dark:text-darkTextSecondar">
+                {isTestnetMode ? "On" : "Off"}
+                <div className="-mr-4">
                   <CustomizedSwitches
                     checked={isTestnetMode}
                     onChange={handleTestnetModeToggle}
                   />
+                  </div>
                 </div>
               </div>
             )}

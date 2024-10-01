@@ -2,11 +2,13 @@
 
 set -e
 
+source ../../.env
+
 # Set variables
-ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"
-debt_canister="cuj6u-c4aaa-aaaaa-qaajq-cai"
-dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
+ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai" 
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
+debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
+dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 reserve_data_method="get_reserve_data"
 
 # Use the default identity
@@ -34,9 +36,9 @@ echo "--------------------------------------"
 amount=1000
 echo "Repaying $amount of ckbtc..."
 ON_BEHALF_OF=null
-asset="ckbtc"
+asset="ckBTC"
 # Call the repay function
-repay=$(dfx canister call dfinance_backend repay "(\"ckbtc\", $amount:nat, ${ON_BEHALF_OF})")
+repay=$(dfx canister call dfinance_backend repay "(\"ckBTC\", $amount:nat, ${ON_BEHALF_OF})")
 echo "Repay Execution Result: $repay"
 
 # Fetch and display balances after repay
@@ -53,6 +55,10 @@ echo "--------------------------------------"
 
 # Fetching reserve data after repay
 echo "Fetching reserve data after repay..."
-reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"ckbtc\")")
+reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"ckBTC\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
+
+echo "Fetching user data..."
+user_data=$(../integration_scripts/user_data.sh)
+echo "user data: $user_data"

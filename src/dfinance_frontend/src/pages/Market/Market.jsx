@@ -8,25 +8,106 @@ import Button from "../../components/Common/Button"
 import { useNavigate } from "react-router-dom"
 import { Modal } from "@mui/material"
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  setIsWalletConnected,
-  setWalletModalOpen
-} from '../../redux/reducers/utilityReducer'
 import { useAuth } from "../../utils/useAuthClient"
 import { useRef } from "react"
 
 import icplogo from '../../../public/wallet/icp.png'
-import plug from "../../../public/wallet/plug.png"
-import bifinity from "../../../public/wallet/bifinity.png"
 import nfid from "../../../public/wallet/nfid.png"
 import Pagination from "../../components/Common/pagination";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import cekTH from '../../../public/assests-icon/cekTH.png';
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssets from "../../components/Common/useAssets"
 import useAssetData from "../../components/Common/useAssets"
+import { setUserData } from '../../redux/reducers/userReducer'
+import {
+  setIsWalletConnected,
+  setWalletModalOpen,
+  setConnectedWallet
+} from "../../redux/reducers/utilityReducer"
+import { Principal } from "@dfinity/principal";
+import { useMemo } from "react"
+import AssetDetails from "../../components/Dashboard/AssetDetails"
 
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
+
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
+
+  // console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
+
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    principal,
+    createLedgerActor,
+  } = useAuth()
+
+  const handleWalletConnect = () => {
+    // console.log("connrcterd");
+    dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
+  }
+
+  const handleWallet = () => {
+    dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
+    dispatch(setIsWalletConnected(true))
+    navigate('/dashboard/my-supply')
+  }
+
+  useEffect(() => {
+    if (isWalletCreated) {
+      navigate('/dashboard/wallet-details')
+    }
+  }, [isWalletCreated]);
+
+
+  const loginHandlerIsSwitch = async (val) => {
+    dispatch(setUserData(null));
+    await logout();
+    await login(val);
+    dispatch(setConnectedWallet(val));
+    dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
+
+  };
+
+  const loginHandler = async (val) => {
+    await login(val);
+    dispatch(setConnectedWallet(val));
+  };
+
+  const handleLogout = () => {
+    dispatch(setUserData(null));
+    logout();
+  };
+
+  const [inputValue, setInputValue] = useState('');
+
+  const handleInputChange = (event) => {
+    setInputValue(event.target.value);
+  };
+
+
+
+  const walletDisplayName = (wallet) => {
+    switch (wallet) {
+      case 'ii':
+        return "Internet Identity";
+      case 'plug':
+        return "Plug";
+      case 'bifinity':
+        return "Bitfinity";
+      case 'nfid':
+        return "NFID";
+      default:
+        return "Unknown Wallet";
+    }
+  };
+
+
 
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -38,52 +119,35 @@ const WalletDetails = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeChevron, setActiveChevron] = useState(null);
   const itemsPerPage = 8; // Number of items per page
-  const navigate = useNavigate();
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  const {
-    isAuthenticated,
-    login,
-    fetchReserveData,
-    backendActor
-  } = useAuth();
 
 
 
-  const handleDetailsClick = (asset) => {
-    setSelectedAsset(asset); 
-    console.log("Selected Asset:", asset); 
-    navigate(`/dashboard/asset-details/${asset}`); 
+  const principalObj = Principal.fromText(principal);
+
+
+
+
+  const handleDetailsClick = (asset, assetData) => {
+    setSelectedAsset(asset);
+    console.log("assetdetailsinMarket", assetData)
+    navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
   };
 
 
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === 'dark' ? '#ffffff' : '#3739b4';
 
-  const handleChevronClick = (asset) => {
-    setSelectedAsset(asset);
-    setShowPopup(true);
-  };
+
 
   const closePopup = () => {
     setShowPopup(false);
   };
 
-  const dispatch = useDispatch()
-  const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
 
-  const handleWalletConnect = () => {
-    console.log("connected");
-    dispatch(setWalletModalOpen(!isWalletModalOpen))
-  }
-
-  const handleWallet = () => {
-    dispatch(setWalletModalOpen(!isWalletModalOpen))
-    dispatch(setIsWalletConnected(true))
-    navigate('/dashboard/my-supply')
-  }
 
   useEffect(() => {
     if (isWalletCreated) {
@@ -91,15 +155,7 @@ const WalletDetails = () => {
     }
   }, [isWalletCreated]);
 
-  const loginHandler = async (val) => {
-    await login(val);
-  };
 
-  const [inputValue, setInputValue] = useState('');
-
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
@@ -108,18 +164,31 @@ const WalletDetails = () => {
 
   const { assets, reserveData, filteredItems, error } = useAssetData(searchQuery);
 
-    const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
 
 
   const filteredReserveData = Object.fromEntries(filteredItems);
-  console.log("filtered data", filteredReserveData);
+  // console.log("filtered data", filteredReserveData);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
+  const [selectedAssetData, setSelectedAssetData] = useState(null)
 
-  const popupRef = useRef(null); 
+  const handleChevronClick = (assetName) => {
+    const selectedAssetData = currentItems.find(item => item[0] === assetName);
+
+    if (selectedAssetData) {
+      setSelectedAssetData(selectedAssetData);
+    }
+
+    // console.log("Selected Asset Data:", selectedAssetData); // Debugging
+    setShowPopup(true);
+  };
+
+
+  const popupRef = useRef(null);
 
 
 
@@ -138,6 +207,32 @@ const WalletDetails = () => {
     }
   }, [showPopup]);
 
+  useEffect(() => {
+    if (showPopup) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showPopup]);
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0';
+    }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toFixed(2).toString();
+  }
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
@@ -159,7 +254,7 @@ const WalletDetails = () => {
             />
           )}
         </div>
-        <svg onClick={showSearchBar} className="cursor-pointer" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg onClick={showSearchBar} className="cursor-pointer button" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           <defs>
@@ -188,8 +283,8 @@ const WalletDetails = () => {
         />
       }
 
-      <div className="w-full min-h-[400px] mt-6 lg:px-10 mb-20">
-        {currentItems.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
+      <div className="w-full mt-6 lg:px-10">
+        {currentItems.length === 0 ? <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>
@@ -203,22 +298,22 @@ const WalletDetails = () => {
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                     <td key={index} className=" whitespace-nowrap">
-                    <div className={`flex ${index === 0 ? 'justify-start' : 'justify-center'}`}>
-                      {item.header}
-                    </div>
-                  </td>
+                      <div className={`flex ${index === 0 ? 'justify-start' : 'justify-center'}`}>
+                        {item.header}
+                      </div>
+                    </td>
                   ))}
                   <td className="p-3 hidden md:table-cell"><div className="flex justify-center">
-                  {WALLET_ASSETS_TABLE_COL[2]?.header}</div></td>
+                    {WALLET_ASSETS_TABLE_COL[2]?.header}</div></td>
                   <td className="p-3 hidden md:table-cell">
                     <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[3]?.header}</div>
-                    </td>
-                    <td className="p-3 hidden md:table-cell">
+                  </td>
+                  <td className="p-3 hidden md:table-cell">
                     <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[4]?.header}</div>
-                    </td>
-               <td className="p-3 ">
+                  </td>
+                  <td className="p-3 ">
                     <div className="flex justify-center">{WALLET_ASSETS_TABLE_COL[5]?.header}</div>
-                    </td>
+                  </td>
                 </tr>
               </thead>
               <tbody>
@@ -227,47 +322,54 @@ const WalletDetails = () => {
                     key={index}
                     className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
-                    <td className=" align-top py-4">
+                    <td className=" align-center py-6">
                       <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
                         {item[0] === "ckBTC" && (
-                          <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full"/>
+                          <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
                         )}
                         {item[0] === "ckETH" && (
-                          <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full"/>
+                          <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                        )}
+                        {item[0] === "ckUSDC" && (
+                          <img src={ckUSDC} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                        )}
+                        {item[0] === "ICP" && (
+                          <img src={icp} alt="cketh logo" className="w-8 h-8 rounded-full" />
                         )}
                         {item[0]}
                       </div>
                     </td>
-                    <td className="p-2 align-top py-4">
-                      <div className="flex justify-center flex-row mt-1">
+                    <td className="p-2 align-center py-6">
+                      <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_supply_count}</p> */}
-                          <p >{item[1].Ok.total_supply.length > 0 ? item[1].Ok.total_supply : "0"}</p>
+                          <p >${formatNumber(item[1].Ok.total_supply)}</p>
                         </div>
                         <div className="md:hidden justify-center ml-6" onClick={() => handleChevronClick(item[0])}>
                           <ChevronRight size={22} color={chevronColor} />
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-5"><div className="flex justify-center">
-                    {item[1].Ok.supply_rate_apr}%</div></td>
-                    <td className="p-3 align-top hidden md:table-cell">
-                      <div className="flex justify-center flex-row mt-1">
+                    <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
+                      {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100).toFixed(2)}%`}</div></td>
+                    <td className="p-3 align-center hidden md:table-cell">
+                      <div className="flex justify-center flex-row">
+                        <div>
+                          {/* <p>{item.total_borrow_count}</p> */}
+                          <p >${formatNumber(item[1].Ok.total_borrowed)}</p>
+                        </div>
+                      </div>
 
-                      <div>
-                        {/* <p>{item.total_borrow_count}</p> */}
-                        <p >{item[1].Ok.total_borrow ? item[1].Ok.total_borrow : "0"}</p> 
-                      </div>
-                      </div>
-                     
                     </td>
-                    <td className="p-3 align-top hidden md:table-cell pt-5">
-                      <div className="flex justify-center">{item[1].Ok.borrow_rate}%</div>
-                      </td>
-                    <td className="p-3 align-top flex">
+                    <td className="p-3 align-center hidden md:table-cell">
+                      <div className="flex justify-center"> {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100).toFixed(2)}%`}</div>
+                    </td>
+                    <td className="p-3 align-center">
                       <div className="w-full flex justify-end align-center">
                         <Button title={"Details"} className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-sm
-                               lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]     font-inter" onClickHandler={() => handleDetailsClick(  `${item[0]}`)} />
+                               lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]     font-inter"
+                          onClickHandler={() => handleDetailsClick(item[0], item[1])}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -275,7 +377,7 @@ const WalletDetails = () => {
               </tbody>
             </table>
           </div>
-          <div className="w-full flex justify-center mt-6">
+          <div className="w-full flex justify-center mt-10">
             <div id="pagination" className="flex gap-2">
               <Pagination
                 currentPage={currentPage}
@@ -294,40 +396,48 @@ const WalletDetails = () => {
                   className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                   onClick={closePopup}
                 >
-                  <X size={40} />
+                  <X size={30} />
                 </button>
                 <div >
                   <div className="flex gap-2 justify-start items-center ">
-                    <img src={selectedAsset.image} alt={selectedAsset.asset} className="rounded-[50%]" />
-                    <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">{selectedAsset}</p>
+                    {selectedAssetData[0] === "ckBTC" && (
+                      <img src={ckBTC} alt="ckBTC logo" className="w-8 h-8 rounded-full" />
+                    )}
+                    {selectedAssetData[0] === "ckETH" && (
+                      <img src={cekTH} alt="ckETH logo" className="w-8 h-8 rounded-full" />
+                    )}
+                    {selectedAssetData[0] === "ckUSDC" && (
+                      <img src={ckUSDC} alt="ckUSDC logo" className="w-8 h-8 rounded-full" />
+                    )}
+                    <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">{selectedAssetData[0]}</p>
                   </div>
 
                   <div className="flex flex-col gap-5 mt-8">
                     <div className="flex justify-between">
                       <p className="text-sm dark:text-darkTextSecondary">Total Supply:</p>
                       <div className="flex flex-col">
-                        <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_supply_count}M</p>
-                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">${selectedAsset.total_supply}M</p>
+                        {/* <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAssetData[1].Ok.total_supply }M</p> */}
+                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">{selectedAssetData[1].Ok.total_supply}</p>
                       </div>
                     </div>
-                    <div className="flex justify-between mb-4">
+                    <div className="flex justify-between">
                       <p className="text-sm dark:text-darkTextSecondary">Supply APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.supply_apy}</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.supply_rate_apr}%</p>
                     </div>
 
 
                     <div className="flex justify-between">
                       <p className="text-sm  dark:text-darkTextSecondary">Total Borrow:</p>
                       <div className="flex flex-col">
-                        <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAsset.total_borrow_count}M</p>
+                        {/* <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAssetData[1].Ok.supply_apy}M</p> */}
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          ${selectedAsset.total_borrow}M
+                          {selectedAssetData[1].Ok.total_borrow > 0 ? selectedAssetData[1].Ok.total_borrow : "0"}
                         </p>
                       </div>
                     </div>
                     <div className="flex justify-between mb-4">
                       <p className="text-sm dark:text-darkTextSecondary">Borrow APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAsset.borrow_apy}</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.borrow_rate}%</p>
                     </div>
                   </div>
 
@@ -335,8 +445,8 @@ const WalletDetails = () => {
                 </div>
                 <div className="flex w-full justify-center">
                   <button
-                    className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-3 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
-                    onClick={() => handleDetailsClick(selectedAsset.asset)}
+                    className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
+                    onClick={() => handleDetailsClick(`${selectedAssetData[0]}`)}
                   >
                     Details
                   </button>
@@ -346,59 +456,70 @@ const WalletDetails = () => {
           )}
 
 
-          {!isAuthenticated && <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
-            <div className='w-[300px] absolute bg-gray-100  shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
-              <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>
-              <div className='flex flex-col gap-2 mt-3 text-sm'>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("ii")}>
-                  Internet Identity
-                  <div className='w-8 h-8'>
-                    <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                  </div>
-                </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
-                  Plug
-                  <div className='w-8 h-8'>
-                    <img src={plug} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                  </div>
-                </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText">
-                  Bifinity
-                  <div className='w-8 h-8'>
-                    <img src={bifinity} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                  </div>
-                </div>
-                <div className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText" onClick={() => loginHandler("nfid")}>
-                  NFID
-                  <div className='w-8 h-8'>
-                    <img src={nfid} alt="connect_wallet_icon" className='object-fill w-8 h-8' />
-                  </div>
-                </div>
-              </div>
-              <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
+          {(isSwitchingWallet || !isAuthenticated) && (
+            <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+              <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
+                {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
+                <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">
+                  {connectedWallet && (
+                    <>
+                      <span className="text-[#2A1F9D] dark:text-blue-400 font-semibold" >{walletDisplayName(connectedWallet)}</span>
+                      <span> is connected</span>
+                    </>
+                  )}
+                </h1>
+                <div className='flex flex-col gap-2 mt-3 text-sm'>
 
-              <div className="w-full">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-                  placeholder="Enter ethereum address or username"
-                />
-              </div>
+                  {connectedWallet !== "ii" && (
+                    <div
+                      className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
+                      onClick={() => { isSwitchingWallet ? loginHandlerIsSwitch("ii") : loginHandler("ii") }}
+                    >
+                      Internet Identity
+                      <div className='w-8 h-8'>
+                        <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
+                      </div>
+                    </div>
+                  )}
 
-              {inputValue && (
-                <div className="w-full flex mt-3">
-                  <Button
-                    title="Connect"
-                    onClickHandler={handleWallet}
-                    className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                  {connectedWallet !== "nfid" && (
+                    <div
+                      className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
+                      onClick={() => { isSwitchingWallet ? loginHandlerIsSwitch("nfid") : loginHandler("nfid") }}
+                    >
+                      NFID
+                      <div className='w-8 h-8'>
+                        <img src={nfid} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
+                      </div>
+                    </div>
+                  )}
+
+
+                </div>
+                <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
+
+                <div className="w-full">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
+                    placeholder="Enter wallet address or username"
                   />
                 </div>
-              )}
 
-            </div>
-          </Modal>}
+                {inputValue && (
+                  <div className="w-full flex mt-3">
+                    <Button
+                      title="Connect"
+                      onClickHandler={handleWallet}
+                      className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </Modal>
+          )}
 
 
         </div>}

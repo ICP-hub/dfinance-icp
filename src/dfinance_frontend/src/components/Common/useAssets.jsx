@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../utils/useAuthClient';
 
 const useAssetData = (searchQuery = '') => {
-    
+
   const {
-    isAuthenticated,
-    login,
     fetchReserveData,
     backendActor
   } = useAuth();
@@ -14,99 +12,95 @@ const useAssetData = (searchQuery = '') => {
   const [reserveData, setReserveData] = useState(null);
   const [totalMarketSize, setTotalMarketSize] = useState(0);
   const [totalSupplySize, setTotalSupplySize] = useState(0);
+  const [totalBorrowSize, setTotalBorrowSize] = useState(0);
   const [error, setError] = useState(null);
 
-  // Fetch asset names
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
 
       try {
-        const assetNames = await backendActor.get_all_assets(); 
-        console.log("Asset names:", assetNames);
-        setAssets(assetNames); 
+        const assetNames = await backendActor.get_all_assets();
+        // console.log("Asset names:", assetNames);
+        setAssets(assetNames);
       } catch (error) {
         console.error('Error fetching asset names:', error);
         setError(error.message);
       }
     };
 
-    fetchAssets(); 
+    fetchAssets();
   }, [backendActor]);
 
-  // Fetch reserve data for each asset and calculate total market size
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0 || !fetchReserveData) return;
-
       try {
         const data = {};
         let totalMarketSizeTemp = 0;
-        let totalSupplies = 0
+        let totalSupplies = parseInt(0);
+        let totalBorrowes = parseFloat(0.0);
 
         for (const asset of assets) {
-          const reserveDataForAsset = await fetchReserveData(asset); 
+          const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
           console.log(`${asset} reserve data:`, reserveDataForAsset);
-
-          // Add the supply_cap to the total market size
           const supplyCap = parseFloat(reserveDataForAsset.Ok.configuration.supply_cap);
           const totalSupply = parseFloat(reserveDataForAsset.Ok.total_supply);
+          const totalBorrow = parseFloat(reserveDataForAsset.Ok.total_borrowed);
           console.log("supplyCap", supplyCap)
           console.log("TotalSupplies", totalSupply)
+          console.log("TotalBorrow", totalBorrow)
           totalMarketSizeTemp += supplyCap;
-          totalSupplies += totalSupply;
+          totalSupplies += parseInt(totalSupply);
+          totalBorrowes +=totalBorrow
         }
-
-        console.log("All reserve data before setting state:", data);
-        setReserveData(data); 
-        setTotalMarketSize(formatNumber(totalMarketSizeTemp)); // Set total market size
+        console.log("TotalSupplies ::", totalSupplies);
+        // console.log("All reserve data before setting state:", data);
+        setReserveData(data);
+        setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies))
+        setTotalBorrowSize(formatNumber(totalBorrowes))
       } catch (err) {
         console.error('Error fetching reserve data:', err);
         setError(err.message);
       }
     };
 
-    fetchData(); 
+    fetchData();
   }, [assets, fetchReserveData]);
 
   useEffect(() => {
-    console.log("Updated reserveData state:", reserveData);
-    console.log("Total market size", totalMarketSize);
+    // console.log("Updated reserveData state:", reserveData);
+    // console.log("Total market size", totalMarketSize);
   }, [reserveData]);
 
 
-
-  // Filter items based on the search query
-const filteredItems = reserveData && Object.keys(reserveData).length > 0
+  const filteredItems = reserveData && Object.keys(reserveData).length > 0
     ? Object.entries(reserveData).filter(([asset, data]) =>
-        asset.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        (data.total_supply && data.total_supply.toString().includes(searchQuery)) || 
-        (data.borrow_rate && data.borrow_rate.some(rate => rate.toString().includes(searchQuery)))
+      asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (data.total_supply && data.total_supply.toString().includes(searchQuery)) ||
+      (data.borrow_rate && data.borrow_rate.some(rate => rate.toString().includes(searchQuery)))
     )
     : [];
 
-
-    function formatNumber(num) {
-      if (num === null || num === undefined) {
-        return '0';
-      }
-      if (num >= 1000000000) {
-        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
-      }
-      if (num >= 1000000) {
-        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-      }
-      if (num >= 1000) {
-        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-      }
-      return num.toString();
+  function formatNumber(num) {
+    if (num === null || num === undefined) {
+      return '0';
     }
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toString();
+  }
 
-
-
-  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize};
+  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize };
 };
 
 export default useAssetData;

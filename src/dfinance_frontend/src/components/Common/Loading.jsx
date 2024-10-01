@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import loader from "../../../public/Helpers/loader.svg"
 
-
 const Loading = ({ isLoading }) => {
     useEffect(() => {
         if (isLoading) {

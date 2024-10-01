@@ -23,8 +23,7 @@ ChartJS.register(
 );
 
 const LineGraph = () => {
-  const theme = useSelector((state) => state.theme.theme); // Get the theme state
-
+  const theme = useSelector((state) => state.theme.theme);
   const options = {
     responsive: true,
     plugins: {
@@ -51,7 +50,7 @@ const LineGraph = () => {
           display: false
         },
         ticks: {
-          color: theme === 'dark' ? 'white' : 'blue', // Conditionally set tick color
+          color: theme === 'dark' ? 'white' : 'blue',
           font: {
             family: 'Poppins, sans-serif'
           }
@@ -69,7 +68,7 @@ const LineGraph = () => {
           display: false
         },
         ticks: {
-          color: theme === 'dark' ? 'white' : 'blue', // Conditionally set tick color
+          color: theme === 'dark' ? 'white' : 'blue',
           font: {
             family: 'Poppins, sans-serif'
           }

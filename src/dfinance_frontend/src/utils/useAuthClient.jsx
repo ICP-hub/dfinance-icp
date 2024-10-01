@@ -137,7 +137,7 @@ export const useAuthClient = (options = defaultOptions) => {
 
       const principal = identity.getPrincipal();
       setPrincipal(principal.toString());
-      console.log('principal', principal.toString());
+      // console.log('principal', principal.toString());
 
       const accountId = AccountIdentifier.fromPrincipal({ principal });
       setAccountId(toHexString(accountId.bytes));
@@ -161,7 +161,7 @@ export const useAuthClient = (options = defaultOptions) => {
   };
 
   // Function to create an actor for interacting with the ledger
-  const createLedgerActor = (canisterId) => {
+  const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== 'production') {
@@ -170,14 +170,13 @@ export const useAuthClient = (options = defaultOptions) => {
         console.error(err);
       });
     }
-    return Actor.createActor(ledgerIdlFactory, { agent, canisterId });
+    return Actor.createActor(IdlFac, { agent, canisterId });
   };
 
   // Function to refresh login without user interaction
   const reloadLogin = async () => {
     try {
       if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
-        console.log("Called");
         updateClient(authClient);
       }
     } catch (error) {
@@ -191,7 +190,6 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     try {
       const result = await backendActor.check_user(user);
-      console.log('check_user result:', result);
       return result;
     } catch (error) {
       console.error('Error checking user:', error);
@@ -206,7 +204,7 @@ export const useAuthClient = (options = defaultOptions) => {
   
     try {
       const reserveData = await backendActor.get_reserve_data(asset);
-      console.log('Reserve Data:', reserveData);
+      // console.log('Reserve Data:', reserveData);
       return reserveData;
     } catch (error) {
       console.error('Error fetching reserve data:', error);
@@ -214,6 +212,21 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
   
+  // Function to fetch all users
+const getAllUsers = async () => {
+  if (!backendActor) {
+    throw new Error("Backend actor not initialized");
+  }
+
+  try {
+    const allUsers = await backendActor.get_all_users();
+    console.log('get_all_users:', allUsers);
+    return allUsers;
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    throw error;
+  }
+};
 
   return {
     isAuthenticated,
@@ -230,6 +243,7 @@ export const useAuthClient = (options = defaultOptions) => {
     accountIdString,
     fetchReserveData, 
     checkUser,
+    getAllUsers,
   };
 };
 

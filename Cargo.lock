@@ -1503,7 +1503,6 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "candid",
- "candid-extractor",
  "candid_parser",
  "cddl",
  "ciborium 0.2.2",
@@ -1511,8 +1510,8 @@ dependencies = [
  "ic-base-types",
  "ic-canister-log",
  "ic-canisters-http-types",
- "ic-cdk 0.15.0",
- "ic-cdk-macros 0.15.0",
+ "ic-cdk 0.13.2",
+ "ic-cdk-macros 0.9.0",
  "ic-crypto-tree-hash",
  "ic-icrc1",
  "ic-icrc1-ledger",
@@ -1586,10 +1585,12 @@ dependencies = [
  "candid-extractor",
  "ciborium 0.2.0",
  "dotenv",
+ "env_logger",
  "ic-cdk 0.15.0",
  "ic-cdk-macros 0.15.0",
  "ic-cdk-timers",
  "ic-stable-structures",
+ "ic-xrc-types",
  "icrc-ledger-types",
  "once_cell",
  "pocket-ic",
@@ -1687,7 +1688,6 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "candid",
- "candid-extractor",
  "candid_parser",
  "cddl",
  "ciborium 0.2.2",
@@ -1695,8 +1695,8 @@ dependencies = [
  "ic-base-types",
  "ic-canister-log",
  "ic-canisters-http-types",
- "ic-cdk 0.15.0",
- "ic-cdk-macros 0.15.0",
+ "ic-cdk 0.13.2",
+ "ic-cdk-macros 0.9.0",
  "ic-crypto-tree-hash",
  "ic-icrc1",
  "ic-icrc1-ledger",
@@ -1853,6 +1853,29 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.71",
+]
+
+[[package]]
+name = "env_filter"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f2c92ceda6ceec50f43169f9ee8424fe2db276791afde7b2cd8bc084cb376ab"
+dependencies = [
+ "log",
+ "regex",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.11.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e13fa619b91fb2381732789fc5de83b45675e882f66623b7d8cb4f643017018d"
+dependencies = [
+ "anstream",
+ "anstyle",
+ "env_filter",
+ "humantime",
+ "log",
 ]
 
 [[package]]
@@ -4885,6 +4908,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ic-xrc-types"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1a2b2eaa332201f4abbd1192a307f7a5b6ea55d077a7f489ac62bf8e358b5a2"
+dependencies = [
+ "candid",
+ "serde",
+]
+
+[[package]]
 name = "ic0"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7698,6 +7731,42 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+
+[[package]]
+name = "token_ledger"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "candid",
+ "candid_parser",
+ "cddl",
+ "ciborium 0.2.2",
+ "hex",
+ "ic-base-types",
+ "ic-canister-log",
+ "ic-canisters-http-types",
+ "ic-cdk 0.13.2",
+ "ic-cdk-macros 0.9.0",
+ "ic-crypto-tree-hash",
+ "ic-icrc1",
+ "ic-icrc1-ledger",
+ "ic-icrc1-ledger-sm-tests",
+ "ic-icrc1-tokens-u256",
+ "ic-icrc1-tokens-u64",
+ "ic-ledger-canister-core",
+ "ic-ledger-core",
+ "ic-ledger-hash-of",
+ "ic-metrics-encoder",
+ "ic-state-machine-tests",
+ "ic-test-utilities-load-wasm",
+ "icrc-ledger-client",
+ "icrc-ledger-types",
+ "leb128",
+ "num-traits",
+ "proptest",
+ "serde",
+ "serde_bytes",
+]
 
 [[package]]
 name = "tokio"

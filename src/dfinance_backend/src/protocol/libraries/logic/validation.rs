@@ -1,277 +1,441 @@
-use candid::{Nat, Principal};
-use core::panic;
-use ic_cdk::api::call::{call, CallResult};
-// use std::env;
+// use crate::api::functions::{get_balance, get_fees};
+// use crate::api::state_handler::mutate_state;
+// use crate::constants::errors::Error;
+// use crate::declarations::assets::ReserveData;
+// use crate::protocol::libraries::math::calculate::{
+//     cal_average_threshold, calculate_health_factor, calculate_ltv, UserPosition,
+// };
+// use candid::Principal;
+// use core::panic;
 
-use crate::constants::errors::Error;
-use crate::declarations::assets::{ReserveCache, ReserveData};
+// pub struct ValidationLogic;
 
-pub struct ValidationLogic;
+// impl ValidationLogic {
+//     // -------------------------------------
+//     // -------------- SUPPLY ---------------
+//     // -------------------------------------
 
-impl ValidationLogic {
-    pub async fn validate_supply(
-        reserve_cache: &ReserveCache,
-        reserve: &ReserveData,
-        amount: u128,
-    ) {
-        if amount == 0 {
-            panic!("{:?}", Error::InvalidAmount);
-        }
-        // let (is_active, is_frozen, _, _, is_paused) =
-        //     reserve_cache.reserve_configuration.get_flags(); // TODO
+//     pub async fn validate_supply(
+//         reserve: &ReserveData,
+//         amount: u128,
+//         user: Principal,
+//         ledger_canister: Principal,
+//     ) {
+//         // validating amount
+//         let user_balance = get_balance(ledger_canister, user).await;
+//         ic_cdk::println!("User balance: {:?}", user_balance);
 
-        // if !is_active {
-        //     panic!("{:?}", Error::ReserveInactive);
-        // }
-        // if is_paused {
-        //     panic!("{:?}", Error::ReservePaused);
-        // }
-        // if is_frozen {
-        //     panic!("{:?}", Error::ReserveFrozen);
-        // }
+//         let transfer_fees = get_fees(ledger_canister).await;
+//         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
-        // Supply cap limit 10 million
-        let supply_cap = Nat::from(10000000u64);
+//         let final_amount = amount + transfer_fees;
+//         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        let dtoken_canister_id = "c5kvi-uuaaa-aaaaa-qaaia-cai".to_string();
-        let total_supply: CallResult<(Nat,)> = call(
-            Principal::from_text(dtoken_canister_id).expect("Invalid principal"),
-            "icrc1_total_supply",
-            (),
-        )
-        .await;
+//         if amount == 0 {
+//             panic!("{:?}", Error::InvalidAmount);
+//         }
 
-        let mut current_total_supply = Nat::from(0u64);
+//         if final_amount > user_balance {
+//             panic!("{:?}", Error::MaxAmount);
+//         }
 
-        match total_supply {
-            Ok((nat_value,)) => {
-                current_total_supply = nat_value.clone();
-                println!("{:?}", nat_value);
-            }
-            Err(err) => {
-                println!("{:?}", err);
-            }
-        }
+//         // validating reserve states
+//         let (is_active, is_frozen, is_paused) = (
+//             reserve.configuration.active,
+//             reserve.configuration.frozen,
+//             reserve.configuration.paused,
+//         );
 
-        if supply_cap == Nat::from(0u8) || (current_total_supply >= supply_cap) {
-            panic!("{:?}", Error::SupplyCapExceeded);
-        }
-    }
+//         if !is_active {
+//             panic!("{:?}", Error::ReserveInactive);
+//         }
+//         if is_paused {
+//             panic!("{:?}", Error::ReservePaused);
+//         }
+//         if is_frozen {
+//             panic!("{:?}", Error::ReserveFrozen);
+//         }
+//         ic_cdk::println!("is_active : {:?}", is_active);
+//         ic_cdk::println!("is_paused : {:?}", is_paused);
+//         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
-    // pub fn validate_withdraw(reserve_cache: &ReserveCache, amount: u128, user_balance: u128) {
-    //     if amount == 0 {
-    //         panic!("{:?}", Error::InvalidAmount);
-    //     }
-    //     if amount > user_balance {
-    //         panic!("{:?}", Error::NotEnoughAvailableUserBalance);
-    //     }
+//         // Validating supply cap limit
+//         let supply_cap = reserve.configuration.supply_cap;
+//         ic_cdk::println!("supply_cap : {:?}", supply_cap);
 
-    //     // let (is_active, _, _, _, is_paused) = reserve_cache.reserve_configuration.get_flags();
-    //     // if !is_active {
-    //     //     panic!("{:?}", Error::ReserveInactive);
-    //     // }
-    //     // if is_paused {
-    //     //     panic!("{:?}", Error::ReservePaused);
-    //     // }
-    // }
+//         let final_total_supply = final_amount + reserve.total_supply as u128;
+//         ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
 
-    // pub fn validate_borrow(
-    //     reserves_data: &ReserveData,
-    //     reserves_list: &ReserveCache,
-    //     e_mode_categories: &HashMap<u8, DataTypes::EModeCategory>,
-    //     params: &ValidateBorrowParams,
-    // ) {
-    //     if params.amount == 0 {
-    //         panic!(Errors::INVALID_AMOUNT);
-    //     }
+//         // if final_total_supply >= supply_cap {
+//         //     panic!("{:?}", Error::SupplyCapExceeded);
+//         // }
+//     }
 
-    //     let mut vars = ValidateBorrowLocalVars::default();
-    //     let flags = params.reserve_cache.reserve_configuration.get_flags();
-    //     vars.is_active = flags.0;
-    //     vars.is_frozen = flags.1;
-    //     vars.borrowing_enabled = flags.2;
-    //     vars.stable_rate_borrowing_enabled = flags.3;
-    //     vars.is_paused = flags.4;
+//     // -------------------------------------
+//     // ------------- WITHDRAW --------------
+//     // -------------------------------------
 
-    //     if !vars.is_active {
-    //         panic!(Errors::RESERVE_INACTIVE);
-    //     }
-    //     if vars.is_paused {
-    //         panic!(Errors::RESERVE_PAUSED);
-    //     }
-    //     if vars.is_frozen {
-    //         panic!(Errors::RESERVE_FROZEN);
-    //     }
-    //     if !vars.borrowing_enabled {
-    //         panic!(Errors::BORROWING_NOT_ENABLED);
-    //     }
+//     pub async fn validate_withdraw(
+//         reserve: &ReserveData,
+//         amount: u128,
+//         user: Principal,
+//         ledger_canister: Principal,
+//     ) {
+//         // validating amount
+//         let transfer_fees = get_fees(ledger_canister).await;
+//         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
-    //     if params.price_oracle_sentinel != String::new()
-    //         && !IPriceOracleSentinel::is_borrow_allowed(&params.price_oracle_sentinel)
-    //     {
-    //         panic!(Errors::PRICE_ORACLE_SENTINEL_CHECK_FAILED);
-    //     }
+//         let final_amount = amount + transfer_fees;
+//         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-    //     if params.interest_rate_mode != DataTypes::InterestRateMode::VARIABLE
-    //         && params.interest_rate_mode != DataTypes::InterestRateMode::STABLE
-    //     {
-    //         panic!(Errors::INVALID_INTEREST_RATE_MODE_SELECTED);
-    //     }
+//         if amount == 0 {
+//             panic!("{:?}", Error::InvalidAmount);
+//         }
 
-    //     vars.reserve_decimals = params.reserve_cache.reserve_configuration.get_decimals();
-    //     vars.borrow_cap = params.reserve_cache.reserve_configuration.get_borrow_cap();
-    //     vars.asset_unit = 10u128.pow(vars.reserve_decimals as u32);
+//         // Fetch user data
+//         let user_data_result = mutate_state(|state| {
+//             let user_profile_data = &mut state.user_profile;
+//             user_profile_data
+//                 .get(&user)
+//                 .map(|user| user.0.clone())
+//                 .ok_or_else(|| format!("User not found: {}", user.to_string()))
+//         });
 
-    //     if vars.borrow_cap != 0 {
-    //         vars.total_supply_variable_debt = params
-    //             .reserve_cache
-    //             .curr_scaled_variable_debt
-    //             .ray_mul(params.reserve_cache.next_variable_borrow_index);
+//         // Handle user data result
+//         let mut user_data = match user_data_result {
+//             Ok(data) => {
+//                 ic_cdk::println!("User found: {:?}", data);
+//                 data
+//             }
+//             Err(e) => {
+//                 ic_cdk::println!("Error: {}", e);
+//                 panic!("{:?}", e);
+//             }
+//         };
 
-    //         vars.total_debt = params.reserve_cache.curr_total_stable_debt
-    //             + vars.total_supply_variable_debt
-    //             + params.amount;
+//         let user_reserve = match user_data.reserves {
+//             Some(ref mut reserves) => reserves
+//                 .iter_mut()
+//                 .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
+//             None => None,
+//         };
 
-    //         if vars.total_debt > vars.borrow_cap * vars.asset_unit {
-    //             panic!(Errors::BORROW_CAP_EXCEEDED);
-    //         }
-    //     }
+//         let mut user_current_supply = 0.0;
 
-    //     if params.isolation_mode_active {
-    //         if !params
-    //             .reserve_cache
-    //             .reserve_configuration
-    //             .get_borrowable_in_isolation()
-    //         {
-    //             panic!(Errors::ASSET_NOT_BORROWABLE_IN_ISOLATION);
-    //         }
+//         if let Some((_, reserve_data)) = user_reserve {
+//             // If Reserve data exists
+//             user_current_supply = reserve_data.asset_supply;
+//         }
 
-    //         if reserves_data
-    //             .get(&params.isolation_mode_collateral_address)
-    //             .unwrap()
-    //             .isolation_mode_total_debt
-    //             + (params.amount
-    //                 / 10u128.pow(
-    //                     vars.reserve_decimals as u32 - ReserveConfiguration::DEBT_CEILING_DECIMALS,
-    //                 )) as u128
-    //             > params.isolation_mode_debt_ceiling
-    //         {
-    //             panic!(Errors::DEBT_CEILING_EXCEEDED);
-    //         }
-    //     }
+//         if final_amount >= user_current_supply as u128 {
+//             panic!("{:?}", Error::WithdrawMoreThanSupply);
+//         }
 
-    //     if params.user_emode_category != 0 {
-    //         if params
-    //             .reserve_cache
-    //             .reserve_configuration
-    //             .get_emode_category()
-    //             != params.user_emode_category
-    //         {
-    //             panic!(Errors::INCONSISTENT_EMODE_CATEGORY);
-    //         }
-    //         vars.emode_price_source = e_mode_categories
-    //             .get(&params.user_emode_category)
-    //             .unwrap()
-    //             .price_source
-    //             .clone();
-    //     }
+//         // validating reserve states
+//         let (is_active, is_frozen, is_paused) = (
+//             reserve.configuration.active,
+//             reserve.configuration.frozen,
+//             reserve.configuration.paused,
+//         );
 
-    //     let (
-    //         user_collateral_in_base_currency,
-    //         user_debt_in_base_currency,
-    //         current_ltv,
-    //         _,
-    //         health_factor,
-    //         _,
-    //     ) = GenericLogic::calculate_user_account_data(
-    //         reserves_data,
-    //         reserves_list,
-    //         e_mode_categories,
-    //         CalculateUserAccountDataParams {
-    //             user_config: params.user_config.clone(),
-    //             reserves_count: params.reserves_count,
-    //             user: params.user_address.clone(),
-    //             oracle: params.oracle.clone(),
-    //             user_emode_category: params.user_emode_category,
-    //         },
-    //     );
+//         if !is_active {
+//             panic!("{:?}", Error::ReserveInactive);
+//         }
+//         if is_paused {
+//             panic!("{:?}", Error::ReservePaused);
+//         }
+//         if is_frozen {
+//             panic!("{:?}", Error::ReserveFrozen);
+//         }
+//         ic_cdk::println!("is_active : {:?}", is_active);
+//         ic_cdk::println!("is_paused : {:?}", is_paused);
+//         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
-    //     if user_collateral_in_base_currency == 0 {
-    //         panic!(Errors::COLLATERAL_BALANCE_IS_ZERO);
-    //     }
-    //     if current_ltv == 0 {
-    //         panic!(Errors::LTV_VALIDATION_FAILED);
-    //     }
+//         let user_total_debt = user_data.total_debt.unwrap_or(0.0);
 
-    //     if health_factor <= HEALTH_FACTOR_LIQUIDATION_THRESHOLD {
-    //         panic!(Errors::HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
-    //     }
+//         // Calculating next total debt
+//         let next_total_debt = amount as f64 + user_total_debt;
+//         ic_cdk::println!("Next total debt: {}", next_total_debt);
 
-    //     vars.amount_in_base_currency = IPriceOracleGetter::get_asset_price(
-    //         &params.oracle,
-    //         if vars.emode_price_source != String::new() {
-    //             &vars.emode_price_source
-    //         } else {
-    //             &params.asset
-    //         },
-    //     ) * params.amount
-    //         / vars.asset_unit;
+//         // Calculating user liquidation threshold
+//         let user_thrs = calculate_average_threshold(amount as f64, reserve, user_data.clone());
+//         ic_cdk::println!("user_thr {:?}", user_thrs);
 
-    //     vars.collateral_needed_in_base_currency =
-    //         (user_debt_in_base_currency + vars.amount_in_base_currency).percent_div(current_ltv);
+//         let user_position = UserPosition {
+//             total_collateral_value: user_data.total_collateral.unwrap(),
+//             total_borrowed_value: next_total_debt,
+//             liquidation_threshold: user_thrs,
+//         };
 
-    //     if vars.collateral_needed_in_base_currency > user_collateral_in_base_currency {
-    //         panic!(Errors::COLLATERAL_CANNOT_COVER_NEW_BORROW);
-    //     }
+//         // Calculating LTV
+//         let ltv = calculate_ltv(&user_position);
+//         ic_cdk::println!("LTV {:?}", ltv);
+//         ic_cdk::println!(
+//             "user liq threshold {:?}",
+//             user_data.liquidation_threshold.unwrap()
+//         );
 
-    //     if params.interest_rate_mode == DataTypes::InterestRateMode::STABLE {
-    //         if !vars.stable_rate_borrowing_enabled {
-    //             panic!(Errors::STABLE_BORROWING_NOT_ENABLED);
-    //         }
+//         if ltv >= user_data.liquidation_threshold.unwrap() {
+//             panic!("{:?}", Error::LTVGreaterThanThreshold);
+//         }
 
-    //         if !params
-    //             .user_config
-    //             .is_using_as_collateral(reserves_data.get(&params.asset).unwrap().id)
-    //             || params.reserve_cache.reserve_configuration.get_ltv() == 0
-    //             || params.amount
-    //                 > IERC20::balance_of(
-    //                     &params.reserve_cache.d_token_address,
-    //                     &params.user_address,
-    //                 )
-    //         {
-    //             panic!(Errors::COLLATERAL_SAME_AS_BORROWING_CURRENCY);
-    //         }
+//         // Calculating health factor
+//         let health_factor = calculate_health_factor(&user_position);
 
-    //         vars.available_liquidity =
-    //             IERC20::balance_of(&params.asset, &params.reserve_cache.d_token_address);
+//         if health_factor < 1.0 {
+//             panic!("{:?}", Error::HealthFactorLess);
+//         }
+//     }
 
-    //         let max_loan_size_stable = vars
-    //             .available_liquidity
-    //             .percent_mul(params.max_stable_loan_percent);
+//     // --------------------------------------
+//     // --------------- BORROW ---------------
+//     // --------------------------------------
 
-    //         if params.amount > max_loan_size_stable {
-    //             panic!(Errors::AMOUNT_BIGGER_THAN_MAX_LOAN_SIZE_STABLE);
-    //         }
-    //     }
+//     pub async fn validate_borrow(reserve: &ReserveData, amount: f64, user_principal: Principal) {
+//         // Ensure the amount is valid
+//         if amount == 0.0 {
+//             panic!("{:?}", Error::InvalidAmount);
+//         }
 
-    //     if params.user_config.is_borrowing_any() {
-    //         let (siloed_borrowing_enabled, siloed_borrowing_address) = params
-    //             .user_config
-    //             .get_siloed_borrowing_state(reserves_data, reserves_list);
+//         // validating reserve states
+//         let (is_active, is_frozen, is_paused) = (
+//             reserve.configuration.active,
+//             reserve.configuration.frozen,
+//             reserve.configuration.paused,
+//         );
 
-    //         if siloed_borrowing_enabled {
-    //             if siloed_borrowing_address != params.asset {
-    //                 panic!(Errors::SILOED_BORROWING_VIOLATION);
-    //             }
-    //         } else {
-    //             if params
-    //                 .reserve_cache
-    //                 .reserve_configuration
-    //                 .get_siloed_borrowing()
-    //             {
-    //                 panic!(Errors::SILOED_BORROWING_VIOLATION);
-    //             }
-    //         }
-    //     }
-    // }
-}
+//         if !is_active {
+//             panic!("{:?}", Error::ReserveInactive);
+//         }
+//         if is_paused {
+//             panic!("{:?}", Error::ReservePaused);
+//         }
+//         if is_frozen {
+//             panic!("{:?}", Error::ReserveFrozen);
+//         }
+//         ic_cdk::println!("is_active : {:?}", is_active);
+//         ic_cdk::println!("is_paused : {:?}", is_paused);
+//         ic_cdk::println!("is_frozen : {:?}", is_frozen);
+
+//         // Fetch user data
+//         let user_data_result = mutate_state(|state| {
+//             let user_profile_data = &mut state.user_profile;
+//             user_profile_data
+//                 .get(&user_principal)
+//                 .map(|user| user.0.clone())
+//                 .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+//         });
+
+//         // Handle user data result
+//         let user_data = match user_data_result {
+//             Ok(data) => {
+//                 ic_cdk::println!("User found: {:?}", data);
+//                 data
+//             }
+//             Err(e) => {
+//                 ic_cdk::println!("Error: {}", e);
+//                 panic!("{:?}", e);
+//             }
+//         };
+
+//         let user_total_debt = user_data.total_debt.unwrap_or(0.0);
+
+//         // Calculating next total debt
+//         let next_total_debt = amount + user_total_debt;
+//         ic_cdk::println!("Next total debt: {}", next_total_debt);
+
+//         // Calculating user liquidation threshold
+//         let user_thrs = calculate_average_threshold(amount as f64, reserve, user_data.clone());
+//         ic_cdk::println!("user_thr {:?}", user_thrs);
+
+//         let user_position = UserPosition {
+//             total_collateral_value: user_data.total_collateral.unwrap(),
+//             total_borrowed_value: next_total_debt,
+//             liquidation_threshold: user_thrs,
+//         };
+
+//         // Calculating LTV
+//         let ltv = calculate_ltv(&user_position);
+//         ic_cdk::println!("LTV {:?}", ltv);
+//         ic_cdk::println!(
+//             "user liq threshold {:?}",
+//             user_data.liquidation_threshold.unwrap()
+//         );
+
+//         if ltv >= user_data.liquidation_threshold.unwrap() {
+//             panic!("{:?}", Error::LTVGreaterThanThreshold);
+//         }
+
+//         // Calculating health factor
+//         let health_factor = calculate_health_factor(&user_position);
+
+//         if health_factor < 1.0 {
+//             panic!("{:?}", Error::HealthFactorLess);
+//         }
+
+//         // Validating supply cap limit
+//         let borrow_cap = reserve.configuration.borrow_cap;
+//         ic_cdk::println!("borrow_cap : {:?}", borrow_cap);
+
+//         let final_total_borrow = amount + reserve.total_supply; // total_borrowed
+//         ic_cdk::println!("final_total_supply : {:?}", final_total_borrow);
+
+//         // if final_total_borrow >= borrow_cap {
+//         //     panic!("{:?}", Error::BorrowCapExceeded);
+//         // };
+//     }
+
+//     // --------------------------------------
+//     // ---------------- REPAY ---------------
+//     // --------------------------------------
+
+//     pub async fn validate_repay(
+//         reserve: &ReserveData,
+//         amount: u128,
+//         user: Principal,
+//         ledger_canister: Principal,
+//     ) {
+//         // validating amount
+//         let transfer_fees = get_fees(ledger_canister).await;
+//         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
+
+//         let final_amount = amount + transfer_fees;
+//         ic_cdk::println!("final_amount : {:?}", final_amount);
+
+//         if amount == 0 {
+//             panic!("{:?}", Error::InvalidAmount);
+//         }
+
+//         // Fetch user data
+//         let user_data_result = mutate_state(|state| {
+//             let user_profile_data = &mut state.user_profile;
+//             user_profile_data
+//                 .get(&user)
+//                 .map(|user| user.0.clone())
+//                 .ok_or_else(|| format!("User not found: {}", user.to_string()))
+//         });
+
+//         // Handle user data result
+//         let mut user_data = match user_data_result {
+//             Ok(data) => {
+//                 ic_cdk::println!("User found: {:?}", data);
+//                 data
+//             }
+//             Err(e) => {
+//                 ic_cdk::println!("Error: {}", e);
+//                 panic!("{:?}", e);
+//             }
+//         };
+
+//         let user_reserve = match user_data.reserves {
+//             Some(ref mut reserves) => reserves
+//                 .iter_mut()
+//                 .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
+//             None => None,
+//         };
+
+//         let mut user_current_debt = 0.0;
+
+//         if let Some((_, reserve_data)) = user_reserve {
+//             // If Reserve data exists
+//             user_current_debt = reserve_data.asset_borrow;
+//         }
+
+//         if final_amount > user_current_debt as u128 {
+//             panic!("{:?}", Error::RepayMoreThanDebt);
+//         }
+
+//         // validating reserve states
+//         let (is_active, is_frozen, is_paused) = (
+//             reserve.configuration.active,
+//             reserve.configuration.frozen,
+//             reserve.configuration.paused,
+//         );
+
+//         if !is_active {
+//             panic!("{:?}", Error::ReserveInactive);
+//         }
+//         if is_paused {
+//             panic!("{:?}", Error::ReservePaused);
+//         }
+//         if is_frozen {
+//             panic!("{:?}", Error::ReserveFrozen);
+//         }
+//         ic_cdk::println!("is_active : {:?}", is_active);
+//         ic_cdk::println!("is_paused : {:?}", is_paused);
+//         ic_cdk::println!("is_frozen : {:?}", is_frozen);
+//     }
+
+//     // --------------------------------------
+//     // ---------------- LIQUIDATION ---------------
+//     // --------------------------------------
+
+//     pub async fn validate_liquidation(repay_asset: String, amount: f64, liquidator: Principal) {
+//         let repay_ledger_canister_id = mutate_state(|state| {
+//             let reserve_list = &state.reserve_list;
+//             reserve_list
+//                 .get(&repay_asset.to_string().clone())
+//                 .map(|principal| principal.clone())
+//                 .ok_or_else(|| format!("No canister ID found for asset: {}", repay_asset))
+//         })
+//         .unwrap();
+
+//         let user_balance = get_balance(repay_ledger_canister_id, liquidator).await;
+//         ic_cdk::println!("User balance: {:?}", user_balance);
+
+//         let transfer_fees = get_fees(repay_ledger_canister_id).await;
+//         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
+
+//         let final_amount = amount as u128 + transfer_fees;
+//         ic_cdk::println!("final_amount : {:?}", final_amount);
+
+//         if amount == 0.0 {
+//             panic!("{:?}", Error::InvalidAmount);
+//         }
+
+//         if final_amount > user_balance {
+//             panic!("{:?}", Error::MaxAmount);
+//         }
+
+//         // Getting reserve data
+//         // Reads the reserve data from the asset
+//         let reserve_data_result = mutate_state(|state| {
+//             let asset_index = &mut state.asset_index;
+//             asset_index
+//                 .get(&repay_asset.to_string().clone())
+//                 .map(|reserve| reserve.0.clone())
+//                 .ok_or_else(|| format!("Reserve not found for asset: {}", repay_asset.to_string()))
+//         });
+
+//         let reserve_data = match reserve_data_result {
+//             Ok(data) => {
+//                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
+//                 data
+//             }
+//             Err(e) => {
+//                 ic_cdk::println!("Error: {}", e);
+//                 panic!("{:?}", e);
+//             }
+//         };
+
+//         // validating reserve states
+//         let (is_active, is_frozen, is_paused) = (
+//             reserve_data.configuration.active,
+//             reserve_data.configuration.frozen,
+//             reserve_data.configuration.paused,
+//         );
+
+//         if !is_active {
+//             panic!("{:?}", Error::ReserveInactive);
+//         }
+//         if is_paused {
+//             panic!("{:?}", Error::ReservePaused);
+//         }
+//         if is_frozen {
+//             panic!("{:?}", Error::ReserveFrozen);
+//         }
+//         ic_cdk::println!("is_active : {:?}", is_active);
+//         ic_cdk::println!("is_paused : {:?}", is_paused);
+//         ic_cdk::println!("is_frozen : {:?}", is_frozen);
+//     }
+// }

@@ -2,14 +2,16 @@
 
 set -e
 
-# Set variables
-ckbtc_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"  
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai" 
-approve_method="icrc2_approve"
+# Load environment variables from .env
+source ../../.env
 
+# Set variables
+ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai" 
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
+debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
+approve_method="icrc2_approve"
 borrow_method="borrow"
 reserve_data_method="get_reserve_data"
-
 
 # Get the principal for the user1 identity (borrower)
 dfx identity use default
@@ -20,7 +22,6 @@ echo "User1 Principal (Borrower): $user1_principal"
 backend_canister_principal=$(dfx canister id $backend_canister)
 echo "Backend Canister Principal (Lender): $backend_canister_principal"
 
-debt_canister="cuj6u-c4aaa-aaaaa-qaajq-cai"
 # Check balances before operations
 echo "Checking balances before operations..."
 user1_balance=$(dfx canister call $ckbtc_canister icrc1_balance_of "(record {owner=principal\"${user1_principal}\"; subaccount=null})")
@@ -33,7 +34,7 @@ echo "--------------------------------------"
 
 
 echo "Fetching reserve data..."
-asset="ckbtc"
+asset="ckBTC"
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
@@ -58,13 +59,15 @@ echo "user data: $user_data"
 # echo "Allowance Set: $allow"
 # echo "--------------------------------------"
 
+dfx identity use default
+
 # Call the borrow function on the backend canister
-borrow_amount=3000  
-currency="ckbtc" 
+borrow_amount=2000  
+currency="ckBTC" 
 interest_rate=0  
 
 echo "Borrowing $borrow_amount from backend_canister..."
-borrow_result=$(dfx canister call $backend_canister $borrow_method "(\"$currency\", $borrow_amount:nat64, \"${user1_principal}\",\"${user1_principal}\", $interest_rate:nat)")
+borrow_result=$(dfx canister call $backend_canister $borrow_method "(\"$currency\", $borrow_amount:nat64)")
 echo "Borrow Result: $borrow_result"
 echo "--------------------------------------"
 

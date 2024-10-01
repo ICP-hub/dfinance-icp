@@ -25,6 +25,8 @@ pub struct UserData {
     pub ltv: Option<f64>,
     pub liquidation_threshold: Option<f64>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
+    //index
+    //total_supply
     
 
 }
@@ -50,9 +52,9 @@ impl Default for UserData {
 pub struct UserReserveData {
     pub reserve: String,
     pub principal_stable_debt: u64,
-    pub total_stable_debt: u64,
-    pub total_variable_debt: u64,
-    pub avg_stable_borrow_rate: f64,
+    pub borrow_rate: f64,
+    pub supply_rate: f64,
+    // pub avg_stable_borrow_rate: f64,
     pub last_update_timestamp: u64,
     pub liquidity_index: f64,
     pub asset_supply: f64,
@@ -66,9 +68,8 @@ impl Default for UserReserveData {
         Self {
             reserve: Default::default(),
             principal_stable_debt: Default::default(),
-            total_stable_debt: Default::default(),
-            total_variable_debt: Default::default(),
-            avg_stable_borrow_rate: Default::default(),
+            borrow_rate: Default::default(),
+            supply_rate: Default::default(),
             last_update_timestamp: Default::default(),
             liquidity_index: Default::default(),
             asset_supply: Default::default(),

@@ -151,6 +151,7 @@ const Home = () => {
                     label={item.title}
                     disableRipple={true}
                     disableFocusRipple={true}
+                    className="button1"
                     sx={{
                       textTransform: "capitalize",
                       fontStyle: "normal",
@@ -174,9 +175,11 @@ const Home = () => {
             {MAIN_NAV_LINK.map((item) => (
               <React.Fragment key={item.id}>
                 {currentTab === item.id && (
-                  <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
-                    {item.content}
-                  </p>
+                <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
+                {item.content}
+              </p>
+               
+                
                 )}
               </React.Fragment>
             ))}
@@ -194,16 +197,15 @@ const Home = () => {
           <div className="w-full flex justify-center">
             <div className="w-full xl:w-5/5 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               <div className="w-full xl:w-9/12">
-                <h1 className="font-semibold text-lg">And more to come...</h1>
+                <h1 className="font-semibold text-lg">Much more to come....</h1>
                 <p className="mt-4 text-sm font-medium">
-                  Submit a proposal to deploy a new market in the Dfinance
-                  ecosystem. You can learn from the DFinance governance.
+                See our roadmap to understand how we plan to explode borrowing and lending on ICP
                 </p>
               </div>
               <div className="w-full xl:w-3/12 flex justify-start mt-3 lg:mt-0 md:justify-end">
                 {" "}
                 {/* Center align the button on mobile screens only */}
-                <Button title="COMMING SOON" />
+                <Button title="DFinance Roadmap" />
               </div>
             </div>
           </div>
@@ -212,11 +214,11 @@ const Home = () => {
         {/* Governed by the Community */}
         <section className="mt-[44px] md:mt-24 " id="gov">
           <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
-            <h1 className="text-lg text-[28px] md:text-[45px] font-extralight">
-              Governed by the <span className="font-semibold">Community</span>
+            <h1 className="text-lg text-[28px] md:text-[45px] font-light">
+             A Better Way To <span className="font-semibold">DeFi</span>
             </h1>
             <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6 dark:text-darkText">
-              DFinance is a fully decentralized, community governed protocol.
+            Phase 1 Includes simple borrowing and lending with our points system for a $DFIN airdrop
             </p>
 
             <div className="w-full flex justify-center mt-3">
@@ -234,7 +236,7 @@ const Home = () => {
         <HowITWork />
 
         {/* Security Contributors */}
-        <section className="mt-[44px] md:mt-24 ">
+        {/* <section className="mt-[44px] md:mt-24 ">
           <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-[#2A1F9D] dark:text-darkText">
             Security Contributors
           </h1>
@@ -253,7 +255,7 @@ const Home = () => {
               />
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* FAQ */}
         <section className="mt-[44px] md:mt-24 " id="faq">

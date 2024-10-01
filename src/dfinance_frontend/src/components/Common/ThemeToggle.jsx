@@ -1,8 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from "../../redux/reducers/themeReducer";
-import { AiOutlineMoon } from "react-icons/ai";
-import { GrSun } from "react-icons/gr";
 import Sun from "../../../public/theme/Sun.svg"
 import Moon from "../../../public/theme/Moon.svg"
 
@@ -37,7 +35,7 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={handleToggle}
-      className="flex items-center p-1 rounded-md"
+      className="flex items-center p-1 rounded-md button1"
     >
     
         <div className="flex items-center justify-center p-[2px] rounded-lg w-[45px] h-[45px]">

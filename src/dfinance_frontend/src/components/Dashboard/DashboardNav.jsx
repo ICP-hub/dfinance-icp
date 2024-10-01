@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import {
   TAB_CARD_DATA,
   WALLET_DETAILS_TABS,
@@ -13,13 +12,15 @@ import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from 'lucide-react';
 import icplogo from '../../../public/wallet/icp.png'
 import { EllipsisVertical } from 'lucide-react';
-import { Principal } from "@dfinity/principal";
-import { PrincipalClass } from "@dfinity/candid/lib/cjs/idl";
 import useAssetData from "../Common/useAssets";
+import { useCallback } from "react";
 
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } = useAuth();
-  const { totalMarketSize, totalSupplySize } = useAssetData();
+  const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
+  const [netSupplyApy, setNetSupplyApy] = useState(0);
+  const [netDebtApy, setNetDebtApy] = useState(0);
+  const [netApy, setNetApy] = useState(0);
   const [userData, setUserData] = useState();
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
@@ -39,8 +40,6 @@ const DashboardNav = () => {
     },
   ]);
 
-
- 
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: "0" },
     { id: 1, title: "Total Supplies", count: "0" },
@@ -48,12 +47,11 @@ const DashboardNav = () => {
   ]);
 
   useEffect(() => {
-    // Define an async function inside the useEffect
     const fetchUserData = async () => {
       if (backendActor) {
         try {
           const result = await getUserData(principal.toString());
-          console.log('get_user_data:', result);
+          // console.log('get_user_data:', result);
           setUserData(result);
           updateWalletDetailTab(result);
         } catch (error) {
@@ -63,8 +61,6 @@ const DashboardNav = () => {
         console.error('Backend actor initialization failed.');
       }
     };
-
-    // Call the async function
     fetchUserData();
   }, [principal, backendActor]);
 
@@ -74,7 +70,7 @@ const DashboardNav = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
-      console.log('get_user_data in dashboardnav:', result);
+      // console.log('get_user_data in dashboardnav:', result);
       return result;
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -82,19 +78,47 @@ const DashboardNav = () => {
     }
   };
 
+
+  function formatNumber(num) {
+    // Ensure num is a valid number
+    const parsedNum = parseFloat(num);
+
+    if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
+      return "0";
+    }
+    if (parsedNum >= 1000000000) {
+      return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
+    }
+    if (parsedNum >= 1000000) {
+      return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
+    }
+    if (parsedNum >= 1000) {
+      return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
+    }
+    return parsedNum.toFixed(2).toString();
+  }
+
+
   const updateWalletDetailTab = (data) => {
     if (!data || !data.Ok) return;
-
     const { net_worth, net_apy, health_factor } = data.Ok;
-
+    // console.log("health factor", health_factor[0])
     const updatedTab = walletDetailTab.map((item) => {
       switch (item.id) {
         case 0:
-          return { ...item, count: `$${net_worth[0] }` };
+          return { ...item, count: `$${formatNumber(net_worth[0])}` };
         case 1:
-          return { ...item, count: `${net_apy[0] }%` };
+          return { ...item, count: `${(netApy).toFixed(2)<0.01?"<0.01":(netApy).toFixed(2)}%` };
         case 2:
-          return { ...item, count: `${health_factor[0]}%` };
+          return {
+            ...item,
+            count: isFinite(health_factor[0])
+              ? health_factor[0] > 100
+                ? "♾️"
+                : parseFloat(health_factor[0].toFixed(2))
+              : "♾️" // Return the heart emoji as a string
+            
+          };
         default:
           return item;
       }
@@ -103,6 +127,142 @@ const DashboardNav = () => {
     setWalletDetailTab(updatedTab);
   };
 
+  const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
+  const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
+  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
+  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
+  const [error, setError] = useState(null);
+
+  const pollInterval = 10000;
+
+  const fetchConversionRate = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:5000/conversion-rates");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const text = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+        throw new Error("Response was not valid JSON");
+      }
+
+      setCkBTCUsdRate(data.bitcoin.usd);
+      setCkETHUsdRate(data.ethereum.usd);
+      setCkUSDCUsdRate(data["usd-coin"].usd);
+      setCkICPUsdRate(data["internet-computer"].usd);
+    } catch (error) {
+      console.error("Error fetching conversion rates:", error);
+      setError(error);
+    }
+  }, [pollInterval]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchConversionRate();
+    }, pollInterval);
+
+    return () => clearInterval(intervalId);
+  }, [fetchConversionRate]);
+
+ 
+  const getConversionRate = (asset) => {
+    switch (asset) {
+      case "ckBTC":
+        return ckBTCUsdRate;
+      case "ckETH":
+        return ckETHUsdRate;
+      case "ckUSDC":
+        return ckUSDCUsdRate;
+      case "ICP":
+        return ckICPUsdRate;
+      default:
+        return null;
+    }
+  };
+
+  useEffect(() => {
+    fetchConversionRate();
+  }, [fetchConversionRate]);
+
+ 
+  
+  const calculateNetSupplyApy = (reserves) => {
+    let totalSuppliedInUSD = 0;
+    let weightedApySum = 0;
+  
+    reserves.forEach((reserve) => {
+      const conversionRate = getConversionRate(reserve[0]);
+      const assetSupply = reserve[1]?.asset_supply || 0;
+      const supplyApy = reserve[1]?.supply_rate || 0;
+  
+      console.log(`Reserve: ${reserve[0]}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`);
+  
+      const assetSupplyInUSD = assetSupply * conversionRate;
+      totalSuppliedInUSD += assetSupplyInUSD;
+      weightedApySum += assetSupplyInUSD * supplyApy;
+  
+      console.log(`Asset Supply in USD: ${assetSupplyInUSD}, Weighted APY Sum: ${weightedApySum}`);
+    });
+  
+    const netApy = totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
+  
+    console.log(`Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${netApy * 100}`);
+    return netApy * 100;
+  };
+  
+  const calculateNetDebtApy = (reserves) => {
+    let totalBorrowedInUSD = 0;
+    let weightedDebtApySum = 0;
+  
+    reserves.forEach((reserve) => {
+      const assetBorrowed = reserve[1]?.asset_borrow || 0;
+      const debtApy = reserve[1]?.borrow_rate || 0;
+      const assetPriceWhenBorrowed = reserve[1]?.asset_price_when_borrowed || 1;
+  
+      console.log(`Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}, Price When Borrowed: ${assetPriceWhenBorrowed}`);
+  
+      const assetBorrowedInUSD = assetBorrowed * assetPriceWhenBorrowed;
+      totalBorrowedInUSD += assetBorrowedInUSD;
+      weightedDebtApySum += assetBorrowedInUSD * debtApy;
+  
+      console.log(`Asset Borrowed in USD: ${assetBorrowedInUSD}, Weighted Debt APY Sum: ${weightedDebtApySum}`);
+    });
+  
+    const netDebtApy = totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
+  
+    console.log(`Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${netDebtApy * 100}`);
+    return netDebtApy * 100;
+  };
+  
+  const calculateNetApy = (reserves) => {
+    const supplyApy = calculateNetSupplyApy(reserves);
+    console.log(`Calculated Supply APY: ${supplyApy}`);
+  
+    const debtApy = calculateNetDebtApy(reserves);
+    console.log(`Calculated Debt APY: ${debtApy}`);
+  
+    const netApy = supplyApy - debtApy;
+    console.log(`Net APY (Supply APY - Debt APY): ${netApy}`);
+    
+    return netApy; 
+  };
+  
+  useEffect(() => {
+    if (userData && userData?.Ok?.reserves[0]) {
+      const reservesData = userData?.Ok?.reserves[0];
+      console.log("UserData Reserves in Dashboard:", reservesData);
+  
+      const calculatedNetApy = calculateNetApy(reservesData);
+      console.log("Calculated Net APY:", calculatedNetApy);
+  
+      setNetApy(calculatedNetApy);
+    }
+  }, [userData]);
+  
 
   const updateWalletDetailTabs = () => {
     const updatedTabs = walletDetailTabs.map((item) => {
@@ -110,8 +270,9 @@ const DashboardNav = () => {
         case 0:
           return { ...item, count: `${totalMarketSize}` };
         case 1:
-          return { ...item, count: `${isNaN(totalSupplySize) ? '0' : totalSupplySize}` };
+          return { ...item, count: `${totalSupplySize}` };
         case 2:
+          return { ...item, count: `${totalBorrowSize}` };
         default:
           return item;
       }
@@ -127,8 +288,6 @@ const DashboardNav = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { isWalletConnected } = useSelector((state) => state.utility);
-
-
   const [isDrop, setIsDrop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentValueIndex, setCurrentValueIndex] = useState(state?.id || 0);
@@ -136,10 +295,9 @@ const DashboardNav = () => {
     state || TAB_CARD_DATA[0]
   );
   const dropdownRef = useRef(null);
-
-
   const theme = useSelector((state) => state.theme.theme);
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
+
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
       setIsDrop(false);
@@ -203,7 +361,6 @@ const DashboardNav = () => {
     setIsPopupOpen(false);
   };
 
-  // Determine if it's dashboard supply or main based on pathname
   const isDashboardSupplyOrMain = pathname === "/dashboard";
 
   const handleAssetSelect = (index) => {
@@ -211,10 +368,8 @@ const DashboardNav = () => {
     setIsDrop(false);
   };
 
-  // Dynamic title based on pathname
   const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
 
-  // Determine if Risk Details button should be rendered
   const shouldRenderRiskDetailsButton =
     !pathname.includes("/market") &&
     !pathname.includes("/governance") &&
@@ -223,6 +378,8 @@ const DashboardNav = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
+
+
 
   return (
     <div className="w-full ">
@@ -243,9 +400,8 @@ const DashboardNav = () => {
           ICP Market
         </h1>
 
-        {/* Menu Button */}
         <div className="md:hidden flex ml-auto -mt-1">
-          <button onClick={toggleMenu} className="p-4 mt-4 rounded-md">
+          <button onClick={toggleMenu} className="p-4 mt-4 rounded-md button1">
             <EllipsisVertical color={checkColor} size={18} />
           </button>
         </div>
@@ -256,8 +412,6 @@ const DashboardNav = () => {
 
           {/* Menu button for small screens */}
           <div className="relative">
-          {/* <button onClick={handleFetch}>Fetch Reserve Data</button> */}
-            {/* Menu Items */}
             <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"} md:hidden`}>
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -275,7 +429,7 @@ const DashboardNav = () => {
                         className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                         style={{ minWidth: "220px", flex: "1 0 220px" }}
                       >
-                        <button className="relative w-full text-left flex justify-between items-center">
+                        <button className="relative w-full text-left flex justify-between items-center button1">
                           <span>{data.title}</span>
                           <span className="font-bold">{data.count}</span>
                           <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
@@ -294,8 +448,6 @@ const DashboardNav = () => {
                     </button>
                   </div>
                 </div>
-
-
               </div>
             </div>
           </div>
@@ -307,7 +459,7 @@ const DashboardNav = () => {
                 : walletDetailTabs
               ).map((data, index) => (
                 <div key={index} className="relative group">
-                  <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80">
+                  <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80 button1">
                     {data.title}
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                     <span className="absolute top-full mt-1 left-0 font-bold py-1 opacity-100 transition-opacity text-[20px] text-[#2A1F9D] dark:text-darkBlue dark:opacity-100">
@@ -318,17 +470,17 @@ const DashboardNav = () => {
               ))}
             {isAuthenticated && shouldRenderRiskDetailsButton && (
               <button
-                className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md font-normal dark:text-darkTextSecondary"
+                className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md font-normal dark:text-darkTextSecondary button1"
                 onClick={handleOpenPopup}
               >
                 Risk Details
               </button>
             )}
           </div>}
-          {isPopupOpen && <RiskPopup onClose={handleClosePopup} userData={userData}/>}
+          {isPopupOpen && <RiskPopup onClose={handleClosePopup} userData={userData} />}
 
         </div>
-        <div className="ml-auto hidden lg:flex">
+        {/* <div className="ml-auto hidden lg:flex">
           {isAuthenticated && shouldRenderTransactionHistoryButton && (
             <a href="/dashboard/transaction-history" className="block">
               <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-md shadow-md hover:shadow-[#00000040] font-medium text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
@@ -336,7 +488,7 @@ const DashboardNav = () => {
               </button>
             </a>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );

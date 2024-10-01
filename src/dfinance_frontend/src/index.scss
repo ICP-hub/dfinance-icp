@@ -4,9 +4,12 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-/* Example of importing Google Fonts in CSS */
 @import url('https://fonts.googleapis.com/css2?family=Vampiro+One&display=swap');
 
+
+html {
+  scroll-behavior: smooth;
+}
 body{
     background: rgba(255, 255, 255, 1);
 }
@@ -22,18 +25,15 @@ body{
     animation-timing-function: ease-in-out;
   }
   50% {
-    transform: translateY(-20px); /* Adjust the bounce height as needed */
+    transform: translateY(-20px);
     animation-timing-function: ease-in-out;
   }
 }
 
 .subtle-bounce {
-  animation: subtle-bounce 4s infinite; /* Adjust duration as needed */
+  animation: subtle-bounce 4s infinite; 
 }
-// learn more buton
 
-
-// search and all buttons in dark mode for dashboard 
   .box {
     border-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='none'%3e%3cpath stroke='url(%23a)' stroke-width='2' d='M8 1h84a7 7 0 0 1 7 7v84a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7Z'/%3e%3cdefs%3e%3clinearGradient id='a' x1='20.27' x2='120.715' y1='125' y2='113.589' gradientUnits='userSpaceOnUse'%3e%3cstop stop-color='%23EFAF68'/%3e%3cstop offset='.367' stop-color='%23CC69A0'/%3e%3cstop offset='.682' stop-color='%23C15CB9'/%3e%3cstop offset='1' stop-color='%235B6BCC'/%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e") 8 / 10px stretch;
   }
@@ -80,7 +80,7 @@ body{
     left: 0;
     margin-left: 0.5rem; /* Adjust margin as needed */
     width: calc(100% - 1.5rem); /* Adjust padding if needed */
-    height: 1px;
+    height: 1.5px;
     background: linear-gradient(to right, #4659CF, #FCBD78);
     transition: background 0.3s ease-in-out;
     z-index: 4; /* Ensure the line is on top of other content */
@@ -186,6 +186,7 @@ body{
 }
 
 .animate-fade-in-left {
+  transition: all 400ms ease !important;
   animation: fadeInLeft 0.5s ease forwards; 
 }
 
@@ -296,3 +297,72 @@ body{
 .transition-text {
   transition: transform 0.8s ease-in-out;
 }
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* For Firefox */
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+.loader {
+  border: 4px solid rgba(143, 142, 142, 0.3); /* Light border */
+  border-top: 4px solid #fff; /* White spinning part */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+a, input, button, .button1,.button2, input{
+  transition: all 400ms !important;
+}
+a, button, .button1, img, svg{
+  user-select: none;
+}
+
+input:active{
+  transform: scale(0.8);
+}
+
+a:hover{
+  transform: scale(0.95);
+}
+
+button:hover{
+  transform: scale(0.96);
+  background: linear-gradient(45deg, #e59792, #0642a9);
+  border-radius: 8px;
+}
+
+.button1:hover{
+  transform: scale(0.96);
+  background: none;
+}
+.button2:hover{
+  transform: scale(0.96);
+  background: none;
+  color:gray;
+}
+a:active{
+  transform: scale(0.9);
+}
+button:active{
+  transform: scale(0.9);
+}
+
+.button1:active{
+  transform: scale(0.9);
+}
+

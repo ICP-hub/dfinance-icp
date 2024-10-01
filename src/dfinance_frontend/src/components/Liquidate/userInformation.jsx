@@ -1279,7 +1279,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       User Health Factor
                     </p>
                     <p className="text-xs font-medium text-[#F30606] ">
-                      {roundToDecimal(userHealthFactor, 2)}
+                      {parseFloat( userHealthFactor> 100 ? "Infinity" : parseFloat(userHealthFactor).toFixed(2))}
                     </p>
                   </div>
                 </div>

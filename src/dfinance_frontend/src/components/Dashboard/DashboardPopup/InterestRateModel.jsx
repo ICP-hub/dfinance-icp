@@ -1,5 +1,4 @@
 import React from 'react'
-import LineGraph from '../../Common/LineGraph'
 
 const InterestRateModel = () => {
   return (
@@ -20,7 +19,6 @@ const InterestRateModel = () => {
           <button className='cursor-pointer hover:text-[#7369df]'>Borrow APR, variable</button>
           <button className='cursor-pointer hover:text-[#7369df]'>Utilization Rate</button>
         </div>
-        {/* <LineGraph /> */}
       </div>
     </div>
   )

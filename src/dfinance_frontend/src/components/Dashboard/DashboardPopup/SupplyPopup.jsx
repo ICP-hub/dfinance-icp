@@ -11,7 +11,7 @@ import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/toke
 import { useMemo } from "react";
 import { useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";  // Import Toastify if not already done
+import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
 
 const SupplyPopup = ({
@@ -29,7 +29,6 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -37,13 +36,13 @@ const SupplyPopup = ({
 
   const convertToUSD = (asset, value, prices) => {
     switch (asset) {
-      case 'ckbtc':
+      case "ckbtc":
         return value * prices.ckbtc;
-      case 'cketh':
+      case "cketh":
         return value * prices.cketh;
-      case 'ckusdc':
+      case "ckusdc":
         return value * prices.ckusdc;
-      case 'icp':
+      case "icp":
         return value * prices.icp;
       default:
         return value;
@@ -68,16 +67,16 @@ const SupplyPopup = ({
   //      setCurrentHealthFactor(healthFactor);
 
   //   if (healthFactor < 1 || ltv >= liquidationThreshold) {
-  //     setIsButtonDisabled(true); 
+  //     setIsButtonDisabled(true);
   //   } else {
-  //     setIsButtonDisabled(false); 
+  //     setIsButtonDisabled(false);
   //   }
 
   // }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
 
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
-  const normalizedAsset = asset ? asset.toLowerCase() : 'default';
+  const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
@@ -87,7 +86,7 @@ const SupplyPopup = ({
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
   const hasEnoughBalance = balance >= transactionFee;
-  const value = currentHealthFactor
+  const value = currentHealthFactor;
   const [conversionRate, setConversionRate] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
@@ -101,10 +100,10 @@ const SupplyPopup = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch('http://localhost:5000/conversion-rates');
+        const response = await fetch("http://localhost:5000/conversion-rates");
 
         if (!response.ok) {
-          throw new Error('Failed to fetch conversion rates from server');
+          throw new Error("Failed to fetch conversion rates from server");
         }
 
         const data = await response.json();
@@ -118,10 +117,10 @@ const SupplyPopup = ({
             rate = data.ethereum?.usd;
             break;
           case "ckUSDC":
-            rate = data['usd-coin']?.usd;
+            rate = data["usd-coin"]?.usd;
             break;
           case "ICP":
-            rate = data['internet-computer']?.usd;
+            rate = data["internet-computer"]?.usd;
             break;
           default:
             console.error(`Unsupported asset: ${asset}`);
@@ -133,9 +132,11 @@ const SupplyPopup = ({
         } else {
           console.error("Conversion rate not found for asset:", asset);
         }
-
       } catch (error) {
-        console.error("Error fetching conversion rate from server:", error.message);
+        console.error(
+          "Error fetching conversion rate from server:",
+          error.message
+        );
       }
     };
 
@@ -143,8 +144,6 @@ const SupplyPopup = ({
       fetchConversionRate();
     }
   }, [asset]);
-
-
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -249,9 +248,9 @@ const SupplyPopup = ({
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
@@ -260,9 +259,9 @@ const SupplyPopup = ({
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
@@ -271,9 +270,9 @@ const SupplyPopup = ({
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
@@ -292,11 +291,9 @@ const SupplyPopup = ({
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
-    }
-    else if (asset === "ckUSDC") {
+    } else if (asset === "ckUSDC") {
       ledgerActor = ledgerActorckUSDC;
-    }
-    else if (asset === "ICP") {
+    } else if (asset === "ICP") {
       ledgerActor = ledgerActorICP;
     }
 
@@ -345,12 +342,10 @@ const SupplyPopup = ({
         ledgerActor = ledgerActorckBTC;
       } else if (asset === "ckETH") {
         ledgerActor = ledgerActorckETH;
-      }
-      else if (asset === "ckUSDC") {
+      } else if (asset === "ckUSDC") {
         ledgerActor = ledgerActorckUSDC;
-      }
-      else if (asset === "ICP") {
-        ledgerActor = ledgerActorckUSDC;
+      } else if (asset === "ICP") {
+        ledgerActor = ledgerActorICP;
       }
 
       const amountAsNat64 = BigInt(amount);
@@ -377,15 +372,19 @@ const SupplyPopup = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
         setIsModalOpen(false);
       }
     };
 
     if (isModalOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
@@ -395,8 +394,6 @@ const SupplyPopup = ({
     setIsModalOpen(false);
     window.location.reload();
   };
-
-
 
   const handleClick = async () => {
     setIsLoading(true);
@@ -412,38 +409,50 @@ const SupplyPopup = ({
   };
 
   useEffect(() => {
-    const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
-    console.log('Health Factor:', healthFactor);
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold
+    );
+    console.log("Health Factor:", healthFactor);
     const ltv = calculateLTV(assetSupply, assetBorrow);
-    console.log('LTV:', ltv);
+    console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(healthFactor.toFixed(2));
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+    );
     //|| liquidationThreshold>ltv
+
     if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
     }
-
   }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
 
-
-  const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
+  const calculateHealthFactor = (
+    totalCollateral,
+    totalDebt,
+    liquidationThreshold
+  ) => {
     const amountTaken = 0; // Ensure usdValue is treated as a number
     const amountAdded = usdValue || 0; // No amount added for now, but keeping it in case of future use
 
     // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
-    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
-    console.log("totalCollateralValue", totalCollateralValue)
-    console.log("totalDeptValue", totalDeptValue)
-    console.log("amountAdded", amountAdded)
-    console.log("liquidationThreshold", liquidationThreshold)
-    console.log("totalDebt", totalDebt)
+    console.log("totalCollateralValue", totalCollateralValue);
+    console.log("totalDeptValue", totalDeptValue);
+    console.log("amountAdded", amountAdded);
+    console.log("liquidationThreshold", liquidationThreshold);
+    console.log("totalDebt", totalDebt);
     if (totalDeptValue === 0) {
       return Infinity;
     }
-    return (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
+    return (
+      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+    );
   };
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
@@ -453,7 +462,6 @@ const SupplyPopup = ({
     return totalDeptValue / totalCollateralValue;
   };
 
-
   const [healthFactorBackend, setHealthFactorBackend] = useState(null);
   const [userData, setUserData] = useState();
 
@@ -462,14 +470,13 @@ const SupplyPopup = ({
       if (backendActor) {
         try {
           const result = await getUserData(principal.toString());
-          console.log('get_user_data:', result);
+          console.log("get_user_data:", result);
           setUserData(result);
-          updateWalletDetailTab(result);
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error("Error fetching user data:", error);
         }
       } else {
-        console.error('Backend actor initialization failed.');
+        console.error("Backend actor initialization failed.");
       }
     };
     fetchUserData();
@@ -481,17 +488,18 @@ const SupplyPopup = ({
     }
     try {
       const result = await backendActor.get_user_data(user);
-      console.log('get_user_data in supplypopup:', result);
+      console.log("get_user_data in supplypopup:", result);
 
       // Check if the result is in the expected format (Ok.health_factor)
       if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor);  // Store health_factor in state
+        setHealthFactorBackend(result.Ok.health_factor);
+        // Store health_factor in state
       } else {
         setError("Health factor not found");
       }
       return result;
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error("Error fetching user data:", error);
       setError(error.message);
     }
   };
@@ -542,13 +550,18 @@ const SupplyPopup = ({
               <div className="w-full bg-gray-100 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Supply APY</p>
-                  <p>{(supplyRateAPR * 100) < 0.1 ? '<0.1%' : `${(supplyRateAPR * 100)}%`}</p>
+                  <p>
+                    {supplyRateAPR * 100 < 0.1
+                      ? "<0.1%"
+                      : `${supplyRateAPR * 100}%`}
+                  </p>
                 </div>
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
                   <p
-                    className={`font-semibold ${isCollateral ? "text-green-500" : "text-red-500"
-                      }`}
+                    className={`font-semibold ${
+                      isCollateral ? "text-green-500" : "text-red-500"
+                    }`}
                   >
                     {isCollateral ? "Enabled" : "Disabled"}
                   </p>
@@ -557,28 +570,36 @@ const SupplyPopup = ({
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>
-                      <span className={`${healthFactorBackend > 3
-                        ? "text-green-500"
-                        : healthFactorBackend <= 1
-                          ? "text-red-500"
-                          : healthFactorBackend <= 1.5
+                      <span
+                        className={`${
+                          healthFactorBackend > 3
+                            ? "text-green-500"
+                            : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
                             ? "text-orange-600"
                             : healthFactorBackend <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                        }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
+                      >
+                        {healthFactorBackend > 100
+                          ? "Infinity"
+                          : parseFloat(healthFactorBackend).toFixed(2)}
+                      </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${value > 3
-                          ? "text-green-500"
-                          : value <= 1
+                        className={`${
+                          value > 3
+                            ? "text-green-500"
+                            : value <= 1
                             ? "text-red-500"
                             : value <= 1.5
-                              ? "text-orange-600"
-                              : value <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -623,8 +644,9 @@ const SupplyPopup = ({
 
             <div className="flex items-center">
               <p
-                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
-                  }`}
+                className={`text-xs whitespace-nowrap ${
+                  isApproved ? "text-green-500" : "text-red-500"
+                }`}
               >
                 {isApproved
                   ? "Approved with signed message"
@@ -635,9 +657,12 @@ const SupplyPopup = ({
 
           <button
             onClick={handleClick}
-            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            disabled={isLoading || (amount <= 0 || null) || isButtonDisabled}
+            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
+              isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }`}
+            disabled={isLoading || amount <= 0 || null || isButtonDisabled}
           >
             {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
           </button>

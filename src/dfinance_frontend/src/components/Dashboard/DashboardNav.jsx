@@ -18,6 +18,9 @@ import { useCallback } from "react";
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } = useAuth();
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
+  const [netSupplyApy, setNetSupplyApy] = useState(0);
+  const [netDebtApy, setNetDebtApy] = useState(0);
+  const [netApy, setNetApy] = useState(0);
   const [userData, setUserData] = useState();
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
@@ -100,13 +103,16 @@ const DashboardNav = () => {
         case 0:
           return { ...item, count: `$${formatNumber(net_worth[0])}` };
         case 1:
-          return { ...item, count: `${net_apy[0]}%` };
+          return { ...item, count: `${(netApy).toFixed(2)<0.01?"<0.01":(netApy).toFixed(2)}%` };
         case 2:
           return {
             ...item,
             count: isFinite(health_factor[0])
-              ? `${parseFloat(health_factor[0]).toFixed(2)}`
-              : "♾️" // Return the heart emoji as a string here
+              ? health_factor[0] > 100
+                ? "♾️"
+                : parseFloat(health_factor[0].toFixed(2))
+              : "♾️" // Return the heart emoji as a string
+            
           };
         default:
           return item;
@@ -166,7 +172,7 @@ const DashboardNav = () => {
         return ckETHUsdRate;
       case "ckUSDC":
         return ckUSDCUsdRate;
-      case "ckICP":
+      case "ICP":
         return ckICPUsdRate;
       default:
         return null;
@@ -177,51 +183,81 @@ const DashboardNav = () => {
     fetchConversionRate();
   }, [fetchConversionRate]);
 
-  const [netSupplyApy, setNetSupplyApy] = useState(0);
-  const [netDebtApy, setNetDebtApy] = useState(0);
-  const [netApy, setNetApy] = useState(0);
-
+ 
+  
   const calculateNetSupplyApy = (reserves) => {
     let totalSuppliedInUSD = 0;
     let weightedApySum = 0;
+  
     reserves.forEach((reserve) => {
-      console.log("conversionrateCall", getConversionRate(reserve[0]), "asset_supply", reserve[0])
-      const assetSupplyInUSD = reserve[1]?.asset_supply * getConversionRate(reserve[0]);
+      const conversionRate = getConversionRate(reserve[0]);
+      const assetSupply = reserve[1]?.asset_supply || 0;
+      const supplyApy = reserve[1]?.supply_rate || 0;
+  
+      console.log(`Reserve: ${reserve[0]}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`);
+  
+      const assetSupplyInUSD = assetSupply * conversionRate;
       totalSuppliedInUSD += assetSupplyInUSD;
-      weightedApySum += assetSupplyInUSD * reserve.supply_apy;
+      weightedApySum += assetSupplyInUSD * supplyApy;
+  
+      console.log(`Asset Supply in USD: ${assetSupplyInUSD}, Weighted APY Sum: ${weightedApySum}`);
     });
-
+  
     const netApy = totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
-    return netApy * 100; 
+  
+    console.log(`Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${netApy * 100}`);
+    return netApy * 100;
   };
-
+  
   const calculateNetDebtApy = (reserves) => {
     let totalBorrowedInUSD = 0;
     let weightedDebtApySum = 0;
-
+  
     reserves.forEach((reserve) => {
-      const assetBorrowedInUSD = reserve.asset_borrow * reserve.asset_price_when_borrowed;
+      const assetBorrowed = reserve[1]?.asset_borrow || 0;
+      const debtApy = reserve[1]?.borrow_rate || 0;
+      const assetPriceWhenBorrowed = reserve[1]?.asset_price_when_borrowed || 1;
+  
+      console.log(`Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}, Price When Borrowed: ${assetPriceWhenBorrowed}`);
+  
+      const assetBorrowedInUSD = assetBorrowed * assetPriceWhenBorrowed;
       totalBorrowedInUSD += assetBorrowedInUSD;
-      weightedDebtApySum += assetBorrowedInUSD * reserve.debt_apy;
+      weightedDebtApySum += assetBorrowedInUSD * debtApy;
+  
+      console.log(`Asset Borrowed in USD: ${assetBorrowedInUSD}, Weighted Debt APY Sum: ${weightedDebtApySum}`);
     });
-
+  
     const netDebtApy = totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
-    return netDebtApy * 100; 
+  
+    console.log(`Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${netDebtApy * 100}`);
+    return netDebtApy * 100;
   };
-
- 
+  
   const calculateNetApy = (reserves) => {
     const supplyApy = calculateNetSupplyApy(reserves);
+    console.log(`Calculated Supply APY: ${supplyApy}`);
+  
     const debtApy = calculateNetDebtApy(reserves);
-    return (supplyApy - debtApy).toFixed(2); // Net APY = Supply APY - Debt APY
+    console.log(`Calculated Debt APY: ${debtApy}`);
+  
+    const netApy = supplyApy - debtApy;
+    console.log(`Net APY (Supply APY - Debt APY): ${netApy}`);
+    
+    return netApy; 
   };
-
+  
   useEffect(() => {
     if (userData && userData?.Ok?.reserves[0]) {
-      const calculatedNetApy = calculateNetApy(userData?.Ok?.reserves[0]);
+      const reservesData = userData?.Ok?.reserves[0];
+      console.log("UserData Reserves in Dashboard:", reservesData);
+  
+      const calculatedNetApy = calculateNetApy(reservesData);
+      console.log("Calculated Net APY:", calculatedNetApy);
+  
       setNetApy(calculatedNetApy);
     }
   }, [userData]);
+  
 
   const updateWalletDetailTabs = () => {
     const updatedTabs = walletDetailTabs.map((item) => {

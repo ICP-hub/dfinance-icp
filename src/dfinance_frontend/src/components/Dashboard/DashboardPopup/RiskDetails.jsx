@@ -1,9 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import {
-  healthFactorValue,
-  currentLTVValue,
-  healthFactorMinValue,
-  currentLTVThreshold,
   liquidationThresholdLabel,
 } from "../../../utils/constants";
 import { X } from "lucide-react";
@@ -12,9 +8,10 @@ const RiskPopup = ({ onClose, userData }) => {
   const popupRef = useRef(null);
 
   console.log("userdata in risk", userData);
-  const health_Factor_Value = parseFloat(userData.Ok.health_factor) > 100
-  ? Infinity
-  : parseFloat(userData.Ok.health_factor);
+  const health_Factor_Value =
+    parseFloat(userData.Ok.health_factor) > 100
+      ? Infinity
+      : parseFloat(userData.Ok.health_factor);
 
   const Ltv_Value = parseFloat(userData.Ok.ltv);
 
@@ -39,19 +36,14 @@ const RiskPopup = ({ onClose, userData }) => {
   const calculateHealthFactorPosition = (value) => {
     if (typeof value !== "number" || isNaN(value)) {
       console.error("Invalid Health Factor value:", value);
-      return NaN; // or a default value like 0
+      return NaN;
     }
-
-    // Handle infinity cases
     if (value === Infinity) {
-      return 100; // +Infinity means the end of the bar
+      return 100;
     } else if (value === -Infinity) {
-      return 0; // -Infinity means the start of the bar
+      return 0;
     }
-
-    // Normalize the value to be between 0 and 100
-    // You can set a maximum value that makes sense for your application
-    const maxValue = 100; // Adjust this if you have a different max in mind
+    const maxValue = 100;
     return Math.max(0, Math.min(100, (value / maxValue) * 100));
   };
 

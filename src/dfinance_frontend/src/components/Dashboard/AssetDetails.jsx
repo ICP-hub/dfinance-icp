@@ -9,7 +9,7 @@ import SupplyInfo from "./DashboardPopup/SupplyInfo";
 import BorrowInfo from "./DashboardPopup/BorrowInfo";
 import { useParams } from "react-router-dom";
 import { Modal } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   setIsWalletConnected,
@@ -32,11 +32,37 @@ import ckbtc from "../../../public/assests-icon/ckBTC.png";
 import cketh from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 
 const AssetDetails = () => {
+  const location = useLocation();
+  const { assetData } = location.state || {};
+
+  const [borrowRateAPR, setBorrowRateAPR] = useState(null);
+  const [supplyRateAPR, setSupplyRateAPR] = useState(null);
+  const [totalBorrowed, setTotalBorrowed] = useState(null);
+  const [totalSupplied, setTotalSupplied] = useState(null);
+  const [borrowCap, setBorrowCap] = useState(null);
+  const [supplyCap, setSupplyCap] = useState(null);
+  const [ltv, setLtv] = useState(null);
+  const [liquidationBonus, setLiquidationBonus] = useState(null);
+  const [liquidationThreshold, setLiquidationThreshold] = useState(null);
+  const [canBeCollateral, setCanBeCollateral] = useState(null);
+
+  useEffect(() => {
+    if (assetData?.Ok) {
+      setBorrowRateAPR(assetData.Ok.borrow_rate);
+      setSupplyRateAPR(assetData.Ok.supply_rate_apr?.[0]);
+      setTotalBorrowed(assetData.Ok.total_borrowed);
+      setTotalSupplied(assetData.Ok.total_supply);
+      setBorrowCap(assetData.Ok.configuration?.borrow_cap);
+      setSupplyCap(assetData.Ok.configuration?.supply_cap);
+      setLtv(assetData.Ok.configuration?.ltv);
+      setLiquidationBonus(assetData.Ok.configuration?.liquidation_bonus);
+      setLiquidationThreshold(assetData.Ok.configuration?.liquidation_threshold);
+      setCanBeCollateral(assetData.Ok.can_be_collateral?.[0]);
+    }
+  }, [assetData]);
 
   const navigate = useNavigate()
   const dispatch = useDispatch()
@@ -167,16 +193,8 @@ const AssetDetails = () => {
   const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
-
-  const [balance, setBalance] = useState(null);
-  const [usdBalance, setUsdBalance] = useState(null);
-  const [supplyCapUsd, setSupplyCapUsd] = useState(null);
-  const [supplyPercentage, setSupplyPercentage] = useState("");
-  const [borrowCapUsd, setBorrowCapUsd] = useState(null);
-  const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isCollateral, setIsCollateral] = useState(true);
 
 
   const handleFilter = (value) => {
@@ -197,7 +215,6 @@ const AssetDetails = () => {
           const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -213,11 +230,6 @@ const AssetDetails = () => {
 
     fetchAssetPrinciple();
   }, [principal, backendActor]);
-
-  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
-  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
-  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
-
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -240,7 +252,7 @@ const AssetDetails = () => {
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
+     
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -313,7 +325,7 @@ const AssetDetails = () => {
 
 
   useEffect(() => {
-    console.log("Asset ID from URL parameters:", id); // Log the asset ID from URL
+    console.log("Asset ID from URL parameters:", id); 
   }, [id]);
 
 
@@ -330,21 +342,21 @@ const AssetDetails = () => {
               return;
             }
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString()); // Set ckBTC balance
+            setCkBTCBalance(balance.toString()); 
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
               console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString()); // Set ckETH balance
+            setCkETHBalance(balance.toString());
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
               console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+            setCKUSDCBalance(balance.toString()); 
           }
           else if (assetType === "ICP") {
             if (!ledgerActorICP) {
@@ -352,14 +364,14 @@ const AssetDetails = () => {
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
-            setCkICPBalance(balance.toString()); // Set ICP balance
+            setCkICPBalance(balance.toString()); 
           }
           else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
           }
-          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+         
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
@@ -376,48 +388,40 @@ const AssetDetails = () => {
     ]
   );
 
-  // Log balances using useEffect after state updates
+  
   useEffect(() => {
     if (ckBTCBalance !== null) {
-      console.log("Updated ckBTC Balance:", ckBTCBalance); // Log updated ckBTC balance
+      console.log("Updated ckBTC Balance:", ckBTCBalance); 
     }
   }, [ckBTCBalance]);
 
   useEffect(() => {
     if (ckETHBalance !== null) {
-      console.log("Updated ckETH Balance:", ckETHBalance); // Log updated ckETH balance
+      console.log("Updated ckETH Balance:", ckETHBalance); 
     }
   }, [ckETHBalance]);
 
   useEffect(() => {
     if (ckUSDCBalance !== null) {
-      console.log("Updated ckUSDC Balance:", ckUSDCBalance); // Log updated ckUSDC balance
+      console.log("Updated ckUSDC Balance:", ckUSDCBalance); 
     }
   }, [ckUSDCBalance]);
 
   useEffect(() => {
     if (error) {
-      console.error("Error detected:", error); // Log any errors
+      console.error("Error detected:", error); 
     }
   }, [error]);
 
-  // Ensure ledger actors are initialized correctly
-  // useEffect(() => {
-  //   console.log("Ledger Actor for ckBTC:", ledgerActorckBTC); // Log the ledger actor for ckBTC
-  //   console.log("Ledger Actor for ckETH:", ledgerActorckETH); // Log the ledger actor for ckETH
-  //   console.log("Ledger Actor for ckUSDC:", ledgerActorckUSDC); // Log the ledger actor for ckUSDC
-  // }, [ledgerActorckBTC, ledgerActorckETH, ledgerActorckUSDC]);
-
-  // Fetch balance when `id` is defined
   useEffect(() => {
     if (id) {
       fetchBalance(id);
     } else {
-      console.error("No valid asset ID found in URL parameters."); // Log missing asset ID
+      console.error("No valid asset ID found in URL parameters."); 
     }
   }, [id, fetchBalance]);
 
-  const pollInterval = 10000; // 10 seconds
+  const pollInterval = 10000; 
   const fetchConversionRate = useCallback(async () => {
     try {
       const response = await fetch("http://localhost:5000/conversion-rates");
@@ -444,12 +448,10 @@ const AssetDetails = () => {
   }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
 
   useEffect(() => {
-    // Start polling at regular intervals
     const intervalId = setInterval(() => {
       fetchConversionRate();
     }, pollInterval);
 
-    // Clear the interval on component unmount
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
@@ -462,7 +464,7 @@ const AssetDetails = () => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
-          fetchConversionRate(), // Fetch ckBTC and ckETH rates
+          fetchConversionRate(), 
         ]);
       } catch (error) {
         setError(error);
@@ -480,53 +482,26 @@ const AssetDetails = () => {
     ckUSDCBalance,
   ]);
 
-  let supply_cap;
-  let borrow_cap;
-  let asset;
-
-  filteredItems.map((item, index) => {
-    asset = item[0];
-    supply_cap = item[1].Ok.configuration.supply_cap;
-    borrow_cap = item[1].Ok.configuration.borrow_cap;
-  });
-
-  console.log("asserhuhdhd", asset);
-
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
-      const supplyCapUsd = (parseFloat(supply_cap) * conversionRate).toFixed(2);
-      const borrowCapUsd = (parseFloat(borrow_cap) * conversionRate).toFixed(2);
-      setUsdBalance(balanceInUsd);
-      setSupplyCapUsd(supplyCapUsd);
-      setBorrowCapUsd(borrowCapUsd);
-
-      const percentage =
-        supplyCapUsd > 0
-          ? Math.round(
-            (parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100
-          )
-          : 0;
-      setSupplyPercentage(percentage);
-      console.log(`Balance as a percentage of Supply Cap: ${percentage}%`);
-    }
-  }, [balance, conversionRate, supply_cap]);
 
   function formatNumber(num) {
-    if (num === null || num === undefined) {
+    // Ensure num is a valid number
+    const parsedNum = parseFloat(num);
+  
+    if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
       return "0";
     }
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
+    if (parsedNum >= 1000000000) {
+      return (parsedNum / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
     }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (parsedNum >= 1000000) {
+      return (parsedNum / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
     }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    if (parsedNum >= 1000) {
+      return (parsedNum / 1000).toFixed(1).replace(/\.0$/, "") + "K";
     }
-    return num.toString();
+    return parsedNum.toFixed(2).toString();
   }
+  
 
 
   useEffect(() => {
@@ -608,21 +583,23 @@ const AssetDetails = () => {
       case "Supply Info":
         return (
           <SupplyInfo
-            filteredItems={filteredItems}
             formatNumber={formatNumber}
-            usdBalance={usdBalance}
-            borrowCapUsd={borrowCapUsd}
-            supplyPercentage={supplyPercentage}
+            supplyCap={supplyCap}
+            totalSupplied={totalSupplied}
+            supplyRateAPR={supplyRateAPR}
+            ltv={ltv}
+            canBeCollateral={canBeCollateral}
+            liquidationBonus={liquidationBonus}
+            liquidationThreshold={liquidationThreshold}
           />
         );
       case "Borrow Info":
         return (
           <BorrowInfo
-            filteredItems={filteredItems}
             formatNumber={formatNumber}
-            usdBalance={usdBalance}
-            borrowCapUsd={borrowCapUsd}
-            supplyPercentage={supplyPercentage}
+            borrowCap={borrowCap}
+            totalBorrowed={totalBorrowed}
+            borrowRateAPR={borrowRateAPR}
           />
         );
       default:
@@ -630,16 +607,27 @@ const AssetDetails = () => {
     }
   };
 
+  const ckBalance =
+    id === "ckBTC"
+      ? ckBTCBalance
+      : id === "ckETH"
+        ? ckETHBalance
+        : id === "ckUSDC"
+          ? ckUSDCBalance
+          : id === "ICP"
+            ? ckICPBalance
+            : null;
+
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-16 my-6 gap-6 mb-[5rem]">
-      <div className="w-full lg1:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+      <div className="w-full lg1:w-9/12  p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
         <h1 className="text-[#2A1F9D] font-bold my-2 dark:text-darkText">
           Reserve status & configuration
         </h1>
         <div className="w-full mt-8  lg:flex">
-          <div className="w-full mb-6 dxl1: block xl:hidden">
-            <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%] dark:text-darkText">
-              <span className="font-medium dark:text-darkText">
+          <div className="mb-6 text-auto md:block xl:hidden">
+            <div className="flex items-center justify-start gap-3 sxs3:justify-start sxs3:px-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%] dark:text-darkText">
+              <span className="font-medium text-nowrap dark:text-darkText">
                 {assetDetailFilter}
               </span>
               <span onClick={() => setIsFilter(!isFilter)}>
@@ -667,7 +655,7 @@ const AssetDetails = () => {
           </div>
 
           <div className="w-2/12 hidden xl:block">
-            <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative">
+            <div className="flex items-center justify-around gap-3 cursor-pointer text-[#2A1F9D] relative">
               <span className="font-medium text-[16px] dark:text-darkText">
                 {assetDetailFilter}
               </span>
@@ -789,7 +777,7 @@ const AssetDetails = () => {
                           <p className="text-[11px] font-light">${formatNumber(ckUSDCUsdBalance)}</p>
                         </>
                       )}
-                       {id === "ICP" && (
+                      {id === "ICP" && (
                         <>
                           <p>{ckICPBalance} {id}</p>
                           <p className="text-[11px] font-light">${formatNumber(ckICPUsdBalance)}</p>
@@ -812,22 +800,22 @@ const AssetDetails = () => {
                         const totalDebt = userData?.Ok?.total_debt || 0;
 
                         const filteredData = filteredItems?.find((item) => {
-                          console.log("itemsitems", item[1]?.Ok?.asset_name); // You can console.log here
-                          return item[1]?.Ok // Still need to return the condition
+                          console.log("itemsitems", item[1]?.Ok?.asset_name); 
+                          return item[1]?.Ok 
                         });
 
                         const supplyRateApr = filteredData[1]?.Ok.supply_rate_apr || 0;
                         const liquidationThreshold = filteredData[1]?.Ok.configuration.liquidation_threshold || 0;
                         const ckBalance =
-                        id === "ckBTC"
-                        ? ckBTCBalance
-                        : id === "ckETH"
-                          ? ckETHBalance
-                          : id === "ckUSDC"
-                            ? ckUSDCBalance
-                            : id === "ICP"
-                              ? ckICPBalance
-                              : null;
+                          id === "ckBTC"
+                            ? ckBTCBalance
+                            : id === "ckETH"
+                              ? ckETHBalance
+                              : id === "ckUSDC"
+                                ? ckUSDCBalance
+                                : id === "ICP"
+                                  ? ckICPBalance
+                                  : null;
 
                         console.log("ckBalance", ckBalance, "assetSupply", assetSupply, "assetBorrow", assetBorrow, "totalCollateral", totalCollateral, "totalDebt", totalDebt, "supplyRateApr", supplyRateApr, "liquidationThreshold", liquidationThreshold);
 
@@ -856,7 +844,7 @@ const AssetDetails = () => {
 
               </div>
 
-              {balance === "0" && (
+              {ckBalance === "0" && (
                 <div className="bg-[#59588D] mt-5 rounded-lg px-2 py-1">
                   <p className=" text-[10px] my-1">
                     Your wallet is empty. Please add assets to your wallet

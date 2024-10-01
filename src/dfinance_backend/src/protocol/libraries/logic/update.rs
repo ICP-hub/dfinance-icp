@@ -531,6 +531,7 @@ impl UpdateLogic {
     pub async fn update_user_data_repay(
         user_principal: Principal,
         params: ExecuteRepayParams,
+        usd_amount: f64,
     ) -> Result<(), String> {
         let user_data_result = mutate_state(|state| {
             let user_profile_data = &mut state.user_profile;
@@ -550,18 +551,18 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-        let ckbtc_to_usd_rate = 60554.70f64;
-        ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
+        // let ckbtc_to_usd_rate = 60554.70f64;
+        // ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
 
-        // Convert the supplied amount (in ckBTC) to ICP
-        let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
-        user_data.total_debt = Some(user_data.total_debt.unwrap_or(0.0) - amount_in_usd);
+        // // Convert the supplied amount (in ckBTC) to ICP
+        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+        
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
-            total_borrowed_value: user_data.total_debt.unwrap_or(0.0),
+            total_borrowed_value: user_data.total_debt.unwrap_or(0.0) - usd_amount.clone(),
             liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0.0),
         };
-
+        user_data.total_debt = Some(user_data.total_debt.unwrap_or(0.0) - usd_amount);
         let health_factor = calculate_health_factor(&user_position);
         user_data.health_factor = Some(health_factor);
 

@@ -153,45 +153,7 @@ const Borrow = ({
     }
   };
 
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(
-            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
-  );
-
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(
-            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
-  );
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(
-            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
+  const { ledgerActors } = useSelector((state) => state.ledger);
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -207,16 +169,11 @@ const Borrow = ({
   const handleBorrowETH = async () => {
     console.log("Borrow function called for", asset, amount);
     setIsLoading(true);
-    let ledgerActor;
-
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP;
+    const ledgerActor = ledgerActors[asset];
+  
+    if (!ledgerActor) {
+      console.error(`Ledger actor for ${asset} not found`);
+      return;
     }
 
     try {

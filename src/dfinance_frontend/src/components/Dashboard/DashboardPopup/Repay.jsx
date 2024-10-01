@@ -97,47 +97,7 @@ const Repay = ({
     }
   };
 
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(
-            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
-  );
-
-  // Memoized actor for ckETH using dynamic principal
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(
-            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
-  );
-
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(
-            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
+  const { ledgerActors } = useSelector((state) => state.ledger);
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -234,21 +194,18 @@ const Repay = ({
   const supplyBalance = numericBalance - transferfee;
 
   const handleApprove = async () => {
-    let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP;
+    // Select the ledger actor based on the asset from Redux
+    const ledgerActor = ledgerActors[asset];
+  
+    if (!ledgerActor) {
+      console.error(`Ledger actor for ${asset} not found`);
+      return;
     }
-
+  
     // Convert amount and transferFee to numbers and add them
     const repayAmount = Number(amount);
     const totalAmount = repayAmount + transferfee;
-
+  
     try {
       // Call the approval function
       const approval = await ledgerActor.icrc2_approve({
@@ -264,21 +221,22 @@ const Repay = ({
           subaccount: [],
         },
       });
-
-      console.log("Approve", approval);
+  
+      console.log('Approve', approval);
       setIsApproved(true);
-      console.log("isApproved state after approval:", isApproved);
-
+      console.log('isApproved state after approval:', isApproved);
+  
       // Show success notification
-      toast.success("Approval successful!");
+      toast.success('Approval successful!');
     } catch (error) {
       // Log the error
-      console.error("Approval failed:", error);
-
+      console.error('Approval failed:', error);
+  
       // Show error notification using Toastify
-      toast.error(`Error: ${error.message || "Approval failed!"}`);
+      toast.error(`Error: ${error.message || 'Approval failed!'}`);
     }
   };
+  
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -287,20 +245,15 @@ const Repay = ({
   }, [isLoading, onLoadingChange]);
   const handleRepayETH = async () => {
     console.log("Repay function called for", asset, amount);
-    let ledgerActor;
+    
 
     // Example logic to select the correct backend actor based on the asset
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP;
+    const ledgerActor = ledgerActors[asset];
+  
+    if (!ledgerActor) {
+      console.error(`Ledger actor for ${asset} not found`);
+      return;
     }
-
-    console.log("Backend actor", ledgerActor);
 
     try {
       // Convert the amount to the appropriate units, if necessary

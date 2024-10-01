@@ -190,52 +190,16 @@ const WithdrawPopup = ({
     }
   };
 
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckBTC]
-  );
-
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(assetPrincipal.ckETH, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckETH]
-  );
-
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(assetPrincipal.ckUSDC, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckUSDC]
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
+  const { ledgerActors } = useSelector((state) => state.ledger);
 
   const handleWithdraw = async () => {
     console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
-    let ledgerActor;
-
-    // Example logic to select the correct backend actor based on the asset
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP;
+    const ledgerActor = ledgerActors[asset];
+  
+    if (!ledgerActor) {
+      console.error(`Ledger actor for ${asset} not found`);
+      return;
     }
 
     try {

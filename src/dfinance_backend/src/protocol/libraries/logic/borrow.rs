@@ -315,7 +315,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
         Ok(new_balance) => {
             println!("Asset transfer from user to backend executed successfully");
             // ----------- Update logic here -------------
-            let _ = UpdateLogic::update_user_data_repay(user_principal, params).await;
+            let _ = UpdateLogic::update_user_data_repay(user_principal, params, usd_amount.clone()).await;
             Ok(new_balance)
         }
         Err(e) => {

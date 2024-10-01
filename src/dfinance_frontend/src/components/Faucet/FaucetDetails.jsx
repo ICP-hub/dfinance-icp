@@ -391,7 +391,7 @@ const FaucetDetails = () => {
 
       <div className="w-full mt-9 p-0 lg:px-9">
         {currentItems.length === 0 ? (
-          <div className="mt-[50px] flex flex-col justify-center align-center place-items-center ">
+          <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
             <div className="w-20 h-15">
               <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
             </div>

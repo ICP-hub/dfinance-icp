@@ -177,6 +177,22 @@ const DebtStatus = () => {
       return isValid;
     });
 
+    function formatNumber(num) {
+      if (num === null || num === undefined) {
+        return "0";
+      }
+      if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
+      }
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+      }
+      if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+      }
+      return num.toString();
+    }
+
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
@@ -184,21 +200,21 @@ const DebtStatus = () => {
         
       </div>
 
-      <div className="w-full min-h-[400px] mt-6 lg:px-10 ">
-        {filteredUsers.length === 0 ? <div className="mt-[120px] flex flex-col justify-center align-center place-items-center ">
+      <div className="w-full mt-6">
+        {filteredUsers.length === 0 ? <div className=" flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>
           <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
             No users found!
           </p>
-        </div> : <div className="w-full min-h-[390px] mt-6 p-0 lg:px-12 mb-20">
+        </div> : <div className="w-full min-h-[390px] mt-6 p-0 lg:px-12 mb-20 select-none">
           <div className="w-full overflow-auto content">
-            <table className="w-full text-[#2A1F9D] font-[500] text-sm md:text-sm lg:text-base dark:text-darkText">
+            <table className="w-full text-[#2A1F9D] font-[500] text-sm md:text-sm lg:text-sm dark:text-darkText">
               <thead>
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {LIQUIDATION_USERLIST_COL.slice(0, 2).map((item, index) => (
-                    <td key={index} className="p-3 whitespace-nowrap py-4">
+                    <td key={index} className="p-3 pl-1 whitespace-nowrap py-4">
                       {item.header}
                     </td>
                   ))}
@@ -236,7 +252,7 @@ const DebtStatus = () => {
                       <td className="p-2 align-top py-8 ">
                         <div className="flex flex-row ml-2 mt-2">
                           <div>
-                            <p className="font-medium">${mappedItem.item[1].total_debt}</p>
+                            <p className="font-medium">${formatNumber(mappedItem.item[1].total_debt)}</p>
                           </div>
                         </div>
                       </td>

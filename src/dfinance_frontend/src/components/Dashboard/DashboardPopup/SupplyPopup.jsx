@@ -350,7 +350,7 @@ const SupplyPopup = ({
         ledgerActor = ledgerActorckUSDC;
       }
       else if (asset === "ICP") {
-        ledgerActor = ledgerActorckUSDC;
+        ledgerActor = ledgerActorICP;
       }
 
       const amountAsNat64 = BigInt(amount);
@@ -464,7 +464,6 @@ const SupplyPopup = ({
           const result = await getUserData(principal.toString());
           console.log('get_user_data:', result);
           setUserData(result);
-          updateWalletDetailTab(result);
         } catch (error) {
           console.error('Error fetching user data:', error);
         }

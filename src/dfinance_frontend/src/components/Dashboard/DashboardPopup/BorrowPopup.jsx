@@ -335,7 +335,6 @@ const Borrow = ({
           const result = await getUserData(principal.toString());
           console.log('get_user_data:', result);
           setUserData(result);
-          updateWalletDetailTab(result);
         } catch (error) {
           console.error('Error fetching user data:', error);
         }

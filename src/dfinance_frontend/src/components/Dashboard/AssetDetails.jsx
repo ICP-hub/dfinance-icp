@@ -9,7 +9,7 @@ import SupplyInfo from "./DashboardPopup/SupplyInfo";
 import BorrowInfo from "./DashboardPopup/BorrowInfo";
 import { useParams } from "react-router-dom";
 import { Modal } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   setIsWalletConnected,
@@ -37,6 +37,34 @@ import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ck
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 
 const AssetDetails = () => {
+  const location = useLocation();
+  const { assetData } = location.state || {};
+
+  const [borrowRateAPR, setBorrowRateAPR] = useState(null);
+  const [supplyRateAPR, setSupplyRateAPR] = useState(null);
+  const [totalBorrowed, setTotalBorrowed] = useState(null);
+  const [totalSupplied, setTotalSupplied] = useState(null);
+  const [borrowCap, setBorrowCap] = useState(null);
+  const [supplyCap, setSupplyCap] = useState(null);
+  const [ltv, setLtv] = useState(null);
+  const [liquidationBonus, setLiquidationBonus] = useState(null);
+  const [liquidationThreshold, setLiquidationThreshold] = useState(null);
+  const [canBeCollateral, setCanBeCollateral] = useState(null);
+
+  useEffect(() => {
+    if (assetData?.Ok) {
+      setBorrowRateAPR(assetData.Ok.borrow_rate);
+      setSupplyRateAPR(assetData.Ok.supply_rate_apr?.[0]);
+      setTotalBorrowed(assetData.Ok.total_borrowed);
+      setTotalSupplied(assetData.Ok.total_supply);
+      setBorrowCap(assetData.Ok.configuration?.borrow_cap);
+      setSupplyCap(assetData.Ok.configuration?.supply_cap);
+      setLtv(assetData.Ok.configuration?.ltv);
+      setLiquidationBonus(assetData.Ok.configuration?.liquidation_bonus);
+      setLiquidationThreshold(assetData.Ok.configuration?.liquidation_threshold);
+      setCanBeCollateral(assetData.Ok.can_be_collateral?.[0]);
+    }
+  }, [assetData]);
 
   const navigate = useNavigate()
   const dispatch = useDispatch()
@@ -167,16 +195,8 @@ const AssetDetails = () => {
   const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
-
-  const [balance, setBalance] = useState(null);
-  const [usdBalance, setUsdBalance] = useState(null);
-  const [supplyCapUsd, setSupplyCapUsd] = useState(null);
-  const [supplyPercentage, setSupplyPercentage] = useState("");
-  const [borrowCapUsd, setBorrowCapUsd] = useState(null);
-  const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isCollateral, setIsCollateral] = useState(true);
 
 
   const handleFilter = (value) => {
@@ -444,12 +464,10 @@ const AssetDetails = () => {
   }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
 
   useEffect(() => {
-    // Start polling at regular intervals
     const intervalId = setInterval(() => {
       fetchConversionRate();
     }, pollInterval);
 
-    // Clear the interval on component unmount
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
@@ -480,37 +498,6 @@ const AssetDetails = () => {
     ckUSDCBalance,
   ]);
 
-  let supply_cap;
-  let borrow_cap;
-  let asset;
-
-  filteredItems.map((item, index) => {
-    asset = item[0];
-    supply_cap = item[1].Ok.configuration.supply_cap;
-    borrow_cap = item[1].Ok.configuration.borrow_cap;
-  });
-
-  console.log("asserhuhdhd", asset);
-
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const balanceInUsd = (parseFloat(balance) * conversionRate).toFixed(2);
-      const supplyCapUsd = (parseFloat(supply_cap) * conversionRate).toFixed(2);
-      const borrowCapUsd = (parseFloat(borrow_cap) * conversionRate).toFixed(2);
-      setUsdBalance(balanceInUsd);
-      setSupplyCapUsd(supplyCapUsd);
-      setBorrowCapUsd(borrowCapUsd);
-
-      const percentage =
-        supplyCapUsd > 0
-          ? Math.round(
-            (parseFloat(balanceInUsd) / parseFloat(supplyCapUsd)) * 100
-          )
-          : 0;
-      setSupplyPercentage(percentage);
-      console.log(`Balance as a percentage of Supply Cap: ${percentage}%`);
-    }
-  }, [balance, conversionRate, supply_cap]);
 
   function formatNumber(num) {
     if (num === null || num === undefined) {
@@ -525,7 +512,7 @@ const AssetDetails = () => {
     if (num >= 1000) {
       return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
     }
-    return num.toString();
+    return num.toFixed(2).toString();
   }
 
 
@@ -608,21 +595,23 @@ const AssetDetails = () => {
       case "Supply Info":
         return (
           <SupplyInfo
-            filteredItems={filteredItems}
             formatNumber={formatNumber}
-            usdBalance={usdBalance}
-            borrowCapUsd={borrowCapUsd}
-            supplyPercentage={supplyPercentage}
+            supplyCap={supplyCap}
+            totalSupplied={totalSupplied}
+            supplyRateAPR={supplyRateAPR}
+            ltv={ltv}
+            canBeCollateral={canBeCollateral}
+            liquidationBonus={liquidationBonus}
+            liquidationThreshold={liquidationThreshold}
           />
         );
       case "Borrow Info":
         return (
           <BorrowInfo
-            filteredItems={filteredItems}
             formatNumber={formatNumber}
-            usdBalance={usdBalance}
-            borrowCapUsd={borrowCapUsd}
-            supplyPercentage={supplyPercentage}
+            borrowCap={borrowCap}
+            totalBorrowed={totalBorrowed}
+            borrowRateAPR={borrowRateAPR}
           />
         );
       default:
@@ -630,16 +619,27 @@ const AssetDetails = () => {
     }
   };
 
+  const ckBalance =
+    id === "ckBTC"
+      ? ckBTCBalance
+      : id === "ckETH"
+        ? ckETHBalance
+        : id === "ckUSDC"
+          ? ckUSDCBalance
+          : id === "ICP"
+            ? ckICPBalance
+            : null;
+
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-16 my-6 gap-6 mb-[5rem]">
-      <div className="w-full lg1:w-9/12 min-h-[450px] p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+      <div className="w-full lg1:w-9/12  p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
         <h1 className="text-[#2A1F9D] font-bold my-2 dark:text-darkText">
           Reserve status & configuration
         </h1>
         <div className="w-full mt-8  lg:flex">
-          <div className="w-full mb-6 dxl1: block xl:hidden">
-            <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%] dark:text-darkText">
-              <span className="font-medium dark:text-darkText">
+          <div className="mb-6 text-auto md:block xl:hidden">
+            <div className="flex items-center justify-start gap-3 sxs3:justify-start sxs3:px-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%] dark:text-darkText">
+              <span className="font-medium text-nowrap dark:text-darkText">
                 {assetDetailFilter}
               </span>
               <span onClick={() => setIsFilter(!isFilter)}>
@@ -667,7 +667,7 @@ const AssetDetails = () => {
           </div>
 
           <div className="w-2/12 hidden xl:block">
-            <div className="flex items-center justify-between gap-3 cursor-pointer text-[#2A1F9D] relative">
+            <div className="flex items-center justify-around gap-3 cursor-pointer text-[#2A1F9D] relative">
               <span className="font-medium text-[16px] dark:text-darkText">
                 {assetDetailFilter}
               </span>
@@ -789,7 +789,7 @@ const AssetDetails = () => {
                           <p className="text-[11px] font-light">${formatNumber(ckUSDCUsdBalance)}</p>
                         </>
                       )}
-                       {id === "ICP" && (
+                      {id === "ICP" && (
                         <>
                           <p>{ckICPBalance} {id}</p>
                           <p className="text-[11px] font-light">${formatNumber(ckICPUsdBalance)}</p>
@@ -819,15 +819,15 @@ const AssetDetails = () => {
                         const supplyRateApr = filteredData[1]?.Ok.supply_rate_apr || 0;
                         const liquidationThreshold = filteredData[1]?.Ok.configuration.liquidation_threshold || 0;
                         const ckBalance =
-                        id === "ckBTC"
-                        ? ckBTCBalance
-                        : id === "ckETH"
-                          ? ckETHBalance
-                          : id === "ckUSDC"
-                            ? ckUSDCBalance
-                            : id === "ICP"
-                              ? ckICPBalance
-                              : null;
+                          id === "ckBTC"
+                            ? ckBTCBalance
+                            : id === "ckETH"
+                              ? ckETHBalance
+                              : id === "ckUSDC"
+                                ? ckUSDCBalance
+                                : id === "ICP"
+                                  ? ckICPBalance
+                                  : null;
 
                         console.log("ckBalance", ckBalance, "assetSupply", assetSupply, "assetBorrow", assetBorrow, "totalCollateral", totalCollateral, "totalDebt", totalDebt, "supplyRateApr", supplyRateApr, "liquidationThreshold", liquidationThreshold);
 
@@ -856,7 +856,7 @@ const AssetDetails = () => {
 
               </div>
 
-              {balance === "0" && (
+              {ckBalance === "0" && (
                 <div className="bg-[#59588D] mt-5 rounded-lg px-2 py-1">
                   <p className=" text-[10px] my-1">
                     Your wallet is empty. Please add assets to your wallet

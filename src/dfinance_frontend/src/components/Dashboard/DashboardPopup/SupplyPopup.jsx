@@ -5,11 +5,13 @@ import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import Setting from "../../../../public/Helpers/settings.png";
+// import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
+// import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
 import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useMemo } from "react";
 import { useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";  
+import { toast } from "react-toastify";  // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
 
 const SupplyPopup = ({
@@ -47,6 +49,31 @@ const SupplyPopup = ({
         return value;
     }
   };
+
+  // useEffect(() => {
+  //   console.log('Asset:', asset);
+  //   console.log('Liquidation Threshold:', liquidationThreshold);
+  //   console.log('Asset Supply:', assetSupply);
+  //   console.log('Asset Borrow:', assetBorrow, supplyRateAPR);
+
+  //   const healthFactor = calculateHealthFactor(assetSupply, assetBorrow, liquidationThreshold);
+  //   const healthf=0
+  //   console.log('Health Factor:', healthFactor);
+  //   const ltv = calculateLTV(assetSupply, assetBorrow);
+  //   const ltV=80;
+  //   console.log('LTV:', ltv);
+
+  //      setPrevHealthFactor(currentHealthFactor);
+
+  //      setCurrentHealthFactor(healthFactor);
+
+  //   if (healthFactor < 1 || ltv >= liquidationThreshold) {
+  //     setIsButtonDisabled(true); 
+  //   } else {
+  //     setIsButtonDisabled(false); 
+  //   }
+
+  // }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
 
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
@@ -133,29 +160,29 @@ const SupplyPopup = ({
     if (!isNaN(numericAmount) && numericAmount >= 0 && supplyBalance >= 0) {
       if (numericAmount <= supplyBalance) {
         const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2))); 
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
         setAmount(inputAmount);
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-         setUsdValue(0);
+        // setUsdValue(0);
       }
     } else if (inputAmount === "") {
       setAmount("");
-      setUsdValue(0);
+      // setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-      setUsdValue(0);
+      // setUsdValue(0);
     }
   };
 
   useEffect(() => {
     if (amount && conversionRate) {
       const convertedValue = parseFloat(amount) * conversionRate;
-      setUsdValue(convertedValue); 
+      setUsdValue(convertedValue); // Update USD value
     } else {
-      setUsdValue(0); 
+      setUsdValue(0); // Reset USD value if conditions are not met
     }
   }, [amount, conversionRate]);
 
@@ -168,7 +195,7 @@ const SupplyPopup = ({
           const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
-           
+            // console.log(`get_asset_principle (${asset}):`, result);
             setAssetPrincipal((prev) => ({
               ...prev,
               [asset]: result,
@@ -185,7 +212,9 @@ const SupplyPopup = ({
     fetchAssetPrinciple();
   }, [principal, backendActor]);
 
-  
+  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
+  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
+  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -209,7 +238,8 @@ const SupplyPopup = ({
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-    
+      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
+      return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
       throw error;
@@ -219,33 +249,33 @@ const SupplyPopup = ({
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-          assetPrincipal.ckBTC,
+          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
         )
-        : null, 
-    [createLedgerActor, assetPrincipal.ckBTC] 
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
 
   const ledgerActorckETH = useMemo(
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-          assetPrincipal.ckETH, 
+          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
         )
-        : null, 
-    [createLedgerActor, assetPrincipal.ckETH] 
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
 
   const ledgerActorckUSDC = useMemo(
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-          assetPrincipal.ckUSDC, 
+          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
           ledgerIdlFactory
         )
-        : null, 
-    [createLedgerActor, assetPrincipal.ckUSDC] 
+        : null, // Return null if principal is not available yet
+    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
 
   const ledgerActorICP = useMemo(
@@ -274,7 +304,7 @@ const SupplyPopup = ({
     const totalAmount = supplyAmount + transferfee;
 
     try {
-     
+      // Call the approval function
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
         memo: [],
@@ -293,13 +323,13 @@ const SupplyPopup = ({
       setIsApproved(true);
       console.log("isApproved state after approval:", isApproved);
 
-      
+      // Show success notification
       toast.success("Approval successful!");
     } catch (error) {
-      
+      // Log the error
       console.error("Approval failed:", error);
 
-    
+      // Show error notification using Toastify
       toast.error(`Error: ${error.message || "Approval failed!"}`);
     }
   };
@@ -326,20 +356,21 @@ const SupplyPopup = ({
       const amountAsNat64 = BigInt(amount);
       console.log("Backend actor", backendActor);
 
+      // Calling the backend actor for supply
       const sup = await backendActor.supply(asset, amountAsNat64, true);
       console.log("Supply", sup);
 
-      
+      // Set state on success
       setIsPaymentDone(true);
       setIsVisible(false);
 
-      
+      // Show success notification
       toast.success("Supply successful!");
     } catch (error) {
-      
+      // Log the error for debugging
       console.error("Supply failed:", error);
 
-   
+      // Show error notification using Toastify
       toast.error(`Error: ${error.message || "Supply action failed!"}`);
     }
   };
@@ -386,8 +417,9 @@ const SupplyPopup = ({
     const ltv = calculateLTV(assetSupply, assetBorrow);
     console.log('LTV:', ltv);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(healthFactor.toFixed(2));
-   
+    setCurrentHealthFactor(healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
+    //|| liquidationThreshold>ltv
+    
     if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
@@ -398,8 +430,10 @@ const SupplyPopup = ({
 
 
   const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
-    const amountTaken = 0; 
-    const amountAdded = usdValue || 0; 
+    const amountTaken = 0; // Ensure usdValue is treated as a number
+    const amountAdded = usdValue || 0; // No amount added for now, but keeping it in case of future use
+
+    // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
     const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
     console.log("totalCollateralValue", totalCollateralValue)
@@ -431,7 +465,7 @@ const SupplyPopup = ({
           const result = await getUserData(principal.toString());
           console.log('get_user_data:', result);
           setUserData(result);
-          updateWalletDetailTab(result);
+          
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
@@ -450,9 +484,10 @@ const SupplyPopup = ({
       const result = await backendActor.get_user_data(user);
       console.log('get_user_data in supplypopup:', result);
 
-      
+      // Check if the result is in the expected format (Ok.health_factor)
       if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor);  
+        setHealthFactorBackend(result.Ok.health_factor );
+        // Store health_factor in state
       } else {
         setError("Health factor not found");
       }
@@ -533,7 +568,7 @@ const SupplyPopup = ({
                             : healthFactorBackend <= 2
                               ? "text-orange-400"
                               : "text-orange-300"
-                        }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
+                        }`}>{( healthFactorBackend> 100 ? "Infinity" : parseFloat(healthFactorBackend).toFixed(2))}</span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${value > 3
@@ -576,7 +611,7 @@ const SupplyPopup = ({
               <img
                 src={image}
                 alt="asset icon"
-                className="object-cover w-5 h-5 rounded-full" 
+                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
               />
               <div className="relative group">
                 <Info size={16} className="ml-2 cursor-pointer" />
@@ -609,13 +644,13 @@ const SupplyPopup = ({
             {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
           </button>
 
-          
+          {/* Fullscreen Loading Overlay with Dim Background */}
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
               style={{
-                background: "rgba(0, 0, 0, 0.4)", 
-                backdropFilter: "blur(1px)", 
+                background: "rgba(0, 0, 0, 0.4)", // Dim background
+                backdropFilter: "blur(1px)", // Blur effect
               }}
             >
               <div className="loader"></div>
@@ -640,6 +675,16 @@ const SupplyPopup = ({
             <p>
               You received {amount} d{asset}
             </p>
+
+            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
+              <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
+                <span>Add dToken to wallet to track your balance.</span>
+              </div>
+              <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
+                <Wallet />
+                Add to wallet
+              </button>
+            </div> */}
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

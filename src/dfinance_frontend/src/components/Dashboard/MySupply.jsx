@@ -2134,14 +2134,7 @@ const MySupply = () => {
                                     )}%`}
                               </p>
                             </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-3 mb-4">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                Can Be Collateral
-                              </p>
-                              <div className="-mr-3 -mt-4 mb-4">
-                                <CustomizedSwitches />
-                              </div>
-                            </div>
+                            
                             <div className="flex justify-center gap-2 mt-2 mb-2">
                               <Button
                                 title={"Borrow"}

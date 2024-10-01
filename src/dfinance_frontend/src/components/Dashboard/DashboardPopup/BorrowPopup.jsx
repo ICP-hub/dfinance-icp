@@ -288,7 +288,7 @@ const Borrow = ({
     const ltv = calculateLTV(nextTotalDebt, totalCollateral);
     console.log('LTV:', ltv * 100);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(healthFactor.toFixed(2));
+    setCurrentHealthFactor(healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
 
     if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
       setIsButtonDisabled(true); 
@@ -335,7 +335,7 @@ const Borrow = ({
           const result = await getUserData(principal.toString());
           console.log('get_user_data:', result);
           setUserData(result);
-          updateWalletDetailTab(result);
+          
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
@@ -356,7 +356,7 @@ const Borrow = ({
 
       
       if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor);  
+        setHealthFactorBackend(result.Ok.health_factor );
       } else {
         setError("Health factor not found");
       }
@@ -470,7 +470,7 @@ const Borrow = ({
                             : healthFactorBackend <= 2
                               ? "text-orange-400"
                               : "text-orange-300"
-                        }`}>{parseFloat(healthFactorBackend).toFixed(2)}</span>
+                        }`}>{parseFloat( healthFactorBackend> 100 ? "Infinity" : parseFloat(healthFactorBackend).toFixed(2))}</span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3

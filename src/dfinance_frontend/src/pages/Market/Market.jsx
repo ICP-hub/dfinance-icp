@@ -28,6 +28,7 @@ import {
 } from "../../redux/reducers/utilityReducer"
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react"
+import AssetDetails from "../../components/Dashboard/AssetDetails"
 
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
@@ -130,10 +131,10 @@ const WalletDetails = () => {
 
 
 
-  const handleDetailsClick = (asset) => {
+  const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);
-    // console.log("Selected Asset:", asset);
-    navigate(`/dashboard/asset-details/${asset}`);
+    console.log("assetdetailsinMarket", assetData)
+    navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
   };
 
 
@@ -283,7 +284,7 @@ const WalletDetails = () => {
       }
 
       <div className="w-full mt-6 lg:px-10">
-        {currentItems.length === 0 ? <div className="mt-[50px] flex flex-col justify-center align-center place-items-center ">
+        {currentItems.length === 0 ? <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
           </div>
@@ -342,7 +343,7 @@ const WalletDetails = () => {
                       <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_supply_count}</p> */}
-                          <p >{formatNumber(item[1].Ok.total_supply)}</p>
+                          <p >${formatNumber(item[1].Ok.total_supply)}</p>
                         </div>
                         <div className="md:hidden justify-center ml-6" onClick={() => handleChevronClick(item[0])}>
                           <ChevronRight size={22} color={chevronColor} />
@@ -350,23 +351,25 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
-                    {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100)}%`}</div></td>
+                      {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100).toFixed(2)}%`}</div></td>
                     <td className="p-3 align-center hidden md:table-cell">
                       <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_borrow_count}</p> */}
-                          <p >{formatNumber(item[1].Ok.total_borrowed)}</p>
+                          <p >${formatNumber(item[1].Ok.total_borrowed)}</p>
                         </div>
                       </div>
 
                     </td>
                     <td className="p-3 align-center hidden md:table-cell">
-                      <div className="flex justify-center"> {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100)}%`}</div>
+                      <div className="flex justify-center"> {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100).toFixed(2)}%`}</div>
                     </td>
                     <td className="p-3 align-center">
                       <div className="w-full flex justify-end align-center">
                         <Button title={"Details"} className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-sm
-                               lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]     font-inter" onClickHandler={() => handleDetailsClick(`${item[0]}`)} />
+                               lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]     font-inter"
+                          onClickHandler={() => handleDetailsClick(item[0], item[1])}
+                        />
                       </div>
                     </td>
                   </tr>

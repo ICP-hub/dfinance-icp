@@ -12,7 +12,6 @@ import { useEffect } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
 
-
 const Borrow = ({
   asset,
   image,
@@ -29,7 +28,6 @@ const Borrow = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -38,7 +36,7 @@ const Borrow = ({
   const [isAcknowledged, setIsAcknowledged] = useState(false);
 
   const { createLedgerActor, backendActor, principal } = useAuth();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,10 +49,10 @@ const Borrow = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch('http://localhost:5000/conversion-rates'); 
+        const response = await fetch("http://localhost:5000/conversion-rates");
 
         if (!response.ok) {
-          throw new Error('Failed to fetch conversion rates from server');
+          throw new Error("Failed to fetch conversion rates from server");
         }
 
         const data = await response.json();
@@ -68,10 +66,10 @@ const Borrow = ({
             rate = data.ethereum?.usd;
             break;
           case "ckUSDC":
-            rate = data['usd-coin']?.usd;
+            rate = data["usd-coin"]?.usd;
             break;
           case "ICP":
-            rate = data['internet-computer']?.usd;
+            rate = data["internet-computer"]?.usd;
             break;
           default:
             console.error(`Unsupported asset: ${asset}`);
@@ -84,9 +82,11 @@ const Borrow = ({
         } else {
           console.error("Conversion rate not found for asset:", asset);
         }
-
       } catch (error) {
-        console.error("Error fetching conversion rate from server:", error.message);
+        console.error(
+          "Error fetching conversion rate from server:",
+          error.message
+        );
       }
     };
 
@@ -94,7 +94,6 @@ const Borrow = ({
       fetchConversionRate();
     }
   }, [asset]);
-
 
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
@@ -120,9 +119,9 @@ const Borrow = ({
     fetchAssetPrinciple();
   }, [principal, backendActor]);
 
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
+  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
+  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
+  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -154,26 +153,24 @@ const Borrow = ({
     }
   };
 
-
   const ledgerActorckBTC = useMemo(
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
-
 
   const ledgerActorckETH = useMemo(
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
@@ -181,9 +178,9 @@ const Borrow = ({
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
@@ -202,7 +199,6 @@ const Borrow = ({
     }
   }, [isLoading, onLoadingChange]);
 
-
   const handleAcknowledgeChange = (e) => {
     setIsAcknowledged(e.target.checked);
   };
@@ -213,33 +209,28 @@ const Borrow = ({
     setIsLoading(true);
     let ledgerActor;
 
-    
     if (asset === "ckBTC") {
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
     } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC; 
-    }
-    else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP; 
+      ledgerActor = ledgerActorckUSDC;
+    } else if (asset === "ICP") {
+      ledgerActor = ledgerActorICP;
     }
 
     try {
-     
       const borrowResult = await backendActor.borrow(asset, Number(amount));
       console.log("Borrow result", borrowResult);
       setIsPaymentDone(true);
       setIsVisible(false);
       toast.success("Borrow successful!");
-     
     } catch (error) {
       console.error("Error borrowing:", error);
       toast.error(`Error: ${error.message || "Borrow action failed!"}`);
       setIsPaymentDone(false);
       setIsVisible(true);
-      setIsLoading(false)
-      
+      setIsLoading(false);
     }
   };
 
@@ -249,80 +240,107 @@ const Borrow = ({
     window.location.reload();
   };
   const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset); 
-  console.log("Fees:", fees); 
-  const normalizedAsset = asset ? asset.toLowerCase() : 'default';
+  console.log("Asset:", asset);
+  console.log("Fees:", fees);
+  const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
 
-  const numericBalance = parseFloat(balance); 
+  const numericBalance = parseFloat(balance);
   const transferFee = Number(fees[normalizedAsset] || fees.default);
-  const supplyBalance = numericBalance - transferFee; 
+  const supplyBalance = numericBalance - transferFee;
 
-  console.log("Supply Balance:", supplyBalance); 
+  console.log("Supply Balance:", supplyBalance);
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target) && !isLoading) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
         setIsModalOpen(false);
       }
     };
 
     if (isModalOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
-
-
   useEffect(() => {
-    const healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold);
-    console.log('Health Factor:', healthFactor);
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold
+    );
+    console.log("Health Factor:", healthFactor);
     const amountTaken = usdValue || 0;
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-    console.log("NextTotalDebt", nextTotalDebt, "TOtal Collateral", totalCollateral, "threshold", liquidationThreshold)
+    console.log(
+      "NextTotalDebt",
+      nextTotalDebt,
+      "TOtal Collateral",
+      totalCollateral,
+      "threshold",
+      liquidationThreshold
+    );
     const ltv = calculateLTV(nextTotalDebt, totalCollateral);
-    console.log('LTV:', ltv * 100);
+    console.log("LTV:", ltv * 100);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+    );
 
     if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
-      setIsButtonDisabled(true); 
+      setIsButtonDisabled(true);
     } else {
-      setIsButtonDisabled(false); 
+      setIsButtonDisabled(false);
     }
 
     if (isAcknowledged) {
       setIsButtonDisabled(false);
     }
+  }, [
+    asset,
+    liquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+    isAcknowledged,
+    setIsAcknowledged,
+  ]);
 
-  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue, isAcknowledged, setIsAcknowledged]);
-
-  const amountTaken = usdValue || 0; 
+  const amountTaken = usdValue || 0;
   const amountAdded = 0;
-  const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold,) => {
-    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
+  const calculateHealthFactor = (
+    totalCollateral,
+    totalDebt,
+    liquidationThreshold
+  ) => {
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
     if (totalDeptValue === 0) {
       return Infinity;
     }
-    return (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
+    return (
+      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+    );
   };
 
-
   const totalDeptValueLTV = parseFloat(totalDebt) + parseFloat(amountTaken);
-
-
 
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
     if (totalCollateral === 0) {
       return 0;
     }
-    return (nextTotalDebt / totalCollateral);
+    return nextTotalDebt / totalCollateral;
   };
 
   const [healthFactorBackend, setHealthFactorBackend] = useState(null);
@@ -333,14 +351,13 @@ const Borrow = ({
       if (backendActor) {
         try {
           const result = await getUserData(principal.toString());
-          console.log('get_user_data:', result);
+          console.log("get_user_data:", result);
           setUserData(result);
-          
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error("Error fetching user data:", error);
         }
       } else {
-        console.error('Backend actor initialization failed.');
+        console.error("Backend actor initialization failed.");
       }
     };
     fetchUserData();
@@ -352,58 +369,48 @@ const Borrow = ({
     }
     try {
       const result = await backendActor.get_user_data(user);
-      console.log('get_user_data in supplypopup:', result);
+      console.log("get_user_data in supplypopup:", result);
 
-      
       if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor );
+        setHealthFactorBackend(result.Ok.health_factor);
       } else {
         setError("Health factor not found");
       }
       return result;
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error("Error fetching user data:", error);
       setError(error.message);
     }
   };
 
-
   const [availableBorrows, setAvailableBorrows] = useState(0);
 
- 
   const ltv2 = 0.7;
-
-
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
 
-    
     const numericAmount = parseFloat(inputAmount);
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
-
-     
       const convertedValue = numericAmount * conversionRate;
-      setUsdValue(parseFloat(convertedValue.toFixed(2))); 
+      setUsdValue(parseFloat(convertedValue.toFixed(2)));
       setAmount(inputAmount);
       setError("");
-
     } else if (inputAmount === "") {
-     
       setAmount("");
-       setUsdValue(0);
+      setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-       setUsdValue(0);
+      setUsdValue(0);
     }
     useEffect(() => {
       if (amount && conversionRate) {
         const convertedValue = parseFloat(amount) * conversionRate;
         setUsdValue(convertedValue);
       } else {
-        setUsdValue(0); 
+        setUsdValue(0);
       }
     }, [amount, conversionRate]);
   };
@@ -428,7 +435,7 @@ const Borrow = ({
                     placeholder="Enter Amount"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                  {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
@@ -443,7 +450,6 @@ const Borrow = ({
                   <p className="text-xs mt-4">
                     ${parseFloat(totalCollateral)?.toFixed(2) || "0.00"} Max
                   </p>
-
                 </div>
               </div>
             </div>
@@ -455,34 +461,48 @@ const Borrow = ({
                 <div className="w-full flex flex-col my-1">
                   <div className="w-full flex justify-between items-center my-1 mb-2">
                     <p>APY, borrow rate</p>
-                    <p>{(supplyRateAPR * 100) < 0.1 ? '<0.1%' : `${(supplyRateAPR * 100)}%`}</p>
+                    <p>
+                      {supplyRateAPR * 100 < 0.1
+                        ? "<0.1%"
+                        : `${supplyRateAPR * 100}%`}
+                    </p>
                   </div>
 
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>
-                      <span className={`${healthFactorBackend > 3
-                        ? "text-green-500"
-                        : healthFactorBackend <= 1
-                          ? "text-red-500"
-                          : healthFactorBackend <= 1.5
+                      <span
+                        className={`${
+                          healthFactorBackend > 3
+                            ? "text-green-500"
+                            : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
                             ? "text-orange-600"
                             : healthFactorBackend <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                        }`}>{parseFloat( healthFactorBackend> 100 ? "Infinity" : parseFloat(healthFactorBackend).toFixed(2))}</span>
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
+                      >
+                        {parseFloat(
+                          healthFactorBackend > 100
+                            ? "Infinity"
+                            : parseFloat(healthFactorBackend).toFixed(2)
+                        )}
+                      </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
+                        className={`${
+                          currentHealthFactor > 3
+                            ? "text-green-500"
+                            : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -493,10 +513,8 @@ const Borrow = ({
                     <p className="text-gray-500">liquidation at &lt;1</p>
                   </div>
                 </div>
-
               </div>
             </div>
-
 
             <div className="w-full mt-3">
               <div className="w-full">
@@ -506,7 +524,7 @@ const Borrow = ({
                   <img
                     src={image}
                     alt="asset icon"
-                    className="object-cover w-5 h-5 rounded-full" 
+                    className="object-cover w-5 h-5 rounded-full"
                   />
                   <div className="relative group">
                     <Info size={16} className="ml-2 cursor-pointer" />
@@ -543,7 +561,8 @@ const Borrow = ({
                             </div>
                           </div>
                           <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                            Borrowing this amount will reduce your health factor and increase risk of liquidation
+                            Borrowing this amount will reduce your health factor
+                            and increase risk of liquidation
                           </div>
                         </div>
                       </div>
@@ -552,12 +571,14 @@ const Borrow = ({
                 </div>
               </div>
 
-
               <button
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                disabled={isLoading || (amount <= 0 || null) || isButtonDisabled}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
+                  isLoading || amount <= 0 || isButtonDisabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}
               </button>
@@ -565,18 +586,16 @@ const Borrow = ({
                 <div
                   className="fixed inset-0 flex items-center justify-center z-50"
                   style={{
-                    background: "rgba(0, 0, 0, 0.4)", 
-                    backdropFilter: "blur(1px)", 
+                    background: "rgba(0, 0, 0, 0.4)",
+                    backdropFilter: "blur(1px)",
                   }}
                 >
                   <div className="loader"></div>
                 </div>
               )}
             </div>
-
           </div>
         </div>
-
       )}
       {isPaymentDone && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">

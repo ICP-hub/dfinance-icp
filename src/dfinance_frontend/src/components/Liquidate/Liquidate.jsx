@@ -76,7 +76,7 @@ const Liquidate = () => {
         setInputValue(event.target.value);
     };
 
-    
+
 
     const walletDisplayName = (wallet) => {
         switch (wallet) {
@@ -93,13 +93,13 @@ const Liquidate = () => {
         }
     };
 
-    
- 
+
+
 
     const [showDebtStatus, setShowDebtStatus] = useState(false);
     const [showWarning, setShowWarning] = useState(false); // Warning state
 
-  
+
 
     useEffect(() => {
         if (isWalletCreated) {
@@ -112,9 +112,9 @@ const Liquidate = () => {
         }
     }, [isWalletCreated, isAuthenticated]);
 
-  
 
-  
+
+
 
     const { pathname } = useLocation();
     const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
@@ -157,7 +157,7 @@ const Liquidate = () => {
                         <h1 className="text-[#2A1F9D] font-bold my-2 text-xl dark:text-darkText mb-3">
                             Check Users in Debt
                         </h1>
-                        
+
                         {/* Display the warning if not authenticated */}
                         {showWarning && (
                             <div className="text-red-500 font-bold mb-4">
@@ -171,70 +171,70 @@ const Liquidate = () => {
                     <DebtStatus onBackClick={handleBackClick} />
                 )}
 
-{(isSwitchingWallet || !isAuthenticated) && (
-                <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
-                    <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
-                        {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
-                        <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">
-                            {connectedWallet && (
-                                <>
-                                    <span className="text-[#2A1F9D] dark:text-blue-400 font-semibold" >{walletDisplayName(connectedWallet)}</span>
-                                    <span> is connected</span>
-                                </>
-                            )}
-                        </h1>
-                        <div className='flex flex-col gap-2 mt-3 text-sm'>
+                {(isSwitchingWallet || !isAuthenticated) && (
+                    <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+                        <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
+                            {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
+                            <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">
+                                {connectedWallet && (
+                                    <>
+                                        <span className="text-[#2A1F9D] dark:text-blue-400 font-semibold" >{walletDisplayName(connectedWallet)}</span>
+                                        <span> is connected</span>
+                                    </>
+                                )}
+                            </h1>
+                            <div className='flex flex-col gap-2 mt-3 text-sm'>
 
-                            {connectedWallet !== "ii" && (
-                                <div
-                                    className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
-                                    onClick={() => { isSwitchingWallet ? loginHandlerIsSwitch("ii") : loginHandler("ii") }}
-                                >
-                                    Internet Identity
-                                    <div className='w-8 h-8'>
-                                        <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
+                                {connectedWallet !== "ii" && (
+                                    <div
+                                        className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
+                                        onClick={() => { isSwitchingWallet ? loginHandlerIsSwitch("ii") : loginHandler("ii") }}
+                                    >
+                                        Internet Identity
+                                        <div className='w-8 h-8'>
+                                            <img src={icplogo} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {connectedWallet !== "nfid" && (
-                                <div
-                                    className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
-                                    onClick={() => { isSwitchingWallet ? loginHandlerIsSwitch("nfid") : loginHandler("nfid") }}
-                                >
-                                    NFID
-                                    <div className='w-8 h-8'>
-                                        <img src={nfid} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
+                                {connectedWallet !== "nfid" && (
+                                    <div
+                                        className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
+                                        onClick={() => { isSwitchingWallet ? loginHandlerIsSwitch("nfid") : loginHandler("nfid") }}
+                                    >
+                                        NFID
+                                        <div className='w-8 h-8'>
+                                            <img src={nfid} alt="connect_wallet_icon" className='object-fill w-9 h-8 bg-white p-1 rounded-[20%]' />
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
 
-                        </div>
-                        <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
+                            </div>
+                            <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>
 
-                        <div className="w-full">
-                            <input
-                                type="text"
-                                value={inputValue}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-                                placeholder="Enter wallet address or username"
-                            />
-                        </div>
-
-                        {inputValue && (
-                            <div className="w-full flex mt-3">
-                                <Button
-                                    title="Connect"
-                                    onClickHandler={handleWallet}
-                                    className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                            <div className="w-full">
+                                <input
+                                    type="text"
+                                    value={inputValue}
+                                    onChange={handleInputChange}
+                                    className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
+                                    placeholder="Enter wallet address or username"
                                 />
                             </div>
-                        )}
-                    </div>
-                </Modal>
-            )}
+
+                            {inputValue && (
+                                <div className="w-full flex mt-3">
+                                    <Button
+                                        title="Connect"
+                                        onClickHandler={handleWallet}
+                                        className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </Modal>
+                )}
             </div>
         </>
     )

@@ -101,9 +101,9 @@ const Repay = ({
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
@@ -113,9 +113,9 @@ const Repay = ({
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
@@ -124,13 +124,12 @@ const Repay = ({
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
-
 
   const ledgerActorICP = useMemo(
     () =>
@@ -176,10 +175,10 @@ const Repay = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch('http://localhost:5000/conversion-rates');
+        const response = await fetch("http://localhost:5000/conversion-rates");
 
         if (!response.ok) {
-          throw new Error('Failed to fetch conversion rates from server');
+          throw new Error("Failed to fetch conversion rates from server");
         }
 
         const data = await response.json();
@@ -193,10 +192,10 @@ const Repay = ({
             rate = data.ethereum?.usd;
             break;
           case "ckUSDC":
-            rate = data['usd-coin']?.usd;
+            rate = data["usd-coin"]?.usd;
             break;
           case "ICP":
-            rate = data['internet-computer']?.usd;
+            rate = data["internet-computer"]?.usd;
             break;
           default:
             console.error(`Unsupported asset: ${asset}`);
@@ -208,9 +207,11 @@ const Repay = ({
         } else {
           console.error("Conversion rate not found for asset:", asset);
         }
-
       } catch (error) {
-        console.error("Error fetching conversion rate from server:", error.message);
+        console.error(
+          "Error fetching conversion rate from server:",
+          error.message
+        );
       }
     };
 
@@ -238,11 +239,9 @@ const Repay = ({
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
-    }
-    else if (asset === "ckUSDC") {
+    } else if (asset === "ckUSDC") {
       ledgerActor = ledgerActorckUSDC;
-    }
-    else if (asset === "ICP") {
+    } else if (asset === "ICP") {
       ledgerActor = ledgerActorICP;
     }
 
@@ -295,11 +294,9 @@ const Repay = ({
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
       ledgerActor = ledgerActorckETH;
-    }
-    else if (asset === "ckUSDC") {
+    } else if (asset === "ckUSDC") {
       ledgerActor = ledgerActorckUSDC;
-    }
-    else if (asset === "ICP") {
+    } else if (asset === "ICP") {
       ledgerActor = ledgerActorICP;
     }
 
@@ -369,7 +366,9 @@ const Repay = ({
     const ltv = calculateLTV(totalCollateral, totalDebt);
     console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+    );
 
     if (healthFactor <= 1 || ltv >= liquidationThreshold) {
       setIsButtonDisabled(true); // Disable the button
@@ -385,11 +384,18 @@ const Repay = ({
   ) => {
     const amountTaken = 0;
     const amountAdded = usdValue || 0;
-    console.log("THreshold", liquidationThreshold)
-    console.log("totalDebt before minus", totalDebt, "collateral", totalCollateral, "amount added", amountAdded);
-    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountTaken);
+    console.log("THreshold", liquidationThreshold);
+    console.log(
+      "totalDebt before minus",
+      totalDebt,
+      "collateral",
+      totalCollateral,
+      "amount added",
+      amountAdded
+    );
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
-
 
     console.log("totalDeptValue", totalDeptValue);
     console.log("amountAdded", amountAdded);
@@ -408,7 +414,6 @@ const Repay = ({
     return totalDeptValue / totalCollateralValue;
   };
 
-
   const [healthFactorBackend, setHealthFactorBackend] = useState(null);
   const [userData, setUserData] = useState();
 
@@ -417,14 +422,13 @@ const Repay = ({
       if (backendActor) {
         try {
           const result = await getUserData(principal.toString());
-          console.log('get_user_data:', result);
+          console.log("get_user_data:", result);
           setUserData(result);
-          
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error("Error fetching user data:", error);
         }
       } else {
-        console.error('Backend actor initialization failed.');
+        console.error("Backend actor initialization failed.");
       }
     };
     fetchUserData();
@@ -436,17 +440,17 @@ const Repay = ({
     }
     try {
       const result = await backendActor.get_user_data(user);
-      console.log('get_user_data in supplypopup:', result);
+      console.log("get_user_data in supplypopup:", result);
 
       // Check if the result is in the expected format (Ok.health_factor)
       if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor);  // Store health_factor in state
+        setHealthFactorBackend(result.Ok.health_factor); // Store health_factor in state
       } else {
         setError("Health factor not found");
       }
       return result;
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error("Error fetching user data:", error);
       setError(error.message);
     }
   };
@@ -505,28 +509,38 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
-                      <span className={`${healthFactorBackend > 3
-                        ? "text-green-500"
-                        : healthFactorBackend <= 1
-                          ? "text-red-500"
-                          : healthFactorBackend <= 1.5
+                      <span
+                        className={`${
+                          healthFactorBackend > 3
+                            ? "text-green-500"
+                            : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
                             ? "text-orange-600"
                             : healthFactorBackend <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                        }`}>{parseFloat( healthFactorBackend> 100 ? "Infinity" : parseFloat(healthFactorBackend).toFixed(2))}</span>
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
+                      >
+                        {parseFloat(
+                          healthFactorBackend > 100
+                            ? "Infinity"
+                            : parseFloat(healthFactorBackend).toFixed(2)
+                        )}
+                      </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
+                        className={`${
+                          currentHealthFactor > 3
+                            ? "text-green-500"
+                            : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -579,10 +593,11 @@ const Repay = ({
 
               <button
                 onClick={handleClick}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-                  }`}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
+                  isLoading || amount <= 0 || isButtonDisabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}

@@ -413,10 +413,11 @@ const MySupply = () => {
   const toggleSupplyVisibility = () => {
     setIsSupplyVisible(!isSupplyVisible);
   };
-  const handleDetailsClick = (asset) => {
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);
-   
-    navigate(`/dashboard/asset-details/${asset}`);
+    console.log("assetdetailsinMarket", assetData)
+    navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
   };
   const renderModalOpen = (type) => {
     
@@ -1329,11 +1330,7 @@ const MySupply = () => {
 
                               <Button
                                 title={"Details"}
-                                onClickHandler={() =>
-                                  navigate(
-                                    `/dashboard/asset-details/${item[0]}`
-                                  )
-                                }
+                                onClickHandler={() => handleDetailsClick(item[0], item[1])}
                                 className="w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent font-inter"
                               />
                             </div>
@@ -1500,11 +1497,7 @@ const MySupply = () => {
                                 />
                                 <Button
                                   title={"Details"}
-                                  onClickHandler={() =>
-                                    navigate(
-                                      `/dashboard/asset-details/${item[0]}`
-                                    )
-                                  }
+                                  onClickHandler={() => handleDetailsClick(item[0], item[1])}
                                   className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                 />
                               </div>
@@ -2183,11 +2176,7 @@ const MySupply = () => {
                               />
                               <Button
                                 title={"Details"}
-                                onClickHandler={() =>
-                                  navigate(
-                                    `/dashboard/asset-details/${item[0]}`
-                                  )
-                                }
+                                onClickHandler={() => handleDetailsClick(item[0], item[1])}
                                 disabled={isTableDisabled}
                                 className="w-[380px] md:block lgx:block xl:hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent"
                               />
@@ -2382,11 +2371,7 @@ const MySupply = () => {
                                   />
                                   <Button
                                     title={"Details"}
-                                    onClickHandler={() =>
-                                      navigate(
-                                        `/dashboard/asset-details/${item[0]}`
-                                      )
-                                    }
+                                    onClickHandler={() => handleDetailsClick(item[0], item[1])}
                                     disabled={isTableDisabled}
                                     className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                   />

@@ -240,7 +240,7 @@ const DebtStatus = () => {
                    
                   })
                   .filter((mappedItem) => {
-                    const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal && mappedItem.healthFactor < 1;
+                    const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal && mappedItem.healthFactor > 1;
                     return isValid;
                   })
                   .map((mappedItem, index) => (

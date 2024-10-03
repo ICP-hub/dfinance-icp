@@ -351,7 +351,7 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
-                      {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100).toFixed(2)}%`}</div></td>
+                      {(item[1].Ok.current_liquidity_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.current_liquidity_rate * 100).toFixed(2)}%`}</div></td>
                     <td className="p-3 align-center hidden md:table-cell">
                       <div className="flex justify-center flex-row">
                         <div>
@@ -422,7 +422,7 @@ const WalletDetails = () => {
                     </div>
                     <div className="flex justify-between">
                       <p className="text-sm dark:text-darkTextSecondary">Supply APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.supply_rate_apr}%</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.current_liquidity_rate}%</p>
                     </div>
 
 

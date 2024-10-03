@@ -17,6 +17,7 @@ const Borrow = ({
   image,
   supplyRateAPR,
   balance,
+  reserveliquidationThreshold,
   liquidationThreshold,
   assetSupply,
   assetBorrow,
@@ -296,7 +297,7 @@ const Borrow = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
+    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -307,6 +308,7 @@ const Borrow = ({
     }
   }, [
     asset,
+    reserveliquidationThreshold,
     liquidationThreshold,
     assetSupply,
     assetBorrow,

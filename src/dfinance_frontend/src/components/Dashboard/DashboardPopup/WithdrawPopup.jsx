@@ -17,6 +17,7 @@ const WithdrawPopup = ({
   image,
   supplyRateAPR,
   balance,
+  reserveliquidationThreshold,
   liquidationThreshold,
   assetSupply,
   assetBorrow,
@@ -299,12 +300,12 @@ const WithdrawPopup = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv >= liquidationThreshold) {
+    if (healthFactor <= 1 || ltv >=reserveliquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
     }
-  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
+  }, [asset, liquidationThreshold,reserveliquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
 
   const calculateHealthFactor = (
     totalCollateral,

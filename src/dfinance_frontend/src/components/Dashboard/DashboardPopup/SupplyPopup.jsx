@@ -19,6 +19,7 @@ const SupplyPopup = ({
   image,
   supplyRateAPR,
   balance,
+  reserveliquidationThreshold,
   liquidationThreshold,
   assetSupply,
   assetBorrow,
@@ -412,7 +413,7 @@ const SupplyPopup = ({
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold
+      liquidationThreshold,
     );
     console.log("Health Factor:", healthFactor);
     const ltv = calculateLTV(assetSupply, assetBorrow);
@@ -423,12 +424,12 @@ const SupplyPopup = ({
     );
     //|| liquidationThreshold>ltv
 
-    if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
+    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
     }
-  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
+  }, [asset, liquidationThreshold,reserveliquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
 
   const calculateHealthFactor = (
     totalCollateral,

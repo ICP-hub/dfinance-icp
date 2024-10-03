@@ -310,19 +310,22 @@ const MySupply = () => {
 
   const [isCollateral, setIsCollateral] = useState(true);
   function formatNumber(num) {
-    if (num === null || num === undefined) {
+    // Ensure num is a valid number
+    const parsedNum = parseFloat(num);
+
+    if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
       return "0";
     }
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
+    if (parsedNum >= 1000000000) {
+      return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
     }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (parsedNum >= 1000000) {
+      return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
     }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    if (parsedNum >= 1000) {
+      return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
     }
-    return num.toString();
+    return parsedNum.toFixed(2).toString();
   }
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
@@ -372,6 +375,7 @@ const MySupply = () => {
     image,
     supplyRateAPR,
     balance,
+    reserveliquidationThreshold,
     liquidationThreshold,
     assetSupply,
     assetBorrow,
@@ -386,6 +390,7 @@ const MySupply = () => {
       image: image,
       supplyRateAPR: supplyRateAPR,
       balance: balance,
+      reserveliquidationThreshold:reserveliquidationThreshold,
       liquidationThreshold: liquidationThreshold,
       assetSupply: assetSupply,
       assetBorrow: assetBorrow,
@@ -436,6 +441,7 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                reserveliquidationThreshold={isModalOpen.reserveliquidationThreshold}
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
@@ -461,6 +467,7 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                reserveliquidationThreshold={isModalOpen.reserveliquidationThreshold}
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
@@ -485,6 +492,7 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                reserveliquidationThreshold={isModalOpen.reserveliquidationThreshold}
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
@@ -524,6 +532,7 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                reserveliquidationThreshold={isModalOpen.reserveliquidationThreshold}
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
@@ -727,6 +736,8 @@ const MySupply = () => {
 
                             const liquidationThreshold =
                               userData.Ok?.liquidation_threshold * 100 || 0;
+                            const reserveliquidationThreshold =item?.[1]?.Ok.configuration
+                              .liquidation_threshold;
                             console.log("liq thres:", liquidationThreshold);
                             const ckBalance =
                               asset === "ckBTC"
@@ -833,6 +844,7 @@ const MySupply = () => {
                                         (asset === "ICP" && icp),
                                         supplyRateApr,
                                         ckBalance,
+                                        reserveliquidationThreshold,
                                         liquidationThreshold,
                                         assetSupply,
                                         assetBorrow,
@@ -868,6 +880,7 @@ const MySupply = () => {
                                         (asset === "ICP" && icp),
                                         supplyRateApr,
                                         ckBalance,
+                                        reserveliquidationThreshold,
                                         liquidationThreshold,
                                         assetSupply,
                                         assetBorrow,
@@ -907,7 +920,7 @@ const MySupply = () => {
                   ) : (
                     <div className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden">
                       <div className="w-full z-10 sticky top-0">
-                        <div className="grid grid-cols-[2fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+                        <div className="grid grid-cols-[2fr_1.14fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-5">Asset</div>
                           <div className="p-5">Asset Supply</div>
                           <div className="p-5">Apy</div>
@@ -943,7 +956,8 @@ const MySupply = () => {
                                 item?.[1]?.Ok?.current_liquidity_rate || 0;
                                 const liquidationThreshold =
                                 userData.Ok?.liquidation_threshold * 100 || 0;
-                               
+                               const reserveliquidationThreshold =item?.[1]?.Ok.configuration
+                               .liquidation_threshold;
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
@@ -958,7 +972,7 @@ const MySupply = () => {
                               return (
                                 <div
                                   key={index}
-                                  className="grid grid-cols-[2.2fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                                  className="grid grid-cols-[2.2fr_1.13fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                                 >
                                   <div className="p-3 align-top flex items-center gap-2">
                                     {asset === "ckBTC" && (
@@ -1030,6 +1044,7 @@ const MySupply = () => {
                                           (asset === "ICP" && icp),
                                           supplyRateApr,
                                           ckBalance,
+                                          reserveliquidationThreshold,
                                           liquidationThreshold,
                                           assetSupply,
                                           assetBorrow,
@@ -1064,6 +1079,7 @@ const MySupply = () => {
                                           (asset === "ICP" && icp),
                                           supplyRateApr,
                                           ckBalance,
+                                          reserveliquidationThreshold,
                                           liquidationThreshold,
                                           assetSupply,
                                           assetBorrow,
@@ -1251,7 +1267,8 @@ const MySupply = () => {
                                           : item[0] === "ICP"
                                             ? ckICPBalance
                                             : null,
-
+                                            item[1]?.Ok.configuration
+                                            .liquidation_threshold,
 
                                     userData.Ok?.liquidation_threshold * 100,
 
@@ -1292,7 +1309,7 @@ const MySupply = () => {
                     <div className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden">
                       {/* Fixed Header */}
                       <div className="w-full z-10 sticky top-0 ">
-                        <div className="grid grid-cols-[2fr_1.1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-5">Asset</div>
                           <div className="p-5">Wallet Balance</div>
                           <div className="p-5">Apy</div>
@@ -1307,7 +1324,7 @@ const MySupply = () => {
                           {filteredItems.slice(0, 8).map((item, index) => (
                             <div
                               key={index}
-                              className="grid grid-cols-[2.2fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                              className="grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                             >
                               <div className="p-3 align-top flex items-center gap-2">
                                 {item[0] === "ckBTC" && (
@@ -1421,7 +1438,8 @@ const MySupply = () => {
                                             : item[0] === "ICP"
                                               ? ckICPBalance
                                               : null,
-
+                                              item[1]?.Ok.configuration
+                                              .liquidation_threshold,
                                       userData.Ok?.liquidation_threshold * 100,
                                       
                                       assetSupply,
@@ -1517,7 +1535,8 @@ const MySupply = () => {
                                 item?.[1]?.Ok?.borrow_rate || 0;
                                 const liquidationThreshold =
                                 userData.Ok?.liquidation_threshold * 100 || 0;
-                              
+                                const reserveliquidationThreshold =item?.[1]?.Ok.configuration
+                                .liquidation_threshold;
 
                               return (
                                 <div
@@ -1614,6 +1633,7 @@ const MySupply = () => {
                                           (asset === "ICP" && icp),
                                           borrowRateApr,
                                           ckBalance,
+                                          reserveliquidationThreshold,
                                           liquidationThreshold,
                                           assetSupply,
                                           assetBorrow,
@@ -1651,6 +1671,7 @@ const MySupply = () => {
                                           (asset === "ICP" && icp),
                                           borrowRateApr,
                                           ckBalance,
+                                          reserveliquidationThreshold,
                                           liquidationThreshold,
                                           assetSupply,
                                           assetBorrow,
@@ -1734,7 +1755,8 @@ const MySupply = () => {
                                 item?.[1]?.Ok?.borrow_rate || 0;
                                 const liquidationThreshold =
                                 userData.Ok?.liquidation_threshold * 100 || 0;
-
+                                const reserveliquidationThreshold =item?.[1]?.Ok.configuration
+                                .liquidation_threshold;
                               return (
                                 <div
                                   key={index}
@@ -1814,6 +1836,7 @@ const MySupply = () => {
                                           (asset === "ICP" && icp),
                                           borrowRateApr,
                                           ckBalance,
+                                          reserveliquidationThreshold,
                                           liquidationThreshold,
                                           assetSupply,
                                           assetBorrow,
@@ -1851,6 +1874,7 @@ const MySupply = () => {
                                           (asset === "ICP" && icp),
                                           borrowRateApr,
                                           ckBalance,
+                                          reserveliquidationThreshold,
                                           liquidationThreshold,
                                           assetSupply,
                                           assetBorrow,
@@ -2033,6 +2057,8 @@ const MySupply = () => {
                                           : null,
                                       
                                     userData.Ok?.liquidation_threshold * 100,
+                                    item[1]?.Ok.configuration
+                                        .liquidation_threshold,
                                     assetSupply,
                                     assetBorrow,
                                     totalCollateral,
@@ -2227,6 +2253,8 @@ const MySupply = () => {
                                                 : null,
                                                
                                                 userData.Ok?.liquidation_threshold * 100,
+                                                item[1]?.Ok.configuration
+                                        .liquidation_threshold,
                                         assetSupply,
                                         assetBorrow,
                                         totalCollateral,

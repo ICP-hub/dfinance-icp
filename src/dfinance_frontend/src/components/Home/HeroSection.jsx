@@ -1,19 +1,11 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { TEMP_HERO_COUNTER_NUMBER } from "../../utils/constants";
-
+import useAssetData from "../Common/useAssets";
 const HeroSection = () => {
-  const [liquidityCounter, setLiquidityCounter] = useState(
-    TEMP_HERO_COUNTER_NUMBER
-  );
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLiquidityCounter((prev) => prev + 1);
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [liquidityCounter]);
+  
+  const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
+  
   return (
     <div
       id="hero"
@@ -40,7 +32,7 @@ const HeroSection = () => {
 
         <div className="w-full mt-10 h-32 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl text-center  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd flex flex-col justify-center items-center px-4 lg:gap-3 gap-4">
           <h1 className="text-[#2A1F9D] font-bold  dark:text-darkText">
-            $ {liquidityCounter}
+            $ {totalSupplySize}
           </h1>
           {/* <p className="text-sm font-normal text-[#585454] lg:my-3 dark:text-darkText">of liquidity is locked in crypto across {8} networks and over {15} markets.</p> */}
           <p className="text-sm font-normal text-[#585454] dark:text-darkText lg:-mb-1 md:-mb-0">

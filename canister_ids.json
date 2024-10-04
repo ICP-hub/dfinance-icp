@@ -5,9 +5,7 @@
   "dfinance_backend": {
     "ic": "um3sd-4iaaa-aaaap-akh7q-cai"
   },
-  "dfinance_frontend": {
-    "ic": "pae4f-saaaa-aaaap-akfoa-cai"
-  },
+  
   "dtoken": {
     "ic": "pscl4-6qaaa-aaaap-akfna-cai"
   },

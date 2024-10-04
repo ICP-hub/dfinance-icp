@@ -205,3 +205,10 @@ fn calculate_overall_borrow_rate(
     let weighted_variable_rate = total_debt * current_variable_borrow_rate;
     weighted_variable_rate / total_debt
 }
+
+
+
+// mintdtoken function
+// call when user relogin
+// perform supply 
+// 

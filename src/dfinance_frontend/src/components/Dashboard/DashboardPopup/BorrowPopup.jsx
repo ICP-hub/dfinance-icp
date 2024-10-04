@@ -17,6 +17,7 @@ const Borrow = ({
   image,
   supplyRateAPR,
   balance,
+  reserveliquidationThreshold,
   liquidationThreshold,
   assetSupply,
   assetBorrow,
@@ -49,7 +50,7 @@ const Borrow = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch("http://localhost:5000/conversion-rates");
+        const response = await fetch("http://139.59.16.70/conversion-rates");
 
         if (!response.ok) {
           throw new Error("Failed to fetch conversion rates from server");
@@ -296,7 +297,7 @@ const Borrow = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
+    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -307,6 +308,7 @@ const Borrow = ({
     }
   }, [
     asset,
+    reserveliquidationThreshold,
     liquidationThreshold,
     assetSupply,
     assetBorrow,
@@ -464,7 +466,7 @@ const Borrow = ({
                     <p>
                       {supplyRateAPR * 100 < 0.1
                         ? "<0.1%"
-                        : `${supplyRateAPR * 100}%`}
+                        : `${(supplyRateAPR * 100).toFixed(2)}%`}
                     </p>
                   </div>
 

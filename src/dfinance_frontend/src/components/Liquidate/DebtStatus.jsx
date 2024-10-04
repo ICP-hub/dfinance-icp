@@ -178,19 +178,22 @@ const DebtStatus = () => {
     });
 
     function formatNumber(num) {
-      if (num === null || num === undefined) {
+      // Ensure num is a valid number
+      const parsedNum = parseFloat(num);
+  
+      if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
         return "0";
       }
-      if (num >= 1000000000) {
-        return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
+      if (parsedNum >= 1000000000) {
+        return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
       }
-      if (num >= 1000000) {
-        return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+      if (parsedNum >= 1000000) {
+        return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
       }
-      if (num >= 1000) {
-        return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+      if (parsedNum >= 1000) {
+        return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
       }
-      return num.toString();
+      return parsedNum.toFixed(2).toString();
     }
 
   return (
@@ -230,12 +233,14 @@ const DebtStatus = () => {
                     const mappedItem = {
                       reserves: item[1].reserves,
                       principal: item[0].toText(),
+                      healthFactor: item[1]?.health_factor,
                       item,
                     };
                     return mappedItem;
+                   
                   })
                   .filter((mappedItem) => {
-                    const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
+                    const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal && mappedItem.healthFactor > 1;
                     return isValid;
                   })
                   .map((mappedItem, index) => (
@@ -261,6 +266,7 @@ const DebtStatus = () => {
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[1]?.reserve
                             const assetBorrow = item[1]?.asset_borrow
+                            console.log("mappedItems",mappedItem)
                             console.log("Asset Borrow:", assetBorrow);
                             if (assetBorrow > 0) {
                               return (

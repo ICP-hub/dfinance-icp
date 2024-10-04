@@ -1,7 +1,7 @@
 use candid::{CandidType, Deserialize};
 use candid::{Nat, Principal};
 
-// Define the transfer_from arguments and result types
+
 #[derive(CandidType, Deserialize)]
 pub struct TransferFromArgs {
     pub to: TransferAccount,

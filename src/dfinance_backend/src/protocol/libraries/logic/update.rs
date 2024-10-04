@@ -315,17 +315,13 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-        // let ckbtc_to_usd_rate = 60554.70f64;
-        // ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
-
-        // // Convert the supplied amount (in ckBTC) to ICP
-        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+      
         user_data.total_debt = Some(user_data.total_debt.unwrap_or(0.0) + usd_amount);
 
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
-            total_borrowed_value: user_data.total_debt.unwrap_or(0.0), // Assuming total_debt is stored in user_data
-            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0.0), // Set to the desired liquidation threshold (80%)
+            total_borrowed_value: user_data.total_debt.unwrap_or(0.0),
+            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0.0), 
         };
          
         let health_factor = calculate_health_factor(&user_position);

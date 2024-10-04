@@ -16,6 +16,7 @@ const Repay = ({
   image,
   supplyRateAPR,
   balance,
+  reserveliquidationThreshold,
   liquidationThreshold,
   assetSupply,
   assetBorrow,
@@ -175,7 +176,7 @@ const Repay = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch("http://localhost:5000/conversion-rates");
+        const response = await fetch("http://139.59.16.70/conversion-rates");
 
         if (!response.ok) {
           throw new Error("Failed to fetch conversion rates from server");
@@ -370,12 +371,12 @@ const Repay = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv >= liquidationThreshold) {
+    if (healthFactor <= 1 || ltv >= reserveliquidationThreshold) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
     }
-  }, [asset, liquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
+  }, [asset, liquidationThreshold,reserveliquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
 
   const calculateHealthFactor = (
     totalCollateral,

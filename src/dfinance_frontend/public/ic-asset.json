@@ -1,0 +1,9 @@
+[
+    {
+        "match": ".*",
+        "headers": {
+            "Access-Control-Allow-Origin" : "http://139.59.16.70/conversion-rates"
+        },
+        "ignore": false
+    }
+]

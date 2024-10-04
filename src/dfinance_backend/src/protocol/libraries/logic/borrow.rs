@@ -47,7 +47,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     let amount_nat = Nat::from(params.amount);
 
     let mut usd_amount = params.amount as f64;
-    let borrow_amount_to_usd = get_exchange_rates(params.asset.clone(), params.amount as f64).await;
+    let borrow_amount_to_usd = get_exchange_rates(params.asset.clone(), None, params.amount as f64).await;
     match borrow_amount_to_usd {
         Ok((amount_in_usd, _timestamp)) => {
             // Extracted the amount in USD
@@ -218,7 +218,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     // Converting asset value to usdt
     let mut usd_amount = params.amount as f64;
     let repay_amount_to_usd =
-        get_exchange_rates(params.asset.clone(), params.amount as f64).await;
+        get_exchange_rates(params.asset.clone(), None, params.amount as f64).await;
     match repay_amount_to_usd {
         Ok((amount_in_usd, _timestamp)) => {
             // Extracted the amount in USD

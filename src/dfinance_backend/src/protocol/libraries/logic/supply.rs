@@ -45,7 +45,7 @@ impl SupplyLogic {
         let mut usd_amount = params.amount as f64;
 
         let supply_amount_to_usd =
-            get_exchange_rates(params.asset.clone(), params.amount as f64).await;
+            get_exchange_rates(params.asset.clone(),None, params.amount as f64).await;
         match supply_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
                 // Extracted the amount in USD
@@ -205,7 +205,7 @@ impl SupplyLogic {
         // Converting asset value to usdt
         let mut usd_amount = params.amount as f64;
         let withdraw_amount_to_usd =
-            get_exchange_rates(params.asset.clone(), params.amount as f64).await;
+            get_exchange_rates(params.asset.clone(),None, params.amount as f64).await;
         match withdraw_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
                 // Extracted the amount in USD

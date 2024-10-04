@@ -7,8 +7,7 @@ use std::borrow::Cow;
 
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
-use icrc_ledger_types::icrc2::{allowance, approve, transfer_from};
-use crate::constants::asset_address::{DEFAULT, MINTER};
+use crate::constants::asset_address::DEFAULT;
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct InitArgs {
@@ -98,7 +97,6 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
-            // controllers: Some(vec![Principal::from_text(BACKEND_CANISTER).unwrap()]),
             controllers: Some(vec![ic_cdk::api::id()]),
             memory_allocation: None,
             reserved_cycles_limit: None,
@@ -124,13 +122,6 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
     let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];
 
     let initial_balances = vec![];
-    // vec![(
-    //     // Account {
-    //     //     owner: Principal::from_text("uj6by-mtpxf-dwssj-ai4xh-32ka3-hiuu7-cquzy-eszdh-k4apf-fq6wj-iae").unwrap(),
-    //     //     subaccount: None,
-    //     // },
-    //     // Nat::from(1000u64),
-    // )];
 
     let feature_flags = Some(FeatureFlags { icrc2: true });
     let maximum_number_of_accounts = Some(1000);
@@ -210,7 +201,6 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     };
 
     let minting_account = Account {
-        // owner: Principal::from_text("xcbu3-qzwyu-iv3oj-2izdz-c6z3o-cmrsw-j66xq-wdu6q-qrjem-2pjji-pae").unwrap(),
         owner: Principal::from_text(DEFAULT).unwrap(),
 
         subaccount: None,
@@ -229,7 +219,6 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     let initial_balances = 
     vec![(
         Account {
-            // owner: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
             owner: ic_cdk::api::id(),
 
             subaccount: None,

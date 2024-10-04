@@ -35,7 +35,7 @@
 //     }
 // }
 use candid::{CandidType, Decode, Encode, Principal};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::borrow::Cow;
 use ic_stable_structures::storable::{Blob, Bound, Storable};
 

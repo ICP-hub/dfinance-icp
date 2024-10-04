@@ -13,7 +13,7 @@ const RiskPopup = ({ onClose, userData }) => {
       ? Infinity
       : parseFloat(userData.Ok.health_factor);
 
-  const Ltv_Value = parseFloat(userData.Ok.ltv);
+  const Ltv_Value = parseFloat(userData.Ok.ltv * 100);
 
   const liquidationThreshold_Value = 76.5;
   const healthFactorMinValue = 1;

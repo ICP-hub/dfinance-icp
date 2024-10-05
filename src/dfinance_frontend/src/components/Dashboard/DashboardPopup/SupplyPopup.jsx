@@ -101,9 +101,7 @@ const SupplyPopup = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch(
-          "https://dfinance.kaifoundry.com/conversion-rates"
-        );
+        const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
 
         if (!response.ok) {
           throw new Error("Failed to fetch conversion rates from server");

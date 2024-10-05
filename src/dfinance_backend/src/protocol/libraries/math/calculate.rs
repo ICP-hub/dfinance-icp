@@ -1,7 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 
-use crate::{declarations::assets::ReserveData, protocol::libraries::types::datatypes::UserData};
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {

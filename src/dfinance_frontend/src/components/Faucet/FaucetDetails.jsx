@@ -2,13 +2,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../Common/Button";
-import { FAUCET_ASSETS_TABLE_ROW, FAUCET_ASSETS_TABLE_COL } from "../../utils/constants";
+import {
+  FAUCET_ASSETS_TABLE_ROW,
+  FAUCET_ASSETS_TABLE_COL,
+} from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import Pagination from "../Common/pagination";
 import useAssetData from "../Common/useAssets";
-import ckBTC from '../../../public/assests-icon/ckBTC.png';
-import cekTH from '../../../public/assests-icon/cekTH.png';
+import ckBTC from "../../../public/assests-icon/ckBTC.png";
+import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
@@ -19,17 +22,16 @@ import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/ck
 import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 
-const ITEMS_PER_PAGE = 8; 
+const ITEMS_PER_PAGE = 8;
 
 const FaucetDetails = () => {
-  const {
-    isAuthenticated,
-    principal,
-    backendActor,
-    createLedgerActor,
-  } = useAuth()
+  const { isAuthenticated, principal, backendActor, createLedgerActor } =
+    useAuth();
 
-  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
 
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -86,7 +88,6 @@ const FaucetDetails = () => {
   // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
   // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
 
-
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -117,14 +118,10 @@ const FaucetDetails = () => {
     }
   };
 
-
   const ledgerActorckBTC = useMemo(
     () =>
       assetPrincipal.ckBTC
-        ? createLedgerActor(
-          assetPrincipal.ckBTC,
-          ledgerIdlFactory
-        )
+        ? createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory)
         : null,
     [createLedgerActor, assetPrincipal.ckBTC]
   );
@@ -132,10 +129,7 @@ const FaucetDetails = () => {
   const ledgerActorckETH = useMemo(
     () =>
       assetPrincipal.ckETH
-        ? createLedgerActor(
-          assetPrincipal.ckETH,
-          ledgerIdlFactory
-        )
+        ? createLedgerActor(assetPrincipal.ckETH, ledgerIdlFactory)
         : null,
     [createLedgerActor, assetPrincipal.ckETH]
   );
@@ -143,10 +137,7 @@ const FaucetDetails = () => {
   const ledgerActorckUSDC = useMemo(
     () =>
       assetPrincipal.ckUSDC
-        ? createLedgerActor(
-          assetPrincipal.ckUSDC,
-          ledgerIdlFactory
-        )
+        ? createLedgerActor(assetPrincipal.ckUSDC, ledgerIdlFactory)
         : null,
     [createLedgerActor, assetPrincipal.ckUSDC]
   );
@@ -191,16 +182,14 @@ const FaucetDetails = () => {
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
             setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
-          }
-          else if (assetType === "ICP") {
+          } else if (assetType === "ICP") {
             if (!ledgerActorICP) {
               console.warn("Ledger actor for ICP not initialized yet");
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
             setCkICPBalance(balance.toString()); // Set ICP balance
-          }
-          else {
+          } else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
@@ -218,10 +207,9 @@ const FaucetDetails = () => {
       ledgerActorckETH,
       ledgerActorckUSDC,
       principalObj,
-      ledgerActorICP
+      ledgerActorICP,
     ]
   );
-
 
   // console.log("ckusdc balance", ckUSDCBalance)
 
@@ -259,7 +247,9 @@ const FaucetDetails = () => {
 
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch("http://139.59.16.70/conversion-rates");
+      const response = await fetch(
+        "https://dfinance.kaifoundry.com/conversion-rates"
+      );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -281,7 +271,7 @@ const FaucetDetails = () => {
       console.error("Error fetching conversion rates:", error);
       setError(error);
     }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance,ckICPBalance, pollInterval]);
+  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
 
   useEffect(() => {
     // Start polling at regular intervals
@@ -312,7 +302,13 @@ const FaucetDetails = () => {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance]);
+  }, [
+    fetchBalance,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+  ]);
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -321,7 +317,9 @@ const FaucetDetails = () => {
   };
 
   const handleNextPage = () => {
-    if (currentPage < Math.ceil(FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE)) {
+    if (
+      currentPage < Math.ceil(FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE)
+    ) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -362,38 +360,41 @@ const FaucetDetails = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const filteredReserveData = Object.fromEntries(filteredItems);
-  console.log(filteredReserveData)
-
-
+  console.log(filteredReserveData);
 
   function formatNumber(num) {
     if (num === null || num === undefined) {
-      return '0';
+      return "0";
     }
     if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
     }
     if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+      return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
     }
     if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+      return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
     }
     return num.toString();
   }
 
-
   return (
     <div className="w-full">
       <div className="w-full flex items-center px-6 mt-4 md:px-9">
-        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Test Assets</h1>
+        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">
+          Test Assets
+        </h1>
       </div>
 
       <div className="w-full mt-9 p-0 lg:px-9">
         {currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
             <div className="w-20 h-15">
-              <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+              <img
+                src="/Transaction/empty file.gif"
+                alt="empty"
+                className="w-30"
+              />
             </div>
             <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
               No assets found!
@@ -406,31 +407,57 @@ const FaucetDetails = () => {
                 <thead>
                   <tr className="placeholder:text-[#233D63] dark:text-darkTextSecondary text-sm">
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
-                      <td key={index} className="p-1 pl-2 -pr-7 pb-3 whitespace-nowrap">{item.header}</td>
+                      <td
+                        key={index}
+                        className="p-1 pl-2 -pr-7 pb-3 whitespace-nowrap"
+                      >
+                        {item.header}
+                      </td>
                     ))}
-                    <td className="p-3 hidden md:table-cell">{FAUCET_ASSETS_TABLE_COL[2]?.header}</td>
+                    <td className="p-3 hidden md:table-cell">
+                      {FAUCET_ASSETS_TABLE_COL[2]?.header}
+                    </td>
                   </tr>
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""
-                        }`}
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${
+                        index !== currentItems.length - 1
+                          ? "gradient-line-bottom"
+                          : ""
+                      }`}
                     >
                       <td className="p-3 align-center py-7">
                         <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
                           {item[0] === "ckBTC" && (
-                            <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full mr-2" />
+                            <img
+                              src={ckBTC}
+                              alt="ckbtc logo"
+                              className="w-8 h-8 rounded-full mr-2"
+                            />
                           )}
                           {item[0] === "ckETH" && (
-                            <img src={cekTH} alt="cketh logo" className="w-8 h-8 rounded-full mr-2" />
+                            <img
+                              src={cekTH}
+                              alt="cketh logo"
+                              className="w-8 h-8 rounded-full mr-2"
+                            />
                           )}
                           {item[0] === "ckUSDC" && (
-                            <img src={ckUSDC} alt="cketh logo" className="w-8 h-8 rounded-full mr-2" />
+                            <img
+                              src={ckUSDC}
+                              alt="cketh logo"
+                              className="w-8 h-8 rounded-full mr-2"
+                            />
                           )}
                           {item[0] === "ICP" && (
-                            <img src={icp} alt="cketh logo" className="w-8 h-8 rounded-full mr-2" />
+                            <img
+                              src={icp}
+                              alt="cketh logo"
+                              className="w-8 h-8 rounded-full mr-2"
+                            />
                           )}
                           {item[0]}
                         </div>
@@ -442,29 +469,35 @@ const FaucetDetails = () => {
                               {item[0] === "ckBTC" && (
                                 <>
                                   <p className="text-left">{ckBTCBalance}</p>
-                                  <p className="font-light text-left text-[11px]">${formatNumber(ckBTCUsdBalance)}</p>
+                                  <p className="font-light text-left text-[11px]">
+                                    ${formatNumber(ckBTCUsdBalance)}
+                                  </p>
                                 </>
                               )}
                               {item[0] === "ckETH" && (
                                 <>
                                   <p className="text-left">{ckETHBalance}</p>
-                                  <p className="font-light text-left text-[11px]">${formatNumber(ckETHUsdBalance)}</p>
+                                  <p className="font-light text-left text-[11px]">
+                                    ${formatNumber(ckETHUsdBalance)}
+                                  </p>
                                 </>
                               )}
                               {item[0] === "ckUSDC" && (
                                 <>
                                   <p className="text-left">{ckUSDCBalance}</p>
-                                  <p className="font-light text-left text-[11px]">${formatNumber(ckUSDCUsdBalance)}</p>
+                                  <p className="font-light text-left text-[11px]">
+                                    ${formatNumber(ckUSDCUsdBalance)}
+                                  </p>
                                 </>
                               )}
-                               {item[0] === "ICP" && (
-                                  <>
-                                    <p className="text-left">{ckICPBalance}</p>
-                                    <p className="font-light text-left text-[11px]">
-                                      ${formatNumber(ckICPUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
+                              {item[0] === "ICP" && (
+                                <>
+                                  <p className="text-left">{ckICPBalance}</p>
+                                  <p className="font-light text-left text-[11px]">
+                                    ${formatNumber(ckICPUsdBalance)}
+                                  </p>
+                                </>
+                              )}
                             </center>
                           </div>
                         </div>
@@ -493,7 +526,9 @@ const FaucetDetails = () => {
                               </>
                             }
                             className="bg-gradient-to-tr md:from-[#4659CF] md:from-20% md:via-[#D379AB] md:via-60% md:to-[#FCBD78] md:to-90% text-white rounded-lg md:px-3 md:py-1 shadow-md shadow-black/40 font-semibold text-sm sxs3:px-1 font-inter md:bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60"
-                            onClickHandler={() => handleFaucetClick(item[0], item.image)}
+                            onClickHandler={() =>
+                              handleFaucetClick(item[0], item.image)
+                            }
                           />
                         </div>
                       </td>
@@ -506,7 +541,9 @@ const FaucetDetails = () => {
               <div id="pagination" className="flex gap-2">
                 <Pagination
                   currentPage={currentPage}
-                  totalPages={Math.ceil(FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE)}
+                  totalPages={Math.ceil(
+                    FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE
+                  )}
                   onPageChange={(page) => setCurrentPage(page)}
                 />
               </div>
@@ -528,6 +565,5 @@ const FaucetDetails = () => {
       </div>
     </div>
   );
-
-}
+};
 export default FaucetDetails;

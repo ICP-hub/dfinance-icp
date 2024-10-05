@@ -140,7 +140,9 @@ const DashboardNav = () => {
 
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
+      const response = await fetch(
+        "https://dfinance.kaifoundry.com/conversion-rates"
+      );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -457,21 +459,23 @@ const DashboardNav = () => {
                     ).map((data, index) => (
                       <div
                         key={index}
-                        className="relative group text-[purple] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+                        className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                         style={{ minWidth: "220px", flex: "1 0 220px" }}
                       >
                         <button className="relative w-full text-left flex justify-between items-center button1">
                           <span>{data.title}</span>
+                          {console.log("Data Count:", data.count)}
+
                           <span
                             className={`font-bold ${
                               data.id === 2
-                                ? data.id === 2 > 3
+                                ? data.count > 3
                                   ? "text-green-500" // Green for health factor greater than 3
-                                  : data.id === 2 <= 1
+                                  : data.count <= 1
                                   ? "text-red-500" // Red for health factor less than or equal to 1
-                                  : data.id === 2 <= 1.5
+                                  : data.count <= 1.5
                                   ? "text-orange-500" // Orange for health factor less than or equal to 1.5
-                                  : data.id === 2 <= 2
+                                  : data.count <= 2
                                   ? "text-orange-300" // Soft orange for health factor less than or equal to 2
                                   : "text-orange-600" // Vivid orange for any other value
                                 : "text-[#2A1F9D]" // Default color for other ids
@@ -514,16 +518,16 @@ const DashboardNav = () => {
                       <span
                         className={`font-bold ${
                           data.id === 2
-                            ? data.id === 2 > 3
-                              ? "text-green-500"
-                              : data.id === 2 <= 1
-                              ? "text-red-500"
-                              : data.id === 2 <= 1.5
-                              ? "text-orange-500"
-                              : data.id === 2 <= 2
-                              ? "text-orange-300"
-                              : "text-orange-600"
-                            : "text-[#2A1F9D]"
+                            ? data.count > 3
+                              ? "text-green-500" // Green for health factor greater than 3
+                              : data.count <= 1
+                              ? "text-red-500" // Red for health factor less than or equal to 1
+                              : data.count <= 1.5
+                              ? "text-orange-500" // Orange for health factor less than or equal to 1.5
+                              : data.count <= 2
+                              ? "text-orange-300" // Soft orange for health factor less than or equal to 2
+                              : "text-orange-600" // Vivid orange for any other value
+                            : "text-[#2A1F9D]" // Default color for other ids
                         }`}
                       >
                         {data.count}

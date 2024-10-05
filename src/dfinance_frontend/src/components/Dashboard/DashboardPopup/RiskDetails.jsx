@@ -143,7 +143,12 @@ const RiskPopup = ({ onClose, userData }) => {
       : Ltv_Value < liquidationThreshold_Value
       ? "green"
       : "orange";
-  
+  const MaxltvColor =
+    Ltv_Value >= Max_Ltv
+      ? "#fa6e0d" // Dark brown
+      : Ltv_Value < Max_Ltv
+      ? "#008000" // Green
+      : "#00FFFF"; // Cyan
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 transition-bar">
@@ -196,12 +201,9 @@ const RiskPopup = ({ onClose, userData }) => {
                         offset="10%"
                         style={{ stopColor: "orange", stopOpacity: 1 }}
                       />
+
                       <stop
                         offset="20%"
-                        style={{ stopColor: "yellow", stopOpacity: 1 }}
-                      />
-                      <stop
-                        offset="80%"
                         style={{ stopColor: "green", stopOpacity: 1 }}
                       />
                       <stop

@@ -138,9 +138,9 @@ const RiskPopup = ({ onClose, userData }) => {
       ? "yellow"
       : "vivid orange";
   const ltvColor =
-    Ltv_Value > liquidationThreshold_Value
+    Ltv_Value >= liquidationThreshold_Value
       ? "red"
-      : Ltv_Value <= liquidationThreshold_Value
+      : Ltv_Value < liquidationThreshold_Value
       ? "green"
       : "orange";
   const MaxltvColor =
@@ -332,7 +332,7 @@ const RiskPopup = ({ onClose, userData }) => {
                     y="12"
                     width="0.25%"
                     height="9"
-                    fill={ltvColor}
+                    fill="red"
                   />
                   <rect
                     className="transition-bar"
@@ -389,7 +389,7 @@ const RiskPopup = ({ onClose, userData }) => {
                     className="transition-text"
                     x={`${currentLTVThresholdPosition}%`}
                     y="10"
-                    fill={ltvColor}
+                    fill="red"
                     fontSize="12"
                     textAnchor="middle"
                   >
@@ -408,16 +408,17 @@ const RiskPopup = ({ onClose, userData }) => {
                   </text>
                 </svg>
                 <span
-                  className={`ml-2 px-4 py-1 bg-[#b2ffac] font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${
-                    Ltv_Value >= liquidationThreshold_Value
-                      ? "text-red-500"
-                      : Ltv_Value <= Max_Ltv
-                      ? "text-[#fa6e0d]"
-                      : "text-green-600"
-                  }`}
-                >
-                  {parseFloat(Ltv_Value)?.toFixed(2) || "0.00"}
-                </span>
+  className={`ml-2 px-4 py-1 bg-[#b2ffac] font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${
+    Ltv_Value >= liquidationThreshold_Value
+      ? "text-red-500" // Red for liquidation threshold
+      : Ltv_Value <= Max_Ltv
+      ? "text-green-600" // Green if LTV is less than or equal to Max LTV
+      : "text-[#fa6e0d]" // Orange for other values between Max LTV and liquidation threshold
+  }`}
+>
+  {parseFloat(Ltv_Value)?.toFixed(2) || "0.00"}
+</span>
+
               </div>
               <p className="text-xs text-gray-400 mt-6 dark:text-darkTextSecondary">
                 If your loan to value goes above {liquidationThreshold_Value},

@@ -101,7 +101,7 @@ const SupplyPopup = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch("http://139.59.16.70/conversion-rates");
+        const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
 
         if (!response.ok) {
           throw new Error("Failed to fetch conversion rates from server");
@@ -413,7 +413,7 @@ const SupplyPopup = ({
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold,
+      liquidationThreshold
     );
     console.log("Health Factor:", healthFactor);
     const ltv = calculateLTV(assetSupply, assetBorrow);
@@ -429,7 +429,15 @@ const SupplyPopup = ({
     } else {
       setIsButtonDisabled(false);
     }
-  }, [asset, liquidationThreshold,reserveliquidationThreshold, assetSupply, assetBorrow, amount, usdValue]);
+  }, [
+    asset,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+  ]);
 
   const calculateHealthFactor = (
     totalCollateral,

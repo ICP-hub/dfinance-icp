@@ -2,7 +2,7 @@
     {
         "match": ".*",
         "headers": {
-            "Access-Control-Allow-Origin" : "http://139.59.16.70/conversion-rates"
+            "Access-Control-Allow-Origin" : "https://dfinance.kaifoundry.com/conversion-rates"
         },
         "ignore": false
     }

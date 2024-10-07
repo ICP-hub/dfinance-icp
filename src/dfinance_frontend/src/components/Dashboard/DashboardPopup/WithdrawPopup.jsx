@@ -448,10 +448,11 @@ const WithdrawPopup = ({
               <div className="w-full flex justify-between items-center my-1">
                 <p>Supply APY</p>
                 <p>
-                  {supplyRateAPR * 100 < 0.1
-                    ? "<0.1%"
-                    : `${supplyRateAPR * 100}%`}
-                </p>
+  {supplyRateAPR * 100 < 0.1
+    ? "<0.1%"
+    : `${(supplyRateAPR * 100).toFixed(2)}%`}
+</p>
+
               </div>
               <div className="w-full flex justify-between items-center my-1">
                 <p>Collateralization</p>

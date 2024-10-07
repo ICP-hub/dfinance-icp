@@ -231,33 +231,39 @@ const MySupply = () => {
               return;
             }
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString());
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkBTCBalance(formattedBalance); // Set ckBTC balance
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
               console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString());
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkETHBalance(formattedBalance); // Set ckETH balance
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
               console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString());
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
           } else if (assetType === "ICP") {
             if (!ledgerActorICP) {
               console.warn("Ledger actor for ICP not initialized yet");
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
-            setCkICPBalance(balance.toString());
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkICPBalance(formattedBalance);
+          
           } else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
           }
+          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
@@ -732,9 +738,9 @@ const MySupply = () => {
                           (reserveGroup, index) => {
                             const asset = reserveGroup[1]?.reserve;
                             const assetSupply =
-                              reserveGroup[1]?.asset_supply || 0;
+                              (reserveGroup[1]?.asset_supply || 0)/100000000;
                             const assetBorrow =
-                              reserveGroup[1]?.asset_borrow || 0;
+                              (reserveGroup[1]?.asset_borrow || 0)/100000000;;
 
                             if (assetSupply <= 0) return null;
 
@@ -748,7 +754,6 @@ const MySupply = () => {
                               userData.Ok?.liquidation_threshold * 100 || 0;
                             const reserveliquidationThreshold =
                               item?.[1]?.Ok.configuration.liquidation_threshold;
-                            console.log("liq thres:", liquidationThreshold);
                             const ckBalance =
                               asset === "ckBTC"
                                 ? ckBTCBalance
@@ -836,9 +841,9 @@ const MySupply = () => {
                                             reserveGroup[0] === item[0]
                                         );
                                       const assetSupply =
-                                        reserveData?.[1]?.asset_supply || 0;
+                                        (reserveData?.[1]?.asset_supply || 0)/100000000;
                                       const assetBorrow =
-                                        reserveData?.[1]?.asset_borrow || 0;
+                                        (reserveData?.[1]?.asset_borrow || 0)/100000000;
                                       const totalCollateral =
                                         userData?.Ok?.total_collateral || 0;
 
@@ -882,9 +887,9 @@ const MySupply = () => {
                                       const totalDebt =
                                         userData?.Ok?.total_debt || 0;
                                       const assetSupply =
-                                        reserveData?.[1]?.asset_supply || 0;
+                                        (reserveData?.[1]?.asset_supply || 0)/100000000;
                                       const assetBorrow =
-                                        reserveData?.[1]?.asset_borrow || 0;
+                                        (reserveData?.[1]?.asset_borrow || 0)/100000000;
                                       handleModalOpen(
                                         "withdraw",
                                         asset,
@@ -958,9 +963,10 @@ const MySupply = () => {
                             (reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               const assetSupply =
-                                reserveGroup[1]?.asset_supply || 0;
+                                (reserveGroup[1]?.asset_supply || 0)/100000000;
+                               
                               const assetBorrow =
-                                reserveGroup[1]?.asset_borrow || 0;
+                                (reserveGroup[1]?.asset_borrow || 0)/100000000;
 
                               if (assetSupply <= 0) return null;
 
@@ -984,12 +990,13 @@ const MySupply = () => {
                                   : asset === "ICP"
                                   ? ckICPBalance
                                   : null;
-
+                                 
                               return (
                                 <div
                                   key={index}
                                   className="grid grid-cols-[2.2fr_1.13fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                                 >
+                                  
                                   <div className="p-3 align-top flex items-center gap-2">
                                     {asset === "ckBTC" && (
                                       <img
@@ -1021,6 +1028,7 @@ const MySupply = () => {
                                     )}
                                     {asset}
                                   </div>
+                                  
                                   <div className="p-3 align-top flex flex-col">
                                     {assetSupply}
                                   </div>
@@ -1043,9 +1051,9 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          reserveData?.[1]?.asset_supply || 0;
+                                          (reserveData?.[1]?.asset_supply || 0)/100000000;
                                         const assetBorrow =
-                                          reserveData?.[1]?.asset_borrow || 0;
+                                          (reserveData?.[1]?.asset_borrow || 0)/100000000;
 
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
@@ -1083,9 +1091,9 @@ const MySupply = () => {
                                         const totalDebt =
                                           userData?.Ok?.total_debt || 0;
                                         const assetSupply =
-                                          reserveData?.[1]?.asset_supply || 0;
+                                         ( reserveData?.[1]?.asset_supply || 0)/100000000;
                                         const assetBorrow =
-                                          reserveData?.[1]?.asset_borrow || 0;
+                                         ( reserveData?.[1]?.asset_borrow || 0)/100000000;
                                         handleModalOpen(
                                           "withdraw",
                                           asset,
@@ -1110,6 +1118,7 @@ const MySupply = () => {
                               );
                             }
                           )}
+                         
                         </div>
                       </div>
                     </div>
@@ -1258,9 +1267,9 @@ const MySupply = () => {
                                         reserveGroup[0] === item[0]
                                     );
                                   const assetSupply =
-                                    reserveData?.[1]?.asset_supply || 0;
+                                    ( reserveData?.[1]?.asset_supply || 0)/100000000;
                                   const assetBorrow =
-                                    reserveData?.[1]?.asset_borrow || 0;
+                                    (reserveData?.[1]?.asset_borrow || 0)/100000000;
                                   const totalCollateral =
                                     userData?.Ok?.total_collateral || 0;
                                   const totalDebt =
@@ -1431,9 +1440,9 @@ const MySupply = () => {
                                           reserveGroup[0] === item[0]
                                       );
                                     const assetSupply =
-                                      reserveData?.[1]?.asset_supply || 0;
+                                      ( reserveData?.[1]?.asset_supply || 0)/100000000;;
                                     const assetBorrow =
-                                      reserveData?.[1]?.asset_borrow || 0;
+                                    (reserveData?.[1]?.asset_borrow || 0)/100000000;
                                     const totalCollateral =
                                       userData?.Ok?.total_collateral || 0;
                                     const totalDebt =
@@ -1540,9 +1549,10 @@ const MySupply = () => {
                                 (item) => item[0] === asset
                               );
                               const assetSupply =
-                                reserveGroup[1]?.asset_supply || 0;
+                                 (reserveGroup[1]?.asset_supply || 0)/100000000;
+                                 console.log("AssetSupply",assetSupply)
                               const assetBorrow =
-                                reserveGroup[1]?.asset_borrow || 0;
+                                (reserveGroup[1]?.asset_borrow || 0)/100000000;
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
@@ -1637,9 +1647,9 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          reserveData?.[1]?.asset_supply || 0;
+                                          ( reserveData?.[1]?.asset_supply || 0)/100000000;;
                                         const assetBorrow =
-                                          reserveData?.[1]?.asset_borrow || 0;
+                                          (reserveData?.[1]?.asset_borrow || 0)/100000000;
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1677,9 +1687,9 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          reserveData?.[1]?.asset_supply || 0;
+                                          ( reserveData?.[1]?.asset_supply || 0)/100000000;;
                                         const assetBorrow =
-                                          reserveData?.[1]?.asset_borrow || 0;
+                                        (reserveData?.[1]?.asset_borrow || 0)/100000000;
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1762,9 +1772,9 @@ const MySupply = () => {
                                 (item) => item[0] === asset
                               );
                               const assetSupply =
-                                reserveGroup[1]?.asset_supply || 0;
+                                (reserveGroup[1]?.asset_supply || 0)/100000000;
                               const assetBorrow =
-                                reserveGroup[1]?.asset_borrow || 0;
+                                (reserveGroup[1]?.asset_borrow || 0)/100000000;
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
@@ -1842,9 +1852,9 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          reserveData?.[1]?.asset_supply || 0;
+                                          (reserveData?.[1]?.asset_supply || 0)/100000000;;
                                         const assetBorrow =
-                                          reserveData?.[1]?.asset_borrow || 0;
+                                          (reserveData?.[1]?.asset_borrow || 0)/100000000;
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1882,9 +1892,9 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          reserveData?.[1]?.asset_supply || 0;
+                                          ( reserveData?.[1]?.asset_supply || 0)/100000000;;
                                         const assetBorrow =
-                                          reserveData?.[1]?.asset_borrow || 0;
+                                          (reserveData?.[1]?.asset_borrow || 0)/100000000;
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -2058,9 +2068,9 @@ const MySupply = () => {
                                         reserveGroup[0] === item[0]
                                     );
                                   const assetSupply =
-                                    reserveData?.[1]?.asset_supply || 0;
+                                    ( reserveData?.[1]?.asset_supply || 0)/100000000;;
                                   const assetBorrow =
-                                    reserveData?.[1]?.asset_borrow || 0;
+                                   ( reserveData?.[1]?.asset_borrow || 0)/100000000;
                                   const totalCollateral =
                                     userData?.Ok?.total_collateral || 0;
                                   const totalDebt =
@@ -2254,9 +2264,9 @@ const MySupply = () => {
                                             reserveGroup[0] === item[0]
                                         );
                                       const assetSupply =
-                                        reserveData?.[1]?.asset_supply || 0;
+                                        ( reserveData?.[1]?.asset_supply || 0)/100000000;;
                                       const assetBorrow =
-                                        reserveData?.[1]?.asset_borrow || 0;
+                                       ( reserveData?.[1]?.asset_borrow || 0)/100000000;
                                       const totalCollateral =
                                         userData?.Ok?.total_collateral || 0;
                                       const totalDebt =

@@ -176,7 +176,9 @@ const Repay = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
+        const response = await fetch(
+          "https://dfinance.kaifoundry.com/conversion-rates"
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch conversion rates from server");
@@ -233,7 +235,8 @@ const Repay = ({
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
-
+  const amountAsNat64 = Number(amount);
+  const scaledAmount = amountAsNat64 * Number(10 ** 8);
   const handleApprove = async () => {
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -247,8 +250,9 @@ const Repay = ({
     }
 
     // Convert amount and transferFee to numbers and add them
-    const repayAmount = Number(amount);
-    const totalAmount = repayAmount + transferfee;
+    const amountAsNat64 = Number(amount);
+    const scaledAmount = amountAsNat64 * Number(10 ** 8);
+    const totalAmount = scaledAmount + transferfee;
 
     try {
       // Call the approval function
@@ -286,11 +290,13 @@ const Repay = ({
       onLoadingChange(isLoading);
     }
   }, [isLoading, onLoadingChange]);
+
   const handleRepayETH = async () => {
-    console.log("Repay function called for", asset, amount);
+    console.log("Repay function called for", asset);
+
     let ledgerActor;
 
-    // Example logic to select the correct backend actor based on the asset
+    // Select the correct backend actor based on the asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActorckBTC;
     } else if (asset === "ckETH") {
@@ -304,23 +310,21 @@ const Repay = ({
     console.log("Backend actor", ledgerActor);
 
     try {
-      // Convert the amount to the appropriate units, if necessary
-      const amountInUnits = Number(amount); // Example conversion to appropriate units
+      const amountAsNat64 = parseFloat(amount);
+      const scaledAmount = BigInt(Math.floor(amountAsNat64 * 10 ** 8));
 
-      // Call the repay function on the selected ledger actor
-      const repayResult = await backendActor.repay(asset, amountInUnits, []);
+      const repayResult = await backendActor.repay(asset, scaledAmount, []);
       toast.success("Repay successful!");
       console.log("Repay result", repayResult);
       setIsPaymentDone(true);
       setIsVisible(false);
-
-      // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
       console.error("Error repaying:", error);
       toast.error(`Error: ${error.message || "Repay action failed!"}`);
       // Handle error state, e.g., show error message
     }
   };
+
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -642,18 +646,8 @@ const Repay = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have repayed {amount} d{asset}
+              You have repayed {scaledAmount/100000000} d{asset}
             </p>
-
-            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
-              <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
-                <span>Add dToken to wallet to track your balance.</span>
-              </div>
-              <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
-                <Wallet />
-                Add to wallet
-              </button>
-            </div> */}
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

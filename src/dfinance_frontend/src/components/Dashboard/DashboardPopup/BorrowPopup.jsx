@@ -204,9 +204,12 @@ const Borrow = ({
     setIsAcknowledged(e.target.checked);
   };
   const value = currentHealthFactor;
-
+  const amountAsNat64 = Number(amount);
+  const scaledAmount = amountAsNat64 * Number(10 ** 8);
+  console.log("amountAsNat64", amountAsNat64)
+  console.log("scaledAmount", scaledAmount)
   const handleBorrowETH = async () => {
-    console.log("Borrow function called for", asset, amount);
+    console.log("Borrow function called for", asset,scaledAmount);
     setIsLoading(true);
     let ledgerActor;
 
@@ -221,7 +224,7 @@ const Borrow = ({
     }
 
     try {
-      const borrowResult = await backendActor.borrow(asset, Number(amount));
+      const borrowResult = await backendActor.borrow(asset,scaledAmount);
       console.log("Borrow result", borrowResult);
       setIsPaymentDone(true);
       setIsVisible(false);
@@ -613,7 +616,7 @@ const Borrow = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have borrowed {amount} d{asset}
+              You have borrowed {scaledAmount/100000000} d{asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

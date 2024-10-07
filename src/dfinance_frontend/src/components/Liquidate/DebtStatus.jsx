@@ -265,7 +265,7 @@ const DebtStatus = () => {
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[1]?.reserve
-                            const assetBorrow = item[1]?.asset_borrow
+                            const assetBorrow = (item[1]?.asset_borrow)/100000000;
                             console.log("mappedItems",mappedItem)
                             console.log("Asset Borrow:", assetBorrow);
                             if (assetBorrow > 0) {

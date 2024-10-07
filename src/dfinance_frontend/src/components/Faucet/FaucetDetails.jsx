@@ -167,28 +167,33 @@ const FaucetDetails = () => {
               return;
             }
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString()); // Set ckBTC balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkBTCBalance(formattedBalance); // Set ckBTC balance
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
               console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString()); // Set ckETH balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkETHBalance(formattedBalance); // Set ckETH balance
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
               console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
           } else if (assetType === "ICP") {
             if (!ledgerActorICP) {
               console.warn("Ledger actor for ICP not initialized yet");
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
-            setCkICPBalance(balance.toString()); // Set ICP balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkICPBalance(formattedBalance);
+          
           } else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"

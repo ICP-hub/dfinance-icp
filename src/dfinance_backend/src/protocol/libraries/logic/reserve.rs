@@ -1,18 +1,3 @@
-// use candid::{CandidType, Principal};
-// use serde::{Deserialize, Serialize};
-
-// use crate::protocol::libraries::math::math_utils;
-// use ic_cdk::api::time;
-
-// use crate::declarations::assets::ReserveCache;
-// use crate::declarations::assets::ReserveData;
-// use crate::protocol::libraries::math::percentage_maths::percent_mul;
-// use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
-
-// fn current_timestamp() -> u64 {
-//     time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds
-// }
-    
 
 
 // pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
@@ -33,19 +18,7 @@
 //     }
 // }
 
-// pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
-//     let current_time = current_timestamp();
-//     ic_cdk::println!("Current timestamp: {}", current_time);
 
-//     if reserve_data.last_update_timestamp == current_time {
-//         return;
-//     }
-
-//     // update_indexes(reserve_data, reserve_cache);
-//     // accrue_to_treasury(reserve_data, reserve_cache);
-
-//     reserve_data.last_update_timestamp = current_time;
-// }
 
 // // pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
 // //     if reserve_cache.curr_liquidity_rate != 0 {
@@ -231,8 +204,7 @@ use ic_cdk::api::time;
 
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
-use crate::protocol::libraries::math::percentage_maths::percent_mul;
-use crate::protocol::libraries::types::datatypes::CalculateInterestRatesParams;
+
 use crate::protocol::libraries::logic::interest_rate::{calculate_interest_rates, initialize_interest_rate_params};
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 
@@ -316,8 +288,9 @@ pub async fn update_interest_rates(
         let total_debt = (reserve_data.total_borrowed +liquidity_taken ) * reserve_cache.curr_debt_index as f64;
         let total_supply= (reserve_data.total_supply + liquidity_added) * reserve_cache.curr_liquidity_index as f64;
         let total_borrowed= reserve_data.total_borrowed + liquidity_taken;
-        let interest_rate_params = initialize_interest_rate_params();
-
+        let asset=reserve_data.asset_name.clone().unwrap_or("no token".to_string());
+        let interest_rate_params = initialize_interest_rate_params(&asset);
+        ic_cdk::println!("interest rate params {:?}", interest_rate_params);
         let (next_liquidity_rate, next_debt_rate) =
         calculate_interest_rates(
             total_supply as f64,                        // f64

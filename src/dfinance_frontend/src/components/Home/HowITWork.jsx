@@ -80,7 +80,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={Calculator}
+                src={ICPRequest}
                 draggable="false"
               />
             </div>

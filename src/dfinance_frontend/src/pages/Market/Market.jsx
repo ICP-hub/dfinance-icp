@@ -235,7 +235,7 @@ const WalletDetails = () => {
   }
   return (
     <div className="w-full">
-      <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
+      <div className="w-full md:h-[40px] flex items-center px-3 -mt-5 lg:mt-8 ">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText -ml-3">ICP Assets</h1>
         <div className="ml-auto   ">
           {Showsearch && (
@@ -283,7 +283,7 @@ const WalletDetails = () => {
         />
       }
 
-      <div className="w-full mt-6 lg:px-10">
+      <div className="w-full mt-6">
         {currentItems.length === 0 ? <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
           <div className="w-20 h-15">
             <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
@@ -351,7 +351,7 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
-                      {(item[1].Ok.supply_rate_apr * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.supply_rate_apr * 100).toFixed(2)}%`}</div></td>
+                      {(item[1].Ok.current_liquidity_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.current_liquidity_rate * 100).toFixed(2)}%`}</div></td>
                     <td className="p-3 align-center hidden md:table-cell">
                       <div className="flex justify-center flex-row">
                         <div>
@@ -366,8 +366,8 @@ const WalletDetails = () => {
                     </td>
                     <td className="p-3 align-center">
                       <div className="w-full flex justify-end align-center">
-                        <Button title={"Details"} className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-sm
-                               lg:px-5 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]     font-inter"
+                        <Button title={"Details"} className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-[12px]
+                               lg:px-4 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
                           onClickHandler={() => handleDetailsClick(item[0], item[1])}
                         />
                       </div>
@@ -422,7 +422,7 @@ const WalletDetails = () => {
                     </div>
                     <div className="flex justify-between">
                       <p className="text-sm dark:text-darkTextSecondary">Supply APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.supply_rate_apr}%</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.current_liquidity_rate}%</p>
                     </div>
 
 

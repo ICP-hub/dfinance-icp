@@ -144,14 +144,24 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   };
   const [amountBorrowUSD, setAmountBorrowUSD] = useState(null);
   const [selectedAssetSupply, setSelectedAssetSupply] = useState(null);
+  const [collateralRate, setCollateralRate] = useState(null);
+  const [collateral, setCollateralRateAmount] = useState(null);
 
   const [isCollateralAssetSelected, setIsCollateralAssetSelected] =
     useState(false);
-  const handleAssetSelection = (asset, assetBorrowAmountInUSD, assetSupply) => {
+  const handleAssetSelection = (
+    asset,
+    collateralRate,
+    assetSupply,
+    collateralAmount
+  ) => {
     setIsCollateralAssetSelected(true);
     setSelectedAsset(asset);
+    setCollateralRate(collateralRate ? collateralRate : 0);
     // Set the selected asset (only one at a time)
     setSelectedAssetSupply(assetSupply);
+    setCollateralRateAmount(collateralAmount ? collateralAmount : 0);
+
     const assetRewardAmounts = {
       cketh: 0.003256,
       ckbtc: 0.001025,
@@ -161,13 +171,19 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     setRewardAmount(assetRewardAmounts[asset] || 10);
   };
   console.log("selectedAsstSUplly", selectedAssetSupply);
-
+  console.log("Collateral in usd", collateral);
   const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
+  const [amountToRepayUSD, setAmountToRepayUSD] = useState(null);
 
-  const handleDebtAssetSelection = (asset, assetBorrowAmount) => {
+  const handleDebtAssetSelection = (
+    asset,
+    assetBorrowAmount,
+    assetBorrowAmountInUSD
+  ) => {
     setIsDebtAssetSelected(true);
     setSelectedDebtAsset(asset); // Set the selected asset (only one at a time)
     setAmountToRepay(assetBorrowAmount ? assetBorrowAmount : 0);
+    setAmountToRepayUSD(assetBorrowAmountInUSD ? assetBorrowAmountInUSD : 0);
 
     console.log("Asset Borrow Amount to Repay:", assetBorrowAmount);
     console.log("Amount to Repay (after check):", amountToRepay);
@@ -241,9 +257,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
@@ -253,9 +269,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
@@ -264,9 +280,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
+            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+            ledgerIdlFactory
+          )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
@@ -312,16 +328,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
             setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
-          }
-          else if (assetType === "ICP") {
+          } else if (assetType === "ICP") {
             if (!ledgerActorICP) {
               console.warn("Ledger actor for ICP not initialized yet");
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
             setCkICPBalance(balance.toString()); // Set ICP balance
-          }
-          else {
+          } else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
@@ -339,12 +353,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       ledgerActorckETH,
       ledgerActorckUSDC,
       principalObj,
-      ledgerActorICP
+      ledgerActorICP,
     ]
   );
 
   const [loading, setLoading] = useState();
-
 
   const handleApprove = async () => {
     let ledgerActor;
@@ -484,10 +497,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   }, [ckICPBalance, ckICPUsdRate]);
 
-  const pollInterval = 10000;
+  const pollInterval = 2000;
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:5000/conversion-rates");
+      const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -520,7 +533,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
-
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -547,7 +559,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     ckETHBalance,
     ckUSDCBalance,
   ]);
-
 
   const renderDebtAssetDetails = (asset) => {
     switch (asset) {
@@ -648,7 +659,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
                 ckETH Price
               </p>
-              <p className="text-sm font-medium">0.0032560</p>
+              <p className="text-sm font-medium">{collateralRate}</p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
               <p className="text-sm font-normal text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
@@ -661,7 +672,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {(amountToRepay * (liquidation_bonus / 100)).toFixed(2)}
+                {Math.floor(
+                  collateral + collateral * (liquidation_bonus / 100)
+                )}
               </p>
             </div>
           </div>
@@ -676,7 +689,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 ckBTC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-                0.0010250
+                {collateralRate}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
@@ -690,7 +703,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {(amountToRepay * (liquidation_bonus / 100)).toFixed(2)}
+                {Math.floor(
+                  collateral + collateral * (liquidation_bonus / 100)
+                )}
               </p>
             </div>
           </div>
@@ -705,7 +720,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 ckUSDC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-                5.032560
+                {collateralRate}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -721,7 +736,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {(amountToRepay * (liquidation_bonus / 100)).toFixed(2)}
+                {Math.floor(
+                  collateral + collateral * (liquidation_bonus / 100)
+                )}
               </p>
             </div>
           </div>
@@ -736,7 +753,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 ICP Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-                5.032560
+                {collateralRate}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -752,7 +769,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {(amountToRepay * (liquidation_bonus / 100)).toFixed(2)}
+                {Math.floor(
+                  collateral + collateral * (liquidation_bonus / 100)
+                )}
               </p>
             </div>
           </div>
@@ -767,19 +786,22 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const { filteredItems } = useAssetData();
 
   function formatNumber(num) {
-    if (num === null || num === undefined) {
+    // Ensure num is a valid number
+    const parsedNum = parseFloat(num);
+
+    if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
       return "0";
     }
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
+    if (parsedNum >= 1000000000) {
+      return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
     }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (parsedNum >= 1000000) {
+      return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
     }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    if (parsedNum >= 1000) {
+      return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
     }
-    return num.toString();
+    return parsedNum.toFixed(2).toString();
   }
 
   let asset_name = "";
@@ -845,7 +867,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       default:
         setSelectedAssetBalance(0);
     }
-  }, [selectedDebtAsset, ckETHBalance, ckBTCBalance, ckUSDCBalance, ckICPBalance]);
+  }, [
+    selectedDebtAsset,
+    ckETHBalance,
+    ckBTCBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+  ]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -916,8 +944,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             {isCheckboxChecked ? (
               // Button for "Call Liquidation"
               <button
-                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 onClick={handleConfirmLiquidation}
                 disabled={isLoading} // Disable the button while loading
               >
@@ -957,8 +986,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               {isCollateralOverlay
                 ? "Collateral Information"
                 : isDebtInfo
-                  ? "Debt Information"
-                  : "User Information"}
+                ? "Debt Information"
+                : "User Information"}
             </h2>
             <button
               onClick={onClose}
@@ -979,49 +1008,37 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
-                    console.log("mappedItesm", mappedItem.reserves[0])
+                    console.log("mappedItesm", mappedItem.reserves[0]);
                     const assetName = item[1]?.reserve;
                     const assetSupply = item[1]?.asset_supply;
                     const assetBorrow = item[1]?.asset_borrow;
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
-                    let assetBorrowAmountInUSD = 0;
+                    let collateralRate = 0;
                     if (assetName === "ckBTC" && ckBTCUsdRate) {
-                      assetBorrowAmountInUSD = (
-                        assetBorrowAmount * ckBTCUsdRate
-                      ).toFixed(2);
+                      collateralRate = ckBTCUsdRate;
                     } else if (assetName === "ckETH" && ckETHUsdRate) {
-                      assetBorrowAmountInUSD = (
-                        assetBorrowAmount * ckETHUsdRate
-                      ).toFixed(2);
+                      collateralRate = ckETHUsdRate;
                     } else if (assetName === "ckUSDC" && ckUSDCUsdRate) {
-                      assetBorrowAmountInUSD = (
-                        assetBorrowAmount * ckUSDCUsdRate
-                      ).toFixed(2);
-                    }
-                    else if (assetName === "ICP" && ckICPUsdRate) {
-                      assetBorrowAmountInUSD = (
-                        assetBorrowAmount * ckICPUsdRate
-                      ).toFixed(2);
+                      collateralRate = ckUSDCUsdRate;
+                    } else if (assetName === "ICP" && ckICPUsdRate) {
+                      collateralRate = ckICPUsdRate;
                     }
 
-                    console.log(
-                      "assetBorrowAmountInUSD",
-                      assetBorrowAmountInUSD
-                    );
+                    console.log("collateralRate", collateralRate);
 
-                    const rewardAmount = (amountToRepay * (liquidation_bonus / 100));
+                    const collateralAmount = amountToRepayUSD / collateralRate;
 
                     const assetBalance =
                       assetName === "ckBTC"
                         ? ckBTCBalance
                         : assetName === "ckETH"
-                          ? ckETHBalance
-                          : assetName === "ckUSDC"
-                            ? ckUSDCBalance
-                            : assetName === "ICP"
-                              ? ckICPBalance
-                              : 0;
+                        ? ckETHBalance
+                        : assetName === "ckUSDC"
+                        ? ckUSDCBalance
+                        : assetName === "ICP"
+                        ? ckICPBalance
+                        : 0;
 
                     if (assetSupply > 0) {
                       return (
@@ -1034,8 +1051,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                             onChange={() =>
                               handleAssetSelection(
                                 assetName,
-                                assetBorrowAmountInUSD,
-                                assetSupply
+                                collateralRate,
+                                assetSupply,
+                                collateralAmount
                               )
                             }
                           />
@@ -1045,12 +1063,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                               assetName === "ckBTC"
                                 ? ckBTC
                                 : assetName === "ckETH"
-                                  ? ckETH
-                                  : assetName === "ckUSDC"
-                                    ? ckUSDC
-                                    : assetName === "ICP"
-                                      ? icp
-                                      : undefined
+                                ? ckETH
+                                : assetName === "ckUSDC"
+                                ? ckUSDC
+                                : assetName === "ICP"
+                                ? icp
+                                : undefined
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -1108,12 +1126,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm  px-6 py-2 relative ${isCollateralAssetSelected &&
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm  px-6 py-2 relative ${
+                    isCollateralAssetSelected &&
                     amountToRepay + amountToRepay * (liquidation_bonus / 100) <
-                    selectedAssetSupply
-                    ? "opacity-100 cursor-pointer"
-                    : "opacity-50 cursor-not-allowed"
-                    }`}
+                      selectedAssetSupply
+                      ? "opacity-100 cursor-pointer"
+                      : "opacity-50 cursor-not-allowed"
+                  }`}
                   onClick={() => {
                     console.log("Button clicked");
                     isApproved ? handleCallLiquidation() : handleApprove();
@@ -1122,8 +1141,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     isLoading ||
                     !isCollateralAssetSelected ||
                     !(
-                      amountToRepay +
-                      amountToRepay * (liquidation_bonus / 100) <
+                      collateral + collateral * (liquidation_bonus / 100) <
                       selectedAssetSupply
                     )
                   }
@@ -1171,13 +1189,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       assetBorrowAmountInUSD = (
                         assetBorrowAmount * ckUSDCUsdRate
                       ).toFixed(2);
-                    }
-                    else if (assetName === "ICP" && ckICPUsdRate) {
+                    } else if (assetName === "ICP" && ckICPUsdRate) {
                       assetBorrowAmountInUSD = (
                         assetBorrowAmount * ckICPUsdRate
                       ).toFixed(2);
                     }
-
                     if (assetBorrow > 0) {
                       return (
                         <label className="flex items-center space-x-2">
@@ -1189,7 +1205,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                             onChange={() =>
                               handleDebtAssetSelection(
                                 assetName,
-                                assetBorrowAmount
+                                assetBorrowAmount,
+                                assetBorrowAmountInUSD
                               )
                             }
                           />
@@ -1199,12 +1216,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                               assetName === "ckBTC"
                                 ? ckBTC
                                 : assetName === "ckETH"
-                                  ? ckETH
-                                  : assetName === "ckUSDC"
-                                    ? ckUSDC
-                                    : assetName === "ICP"
-                                      ? icp
-                                      : undefined
+                                ? ckETH
+                                : assetName === "ckUSDC"
+                                ? ckUSDC
+                                : assetName === "ICP"
+                                ? icp
+                                : undefined
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -1242,10 +1259,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
-                    ? "opacity-100"
-                    : "opacity-50 cursor-not-allowed"
-                    }`}
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${
+                    isDebtAssetSelected && amountToRepay <= selectedAssetBalance
+                      ? "opacity-100"
+                      : "opacity-50 cursor-not-allowed"
+                  }`}
                   onClick={handleNextClick}
                   disabled={
                     !isDebtAssetSelected ||
@@ -1279,7 +1297,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       User Health Factor
                     </p>
                     <p className="text-xs font-medium text-[#F30606] ">
-                      {parseFloat( userHealthFactor> 100 ? "Infinity" : parseFloat(userHealthFactor).toFixed(2))}
+                      {parseFloat(
+                        userHealthFactor > 100
+                          ? "Infinity"
+                          : parseFloat(userHealthFactor).toFixed(2)
+                      )}
                     </p>
                   </div>
                 </div>

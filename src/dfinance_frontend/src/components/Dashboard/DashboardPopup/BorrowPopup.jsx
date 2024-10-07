@@ -17,6 +17,7 @@ const Borrow = ({
   image,
   supplyRateAPR,
   balance,
+  reserveliquidationThreshold,
   liquidationThreshold,
   assetSupply,
   assetBorrow,
@@ -49,7 +50,7 @@ const Borrow = ({
   useEffect(() => {
     const fetchConversionRate = async () => {
       try {
-        const response = await fetch("http://localhost:5000/conversion-rates");
+        const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
 
         if (!response.ok) {
           throw new Error("Failed to fetch conversion rates from server");
@@ -157,9 +158,9 @@ const Borrow = ({
     () =>
       assetPrincipal.ckBTC
         ? createLedgerActor(
-            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
   );
@@ -168,9 +169,9 @@ const Borrow = ({
     () =>
       assetPrincipal.ckETH
         ? createLedgerActor(
-            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
   );
@@ -178,9 +179,9 @@ const Borrow = ({
     () =>
       assetPrincipal.ckUSDC
         ? createLedgerActor(
-            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
+          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
+          ledgerIdlFactory
+        )
         : null, // Return null if principal is not available yet
     [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
   );
@@ -296,7 +297,7 @@ const Borrow = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
+    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -307,6 +308,7 @@ const Borrow = ({
     }
   }, [
     asset,
+    reserveliquidationThreshold,
     liquidationThreshold,
     assetSupply,
     assetBorrow,
@@ -433,6 +435,7 @@ const Borrow = ({
                     disabled={totalCollateral === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100  rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
+                    min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
@@ -464,7 +467,7 @@ const Borrow = ({
                     <p>
                       {supplyRateAPR * 100 < 0.1
                         ? "<0.1%"
-                        : `${supplyRateAPR * 100}%`}
+                        : `${(supplyRateAPR * 100).toFixed(2)}%`}
                     </p>
                   </div>
 
@@ -472,17 +475,16 @@ const Borrow = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          healthFactorBackend > 3
+                        className={`${healthFactorBackend > 3
                             ? "text-green-500"
                             : healthFactorBackend <= 1
-                            ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                            ? "text-orange-600"
-                            : healthFactorBackend <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : healthFactorBackend <= 1.5
+                                ? "text-orange-600"
+                                : healthFactorBackend <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {parseFloat(
                           healthFactorBackend > 100
@@ -492,17 +494,16 @@ const Borrow = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
+                        className={`${currentHealthFactor > 3
                             ? "text-green-500"
                             : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : currentHealthFactor <= 1.5
+                                ? "text-orange-600"
+                                : currentHealthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -573,11 +574,10 @@ const Borrow = ({
 
               <button
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""
-                }`}
+                  }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}

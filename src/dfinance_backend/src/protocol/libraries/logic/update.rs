@@ -221,7 +221,14 @@ impl UpdateLogic {
         // Calculate and update loan-to-value (LTV)
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
-    
+
+        // let available_borrow = calculate_available_borrows(
+        //     user_data.total_collateral.unwrap_or(0.0).clone(),
+        //     user_data.total_debt.unwrap_or(0.0).clone(),
+        //     ltv.clone(), 
+        // );
+        
+        // user_data.available_borrow = Some(available_borrow);
         // Check if the user has a reserve for the asset
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -315,17 +322,13 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-        // let ckbtc_to_usd_rate = 60554.70f64;
-        // ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
-
-        // // Convert the supplied amount (in ckBTC) to ICP
-        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+      
         user_data.total_debt = Some(user_data.total_debt.unwrap_or(0.0) + usd_amount);
 
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
-            total_borrowed_value: user_data.total_debt.unwrap_or(0.0), // Assuming total_debt is stored in user_data
-            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0.0), // Set to the desired liquidation threshold (80%)
+            total_borrowed_value: user_data.total_debt.unwrap_or(0.0),
+            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0.0), 
         };
          
         let health_factor = calculate_health_factor(&user_position);
@@ -616,7 +619,20 @@ impl UpdateLogic {
     }
 }
 
+fn calculate_available_borrows(
+    total_collateral_in_usd: f64,
+    total_debt_in_usd: f64,
+    ltv: f64, 
+) -> f64 {
 
+    let available_borrows_in_usd = total_collateral_in_usd * ltv;
+
+    if available_borrows_in_usd < total_debt_in_usd {
+        return 0.0;
+    }
+
+    available_borrows_in_usd - total_debt_in_usd
+}
 // fn calculate_available_borrows(
 //     total_collateral_in_base_currency: u128,
 //     total_debt_in_base_currency: u128,

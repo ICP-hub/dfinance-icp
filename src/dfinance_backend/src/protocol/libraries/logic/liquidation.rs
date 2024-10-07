@@ -1,7 +1,7 @@
 use crate::{
     api::{functions::asset_transfer, state_handler::mutate_state},
     declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
-    protocol::libraries::logic::update::UpdateLogic,
+    protocol::libraries::{logic::update::UpdateLogic, math::calculate::get_exchange_rates},
     repay,
 };
 use candid::{Nat, Principal};
@@ -17,6 +17,24 @@ impl LiquidationLogic {
         on_behalf_of: String,
     ) -> Result<Nat, String> {
         // Reads the reserve data from the asset
+        let mut usd_amount = amount as f64;
+
+        let supply_amount_to_usd =
+            get_exchange_rates(asset_name.clone(), None, amount as f64).await;
+        match supply_amount_to_usd {
+            Ok((amount_in_usd, _timestamp)) => {
+                // Extracted the amount in USD
+                usd_amount = amount_in_usd;
+                ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
+            }
+            Err(e) => {
+                // Handling the error
+                ic_cdk::println!("Error getting exchange rate: {:?}", e);
+            }
+        }
+
+        ic_cdk::println!("Supply amount in USD: {:?}", usd_amount);
+
         let reserve_data_result = mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index
@@ -65,11 +83,24 @@ impl LiquidationLogic {
 
         let asset = asset_name.clone();
 
-        let bonus = (amount as f64 * (reserve_data.configuration.liquidation_bonus as f64 / 100f64))
+        
+        let collateral_amount = match get_exchange_rates("USDT".to_string(), Some(collateral_asset.clone()), usd_amount).await {
+            Ok((total_value, _time)) => {
+                // Store the total_value returned from the get_exchange_rates function
+                total_value
+            },
+            Err(e) => {
+                // Handle the error case
+                ic_cdk::println!("Error fetching exchange rate: {}", e);
+                0.0 // Or handle the error as appropriate for your logic
+            }
+        };
+        ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
+        let bonus = (collateral_amount * (reserve_data.configuration.liquidation_bonus as f64 / 100f64))
             .round() as u64;
-        let reward_amount = Nat::from(amount) + Nat::from(bonus);
+        let reward_amount = Nat::from(collateral_amount as u128) + Nat::from(bonus);
 
-        let reward_amount_param = amount + bonus as u128;
+        let reward_amount_param = collateral_amount as u128 + bonus as u128;
 
         let supply_param = ExecuteSupplyParams {
             asset: collateral_asset.to_string(),

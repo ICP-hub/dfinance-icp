@@ -1,7 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import {
-  liquidationThresholdLabel,
-} from "../../../utils/constants";
+import { liquidationThresholdLabel } from "../../../utils/constants";
 import { X } from "lucide-react";
 
 const RiskPopup = ({ onClose, userData }) => {
@@ -9,15 +7,24 @@ const RiskPopup = ({ onClose, userData }) => {
 
   console.log("userdata in risk", userData);
   const health_Factor_Value =
-    parseFloat(userData.Ok.health_factor) > 100
-      ? Infinity
-      : parseFloat(userData.Ok.health_factor);
+    userData?.Ok?.health_factor !== undefined &&
+    userData?.Ok?.health_factor !== null
+      ? parseFloat(userData.Ok.health_factor) > 100
+        ? Infinity
+        : parseFloat(userData.Ok.health_factor)
+      : 0; // Return 0 if health_factor is not defined
 
-  const Ltv_Value = parseFloat(userData.Ok.ltv);
+  const Ltv_Value = parseFloat(userData?.Ok?.ltv)
+    ? parseFloat(userData.Ok.ltv * 100)
+    : 0;
 
-  const liquidationThreshold_Value = 76.5;
+  const liquidationThreshold_Value = userData?.Ok?.liquidation_threshold
+    ? (userData.Ok.liquidation_threshold * 100).toFixed(2)
+    : "0.00";
+
+  console.log("liquidationThresholdValue", liquidationThreshold_Value);
   const healthFactorMinValue = 1;
-
+  const Max_Ltv = 50.0;
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       onClose();
@@ -38,16 +45,47 @@ const RiskPopup = ({ onClose, userData }) => {
       console.error("Invalid Health Factor value:", value);
       return NaN;
     }
+
     if (value === Infinity) {
-      return 100;
+      return 100; // Maximum position for infinity
     } else if (value === -Infinity) {
-      return 0;
+      return 0; // Minimum position for negative infinity
     }
-    const maxValue = 100;
-    return Math.max(0, Math.min(100, (value / maxValue) * 100));
+
+    const minValue = 0; // Minimum value to consider for health factor
+    const maxValue = 100; // Maximum health factor value
+    const offset = 5; // Offset distance for value 1
+
+    // Calculate the position
+    const position = Math.max(
+      0,
+      Math.min(
+        100,
+        ((value - minValue) / (maxValue - minValue)) * (100 - offset) + offset
+      )
+    );
+
+    // If the value is 0, ensure it returns 0
+    return value === 0 ? 0 : position;
   };
 
   const calculateLTVPosition = (value, min, max) => {
+    if (
+      typeof value !== "number" ||
+      typeof min !== "number" ||
+      typeof max !== "number" ||
+      min === max
+    ) {
+      console.error("Invalid input values for LTV position calculation:", {
+        value,
+        min,
+        max,
+      });
+      return NaN;
+    }
+    return ((value - min) / (max - min)) * 100;
+  };
+  const calculateMaxLTVPosition = (value, min, max) => {
     if (
       typeof value !== "number" ||
       typeof min !== "number" ||
@@ -73,6 +111,8 @@ const RiskPopup = ({ onClose, userData }) => {
   };
 
   const thresholdValue = parseThreshold(liquidationThreshold_Value);
+  const MaxLtvValue = parseThreshold(Max_Ltv);
+  console.log("threshold value", liquidationThreshold_Value);
   const healthFactorPosition =
     calculateHealthFactorPosition(health_Factor_Value);
   const healthFactorMinPosition =
@@ -83,6 +123,7 @@ const RiskPopup = ({ onClose, userData }) => {
     0,
     100
   );
+  const currentMaxLtvPosition = calculateMaxLTVPosition(MaxLtvValue, 0, 100);
 
   console.log("Health Factor Value:", health_Factor_Value);
   console.log("Health Factor Position:", healthFactorPosition);
@@ -95,8 +136,27 @@ const RiskPopup = ({ onClose, userData }) => {
   console.log("Current LTV Threshold Position:", currentLTVThresholdPosition);
 
   const healthFactorColor =
-    health_Factor_Value < healthFactorMinValue ? "yellow" : "green";
-  const ltvColor = Ltv_Value > thresholdValue ? "yellow" : "green";
+    health_Factor_Value > 3
+      ? "#008000"
+      : health_Factor_Value <= 1
+      ? "red"
+      : health_Factor_Value <= 1.5
+      ? "#fa6e0d"
+      : health_Factor_Value <= 2
+      ? "yellow"
+      : "vivid orange";
+  const ltvColor =
+    Ltv_Value >= liquidationThreshold_Value
+      ? "red" // Red for liquidation threshold
+      : Ltv_Value >= Max_Ltv // Check if LTV is equal to or greater than Max LTV
+      ? "#fa6e0d" // Orange if LTV equals Max LTV or is in the range
+      : "green";
+  const MaxltvColor =
+    Ltv_Value >= Max_Ltv
+      ? "#fa6e0d" // Dark brown
+      : Ltv_Value < Max_Ltv
+      ? "#008000" // Green
+      : "#00FFFF"; // Cyan
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 transition-bar">
@@ -146,15 +206,21 @@ const RiskPopup = ({ onClose, userData }) => {
                         style={{ stopColor: "red", stopOpacity: 1 }}
                       />
                       <stop
-                        offset="60%"
-                        style={{ stopColor: "yellow", stopOpacity: 1 }}
+                        offset="10%"
+                        style={{ stopColor: "orange", stopOpacity: 1 }}
+                      />
+
+                      <stop
+                        offset="20%"
+                        style={{ stopColor: "green", stopOpacity: 1 }}
                       />
                       <stop
                         offset="100%"
-                        style={{ stopColor: "lightgreen", stopOpacity: 1 }}
+                        style={{ stopColor: "green", stopOpacity: 1 }}
                       />
                     </linearGradient>
                   </defs>
+
                   <rect
                     className="transition-bar"
                     x="0"
@@ -183,10 +249,10 @@ const RiskPopup = ({ onClose, userData }) => {
                     className="transition-text"
                     x={`${healthFactorPosition}%`}
                     y="9"
-                    fill="gray"
+                    fill={healthFactorColor}
                     fontSize="13"
                     textAnchor={healthFactorPosition > 50 ? "left" : "right"}
-                    dx={healthFactorPosition > 50 ? "-3.4em" : "-0.3em"}
+                    dx={healthFactorPosition > 50 ? "-3.4em" : "-0.001em"}
                     dy=".04em"
                   >
                     {parseFloat(health_Factor_Value)?.toFixed(2) || "0.00"}
@@ -203,7 +269,19 @@ const RiskPopup = ({ onClose, userData }) => {
                     {healthFactorMinValue}
                   </text>
                 </svg>
-                <span className="ml-2 px-4 py-1 bg-[#b2ffac] text-green-800 font-bold rounded-l-2xl rounded-r-2xl cursor-pointer">
+                <span
+                  className={`ml-2 px-4 py-1 bg-[#b2ffac] font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${
+                    health_Factor_Value > 3
+                      ? "text-green-800" // Use appropriate Tailwind CSS class for green
+                      : health_Factor_Value <= 1
+                      ? "text-red-700" // Use appropriate Tailwind CSS class for red
+                      : health_Factor_Value <= 1.5
+                      ? "text-orange-500" // Use appropriate Tailwind CSS class for orange
+                      : health_Factor_Value <= 2
+                      ? "text-orange-300" // Use appropriate Tailwind CSS class for soft orange
+                      : "text-orange-600" // Use appropriate Tailwind CSS class for vivid orange
+                  }`}
+                >
                   {parseFloat(health_Factor_Value)?.toFixed(2) || "0.00"}
                 </span>
               </div>
@@ -235,15 +313,16 @@ const RiskPopup = ({ onClose, userData }) => {
                         style={{ stopColor: "green", stopOpacity: 1 }}
                       />
                       <stop
-                        offset="70%"
-                        style={{ stopColor: "#C0F9BC", stopOpacity: 1 }}
+                        offset="63%"
+                        style={{ stopColor: "#fa6e0d", stopOpacity: 1 }} // Removed extra quotation mark
                       />
                       <stop
-                        offset="100%"
-                        style={{ stopColor: "#E9E9E9", stopOpacity: 1 }}
+                        offset="currentLTVThresholdPosition" // Use a different offset for the red color
+                        style={{ stopColor: "red", stopOpacity: 1 }}
                       />
                     </linearGradient>
                   </defs>
+
                   <rect
                     className="transition-bar"
                     x="0"
@@ -258,11 +337,11 @@ const RiskPopup = ({ onClose, userData }) => {
                     y="12"
                     width="0.25%"
                     height="9"
-                    fill="yellow"
+                    fill="red"
                   />
                   <rect
                     className="transition-bar"
-                    x={`${currentLTVPosition}%`}
+                    x={`${Math.max(currentLTVPosition - 0.25, 0)}%`} // Move slightly left to prevent cutting off
                     y="12"
                     width="0.25%"
                     height="9"
@@ -271,39 +350,88 @@ const RiskPopup = ({ onClose, userData }) => {
                   <text
                     className="transition-text"
                     x={`${currentLTVPosition}%`}
-                    y="30"
-                    fill="gray"
-                    fontSize="14"
-                    textAnchor="left"
-                    dx="0.1em"
-                    dy=".2em"
+                    y="9"
+                    fill={ltvColor}
+                    fontSize="13"
+                    textAnchor={currentLTVPosition > 50 ? "left" : "right"}
+                    dx={currentLTVPosition > 50 ? "-3.2em" : "-0.01em"}
+                    dy=".04em"
                   >
                     {" "}
                     {parseFloat(Ltv_Value)?.toFixed(2) || "0.00"}
                   </text>
+                  <rect
+                    className="transition-bar"
+                    x={`${currentMaxLtvPosition}%`}
+                    y="12"
+                    width="0.25%"
+                    height="9"
+                    fill="#fa6e0d"
+                  />
+
+                  <text
+                    className="transition-text"
+                    x={`${currentMaxLtvPosition}%`}
+                    y="10"
+                    fill="#fa6e0d"
+                    fontSize="12"
+                    textAnchor="middle"
+                  >
+                    {parseFloat(Max_Ltv)?.toFixed(2) || "0.00"}
+                  </text>
+                  <text
+                    className="transition-text"
+                    x={`${currentMaxLtvPosition}%`} // Move the text 2% to the left
+                    y="40"
+                    dy="-0.2em"
+                    fill="#fa6e0d"
+                    fontSize="12"
+                    textAnchor={currentMaxLtvPosition > 50 ? "left" : "right"}
+                    dx={currentMaxLtvPosition > 50 ? "-1em" : "-0.01em"}
+                  >
+                    Max Ltv
+                  </text>
+
                   <text
                     className="transition-text"
                     x={`${currentLTVThresholdPosition}%`}
                     y="10"
                     fill="red"
                     fontSize="12"
-                    textAnchor="middle"
+                    textAnchor={
+                      currentLTVThresholdPosition > 50 ? "left" : "right"
+                    }
+                    dx={currentLTVThresholdPosition > 50 ? "-3.2em" : "-0.01em"}
                   >
                     {liquidationThreshold_Value}
                   </text>
                   <text
                     className="transition-text"
-                    x={`${currentLTVThresholdPosition}%`}
+                    x={`${currentLTVThresholdPosition + 2}%`}
                     y="40"
                     dy="-0.2em"
                     fill="red"
                     fontSize="12"
-                    textAnchor="middle"
+                    textAnchor={
+                      currentLTVThresholdPosition > 50 ? "left" : "right"
+                    }
+                    dx={currentLTVThresholdPosition > 50 ? "-3.4em" : "0em"}
                   >
-                    {liquidationThresholdLabel}
+                    <tspan className="hidden md:inline">
+                      {liquidationThresholdLabel}
+                    </tspan>
+                    <tspan className="inline md:hidden">LTV</tspan>
                   </text>
                 </svg>
-                <span className="ml-2 px-4 py-1 bg-[#b2ffac] text-green-800 font-bold rounded-l-2xl rounded-r-2xl cursor-pointer">
+                <span
+                  className={`ml-2 px-4 py-1 bg-[#b2ffac] font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${
+                    Ltv_Value >= liquidationThreshold_Value // Check if LTV is greater than or equal to the liquidation threshold
+                      ? "text-red-700" // Red for liquidation threshold
+                      : Ltv_Value >= Max_Ltv // Check if LTV is equal to or greater than Max LTV
+                      ? "text-[#fa6e0d]" // Orange if LTV equals Max LTV or is in the range
+                      : "text-green-600" // Green if LTV is less than Max LTV
+                  }`}
+                >
                   {parseFloat(Ltv_Value)?.toFixed(2) || "0.00"}
                 </span>
               </div>

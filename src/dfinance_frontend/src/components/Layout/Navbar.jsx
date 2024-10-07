@@ -901,7 +901,7 @@ export default function Navbar({ isHomeNav }) {
                       <img
                         src={settingsIcon}
                         alt="settings_icon"
-                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1  button1"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1 button1"
                         onClick={handleDropdownToggle}
                       />
                     )}

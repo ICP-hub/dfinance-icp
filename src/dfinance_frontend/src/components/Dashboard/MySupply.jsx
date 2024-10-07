@@ -659,7 +659,7 @@ const MySupply = () => {
   }, [userData]);
 
   return (
-    <div className="w-full flex-col lg:flex-row flex gap-6">
+    <div className="w-full flex-col lg:flex-row flex gap-6 -mt-10">
       <div className="flex justify-center -mb-38 lg:hidden">
         <button
           className={`w-1/2 py-2 button1 ${
@@ -940,7 +940,7 @@ const MySupply = () => {
                     <div className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden">
                       <div className="w-full z-10 sticky top-0">
                         <div className="grid grid-cols-[2fr_1.14fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          <div className="p-5">Asset</div>
+                          <div className="p-5 pl-4">Asset</div>
                           <div className="p-5">Asset Supply</div>
                           <div className="p-5">Apy</div>
                           <div className="p-5"> Is Collateral</div>
@@ -996,8 +996,7 @@ const MySupply = () => {
                                   key={index}
                                   className="grid grid-cols-[2.2fr_1.13fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                                 >
-                                  
-                                  <div className="p-3 align-top flex items-center gap-2">
+                                  <div className="p-3 pl-4 align-top flex items-center gap-2">
                                     {asset === "ckBTC" && (
                                       <img
                                         src={ckBTC}
@@ -1337,7 +1336,7 @@ const MySupply = () => {
                       {/* Fixed Header */}
                       <div className="w-full z-10 sticky top-0 ">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          <div className="p-5">Asset</div>
+                          <div className="p-5 pl-4">Asset</div>
                           <div className="p-5">Wallet Balance</div>
                           <div className="p-5">Apy</div>
                           <div className="p-5">Can be Collateral</div>
@@ -1353,7 +1352,7 @@ const MySupply = () => {
                               key={index}
                               className="grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                             >
-                              <div className="p-3 align-top flex items-center gap-2">
+                              <div className="p-3 pl-4 align-top flex items-center gap-2">
                                 {item[0] === "ckBTC" && (
                                   <img
                                     src={ckBTC}
@@ -1745,8 +1744,8 @@ const MySupply = () => {
                       {/* Container for the fixed header */}
                       <div className="w-full sticky top-0 z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          <div className="p-3 ml-1">Asset</div>
-                          <div className="p-3 -ml-[1px]">Debt</div>
+                          <div className="p-3  pl-4">Asset</div>
+                          <div className="p-3 -ml-[4px]">Debt</div>
                           <div className="p-3">Apy</div>
                           <div className="p-3">Apy type</div>
                           <div className="p-3"></div>{" "}
@@ -1797,7 +1796,7 @@ const MySupply = () => {
                                   key={index}
                                   className="grid grid-cols-[1.95fr_0.9fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-2"
                                 >
-                                  <div className="p-3 flex items-center gap-2">
+                                  <div className="p-3 pl-4 flex items-center gap-2">
                                     {asset === "ckBTC" && (
                                       <img
                                         src={ckBTC}
@@ -1938,7 +1937,7 @@ const MySupply = () => {
               isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
-            <div className="flex justify-between items-center mt-2 mx-2">
+            <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText mb-3">
                 Assets to borrow
               </h1>
@@ -2160,7 +2159,7 @@ const MySupply = () => {
                         <thead>
                           <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-5">
                             {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
-                              <td key={index} className="p-2 whitespace-nowrap">
+                              <td key={index} className="p-2 pl-4 whitespace-nowrap">
                                 <p className="mb-5">
                                   {index === 2 ? item.header1 : item.header}
                                 </p>
@@ -2174,7 +2173,7 @@ const MySupply = () => {
                               key={index}
                               className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
                             >
-                              <td className="p-3 align-top">
+                              <td className="p-3 pl-4 align-top">
                                 <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap mt-2">
                                   {item[0] === "ckBTC" && (
                                     <img
@@ -2207,7 +2206,7 @@ const MySupply = () => {
                                   {item[0]}
                                 </div>
                               </td>
-                              <td className="p-3 align-bottom">
+                              <td className="p-3 pl-5 align-bottom">
                                 <div className="flex flex-col">
                                   {item[0] === "ckBTC" && (
                                     <>
@@ -2243,7 +2242,7 @@ const MySupply = () => {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-3 align-center">
+                              <td className="p-3 pl-5 align-center">
                                 <p className="mt-1.5">
                                   {item[1].Ok.borrow_rate * 100 < 0.1
                                     ? "<0.1%"

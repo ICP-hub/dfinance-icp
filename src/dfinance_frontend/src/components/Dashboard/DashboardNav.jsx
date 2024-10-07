@@ -220,8 +220,7 @@ const DashboardNav = () => {
       totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
 
     console.log(
-      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${
-        netApy * 100
+      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${netApy * 100
       }`
     );
     return netApy * 100;
@@ -253,8 +252,7 @@ const DashboardNav = () => {
       totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
 
     console.log(
-      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${
-        netDebtApy * 100
+      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${netDebtApy * 100
       }`
     );
     return netDebtApy * 100;
@@ -444,9 +442,8 @@ const DashboardNav = () => {
           {/* Menu button for small screens */}
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -548,6 +545,7 @@ const DashboardNav = () => {
                       >
                         {data.count !== null ? data.count : ""}
                       </span>
+
                     </button>
                   </div>
                 ))}

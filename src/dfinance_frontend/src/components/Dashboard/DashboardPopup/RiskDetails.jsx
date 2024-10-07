@@ -413,7 +413,7 @@ const RiskPopup = ({ onClose, userData }) => {
                     textAnchor={
                       currentLTVThresholdPosition > 50 ? "left" : "right"
                     }
-                    dx={currentLTVThresholdPosition > 50 ? "-1em" : "-0.01em" && currentLTVThresholdPosition > 80 ? "-3.4em" : "-0.01em"}
+                    dx={currentLTVThresholdPosition > 50 ? "-1em" : "-0.01em" && currentLTVThresholdPosition > 80 ? "-3.2em" : "-0.01em"}
                   >
                     {liquidationThreshold_Value}
                   </text>
@@ -427,7 +427,7 @@ const RiskPopup = ({ onClose, userData }) => {
                     textAnchor={
                       currentLTVThresholdPosition > 50 ? "left" : "right"
                     }
-                    dx={currentLTVThresholdPosition > 50 ? "-1em" : "0em"}
+                    dx={currentLTVThresholdPosition > 50 ? "-3.4em" : "0em"}
                   >
                     <tspan className="md:hidden lg:inline">
                       {liquidationThresholdLabel}

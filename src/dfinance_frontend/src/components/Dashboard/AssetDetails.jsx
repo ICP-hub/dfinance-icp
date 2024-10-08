@@ -343,33 +343,39 @@ const AssetDetails = () => {
               return;
             }
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString());
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkBTCBalance(formattedBalance); // Set ckBTC balance
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
               console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString());
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkETHBalance(formattedBalance); // Set ckETH balance
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
               console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString());
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
           } else if (assetType === "ICP") {
             if (!ledgerActorICP) {
               console.warn("Ledger actor for ICP not initialized yet");
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
-            setCkICPBalance(balance.toString());
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkICPBalance(formattedBalance);
+          
           } else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
             );
           }
+          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
@@ -807,8 +813,11 @@ const AssetDetails = () => {
                           (reserveGroup) => reserveGroup[0] === id
                         );
                         console.log("userData", userData);
-                        const assetSupply = reserveData?.[1]?.asset_supply || 0;
-                        const assetBorrow = reserveData?.[1]?.asset_borrow || 0;
+                        const assetSupply = (reserveData?.[1]?.asset_supply || 0)/100000000;
+                        const assetBorrow = (reserveData?.[1]?.asset_borrow || 0) / 100000000;
+
+                        console.log("Asset Borrow:", assetBorrow); // This will log the asset borrow value or 0 if it's undefined
+                        
                         const totalCollateral =
                           userData?.Ok?.total_collateral || 0;
                         const totalDebt = userData?.Ok?.total_debt || 0;

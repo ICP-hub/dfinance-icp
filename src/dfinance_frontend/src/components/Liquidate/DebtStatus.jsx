@@ -198,7 +198,7 @@ const DebtStatus = () => {
 
   return (
     <div className="w-full">
-      <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
+      <div className="w-full md:h-[40px] flex items-center mt-8">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Users List</h1>
         
       </div>
@@ -211,7 +211,7 @@ const DebtStatus = () => {
           <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
             No users found!
           </p>
-        </div> : <div className="w-full min-h-[390px] mt-6 p-0 lg:px-12 mb-20 select-none">
+        </div> : <div className="w-full min-h-[390px] mt-6 p-0 mb-20 select-none">
           <div className="w-full overflow-auto content">
             <table className="w-full text-[#2A1F9D] font-[500] text-sm md:text-sm lg:text-sm dark:text-darkText">
               <thead>
@@ -265,7 +265,7 @@ const DebtStatus = () => {
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[1]?.reserve
-                            const assetBorrow = item[1]?.asset_borrow
+                            const assetBorrow = (item[1]?.asset_borrow)/100000000;
                             console.log("mappedItems",mappedItem)
                             console.log("Asset Borrow:", assetBorrow);
                             if (assetBorrow > 0) {
@@ -345,7 +345,7 @@ const DebtStatus = () => {
                                 </span>
                               </>
                             }
-                            className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-sm lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px] font-inter"
+                            className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-[12px] lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
                             onClickHandler={() => handleDetailsClick(mappedItem)}
                           />
                         </div>

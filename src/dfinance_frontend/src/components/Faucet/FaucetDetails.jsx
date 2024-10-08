@@ -167,28 +167,33 @@ const FaucetDetails = () => {
               return;
             }
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString()); // Set ckBTC balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkBTCBalance(formattedBalance); // Set ckBTC balance
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
               console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString()); // Set ckETH balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkETHBalance(formattedBalance); // Set ckETH balance
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
               console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
           } else if (assetType === "ICP") {
             if (!ledgerActorICP) {
               console.warn("Ledger actor for ICP not initialized yet");
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
-            setCkICPBalance(balance.toString()); // Set ICP balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkICPBalance(formattedBalance);
+          
           } else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
@@ -378,13 +383,13 @@ const FaucetDetails = () => {
 
   return (
     <div className="w-full">
-      <div className="w-full flex items-center px-6 mt-4 md:px-9">
+      <div className="w-full flex items-center px-2">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">
           Test Assets
         </h1>
       </div>
 
-      <div className="w-full mt-9 p-0 lg:px-9">
+      <div className="w-full mt-9 p-0 lg:px-1">
         {currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
             <div className="w-20 h-15">
@@ -427,7 +432,7 @@ const FaucetDetails = () => {
                           : ""
                       }`}
                     >
-                      <td className="p-3 align-center py-7">
+                      <td className="p-3 align-center py-7 px-2">
                         <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
                           {item[0] === "ckBTC" && (
                             <img
@@ -523,7 +528,7 @@ const FaucetDetails = () => {
                                 </span>
                               </>
                             }
-                            className="bg-gradient-to-tr md:from-[#4659CF] md:from-20% md:via-[#D379AB] md:via-60% md:to-[#FCBD78] md:to-90% text-white rounded-lg md:px-3 md:py-1 shadow-md shadow-black/40 font-semibold text-sm sxs3:px-1 font-inter md:bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60"
+                            className="bg-gradient-to-tr md:from-[#4659CF] md:from-20% md:via-[#D379AB] md:via-60% md:to-[#FCBD78] md:to-90% text-white rounded-[5px] md:px-3 md:py-1 shadow-md shadow-black/40 font-semibold text-[12px] sxs3:px-1 md:bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60"
                             onClickHandler={() =>
                               handleFaucetClick(item[0], item.image)
                             }

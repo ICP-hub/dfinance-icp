@@ -313,28 +313,33 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               return;
             }
             balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString()); // Set ckBTC balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkBTCBalance(formattedBalance); // Set ckBTC balance
           } else if (assetType === "ckETH") {
             if (!ledgerActorckETH) {
               console.warn("Ledger actor for ckETH not initialized yet");
               return;
             }
             balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString()); // Set ckETH balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkETHBalance(formattedBalance); // Set ckETH balance
           } else if (assetType === "ckUSDC") {
             if (!ledgerActorckUSDC) {
               console.warn("Ledger actor for ckUSDC not initialized yet");
               return;
             }
             balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
           } else if (assetType === "ICP") {
             if (!ledgerActorICP) {
               console.warn("Ledger actor for ICP not initialized yet");
               return;
             }
             balance = await ledgerActorICP.icrc1_balance_of(account);
-            setCkICPBalance(balance.toString()); // Set ICP balance
+            const formattedBalance = (balance / BigInt(100000000)).toString();
+            setCkICPBalance(formattedBalance);
+          
           } else {
             throw new Error(
               "Unsupported asset type or ledger actor not initialized"
@@ -1010,8 +1015,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   {mappedItem.reserves[0].map((item, index) => {
                     console.log("mappedItesm", mappedItem.reserves[0]);
                     const assetName = item[1]?.reserve;
-                    const assetSupply = item[1]?.asset_supply;
-                    const assetBorrow = item[1]?.asset_borrow;
+                    const assetSupply = (item[1]?.asset_supply)/100000000;
+                    const assetBorrow = (item[1]?.asset_borrow)/100000000;
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let collateralRate = 0;
@@ -1173,7 +1178,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[1]?.reserve;
-                    const assetBorrow = item[1]?.asset_borrow;
+                    const assetBorrow = item[1]?.asset_borrow / 100000000; // or Math.pow(10, 8)
+
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let assetBorrowAmountInUSD = 0;

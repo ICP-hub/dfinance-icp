@@ -222,7 +222,8 @@ const WithdrawPopup = ({
         : null,
     [createLedgerActor, assetPrincipal.ICP]
   );
-
+  const amountAsNat64 = Number(amount);
+  const scaledAmount = amountAsNat64 * Number(10 ** 8);
   const handleWithdraw = async () => {
     console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
@@ -240,11 +241,12 @@ const WithdrawPopup = ({
     }
 
     try {
-      const amountInUnits = BigInt(amount);
+      const amountAsNat64 = parseFloat(amount); 
+        const scaledAmount = BigInt(Math.floor(amountAsNat64 * 10 ** 8)); 
       // Call the withdraw function on the selected ledger actor
       const withdrawResult = await backendActor.withdraw(
         asset,
-        amountInUnits,
+        scaledAmount,
         [],
         true
       );
@@ -407,6 +409,7 @@ const WithdrawPopup = ({
                     disabled={supplyBalance === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
+                    min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
@@ -445,17 +448,17 @@ const WithdrawPopup = ({
               <div className="w-full flex justify-between items-center my-1">
                 <p>Supply APY</p>
                 <p>
-                  {supplyRateAPR * 100 < 0.1
-                    ? "<0.1%"
-                    : `${supplyRateAPR * 100}%`}
-                </p>
+  {supplyRateAPR * 100 < 0.1
+    ? "<0.1%"
+    : `${(supplyRateAPR * 100).toFixed(2)}%`}
+</p>
+
               </div>
               <div className="w-full flex justify-between items-center my-1">
                 <p>Collateralization</p>
                 <p
-                  className={`font-semibold ${
-                    isCollateral ? "text-green-500" : "text-red-500"
-                  }`}
+                  className={`font-semibold ${isCollateral ? "text-green-500" : "text-red-500"
+                    }`}
                 >
                   {isCollateral ? "Enabled" : "Disabled"}
                 </p>
@@ -465,17 +468,16 @@ const WithdrawPopup = ({
                   <p>Health Factor</p>
                   <p>
                     <span
-                      className={`${
-                        healthFactorBackend > 3
+                      className={`${healthFactorBackend > 3
                           ? "text-green-500"
                           : healthFactorBackend <= 1
-                          ? "text-red-500"
-                          : healthFactorBackend <= 1.5
-                          ? "text-orange-600"
-                          : healthFactorBackend <= 2
-                          ? "text-orange-400"
-                          : "text-orange-300"
-                      }`}
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                        }`}
                     >
                       {parseFloat(
                         healthFactorBackend > 100
@@ -485,17 +487,16 @@ const WithdrawPopup = ({
                     </span>
                     <span className="text-gray-500 mx-1">→</span>
                     <span
-                      className={`${
-                        currentHealthFactor > 3
+                      className={`${currentHealthFactor > 3
                           ? "text-green-500"
                           : currentHealthFactor <= 1
-                          ? "text-red-500"
-                          : currentHealthFactor <= 1.5
-                          ? "text-orange-600"
-                          : currentHealthFactor <= 2
-                          ? "text-orange-400"
-                          : "text-orange-300"
-                      }`}
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                        }`}
                     >
                       {currentHealthFactor}
                     </span>
@@ -534,11 +535,10 @@ const WithdrawPopup = ({
                   ? null
                   : handleWithdraw
               }
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
-                isLoading || amount <= 0 || isButtonDisabled
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled
                   ? "opacity-50 cursor-not-allowed"
                   : ""
-              }`}
+                }`}
               title="Withdraw"
             />
           </div>
@@ -569,18 +569,8 @@ const WithdrawPopup = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p className="mt-2">
-              You have withdrawn {amount} d{asset}
+              You have withdrawn {scaledAmount/100000000} d{asset}
             </p>
-
-            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
-              <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
-                <span>Add dToken to wallet to track your balance.</span>
-              </div>
-              <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
-                <Wallet />
-                Add to wallet
-              </button>
-            </div> */}
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

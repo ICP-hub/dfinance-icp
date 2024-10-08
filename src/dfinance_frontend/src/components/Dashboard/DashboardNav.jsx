@@ -23,28 +23,29 @@ const DashboardNav = () => {
   const [netDebtApy, setNetDebtApy] = useState(0);
   const [netApy, setNetApy] = useState(0);
   const [userData, setUserData] = useState();
+  const [assetSupply, setAssetSupply] = useState(0);
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
       title: "Net Worth",
-      count: "$0.00",
+      count: null, // Initial state is null
     },
     {
       id: 1,
       title: "Net APY",
-      count: "0.00 %",
+      count: null, // Initial state is null
     },
     {
       id: 2,
       title: "Health Factor",
-      count: "0.00 %",
+      count: null, // Initial state is null
     },
   ]);
 
   const [walletDetailTabs, setWalletDetailTabs] = useState([
-    { id: 0, title: "Total Market Size", count: "0" },
-    { id: 1, title: "Total Supplies", count: "0" },
-    { id: 2, title: "Total Borrows", count: "0" },
+    { id: 0, title: "Total Market Size", count: 0 }, // Initial count set to null
+    { id: 1, title: "Total Supplies", count: 0 }, // Initial count set to null
+    { id: 2, title: "Total Borrows", count: 0 }, // Initial count set to null
   ]);
 
   useEffect(() => {
@@ -103,6 +104,7 @@ const DashboardNav = () => {
     const { net_worth, net_apy, health_factor } = data.Ok;
     // console.log("health factor", health_factor[0])
     const updatedTab = walletDetailTab.map((item) => {
+    console.log("item",item)
       switch (item.id) {
         case 0:
           return { ...item, count: `$${formatNumber(net_worth[0])}` };
@@ -140,7 +142,9 @@ const DashboardNav = () => {
 
   const fetchConversionRate = useCallback(async () => {
     try {
-      const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
+      const response = await fetch(
+        "https://dfinance.kaifoundry.com/conversion-rates"
+      );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -196,7 +200,7 @@ const DashboardNav = () => {
 
     reserves.forEach((reserve) => {
       const conversionRate = getConversionRate(reserve[0]);
-      const assetSupply = reserve[1]?.asset_supply || 0;
+      const assetSupply = (reserve[1]?.asset_supply || 0) / 100000000;
       const supplyApy = reserve[1]?.supply_rate || 0;
 
       console.log(
@@ -216,8 +220,7 @@ const DashboardNav = () => {
       totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
 
     console.log(
-      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${
-        netApy * 100
+      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${netApy * 100
       }`
     );
     return netApy * 100;
@@ -228,7 +231,7 @@ const DashboardNav = () => {
     let weightedDebtApySum = 0;
 
     reserves.forEach((reserve) => {
-      const assetBorrowed = reserve[1]?.asset_borrow || 0;
+      const assetBorrowed = (reserve[1]?.asset_borrow || 0) / 100000000;
       const debtApy = reserve[1]?.borrow_rate || 0;
       const assetPriceWhenBorrowed = reserve[1]?.asset_price_when_borrowed || 1;
 
@@ -249,8 +252,7 @@ const DashboardNav = () => {
       totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
 
     console.log(
-      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${
-        netDebtApy * 100
+      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${netDebtApy * 100
       }`
     );
     return netDebtApy * 100;
@@ -272,12 +274,18 @@ const DashboardNav = () => {
   useEffect(() => {
     if (userData && userData?.Ok?.reserves[0]) {
       const reservesData = userData?.Ok?.reserves[0];
+      console.log("reserveData in dashboard nav",reservesData)
       console.log("UserData Reserves in Dashboard:", reservesData);
 
       const calculatedNetApy = calculateNetApy(reservesData);
       console.log("Calculated Net APY:", calculatedNetApy);
 
       setNetApy(calculatedNetApy);
+      const reserve = reservesData[0]; // Adjust this index as needed based on your data structure
+
+      // Accessing asset_supply from the second element of the reserve
+      const supply = (reserve[1]?.asset_supply || 0) / 100000000; // Make sure reserve[1] exists
+      setAssetSupply(supply);
     }
   }, [userData]);
 
@@ -399,12 +407,12 @@ const DashboardNav = () => {
   return (
     <div className="w-full ">
       {["/dashboard", "/market", "/governance"].includes(pathname) && (
-        <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl mb-8 dark:text-darkText">
+        <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl dark:text-darkText">
           {dashboardTitle}
         </h1>
       )}
 
-      <div className="flex h-[60px] gap-5 -ml-3">
+      <div className="flex gap-5 -ml-3">
         {!["/dashboard", "/market", "/governance"].includes(pathname) && (
           <div
             className=" lg1:-mt-1 mt-[20px] cursor-pointer"
@@ -413,7 +421,7 @@ const DashboardNav = () => {
             <ChevronLeft size={40} color={chevronColor} />
           </div>
         )}
-        <h1 className="text-[#2A1F9D] text-xl inline-flex items-center lg1:mt-0 mt-10 mb-8 dark:text-darkText ml-1">
+        <h1 className="text-[#2A1F9D] text-xl inline-flex items-center dark:text-darkText ml-1 py-10">
           <img
             src={icplogo}
             alt="Icp Logo"
@@ -434,9 +442,8 @@ const DashboardNav = () => {
           {/* Menu button for small screens */}
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -457,27 +464,33 @@ const DashboardNav = () => {
                     ).map((data, index) => (
                       <div
                         key={index}
-                        className="relative group text-[purple] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+                        className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                         style={{ minWidth: "220px", flex: "1 0 220px" }}
                       >
                         <button className="relative w-full text-left flex justify-between items-center button1">
                           <span>{data.title}</span>
+                          {console.log("Data Count:", data.count)}
+                          {console.log("Asset Supply in healthfactor conmditon:", assetSupply)}
                           <span
-                            className={`font-bold ${
-                              data.id === 2
-                                ? data.id === 2 > 3
+                            className={`font-bold text-[20px] ${
+                              data.title === "Health Factor"
+                                ? data.count === 0  && assetSupply === 0// Check if health factor is 0
+                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
+                                  : data.count > 3
                                   ? "text-green-500" // Green for health factor greater than 3
-                                  : data.id === 2 <= 1
+                                  : data.count <= 1
                                   ? "text-red-500" // Red for health factor less than or equal to 1
-                                  : data.id === 2 <= 1.5
+                                  : data.count <= 1.5
                                   ? "text-orange-500" // Orange for health factor less than or equal to 1.5
-                                  : data.id === 2 <= 2
+                                  : data.count <= 2
                                   ? "text-orange-300" // Soft orange for health factor less than or equal to 2
-                                  : "text-orange-600" // Vivid orange for any other value
-                                : "text-[#2A1F9D]" // Default color for other ids
+                                  : "text-orange-600" // Vivid orange for other values
+                                : data.title === "Total Borrows"
+                                ? "text-[#2A1F9D] dark:text-darkBlue" // Default color for Total Borrows
+                                : "text-[#2A1F9D] dark:text-darkBlue" // Default color for other titles
                             }`}
                           >
-                            {data.count}
+                            {data.count !== null ? data.count : "N/A"}
                           </span>
 
                           <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
@@ -501,39 +514,44 @@ const DashboardNav = () => {
           </div>
 
           {isAuthenticated && (
-            <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText mb-5 mt-5">
+            <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText lg:mb-0 mb-8">
               {pathname !== "/dashboard/transaction-history" &&
                 (isDashboardSupplyOrMain
                   ? walletDetailTab
                   : walletDetailTabs
                 ).map((data, index) => (
                   <div key={index} className="relative group">
-                    <button className="relative font-light text-sm text-left min-w-[80px] dark:opacity-80 button1">
+                    <button className="relative font-light text-[13px] text-left min-w-[80px] dark:opacity-80 button1">
                       {data.title}
                       <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                       <span
-                        className={`font-bold ${
-                          data.id === 2
-                            ? data.id === 2 > 3
-                              ? "text-green-500"
-                              : data.id === 2 <= 1
-                              ? "text-red-500"
-                              : data.id === 2 <= 1.5
-                              ? "text-orange-500"
-                              : data.id === 2 <= 2
-                              ? "text-orange-300"
-                              : "text-orange-600"
-                            : "text-[#2A1F9D]"
+                        className={`font-bold text-[20px] ${
+                          data.title === "Health Factor"
+                            ? data.count === 0 && assetSupply === 0
+                              ? "text-[#2A1F9D] dark:text-darkBlue"
+                              : data.count > 3
+                              ? "text-green-500" 
+                              : data.count <= 1
+                              ? "text-red-500" 
+                              : data.count <= 1.5
+                              ? "text-orange-500" 
+                              : data.count <= 2
+                              ? "text-orange-300" 
+                              : "text-orange-600" 
+                            : data.title === "Total Borrows"
+                            ? "text-[#2A1F9D] dark:text-darkBlue" 
+                            : "text-[#2A1F9D] dark:text-darkBlue" 
                         }`}
                       >
-                        {data.count}
+                        {data.count !== null ? data.count : ""}
                       </span>
+
                     </button>
                   </div>
                 ))}
               {isAuthenticated && shouldRenderRiskDetailsButton && (
                 <button
-                  className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md font-normal dark:text-darkTextSecondary button1"
+                  className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md dark:text-darkTextSecondary button1"
                   onClick={handleOpenPopup}
                 >
                   Risk Details

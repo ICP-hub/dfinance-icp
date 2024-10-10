@@ -1611,7 +1611,7 @@ const MySupply = () => {
                                       Debt
                                     </p>
                                     <div className="text-right text-[#2A1F9D] dark:text-darkText mt-4">
-                                      {assetBorrow}
+                                      {assetBorrow.toFixed(2)}
                                     </div>
                                   </div>
 
@@ -1829,7 +1829,7 @@ const MySupply = () => {
                                   </div>
                                   <div className="p-3">
                                     <div className="flex flex-col">
-                                      {assetBorrow}
+                                      {assetBorrow.toFixed(2)}
                                     </div>
                                   </div>
                                   <div className="p-3 ml-1">

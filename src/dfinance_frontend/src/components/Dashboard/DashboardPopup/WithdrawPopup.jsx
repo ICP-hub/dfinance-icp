@@ -241,8 +241,8 @@ const WithdrawPopup = ({
     }
 
     try {
-      const amountAsNat64 = parseFloat(amount); 
-        const scaledAmount = BigInt(Math.floor(amountAsNat64 * 10 ** 8)); 
+      const amountAsNat64 = parseFloat(amount);
+      const scaledAmount = BigInt(Math.floor(amountAsNat64 * 10 ** 8));
       // Call the withdraw function on the selected ledger actor
       const withdrawResult = await backendActor.withdraw(
         asset,
@@ -406,14 +406,15 @@ const WithdrawPopup = ({
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0}
+                    // disabled={supplyBalance === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                     min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                    {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
                   </p>
+
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -424,7 +425,9 @@ const WithdrawPopup = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">{assetSupply.toFixed(2)} Max</p>
+                  <p className="text-xs mt-4">
+                    {assetSupply.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                  </p>
                 </div>
               </div>
             </div>
@@ -437,7 +440,9 @@ const WithdrawPopup = ({
                   <p className="text-sm">Remaining supply</p>
                 </div>
                 <div className="w-4/12 flex flex-col items-end">
-                  <p className="text-xs mt-2">{assetSupply - amount} Max</p>
+                  <p className="text-xs mt-2">
+                    {(assetSupply - amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                  </p>
                 </div>
               </div>
             </div>
@@ -448,10 +453,10 @@ const WithdrawPopup = ({
               <div className="w-full flex justify-between items-center my-1">
                 <p>Supply APY</p>
                 <p>
-  {supplyRateAPR * 100 < 0.1
-    ? "<0.1%"
-    : `${(supplyRateAPR * 100).toFixed(2)}%`}
-</p>
+                  {supplyRateAPR * 100 < 0.1
+                    ? "<0.1%"
+                    : `${(supplyRateAPR * 100).toFixed(2)}%`}
+                </p>
 
               </div>
               <div className="w-full flex justify-between items-center my-1">
@@ -469,14 +474,14 @@ const WithdrawPopup = ({
                   <p>
                     <span
                       className={`${healthFactorBackend > 3
-                          ? "text-green-500"
-                          : healthFactorBackend <= 1
-                            ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                              ? "text-orange-600"
-                              : healthFactorBackend <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                        ? "text-green-500"
+                        : healthFactorBackend <= 1
+                          ? "text-red-500"
+                          : healthFactorBackend <= 1.5
+                            ? "text-orange-600"
+                            : healthFactorBackend <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}
                     >
                       {parseFloat(
@@ -488,14 +493,14 @@ const WithdrawPopup = ({
                     <span className="text-gray-500 mx-1">→</span>
                     <span
                       className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                        ? "text-green-500"
+                        : currentHealthFactor <= 1
+                          ? "text-red-500"
+                          : currentHealthFactor <= 1.5
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}
                     >
                       {currentHealthFactor}
@@ -536,8 +541,8 @@ const WithdrawPopup = ({
                   : handleWithdraw
               }
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               title="Withdraw"
             />
@@ -569,7 +574,7 @@ const WithdrawPopup = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p className="mt-2">
-              You have withdrawn {scaledAmount/100000000} d{asset}
+              You have withdrawn {scaledAmount / 100000000} d{asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

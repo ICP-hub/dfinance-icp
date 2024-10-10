@@ -209,7 +209,7 @@ const Borrow = ({
   console.log("amountAsNat64", amountAsNat64)
   console.log("scaledAmount", scaledAmount)
   const handleBorrowETH = async () => {
-    console.log("Borrow function called for", asset,scaledAmount);
+    console.log("Borrow function called for", asset, scaledAmount);
     setIsLoading(true);
     let ledgerActor;
 
@@ -224,7 +224,7 @@ const Borrow = ({
     }
 
     try {
-      const borrowResult = await backendActor.borrow(asset,scaledAmount);
+      const borrowResult = await backendActor.borrow(asset, scaledAmount);
       console.log("Borrow result", borrowResult);
       setIsPaymentDone(true);
       setIsVisible(false);
@@ -441,8 +441,9 @@ const Borrow = ({
                     min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                    {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
                   </p>
+
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -454,8 +455,9 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p className="text-xs mt-4">
-                    ${parseFloat(totalCollateral)?.toFixed(2) || "0.00"} Max
+                    ${parseFloat(totalCollateral)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"} Max
                   </p>
+
                 </div>
               </div>
             </div>
@@ -479,14 +481,14 @@ const Borrow = ({
                     <p>
                       <span
                         className={`${healthFactorBackend > 3
-                            ? "text-green-500"
-                            : healthFactorBackend <= 1
-                              ? "text-red-500"
-                              : healthFactorBackend <= 1.5
-                                ? "text-orange-600"
-                                : healthFactorBackend <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {parseFloat(
@@ -498,14 +500,14 @@ const Borrow = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
-                              ? "text-red-500"
-                              : currentHealthFactor <= 1.5
-                                ? "text-orange-600"
-                                : currentHealthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -578,8 +580,8 @@ const Borrow = ({
               <button
                 onClick={handleBorrowETH}
                 className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                   }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
@@ -614,7 +616,7 @@ const Borrow = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have borrowed {scaledAmount/100000000} d{asset}
+              You have borrowed {scaledAmount / 100000000} d{asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

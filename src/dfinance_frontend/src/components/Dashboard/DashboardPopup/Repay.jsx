@@ -491,8 +491,9 @@ const Repay = ({
                     min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                    {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
                   </p>
+
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -503,7 +504,10 @@ const Repay = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">{assetBorrow.toFixed(2)} Max </p>
+                  <p className="text-xs mt-4">
+                    {assetBorrow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                  </p>
+
                 </div>
               </div>
             </div>
@@ -516,7 +520,10 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center ">
                     <p className="text-nowrap">Remaining debt</p>
                     <div className="w-4/12 flex flex-col items-end">
-                      <p className="text-xs mt-2">{assetBorrow - amount} Max</p>
+                    <p className="text-xs mt-2">
+  {(assetBorrow - amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+</p>
+
                     </div>
                   </div>
 
@@ -525,14 +532,14 @@ const Repay = ({
                     <p>
                       <span
                         className={`${healthFactorBackend > 3
-                            ? "text-green-500"
-                            : healthFactorBackend <= 1
-                              ? "text-red-500"
-                              : healthFactorBackend <= 1.5
-                                ? "text-orange-600"
-                                : healthFactorBackend <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {parseFloat(
@@ -544,14 +551,14 @@ const Repay = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
-                              ? "text-red-500"
-                              : currentHealthFactor <= 1.5
-                                ? "text-orange-600"
-                                : currentHealthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -606,8 +613,8 @@ const Repay = ({
               <button
                 onClick={handleClick}
                 className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                   }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
@@ -644,7 +651,7 @@ const Repay = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have repayed {scaledAmount/100000000} d{asset}
+              You have repayed {scaledAmount / 100000000} d{asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

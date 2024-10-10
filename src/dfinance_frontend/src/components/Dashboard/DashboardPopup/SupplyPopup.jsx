@@ -299,7 +299,7 @@ const SupplyPopup = ({
     }
 
     const amountAsNat64 = Number(amount);
-      const scaledAmount = amountAsNat64 * Number(10 ** 8);
+    const scaledAmount = amountAsNat64 * Number(10 ** 8);
 
     const totalAmount = scaledAmount + transferfee;
 
@@ -352,7 +352,7 @@ const SupplyPopup = ({
         ledgerActor = ledgerActorICP;
       }
 
-      
+
       console.log("amountAsNat64", amountAsNat64)
       console.log("scaledAmount", scaledAmount)
       console.log("Backend actor", backendActor);
@@ -429,7 +429,7 @@ const SupplyPopup = ({
     );
     //|| liquidationThreshold>ltv
 
-    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold) {
+    if (ltv * 100 >= reserveliquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -540,8 +540,9 @@ const SupplyPopup = ({
                     min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                    {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
                   </p>
+
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -553,8 +554,9 @@ const SupplyPopup = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p className="text-xs mt-4">
-                    {supplyBalance.toFixed(2)} Max{" "}
+                    {supplyBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
                   </p>
+
                 </div>
               </div>
             </div>
@@ -586,14 +588,14 @@ const SupplyPopup = ({
                     <p>
                       <span
                         className={`${healthFactorBackend > 3
-                            ? "text-green-500"
-                            : healthFactorBackend <= 1
-                              ? "text-red-500"
-                              : healthFactorBackend <= 1.5
-                                ? "text-orange-600"
-                                : healthFactorBackend <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {healthFactorBackend > 100
@@ -603,14 +605,14 @@ const SupplyPopup = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${value > 3
-                            ? "text-green-500"
-                            : value <= 1
-                              ? "text-red-500"
-                              : value <= 1.5
-                                ? "text-orange-600"
-                                : value <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                              ? "text-orange-600"
+                              : value <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -669,8 +671,8 @@ const SupplyPopup = ({
           <button
             onClick={handleClick}
             className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+              ? "opacity-50 cursor-not-allowed"
+              : ""
               }`}
             disabled={isLoading || amount <= 0 || null || isButtonDisabled}
           >
@@ -706,7 +708,7 @@ const SupplyPopup = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You received {scaledAmount/100000000} d{asset}
+              You received {scaledAmount / 100000000} d{asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

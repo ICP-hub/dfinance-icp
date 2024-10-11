@@ -7,7 +7,6 @@ import Loading from "./components/Common/Loading";
 import { usePageLoading } from "./components/Common/useLoading";
 import { useDispatch } from 'react-redux';
 import { setLedgerActor } from './redux/reducers/ledgerRedcuer';
-import { setBalances, setError, selectBalances, selectError } from './redux/reducers/balanceReducer';
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
 import { Principal } from "@dfinity/principal";
 import { useCallback } from "react";

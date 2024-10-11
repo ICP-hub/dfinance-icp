@@ -364,7 +364,7 @@ const RiskPopup = ({ onClose, userData }) => {
                         style={{ stopColor: "#fa6e0d", stopOpacity: 1 }}
                       />
                       <stop
-                        offset={`${currentLTVThresholdPosition}%`} // End of orange and start of red
+                        offset={`${currentLTVThresholdPosition-1}%`} // End of orange and start of red
                         style={{ stopColor: "#fa6e0d", stopOpacity: 1 }} // Keep orange until the threshold position
                       />
                       <stop

@@ -507,7 +507,6 @@ const Repay = ({
                   <p className="text-xs mt-4">
                     {assetBorrow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
                   </p>
-
                 </div>
               </div>
             </div>
@@ -520,9 +519,9 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center ">
                     <p className="text-nowrap">Remaining debt</p>
                     <div className="w-4/12 flex flex-col items-end">
-                    <p className="text-xs mt-2">
-  {(assetBorrow - amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
-</p>
+                      <p className="text-xs mt-2">
+                        {(assetBorrow - amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                      </p>
 
                     </div>
                   </div>

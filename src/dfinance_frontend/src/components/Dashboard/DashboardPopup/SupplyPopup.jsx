@@ -186,153 +186,58 @@ const SupplyPopup = ({
     }
   }, [amount, conversionRate]);
 
-  const [assetPrincipal, setAssetPrincipal] = useState({});
-
-  useEffect(() => {
-    const fetchAssetPrinciple = async () => {
-      if (backendActor) {
-        try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
-          for (const asset of assets) {
-            const result = await getAssetPrinciple(asset);
-            // console.log(`get_asset_principle (${asset}):`, result);
-            setAssetPrincipal((prev) => ({
-              ...prev,
-              [asset]: result,
-            }));
-          }
-        } catch (error) {
-          console.error("Error fetching asset principal:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-
-    fetchAssetPrinciple();
-  }, [principal, backendActor]);
-
-  // console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC)
-  // console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC)
-  // console.log("fecthAssteprincCKETH", assetPrincipal.ckETH)
-
-  const getAssetPrinciple = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      let result;
-      switch (asset) {
-        case "ckBTC":
-          result = await backendActor.get_asset_principal("ckBTC");
-          break;
-        case "ckETH":
-          result = await backendActor.get_asset_principal("ckETH");
-          break;
-        case "ckUSDC":
-          result = await backendActor.get_asset_principal("ckUSDC");
-          break;
-        case "ICP":
-          result = await backendActor.get_asset_principal("ICP");
-          break;
-        default:
-          throw new Error(`Unknown asset: ${asset}`);
-      }
-      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
-      return result.Ok.toText();
-    } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
-      throw error;
-    }
-  };
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(
-          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
-  );
-
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(
-          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
-  );
-
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(
-          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
-
+  const ledgerActors = useSelector((state) => state.ledger);
+  console.log("ledgerActors", ledgerActors);
+  
   const handleApprove = async () => {
     let ledgerActor;
+  
+    // Access ledger actor based on asset
     if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
+      ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
+      ledgerActor = ledgerActors.ckETH;
     } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
+      ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP;
+      ledgerActor = ledgerActors.ICP;
     }
-
+  
     const amountAsNat64 = Number(amount);
-    const scaledAmount = amountAsNat64 * Number(10 ** 8);
-
-    const totalAmount = scaledAmount + transferfee;
-
+    const scaledAmount = amountAsNat64 * Number(10 ** 8); // Adjusting for scaling factor
+    const totalAmount = scaledAmount + transferfee; // Add transfer fee
+  
     try {
       // Call the approval function
       const approval = await ledgerActor.icrc2_approve({
-        fee: [],
-        memo: [],
+        fee: [], // Adjust fee if needed
+        memo: [], // Optional memo field
         from_subaccount: [],
         created_at_time: [],
-        amount: totalAmount,
+        amount: totalAmount, // Set the amount to be approved
         expected_allowance: [],
         expires_at: [],
         spender: {
-          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND), // Set spender principal ID
           subaccount: [],
         },
       });
-
+  
       console.log("Approve", approval);
-      setIsApproved(true);
+      setIsApproved(true); // Update the approval state
       console.log("isApproved state after approval:", isApproved);
-
+  
       // Show success notification
       toast.success("Approval successful!");
     } catch (error) {
-      // Log the error
+      // Handle error during approval
       console.error("Approval failed:", error);
-
-      // Show error notification using Toastify
+  
+      // Show error notification
       toast.error(`Error: ${error.message || "Approval failed!"}`);
     }
   };
+  
 
   const isCollateral = true;
   const amountAsNat64 = Number(amount);
@@ -343,13 +248,13 @@ const SupplyPopup = ({
 
       let ledgerActor;
       if (asset === "ckBTC") {
-        ledgerActor = ledgerActorckBTC;
+        ledgerActor = ledgerActors.ckBTC;
       } else if (asset === "ckETH") {
-        ledgerActor = ledgerActorckETH;
+        ledgerActor = ledgerActors.ckETH;
       } else if (asset === "ckUSDC") {
-        ledgerActor = ledgerActorckUSDC;
+        ledgerActor = ledgerActors.ckUSDC;
       } else if (asset === "ICP") {
-        ledgerActor = ledgerActorICP;
+        ledgerActor = ledgerActors.ICP;
       }
 
 

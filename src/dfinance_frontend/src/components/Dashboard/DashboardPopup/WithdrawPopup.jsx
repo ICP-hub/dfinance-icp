@@ -135,93 +135,9 @@ const WithdrawPopup = ({
   };
 
   const { createLedgerActor, backendActor, principal } = useAuth();
-
-  const [assetPrincipal, setAssetPrincipal] = useState({});
-
-  useEffect(() => {
-    const fetchAssetPrinciple = async () => {
-      if (backendActor) {
-        try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
-          for (const asset of assets) {
-            const result = await getAssetPrinciple(asset);
-
-            setAssetPrincipal((prev) => ({
-              ...prev,
-              [asset]: result,
-            }));
-          }
-        } catch (error) {
-          console.error("Error fetching asset principal:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-
-    fetchAssetPrinciple();
-  }, [principal, backendActor]);
-
-  const getAssetPrinciple = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      let result;
-      switch (asset) {
-        case "ckBTC":
-          result = await backendActor.get_asset_principal("ckBTC");
-          break;
-        case "ckETH":
-          result = await backendActor.get_asset_principal("ckETH");
-          break;
-        case "ckUSDC":
-          result = await backendActor.get_asset_principal("ckUSDC");
-          break;
-        case "ICP":
-          result = await backendActor.get_asset_principal("ICP");
-          break;
-        default:
-          throw new Error(`Unknown asset: ${asset}`);
-      }
-      return result.Ok.toText();
-    } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
-      throw error;
-    }
-  };
-
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckBTC]
-  );
-
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(assetPrincipal.ckETH, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckETH]
-  );
-
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(assetPrincipal.ckUSDC, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckUSDC]
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
+  const ledgerActors = useSelector((state) => state.ledger);
+  console.log("ledgerActors", ledgerActors);
+  
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
   const handleWithdraw = async () => {
@@ -231,13 +147,13 @@ const WithdrawPopup = ({
 
     // Example logic to select the correct backend actor based on the asset
     if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
+      ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
+      ledgerActor = ledgerActors.ckETH;
     } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
+      ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP;
+      ledgerActor = ledgerActors.ICP;
     }
 
     try {

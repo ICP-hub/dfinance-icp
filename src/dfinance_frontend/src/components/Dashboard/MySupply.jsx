@@ -69,91 +69,11 @@ const MySupply = () => {
     [principal]
   );
 
-  const [assetPrincipal, setAssetPrincipal] = useState({});
+  
 
-  useEffect(() => {
-    const fetchAssetPrinciple = async () => {
-      if (backendActor) {
-        try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
-          for (const asset of assets) {
-            const result = await getAssetPrinciple(asset);
-            setAssetPrincipal((prev) => ({
-              ...prev,
-              [asset]: result,
-            }));
-          }
-        } catch (error) {
-          console.error("Error fetching asset principal:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-
-    fetchAssetPrinciple();
-  }, [principal, backendActor]);
-
-  const getAssetPrinciple = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      let result;
-      switch (asset) {
-        case "ckBTC":
-          result = await backendActor.get_asset_principal("ckBTC");
-          break;
-        case "ckETH":
-          result = await backendActor.get_asset_principal("ckETH");
-          break;
-        case "ckUSDC":
-          result = await backendActor.get_asset_principal("ckUSDC");
-          break;
-        case "ICP":
-          result = await backendActor.get_asset_principal("ICP");
-          break;
-        default:
-          throw new Error(`Unknown asset: ${asset}`);
-      }
-      return result.Ok.toText();
-    } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
-      throw error;
-    }
-  };
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckBTC]
-  );
-
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(assetPrincipal.ckETH, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckETH]
-  );
-
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(assetPrincipal.ckUSDC, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckUSDC]
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
-
+ 
+  const ledgerActors = useSelector((state) => state.ledger);
+console.log("ledgerActors",ledgerActors)
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
@@ -223,47 +143,37 @@ const MySupply = () => {
       if (isAuthenticated && principalObj) {
         try {
           const account = { owner: principalObj, subaccount: [] };
-          let balance;
-
-          if (assetType === "ckBTC") {
-            if (!ledgerActorckBTC) {
-              console.warn("Ledger actor for ckBTC not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            const formattedBalance = (balance / BigInt(100000000)).toString();
-            setCkBTCBalance(formattedBalance); // Set ckBTC balance
-          } else if (assetType === "ckETH") {
-            if (!ledgerActorckETH) {
-              console.warn("Ledger actor for ckETH not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckETH.icrc1_balance_of(account);
-            const formattedBalance = (balance / BigInt(100000000)).toString();
-            setCkETHBalance(formattedBalance); // Set ckETH balance
-          } else if (assetType === "ckUSDC") {
-            if (!ledgerActorckUSDC) {
-              console.warn("Ledger actor for ckUSDC not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            const formattedBalance = (balance / BigInt(100000000)).toString();
-            setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
-          } else if (assetType === "ICP") {
-            if (!ledgerActorICP) {
-              console.warn("Ledger actor for ICP not initialized yet");
-              return;
-            }
-            balance = await ledgerActorICP.icrc1_balance_of(account);
-            const formattedBalance = (balance / BigInt(100000000)).toString();
-            setCkICPBalance(formattedBalance);
+          const ledgerActor = ledgerActors[assetType];
           
-          } else {
-            throw new Error(
-              "Unsupported asset type or ledger actor not initialized"
-            );
+          // Debugging logs
+          console.log(`Using ledger actor for ${assetType}:`, ledgerActor);
+          
+          if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
+            console.warn(`Ledger actor for ${assetType} not initialized or method not available`);
+            return;
           }
-          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
+  
+          // Fetch balance using the actor from Redux
+          const balance = await ledgerActor.icrc1_balance_of(account);
+          const formattedBalance = (balance / BigInt(100000000)).toString();
+  
+          // Set balance based on asset type
+          switch (assetType) {
+            case "ckBTC":
+              setCkBTCBalance(formattedBalance); // Set ckBTC balance
+              break;
+            case "ckETH":
+              setCkETHBalance(formattedBalance); // Set ckETH balance
+              break;
+            case "ckUSDC":
+              setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
+              break;
+            case "ICP":
+              setCkICPBalance(formattedBalance); // Set ckICP balance
+              break;
+            default:
+              throw new Error("Unsupported asset type");
+          }
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
@@ -272,14 +182,12 @@ const MySupply = () => {
     },
     [
       isAuthenticated,
-      ledgerActorckBTC,
-      ledgerActorckETH,
-      ledgerActorckUSDC,
       principalObj,
-      ledgerActorICP,
+      ledgerActors, // Include the ledger actors from Redux in the dependencies
     ]
   );
-
+  
+  
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -297,15 +205,14 @@ const MySupply = () => {
         setLoading(false);
       }
     };
-
+  
     fetchAllData();
   }, [
     fetchBalance,
     fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
   ]);
+  
+ 
 
   const { assets, reserveData, filteredItems } = useAssetData();
 

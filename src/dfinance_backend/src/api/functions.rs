@@ -5,6 +5,8 @@ use ic_cdk::call;
 use crate::api::state_handler::{mutate_state, read_state};
 use ic_cdk_macros::update;
 use serde::Serialize;
+// use icrc_ledger_types::icrc2::approve::ApproveArgs;
+
 
 // Icrc2_transfer_from inter canister call
 pub async fn asset_transfer_from(
@@ -108,6 +110,42 @@ pub async fn asset_transfer(
     match new_result {
         TransferFromResult::Ok(balance) => Ok(balance),
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+    }
+}
+
+pub async fn approve_transfer(
+    spender: Principal,
+    ledger: Principal,
+    from: Principal,
+    amount: Nat,
+) -> Result<Nat, String> {
+    let approve_args = ApproveArgs {
+        from_subaccount: None,
+        spender:  TransferAccount {
+            owner: spender,
+            subaccount: None,
+        },
+        amount: amount.clone(),
+        expected_allowance: None,
+        expires_at: None,
+        fee: None,
+        memo: None,
+        created_at_time: None,
+    };
+
+    let (approval_result,): (ApproveResult,) =
+        call(ledger, "icrc2_approve", (approve_args, false, Some(from)))
+            .await
+            .map_err(|e| e.1)?;
+
+    ic_cdk::println!(
+        "approve_transfer executed successfully and the call result: {:?}",
+        approval_result
+    );
+
+    match approval_result {
+        ApproveResult::Ok(balance) => Ok(balance),
+        ApproveResult::Err(err) => Err(format!("{:?}", err)),
     }
 }
 

@@ -4,22 +4,22 @@ use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateRes
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
-    pub total_collateral_value: f64,
-    pub total_borrowed_value: f64,
-    pub liquidation_threshold: f64,
+    pub total_collateral_value: u128,
+    pub total_borrowed_value: u128,
+    pub liquidation_threshold: u128,
 }
-pub fn calculate_health_factor(position: &UserPosition) -> f64 {
-    if position.total_borrowed_value == 0.0 {
-        return f64::INFINITY; 
+pub fn calculate_health_factor(position: &UserPosition) -> u128 {
+    if position.total_borrowed_value == 0 {
+        return u128::MAX; //
     }
 
     (position.total_collateral_value * position.liquidation_threshold)
         / position.total_borrowed_value
 }
 
-pub fn calculate_ltv(position: &UserPosition) -> f64 {
-    if position.total_collateral_value == 0.0 {
-        return 0.0; 
+pub fn calculate_ltv(position: &UserPosition) -> u128 {
+    if position.total_collateral_value == 0 {
+        return 0; 
     }
 
     position.total_borrowed_value / position.total_collateral_value
@@ -37,17 +37,17 @@ pub fn calculate_ltv(position: &UserPosition) -> f64 {
 //     num / deno
 // }
 pub fn cal_average_threshold(
-    amount: f64, 
-    amount_taken: f64,
-    reserve_liq_thres: u16, 
-    user_total_collateral: f64, 
-    user_liq_thres: f64
-) -> f64 {
+    amount: u128, 
+    amount_taken: u128,
+    reserve_liq_thres: u128, 
+    user_total_collateral: u128, 
+    user_liq_thres: u128
+) -> u128 {
     
-    let reserve_liq_thres_f64 = reserve_liq_thres as f64 / 100.0;
+    // let reserve_liq_thres_f64 = reserve_liq_thres as f64 / 100.0;
     
     // Perform the calculation
-    let result = ((amount * reserve_liq_thres_f64 )+ (user_total_collateral * user_liq_thres) - (amount_taken * reserve_liq_thres_f64)) 
+    let result = ((amount * reserve_liq_thres )+ (user_total_collateral * user_liq_thres) - (amount_taken * reserve_liq_thres)) 
         / (amount + user_total_collateral - amount_taken);
     
     result
@@ -122,8 +122,8 @@ pub fn cal_average_threshold(
 pub async fn get_exchange_rates(
     base_asset_symbol: String,
     quote_asset_symbol: Option<String>, // Make the quote_asset_symbol optional
-    amount: f64,
-) -> Result<(f64, u64), String> {
+    amount: u128,
+) -> Result<(u128, u64), String> {
     // Map the base asset to its corresponding cryptocurrency symbol
     let base_asset = if base_asset_symbol == "ckBTC" {
         "btc".to_string()
@@ -179,10 +179,10 @@ pub async fn get_exchange_rates(
                 GetExchangeRateResult::Ok(v) => {
                     let quote = v.rate;
                     let pow = 10usize.pow(v.metadata.decimals);
-                    let exchange_rate = quote as f64 / pow as f64;
+                    let exchange_rate = quote  / pow as u64 ;
     
                     // Multiplying the exchange rate by the amount
-                    let total_value = exchange_rate * amount;
+                    let total_value = exchange_rate as u128 * amount;
     
                     // Getting the current time
                     let time = ic_cdk::api::time();
@@ -202,27 +202,4 @@ pub async fn get_exchange_rates(
     }
     
 
-// ------------ Manual exchange rate ------------
 
-const CONVERSION_RATE_CKBTC_TO_USD: f64 = 62353.75;
-const CONVERSION_RATE_CKETH_TO_USD: f64 = 2617.19;
-const CONVERSION_RATE_CKUSDC_TO_USD: f64 = 1.0;
-
-fn get_conversion_rate_to_usd(asset: &str) -> Option<f64> {
-    match asset {
-        "ckBTC" => Some(CONVERSION_RATE_CKBTC_TO_USD),
-        "ckETH" => Some(CONVERSION_RATE_CKETH_TO_USD),
-        "ckUSDC" => Some(CONVERSION_RATE_CKUSDC_TO_USD),
-        _ => None,
-    }
-}
-
-pub fn exchange_rate_usd(asset_from: &str, amount: f64) -> Result<f64, String> {
-
-    let rate_from_usd = get_conversion_rate_to_usd(asset_from)
-        .ok_or(format!("Unsupported asset: {}", asset_from))?;
-
-    let amount_in_usd = amount * rate_from_usd;
-
-    Ok(amount_in_usd)
-}

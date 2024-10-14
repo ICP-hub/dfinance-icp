@@ -37,13 +37,9 @@ const DebtStatus = () => {
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   }
-  const [currentPage, setCurrentPage] = useState(1);
-  const [activeChevron, setActiveChevron] = useState(null);
-  const itemsPerPage = 8; // Number of items per page
+
   const navigate = useNavigate();
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+
 
   const {
     isAuthenticated,
@@ -130,7 +126,12 @@ const DebtStatus = () => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [activeChevron, setActiveChevron] = useState(null);
+  const itemsPerPage = 8; // Number of items per page
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
   const totalPages = Math.ceil(LIQUIDATION_USERLIST_ROW.length / ITEMS_PER_PAGE);
   const filteredItems = LIQUIDATION_USERLIST_ROW.filter(item =>
     item.user_principle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -140,7 +141,6 @@ const DebtStatus = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-
 
   const popupRef = useRef(null); // Ref for the popup content
 
@@ -177,30 +177,30 @@ const DebtStatus = () => {
       return isValid;
     });
 
-    function formatNumber(num) {
-      // Ensure num is a valid number
-      const parsedNum = parseFloat(num);
-  
-      if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
-        return "0";
-      }
-      if (parsedNum >= 1000000000) {
-        return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
-      }
-      if (parsedNum >= 1000000) {
-        return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
-      }
-      if (parsedNum >= 1000) {
-        return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
-      }
-      return parsedNum.toFixed(2).toString();
+  function formatNumber(num) {
+    // Ensure num is a valid number
+    const parsedNum = parseFloat(num);
+
+    if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
+      return "0";
     }
+    if (parsedNum >= 1000000000) {
+      return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
+    }
+    if (parsedNum >= 1000000) {
+      return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
+    }
+    if (parsedNum >= 1000) {
+      return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
+    }
+    return parsedNum.toFixed(2).toString();
+  }
 
   return (
     <div className="w-full">
-      <div className="w-full md:h-[40px] flex items-center px-2 mt-8 md:px-12 ">
+      <div className="w-full md:h-[40px] flex items-center mt-8">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Users List</h1>
-        
+
       </div>
 
       <div className="w-full mt-6">
@@ -211,7 +211,7 @@ const DebtStatus = () => {
           <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
             No users found!
           </p>
-        </div> : <div className="w-full min-h-[390px] mt-6 p-0 lg:px-12 mb-20 select-none">
+        </div> : <div className="w-full min-h-[390px] mt-6 p-0 mb-20 select-none">
           <div className="w-full overflow-auto content">
             <table className="w-full text-[#2A1F9D] font-[500] text-sm md:text-sm lg:text-sm dark:text-darkText">
               <thead>
@@ -224,7 +224,7 @@ const DebtStatus = () => {
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[2]?.header}</td>
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[3]?.header}</td>
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[4]?.header}</td>
-                  
+
                 </tr>
               </thead>
               <tbody>
@@ -237,7 +237,7 @@ const DebtStatus = () => {
                       item,
                     };
                     return mappedItem;
-                   
+
                   })
                   .filter((mappedItem) => {
                     const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal && mappedItem.healthFactor > 1;
@@ -265,8 +265,8 @@ const DebtStatus = () => {
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[1]?.reserve
-                            const assetBorrow = item[1]?.asset_borrow
-                            console.log("mappedItems",mappedItem)
+                            const assetBorrow = (item[1]?.asset_borrow) / 100000000;
+                            console.log("mappedItems", mappedItem)
                             console.log("Asset Borrow:", assetBorrow);
                             if (assetBorrow > 0) {
                               return (
@@ -304,11 +304,11 @@ const DebtStatus = () => {
                                 <img
                                   key={index}
                                   src={
-                                    assetName === "ckBTC" ? ckBTC 
-                                    : assetName === "ckETH" ? ckETH 
-                                    : assetName === "ckUSDC" ? ckUSDC 
-                                    : assetName === "ICP" ? icp 
-                                    : undefined
+                                    assetName === "ckBTC" ? ckBTC
+                                      : assetName === "ckETH" ? ckETH
+                                        : assetName === "ckUSDC" ? ckUSDC
+                                          : assetName === "ICP" ? icp
+                                            : undefined
                                   }
                                   alt={assetName}
                                   className="rounded-[50%] w-7"
@@ -345,7 +345,7 @@ const DebtStatus = () => {
                                 </span>
                               </>
                             }
-                            className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-sm lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px] font-inter"
+                            className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-[12px] lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
                             onClickHandler={() => handleDetailsClick(mappedItem)}
                           />
                         </div>
@@ -357,9 +357,19 @@ const DebtStatus = () => {
 
 
             </table>
-          </div>
 
+          </div>
+          <div className="w-full flex justify-center mt-10">
+            <div id="pagination" className="flex gap-2">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </div>
         </div>}
+
 
       </div>
       {showUserInfoPopup && selectedAsset && (

@@ -23,7 +23,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     try {
       if (backendActor) {
-        const result = backendActor.faucet(asset, 1000);
+        const result = backendActor.faucet(asset, 500*100000000);
         console.log("Faucet result.", result);
       }
     } catch (error) {
@@ -67,7 +67,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       alt="connect_wallet_icon"
                       className="object-cover w-8 h-8 rounded-full"
                     />
-                    <span className="text-lg">1,000 {asset}</span>
+                    <span className="text-lg">500 {asset}</span>
                   </div>
                 </div>
               </div>

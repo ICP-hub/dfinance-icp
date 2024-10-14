@@ -1,17 +1,17 @@
 {
   "debttoken": {
-    "ic": "p3baa-iyaaa-aaaap-akfmq-cai"
+    "ic": "oa2nu-caaaa-aaaam-admaa-cai"
   },
   "dfinance_backend": {
-    "ic": "um3sd-4iaaa-aaaap-akh7q-cai"
+    "ic": "oh3la-pyaaa-aaaam-admaq-cai"
   },
   "dfinance_frontend": {
-    "ic": "pae4f-saaaa-aaaap-akfoa-cai"
+    "ic": "ooya4-zqaaa-aaaam-admba-cai"
   },
   "dtoken": {
-    "ic": "pscl4-6qaaa-aaaap-akfna-cai"
+    "ic": "o7joh-nyaaa-aaaam-adl7a-cai"
   },
   "token_ledger": {
-    "ic": "gnjyw-viaaa-aaaap-qkfsq-cai"
+    "ic": "oyiit-aaaaa-aaaam-adl7q-cai"
   }
 }

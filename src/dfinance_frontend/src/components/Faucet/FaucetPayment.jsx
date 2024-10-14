@@ -47,7 +47,7 @@ const FaucetPayment = ({ asset, onClose }) => {
                     <Check />
                 </div>
                 <h1 className='font-semibold text-xl'>All done!</h1>
-                <p>You received 1,000 {asset}</p>
+                <p>You received 500 {asset}</p>
 
 
                 <button

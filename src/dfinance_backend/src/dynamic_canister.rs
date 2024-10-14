@@ -223,7 +223,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
 
             subaccount: None,
         },
-        Nat::from(10_000_000_000u64),
+        Nat::from(100_000_000_000_000u64),
     )];
 
     let feature_flags = Some(FeatureFlags { icrc2: true });

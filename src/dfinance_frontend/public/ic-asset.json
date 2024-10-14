@@ -1,0 +1,9 @@
+[
+    {
+        "match": ".*",
+        "headers": {
+            "Access-Control-Allow-Origin" : "https://dfinance.kaifoundry.com/conversion-rates"
+        },
+        "ignore": false
+    }
+]

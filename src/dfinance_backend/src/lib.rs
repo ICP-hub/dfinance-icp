@@ -236,4 +236,13 @@ pub async fn withdraw(
     }
 }
 
+
+//approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve 
+//call approve transfer function
+// backend canister as spender
+//caller as from
+//asset principal as ledger
+//amount as amount
+
+
 export_candid!();

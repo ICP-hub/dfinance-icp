@@ -166,8 +166,8 @@ pub async fn get_exchange_rates(
     };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
             ic_cdk::api::call::call_with_payment128(
-                // Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai").unwrap(),
-                Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+                Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
+                // Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
                 "get_exchange_rate",
                 (args,),
                 1_000_000_000,

@@ -368,7 +368,7 @@ impl UpdateLogic {
 
 
 
-        let usd_rate = usd_amount/params.amount ;
+        let usd_rate = (usd_amount/params.amount) * 100000000;
         if let Some((_, reserve_data)) = user_reserve {
             // If Reserve data exists, it updates asset supply
             // let asset_rate_result = get_exchange_rates(params.asset.clone(), 1.0).await;

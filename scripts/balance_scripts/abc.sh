@@ -7,8 +7,8 @@ set -e
 source ../../.env
 
 CANISTER_ID=$CANISTER_ID_DFINANCE_BACKEND
-ASSET="ckBTC"                         
-AMOUNT=1000                       
+ASSET="ckETH"                         
+AMOUNT=300000000                       
 
 # Validate the input parameters
 if [ -z "$ASSET" ] || [ -z "$AMOUNT" ]; then

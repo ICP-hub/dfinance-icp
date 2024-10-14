@@ -88,7 +88,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
      
 
     if reserve_data.total_borrowed == 0 {
-        *&mut reserve_data.debt_index = 1;
+        *&mut reserve_data.debt_index = 100000000;
     }
 
     // Fetches the reserve logic cache having the current values

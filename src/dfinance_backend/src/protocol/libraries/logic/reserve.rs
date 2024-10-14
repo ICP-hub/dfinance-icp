@@ -287,8 +287,8 @@ pub async fn update_interest_rates(
         liquidity_taken: u128,
     ){
         ic_cdk::println!("Borrow liquidity_taken (in USD): {}", liquidity_taken);
-        let total_debt = (reserve_data.total_borrowed +liquidity_taken ) * reserve_cache.curr_debt_index ;
-        let total_supply= (reserve_data.total_supply + liquidity_added) * reserve_cache.curr_liquidity_index;
+        let total_debt = ((reserve_data.total_borrowed +liquidity_taken ) * reserve_cache.curr_debt_index) / 100000000;  //scal_mul
+        let total_supply= ((reserve_data.total_supply + liquidity_added) * reserve_cache.curr_liquidity_index) / 100000000; //scale_mul
         let total_borrowed= reserve_data.total_borrowed + liquidity_taken;
         let asset=reserve_data.asset_name.clone().unwrap_or("no token".to_string());
         let interest_rate_params = initialize_interest_rate_params(&asset);

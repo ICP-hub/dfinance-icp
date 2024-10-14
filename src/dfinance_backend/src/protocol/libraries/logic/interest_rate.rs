@@ -106,7 +106,7 @@ pub fn calculate_interest_rates(
     
         current_variable_borrow_rate,
     
-    ) * utilization_rate * (1 - reserve_factor))  / (100000000*100000000) ; //scal_mul
+    ) * utilization_rate * (10000000000 - reserve_factor))  / (100000000*100000000) ; //scal_mul
     
       
     (

@@ -29,14 +29,14 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
             max_excess_usage_ratio: ScalingMath::to_scaled(55), // 20% up to 100%
             base_variable_borrow_rate: ScalingMath::to_scaled(0), // 2% base variable rate
             variable_rate_slope1: ScalingMath::to_scaled(4), // 4% slope before optimal usage
-            variable_rate_slope2: ScalingMath::to_scaled(300), // 75% slope after optimal usage
+            variable_rate_slope2: ScalingMath::to_scaled(30), // 75% slope after optimal usage
         },
         "ckETH" => InterestRateParams {
             optimal_usage_ratio: ScalingMath::to_scaled(45), // Custom utilization for ckETH
             max_excess_usage_ratio: ScalingMath::to_scaled(55), // Custom excess usage
             base_variable_borrow_rate: ScalingMath::to_scaled(0), // 3% base variable rate for ckETH
             variable_rate_slope1: ScalingMath::to_scaled(4), // 5% slope before optimal usage
-            variable_rate_slope2: ScalingMath::to_scaled(300), // 80% slope after optimal usage          //review the value
+            variable_rate_slope2: ScalingMath::to_scaled(30), // 80% slope after optimal usage          //review the value
         },
         "ICP" => InterestRateParams {
             optimal_usage_ratio: ScalingMath::to_scaled(45), 
@@ -67,7 +67,7 @@ fn calculate_utilization_rate(total_supply: u128, total_borrowed: u128) -> u128 
     if total_supply == 0 {
         0
     } else {
-        total_borrowed / total_supply
+        (total_borrowed / total_supply) * 100000000
     }
 }
 
@@ -90,24 +90,24 @@ pub fn calculate_interest_rates(
 
 
     if utilization_rate > params.optimal_usage_ratio {
-        let excess_borrow_usage_ratio = (utilization_rate - params.optimal_usage_ratio)
-            / params.max_excess_usage_ratio;
+        let excess_borrow_usage_ratio = (utilization_rate - params.optimal_usage_ratio) * 100000000
+            / params.max_excess_usage_ratio;  //scale_div
 
         current_variable_borrow_rate += params.variable_rate_slope1
             + params.variable_rate_slope2 * excess_borrow_usage_ratio;
     } else {
-        current_variable_borrow_rate += params.variable_rate_slope1 * (utilization_rate / params.optimal_usage_ratio);
+        current_variable_borrow_rate += (params.variable_rate_slope1 * ((utilization_rate * 100000000) / params.optimal_usage_ratio) ) / 100000000; //scaled_div scaled_mul
     }
     
 
-    let current_liquidity_rate = calculate_overall_borrow_rate(
+    let current_liquidity_rate = (calculate_overall_borrow_rate(
        
         total_debt,
     
         current_variable_borrow_rate,
     
-    ) * utilization_rate * (1 - reserve_factor);
-    // * utilization_rate * (1.0 - reserve_factor);
+    ) * utilization_rate * (1 - reserve_factor))  / (100000000*100000000) ; //scal_mul
+    
       
     (
         current_liquidity_rate,
@@ -124,8 +124,8 @@ fn calculate_overall_borrow_rate(
         return 0;
     }
    
-    let weighted_variable_rate = total_debt * current_variable_borrow_rate;
-    weighted_variable_rate / total_debt
+    let weighted_variable_rate = (total_debt * current_variable_borrow_rate) / 100000000; //scal_mul
+    (weighted_variable_rate / total_debt) * 100000000 //scal_div
 }
 
 

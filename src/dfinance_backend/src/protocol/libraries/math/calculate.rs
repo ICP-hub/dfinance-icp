@@ -14,7 +14,7 @@ pub fn calculate_health_factor(position: &UserPosition) -> u128 {
     }
 
     (position.total_collateral_value * position.liquidation_threshold)
-        / position.total_borrowed_value
+        / position.total_borrowed_value                                    //check if need scaling
 }
 
 pub fn calculate_ltv(position: &UserPosition) -> u128 {
@@ -22,7 +22,7 @@ pub fn calculate_ltv(position: &UserPosition) -> u128 {
         return 0; 
     }
 
-    position.total_borrowed_value / position.total_collateral_value
+    (position.total_borrowed_value / position.total_collateral_value) * 100000000  //scal_div
 }
 
 // pub fn calculate_average_threshold(amount: f64, reserve: &ReserveData, user: UserData) -> f64 {
@@ -47,8 +47,8 @@ pub fn cal_average_threshold(
     // let reserve_liq_thres_f64 = reserve_liq_thres as f64 / 100.0;
     
     // Perform the calculation
-    let result = ((amount * reserve_liq_thres )+ (user_total_collateral * user_liq_thres) - (amount_taken * reserve_liq_thres)) 
-        / (amount + user_total_collateral - amount_taken);
+    let result =( (((amount * reserve_liq_thres) / 100000000)+ ((user_total_collateral * user_liq_thres)/100000000) - ((amount_taken * reserve_liq_thres)/100000000))   //scal_mul
+        / (amount + user_total_collateral - amount_taken) ) * 100000000; //scal_div
     
     result
 }

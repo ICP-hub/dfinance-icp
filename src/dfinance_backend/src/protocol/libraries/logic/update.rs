@@ -186,7 +186,7 @@ impl UpdateLogic {
         // let ckbtc_to_usd_rate = 60554.70f64;
         // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
         // let unscaled_amount = params.amount/100000000;
-        let mut usd_rate = usd_amount/params.amount;
+        let mut usd_rate = usd_amount/params.amount * 100000000;
         ic_cdk::println!(
             "Converted ckBTC amount: {} to USD amount: {} with rate: {}",
             params.amount.clone(),

@@ -3,7 +3,7 @@
 set -e
 
 # Load environment variables from .env
-source ../../.env
+source ../../.env 
 
 # Set variables
 # ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"

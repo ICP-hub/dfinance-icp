@@ -1,3 +1,5 @@
+use candid::types::principal;
+use candid::Nat;
 use candid::Principal;
 use declarations::assets::{
     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
@@ -5,7 +7,6 @@ use declarations::assets::{
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
-use candid::Nat;
 mod api;
 mod constants;
 pub mod declarations;
@@ -145,11 +146,9 @@ pub fn get_all_assets() -> Vec<String> {
 
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, String> {
-    read_state(|state| {
-        match state.reserve_list.get(&asset_name) {
-            Some(principal) => Ok(principal),
-            None => Err(format!("No principal found for asset: {}", asset_name)),
-        }
+    read_state(|state| match state.reserve_list.get(&asset_name) {
+        Some(principal) => Ok(principal),
+        None => Err(format!("No principal found for asset: {}", asset_name)),
     })
 }
 
@@ -235,5 +234,14 @@ pub async fn withdraw(
         }
     }
 }
+
+
+
+//approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve
+//call approve transfer function -- function.rs
+// backend canister as spender
+//caller as from
+//asset principal as ledger
+//amount as amount
 
 export_candid!();

@@ -1,23 +1,22 @@
-source ../../.env
+#!/bin/bash
 
-dfx identity use anonymous
-# Approve the transfer
-ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
-backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-dtoken_canister=$CANISTER_ID_DTOKEN
-approve_method="icrc2_approve"
-backend_canister_principal=$(dfx canister id $backend_canister)
-approve_amount=10000000  # Set the amount you want to approve
-echo "Approving transfer of $approve_amount from user1 to backend_canister..."
-allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
-    from_subaccount=null;
-    spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
-    amount=$approve_amount:nat;
-    expected_allowance=null;
-    expires_at=null;
-    fee=null;
-    memo=null;
-    created_at_time=null
-})")
-echo "Allowance Set: $allow"
-echo "--------------------------------------"
+set -e  # Exit immediately if a command exits with a non-zero status
+
+# Load environment variables from .env
+source ../../.env 
+
+# Get the backend canister ID from the environment variable
+backend_canister=$CANISTER_ID_DFINANCE_BACKEND 
+
+# Use the default identity for the transaction
+dfx identity use default
+
+# Set the transfer amount and token type
+transfer_amount=100  # This should be a number, as expected by Rust
+token_type="ckBTC"   # Token name as a string
+
+# Call the transfer function and store the response
+reserve_data=$(dfx canister call "$backend_canister" transfer "($transfer_amount, \"$token_type\")")
+
+# Output the reserve data received from the transfer call
+echo "Reserve Data: $reserve_data"

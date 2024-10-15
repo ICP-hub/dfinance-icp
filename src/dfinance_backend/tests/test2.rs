@@ -186,6 +186,22 @@ fn setup() -> (PocketIc, Principal) {
     (pic, backend_canister)
 }
 
+#[test]
+fn call_test_function() {
+    let (pic, backend_canister) = setup();
+    test_deposit(&pic, backend_canister);
+    test_borrow(&pic, backend_canister);
+    test_repay(&pic, backend_canister);
+  
+}
+
+
+// #[test]
+// fn run_selected_test() {
+//     call_test_function("test_borrow");
+//     // call_test_function("test_deposit");
+//     call_test_function("test_repay");
+// }
 //==========================transfer debttoken ====================================
 fn transfer_debttoken_to_anonymous(
     pic: &PocketIc,
@@ -362,8 +378,7 @@ fn transfer_dtoken_to_anonymous(
     }
 }
 
-#[test]
-fn test_deposit() {
+fn test_deposit(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -434,8 +449,7 @@ fn test_deposit() {
         },
     ];
 
-    // let (pic, backend_canister, ckbtc_canister, dtoken_canister) = setup();
-    let (pic, backend_canister) = setup();
+  
     // for case in test_cases {
     println!();
     println!("****************************************************************************");
@@ -647,8 +661,8 @@ fn test_deposit() {
 }
 
 //===============Borrow ==============
-#[test]
-fn test_borrow() {
+
+fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -727,7 +741,7 @@ fn test_borrow() {
         // },
     ];
 
-    let (pic, backend_canister) = setup();
+    // let (pic, backend_canister) = setup();
 
     // for case in test_cases {
     println!();
@@ -827,219 +841,387 @@ fn test_borrow() {
 }
 
 //===============Withdraw ==============
-#[test]
-fn test_withdraw() {
-    #[derive(Debug, Clone)]
-    struct TestCase {
-        asset: String,
-        amount: u128,
-        on_behalf_of: Option<String>,
-        is_collateral: bool,
-        expect_success: bool,
-        expected_error_message: Option<String>,
-    }
+// #[test]
+// fn test_withdraw() {
+//     #[derive(Debug, Clone)]
+//     struct TestCase {
+//         asset: String,
+//         amount: u128,
+//         on_behalf_of: Option<String>,
+//         is_collateral: bool,
+//         expect_success: bool,
+//         expected_error_message: Option<String>,
+//     }
 
-    let test_cases = vec![
-        // Valid deposit case
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 1000,
-            on_behalf_of: None,
-            is_collateral: true,
-            expect_success: true,
-            expected_error_message: None,
-        },
-        // Non-existent asset case
-        TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: 500,
-            on_behalf_of: None,
-            is_collateral: false,
-            expect_success: false,
-            expected_error_message: Some(
-                "Reserve not found for asset: nonexistent_asset".to_string(),
-            ),
-        },
-        // Large amount
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 7_000, // Large amount
-            on_behalf_of: None,
-            is_collateral: true,
-            expect_success: true,
-            expected_error_message: None,
-        },
-        // Insufficient balance
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 10_00_000, // Valid amount but insufficient balance
-        //     on_behalf_of: None,
-        //     is_collateral: true,
-        //     expect_success: false,
-        //     expected_error_message: Some("InsufficientFunds { balance: Nat(2000) }".to_string()), // change it later on
-        //     simulate_insufficient_balance: true,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
-    ];
+//     let test_cases = vec![
+//         // Valid deposit case
+//         TestCase {
+//             asset: "ckBTC".to_string(),
+//             amount: 1000,
+//             on_behalf_of: None,
+//             is_collateral: true,
+//             expect_success: true,
+//             expected_error_message: None,
+//         },
+//         // Non-existent asset case
+//         TestCase {
+//             asset: "nonexistent_asset".to_string(),
+//             amount: 500,
+//             on_behalf_of: None,
+//             is_collateral: false,
+//             expect_success: false,
+//             expected_error_message: Some(
+//                 "Reserve not found for asset: nonexistent_asset".to_string(),
+//             ),
+//         },
+//         // Large amount
+//         TestCase {
+//             asset: "ckBTC".to_string(),
+//             amount: 7_000, // Large amount
+//             on_behalf_of: None,
+//             is_collateral: true,
+//             expect_success: true,
+//             expected_error_message: None,
+//         },
+//         // Insufficient balance
+//         // TestCase {
+//         //     asset: "ckBTC".to_string(),
+//         //     amount: 10_00_000, // Valid amount but insufficient balance
+//         //     on_behalf_of: None,
+//         //     is_collateral: true,
+//         //     expect_success: false,
+//         //     expected_error_message: Some("InsufficientFunds { balance: Nat(2000) }".to_string()), // change it later on
+//         //     simulate_insufficient_balance: true,
+//         //     simulate_dtoken_transfer_failure: false,
+//         // },
+//     ];
 
-    let (pic, backend_canister) = setup();
+//     let (pic, backend_canister) = setup();
 
-    println!();
-    println!("****************************************************************************");
-    println!();
-    for (i, case) in test_cases.iter().enumerate() {
-        // Print the case number
-        println!("Running test case no: {}", i + 1);
-        println!();
-        println!("Test case details: {:?}", case);
-        println!();
+//     println!();
+//     println!("****************************************************************************");
+//     println!();
+//     for (i, case) in test_cases.iter().enumerate() {
+//         // Print the case number
+//         println!("Running test case no: {}", i + 1);
+//         println!();
+//         println!("Test case details: {:?}", case);
+//         println!();
+//         let result = pic.query_call(
+//             backend_canister,
+//             Principal::anonymous(),
+//             "get_reserve_data",
+//             encode_one(case.asset.clone()).unwrap(),
+//         );
+
+//         // i dont need none here. need to replace it.----- work.
+//         // Handle the result and store the Ok value in asset_canister
+//         let reserve_data_r = match result {
+//             Ok(WasmResult::Reply(response_data)) => {
+//                 match decode_one::<Result<ReserveData, String>>(&response_data) {
+//                     Ok(Ok(reserve)) => {
+//                         // Successfully retrieved the principal
+//                         Some(reserve)
+//                     }
+//                     Ok(Err(err)) => {
+//                         // Handle the error returned by get_asset_principal
+//                         println!("Error retrieving asset principal: {}", err);
+//                         None
+//                     }
+//                     Err(decode_err) => {
+//                         // Handle the error while decoding the response
+//                         println!("Error decoding the response: {}", decode_err);
+//                         None
+//                     }
+//                 }
+//             }
+//             Ok(WasmResult::Reject(reject_message)) => {
+//                 // Handle the rejection message from the WasmResult
+//                 println!("Query call rejected: {}", reject_message);
+//                 None
+//             }
+//             Err(call_err) => {
+//                 // Handle the error from the query call itself
+//                 println!("Query call failed: {}", call_err);
+//                 None
+//             }
+//         };
+//         // let asset_principal = asset_canister.unwrap();
+//         let reserve_d = match reserve_data_r {
+//             Some(reserve) => reserve,
+//             None => {
+//                 // Handle the case where the asset principal was not found
+//                 println!("{:?}", case.expected_error_message);
+//                 continue;
+//             }
+//         };
         
-        let reserve_data = pic.query_call(
-            backend_canister,
-            Principal::anonymous(),
-            "get_reserve_data",
-            encode_one(case.asset.clone()).unwrap(),
-        );
-
-        let reserve_data_result = match reserve_data {
-            Ok(WasmResult::Reply(response_data)) => {
-                match decode_one::<Result<ReserveData, String>>(&response_data) {
-                    Ok(Ok(reserve_data)) => {
-                        // Successfully retrieved the ReserveData, return or use it
-                        println!("Successfully retrieved ReserveData: {:?}", reserve_data);
-                        Some(reserve_data)
-                    }
-                    Ok(Err(err)) => {
-                        // Handle error from `get_reserve_data`
-                        println!("Error retrieving asset principal: {}", err);
-                        None // or return Err(err) if you want to propagate it up
-                    }
-                    Err(decode_err) => {
-                        // Handle the decoding error
-                        println!("Error decoding the response: {}", decode_err);
-                        None // or return Err(decode_err.to_string())
-                    }
-                }
-            }
-            Ok(WasmResult::Reject(reject_message)) => {
-                // Handle the rejection message from the WasmResult
-                println!("Query call rejected: {}", reject_message);
-                None
-            }
-            Err(call_err) => {
-                // Handle the error from the query call itself
-                println!("Query call failed: {}", call_err);
-                None
-            }
-        };
-
-        if let Some(reserve_data) = reserve_data_result {
-            // Check if `d_token_canister` is `Some` and proceed, or handle the `None` case
-            if let Some(d_token_canister) = &reserve_data.d_token_canister {
-                let d_token_principal = match Principal::from_text(d_token_canister) {
-                    Ok(principal) => principal,
-                    Err(err) => {
-                        println!("Failed to parse d_token_canister as Principal: {}", err);
-                        return; // Or handle the error as needed
-                    }
-                };
-
-                // Now safely call the transfer function with the parsed principal
-                transfer_dtoken_to_anonymous(&pic, d_token_principal, backend_canister);
-            } else {
-                println!("d_token_canister is None, cannot proceed with transfer.");
-            }
-        } else {
-            println!("Failed to retrieve ReserveData, aborting transfer.");
-        }
-
-        // Now call the deposit function
-        let result = pic.update_call(
-            backend_canister,
-            Principal::anonymous(),
-            "withdraw",
-            encode_args((
-                case.asset.clone(),
-                case.amount,
-                case.on_behalf_of.clone(),
-                case.is_collateral,
-            ))
-            .unwrap(),
-        );
-        match result {
-            Ok(WasmResult::Reply(response)) => {
-                let withdraw_response: Result<(), String> =
-                    candid::decode_one(&response).expect("Failed to decode withdraw response");
-
-                match withdraw_response {
-                    Ok(()) => {
-                        if case.expect_success {
-                            println!("withdraw succeeded for case: {:?}", i + 1);
-                        } else {
-                            panic!("Expected failure but got success for case: {:?}", case);
-                        }
-                    }
-                    Err(e) => {
-                        if !case.expect_success {
-                            assert_eq!(
-                                case.expected_error_message.as_deref(),
-                                Some(e.as_str()),
-                                "Error message mismatch for case: {:?}",
-                                case
-                            );
-                            println!("Withdraw failed as expected with error: {:?}", e);
-                        } else {
-                            panic!("Expected success but got error: {:?}", e);
-                        }
-                    }
-                }
-            }
-            Ok(WasmResult::Reject(reject_message)) => {
-                if !case.expect_success {
-                    assert_eq!(
-                        case.expected_error_message.as_deref(),
-                        Some(reject_message.as_str()),
-                        "Error message mismatch for case: {:?}",
-                        case
-                    );
-                    println!("withdraw rejected as expected: {}", reject_message);
-                } else {
-                    panic!(
-                        "Expected success but got rejection for case: {:?} with message: {}",
-                        case, reject_message
-                    );
-                }
-            }
-            Err(e) => {
-                panic!("Error during withdraw function call: {:?}", e);
-            }
-        }
-
-        // if case.expect_success {
-        //     let user_principal = Principal::anonymous();
-        //     let user_balance_after = check_balance(&pic, ckbtc_canister, user_principal);
-        //     let backend_balance_after = check_balance(&pic, ckbtc_canister, backend_canister);
-
-        //     let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
-
-        //     println!("User balance after withdraw: {}", user_balance_after);
-        //     println!("Backend balance after withdraw: {}", backend_balance_after);
-        //     println!("User Dtoken balance after withdraw: {}", user_dtoken_balance_after);
-
-        //     assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after withdraw");
-        //     assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after withdraw"); //
-        // }
-        println!();
-        println!("****************************************************************************");
-        println!();
-    }
-}
+//         if let Some(d_token_canister) = &reserve_d.d_token_canister {
+//                     let d_token_principal = Principal::from_text(d_token_canister).unwrap();
+                
+                       
+                
+    
+//                     // Now safely call the transfer function with the parsed principal
+//                     transfer_dtoken_to_anonymous(&pic, d_token_principal, backend_canister);
+//         }  
+       
 
 
-// ================ Repay =============
+//         // let reserve_data = pic.query_call(
+//         //     backend_canister,
+//         //     Principal::anonymous(),
+//         //     "get_reserve_data",
+//         //     encode_one(case.asset.clone()).unwrap(),
+//         // );
 
-#[test]
-fn test_repay() {
+//         // let reserve_data_result = match reserve_data {
+//         //     Ok(WasmResult::Reply(response_data)) => {
+//         //         match decode_one::<Result<ReserveData, String>>(&response_data) {
+//         //             Ok(Ok(reserve_data)) => {
+//         //                 // Successfully retrieved the ReserveData, return or use it
+//         //                 println!("Successfully retrieved ReserveData: {:?}", reserve_data);
+//         //                 Some(reserve_data)
+//         //             }
+//         //             Ok(Err(err)) => {
+//         //                 // Handle error from `get_reserve_data`
+//         //                 println!("Error retrieving asset principal: {}", err);
+//         //                 None // or return Err(err) if you want to propagate it up
+//         //             }
+//         //             Err(decode_err) => {
+//         //                 // Handle the decoding error
+//         //                 println!("Error decoding the response: {}", decode_err);
+//         //                 None // or return Err(decode_err.to_string())
+//         //             }
+//         //         }
+//         //     }
+//         //     Ok(WasmResult::Reject(reject_message)) => {
+//         //         // Handle the rejection message from the WasmResult
+//         //         println!("Query call rejected: {}", reject_message);
+//         //         None
+//         //     }
+//         //     Err(call_err) => {
+//         //         // Handle the error from the query call itself
+//         //         println!("Query call failed: {}", call_err);
+//         //         None
+//         //     }
+//         // };
+
+//         // if let Some(reserve_data) = reserve_data_result {
+//         //     // Check if `d_token_canister` is `Some` and proceed, or handle the `None` case
+//         //     if let Some(d_token_canister) = &reserve_data.d_token_canister {
+//         //         let d_token_principal = match Principal::from_text(d_token_canister) {
+//         //             Ok(principal) => principal,
+//         //             Err(err) => {
+//         //                 println!("Failed to parse d_token_canister as Principal: {}", err);
+//         //                 return; // Or handle the error as needed
+//         //             }
+//         //         };
+
+//         //         // Now safely call the transfer function with the parsed principal
+//         //         transfer_dtoken_to_anonymous(&pic, d_token_principal, backend_canister);
+//         //     } else {
+//         //         println!("d_token_canister is None, cannot proceed with transfer.");
+//         //     }
+//         // } else {
+//         //     println!("Failed to retrieve ReserveData, aborting transfer.");
+//         // }
+
+//         // Now call the deposit function
+//         let result = pic.update_call(
+//             backend_canister,
+//             Principal::anonymous(),
+//             "withdraw",
+//             encode_args((
+//                 case.asset.clone(),
+//                 case.amount,
+//                 case.on_behalf_of.clone(),
+//                 case.is_collateral,
+//             ))
+//             .unwrap(),
+//         );
+//         match result {
+//             Ok(WasmResult::Reply(response)) => {
+//                 let withdraw_response: Result<(), String> =
+//                     candid::decode_one(&response).expect("Failed to decode withdraw response");
+
+//                 match withdraw_response {
+//                     Ok(()) => {
+//                         if case.expect_success {
+//                             println!("withdraw succeeded for case: {:?}", i + 1);
+//                         } else {
+//                             panic!("Expected failure but got success for case: {:?}", case);
+//                         }
+//                     }
+//                     Err(e) => {
+//                         if !case.expect_success {
+//                             assert_eq!(
+//                                 case.expected_error_message.as_deref(),
+//                                 Some(e.as_str()),
+//                                 "Error message mismatch for case: {:?}",
+//                                 case
+//                             );
+//                             println!("Withdraw failed as expected with error: {:?}", e);
+//                         } else {
+//                             panic!("Expected success but got error: {:?}", e);
+//                         }
+//                     }
+//                 }
+//             }
+//             Ok(WasmResult::Reject(reject_message)) => {
+//                 if !case.expect_success {
+//                     assert_eq!(
+//                         case.expected_error_message.as_deref(),
+//                         Some(reject_message.as_str()),
+//                         "Error message mismatch for case: {:?}",
+//                         case
+//                     );
+//                     println!("withdraw rejected as expected: {}", reject_message);
+//                 } else {
+//                     panic!(
+//                         "Expected success but got rejection for case: {:?} with message: {}",
+//                         case, reject_message
+//                     );
+//                 }
+//             }
+//             Err(e) => {
+//                 panic!("Error during withdraw function call: {:?}", e);
+//             }
+//         }
+
+//         // if case.expect_success {
+//         //     let user_principal = Principal::anonymous();
+//         //     let user_balance_after = check_balance(&pic, ckbtc_canister, user_principal);
+//         //     let backend_balance_after = check_balance(&pic, ckbtc_canister, backend_canister);
+
+//         //     let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
+
+//         //     println!("User balance after withdraw: {}", user_balance_after);
+//         //     println!("Backend balance after withdraw: {}", backend_balance_after);
+//         //     println!("User Dtoken balance after withdraw: {}", user_dtoken_balance_after);
+
+//         //     assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after withdraw");
+//         //     assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after withdraw"); //
+//         // }
+//         println!();
+//         println!("****************************************************************************");
+//         println!();
+//     }
+// }
+
+// #[test]
+// fn test_withdraw() {
+//     #[derive(Debug, Clone)]
+//     struct TestCase {
+//         asset: String,
+//         amount: u128,
+//         on_behalf_of: Option<String>,
+//         is_collateral: bool,
+//         expect_success: bool,
+//         expected_error_message: Option<String>,
+//     }
+
+//     let test_cases = vec![
+//         TestCase {
+//             asset: "ckBTC".to_string(),
+//             amount: 1000,
+//             on_behalf_of: None,
+//             is_collateral: true,
+//             expect_success: true,
+//             expected_error_message: None,
+//         },
+//         TestCase {
+//             asset: "nonexistent_asset".to_string(),
+//             amount: 500,
+//             on_behalf_of: None,
+//             is_collateral: false,
+//             expect_success: false,
+//             expected_error_message: Some("Reserve not found for asset: nonexistent_asset".to_string()),
+//         },
+//         TestCase {
+//             asset: "ckBTC".to_string(),
+//             amount: 7_000,
+//             on_behalf_of: None,
+//             is_collateral: true,
+//             expect_success: true,
+//             expected_error_message: None,
+//         },
+//     ];
+
+//     let (pic, backend_canister) = setup();
+
+//     println!("****************************************************************************");
+
+//     for (i, case) in test_cases.iter().enumerate() {
+//         println!("Running test case no: {}", i + 1);
+//         println!("Test case details: {:?}", case);
+
+//         // Call the withdraw function
+//         let withdraw_result = pic.update_call(
+//             backend_canister,
+//             Principal::anonymous(),
+//             "withdraw",
+//             encode_args((case.asset.clone(), case.amount, case.on_behalf_of.clone(), case.is_collateral)).unwrap(),
+//         );
+
+//         // Handle the result of the withdraw call
+//         match withdraw_result {
+//             Ok(WasmResult::Reply(response)) => {
+//                 // Decode the response using Result<(), String>
+//                 let withdraw_response: Result<(), String> = candid::decode_one(&response)
+//                     .expect("Failed to decode withdraw response");
+
+//                 match withdraw_response {
+//                     Ok(()) => {
+//                         if case.expect_success {
+//                             println!("Withdraw succeeded for case: {:?}", case);
+//                         } else {
+//                             panic!("Expected failure but got success for case: {:?}", case);
+//                         }
+//                     }
+//                     Err(e) => {
+//                         if !case.expect_success {
+//                             assert_eq!(
+//                                 case.expected_error_message.as_deref(),
+//                                 Some(e.as_str()),
+//                                 "Error message mismatch for case: {:?}",
+//                                 case
+//                             );
+//                             println!("Withdraw failed as expected with error: {:?}", e);
+//                         } else {
+//                             panic!("Expected success but got error: {:?}", e);
+//                         }
+//                     }
+//                 }
+//             }
+//             Ok(WasmResult::Reject(reject_message)) => {
+//                 if !case.expect_success {
+//                     assert_eq!(
+//                         case.expected_error_message.as_deref(),
+//                         Some(reject_message.as_str()),
+//                         "Error message mismatch for case: {:?}",
+//                         case
+//                     );
+//                     println!("Withdraw rejected as expected: {}", reject_message);
+//                 } else {
+//                     panic!(
+//                         "Expected success but got rejection for case: {:?} with message: {}",
+//                         case, reject_message
+//                     );
+//                 }
+//             }
+//             Err(e) => {
+//                 panic!("Error during withdraw function call: {:?}", e);
+//             }
+//         }
+
+//         println!("****************************************************************************");
+//     }
+// }
+
+//============== Repay =============
+
+fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -1097,7 +1279,7 @@ fn test_repay() {
         },
     ];
 
-    let (pic, backend_canister) = setup();
+    // let (pic, backend_canister) = setup();
     let platform_principal = backend_canister; // Example
 
     // Call the transfer function to transfer dtoken to an anonymous user

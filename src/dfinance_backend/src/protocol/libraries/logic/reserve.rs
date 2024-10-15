@@ -195,8 +195,7 @@
 //     total_variable_debt: u128,
 // }
 
-use candid::{CandidType, Principal};
-use serde::{Deserialize, Serialize};
+
 
 
 use crate::protocol::libraries::math::math_utils;
@@ -229,9 +228,11 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
 
          curr_debt_index: reserve_data.debt_index,
          curr_debt_rate: reserve_data.borrow_rate.clone(),
-         next_debt_rate: 0.0,
-         next_debt_index: 0.0,
+         next_debt_rate: 0,
+         next_debt_index: 0,
          debt_last_update_timestamp: 0,
+
+         reserve_factor: reserve_data.configuration.reserve_factor.clone(),
 
     }
 }
@@ -251,27 +252,28 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
 }
 
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
-    if reserve_cache.curr_liquidity_rate != 0.0 {
+    if reserve_cache.curr_liquidity_rate != 0 {
+        //liq_rate as scaled 
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_cache.curr_liquidity_rate,
             reserve_cache.reserve_last_update_timestamp,
         );
-        let interest= cumulated_liquidity_interest.scaled_to_float();
+        // let interest= cumulated_liquidity_interest.scaled_to_float();
         reserve_cache.next_liquidity_index = 
-            interest * reserve_cache.curr_liquidity_index;
+            cumulated_liquidity_interest * reserve_cache.curr_liquidity_index;
         
         reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
     }
 
-    if reserve_cache.curr_debt_index != 0.0 {
+    if reserve_cache.curr_debt_index != 0 {
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
             reserve_cache.curr_debt_rate,
             reserve_cache.reserve_last_update_timestamp,
             current_timestamp(),
         );
-        let interest = cumulated_borrow_interest.scaled_to_float();
-        ic_cdk::println!("interest on debt {:?}", interest);
-        reserve_cache.next_debt_index = interest * reserve_cache.curr_debt_index;
+        // let interest = cumulated_borrow_interest.scaled_to_float();
+        // ic_cdk::println!("interest on debt {:?}", interest);
+        reserve_cache.next_debt_index = cumulated_borrow_interest * reserve_cache.curr_debt_index;
         reserve_data.debt_index = reserve_cache.next_debt_index;
     }
 }
@@ -281,23 +283,24 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
 pub async fn update_interest_rates(
         reserve_data: &mut ReserveData,
         reserve_cache: &mut ReserveCache,
-        liquidity_added: f64,
-        liquidity_taken: f64,
+        liquidity_added: u128,
+        liquidity_taken: u128,
     ){
         ic_cdk::println!("Borrow liquidity_taken (in USD): {}", liquidity_taken);
-        let total_debt = (reserve_data.total_borrowed +liquidity_taken ) * reserve_cache.curr_debt_index as f64;
-        let total_supply= (reserve_data.total_supply + liquidity_added) * reserve_cache.curr_liquidity_index as f64;
+        let total_debt = (reserve_data.total_borrowed +liquidity_taken ) * reserve_cache.curr_debt_index ;
+        let total_supply= (reserve_data.total_supply + liquidity_added) * reserve_cache.curr_liquidity_index;
         let total_borrowed= reserve_data.total_borrowed + liquidity_taken;
         let asset=reserve_data.asset_name.clone().unwrap_or("no token".to_string());
         let interest_rate_params = initialize_interest_rate_params(&asset);
         ic_cdk::println!("interest rate params {:?}", interest_rate_params);
         let (next_liquidity_rate, next_debt_rate) =
         calculate_interest_rates(
-            total_supply as f64,                        // f64
-            total_borrowed as f64,                      // f64
-            total_debt as f64,            // f64        
-            reserve_cache.curr_debt_rate as f64,   // f64
-            &interest_rate_params,               // InterestRateParams struct
+            total_supply,                        // f64
+            total_borrowed,                      // f64
+            total_debt,            // f64        
+            reserve_cache.curr_debt_rate,   // f64
+            &interest_rate_params, 
+            reserve_cache.reserve_factor,              // InterestRateParams struct
            
         );
         reserve_data.total_borrowed = total_borrowed;

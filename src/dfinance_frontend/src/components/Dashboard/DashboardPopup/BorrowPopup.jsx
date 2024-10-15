@@ -96,103 +96,8 @@ const Borrow = ({
     }
   }, [asset]);
 
-  useEffect(() => {
-    const fetchAssetPrinciple = async () => {
-      if (backendActor) {
-        try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
-          for (const asset of assets) {
-            const result = await getAssetPrinciple(asset);
-            // console.log(`get_asset_principle (${asset}):`, result);
-            setAssetPrincipal((prev) => ({
-              ...prev,
-              [asset]: result,
-            }));
-          }
-        } catch (error) {
-          console.error("Error fetching asset principal:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-
-    fetchAssetPrinciple();
-  }, [principal, backendActor]);
-
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
-
-  const getAssetPrinciple = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      let result;
-      switch (asset) {
-        case "ckBTC":
-          result = await backendActor.get_asset_principal("ckBTC");
-          break;
-        case "ckETH":
-          result = await backendActor.get_asset_principal("ckETH");
-          break;
-        case "ckUSDC":
-          result = await backendActor.get_asset_principal("ckUSDC");
-          break;
-        case "ICP":
-          result = await backendActor.get_asset_principal("ICP");
-          break;
-        default:
-          throw new Error(`Unknown asset: ${asset}`);
-      }
-      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
-      return result.Ok.toText();
-    } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
-      throw error;
-    }
-  };
-
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(
-            assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
-  );
-
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(
-            assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
-  );
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(
-            assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-            ledgerIdlFactory
-          )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
+  const ledgerActors = useSelector((state) => state.ledger);
+  console.log("ledgerActors", ledgerActors);
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -204,24 +109,26 @@ const Borrow = ({
     setIsAcknowledged(e.target.checked);
   };
   const value = currentHealthFactor;
-
+  const amountAsNat64 = Number(amount);
+  const scaledAmount = amountAsNat64 * Number(10 ** 8);
+  console.log("amountAsNat64", amountAsNat64)
+  console.log("scaledAmount", scaledAmount)
   const handleBorrowETH = async () => {
-    console.log("Borrow function called for", asset, amount);
+    console.log("Borrow function called for", asset, scaledAmount);
     setIsLoading(true);
     let ledgerActor;
 
     if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
+      ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
+      ledgerActor = ledgerActors.ckETH;
     } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
+      ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP;
+      ledgerActor = ledgerActors.ICP;
     }
-
     try {
-      const borrowResult = await backendActor.borrow(asset, Number(amount));
+      const borrowResult = await backendActor.borrow(asset, scaledAmount);
       console.log("Borrow result", borrowResult);
       setIsPaymentDone(true);
       setIsVisible(false);
@@ -435,10 +342,12 @@ const Borrow = ({
                     disabled={totalCollateral === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100  rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
+                    min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                    {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
                   </p>
+
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -450,8 +359,9 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p className="text-xs mt-4">
-                    ${parseFloat(totalCollateral)?.toFixed(2) || "0.00"} Max
+                    ${parseFloat(totalCollateral)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"} Max
                   </p>
+
                 </div>
               </div>
             </div>
@@ -474,17 +384,16 @@ const Borrow = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          healthFactorBackend > 3
-                            ? "text-green-500"
-                            : healthFactorBackend <= 1
+                        className={`${healthFactorBackend > 3
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
                             ? "text-red-500"
                             : healthFactorBackend <= 1.5
-                            ? "text-orange-600"
-                            : healthFactorBackend <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {parseFloat(
                           healthFactorBackend > 100
@@ -494,17 +403,16 @@ const Borrow = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -575,11 +483,10 @@ const Borrow = ({
 
               <button
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+                  }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}
@@ -613,7 +520,7 @@ const Borrow = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have borrowed {amount} d{asset}
+              You have borrowed {scaledAmount / 100000000} d{asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

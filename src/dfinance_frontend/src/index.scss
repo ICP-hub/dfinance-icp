@@ -342,18 +342,14 @@ a:hover{
 
 button:hover{
   transform: scale(0.96);
-  background: linear-gradient(45deg, #e59792, #0642a9);
-  border-radius: 8px;
+  
 }
 
 .button1:hover{
   transform: scale(0.96);
-  background: none;
 }
 .button2:hover{
   transform: scale(0.96);
-  background: none;
-  color:gray;
 }
 a:active{
   transform: scale(0.9);

@@ -26,7 +26,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   } = useAuth();
 
   console.log("mappeditems", mappedItem);
-  const [rewardAmount, setRewardAmount] = useState(10);
+  const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
   const [isApproved, setIsApproved] = useState(false);
   const popupRef = useRef(null);
@@ -144,37 +144,40 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   };
   const [amountBorrowUSD, setAmountBorrowUSD] = useState(null);
   const [selectedAssetSupply, setSelectedAssetSupply] = useState(null);
-  const [collateralRate, setCollateralRate] = useState(null)
-const [collateral, setCollateralRateAmount] = useState(null)
+  const [collateralRate, setCollateralRate] = useState(null);
+  const [collateral, setCollateralRateAmount] = useState(null);
 
   const [isCollateralAssetSelected, setIsCollateralAssetSelected] =
     useState(false);
-  const handleAssetSelection = (asset, collateralRate, assetSupply, collateralAmount) => {
+  const handleAssetSelection = (
+    asset,
+    collateralRate,
+    assetSupply,
+    collateralAmount
+  ) => {
     setIsCollateralAssetSelected(true);
     setSelectedAsset(asset);
-    setCollateralRate(collateralRate ? collateralRate: 0);
+    setCollateralRate(collateralRate ? collateralRate : 0);
     // Set the selected asset (only one at a time)
     setSelectedAssetSupply(assetSupply);
-    setCollateralRateAmount(collateralAmount ? collateralAmount: 0)
-   
-    const assetRewardAmounts = {
-      cketh: 0.003256,
-      ckbtc: 0.001025,
-      icp: 5.03256,
-    };
+    setCollateralRateAmount(collateralAmount ? collateralAmount : 0);
 
-    setRewardAmount(assetRewardAmounts[asset] || 10);
+
   };
   console.log("selectedAsstSUplly", selectedAssetSupply);
-  console.log("Collateral in usd",collateral)
+  console.log("Collateral in usd", collateral);
   const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
-  const [amountToRepayUSD, setAmountToRepayUSD] = useState(null)
+  const [amountToRepayUSD, setAmountToRepayUSD] = useState(null);
 
-  const handleDebtAssetSelection = (asset, assetBorrowAmount, assetBorrowAmountInUSD) => {
+  const handleDebtAssetSelection = (
+    asset,
+    assetBorrowAmount,
+    assetBorrowAmountInUSD
+  ) => {
     setIsDebtAssetSelected(true);
     setSelectedDebtAsset(asset); // Set the selected asset (only one at a time)
     setAmountToRepay(assetBorrowAmount ? assetBorrowAmount : 0);
-    setAmountToRepayUSD(assetBorrowAmountInUSD? assetBorrowAmountInUSD : 0)
+    setAmountToRepayUSD(assetBorrowAmountInUSD ? assetBorrowAmountInUSD : 0);
 
     console.log("Asset Borrow Amount to Repay:", assetBorrowAmount);
     console.log("Amount to Repay (after check):", amountToRepay);
@@ -184,107 +187,8 @@ const [collateral, setCollateralRateAmount] = useState(null)
     setIsCheckboxChecked(e.target.checked);
   };
 
-  const [assetPrincipal, setAssetPrincipal] = useState({});
-
-  useEffect(() => {
-    const fetchAssetPrinciple = async () => {
-      if (backendActor) {
-        try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
-          for (const asset of assets) {
-            const result = await getAssetPrinciple(asset);
-            // console.log(`get_asset_principle (${asset}):`, result);
-            setAssetPrincipal((prev) => ({
-              ...prev,
-              [asset]: result,
-            }));
-          }
-        } catch (error) {
-          console.error("Error fetching asset principal:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-
-    fetchAssetPrinciple();
-  }, [backendActor]);
-
-  console.log("fecthAssteprincCKUSDC", assetPrincipal.ckUSDC);
-  console.log("fecthAssteprincCKBTC", assetPrincipal.ckBTC);
-  console.log("fecthAssteprincCKETH", assetPrincipal.ckETH);
-
-  const getAssetPrinciple = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      let result;
-      switch (asset) {
-        case "ckBTC":
-          result = await backendActor.get_asset_principal("ckBTC");
-          break;
-        case "ckETH":
-          result = await backendActor.get_asset_principal("ckETH");
-          break;
-        case "ckUSDC":
-          result = await backendActor.get_asset_principal("ckUSDC");
-          break;
-        case "ICP":
-          result = await backendActor.get_asset_principal("ICP");
-          break;
-        default:
-          throw new Error(`Unknown asset: ${asset}`);
-      }
-      // console.log(`get_asset_principle in mysupply (${asset}):`, result);
-      return result.Ok.toText();
-    } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
-      throw error;
-    }
-  };
-
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(
-          assetPrincipal.ckBTC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckBTC] // Re-run when principal changes
-  );
-
-  // Memoized actor for ckETH using dynamic principal
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(
-          assetPrincipal.ckETH, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckETH] // Re-run when principal changes
-  );
-
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(
-          assetPrincipal.ckUSDC, // Use the dynamic principal instead of env variable
-          ledgerIdlFactory
-        )
-        : null, // Return null if principal is not available yet
-    [createLedgerActor, assetPrincipal.ckUSDC] // Re-run when principal changes
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
+  const ledgerActors = useSelector((state) => state.ledger);
+  console.log("ledgerActors", ledgerActors);
 
   const principalObj = useMemo(
     () => Principal.fromText(currentUserPrincipal),
@@ -296,44 +200,37 @@ const [collateral, setCollateralRateAmount] = useState(null)
       if (isAuthenticated && principalObj) {
         try {
           const account = { owner: principalObj, subaccount: [] };
-          let balance;
-
-          if (assetType === "ckBTC") {
-            if (!ledgerActorckBTC) {
-              console.warn("Ledger actor for ckBTC not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckBTC.icrc1_balance_of(account);
-            setCkBTCBalance(balance.toString()); // Set ckBTC balance
-          } else if (assetType === "ckETH") {
-            if (!ledgerActorckETH) {
-              console.warn("Ledger actor for ckETH not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckETH.icrc1_balance_of(account);
-            setCkETHBalance(balance.toString()); // Set ckETH balance
-          } else if (assetType === "ckUSDC") {
-            if (!ledgerActorckUSDC) {
-              console.warn("Ledger actor for ckUSDC not initialized yet");
-              return;
-            }
-            balance = await ledgerActorckUSDC.icrc1_balance_of(account);
-            setCKUSDCBalance(balance.toString()); // Set ckUSDC balance
+          const ledgerActor = ledgerActors[assetType];
+          
+          // Debugging logs
+          console.log(`Using ledger actor for ${assetType}:`, ledgerActor);
+          
+          if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
+            console.warn(`Ledger actor for ${assetType} not initialized or method not available`);
+            return;
           }
-          else if (assetType === "ICP") {
-            if (!ledgerActorICP) {
-              console.warn("Ledger actor for ICP not initialized yet");
-              return;
-            }
-            balance = await ledgerActorICP.icrc1_balance_of(account);
-            setCkICPBalance(balance.toString()); // Set ICP balance
+  
+          // Fetch balance using the actor from Redux
+          const balance = await ledgerActor.icrc1_balance_of(account);
+          const formattedBalance = (balance / BigInt(100000000)).toString();
+  
+          // Set balance based on asset type
+          switch (assetType) {
+            case "ckBTC":
+              setCkBTCBalance(formattedBalance); // Set ckBTC balance
+              break;
+            case "ckETH":
+              setCkETHBalance(formattedBalance); // Set ckETH balance
+              break;
+            case "ckUSDC":
+              setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
+              break;
+            case "ICP":
+              setCkICPBalance(formattedBalance); // Set ckICP balance
+              break;
+            default:
+              throw new Error("Unsupported asset type");
           }
-          else {
-            throw new Error(
-              "Unsupported asset type or ledger actor not initialized"
-            );
-          }
-          // console.log(`Fetched Balance for ${assetType}:`, balance.toString());
         } catch (error) {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
@@ -342,27 +239,23 @@ const [collateral, setCollateralRateAmount] = useState(null)
     },
     [
       isAuthenticated,
-      ledgerActorckBTC,
-      ledgerActorckETH,
-      ledgerActorckUSDC,
       principalObj,
-      ledgerActorICP
+      ledgerActors, // Include the ledger actors from Redux in the dependencies
     ]
   );
 
   const [loading, setLoading] = useState();
 
-
   const handleApprove = async () => {
     let ledgerActor;
-    if (selectedDebtAsset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
-    } else if (selectedDebtAsset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
-    } else if (selectedDebtAsset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
-    } else if (selectedDebtAsset === "ICP") {
-      ledgerActor = ledgerActorICP;
+    if (selectedDebtAsset=== "ckBTC") {
+      ledgerActor = ledgerActors.ckBTC;
+    } else if (selectedDebtAsset=== "ckETH") {
+      ledgerActor = ledgerActors.ckETH;
+    } else if (selectedDebtAsset=== "ckUSDC") {
+      ledgerActor = ledgerActors.ckUSDC;
+    } else if (selectedDebtAsset=== "ICP") {
+      ledgerActor = ledgerActors.ICP;
     }
 
     const transferfee = BigInt(100);
@@ -421,17 +314,29 @@ const [collateral, setCollateralRateAmount] = useState(null)
         supplyAmount,
         mappedItem.principal
       );
-      toast.success("Liquidation successful!");
-      console.log("Liquidation call result:", result);
-      setTransactionResult("success");
+
+      if ("Ok" in result) {
+        toast.success("Liquidation successful!");
+        console.log("Liquidation call result:", result);
+        setTransactionResult("success");
+      } else if ("Err" in result) {
+        // Handle the error returned in the result
+        const errorMsg = result.Err;
+        toast.error(`Liquidation failed: ${errorMsg}`);
+        console.error("Liquidation call error:", errorMsg);
+        setTransactionResult("failure");
+      }
+
       setShowWarningPopup(false);
     } catch (error) {
+      toast.error(`Error: ${error.message}`);
       console.error("Error during liquidation:", error);
       setTransactionResult("failure");
     } finally {
       setIsLoading(false); // Stop loading once the function is done
     }
   };
+
 
   const handleCloseWarningPopup = () => {
     setShowWarningPopup(false);
@@ -527,7 +432,6 @@ const [collateral, setCollateralRateAmount] = useState(null)
     return () => clearInterval(intervalId);
   }, [fetchConversionRate]);
 
-
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -554,7 +458,6 @@ const [collateral, setCollateralRateAmount] = useState(null)
     ckETHBalance,
     ckUSDCBalance,
   ]);
-
 
   const renderDebtAssetDetails = (asset) => {
     switch (asset) {
@@ -647,6 +550,7 @@ const [collateral, setCollateralRateAmount] = useState(null)
     }
   };
   const renderAssetDetails = (asset) => {
+    console.log("asset", asset)
     switch (asset) {
       case "ckETH":
         return (
@@ -668,8 +572,9 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-               
-                {Math.floor(collateral + (collateral * (liquidation_bonus / 100)))}
+                {Math.floor(
+                  collateral + collateral * (liquidation_bonus / 100)
+                )}
               </p>
             </div>
           </div>
@@ -684,7 +589,7 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 ckBTC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-              {collateralRate}
+                {collateralRate}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
@@ -698,7 +603,9 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-             {Math.floor(collateral + (collateral * (liquidation_bonus / 100)))}
+                {Math.floor(
+                  collateral + collateral * (liquidation_bonus / 100)
+                )}
               </p>
             </div>
           </div>
@@ -713,7 +620,7 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 ckUSDC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-              {collateralRate}
+                {collateralRate}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -729,7 +636,9 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-             {Math.floor(collateral + (collateral * (liquidation_bonus / 100)))}
+                {Math.floor(
+                  collateral + collateral * (liquidation_bonus / 100)
+                )}
               </p>
             </div>
           </div>
@@ -744,7 +653,7 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 ICP Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-              {collateralRate}
+                {collateralRate}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -760,7 +669,9 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-             {Math.floor(collateral + (collateral * (liquidation_bonus / 100)))}
+                {Math.floor(
+                  collateral + collateral * (liquidation_bonus / 100)
+                )}
               </p>
             </div>
           </div>
@@ -810,8 +721,17 @@ const [collateral, setCollateralRateAmount] = useState(null)
   let liquidation_bonus = "";
   let liquidation_threshold = "";
 
-  if (filteredItems && filteredItems.length > 0) {
-    const item = filteredItems[0][1].Ok;
+
+  // Find the asset in filteredItems based on the selected asset
+  const selectedItem = filteredItems.find(item => {
+    const assetName = item[1].Ok.asset_name ? item[1].Ok.asset_name[0] : "Unknown";
+    return assetName === selectedAsset; // Compare based on the selected asset
+  });
+
+  if (selectedItem && selectedItem[1]?.Ok) {
+    const item = selectedItem[1].Ok;
+
+    console.log("item", filteredItems)
     asset_name = item.asset_name ? item.asset_name[0] : "Unknown";
     accrued_to_treasury = item.accrued_to_treasury?.toString() || "0";
     borrow_rate = item.borrow_rate ? item.borrow_rate[0] : "0";
@@ -836,6 +756,11 @@ const [collateral, setCollateralRateAmount] = useState(null)
       : "0";
   }
 
+  useEffect(() => {
+    // Calculate the reward amount whenever collateral or liquidation_bonus changes
+    const calculatedRewardAmount = Math.floor(collateral + collateral * (liquidation_bonus / 100));
+    setRewardAmount(calculatedRewardAmount);
+  }, [collateral, liquidation_bonus]);
   const [selectedAssetBalance, setSelectedAssetBalance] = useState(0);
 
   // When an asset is selected, update the balance accordingly
@@ -856,7 +781,13 @@ const [collateral, setCollateralRateAmount] = useState(null)
       default:
         setSelectedAssetBalance(0);
     }
-  }, [selectedDebtAsset, ckETHBalance, ckBTCBalance, ckUSDCBalance, ckICPBalance]);
+  }, [
+    selectedDebtAsset,
+    ckETHBalance,
+    ckBTCBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+  ]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -905,21 +836,24 @@ const [collateral, setCollateralRateAmount] = useState(null)
           <h2 className="text-xl font-bold text-center text-[#2A1F9D] dark:text-indigo-300">
             Warning Pop Up
           </h2>
-          <p className="text-sm text-[#989898] text-center dark:text-darkText mt-4">
+          <p className="text-sm text-[#989898] text-center dark:text-darkText mt-4 font-light">
             Are you sure you want to liquidate on behalf of "
-            <strong>{principal}</strong>"? <strong>{amountToRepay} ICP</strong>{" "}
-            will be <strong>deducted</strong> from your account &{" "}
-            <strong>{rewardAmount}</strong> will be rewarded.
+            <strong className="font-bold">{principal}</strong>"?
+            <strong className="font-bold">{amountToRepay} ICP</strong>
+            will be <strong className="font-bold">deducted</strong> from your account &
+            <strong className="font-bold">{rewardAmount}</strong> will be rewarded.
           </p>
+
+
           <div className="mt-4 flex justify-center">
-            <label className="flex items-center text-[#989898]">
+            <label className="flex items-center text-[#989898]  ">
               <input
                 type="checkbox"
-                className="mr-2 h-4 w-4 appearance-none border-2 border-gray-300 rounded bg-white checked:bg-gray-400 checked:border-gray-400 checked:text-white focus:outline-none checked:after:content-['✔'] checked:after:text-white checked:after:text-xs checked:after:flex checked:after:justify-center checked:after:items-center"
+                className="mr-2 h-4 w-4  appearance-none border-2 border-gray-300 rounded bg-white checked:bg-gray-400 checked:border-gray-400 checked:text-white focus:outline-none checked:after:content-['✔'] checked:after:text-white checked:after:text-xs checked:after:flex checked:after:justify-center checked:after:items-center"
                 checked={isCheckboxChecked}
                 onChange={handleCheckboxClick}
               />
-              Yes, call Liquidation
+              <p className="font-semibold">Yes, call Liquidation</p>
             </label>
           </div>
 
@@ -990,36 +924,24 @@ const [collateral, setCollateralRateAmount] = useState(null)
 
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
-                    console.log("mappedItesm", mappedItem.reserves[0])
+                    console.log("mappedItesm", mappedItem.reserves[0]);
                     const assetName = item[1]?.reserve;
-                    const assetSupply = item[1]?.asset_supply;
-                    const assetBorrow = item[1]?.asset_borrow;
+                    const assetSupply = (item[1]?.asset_supply) / 100000000;
+                    const assetBorrow = (item[1]?.asset_borrow) / 100000000;
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let collateralRate = 0;
                     if (assetName === "ckBTC" && ckBTCUsdRate) {
-                      collateralRate = (
-                        ckBTCUsdRate
-                      );
+                      collateralRate = ckBTCUsdRate;
                     } else if (assetName === "ckETH" && ckETHUsdRate) {
-                      collateralRate = (
-                        ckETHUsdRate
-                      );
+                      collateralRate = ckETHUsdRate;
                     } else if (assetName === "ckUSDC" && ckUSDCUsdRate) {
-                      collateralRate = (
-                        ckUSDCUsdRate
-                      );
-                    }
-                    else if (assetName === "ICP" && ckICPUsdRate) {
-                      collateralRate = (
-                        ckICPUsdRate
-                      );
+                      collateralRate = ckUSDCUsdRate;
+                    } else if (assetName === "ICP" && ckICPUsdRate) {
+                      collateralRate = ckICPUsdRate;
                     }
 
-                    console.log(
-                      "collateralRate",
-                      collateralRate
-                    );
+                    console.log("collateralRate", collateralRate);
 
                     const collateralAmount = amountToRepayUSD / collateralRate;
 
@@ -1076,6 +998,7 @@ const [collateral, setCollateralRateAmount] = useState(null)
 
                 {/* Render asset details based on selected checkboxes */}
                 {renderAssetDetails(selectedAsset)}
+
                 <div className="flex items-center mt-2">
                   <Fuel className="w-4 h-4 mr-1" />
                   <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
@@ -1121,10 +1044,10 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 </button>
                 <button
                   className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm  px-6 py-2 relative ${isCollateralAssetSelected &&
-                    amountToRepay + amountToRepay * (liquidation_bonus / 100) <
-                    selectedAssetSupply
-                    ? "opacity-100 cursor-pointer"
-                    : "opacity-50 cursor-not-allowed"
+                      amountToRepay + amountToRepay * (liquidation_bonus / 100) <
+                      selectedAssetSupply
+                      ? "opacity-100 cursor-pointer"
+                      : "opacity-50 cursor-not-allowed"
                     }`}
                   onClick={() => {
                     console.log("Button clicked");
@@ -1134,7 +1057,7 @@ const [collateral, setCollateralRateAmount] = useState(null)
                     isLoading ||
                     !isCollateralAssetSelected ||
                     !(
-                      (collateral + (collateral * (liquidation_bonus / 100))) <
+                      collateral + collateral * (liquidation_bonus / 100) <
                       selectedAssetSupply
                     )
                   }
@@ -1166,7 +1089,8 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[1]?.reserve;
-                    const assetBorrow = item[1]?.asset_borrow;
+                    const assetBorrow = item[1]?.asset_borrow / 100000000; // or Math.pow(10, 8)
+
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let assetBorrowAmountInUSD = 0;
@@ -1182,8 +1106,7 @@ const [collateral, setCollateralRateAmount] = useState(null)
                       assetBorrowAmountInUSD = (
                         assetBorrowAmount * ckUSDCUsdRate
                       ).toFixed(2);
-                    }
-                    else if (assetName === "ICP" && ckICPUsdRate) {
+                    } else if (assetName === "ICP" && ckICPUsdRate) {
                       assetBorrowAmountInUSD = (
                         assetBorrowAmount * ckICPUsdRate
                       ).toFixed(2);
@@ -1254,8 +1177,8 @@ const [collateral, setCollateralRateAmount] = useState(null)
                 </button>
                 <button
                   className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
-                    ? "opacity-100"
-                    : "opacity-50 cursor-not-allowed"
+                      ? "opacity-100"
+                      : "opacity-50 cursor-not-allowed"
                     }`}
                   onClick={handleNextClick}
                   disabled={
@@ -1290,7 +1213,11 @@ const [collateral, setCollateralRateAmount] = useState(null)
                       User Health Factor
                     </p>
                     <p className="text-xs font-medium text-[#F30606] ">
-                      {parseFloat(userHealthFactor > 100 ? "Infinity" : parseFloat(userHealthFactor).toFixed(2))}
+                      {parseFloat(
+                        userHealthFactor > 100
+                          ? "Infinity"
+                          : parseFloat(userHealthFactor).toFixed(2)
+                      )}
                     </p>
                   </div>
                 </div>

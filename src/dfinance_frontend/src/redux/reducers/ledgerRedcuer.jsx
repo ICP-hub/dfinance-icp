@@ -1,28 +1,29 @@
+// ledgerSlice.js
 import { createSlice } from '@reduxjs/toolkit';
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
 
 const initialState = {
-  ledgerActorckBTC: null,
-  ledgerActorckETH: null,
+  ckBTC: null,
+  ckETH: null,
+  ckUSDC: null,
+  ICP: null,
 };
 
 const ledgerSlice = createSlice({
   name: 'ledger',
   initialState,
   reducers: {
-    setLedgerActorckBTC: (state, action) => {
-      state.ledgerActorckBTC = action.payload;
+    setLedgerActor(state, action) {
+      const { asset, actor } = action.payload;
+      state[asset] = actor;
     },
-    setLedgerActorckETH: (state, action) => {
-      state.ledgerActorckETH = action.payload;
+    clearLedgerActors(state) {
+      state.ckBTC = null;
+      state.ckETH = null;
+      state.ckUSDC = null;
+      state.ICP = null;
     },
   },
 });
 
-export const { setLedgerActorckBTC, setLedgerActorckETH } = ledgerSlice.actions;
-
-export const selectLedgerActorckBTC = (state) => state.ledger.ledgerActorckBTC;
-export const selectLedgerActorckETH = (state) => state.ledger.ledgerActorckETH;
-
+export const { setLedgerActor, clearLedgerActors } = ledgerSlice.actions;
 export default ledgerSlice.reducer;

@@ -28,7 +28,7 @@ const HowITWork = () => {
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
-            className="w-full md:hidden lg:block mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+            className="w-full hidden lg:block mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
             <div className="flex items-center justify-center gap-4 mt-[35px]">
               <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
@@ -80,7 +80,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={Calculator}
+                src={ICPRequest}
                 draggable="false"
               />
             </div>
@@ -95,7 +95,7 @@ const HowITWork = () => {
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
-            className="w-full md:hidden lg:block mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
+            className="w-full hidden lg:block mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
             <div className="flex items-center justify-center gap-4 mt-[35px]">
               <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">

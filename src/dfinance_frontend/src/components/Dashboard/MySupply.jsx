@@ -19,175 +19,72 @@ import Repay from "./DashboardPopup/Repay";
 import { useAuth } from "../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { useEffect } from "react";
-import { useCallback } from "react";
 import { useMemo } from "react";
 import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
-import { useParams } from "react-router-dom";
+import useFormatNumber from "../customHooks/useFormatNumber";
+import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useUserData from "../customHooks/useUserData";
 
 const MySupply = () => {
-  const [userData, setUserData] = useState();
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
+
   const {
-    isAuthenticated,
-    login,
-    logout,
-    updateClient,
-    authClient,
-    identity,
     principal,
     backendActor,
-    accountId,
-    createLedgerActor,
-    reloadLogin,
-    accountIdString,
   } = useAuth();
 
-  const [ckBTCBalance, setCkBTCBalance] = useState(null);
-  const [ckETHBalance, setCkETHBalance] = useState(null);
-  const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
-
-  const [ckICPBalance, setCkICPBalance] = useState(null);
-  const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
-  const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
-  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
 
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
   );
 
-  
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    fetchBalance
+  } = useFetchConversionRate();
 
- 
-  const ledgerActors = useSelector((state) => state.ledger);
-console.log("ledgerActors",ledgerActors)
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
     }
-  }, [ckBTCBalance, ckBTCUsdRate]);
 
-  useEffect(() => {
     if (ckETHBalance && ckETHUsdRate) {
       const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
     }
-  }, [ckETHBalance, ckETHUsdRate]);
 
-  useEffect(() => {
     if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(
-        2
-      );
+      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
       setCkUSDCUsdBalance(balanceInUsd);
     }
-  }, [ckUSDCBalance, ckUSDCUsdRate]);
 
-  useEffect(() => {
     if (ckICPBalance && ckICPUsdRate) {
       const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
-  }, [ckICPBalance, ckICPUsdRate]);
+  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate]);
 
-  const pollInterval = 2000;
-
-  const fetchConversionRate = useCallback(async () => {
-    try {
-      const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const text = await response.text();
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (jsonError) {
-        throw new Error("Response was not valid JSON");
-      }
-
-      setCkBTCUsdRate(data.bitcoin.usd);
-      setCkETHUsdRate(data.ethereum.usd);
-      setCkUSDCUsdRate(data["usd-coin"].usd);
-      setCkICPUsdRate(data["internet-computer"].usd);
-    } catch (error) {
-      console.error("Error fetching conversion rates:", error);
-      setError(error);
-    }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      fetchConversionRate();
-    }, pollInterval);
-    return () => clearInterval(intervalId);
-  }, [fetchConversionRate]);
-
-  const fetchBalance = useCallback(
-    async (assetType) => {
-      if (isAuthenticated && principalObj) {
-        try {
-          const account = { owner: principalObj, subaccount: [] };
-          const ledgerActor = ledgerActors[assetType];
-          
-          // Debugging logs
-          console.log(`Using ledger actor for ${assetType}:`, ledgerActor);
-          
-          if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
-            console.warn(`Ledger actor for ${assetType} not initialized or method not available`);
-            return;
-          }
-  
-          // Fetch balance using the actor from Redux
-          const balance = await ledgerActor.icrc1_balance_of(account);
-          const formattedBalance = (balance / BigInt(100000000)).toString();
-  
-          // Set balance based on asset type
-          switch (assetType) {
-            case "ckBTC":
-              setCkBTCBalance(formattedBalance); // Set ckBTC balance
-              break;
-            case "ckETH":
-              setCkETHBalance(formattedBalance); // Set ckETH balance
-              break;
-            case "ckUSDC":
-              setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
-              break;
-            case "ICP":
-              setCkICPBalance(formattedBalance); // Set ckICP balance
-              break;
-            default:
-              throw new Error("Unsupported asset type");
-          }
-        } catch (error) {
-          console.error(`Error fetching balance for ${assetType}:`, error);
-          setError(error);
-        }
-      }
-    },
-    [
-      isAuthenticated,
-      principalObj,
-      ledgerActors, // Include the ledger actors from Redux in the dependencies
-    ]
-  );
-  
-  
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -205,38 +102,20 @@ console.log("ledgerActors",ledgerActors)
         setLoading(false);
       }
     };
-  
+
     fetchAllData();
   }, [
     fetchBalance,
     fetchConversionRate,
   ]);
-  
- 
 
   const { assets, reserveData, filteredItems } = useAssetData();
 
   const filteredReserveData = Object.fromEntries(filteredItems);
 
   const [isCollateral, setIsCollateral] = useState(true);
-  function formatNumber(num) {
-    // Ensure num is a valid number
-    const parsedNum = parseFloat(num);
 
-    if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
-      return "0";
-    }
-    if (parsedNum >= 1000000000) {
-      return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
-    }
-    if (parsedNum >= 1000000) {
-      return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
-    }
-    if (parsedNum >= 1000) {
-      return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
-    }
-    return parsedNum.toFixed(2).toString();
-  }
+  const formatNumber = useFormatNumber();
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
 
@@ -248,35 +127,7 @@ console.log("ledgerActors",ledgerActors)
     balance: "",
   });
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (backendActor) {
-        try {
-          const result = await getUserData(principal.toString());
-          setUserData(result);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-    fetchUserData();
-  }, [principal, backendActor]);
-
-  const getUserData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_data(user);
-      console.log("get_user_data in mysupply:", result);
-      return result;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      throw error;
-    }
-  };
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleModalOpen = (
     type,
@@ -550,7 +401,7 @@ console.log("ledgerActors",ledgerActors)
             totalBorrowedValue === 0
               ? Infinity
               : (totalCollateralValue * liquidationThreshold) /
-                totalBorrowedValue;
+              totalBorrowedValue;
 
           return {
             ...reserveGroup,
@@ -569,21 +420,19 @@ console.log("ledgerActors",ledgerActors)
     <div className="w-full flex-col lg:flex-row flex gap-6 -mt-10">
       <div className="flex justify-center -mb-38 lg:hidden">
         <button
-          className={`w-1/2 py-2 button1 ${
-            activeSection === "supply"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
-              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
-          }`}
+          className={`w-1/2 py-2 button1 ${activeSection === "supply"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
+            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1"
+            }`}
           onClick={() => setActiveSection("supply")}
         >
           &#8226; Supply
         </button>
         <button
-          className={`w-1/2 py-1 button1 ${
-            activeSection === "borrow"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
-              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
-          }`}
+          className={`w-1/2 py-1 button1 ${activeSection === "borrow"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary"
+            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary"
+            }`}
           onClick={() => setActiveSection("borrow")}
         >
           &#8226; Borrow
@@ -592,14 +441,12 @@ console.log("ledgerActors",ledgerActors)
 
       <div className="w-full lg:w-6/12 mt-6 md:mt-4 lg:mt-20">
         <div
-          className={`${
-            activeSection === "supply" ? "block" : "hidden"
-          } lg:block`}
+          className={`${activeSection === "supply" ? "block" : "hidden"
+            } lg:block`}
         >
           <div
-            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar  ${
-              isSupplyVisible ? "min-h-[200px]" : "min-h-[100px]"
-            } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar  ${isSupplyVisible ? "min-h-[200px]" : "min-h-[100px]"
+              } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             {/* Header */}
             <div className="flex justify-between items-center mt-2 mx-4">
@@ -624,30 +471,28 @@ console.log("ledgerActors",ledgerActors)
               {isSupplyVisible && (
                 <>
                   {!userData?.Ok?.reserves?.[0]?.length ||
-                  userData.Ok.reserves[0].every(
-                    (reserveGroup) => reserveGroup[1]?.asset_supply === 0
-                  ) ? (
+                    userData.Ok.reserves[0].every(
+                      (reserveGroup) => reserveGroup[1]?.asset_supply === 0
+                    ) ? (
                     noSupplyMessage
                   ) : (
                     <div
-                      className={`relative mt-4 overflow-y-auto scrollbar-custom ${
-                        filteredItems.length > 1
-                          ? "max-h-[280px]"
-                          : "max-h-auto"
-                      }`}
+                      className={`relative mt-4 overflow-y-auto scrollbar-custom ${filteredItems.length > 1
+                        ? "max-h-[280px]"
+                        : "max-h-auto"
+                        }`}
                     >
                       <div
-                        className={`w-full ${
-                          filteredItems.length > 1 ? "h-full" : ""
-                        }`}
+                        className={`w-full ${filteredItems.length > 1 ? "h-full" : ""
+                          }`}
                       >
                         {userData?.Ok?.reserves[0]?.map(
                           (reserveGroup, index) => {
                             const asset = reserveGroup[1]?.reserve;
                             const assetSupply =
-                              (reserveGroup[1]?.asset_supply || 0)/100000000;
+                              (reserveGroup[1]?.asset_supply || 0) / 100000000;
                             const assetBorrow =
-                              (reserveGroup[1]?.asset_borrow || 0)/100000000;;
+                              (reserveGroup[1]?.asset_borrow || 0) / 100000000;;
 
                             if (assetSupply <= 0) return null;
 
@@ -665,12 +510,12 @@ console.log("ledgerActors",ledgerActors)
                               asset === "ckBTC"
                                 ? ckBTCBalance
                                 : asset === "ckETH"
-                                ? ckETHBalance
-                                : asset === "ckUSDC"
-                                ? ckUSDCBalance
-                                : asset === "ICP"
-                                ? ckICPBalance
-                                : null;
+                                  ? ckETHBalance
+                                  : asset === "ckUSDC"
+                                    ? ckUSDCBalance
+                                    : asset === "ICP"
+                                      ? ckICPBalance
+                                      : null;
 
                             return (
                               <div
@@ -748,9 +593,9 @@ console.log("ledgerActors",ledgerActors)
                                             reserveGroup[0] === item[0]
                                         );
                                       const assetSupply =
-                                        (reserveData?.[1]?.asset_supply || 0)/100000000;
+                                        (reserveData?.[1]?.asset_supply || 0) / 100000000;
                                       const assetBorrow =
-                                        (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                        (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                       const totalCollateral =
                                         userData?.Ok?.total_collateral || 0;
 
@@ -765,9 +610,9 @@ console.log("ledgerActors",ledgerActors)
                                         "supply",
                                         asset,
                                         (asset === "ckBTC" && ckBTC) ||
-                                          (asset === "ckETH" && ckETH) ||
-                                          (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                        (asset === "ckETH" && ckETH) ||
+                                        (asset === "ckUSDC" && ckUSDC) ||
+                                        (asset === "ICP" && icp),
                                         supplyRateApr,
                                         ckBalance,
                                         reserveliquidationThreshold,
@@ -794,16 +639,16 @@ console.log("ledgerActors",ledgerActors)
                                       const totalDebt =
                                         userData?.Ok?.total_debt || 0;
                                       const assetSupply =
-                                        (reserveData?.[1]?.asset_supply || 0)/100000000;
+                                        (reserveData?.[1]?.asset_supply || 0) / 100000000;
                                       const assetBorrow =
-                                        (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                        (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                       handleModalOpen(
                                         "withdraw",
                                         asset,
                                         (asset === "ckBTC" && ckBTC) ||
-                                          (asset === "ckETH" && ckETH) ||
-                                          (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                        (asset === "ckETH" && ckETH) ||
+                                        (asset === "ckUSDC" && ckUSDC) ||
+                                        (asset === "ICP" && icp),
                                         supplyRateApr,
                                         ckBalance,
                                         reserveliquidationThreshold,
@@ -820,8 +665,8 @@ console.log("ledgerActors",ledgerActors)
 
                                 {index !==
                                   userData.Ok.reserves[0].length - 1 && (
-                                  <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
-                                )}
+                                    <div className="border-t border-blue-800 my-4 opacity-50 mt-4"></div>
+                                  )}
                               </div>
                             );
                           }
@@ -838,10 +683,10 @@ console.log("ledgerActors",ledgerActors)
               {isSupplyVisible && (
                 <>
                   {!userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].every(
-                    (reserveGroup) => reserveGroup[1]?.asset_supply === 0
-                  ) ? (
+                    !userData?.Ok?.reserves[0] ||
+                    userData?.Ok?.reserves[0].every(
+                      (reserveGroup) => reserveGroup[1]?.asset_supply === 0
+                    ) ? (
                     noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden">
@@ -857,23 +702,22 @@ console.log("ledgerActors",ledgerActors)
 
                       {/* Scrollable Content Area */}
                       <div
-                        className={`w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom ${
-                          userData?.Ok?.reserves[0]?.filter(
-                            (reserveGroup) => reserveGroup[1].asset_supply > 0
-                          ).length > 3
-                            ? "h-[260px]"
-                            : ""
-                        }`}
+                        className={`w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                          (reserveGroup) => reserveGroup[1].asset_supply > 0
+                        ).length > 3
+                          ? "h-[260px]"
+                          : ""
+                          }`}
                       >
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               const assetSupply =
-                                (reserveGroup[1]?.asset_supply || 0)/100000000;
-                               
+                                (reserveGroup[1]?.asset_supply || 0) / 100000000;
+
                               const assetBorrow =
-                                (reserveGroup[1]?.asset_borrow || 0)/100000000;
+                                (reserveGroup[1]?.asset_borrow || 0) / 100000000;
 
                               if (assetSupply <= 0) return null;
 
@@ -891,13 +735,13 @@ console.log("ledgerActors",ledgerActors)
                                 asset === "ckBTC"
                                   ? ckBTCBalance
                                   : asset === "ckETH"
-                                  ? ckETHBalance
-                                  : asset === "ckUSDC"
-                                  ? ckUSDCBalance
-                                  : asset === "ICP"
-                                  ? ckICPBalance
-                                  : null;
-                                 
+                                    ? ckETHBalance
+                                    : asset === "ckUSDC"
+                                      ? ckUSDCBalance
+                                      : asset === "ICP"
+                                        ? ckICPBalance
+                                        : null;
+
                               return (
                                 <div
                                   key={index}
@@ -934,7 +778,7 @@ console.log("ledgerActors",ledgerActors)
                                     )}
                                     {asset}
                                   </div>
-                                  
+
                                   <div className="p-3 align-top flex flex-col">
                                     {assetSupply}
                                   </div>
@@ -957,9 +801,9 @@ console.log("ledgerActors",ledgerActors)
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          (reserveData?.[1]?.asset_supply || 0)/100000000;
+                                          (reserveData?.[1]?.asset_supply || 0) / 100000000;
                                         const assetBorrow =
-                                          (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                          (reserveData?.[1]?.asset_borrow || 0) / 100000000;
 
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
@@ -969,9 +813,9 @@ console.log("ledgerActors",ledgerActors)
                                           "supply",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp),
                                           supplyRateApr,
                                           ckBalance,
                                           reserveliquidationThreshold,
@@ -997,16 +841,16 @@ console.log("ledgerActors",ledgerActors)
                                         const totalDebt =
                                           userData?.Ok?.total_debt || 0;
                                         const assetSupply =
-                                         ( reserveData?.[1]?.asset_supply || 0)/100000000;
+                                          (reserveData?.[1]?.asset_supply || 0) / 100000000;
                                         const assetBorrow =
-                                         ( reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                          (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                         handleModalOpen(
                                           "withdraw",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp),
                                           supplyRateApr,
                                           ckBalance,
                                           reserveliquidationThreshold,
@@ -1024,7 +868,7 @@ console.log("ledgerActors",ledgerActors)
                               );
                             }
                           )}
-                         
+
                         </div>
                       </div>
                     </div>
@@ -1035,9 +879,8 @@ console.log("ledgerActors",ledgerActors)
           </div>
 
           <div
-            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${
-              isVisible ? "min-h-[200px]" : "min-h-[100px]"
-            } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40  rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${isVisible ? "min-h-[200px]" : "min-h-[100px]"
+              } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40  rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
@@ -1151,8 +994,8 @@ console.log("ledgerActors",ledgerActors)
                                 {item[1].Ok.current_liquidity_rate * 100 < 0.1
                                   ? "<0.1%"
                                   : `${(
-                                      item[1].Ok.current_liquidity_rate * 100
-                                    ).toFixed(2)}%`}
+                                    item[1].Ok.current_liquidity_rate * 100
+                                  ).toFixed(2)}%`}
                               </p>
                             </div>
                             <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
@@ -1173,9 +1016,9 @@ console.log("ledgerActors",ledgerActors)
                                         reserveGroup[0] === item[0]
                                     );
                                   const assetSupply =
-                                    ( reserveData?.[1]?.asset_supply || 0)/100000000;
+                                    (reserveData?.[1]?.asset_supply || 0) / 100000000;
                                   const assetBorrow =
-                                    (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                    (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                   const totalCollateral =
                                     userData?.Ok?.total_collateral || 0;
                                   const totalDebt =
@@ -1185,19 +1028,19 @@ console.log("ledgerActors",ledgerActors)
                                     "supply",
                                     item[0],
                                     (item[0] === "ckBTC" && ckBTC) ||
-                                      (item[0] === "ckETH" && ckETH) ||
-                                      (item[0] === "ckUSDC" && ckUSDC) ||
-                                      (item[0] === "ICP" && icp),
+                                    (item[0] === "ckETH" && ckETH) ||
+                                    (item[0] === "ckUSDC" && ckUSDC) ||
+                                    (item[0] === "ICP" && icp),
                                     item[1]?.Ok.current_liquidity_rate,
                                     item[0] === "ckBTC"
                                       ? ckBTCBalance
                                       : item[0] === "ckETH"
-                                      ? ckETHBalance
-                                      : item[0] === "ckUSDC"
-                                      ? ckUSDCBalance
-                                      : item[0] === "ICP"
-                                      ? ckICPBalance
-                                      : null,
+                                        ? ckETHBalance
+                                        : item[0] === "ckUSDC"
+                                          ? ckUSDCBalance
+                                          : item[0] === "ICP"
+                                            ? ckICPBalance
+                                            : null,
                                     item[1]?.Ok.configuration
                                       .liquidation_threshold,
 
@@ -1329,8 +1172,8 @@ console.log("ledgerActors",ledgerActors)
                                 {item[1].Ok.current_liquidity_rate * 100 < 0.1
                                   ? "<0.1%"
                                   : `${(
-                                      item[1].Ok.current_liquidity_rate * 100
-                                    ).toFixed(2)}%`}
+                                    item[1].Ok.current_liquidity_rate * 100
+                                  ).toFixed(2)}%`}
                               </div>
 
                               <div className="p-3 -ml-3 align-top flex items-center justify-center dark:text-darkText">
@@ -1346,9 +1189,9 @@ console.log("ledgerActors",ledgerActors)
                                           reserveGroup[0] === item[0]
                                       );
                                     const assetSupply =
-                                      ( reserveData?.[1]?.asset_supply || 0)/100000000;;
+                                      (reserveData?.[1]?.asset_supply || 0) / 100000000;;
                                     const assetBorrow =
-                                    (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                      (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                     const totalCollateral =
                                       userData?.Ok?.total_collateral || 0;
                                     const totalDebt =
@@ -1358,19 +1201,19 @@ console.log("ledgerActors",ledgerActors)
                                       "supply",
                                       item[0],
                                       (item[0] === "ckBTC" && ckBTC) ||
-                                        (item[0] === "ckETH" && ckETH) ||
-                                        (item[0] === "ckUSDC" && ckUSDC) ||
-                                        (item[0] === "ICP" && icp),
+                                      (item[0] === "ckETH" && ckETH) ||
+                                      (item[0] === "ckUSDC" && ckUSDC) ||
+                                      (item[0] === "ICP" && icp),
                                       item[1]?.Ok.current_liquidity_rate,
                                       item[0] === "ckBTC"
                                         ? ckBTCBalance
                                         : item[0] === "ckETH"
-                                        ? ckETHBalance
-                                        : item[0] === "ckUSDC"
-                                        ? ckUSDCBalance
-                                        : item[0] === "ICP"
-                                        ? ckICPBalance
-                                        : null,
+                                          ? ckETHBalance
+                                          : item[0] === "ckUSDC"
+                                            ? ckUSDCBalance
+                                            : item[0] === "ICP"
+                                              ? ckICPBalance
+                                              : null,
                                       item[1]?.Ok.configuration
                                         .liquidation_threshold,
                                       userData.Ok?.liquidation_threshold * 100,
@@ -1405,14 +1248,12 @@ console.log("ledgerActors",ledgerActors)
       </div>
       <div className="w-full lg:w-6/12 md:-mt-10 lg:mt-20">
         <div
-          className={`${
-            activeSection === "borrow" ? "block" : "hidden"
-          } lg:block`}
+          className={`${activeSection === "borrow" ? "block" : "hidden"
+            } lg:block`}
         >
           <div
-            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar  ${
-              isborrowVisible ? "min-h-[200px]" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar  ${isborrowVisible ? "min-h-[200px]" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
@@ -1436,10 +1277,10 @@ console.log("ledgerActors",ledgerActors)
               {isborrowVisible && (
                 <>
                   {!userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].every(
-                    (reserveGroup) => reserveGroup[1]?.asset_borrow === 0
-                  ) ? (
+                    !userData?.Ok?.reserves[0] ||
+                    userData?.Ok?.reserves[0].every(
+                      (reserveGroup) => reserveGroup[1]?.asset_borrow === 0
+                    ) ? (
                     noBorrowMessage
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
@@ -1455,20 +1296,20 @@ console.log("ledgerActors",ledgerActors)
                                 (item) => item[0] === asset
                               );
                               const assetSupply =
-                                 (reserveGroup[1]?.asset_supply || 0)/100000000;
-                                 console.log("AssetSupply",assetSupply)
+                                (reserveGroup[1]?.asset_supply || 0) / 100000000;
+                              console.log("AssetSupply", assetSupply)
                               const assetBorrow =
-                                (reserveGroup[1]?.asset_borrow || 0)/100000000;
+                                (reserveGroup[1]?.asset_borrow || 0) / 100000000;
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
                                   : asset === "ckETH"
-                                  ? ckETHBalance
-                                  : asset === "ckUSDC"
-                                  ? ckUSDCBalance
-                                  : asset === "ICP"
-                                  ? ckICPBalance
-                                  : null;
+                                    ? ckETHBalance
+                                    : asset === "ckUSDC"
+                                      ? ckUSDCBalance
+                                      : asset === "ICP"
+                                        ? ckICPBalance
+                                        : null;
                               const borrowRateApr =
                                 item?.[1]?.Ok?.borrow_rate || 0;
                               const liquidationThreshold =
@@ -1530,8 +1371,8 @@ console.log("ledgerActors",ledgerActors)
                                       {borrowRateApr * 100 < 0.1
                                         ? "<0.1%"
                                         : `${(borrowRateApr * 100).toFixed(
-                                            2
-                                          )}%`}
+                                          2
+                                        )}%`}
                                     </p>
                                   </div>
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
@@ -1553,9 +1394,9 @@ console.log("ledgerActors",ledgerActors)
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          ( reserveData?.[1]?.asset_supply || 0)/100000000;;
+                                          (reserveData?.[1]?.asset_supply || 0) / 100000000;;
                                         const assetBorrow =
-                                          (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                          (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1567,9 +1408,9 @@ console.log("ledgerActors",ledgerActors)
                                           "borrow",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp),
                                           borrowRateApr,
                                           ckBalance,
                                           reserveliquidationThreshold,
@@ -1593,9 +1434,9 @@ console.log("ledgerActors",ledgerActors)
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          ( reserveData?.[1]?.asset_supply || 0)/100000000;;
+                                          (reserveData?.[1]?.asset_supply || 0) / 100000000;;
                                         const assetBorrow =
-                                        (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                          (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1605,9 +1446,9 @@ console.log("ledgerActors",ledgerActors)
                                           "repay",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp),
                                           borrowRateApr,
                                           ckBalance,
                                           reserveliquidationThreshold,
@@ -1641,10 +1482,10 @@ console.log("ledgerActors",ledgerActors)
               {isborrowVisible && (
                 <>
                   {!userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].every(
-                    (reserveGroup) => reserveGroup[1]?.asset_borrow === 0
-                  ) ? (
+                    !userData?.Ok?.reserves[0] ||
+                    userData?.Ok?.reserves[0].every(
+                      (reserveGroup) => reserveGroup[1]?.asset_borrow === 0
+                    ) ? (
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6 relative max-h-[300px] overflow-hidden">
@@ -1660,13 +1501,12 @@ console.log("ledgerActors",ledgerActors)
                       </div>
                       {/* Scrollable table body */}
                       <div
-                        className={`w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom ${
-                          userData?.Ok?.reserves[0]?.filter(
-                            (reserveGroup) => reserveGroup[1].asset_borrow > 0
-                          ).length > 3
-                            ? "h-[260px]"
-                            : ""
-                        }`}
+                        className={`w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                          (reserveGroup) => reserveGroup[1].asset_borrow > 0
+                        ).length > 3
+                          ? "h-[260px]"
+                          : ""
+                          }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
                           {userData?.Ok?.reserves[0]?.map(
@@ -1678,19 +1518,19 @@ console.log("ledgerActors",ledgerActors)
                                 (item) => item[0] === asset
                               );
                               const assetSupply =
-                                (reserveGroup[1]?.asset_supply || 0)/100000000;
+                                (reserveGroup[1]?.asset_supply || 0) / 100000000;
                               const assetBorrow =
-                                (reserveGroup[1]?.asset_borrow || 0)/100000000;
+                                (reserveGroup[1]?.asset_borrow || 0) / 100000000;
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
                                   : asset === "ckETH"
-                                  ? ckETHBalance
-                                  : asset === "ckUSDC"
-                                  ? ckUSDCBalance
-                                  : asset === "ICP"
-                                  ? ckICPBalance
-                                  : null;
+                                    ? ckETHBalance
+                                    : asset === "ckUSDC"
+                                      ? ckUSDCBalance
+                                      : asset === "ICP"
+                                        ? ckICPBalance
+                                        : null;
                               const borrowRateApr =
                                 item?.[1]?.Ok?.borrow_rate || 0;
                               const liquidationThreshold =
@@ -1758,9 +1598,9 @@ console.log("ledgerActors",ledgerActors)
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          (reserveData?.[1]?.asset_supply || 0)/100000000;;
+                                          (reserveData?.[1]?.asset_supply || 0) / 100000000;;
                                         const assetBorrow =
-                                          (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                          (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1772,9 +1612,9 @@ console.log("ledgerActors",ledgerActors)
                                           "borrow",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp),
                                           borrowRateApr,
                                           ckBalance,
                                           reserveliquidationThreshold,
@@ -1798,9 +1638,9 @@ console.log("ledgerActors",ledgerActors)
                                               reserveGroup[0] === item[0]
                                           );
                                         const assetSupply =
-                                          ( reserveData?.[1]?.asset_supply || 0)/100000000;;
+                                          (reserveData?.[1]?.asset_supply || 0) / 100000000;;
                                         const assetBorrow =
-                                          (reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                          (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                         const totalCollateral =
                                           userData?.Ok?.total_collateral || 0;
                                         const totalDebt =
@@ -1810,9 +1650,9 @@ console.log("ledgerActors",ledgerActors)
                                           "repay",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp),
                                           borrowRateApr,
                                           ckBalance,
                                           reserveliquidationThreshold,
@@ -1840,9 +1680,8 @@ console.log("ledgerActors",ledgerActors)
           </div>
 
           <div
-            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${
-              isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText mb-3">
@@ -1872,11 +1711,10 @@ console.log("ledgerActors",ledgerActors)
                         {filteredItems.slice(0, 8).map((item, index) => (
                           <div
                             key={index}
-                            className={`p-3 rounded-lg dark:bg-darkSurface mb-4 dark:text-darkText ${
-                              isTableDisabled
-                                ? "opacity-50 pointer-events-none"
-                                : ""
-                            }`}
+                            className={`p-3 rounded-lg dark:bg-darkSurface mb-4 dark:text-darkText ${isTableDisabled
+                              ? "opacity-50 pointer-events-none"
+                              : ""
+                              }`}
                           >
                             <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                               {item[0] === "ckBTC" && (
@@ -1959,8 +1797,8 @@ console.log("ledgerActors",ledgerActors)
                                 {item[1].Ok.borrow_rate * 100 < 0.1
                                   ? "<0.1%"
                                   : `${(item[1].Ok.borrow_rate * 100).toFixed(
-                                      2
-                                    )}%`}
+                                    2
+                                  )}%`}
                               </p>
                             </div>
 
@@ -1974,9 +1812,9 @@ console.log("ledgerActors",ledgerActors)
                                         reserveGroup[0] === item[0]
                                     );
                                   const assetSupply =
-                                    ( reserveData?.[1]?.asset_supply || 0)/100000000;;
+                                    (reserveData?.[1]?.asset_supply || 0) / 100000000;;
                                   const assetBorrow =
-                                   ( reserveData?.[1]?.asset_borrow || 0)/100000000;
+                                    (reserveData?.[1]?.asset_borrow || 0) / 100000000;
                                   const totalCollateral =
                                     userData?.Ok?.total_collateral || 0;
                                   const totalDebt =
@@ -1987,17 +1825,17 @@ console.log("ledgerActors",ledgerActors)
                                     "borrow",
                                     item[0],
                                     (item[0] === "ckBTC" && ckBTC) ||
-                                      (item[0] === "ckETH" && ckETH) ||
-                                      (item[0] === "ckUSDC" && ckUSDC) ||
-                                      (item[0] === "ICP" && icp),
+                                    (item[0] === "ckETH" && ckETH) ||
+                                    (item[0] === "ckUSDC" && ckUSDC) ||
+                                    (item[0] === "ICP" && icp),
                                     item[1]?.Ok.borrow_rate,
                                     item[0] === "ckBTC"
                                       ? ckBTCBalance
                                       : item[0] === "ckETH"
-                                      ? ckETHBalance
-                                      : item[0] === "ckUSDC"
-                                      ? ckUSDCBalance
-                                      : null,
+                                        ? ckETHBalance
+                                        : item[0] === "ckUSDC"
+                                          ? ckUSDCBalance
+                                          : null,
 
                                     userData.Ok?.liquidation_threshold * 100,
                                     item[1]?.Ok.configuration
@@ -2042,190 +1880,157 @@ console.log("ledgerActors",ledgerActors)
                     userData?.Ok?.reserves[0].every(
                       (reserveGroup) => reserveGroup[1]?.asset_supply === 0
                     )) && (
-                    <div className="bg-[#6d6c89] opacity-80 mt-2 px-2 py-2 mb-2 rounded-lg flex items-center">
-                      <span className="text-white dark:text-darkText ms-4 text-sm">
-                        To borrow, you need to supply any asset to be used as
-                        collateral.
-                      </span>
-                      <Info className="ml-4 text-[#5d151c]" />
-                    </div>
-                  )}
+                      <div className="bg-[#6d6c89] opacity-80 mt-2 px-2 py-2 mb-2 rounded-lg flex items-center">
+                        <span className="text-white dark:text-darkText ms-4 text-sm">
+                          To borrow, you need to supply any asset to be used as
+                          collateral.
+                        </span>
+                        <Info className="ml-4 text-[#5d151c]" />
+                      </div>
+                    )}
 
-                  <div className="w-full max-h-[260px] overflow-y-auto overflow-x-hidden scrollbar-custom">
+                  <div className="w-full max-h-[300px] ">
                     {/* Supply Section */}
                     {filteredItems.length === 0 ? (
                       noAssetsToBorrowMessage
                     ) : (
-                      <table
-                        className={`w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4 ${
-                          isTableDisabled
+                      <div
+                        className={`w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4 ${isTableDisabled
                             ? "opacity-50 pointer-events-none"
                             : ""
-                        }`}
+                          }`}
                       >
-                        <thead>
-                          <tr className="text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-5">
-                            {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
-                              <td key={index} className="p-2 pl-4 whitespace-nowrap">
-                                <p className="mb-5">
-                                  {index === 2 ? item.header1 : item.header}
-                                </p>
-                              </td>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredItems.slice(0, 8).map((item, index) => (
-                            <tr
+                        {/* Header */}
+                        <div className="grid grid-cols-[3fr_2fr_3fr_1fr_2fr] text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 sticky top-0  z-10">
+                          {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
+                            <div
                               key={index}
-                              className="w-full font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                              className="p-2 lgx:pl-4  font-[500] whitespace-nowrap"
                             >
-                              <td className="p-3 pl-4 align-top">
-                                <div className="w-full flex items-center justify-start min-w-[80px] gap-2 whitespace-nowrap mt-2">
-                                  {item[0] === "ckBTC" && (
-                                    <img
-                                      src={ckBTC}
-                                      alt="ckbtc logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ckETH" && (
-                                    <img
-                                      src={ckETH}
-                                      alt="cketh logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ckUSDC" && (
-                                    <img
-                                      src={ckUSDC}
-                                      alt="cketh logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ICP" && (
-                                    <img
-                                      src={icp}
-                                      alt="cketh logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0]}
-                                </div>
-                              </td>
-                              <td className="p-3 pl-5 align-bottom">
-                                <div className="flex flex-col">
-                                  {item[0] === "ckBTC" && (
-                                    <>
-                                      <p>{ckBTCBalance}</p>
-                                      <p className="font-light">
-                                        ${formatNumber(ckBTCUsdBalance)}
-                                      </p>
-                                    </>
-                                  )}
-                                  {item[0] === "ckETH" && (
-                                    <>
-                                      <p>{ckETHBalance}</p>
-                                      <p className="font-light">
-                                        ${formatNumber(ckETHUsdBalance)}
-                                      </p>
-                                    </>
-                                  )}
-                                  {item[0] === "ckUSDC" && (
-                                    <>
-                                      <p>{ckUSDCBalance}</p>
-                                      <p className="font-light">
-                                        ${formatNumber(ckUSDCUsdBalance)}
-                                      </p>
-                                    </>
-                                  )}
-                                  {item[0] === "ICP" && (
-                                    <>
-                                      <p>{ckICPBalance}</p>
-                                      <p className="font-light">
-                                        ${formatNumber(ckICPUsdBalance)}
-                                      </p>
-                                    </>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="p-3 pl-5 align-center">
+                              <p>{index === 2 ? item.header1 : item.header}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="w-full max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-custom">
+                          {/* Body */}
+                          {filteredItems.slice(0, 8).map((item, index) => (
+                            <div
+                              key={index}
+                              className="grid grid-cols-[3fr_2fr_2fr_1fr_2fr] items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                            >
+                              {/* Asset Column */}
+                              <div className="p-3 lgx:pl-4  align-top flex items-center min-w-[80px] gap-2 whitespace-nowrap mt-2">
+                                {item[0] === "ckBTC" && (
+                                  <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
+                                )}
+                                {item[0] === "ckETH" && (
+                                  <img src={ckETH} alt="cketh logo" className="w-8 h-8 rounded-full" />
+                                )}
+                                {item[0] === "ckUSDC" && (
+                                  <img src={ckUSDC} alt="ckusdc logo" className="w-8 h-8 rounded-full" />
+                                )}
+                                {item[0] === "ICP" && (
+                                  <img src={icp} alt="icp logo" className="w-8 h-8 rounded-full" />
+                                )}
+                                <span>{item[0]}</span>
+                              </div>
+
+                              {/* Balance Column */}
+                              <div className="p-3 lgx:pl-6  align-top flex flex-col">
+                                {item[0] === "ckBTC" && (
+                                  <>
+                                    <p>{ckBTCBalance}</p>
+                                    <p className="font-light">${formatNumber(ckBTCUsdBalance)}</p>
+                                  </>
+                                )}
+                                {item[0] === "ckETH" && (
+                                  <>
+                                    <p>{ckETHBalance}</p>
+                                    <p className="font-light">${formatNumber(ckETHUsdBalance)}</p>
+                                  </>
+                                )}
+                                {item[0] === "ckUSDC" && (
+                                  <>
+                                    <p>{ckUSDCBalance}</p>
+                                    <p className="font-light">${formatNumber(ckUSDCUsdBalance)}</p>
+                                  </>
+                                )}
+                                {item[0] === "ICP" && (
+                                  <>
+                                    <p>{ckICPBalance}</p>
+                                    <p className="font-light">${formatNumber(ckICPUsdBalance)}</p>
+                                  </>
+                                )}
+                              </div>
+
+                              {/* Borrow Rate Column */}
+                              <div className="p-3 lgx:pl-6 align-center flex items-center">
                                 <p className="mt-1.5">
                                   {item[1].Ok.borrow_rate * 100 < 0.1
                                     ? "<0.1%"
-                                    : `${(item[1].Ok.borrow_rate * 100).toFixed(
-                                        2
-                                      )}%`}
+                                    : `${(item[1].Ok.borrow_rate * 100).toFixed(2)}%`}
                                 </p>
-                              </td>
+                              </div>
 
-                              <td className="p-3 align-center">
-                                <div className="w-full flex gap-3 -mr-[3.8rem]">
-                                  <Button
-                                    title={"Borrow"}
-                                    onClickHandler={() => {
-                                      const reserveData =
-                                        userData?.Ok?.reserves[0]?.find(
-                                          (reserveGroup) =>
-                                            reserveGroup[0] === item[0]
-                                        );
-                                      const assetSupply =
-                                        ( reserveData?.[1]?.asset_supply || 0)/100000000;;
-                                      const assetBorrow =
-                                       ( reserveData?.[1]?.asset_borrow || 0)/100000000;
-                                      const totalCollateral =
-                                        userData?.Ok?.total_collateral || 0;
-                                      const totalDebt =
-                                        userData?.Ok?.total_debt || 0;
-                                      const Ltv = userData?.Ok?.ltv || 0;
-                                      console.log("LTV1", Ltv);
+                              {/* Empty Spacer Column */}
+                              <div className="p-3 text-center"></div>
 
-                                      handleModalOpen(
-                                        "borrow",
-                                        item[0],
-                                        (item[0] === "ckBTC" && ckBTC) ||
-                                          (item[0] === "ckETH" && ckETH) ||
-                                          (item[0] === "ckUSDC" && ckUSDC) ||
-                                          (item[0] === "ICP" && icp),
-                                        item[1]?.Ok.borrow_rate,
-                                        item[0] === "ckBTC"
-                                          ? ckBTCBalance
-                                          : item[0] === "ckETH"
+                              {/* Actions Column */}
+                              <div className="p-3 flex gap-3 justify-end">
+                                <Button
+                                  title={"Borrow"}
+                                  onClickHandler={() => {
+                                    const reserveData = userData?.Ok?.reserves[0]?.find(
+                                      (reserveGroup) => reserveGroup[0] === item[0]
+                                    );
+                                    const assetSupply = (reserveData?.[1]?.asset_supply || 0) / 100000000;
+                                    const assetBorrow = (reserveData?.[1]?.asset_borrow || 0) / 100000000;
+                                    const totalCollateral = userData?.Ok?.total_collateral || 0;
+                                    const totalDebt = userData?.Ok?.total_debt || 0;
+                                    const Ltv = userData?.Ok?.ltv || 0;
+
+                                    handleModalOpen(
+                                      "borrow",
+                                      item[0],
+                                      item[0] === "ckBTC"
+                                        ? ckBTC
+                                        : item[0] === "ckETH"
+                                          ? ckETH
+                                          : item[0] === "ckUSDC"
+                                            ? ckUSDC
+                                            : icp,
+                                      item[1]?.Ok.borrow_rate,
+                                      item[0] === "ckBTC"
+                                        ? ckBTCBalance
+                                        : item[0] === "ckETH"
                                           ? ckETHBalance
                                           : item[0] === "ckUSDC"
-                                          ? ckUSDCBalance
-                                          : item[0] === "ICP"
-                                          ? ckICPBalance
-                                          : null,
+                                            ? ckUSDCBalance
+                                            : ckICPBalance,
+                                      userData.Ok?.liquidation_threshold * 100,
+                                      item[1]?.Ok.configuration.liquidation_threshold,
+                                      assetSupply,
+                                      assetBorrow,
+                                      totalCollateral,
+                                      totalDebt,
+                                      Ltv
+                                    );
+                                  }}
+                                  disabled={isTableDisabled}
+                                  className="bg-gradient-to-tr from-[#4659CF] via-[#D379AB] to-[#FCBD78] text-white rounded-md px-3 py-1.5 shadow-md font-semibold text-xs"
+                                />
+                                <Button
+                                  title={"Details"}
+                                  onClickHandler={() => handleDetailsClick(item[0], item[1])}
+                                  disabled={isTableDisabled}
+                                  className="bg-gradient-to-r from-[#4659CF] to-[#2A1F9D] text-white rounded-md px-3 py-1.5 shadow-md font-semibold text-xs"
+                                />
+                              </div>
+                            </div>
 
-                                        userData.Ok?.liquidation_threshold *
-                                          100,
-                                        item[1]?.Ok.configuration
-                                          .liquidation_threshold,
-                                        assetSupply,
-                                        assetBorrow,
-                                        totalCollateral,
-                                        totalDebt,
-                                        Ltv
-                                      );
-                                    }}
-                                    disabled={isTableDisabled}
-                                    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
-                                  />
-                                  <Button
-                                    title={"Details"}
-                                    onClickHandler={() =>
-                                      handleDetailsClick(item[0], item[1])
-                                    }
-                                    disabled={isTableDisabled}
-                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
-                                  />
-                                </div>
-                              </td>
-                            </tr>
                           ))}
-                        </tbody>
-                      </table>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </>

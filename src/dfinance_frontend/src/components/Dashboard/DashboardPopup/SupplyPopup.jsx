@@ -4,15 +4,12 @@ import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
-import Setting from "../../../../public/Helpers/settings.png";
-// import {idlFactory as ledgerIdlFactoryckETH} from "../../../../../declarations/cketh_ledger";
-// import {idlFactory as ledgerIdlFactoryckBTC} from "../../../../../declarations/ckbtc_ledger";
-import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
-import { useMemo } from "react";
 import { useEffect } from "react";
-import axios from "axios";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
+import coinSound from "../../../../public/sound/message_chronicles.mp3"
+import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
+import useUserData from "../../customHooks/useUserData";
 
 const SupplyPopup = ({
   asset,
@@ -50,31 +47,6 @@ const SupplyPopup = ({
     }
   };
 
-  // useEffect(() => {
-  //   console.log('Asset:', asset);
-  //   console.log('Liquidation Threshold:', liquidationThreshold);
-  //   console.log('Asset Supply:', assetSupply);
-  //   console.log('Asset Borrow:', assetBorrow, supplyRateAPR);
-
-  //   const healthFactor = calculateHealthFactor(assetSupply, assetBorrow, liquidationThreshold);
-  //   const healthf=0
-  //   console.log('Health Factor:', healthFactor);
-  //   const ltv = calculateLTV(assetSupply, assetBorrow);
-  //   const ltV=80;
-  //   console.log('LTV:', ltv);
-
-  //      setPrevHealthFactor(currentHealthFactor);
-
-  //      setCurrentHealthFactor(healthFactor);
-
-  //   if (healthFactor < 1 || ltv >= liquidationThreshold) {
-  //     setIsButtonDisabled(true);
-  //   } else {
-  //     setIsButtonDisabled(false);
-  //   }
-
-  // }, [asset, liquidationThreshold, assetSupply, assetBorrow]);
-
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
@@ -88,7 +60,7 @@ const SupplyPopup = ({
   const supplyBalance = numericBalance - transferfee;
   const hasEnoughBalance = balance >= transactionFee;
   const value = currentHealthFactor;
-  const [conversionRate, setConversionRate] = useState(0);
+ 
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
@@ -98,53 +70,7 @@ const SupplyPopup = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchConversionRate = async () => {
-      try {
-        const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch conversion rates from server");
-        }
-
-        const data = await response.json();
-
-        let rate;
-        switch (asset) {
-          case "ckBTC":
-            rate = data.bitcoin?.usd;
-            break;
-          case "ckETH":
-            rate = data.ethereum?.usd;
-            break;
-          case "ckUSDC":
-            rate = data["usd-coin"]?.usd;
-            break;
-          case "ICP":
-            rate = data["internet-computer"]?.usd;
-            break;
-          default:
-            console.error(`Unsupported asset: ${asset}`);
-            return;
-        }
-        if (rate) {
-          console.log(`Rate for ${asset}:`, rate);
-          setConversionRate(rate);
-        } else {
-          console.error("Conversion rate not found for asset:", asset);
-        }
-      } catch (error) {
-        console.error(
-          "Error fetching conversion rate from server:",
-          error.message
-        );
-      }
-    };
-
-    if (asset) {
-      fetchConversionRate();
-    }
-  }, [asset]);
+  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset)
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -188,10 +114,10 @@ const SupplyPopup = ({
 
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
-  
+
   const handleApprove = async () => {
     let ledgerActor;
-  
+
     // Access ledger actor based on asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -202,11 +128,11 @@ const SupplyPopup = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     }
-  
+
     const amountAsNat64 = Number(amount);
     const scaledAmount = amountAsNat64 * Number(10 ** 8); // Adjusting for scaling factor
     const totalAmount = scaledAmount + transferfee; // Add transfer fee
-  
+
     try {
       // Call the approval function
       const approval = await ledgerActor.icrc2_approve({
@@ -222,22 +148,22 @@ const SupplyPopup = ({
           subaccount: [],
         },
       });
-  
+
       console.log("Approve", approval);
       setIsApproved(true); // Update the approval state
       console.log("isApproved state after approval:", isApproved);
-  
+
       // Show success notification
       toast.success("Approval successful!");
     } catch (error) {
       // Handle error during approval
       console.error("Approval failed:", error);
-  
+
       // Show error notification
       toast.error(`Error: ${error.message || "Approval failed!"}`);
     }
   };
-  
+
 
   const isCollateral = true;
   const amountAsNat64 = Number(amount);
@@ -271,6 +197,8 @@ const SupplyPopup = ({
       setIsVisible(false);
 
       // Show success notification
+      const sound = new Audio(coinSound);
+    sound.play();
       toast.success("Supply successful!");
     } catch (error) {
       // Log the error for debugging
@@ -381,47 +309,7 @@ const SupplyPopup = ({
     return totalDeptValue / totalCollateralValue;
   };
 
-  const [healthFactorBackend, setHealthFactorBackend] = useState(null);
-  const [userData, setUserData] = useState();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (backendActor) {
-        try {
-          const result = await getUserData(principal.toString());
-          console.log("get_user_data:", result);
-          setUserData(result);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-    fetchUserData();
-  }, [principal, backendActor]);
-
-  const getUserData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_data(user);
-      console.log("get_user_data in supplypopup:", result);
-
-      // Check if the result is in the expected format (Ok.health_factor)
-      if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor);
-        // Store health_factor in state
-      } else {
-        setError("Health factor not found");
-      }
-      return result;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setError(error.message);
-    }
-  };
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   return (
     <>
@@ -613,8 +501,9 @@ const SupplyPopup = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You received {scaledAmount / 100000000} d{asset}
+              You have supplied <strong>{scaledAmount / 100000000} {asset}</strong>
             </p>
+            <p>You have received <strong>{scaledAmount / 100000000} d{asset}</strong></p>
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

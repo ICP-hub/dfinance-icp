@@ -1,4 +1,3 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../Common/Button";
@@ -18,9 +17,9 @@ import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
 import { useAuth } from "../../utils/useAuthClient";
 import { useEffect } from "react";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
-import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
+import useFetchBalance from "../customHooks/useFetchBalance";
+import useFormatNumber from "../customHooks/useFormatNumber";
+import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -38,15 +37,8 @@ const FaucetDetails = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
 
-  const [ckBTCBalance, setCkBTCBalance] = useState(null);
-  const [ckETHBalance, setCkETHBalance] = useState(null);
-  const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
-
-  const [ckICPBalance, setCkICPBalance] = useState(null);
-  const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
-  const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
 
@@ -55,131 +47,42 @@ const FaucetDetails = () => {
   const [conversionRate, setConversionRate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
-  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
 
-  const ledgerActors = useSelector((state) => state.ledger);
-  console.log("ledgerActors", ledgerActors);
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    fetchBalance
+  } = useFetchConversionRate();
 
+useEffect(() => {
+  if (ckBTCBalance && ckBTCUsdRate) {
+    const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
+    setCkBTCUsdBalance(balanceInUsd);
+  }
   
-
-  const fetchBalance = useCallback(
-    async (assetType) => {
-      if (isAuthenticated && principalObj) {
-        try {
-          const account = { owner: principalObj, subaccount: [] };
-          const ledgerActor = ledgerActors[assetType];
-          
-          // Debugging logs
-          console.log(`Using ledger actor for ${assetType}:`, ledgerActor);
-          
-          if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
-            console.warn(`Ledger actor for ${assetType} not initialized or method not available`);
-            return;
-          }
+  if (ckETHBalance && ckETHUsdRate) {
+    const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
+    setCkETHUsdBalance(balanceInUsd);
+  }
   
-          // Fetch balance using the actor from Redux
-          const balance = await ledgerActor.icrc1_balance_of(account);
-          const formattedBalance = (balance / BigInt(100000000)).toString();
-  
-          // Set balance based on asset type
-          switch (assetType) {
-            case "ckBTC":
-              setCkBTCBalance(formattedBalance); // Set ckBTC balance
-              break;
-            case "ckETH":
-              setCkETHBalance(formattedBalance); // Set ckETH balance
-              break;
-            case "ckUSDC":
-              setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
-              break;
-            case "ICP":
-              setCkICPBalance(formattedBalance); // Set ckICP balance
-              break;
-            default:
-              throw new Error("Unsupported asset type");
-          }
-        } catch (error) {
-          console.error(`Error fetching balance for ${assetType}:`, error);
-          setError(error);
-        }
-      }
-    },
-    [
-      isAuthenticated,
-      principalObj,
-      ledgerActors, // Include the ledger actors from Redux in the dependencies
-    ]
-  );
-  // console.log("ckusdc balance", ckUSDCBalance)
+  if (ckUSDCBalance && ckUSDCUsdRate) {
+    const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
+    setCkUSDCUsdBalance(balanceInUsd);
+  }
 
-  useEffect(() => {
-    if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
-      setCkBTCUsdBalance(balanceInUsd);
-    }
-  }, [ckBTCBalance, ckBTCUsdRate]);
+  if (ckICPBalance && ckICPUsdRate) {
+    const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+    setCkICPUsdBalance(balanceInUsd);
+  }
+}, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate]);
 
-  useEffect(() => {
-    if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
-      setCkETHUsdBalance(balanceInUsd);
-    }
-  }, [ckETHBalance, ckETHUsdRate]);
-
-  useEffect(() => {
-    if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(
-        2
-      );
-      setCkUSDCUsdBalance(balanceInUsd);
-    }
-  }, [ckUSDCBalance, ckUSDCUsdRate]);
-
-  useEffect(() => {
-    if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
-      setCkICPUsdBalance(balanceInUsd);
-    }
-  }, [ckICPBalance, ckICPUsdRate]);
-
-  const pollInterval = 2000; // 10 seconds
-
-  const fetchConversionRate = useCallback(async () => {
-    try {
-      const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const text = await response.text();
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (jsonError) {
-        throw new Error("Response was not valid JSON");
-      }
-
-      setCkBTCUsdRate(data.bitcoin.usd);
-      setCkETHUsdRate(data.ethereum.usd);
-      setCkUSDCUsdRate(data["usd-coin"].usd);
-      setCkICPUsdRate(data["internet-computer"].usd);
-    } catch (error) {
-      console.error("Error fetching conversion rates:", error);
-      setError(error);
-    }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
-
-  useEffect(() => {
-    // Start polling at regular intervals
-    const intervalId = setInterval(() => {
-      fetchConversionRate();
-    }, pollInterval);
-
-    // Clear the interval on component unmount
-    return () => clearInterval(intervalId);
-  }, [fetchConversionRate]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -260,21 +163,7 @@ const FaucetDetails = () => {
   const filteredReserveData = Object.fromEntries(filteredItems);
   console.log(filteredReserveData);
 
-  function formatNumber(num) {
-    if (num === null || num === undefined) {
-      return "0";
-    }
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
-    }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
-    }
-    return num.toString();
-  }
+  const formatNumber = useFormatNumber();
 
   return (
     <div className="w-full">
@@ -435,7 +324,7 @@ const FaucetDetails = () => {
                 </tbody>
               </table>
             </div>
-            <div className="w-full flex justify-center mt-10">
+            {/* <div className="w-full flex justify-center mt-10">
               <div id="pagination" className="flex gap-2">
                 <Pagination
                   currentPage={currentPage}
@@ -445,7 +334,7 @@ const FaucetDetails = () => {
                   onPageChange={(page) => setCurrentPage(page)}
                 />
               </div>
-            </div>
+            </div> */}
           </>
         )}
 

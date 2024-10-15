@@ -108,7 +108,7 @@ body{
   align-items: center;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4); /* Dim background */
+  background: transparent; /* Dim background */
   backdrop-filter: blur(5px); /* Blur effect */
   z-index: 1000;
 }
@@ -128,7 +128,6 @@ body{
   height: 20px;
   margin: 1px 3px;
   margin-bottom: 35px;
- 
   animation: bouncing-loader 0.6s infinite alternate;
 }
 
@@ -137,7 +136,6 @@ body{
   height: 4px;
   margin: 3px 1px;
   border-radius: 50%;
-  background-color: white;
   animation: bouncing-div 0.7s infinite alternate;
 }
 

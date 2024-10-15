@@ -4,13 +4,11 @@ import { Info } from "lucide-react";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Check, Wallet, X } from "lucide-react";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
-import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
-import { useMemo } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
+import useUserData from "../../customHooks/useUserData";
 
 const WithdrawPopup = ({
   asset,
@@ -38,7 +36,6 @@ const WithdrawPopup = ({
   console.log("assetSupply:", assetSupply);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const [amount, setAmount] = useState("");
-  const [conversionRate, setConversionRate] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,59 +47,14 @@ const WithdrawPopup = ({
 
   const isCollateral = true;
 
-  useEffect(() => {
-    const fetchConversionRate = async () => {
-      try {
-        const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch conversion rates from server");
-        }
-
-        const data = await response.json();
-
-        let rate;
-        switch (asset) {
-          case "ckBTC":
-            rate = data.bitcoin?.usd;
-            break;
-          case "ckETH":
-            rate = data.ethereum?.usd;
-            break;
-          case "ckUSDC":
-            rate = data["usd-coin"]?.usd;
-            break;
-          case "ICP":
-            rate = data["internet-computer"]?.usd;
-            break;
-          default:
-            console.error(`Unsupported asset: ${asset}`);
-            return;
-        }
-        if (rate) {
-          console.log(`Rate for ${asset}:`, rate);
-          setConversionRate(rate);
-        } else {
-          console.error("Conversion rate not found for asset:", asset);
-        }
-      } catch (error) {
-        console.error(
-          "Error fetching conversion rate from server:",
-          error.message
-        );
-      }
-    };
-
-    if (asset) {
-      fetchConversionRate();
-    }
-  }, [asset]);
+  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
 
   const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
   const modalRef = useRef(null);
+
   useEffect(() => {
     if (onLoadingChange) {
       onLoadingChange(isLoading);
@@ -265,46 +217,7 @@ const WithdrawPopup = ({
     return totalDeptValue / totalCollateralValue;
   };
 
-  const [healthFactorBackend, setHealthFactorBackend] = useState(null);
-  const [userData, setUserData] = useState();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (backendActor) {
-        try {
-          const result = await getUserData(principal.toString());
-          console.log("get_user_data:", result);
-          setUserData(result);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-    fetchUserData();
-  }, [principal, backendActor]);
-
-  const getUserData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_data(user);
-      console.log("get_user_data in supplypopup:", result);
-
-      // Check if the result is in the expected format (Ok.health_factor)
-      if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor); // Store health_factor in state
-      } else {
-        setError("Health factor not found");
-      }
-      return result;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setError(error.message);
-    }
-  };
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   return (
     <>

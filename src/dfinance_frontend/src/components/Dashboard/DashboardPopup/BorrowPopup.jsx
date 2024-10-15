@@ -11,6 +11,8 @@ import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/toke
 import { useEffect } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
+import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
+import useUserData from "../../customHooks/useUserData";
 
 const Borrow = ({
   asset,
@@ -38,7 +40,6 @@ const Borrow = ({
 
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [error, setError] = useState("");
-  const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
@@ -47,54 +48,7 @@ const Borrow = ({
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
 
-  useEffect(() => {
-    const fetchConversionRate = async () => {
-      try {
-        const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch conversion rates from server");
-        }
-
-        const data = await response.json();
-
-        let rate;
-        switch (asset) {
-          case "ckBTC":
-            rate = data.bitcoin?.usd;
-            break;
-          case "ckETH":
-            rate = data.ethereum?.usd;
-            break;
-          case "ckUSDC":
-            rate = data["usd-coin"]?.usd;
-            break;
-          case "ICP":
-            rate = data["internet-computer"]?.usd;
-            break;
-          default:
-            console.error(`Unsupported asset: ${asset}`);
-            return;
-        }
-
-        if (rate) {
-          console.log(`Rate for ${asset}:`, rate);
-          setConversionRate(rate);
-        } else {
-          console.error("Conversion rate not found for asset:", asset);
-        }
-      } catch (error) {
-        console.error(
-          "Error fetching conversion rate from server:",
-          error.message
-        );
-      }
-    };
-
-    if (asset) {
-      fetchConversionRate();
-    }
-  }, [asset]);
+  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset)
 
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
@@ -252,45 +206,7 @@ const Borrow = ({
     return nextTotalDebt / totalCollateral;
   };
 
-  const [healthFactorBackend, setHealthFactorBackend] = useState(null);
-  const [userData, setUserData] = useState();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (backendActor) {
-        try {
-          const result = await getUserData(principal.toString());
-          console.log("get_user_data:", result);
-          setUserData(result);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-    fetchUserData();
-  }, [principal, backendActor]);
-
-  const getUserData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_data(user);
-      console.log("get_user_data in supplypopup:", result);
-
-      if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor);
-      } else {
-        setError("Health factor not found");
-      }
-      return result;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setError(error.message);
-    }
-  };
+   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const [availableBorrows, setAvailableBorrows] = useState(0);
 
@@ -520,7 +436,7 @@ const Borrow = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have borrowed {scaledAmount / 100000000} d{asset}
+              You have borrowed {scaledAmount / 100000000} {asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

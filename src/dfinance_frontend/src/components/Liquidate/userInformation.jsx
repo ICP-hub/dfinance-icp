@@ -16,11 +16,12 @@ import useAssetData from "../Common/useAssets";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
+import useFormatNumber from "../customHooks/useFormatNumber";
+import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useUserData from "../customHooks/useUserData";
 
 const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const {
-    isAuthenticated,
-    createLedgerActor,
     backendActor,
     principal: currentUserPrincipal,
   } = useAuth();
@@ -38,22 +39,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const [transactionResult, setTransactionResult] = useState(null); // State to handle transaction
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
-  const [ckICPBalance, setCkICPBalance] = useState(null);
-  const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
 
   const [userdata, setUserData] = useState();
-  const [userHealthFactor, setUserHealthFactor] = useState();
-
-  const [ckBTCBalance, setCkBTCBalance] = useState(null);
-  const [ckETHBalance, setCkETHBalance] = useState(null);
-  const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
-  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
-  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
-  const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -74,37 +65,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (backendActor) {
-        try {
-          const result = await getUserData(principal.toString());
-          console.log("get_user_data:", result);
-          setUserData(result);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-    fetchUserData();
-  }, [principal, backendActor]);
-
-  const getUserData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_data(user);
-      console.log("get_user_data in mysupply:", result);
-      setUserHealthFactor(result.Ok.health_factor);
-      return result;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      throw error;
-    }
-  };
+  const { userData, healthFactorBackend:userHealthFactor, refetchUserData } = useUserData();
 
   function roundToDecimal(value, decimalPlaces) {
     const factor = Math.pow(10, decimalPlaces);
@@ -190,59 +151,25 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
 
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    fetchBalance
+  } = useFetchConversionRate();
+
   const principalObj = useMemo(
     () => Principal.fromText(currentUserPrincipal),
     [currentUserPrincipal]
   );
 
-  const fetchBalance = useCallback(
-    async (assetType) => {
-      if (isAuthenticated && principalObj) {
-        try {
-          const account = { owner: principalObj, subaccount: [] };
-          const ledgerActor = ledgerActors[assetType];
-          
-          // Debugging logs
-          console.log(`Using ledger actor for ${assetType}:`, ledgerActor);
-          
-          if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
-            console.warn(`Ledger actor for ${assetType} not initialized or method not available`);
-            return;
-          }
-  
-          // Fetch balance using the actor from Redux
-          const balance = await ledgerActor.icrc1_balance_of(account);
-          const formattedBalance = (balance / BigInt(100000000)).toString();
-  
-          // Set balance based on asset type
-          switch (assetType) {
-            case "ckBTC":
-              setCkBTCBalance(formattedBalance); // Set ckBTC balance
-              break;
-            case "ckETH":
-              setCkETHBalance(formattedBalance); // Set ckETH balance
-              break;
-            case "ckUSDC":
-              setCKUSDCBalance(formattedBalance); // Set ckUSDC balance
-              break;
-            case "ICP":
-              setCkICPBalance(formattedBalance); // Set ckICP balance
-              break;
-            default:
-              throw new Error("Unsupported asset type");
-          }
-        } catch (error) {
-          console.error(`Error fetching balance for ${assetType}:`, error);
-          setError(error);
-        }
-      }
-    },
-    [
-      isAuthenticated,
-      principalObj,
-      ledgerActors, // Include the ledger actors from Redux in the dependencies
-    ]
-  );
+
 
   const [loading, setLoading] = useState();
 
@@ -396,41 +323,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   }, [ckICPBalance, ckICPUsdRate]);
 
-  const pollInterval = 2000;
-  const fetchConversionRate = useCallback(async () => {
-    try {
-      const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const text = await response.text();
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (jsonError) {
-        throw new Error("Response was not valid JSON");
-      }
-
-      setCkBTCUsdRate(data.bitcoin.usd);
-      setCkETHUsdRate(data.ethereum.usd);
-      setCkUSDCUsdRate(data["usd-coin"].usd);
-      setCkICPUsdRate(data["internet-computer"].usd);
-    } catch (error) {
-      console.error("Error fetching conversion rates:", error);
-      setError(error);
-    }
-  }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
-
-  useEffect(() => {
-    // Start polling at regular intervals
-    const intervalId = setInterval(() => {
-      fetchConversionRate();
-    }, pollInterval);
-
-    // Clear the interval on component unmount
-    return () => clearInterval(intervalId);
-  }, [fetchConversionRate]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -685,24 +577,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
   const { filteredItems } = useAssetData();
 
-  function formatNumber(num) {
-    // Ensure num is a valid number
-    const parsedNum = parseFloat(num);
-
-    if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
-      return "0";
-    }
-    if (parsedNum >= 1000000000) {
-      return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
-    }
-    if (parsedNum >= 1000000) {
-      return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
-    }
-    if (parsedNum >= 1000) {
-      return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
-    }
-    return parsedNum.toFixed(2).toString();
-  }
+  const formatNumber = useFormatNumber();
 
   let asset_name = "";
   let accrued_to_treasury = "0";

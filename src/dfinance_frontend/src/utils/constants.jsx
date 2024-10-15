@@ -43,7 +43,7 @@ export const FOOTER_LINK_1 = [
   // },
   {
     id: 1,
-    title: "Liquidate",
+    title: "Liquidation",
     route: "/Liquidate",
     icon: "",
   },

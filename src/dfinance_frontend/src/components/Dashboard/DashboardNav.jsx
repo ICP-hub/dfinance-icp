@@ -14,6 +14,9 @@ import icplogo from "../../../public/wallet/icp.png";
 import { EllipsisVertical } from "lucide-react";
 import useAssetData from "../Common/useAssets";
 import { useCallback } from "react";
+import useFormatNumber from "../customHooks/useFormatNumber";
+import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useUserData from "../customHooks/useUserData";
 
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
@@ -22,7 +25,6 @@ const DashboardNav = () => {
   const [netSupplyApy, setNetSupplyApy] = useState(0);
   const [netDebtApy, setNetDebtApy] = useState(0);
   const [netApy, setNetApy] = useState(0);
-  const [userData, setUserData] = useState();
   const [assetSupply, setAssetSupply] = useState(0);
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
@@ -48,63 +50,15 @@ const DashboardNav = () => {
     { id: 2, title: "Total Borrows", count: 0 }, // Initial count set to null
   ]);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (backendActor) {
-        try {
-          const result = await getUserData(principal.toString());
-          // console.log('get_user_data:', result);
-          setUserData(result);
-          updateWalletDetailTab(result);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-    fetchUserData();
-  }, [principal, backendActor]);
-
-  const getUserData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_data(user);
-      // console.log('get_user_data in dashboardnav:', result);
-      return result;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      throw error;
-    }
-  };
-
-  function formatNumber(num) {
-    // Ensure num is a valid number
-    const parsedNum = parseFloat(num);
-
-    if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
-      return "0";
-    }
-    if (parsedNum >= 1000000000) {
-      return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
-    }
-    if (parsedNum >= 1000000) {
-      return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
-    }
-    if (parsedNum >= 1000) {
-      return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
-    }
-    return parsedNum.toFixed(2).toString();
-  }
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const formatNumber = useFormatNumber();
 
   const updateWalletDetailTab = (data) => {
     if (!data || !data.Ok) return;
     const { net_worth, net_apy, health_factor } = data.Ok;
     // console.log("health factor", health_factor[0])
     const updatedTab = walletDetailTab.map((item) => {
-    console.log("item",item)
+      console.log("item", item)
       switch (item.id) {
         case 0:
           return { ...item, count: `$${formatNumber(net_worth[0])}` };
@@ -132,48 +86,21 @@ const DashboardNav = () => {
     setWalletDetailTab(updatedTab);
   };
 
-  const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
-  const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
-  const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
-  const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
+  useEffect(() => {
+    if (userData) {
+      updateWalletDetailTab(userData);
+    }
+  }, [userData]);
+  
   const [error, setError] = useState(null);
 
-  const pollInterval = 2000;
-
-  const fetchConversionRate = useCallback(async () => {
-    try {
-      const response = await fetch(
-        "https://dfinance.kaifoundry.com/conversion-rates"
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const text = await response.text();
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (jsonError) {
-        throw new Error("Response was not valid JSON");
-      }
-
-      setCkBTCUsdRate(data.bitcoin.usd);
-      setCkETHUsdRate(data.ethereum.usd);
-      setCkUSDCUsdRate(data["usd-coin"].usd);
-      setCkICPUsdRate(data["internet-computer"].usd);
-    } catch (error) {
-      console.error("Error fetching conversion rates:", error);
-      setError(error);
-    }
-  }, [pollInterval]);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      fetchConversionRate();
-    }, pollInterval);
-
-    return () => clearInterval(intervalId);
-  }, [fetchConversionRate]);
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    fetchConversionRate,
+  } = useFetchConversionRate();
 
   const getConversionRate = (asset) => {
     switch (asset) {
@@ -274,7 +201,7 @@ const DashboardNav = () => {
   useEffect(() => {
     if (userData && userData?.Ok?.reserves[0]) {
       const reservesData = userData?.Ok?.reserves[0];
-      console.log("reserveData in dashboard nav",reservesData)
+      console.log("reserveData in dashboard nav", reservesData)
       console.log("UserData Reserves in Dashboard:", reservesData);
 
       const calculatedNetApy = calculateNetApy(reservesData);
@@ -398,7 +325,8 @@ const DashboardNav = () => {
   const shouldRenderRiskDetailsButton =
     !pathname.includes("/market") &&
     !pathname.includes("/governance") &&
-    !pathname.includes("/dashboard/transaction-history");
+    !pathname.includes("/dashboard/transaction-history") &&
+    !pathname.startsWith("/dashboard/asset-details/");
 
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
@@ -415,7 +343,7 @@ const DashboardNav = () => {
       <div className="flex gap-5 -ml-3">
         {!["/dashboard", "/market", "/governance"].includes(pathname) && (
           <div
-            className=" lg1:-mt-1 mt-[20px] cursor-pointer"
+            className=" lg1:-mt-1 mt-[20px] cursor-pointer flex justify-center align-center items-center"
             onClick={() => navigate(-1)}
           >
             <ChevronLeft size={40} color={chevronColor} />
@@ -429,6 +357,7 @@ const DashboardNav = () => {
           />
           ICP Market
         </h1>
+
 
         <div className="md:hidden flex ml-auto -mt-1">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md button1">
@@ -472,23 +401,22 @@ const DashboardNav = () => {
                           {console.log("Data Count:", data.count)}
                           {console.log("Asset Supply in healthfactor conmditon:", assetSupply)}
                           <span
-                            className={`font-bold text-[20px] ${
-                              data.title === "Health Factor"
-                                ? data.count === 0  && assetSupply === 0// Check if health factor is 0
-                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
-                                  : data.count > 3
+                            className={`font-bold text-[20px] ${data.title === "Health Factor"
+                              ? data.count === 0 && assetSupply === 0// Check if health factor is 0
+                                ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
+                                : data.count > 3
                                   ? "text-green-500" // Green for health factor greater than 3
                                   : data.count <= 1
-                                  ? "text-red-500" // Red for health factor less than or equal to 1
-                                  : data.count <= 1.5
-                                  ? "text-orange-500" // Orange for health factor less than or equal to 1.5
-                                  : data.count <= 2
-                                  ? "text-orange-300" // Soft orange for health factor less than or equal to 2
-                                  : "text-orange-600" // Vivid orange for other values
-                                : data.title === "Total Borrows"
+                                    ? "text-red-500" // Red for health factor less than or equal to 1
+                                    : data.count <= 1.5
+                                      ? "text-orange-500" // Orange for health factor less than or equal to 1.5
+                                      : data.count <= 2
+                                        ? "text-orange-300" // Soft orange for health factor less than or equal to 2
+                                        : "text-orange-600" // Vivid orange for other values
+                              : data.title === "Total Borrows"
                                 ? "text-[#2A1F9D] dark:text-darkBlue" // Default color for Total Borrows
                                 : "text-[#2A1F9D] dark:text-darkBlue" // Default color for other titles
-                            }`}
+                              }`}
                           >
                             {data.count !== null ? data.count : "N/A"}
                           </span>
@@ -525,23 +453,22 @@ const DashboardNav = () => {
                       {data.title}
                       <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                       <span
-                        className={`font-bold text-[20px] ${
-                          data.title === "Health Factor"
-                            ? data.count === 0 && assetSupply === 0
-                              ? "text-[#2A1F9D] dark:text-darkBlue"
-                              : data.count > 3
-                              ? "text-green-500" 
+                        className={`font-bold text-[20px] ${data.title === "Health Factor"
+                          ? data.count === 0 && assetSupply === 0
+                            ? "text-[#2A1F9D] dark:text-darkBlue"
+                            : data.count > 3
+                              ? "text-green-500"
                               : data.count <= 1
-                              ? "text-red-500" 
-                              : data.count <= 1.5
-                              ? "text-orange-500" 
-                              : data.count <= 2
-                              ? "text-orange-300" 
-                              : "text-orange-600" 
-                            : data.title === "Total Borrows"
-                            ? "text-[#2A1F9D] dark:text-darkBlue" 
-                            : "text-[#2A1F9D] dark:text-darkBlue" 
-                        }`}
+                                ? "text-red-500"
+                                : data.count <= 1.5
+                                  ? "text-orange-500"
+                                  : data.count <= 2
+                                    ? "text-orange-300"
+                                    : "text-orange-600"
+                          : data.title === "Total Borrows"
+                            ? "text-[#2A1F9D] dark:text-darkBlue"
+                            : "text-[#2A1F9D] dark:text-darkBlue"
+                          }`}
                       >
                         {data.count !== null ? data.count : ""}
                       </span>

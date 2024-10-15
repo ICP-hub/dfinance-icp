@@ -69,16 +69,16 @@ const Footer = () => {
                 <img src="./social/discord.svg" alt="discord" className="w-full h-full object-contain" />
               </span> */}
               <a target="_blank" href="https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all">
-                <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
-                  <img src="./social/in.svg" alt="Linkedin" className="w-full h-full object-contain" />
+                <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
+                  <img src="./social/linkedin.png" alt="Linkedin" className="w-full h-full object-contain" />
                 </span>
               </a>
               {/* <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/instagram.svg" alt="instagram" className="w-full h-full object-contain" />
               </span> */}
                <a target="_blank" href="https://x.com/dfinance_app">
-              <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
-                <img src="./social/twitter.svg" alt="twitter" className="w-full h-full object-contain" />
+              <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
+                <img src="./social/X.png" alt="X" className="w-full h-full object-contain" />
               </span>
               </a>
             </div>

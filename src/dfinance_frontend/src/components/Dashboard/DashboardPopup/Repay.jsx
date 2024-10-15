@@ -11,6 +11,8 @@ import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/toke
 import { useEffect } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
+import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
+import useUserData from "../../customHooks/useUserData";
 const Repay = ({
   asset,
   image,
@@ -35,7 +37,6 @@ const Repay = ({
   const [error, setError] = useState("");
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [conversionRate, setConversionRate] = useState(0); // Holds the conversion rate for the selected asset
   const [usdValue, setUsdValue] = useState(0);
 
   const ledgerActors = useSelector((state) => state.ledger);
@@ -73,56 +74,7 @@ const Repay = ({
       // setUsdValue(0);
     }
   };
-
-  useEffect(() => {
-    const fetchConversionRate = async () => {
-      try {
-        const response = await fetch(
-          "https://dfinance.kaifoundry.com/conversion-rates"
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch conversion rates from server");
-        }
-
-        const data = await response.json();
-
-        let rate;
-        switch (asset) {
-          case "ckBTC":
-            rate = data.bitcoin?.usd;
-            break;
-          case "ckETH":
-            rate = data.ethereum?.usd;
-            break;
-          case "ckUSDC":
-            rate = data["usd-coin"]?.usd;
-            break;
-          case "ICP":
-            rate = data["internet-computer"]?.usd;
-            break;
-          default:
-            console.error(`Unsupported asset: ${asset}`);
-            return;
-        }
-        if (rate) {
-          console.log(`Rate for ${asset}:`, rate);
-          setConversionRate(rate);
-        } else {
-          console.error("Conversion rate not found for asset:", asset);
-        }
-      } catch (error) {
-        console.error(
-          "Error fetching conversion rate from server:",
-          error.message
-        );
-      }
-    };
-
-    if (asset) {
-      fetchConversionRate();
-    }
-  }, [asset]);
+  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset)
 
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
@@ -275,7 +227,7 @@ const Repay = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv >= reserveliquidationThreshold) {
+    if ( ltv >= reserveliquidationThreshold) {
       setIsButtonDisabled(true); // Disable the button
     } else {
       setIsButtonDisabled(false); // Enable the button
@@ -327,46 +279,7 @@ const Repay = ({
     return totalDeptValue / totalCollateralValue;
   };
 
-  const [healthFactorBackend, setHealthFactorBackend] = useState(null);
-  const [userData, setUserData] = useState();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (backendActor) {
-        try {
-          const result = await getUserData(principal.toString());
-          console.log("get_user_data:", result);
-          setUserData(result);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-    fetchUserData();
-  }, [principal, backendActor]);
-
-  const getUserData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_data(user);
-      console.log("get_user_data in supplypopup:", result);
-
-      // Check if the result is in the expected format (Ok.health_factor)
-      if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor); // Store health_factor in state
-      } else {
-        setError("Health factor not found");
-      }
-      return result;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setError(error.message);
-    }
-  };
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   return (
     <>
@@ -407,7 +320,6 @@ const Repay = ({
                   <p className="text-xs mt-4">
                     {assetBorrow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
                   </p>
-
                 </div>
               </div>
             </div>
@@ -420,9 +332,9 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center ">
                     <p className="text-nowrap">Remaining debt</p>
                     <div className="w-4/12 flex flex-col items-end">
-                    <p className="text-xs mt-2">
-  {(assetBorrow - amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
-</p>
+                      <p className="text-xs mt-2">
+                        {(assetBorrow - amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                      </p>
 
                     </div>
                   </div>

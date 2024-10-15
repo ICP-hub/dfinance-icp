@@ -5,6 +5,11 @@ import { useSelector } from "react-redux";
 
 const CircularProgress  = ({ progessValue }) => {
     const theme = useSelector((state) => state.theme.theme);
+    const getTextSize = (value) => {
+      if (value > 99) return '16px'; 
+      if (value > 50) return '17px';
+      return '18px'; 
+    };
   return (
     <div style={{ width: 78, height: 78, position: 'relative' }}>
       <CircularProgressbar
@@ -14,6 +19,7 @@ const CircularProgress  = ({ progessValue }) => {
           pathColor: 'url(#gradient)',
           textColor: theme === 'dark' ? "#FFFFFF" : "#2A1F9D",
           trailColor: theme === 'dark' ? "#18183d" : "#e6d7eb",
+          textSize: getTextSize(progessValue),
         })}
       />
       <svg style={{ height: 0 }}>

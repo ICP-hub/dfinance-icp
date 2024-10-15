@@ -29,6 +29,7 @@ import {
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react"
 import AssetDetails from "../../components/Dashboard/AssetDetails"
+import useFormatNumber from "../../components/customHooks/useFormatNumber"
 
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
@@ -134,7 +135,7 @@ const WalletDetails = () => {
   const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);
     console.log("assetdetailsinMarket", assetData)
-    navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
+    navigate(`/market/asset-details/${asset}`, { state: { assetData } });
   };
 
 
@@ -218,21 +219,9 @@ const WalletDetails = () => {
       document.body.style.overflow = 'auto';
     };
   }, [showPopup]);
-  function formatNumber(num) {
-    if (num === null || num === undefined) {
-      return '0';
-    }
-    if (num >= 1000000000) {
-      return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
-    }
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-    }
-    return num.toFixed(2).toString();
-  }
+
+  const formatNumber = useFormatNumber();
+
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-3 -mt-5 lg:mt-8 ">
@@ -377,7 +366,7 @@ const WalletDetails = () => {
               </tbody>
             </table>
           </div>
-          <div className="w-full flex justify-center mt-10">
+          {/* <div className="w-full flex justify-center mt-10">
             <div id="pagination" className="flex gap-2">
               <Pagination
                 currentPage={currentPage}
@@ -385,7 +374,7 @@ const WalletDetails = () => {
                 onPageChange={handlePageChange}
               />
             </div>
-          </div>
+          </div> */}
 
 
 

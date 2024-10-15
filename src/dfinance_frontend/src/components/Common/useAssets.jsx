@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../utils/useAuthClient';
+import useFormatNumber from '../customHooks/useFormatNumber';
 
 const useAssetData = (searchQuery = '') => {
 
@@ -21,7 +22,6 @@ const useAssetData = (searchQuery = '') => {
 
       try {
         const assetNames = await backendActor.get_all_assets();
-        // console.log("Asset names:", assetNames);
         setAssets(assetNames);
       } catch (error) {
         console.error('Error fetching asset names:', error);
@@ -46,8 +46,8 @@ const useAssetData = (searchQuery = '') => {
           data[asset] = reserveDataForAsset;
           console.log(`${asset} reserve data:`, reserveDataForAsset);
           const supplyCap = parseFloat(reserveDataForAsset.Ok.configuration.supply_cap);
-          const totalSupply = parseFloat(reserveDataForAsset.Ok.total_supply);
-          const totalBorrow = parseFloat(reserveDataForAsset.Ok.total_borrowed);
+          const totalSupply = parseFloat(reserveDataForAsset.Ok.total_supply/100000000);
+          const totalBorrow = parseFloat(reserveDataForAsset.Ok.total_borrowed/100000000);
           console.log("supplyCap", supplyCap)
           console.log("TotalSupplies", totalSupply)
           console.log("TotalBorrow", totalBorrow)
@@ -84,24 +84,7 @@ const useAssetData = (searchQuery = '') => {
     )
     : [];
 
-    function formatNumber(num) {
-      // Ensure num is a valid number
-      const parsedNum = parseFloat(num);
-  
-      if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
-        return "0";
-      }
-      if (parsedNum >= 1000000000) {
-        return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
-      }
-      if (parsedNum >= 1000000) {
-        return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
-      }
-      if (parsedNum >= 1000) {
-        return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
-      }
-      return parsedNum.toFixed(2).toString();
-    }
+    const formatNumber = useFormatNumber();
 
   return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize };
 };

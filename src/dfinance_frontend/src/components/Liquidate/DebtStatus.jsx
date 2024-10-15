@@ -25,6 +25,7 @@ import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
+import useFormatNumber from "../customHooks/useFormatNumber"
 
 const ITEMS_PER_PAGE = 8;
 const DebtStatus = () => {
@@ -37,13 +38,9 @@ const DebtStatus = () => {
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   }
-  const [currentPage, setCurrentPage] = useState(1);
-  const [activeChevron, setActiveChevron] = useState(null);
-  const itemsPerPage = 8; // Number of items per page
+
   const navigate = useNavigate();
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+
 
   const {
     isAuthenticated,
@@ -126,21 +123,49 @@ const DebtStatus = () => {
     setInputValue(event.target.value);
   };
 
+  const ITEMS_PER_PAGE = 8;
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  
+  // Filter users based on search query
+  const filteredUsers = users
+    .map((item) => {
+      const mappedItem = {
+        reserves: item[1].reserves,
+        principal: item[0].toText(),
+        healthFactor: item[1]?.health_factor,
+        item,
+      };
+      return mappedItem;
+    })
+    .filter((mappedItem) => {
+      const isValid =
+        mappedItem.reserves.length > 0 &&
+        mappedItem.principal !== principal &&
+        mappedItem.healthFactor > 1 &&
+        (mappedItem.principal.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         mappedItem.item[1].total_debt.toString().includes(searchQuery));
+      return isValid;
+    });
+  
+  // Calculate total pages based on the filtered users
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  
+  // Determine the items for the current page
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  
+  // Function to handle page changes
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+  
+  // Update search input and reset to page 1
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
-
-  const totalPages = Math.ceil(LIQUIDATION_USERLIST_ROW.length / ITEMS_PER_PAGE);
-  const filteredItems = LIQUIDATION_USERLIST_ROW.filter(item =>
-    item.user_principle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.debt_amount.toString().includes(searchQuery)
-  );
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-
 
   const popupRef = useRef(null); // Ref for the popup content
 
@@ -163,44 +188,14 @@ const DebtStatus = () => {
     }
   }, [showPopup]);
 
-  const filteredUsers = users
-    .map((item) => {
-      const mappedItem = {
-        reserves: item[1].reserves,
-        principal: item[0].toText(),
-        item,
-      };
-      return mappedItem;
-    })
-    .filter((mappedItem) => {
-      const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal;
-      return isValid;
-    });
 
-    function formatNumber(num) {
-      // Ensure num is a valid number
-      const parsedNum = parseFloat(num);
-  
-      if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
-        return "0";
-      }
-      if (parsedNum >= 1000000000) {
-        return (parsedNum / 1000000000).toFixed(1).replace(/.0$/, "") + "B";
-      }
-      if (parsedNum >= 1000000) {
-        return (parsedNum / 1000000).toFixed(1).replace(/.0$/, "") + "M";
-      }
-      if (parsedNum >= 1000) {
-        return (parsedNum / 1000).toFixed(1).replace(/.0$/, "") + "K";
-      }
-      return parsedNum.toFixed(2).toString();
-    }
+    const formatNumber = useFormatNumber();
 
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center mt-8">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Users List</h1>
-        
+
       </div>
 
       <div className="w-full mt-6">
@@ -224,26 +219,11 @@ const DebtStatus = () => {
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[2]?.header}</td>
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[3]?.header}</td>
                   <td className="p-3 hidden md:table-cell">{LIQUIDATION_USERLIST_COL[4]?.header}</td>
-                  
+
                 </tr>
               </thead>
               <tbody>
-                {users
-                  .map((item) => {
-                    const mappedItem = {
-                      reserves: item[1].reserves,
-                      principal: item[0].toText(),
-                      healthFactor: item[1]?.health_factor,
-                      item,
-                    };
-                    return mappedItem;
-                   
-                  })
-                  .filter((mappedItem) => {
-                    const isValid = mappedItem.reserves.length > 0 && mappedItem.principal !== principal && mappedItem.healthFactor > 1;
-                    return isValid;
-                  })
-                  .map((mappedItem, index) => (
+              {currentItems.map((mappedItem, index) => (
                     <tr
                       key={index}
                       className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== users.length - 1 ? "gradient-line-bottom" : ""
@@ -265,8 +245,8 @@ const DebtStatus = () => {
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[1]?.reserve
-                            const assetBorrow = item[1]?.asset_borrow
-                            console.log("mappedItems",mappedItem)
+                            const assetBorrow = (item[1]?.asset_borrow) / 100000000;
+                            console.log("mappedItems", mappedItem)
                             console.log("Asset Borrow:", assetBorrow);
                             if (assetBorrow > 0) {
                               return (
@@ -304,11 +284,11 @@ const DebtStatus = () => {
                                 <img
                                   key={index}
                                   src={
-                                    assetName === "ckBTC" ? ckBTC 
-                                    : assetName === "ckETH" ? ckETH 
-                                    : assetName === "ckUSDC" ? ckUSDC 
-                                    : assetName === "ICP" ? icp 
-                                    : undefined
+                                    assetName === "ckBTC" ? ckBTC
+                                      : assetName === "ckETH" ? ckETH
+                                        : assetName === "ckUSDC" ? ckUSDC
+                                          : assetName === "ICP" ? icp
+                                            : undefined
                                   }
                                   alt={assetName}
                                   className="rounded-[50%] w-7"
@@ -357,9 +337,19 @@ const DebtStatus = () => {
 
 
             </table>
-          </div>
 
+          </div>
+          <div className="w-full flex justify-center mt-10">
+            <div id="pagination" className="flex gap-2">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </div>
         </div>}
+
 
       </div>
       {showUserInfoPopup && selectedAsset && (

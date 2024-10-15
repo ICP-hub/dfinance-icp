@@ -1,6 +1,8 @@
 use candid::{CandidType, Deserialize, Principal};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 
+use super::math_utils::ScalingMath;
+
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
@@ -22,7 +24,8 @@ pub fn calculate_ltv(position: &UserPosition) -> u128 {
         return 0; 
     }
 
-    (position.total_borrowed_value / position.total_collateral_value) * 100000000  //scal_div
+    //(position.total_borrowed_value / position.total_collateral_value) * 100000000  //scal_div
+    position.total_borrowed_value.scaled_div(position.total_collateral_value)
 }
 
 // pub fn calculate_average_threshold(amount: f64, reserve: &ReserveData, user: UserData) -> f64 {
@@ -47,9 +50,11 @@ pub fn cal_average_threshold(
     // let reserve_liq_thres_f64 = reserve_liq_thres as f64 / 100.0;
     
     // Perform the calculation
-    let result =( (((amount * reserve_liq_thres) / 100000000)+ ((user_total_collateral * user_liq_thres)/100000000) - ((amount_taken * reserve_liq_thres)/100000000))   //scal_mul
-        / (amount + user_total_collateral - amount_taken) ) * 100000000; //scal_div
+    // let result =( (((amount * reserve_liq_thres) / 100000000)+ ((user_total_collateral * user_liq_thres)/100000000) - ((amount_taken * reserve_liq_thres)/100000000))   //scal_mul
+    //     / (amount + user_total_collateral - amount_taken) ) * 100000000; //scal_div
     
+    // result
+    let result = ((amount.scaled_mul(reserve_liq_thres)) + (user_total_collateral.scaled_mul(user_liq_thres)) - (amount_taken.scaled_mul(reserve_liq_thres))).scaled_div(amount + user_total_collateral - amount_taken);
     result
 }
 

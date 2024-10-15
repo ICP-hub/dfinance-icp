@@ -7,7 +7,7 @@ use crate::{
         storable::Candid,
     },
     protocol::libraries::{
-        math::calculate::{cal_average_threshold, calculate_health_factor, calculate_ltv, get_exchange_rates, UserPosition},
+        math::{calculate::{cal_average_threshold, calculate_health_factor, calculate_ltv, get_exchange_rates, UserPosition}, math_utils::ScalingMath},
         types::datatypes::UserReserveData,
     },
 };
@@ -186,7 +186,8 @@ impl UpdateLogic {
         // let ckbtc_to_usd_rate = 60554.70f64;
         // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
         // let unscaled_amount = params.amount/100000000;
-        let mut usd_rate = usd_amount/params.amount * 100000000;
+        // let mut usd_rate = usd_amount/params.amount * 100000000; -- changes
+        let mut usd_rate = usd_amount.scaled_div(params.amount);
         ic_cdk::println!(
             "Converted ckBTC amount: {} to USD amount: {} with rate: {}",
             params.amount.clone(),
@@ -368,7 +369,8 @@ impl UpdateLogic {
 
 
 
-        let usd_rate = (usd_amount/params.amount) * 100000000;
+        //let usd_rate = (usd_amount/params.amount) * 100000000;
+        let usd_rate = usd_amount.scaled_div(params.amount);
         if let Some((_, reserve_data)) = user_reserve {
             // If Reserve data exists, it updates asset supply
             // let asset_rate_result = get_exchange_rates(params.asset.clone(), 1.0).await;

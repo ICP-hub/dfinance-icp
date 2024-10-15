@@ -67,6 +67,7 @@ service : () -> {
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_3) query;
+  get_balance : (principal, principal) -> (nat) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_4);
   get_reserve_data : (text) -> (Result_5) query;
   get_user_data : (text) -> (Result_6) query;

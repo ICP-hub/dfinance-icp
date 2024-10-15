@@ -2,7 +2,7 @@ use crate::declarations::transfer::*;
 use crate::get_asset_principal;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
-use ic_cdk::call;
+use ic_cdk::{call, query};
 use crate::api::state_handler::{mutate_state, read_state};
 use ic_cdk_macros::update;
 use serde::Serialize;
@@ -48,6 +48,7 @@ struct Account {
 }
 
 // Icrc1_balance inter canister call
+#[query]
 pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
     let account = Account {
         owner: principal,
@@ -61,7 +62,7 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
         .unwrap();
 
     let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
-
+    
     balance
 }
 

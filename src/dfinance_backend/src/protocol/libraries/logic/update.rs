@@ -186,7 +186,7 @@ impl UpdateLogic {
         // let ckbtc_to_usd_rate = 60554.70f64;
         // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
         // let unscaled_amount = params.amount/100000000;
-        let mut usd_rate = usd_amount/params.amount* 100000000;
+        let mut usd_rate = usd_amount/params.amount * 100000000;
         ic_cdk::println!(
             "Converted ckBTC amount: {} to USD amount: {} with rate: {}",
             params.amount.clone(),
@@ -368,7 +368,7 @@ impl UpdateLogic {
 
 
 
-        let usd_rate = usd_amount/params.amount ;
+        let usd_rate = (usd_amount/params.amount) * 100000000;
         if let Some((_, reserve_data)) = user_reserve {
             // If Reserve data exists, it updates asset supply
             // let asset_rate_result = get_exchange_rates(params.asset.clone(), 1.0).await;

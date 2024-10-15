@@ -30,11 +30,12 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             total_supply: 0,
             total_borrowed:0,
             can_be_collateral: Some(true),
-            liquidity_index: 1,
+            liquidity_index: ScalingMath::to_scaled(1),
             id: 1,
+            //scale it
             configuration: ReserveConfiguration {
-                ltv:73, liquidation_threshold:78, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:10000000000, supply_cap:10000000000, liquidation_protocol_fee:0,
-                reserve_factor:20
+                ltv: ScalingMath::to_scaled(73), liquidation_threshold: ScalingMath::to_scaled(78), liquidation_bonus: ScalingMath::to_scaled(5), borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap: ScalingMath::to_scaled(10000000000), supply_cap: ScalingMath::to_scaled(10000000000), liquidation_protocol_fee:0,
+                reserve_factor: ScalingMath::to_scaled(20)
             },
             debt_index: 0,
         }
@@ -57,11 +58,11 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             total_supply: 0,
             total_borrowed:0,
             can_be_collateral: Some(false),
-            liquidity_index: 1,
+            liquidity_index:  ScalingMath::to_scaled(1),
             id: 2,
             configuration: ReserveConfiguration {
-                ltv:80, liquidation_threshold:83, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:10000000000, supply_cap:10000000000, liquidation_protocol_fee:0,
-                reserve_factor:15
+                ltv: ScalingMath::to_scaled(80), liquidation_threshold: ScalingMath::to_scaled(83), liquidation_bonus: ScalingMath::to_scaled(5), borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap: ScalingMath::to_scaled(10000000000), supply_cap: ScalingMath::to_scaled(10000000000), liquidation_protocol_fee:0,
+                reserve_factor: ScalingMath::to_scaled(15)
             },
             debt_index: 0,
         }
@@ -83,11 +84,11 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             total_supply: 0,
             total_borrowed:0,
             can_be_collateral: Some(true),
-            liquidity_index: 1,
+            liquidity_index:  ScalingMath::to_scaled(1),
             id: 3,
             configuration: ReserveConfiguration{
-                ltv:75, liquidation_threshold:78, liquidation_bonus:5, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:10000000000, supply_cap:10000000000, liquidation_protocol_fee:0,
-                reserve_factor:10
+                ltv: ScalingMath::to_scaled(75), liquidation_threshold: ScalingMath::to_scaled(78), liquidation_bonus: ScalingMath::to_scaled(5), borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap: ScalingMath::to_scaled(10000000000), supply_cap: ScalingMath::to_scaled(10000000000), liquidation_protocol_fee:0,
+                reserve_factor: ScalingMath::to_scaled(10)
             },
             debt_index: 0,
         }
@@ -109,11 +110,11 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             total_supply: 0,
             total_borrowed:0,
             can_be_collateral: Some(true),
-            liquidity_index: 1,
+            liquidity_index:  ScalingMath::to_scaled(1),
             id: 3,
             configuration: ReserveConfiguration{
-                ltv:58, liquidation_threshold:63, liquidation_bonus:0, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap:10000000000, supply_cap:10000000000, liquidation_protocol_fee:0,
-                reserve_factor:20
+                ltv: ScalingMath::to_scaled(58), liquidation_threshold: ScalingMath::to_scaled(63), liquidation_bonus:0, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap: ScalingMath::to_scaled(10000000000), supply_cap: ScalingMath::to_scaled(10000000000), liquidation_protocol_fee:0,
+                reserve_factor: ScalingMath::to_scaled(20)
             },
             debt_index: 0
         }

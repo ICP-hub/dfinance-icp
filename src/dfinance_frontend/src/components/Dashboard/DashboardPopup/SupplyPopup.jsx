@@ -251,7 +251,7 @@ const SupplyPopup = ({
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold
+      reserveliquidationThreshold
     );
     console.log("Health Factor:", healthFactor);
     const ltv = calculateLTV(assetSupply, assetBorrow);
@@ -262,7 +262,7 @@ const SupplyPopup = ({
     );
     //|| liquidationThreshold>ltv
 
-    if (ltv * 100 >= reserveliquidationThreshold) {
+    if (ltv * 100 >= liquidationThreshold) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -310,7 +310,7 @@ const SupplyPopup = ({
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
-
+console.log("HealthFactorBackend",healthFactorBackend)
   return (
     <>
       {isVisible && (

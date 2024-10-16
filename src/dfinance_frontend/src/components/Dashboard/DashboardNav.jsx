@@ -58,26 +58,26 @@ const DashboardNav = () => {
     const { net_worth, net_apy, health_factor } = data.Ok;
     // console.log("health factor", health_factor[0])
     const updatedTab = walletDetailTab.map((item) => {
-      console.log("item", item)
+      console.log("item", item);
       switch (item.id) {
         case 0:
-          return { ...item, count: `$${formatNumber(net_worth[0])}` };
+          return { ...item, count: `$${formatNumber(Number(net_worth[0])/100000000)}` };
         case 1:
           return {
             ...item,
             count: `${netApy.toFixed(2) < 0.01 ? "<0.01" : netApy.toFixed(2)}%`,
           };
         case 2:
-          const healthValue = isFinite(health_factor[0])
-            ? health_factor[0] > 100
+          const healthValue =
+            Number(health_factor[0]) / 10000000000 > 100
               ? "♾️"
-              : parseFloat(health_factor[0].toFixed(2))
-            : "♾️";
+              : parseFloat((Number(health_factor[0]) / 10000000000).toFixed(2));
 
           return {
             ...item,
             count: healthValue,
           };
+
         default:
           return item;
       }
@@ -91,7 +91,7 @@ const DashboardNav = () => {
       updateWalletDetailTab(userData);
     }
   }, [userData]);
-  
+
   const [error, setError] = useState(null);
 
   const {
@@ -127,8 +127,9 @@ const DashboardNav = () => {
 
     reserves.forEach((reserve) => {
       const conversionRate = getConversionRate(reserve[0]);
-      const assetSupply = (reserve[1]?.asset_supply || 0) / 100000000;
-      const supplyApy = reserve[1]?.supply_rate || 0;
+      const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
+
+      const supplyApy = Number(reserve[1]?.supply_rate || 0n) / 100000000;
 
       console.log(
         `Reserve: ${reserve[0]}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
@@ -147,7 +148,8 @@ const DashboardNav = () => {
       totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
 
     console.log(
-      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${netApy * 100
+      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${
+        netApy * 100
       }`
     );
     return netApy * 100;
@@ -158,9 +160,9 @@ const DashboardNav = () => {
     let weightedDebtApySum = 0;
 
     reserves.forEach((reserve) => {
-      const assetBorrowed = (reserve[1]?.asset_borrow || 0) / 100000000;
-      const debtApy = reserve[1]?.borrow_rate || 0;
-      const assetPriceWhenBorrowed = reserve[1]?.asset_price_when_borrowed || 1;
+      const assetBorrowed =  Number(reserve[1]?.asset_borrow|| 0n) / 100000000
+      const debtApy = Number(reserve[1]?.borrow_rate|| 0n) / 100000000
+      const assetPriceWhenBorrowed = Number(reserve[1]?.asset_price_when_borrowed|| 0n) / 100000000 || 1;
 
       console.log(
         `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}, Price When Borrowed: ${assetPriceWhenBorrowed}`
@@ -179,7 +181,8 @@ const DashboardNav = () => {
       totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
 
     console.log(
-      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${netDebtApy * 100
+      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${
+        netDebtApy * 100
       }`
     );
     return netDebtApy * 100;
@@ -201,7 +204,7 @@ const DashboardNav = () => {
   useEffect(() => {
     if (userData && userData?.Ok?.reserves[0]) {
       const reservesData = userData?.Ok?.reserves[0];
-      console.log("reserveData in dashboard nav", reservesData)
+      console.log("reserveData in dashboard nav", reservesData);
       console.log("UserData Reserves in Dashboard:", reservesData);
 
       const calculatedNetApy = calculateNetApy(reservesData);
@@ -211,7 +214,7 @@ const DashboardNav = () => {
       const reserve = reservesData[0]; // Adjust this index as needed based on your data structure
 
       // Accessing asset_supply from the second element of the reserve
-      const supply = (reserve[1]?.asset_supply || 0) / 100000000; // Make sure reserve[1] exists
+      const supply = Number(reserve[1]?.asset_supply || 0n) / 100000000; // Make sure reserve[1] exists
       setAssetSupply(supply);
     }
   }, [userData]);
@@ -358,7 +361,6 @@ const DashboardNav = () => {
           ICP Market
         </h1>
 
-
         <div className="md:hidden flex ml-auto -mt-1">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md button1">
             <EllipsisVertical color={checkColor} size={18} />
@@ -371,8 +373,9 @@ const DashboardNav = () => {
           {/* Menu button for small screens */}
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
-                } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
+                isMenuOpen ? "block" : "hidden"
+              } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -399,24 +402,28 @@ const DashboardNav = () => {
                         <button className="relative w-full text-left flex justify-between items-center button1">
                           <span>{data.title}</span>
                           {console.log("Data Count:", data.count)}
-                          {console.log("Asset Supply in healthfactor conmditon:", assetSupply)}
+                          {console.log(
+                            "Asset Supply in healthfactor conmditon:",
+                            assetSupply
+                          )}
                           <span
-                            className={`font-bold text-[20px] ${data.title === "Health Factor"
-                              ? data.count === 0 && assetSupply === 0// Check if health factor is 0
-                                ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
-                                : data.count > 3
+                            className={`font-bold text-[20px] ${
+                              data.title === "Health Factor"
+                                ? data.count === 0 && assetSupply === 0 // Check if health factor is 0
+                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
+                                  : data.count > 3
                                   ? "text-green-500" // Green for health factor greater than 3
                                   : data.count <= 1
-                                    ? "text-red-500" // Red for health factor less than or equal to 1
-                                    : data.count <= 1.5
-                                      ? "text-orange-500" // Orange for health factor less than or equal to 1.5
-                                      : data.count <= 2
-                                        ? "text-orange-300" // Soft orange for health factor less than or equal to 2
-                                        : "text-orange-600" // Vivid orange for other values
-                              : data.title === "Total Borrows"
+                                  ? "text-red-500" // Red for health factor less than or equal to 1
+                                  : data.count <= 1.5
+                                  ? "text-orange-500" // Orange for health factor less than or equal to 1.5
+                                  : data.count <= 2
+                                  ? "text-orange-300" // Soft orange for health factor less than or equal to 2
+                                  : "text-orange-600" // Vivid orange for other values
+                                : data.title === "Total Borrows"
                                 ? "text-[#2A1F9D] dark:text-darkBlue" // Default color for Total Borrows
                                 : "text-[#2A1F9D] dark:text-darkBlue" // Default color for other titles
-                              }`}
+                            }`}
                           >
                             {data.count !== null ? data.count : "N/A"}
                           </span>
@@ -453,26 +460,26 @@ const DashboardNav = () => {
                       {data.title}
                       <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                       <span
-                        className={`font-bold text-[20px] ${data.title === "Health Factor"
-                          ? data.count === 0 && assetSupply === 0
-                            ? "text-[#2A1F9D] dark:text-darkBlue"
-                            : data.count > 3
+                        className={`font-bold text-[20px] ${
+                          data.title === "Health Factor"
+                            ? data.count === 0 && assetSupply === 0
+                              ? "text-[#2A1F9D] dark:text-darkBlue"
+                              : data.count > 3
                               ? "text-green-500"
                               : data.count <= 1
-                                ? "text-red-500"
-                                : data.count <= 1.5
-                                  ? "text-orange-500"
-                                  : data.count <= 2
-                                    ? "text-orange-300"
-                                    : "text-orange-600"
-                          : data.title === "Total Borrows"
+                              ? "text-red-500"
+                              : data.count <= 1.5
+                              ? "text-orange-500"
+                              : data.count <= 2
+                              ? "text-orange-300"
+                              : "text-orange-600"
+                            : data.title === "Total Borrows"
                             ? "text-[#2A1F9D] dark:text-darkBlue"
                             : "text-[#2A1F9D] dark:text-darkBlue"
-                          }`}
+                        }`}
                       >
                         {data.count !== null ? data.count : ""}
                       </span>
-
                     </button>
                   </div>
                 ))}

@@ -278,18 +278,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     onClose(); // Close the transaction result popup
   };
 
-  const conversionRates = {
-    ckBTC: 26000, // example conversion rate, 1 ckBTC = 26000 USD
-    ckETH: 1600, // example conversion rate, 1 ckETH = 1600 USD
-    ckUSDC: 1, // example conversion rate, 1 ckUSDC = 1 USD
-  };
-
-  const convertToUSD = (assetName, assetBorrowAmount) => {
-    const rate = conversionRates[assetName];
-    if (!rate) return 0; // default to 0 if no rate is available for the asset
-    return assetBorrowAmount * rate; // calculate USD equivalent
-  };
-
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);

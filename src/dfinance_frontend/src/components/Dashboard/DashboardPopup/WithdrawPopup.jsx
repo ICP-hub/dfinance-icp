@@ -61,9 +61,13 @@ const WithdrawPopup = ({
     }
   }, [isLoading, onLoadingChange]);
 
+
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
+    updateAmountAndUsdValue(inputAmount);
+  };
 
+  const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount);
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
@@ -74,22 +78,31 @@ const WithdrawPopup = ({
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-        setUsdValue(0);
+        // setUsdValue(0);
       }
     } else if (inputAmount === "") {
       setAmount("");
-      setUsdValue(0);
+      // setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-      setUsdValue(0);
+      // setUsdValue(0);
     }
   };
+
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const convertedValue = parseFloat(amount) * conversionRate;
+      setUsdValue(convertedValue); // Update USD value
+    } else {
+      setUsdValue(0); // Reset USD value if conditions are not met
+    }
+  }, [amount, conversionRate]);
 
   const { createLedgerActor, backendActor, principal } = useAuth();
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
-  
+
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
   const handleWithdraw = async () => {
@@ -219,6 +232,11 @@ const WithdrawPopup = ({
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
+  const handleMaxClick = () => {
+    const maxAmount = assetSupply.toString();
+    updateAmountAndUsdValue(maxAmount);
+  };
+
   return (
     <>
       {isVisible && (
@@ -254,7 +272,12 @@ const WithdrawPopup = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">
+                  <p className="text-xs mt-4 cursor-pointer bg-blue-100 dark:bg-gray-700/45 p-2 py-1 rounded-md button1"
+                    onClick={() => {
+                      if (assetSupply > 0) {
+                        handleMaxClick();
+                      }
+                    }}>
                     {assetSupply.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
                   </p>
                 </div>

@@ -20,10 +20,12 @@ import { useEffect } from "react";
 import useFetchBalance from "../customHooks/useFetchBalance";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import Loading from "../Common/Loading";
 
 const ITEMS_PER_PAGE = 8;
 
 const FaucetDetails = () => {
+
   const { isAuthenticated, principal, backendActor, createLedgerActor } =
     useAuth();
 
@@ -36,12 +38,10 @@ const FaucetDetails = () => {
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
-
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
-
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
@@ -61,28 +61,27 @@ const FaucetDetails = () => {
     fetchBalance
   } = useFetchConversionRate();
 
-useEffect(() => {
-  if (ckBTCBalance && ckBTCUsdRate) {
-    const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
-    setCkBTCUsdBalance(balanceInUsd);
-  }
-  
-  if (ckETHBalance && ckETHUsdRate) {
-    const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
-    setCkETHUsdBalance(balanceInUsd);
-  }
-  
-  if (ckUSDCBalance && ckUSDCUsdRate) {
-    const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
-    setCkUSDCUsdBalance(balanceInUsd);
-  }
+  useEffect(() => {
+    if (ckBTCBalance && ckBTCUsdRate) {
+      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
+      setCkBTCUsdBalance(balanceInUsd);
+    }
 
-  if (ckICPBalance && ckICPUsdRate) {
-    const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
-    setCkICPUsdBalance(balanceInUsd);
-  }
-}, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate]);
+    if (ckETHBalance && ckETHUsdRate) {
+      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
+      setCkETHUsdBalance(balanceInUsd);
+    }
 
+    if (ckUSDCBalance && ckUSDCUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
+      setCkUSDCUsdBalance(balanceInUsd);
+    }
+
+    if (ckICPBalance && ckICPUsdRate) {
+      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+      setCkICPUsdBalance(balanceInUsd);
+    }
+  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -93,8 +92,12 @@ useEffect(() => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
-          fetchConversionRate(), // Fetch ckBTC and ckETH rates
+          fetchConversionRate(),
         ]);
+         // Assuming you fetch assets in one of the fetch functions
+         const allAssets = await backendActor.getAllAssets();  // Fetch assets
+
+         setAssets(allAssets);  // Set assets here after fetch is complete
       } catch (error) {
         setError(error);
       } finally {
@@ -152,17 +155,12 @@ useEffect(() => {
   };
 
   const { filteredItems } = useAssetData();
-
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-
   const filteredReserveData = Object.fromEntries(filteredItems);
-  console.log(filteredReserveData);
-
   const formatNumber = useFormatNumber();
 
   return (
@@ -174,7 +172,11 @@ useEffect(() => {
       </div>
 
       <div className="w-full mt-9 p-0 lg:px-1">
-        {currentItems.length === 0 ? (
+        {loading ? ( 
+          <div className="flex justify-center items-center my-[14rem]">
+            <Loading isLoading={true}/>
+          </div>
+        ) : !currentItems ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
             <div className="w-20 h-15">
               <img
@@ -210,11 +212,10 @@ useEffect(() => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${
-                        index !== currentItems.length - 1
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""
-                      }`}
+                        }`}
                     >
                       <td className="p-3 align-center py-7 px-2">
                         <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">

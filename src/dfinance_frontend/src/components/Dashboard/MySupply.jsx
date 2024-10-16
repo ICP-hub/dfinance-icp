@@ -689,7 +689,8 @@ const MySupply = () => {
                     ) ? (
                     noSupplyMessage
                   ) : (
-                    <div className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden">
+                    // className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden"
+                    <div className="w-full h-auto mt-4 relative  overflow-hidden">
                       <div className="w-full z-10 sticky top-0">
                         <div className="grid grid-cols-[2fr_1.14fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-5 pl-4">Asset</div>
@@ -701,8 +702,14 @@ const MySupply = () => {
                       </div>
 
                       {/* Scrollable Content Area */}
+                      {/* className={`w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                          (reserveGroup) => reserveGroup[1].asset_supply > 0
+                        ).length > 3
+                          ? "h-[260px]"
+                          : ""
+                          }`} */}
                       <div
-                        className={`w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                        className={`w-full h-auto  ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_supply > 0
                         ).length > 3
                           ? "h-[260px]"
@@ -1082,7 +1089,8 @@ const MySupply = () => {
                   {filteredItems.length === 0 ? (
                     noAssetsToSupplyMessage
                   ) : (
-                    <div className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden">
+                    // <div className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden">
+                    <div className="w-full h-auto mt-4 ">
                       {/* Fixed Header */}
                       <div className="w-full z-10 sticky top-0 ">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
@@ -1094,8 +1102,9 @@ const MySupply = () => {
                         </div>
                       </div>
 
+                      {/* className="w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom" */}
                       {/* Scrollable Content Area */}
-                      <div className="w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom">
+                      <div className="w-full h-auto ">
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {filteredItems.slice(0, 8).map((item, index) => (
                             <div
@@ -1488,7 +1497,8 @@ const MySupply = () => {
                     ) ? (
                     noBorrowMessage
                   ) : (
-                    <div className="w-full h-auto mt-6 relative max-h-[300px] overflow-hidden">
+                    // className="w-full h-auto mt-6 relative max-h-[300px] overflow-hidden"
+                    <div className="w-full h-auto mt-6 relative  overflow-hidden">
                       {/* Container for the fixed header */}
                       <div className="w-full sticky top-0 z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
@@ -1500,8 +1510,14 @@ const MySupply = () => {
                         </div>
                       </div>
                       {/* Scrollable table body */}
+                      {/* className={`w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                          (reserveGroup) => reserveGroup[1].asset_borrow > 0
+                        ).length > 3
+                          ? "h-[260px]"
+                          : ""
+                          }`} */}
                       <div
-                        className={`w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                        className={`w-full h-auto ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_borrow > 0
                         ).length > 3
                           ? "h-[260px]"
@@ -1888,16 +1904,16 @@ const MySupply = () => {
                         <Info className="ml-4 text-[#5d151c]" />
                       </div>
                     )}
-
-                  <div className="w-full max-h-[300px] ">
+                  {/* className="w-full max-h-[300px] " */}
+                  <div className="w-full h-auto">
                     {/* Supply Section */}
                     {filteredItems.length === 0 ? (
                       noAssetsToBorrowMessage
                     ) : (
                       <div
                         className={`w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4 ${isTableDisabled
-                            ? "opacity-50 pointer-events-none"
-                            : ""
+                          ? "opacity-50 pointer-events-none"
+                          : ""
                           }`}
                       >
                         {/* Header */}
@@ -1911,7 +1927,8 @@ const MySupply = () => {
                             </div>
                           ))}
                         </div>
-                        <div className="w-full max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-custom">
+                        {/* className="w-full max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-custom" */}
+                        <div className="w-full h-auto">
                           {/* Body */}
                           {filteredItems.slice(0, 8).map((item, index) => (
                             <div

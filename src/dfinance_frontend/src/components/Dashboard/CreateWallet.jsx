@@ -54,7 +54,6 @@ const CreateWallet = () => {
         await login(val);
         dispatch(setConnectedWallet(val));
         dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
-
     };
 
     const loginHandler = async (val) => {
@@ -109,6 +108,7 @@ const CreateWallet = () => {
 
         fetchBalance();
     }, [isAuthenticated, ledgerActorckBTC, principalObj]);
+    
 
     return (
         <>

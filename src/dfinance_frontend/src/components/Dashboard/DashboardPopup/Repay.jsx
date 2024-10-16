@@ -47,8 +47,13 @@ const Repay = ({
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
 
   const value = 5.23;
+
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
+    updateAmountAndUsdValue(inputAmount);
+  };
+
+  const updateAmountAndUsdValue = (inputAmount) => {
 
     // Convert input to a number
     const numericAmount = parseFloat(inputAmount);
@@ -62,19 +67,26 @@ const Repay = ({
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-        setUsdValue(0);
       }
     } else if (inputAmount === "") {
       // Allow empty input and reset error
       setAmount("");
-      setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-      // setUsdValue(0);
     }
   };
+
   const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset)
+
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const convertedValue = parseFloat(amount) * conversionRate;
+      setUsdValue(convertedValue); // Update USD value
+    } else {
+      setUsdValue(0); // Reset USD value if conditions are not met
+    }
+  }, [amount, conversionRate]);
 
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
@@ -281,6 +293,11 @@ const Repay = ({
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
+  const handleMaxClick = () => {
+    const maxAmount = assetBorrow.toString();
+    updateAmountAndUsdValue(maxAmount);
+  };
+
   return (
     <>
       {isVisible && (
@@ -317,7 +334,13 @@ const Repay = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">
+                  <p className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${assetBorrow === 0 ? "text-gray-400 cursor-not-allowed" : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                    }`}
+                  onClick={() => {
+                    if (assetBorrow > 0) {
+                      handleMaxClick();
+                    }
+                  }}>
                     {assetBorrow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
                   </p>
                 </div>

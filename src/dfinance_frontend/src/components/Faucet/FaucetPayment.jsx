@@ -1,7 +1,7 @@
 import { Check, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
-const FaucetPayment = ({ asset, onClose }) => {
+const FaucetPayment = ({ asset, amount, onClose }) => {
     const [isVisible, setIsVisible] = useState(true);
     const modalRef = useRef(null);
 
@@ -11,30 +11,22 @@ const FaucetPayment = ({ asset, onClose }) => {
                 handleClose();
             }
         };
-
-        // Add event listener for clicks outside the component
         document.addEventListener('mousedown', handleClickOutside);
-
-        // Prevent body scrolling
         document.body.style.overflow = 'hidden';
-
         return () => {
-            // Remove event listener on cleanup
             document.removeEventListener('mousedown', handleClickOutside);
-
-            // Restore body scrolling
             document.body.style.overflow = 'auto';
         };
     }, []);
 
     const handleClose = () => {
         setIsVisible(false);
-        onClose(); // Also call onClose to close the parent popup
+        onClose();
         window.location.reload()
     };
 
     if (!isVisible) {
-        return null; // Hide the component when isVisible is false
+        return null;
     }
 
     return (
@@ -47,9 +39,7 @@ const FaucetPayment = ({ asset, onClose }) => {
                     <Check />
                 </div>
                 <h1 className='font-semibold text-xl'>All done!</h1>
-                <p>You received 500 {asset}</p>
-
-
+                <p>You received {amount} {asset}</p>
                 <button
                     onClick={handleClose}
                     className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"

@@ -1,29 +1,42 @@
 import React, { useState } from "react";
-import { Info, X } from 'lucide-react';
-import FaucetPayment from "./FaucetPayment"; // Import FaucetPayment component
-import Vector from "../../../public/Helpers/Vector.png"
-import { Fuel } from "lucide-react";
+import { X } from 'lucide-react';
+import FaucetPayment from "./FaucetPayment";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const {
     backendActor,
   } = useAuth()
+
   const [amount, setAmount] = useState("");
-  const [showFaucetPayment, setShowFaucetPayment] = useState(false); // State for showing/hiding FaucetPayment popup
+  const [showFaucetPayment, setShowFaucetPayment] = useState(false);
 
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    const value = e.target.value;
+    if (value === "") {
+      setAmount("");
+    } else {
+      const numericValue = Number(value);
+      if (maxAmount) {
+        setAmount(Math.min(numericValue, maxAmount));
+      } else {
+        setAmount(numericValue);
+      }
+    }
+  };
+
+  const handleMaxAmountClick = () => {
+    if (maxAmount) {
+      setAmount(maxAmount);
+    }
   };
 
   const handleFaucetETH = (asset) => {
     console.log("Faucet", asset, "ETH:", amount);
-    setShowFaucetPayment(true); // Show FaucetPayment popup after faucet action
-
-
+    setShowFaucetPayment(true);
     try {
       if (backendActor) {
-        const result = backendActor.faucet(asset, 500*100000000);
+        const result = backendActor.faucet(asset, amount * 100000000);
         console.log("Faucet result.", result);
       }
     } catch (error) {
@@ -35,12 +48,13 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     setShowFaucetPayment(false);
     onClose();
   };
+
   const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset); // Check what asset value is being passed
-  console.log("Fees:", fees); // Check the fees object
   const normalizedAsset = asset ? asset.toLowerCase() : 'default';
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
+  const maxAmount = asset === "ckUSDC" ? 10000 : 500;
+
   return (
     <>
       {!showFaucetPayment && (
@@ -56,9 +70,16 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               <div className="w-full flex justify-between my-2">
                 <h1>Transaction overview</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                <div className="w-3/12">
-                  <p>Amount</p>
+              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+                <div className="w-[60%]">
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={handleAmountChange}
+                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder="Enter Amount"
+                    min="0"
+                  />
                 </div>
                 <div className="w-9/12 flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -67,32 +88,33 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       alt="connect_wallet_icon"
                       className="object-cover w-8 h-8 rounded-full"
                     />
-                    <span className="text-lg">500 {asset}</span>
+                    <span className="text-lg">{asset}</span>
                   </div>
+                  {maxAmount && <p className="button1 cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md button1"
+                    onClick={handleMaxAmountClick}>{maxAmount} Max
+                  </p>}
                 </div>
               </div>
             </div>
           </div>
-
-          <div className="w-full flex  mt-3">
-
-
-          </div>
           <div>
             <button
               onClick={() => handleFaucetETH(asset)}
-              className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"
+              disabled={amount <= 0}
+              className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${amount > 0
+                ? "opacity-100 cursor-pointer"
+                : "opacity-50 cursor-not-allowed"
+                }`}
             >
               Faucet {asset}
             </button>
           </div>
         </div>
       )}
-
       {showFaucetPayment && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-gray-800 opacity-50" />
-          <FaucetPayment asset={asset} onClose={handleClose} />
+          <FaucetPayment asset={asset} amount={amount} onClose={handleClose} />
         </div>
       )}
     </>

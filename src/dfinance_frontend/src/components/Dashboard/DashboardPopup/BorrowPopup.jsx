@@ -206,7 +206,7 @@ const Borrow = ({
     return nextTotalDebt / totalCollateral;
   };
 
-   const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const [availableBorrows, setAvailableBorrows] = useState(0);
 
@@ -214,6 +214,9 @@ const Borrow = ({
 
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
+    updateAmountAndUsdValue(inputAmount);
+  };
+  const updateAmountAndUsdValue = (inputAmount) => {
 
     const numericAmount = parseFloat(inputAmount);
 
@@ -238,6 +241,11 @@ const Borrow = ({
         setUsdValue(0);
       }
     }, [amount, conversionRate]);
+  };
+
+  const handleMaxClick = () => {
+    const maxAmount = parseFloat(totalCollateral).toString();
+    updateAmountAndUsdValue(maxAmount);
   };
   return (
     <>
@@ -274,7 +282,13 @@ const Borrow = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">
+                  <p className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(totalCollateral) === 0 ? "text-gray-400 cursor-not-allowed" : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                    }`}
+                    onClick={() => {
+                      if (parseFloat(totalCollateral) > 0) {
+                        handleMaxClick();
+                      }
+                    }}>
                     ${parseFloat(totalCollateral)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"} Max
                   </p>
 

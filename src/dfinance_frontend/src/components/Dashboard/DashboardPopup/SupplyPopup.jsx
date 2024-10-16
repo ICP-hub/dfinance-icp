@@ -5,9 +5,9 @@ import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
-import { toast } from "react-toastify"; // Import Toastify if not already done
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import coinSound from "../../../../public/sound/message_chronicles.mp3"
+import coinSound from "../../../../public/sound/caching_duck_habbo.mp3"
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
 
@@ -32,21 +32,6 @@ const SupplyPopup = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
 
-  const convertToUSD = (asset, value, prices) => {
-    switch (asset) {
-      case "ckbtc":
-        return value * prices.ckbtc;
-      case "cketh":
-        return value * prices.cketh;
-      case "ckusdc":
-        return value * prices.ckusdc;
-      case "icp":
-        return value * prices.icp;
-      default:
-        return value;
-    }
-  };
-
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
@@ -60,7 +45,7 @@ const SupplyPopup = ({
   const supplyBalance = numericBalance - transferfee;
   const hasEnoughBalance = balance >= transactionFee;
   const value = currentHealthFactor;
- 
+
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
@@ -78,37 +63,38 @@ const SupplyPopup = ({
     }
   }, [isLoading, onLoadingChange]);
 
+
   const handleAmountChange = (e) => {
     const inputAmount = e.target.value;
+    updateAmountAndUsdValue(inputAmount);
+  };
 
+  const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount);
 
     if (!isNaN(numericAmount) && numericAmount >= 0 && supplyBalance >= 0) {
       if (numericAmount <= supplyBalance) {
         const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
+        setUsdValue(parseFloat(convertedValue.toFixed(2)));
         setAmount(inputAmount);
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-        // setUsdValue(0);
       }
     } else if (inputAmount === "") {
       setAmount("");
-      // setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
-      // setUsdValue(0);
     }
   };
 
   useEffect(() => {
     if (amount && conversionRate) {
       const convertedValue = parseFloat(amount) * conversionRate;
-      setUsdValue(convertedValue); // Update USD value
+      setUsdValue(convertedValue);
     } else {
-      setUsdValue(0); // Reset USD value if conditions are not met
+      setUsdValue(0);
     }
   }, [amount, conversionRate]);
 
@@ -117,8 +103,6 @@ const SupplyPopup = ({
 
   const handleApprove = async () => {
     let ledgerActor;
-
-    // Access ledger actor based on asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
@@ -128,42 +112,33 @@ const SupplyPopup = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     }
-
     const amountAsNat64 = Number(amount);
-    const scaledAmount = amountAsNat64 * Number(10 ** 8); // Adjusting for scaling factor
-    const totalAmount = scaledAmount + transferfee; // Add transfer fee
+    const scaledAmount = amountAsNat64 * Number(10 ** 8);
+    const totalAmount = scaledAmount + transferfee;
 
     try {
-      // Call the approval function
       const approval = await ledgerActor.icrc2_approve({
-        fee: [], // Adjust fee if needed
-        memo: [], // Optional memo field
+        fee: [],
+        memo: [],
         from_subaccount: [],
         created_at_time: [],
-        amount: totalAmount, // Set the amount to be approved
+        amount: totalAmount,
         expected_allowance: [],
         expires_at: [],
         spender: {
-          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND), // Set spender principal ID
+          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
           subaccount: [],
         },
       });
-
       console.log("Approve", approval);
-      setIsApproved(true); // Update the approval state
+      setIsApproved(true);
       console.log("isApproved state after approval:", isApproved);
-
-      // Show success notification
       toast.success("Approval successful!");
     } catch (error) {
-      // Handle error during approval
       console.error("Approval failed:", error);
-
-      // Show error notification
       toast.error(`Error: ${error.message || "Approval failed!"}`);
     }
   };
-
 
   const isCollateral = true;
   const amountAsNat64 = Number(amount);
@@ -188,23 +163,18 @@ const SupplyPopup = ({
       console.log("scaledAmount", scaledAmount)
       console.log("Backend actor", backendActor);
 
-      // Calling the backend actor for supply
       const sup = await backendActor.supply(asset, scaledAmount, true);
       console.log("Supply", sup);
 
-      // Set state on success
       setIsPaymentDone(true);
       setIsVisible(false);
 
-      // Show success notification
       const sound = new Audio(coinSound);
-    sound.play();
+      sound.play();
       toast.success("Supply successful!");
     } catch (error) {
-      // Log the error for debugging
       console.error("Supply failed:", error);
 
-      // Show error notification using Toastify
       toast.error(`Error: ${error.message || "Supply action failed!"}`);
     }
   };
@@ -282,12 +252,12 @@ const SupplyPopup = ({
     totalDebt,
     liquidationThreshold
   ) => {
-    const amountTaken = 0; // Ensure usdValue is treated as a number
-    const amountAdded = usdValue || 0; // No amount added for now, but keeping it in case of future use
+    const amountTaken = 0;
+    const amountAdded = usdValue || 0;
 
-    // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
+    console.log("amount added", amountAdded, "totalCollateral", totalCollateral, "totalDebt", totalDebt, "liquidationThreshold", liquidationThreshold);
+
+    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
     console.log("totalCollateralValue", totalCollateralValue);
     console.log("totalDeptValue", totalDeptValue);
@@ -310,6 +280,11 @@ const SupplyPopup = ({
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
+
+  const handleMaxClick = () => {
+    const maxAmount = supplyBalance.toString();
+    updateAmountAndUsdValue(maxAmount);
+  };
 
   return (
     <>
@@ -346,7 +321,14 @@ const SupplyPopup = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">
+                  <p className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 ? "text-gray-400 cursor-not-allowed" : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                    }`}
+                    onClick={() => {
+                      if (supplyBalance > 0) {
+                        handleMaxClick();
+                      }
+                    }}
+                  >
                     {supplyBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
                   </p>
 

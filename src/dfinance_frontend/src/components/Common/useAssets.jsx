@@ -45,9 +45,11 @@ const useAssetData = (searchQuery = '') => {
           const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
           console.log(`${asset} reserve data:`, reserveDataForAsset);
-          const supplyCap = parseFloat(reserveDataForAsset.Ok.configuration.supply_cap);
-          const totalSupply = parseFloat(reserveDataForAsset.Ok.total_supply/100000000);
-          const totalBorrow = parseFloat(reserveDataForAsset.Ok.total_borrowed/100000000);
+          const supplyCap = parseFloat(Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000);
+          const totalSupply = parseFloat(Number(reserveDataForAsset.Ok.total_supply) / 100000000);
+          const totalBorrow = parseFloat(Number(reserveDataForAsset.Ok.total_borrowed) / 100000000);
+          
+          
           console.log("supplyCap", supplyCap)
           console.log("TotalSupplies", totalSupply)
           console.log("TotalBorrow", totalBorrow)

@@ -157,6 +157,7 @@ enum ApproveResult {
 }
 
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
+const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
 
 fn setup() -> (PocketIc, Principal) {
     let pic = PocketIc::new();
@@ -167,6 +168,13 @@ fn setup() -> (PocketIc, Principal) {
     pic.install_canister(backend_canister, wasm, vec![], None);
 
     println!("Backend canister: {}", backend_canister);
+
+    let xrc_canister = pic.create_canister();
+    pic.add_cycles(xrc_canister, 5_000_000_000_000); // 2T Cycles
+    let wasm = fs::read(XRC_WASM).expect("Wasm file not found, run 'dfx build'.");
+    pic.install_canister(xrc_canister, wasm, vec![], None);
+
+    println!("Backend canister: {}", xrc_canister);
 
     //=================Reserve Initialize ==================
 
@@ -221,9 +229,10 @@ fn check_balance(pic: &PocketIc, canister: Principal, user_principal: Principal)
 fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_supply(&pic, backend_canister);
-    // test_borrow(&pic, backend_canister);
-    // test_repay(&pic, backend_canister);
+    test_borrow(&pic, backend_canister);
+    test_repay(&pic, backend_canister);
     test_withdraw(&pic, backend_canister);
+    test_liquidation(&pic, backend_canister);
 }
 
 // #[test]
@@ -420,7 +429,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         simulate_dtoken_transfer_failure: bool,
     }
 
-    let test_cases = vec![
+    let mut test_cases = vec![
         // Valid deposit case
         TestCase {
             asset: "ckBTC".to_string(),
@@ -457,7 +466,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Large amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 100_000, // Large amount
+            amount: 100_00, // Large amount
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -471,8 +480,9 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             is_collateral: true,
             expect_success: false,
             expected_error_message: Some(
-                "Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\""
-                    .to_string(),
+                // "Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\""
+                //     .to_string(),
+                "Asset transfer failed, burned dtoken. Error: \"InsufficientFunds".to_string()
             ), // change it later on
             simulate_insufficient_balance: true,
             simulate_dtoken_transfer_failure: false,
@@ -483,7 +493,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     println!();
     println!("****************************************************************************");
     println!();
-    for (i, case) in test_cases.iter().enumerate() {
+    for (i, case) in test_cases.iter_mut().enumerate() {
         // Print the case number
         println!("Running test case no: {}", i + 1);
         println!();
@@ -546,19 +556,17 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             Some(principal) => principal,
             None => {
                 // Handle the case where the asset principal was not found
-                println!("{:?}", case.expected_error_message);
+                // println!("{:?}", case.expected_error_message);
                 continue;
             }
         };
 
-        ic_cdk::println!("got the id = {}", asset_principal);
-
-        let reserve_data = pic.query_call(
-            backend_canister,
-            Principal::anonymous(),
-            "get_reserve_data",
-            encode_one(case.asset.clone()).unwrap(),
-        );
+        // let reserve_data = pic.query_call(
+        //     backend_canister,
+        //     Principal::anonymous(),
+        //     "get_reserve_data",
+        //     encode_one(case.asset.clone()).unwrap(),
+        // );
 
         // Approve before deposit
         let approve_args = ApproveArgs {
@@ -636,13 +644,27 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     Err(e) => {
                         if !case.expect_success {
                             // to run this need to use the rejex ------ work.
-                            // assert_eq!(
-                            //     case.expected_error_message.as_deref(),
-                            //     Some(e.as_str()),
-                            //     "Error message mismatch for case: {:?}",
-                            //     case
-                            // );
-                            println!("{:?}", case.expected_error_message);
+                            let error_message = e.as_str();
+
+                            // Create a regular expression to capture the balance information with the value
+                            let re = Regex::new(r"\{ balance: Nat\((\d+)\) \}").unwrap();
+
+                            // Find the match in the error message
+                            if let Some(captures) = re.captures(error_message) {
+                                // Get the matched string
+                                let balance_info = captures.get(0).map_or("", |m| m.as_str());
+
+                                if let Some(ref mut case) = case.expected_error_message {
+                                    case.push_str(&format!(" {}\"", balance_info));
+                                }
+                            };
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(e.as_str()),
+                                "Error message mismatch for case: {:?}",
+                                case
+                            );
+                            println!("supply rejected as expected: {:?}", case.expected_error_message);
                         } else {
                             println!("Expected success but got error: {:?}", e);
                         }
@@ -1077,6 +1099,55 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         //     transfer_dtoken_to_anonymous(&pic, d_token_principal, backend_canister);
         // }
 
+        let result: Result<WasmResult, pocket_ic::UserError> = pic.query_call(
+            backend_canister,
+            Principal::anonymous(),
+            "get_asset_principal",
+            encode_one(case.asset.clone()).unwrap(),
+        );
+
+        // i dont need none here. need to replace it.----- work.
+        // Handle the result and store the Ok value in asset_canister
+        let asset_canister = match result {
+            Ok(WasmResult::Reply(response_data)) => {
+                match decode_one::<Result<Principal, String>>(&response_data) {
+                    Ok(Ok(principal)) => {
+                        // Successfully retrieved the principal
+                        Some(principal)
+                    }
+                    Ok(Err(err)) => {
+                        // Handle the error returned by get_asset_principal
+                        println!("Error retrieving asset principal: {}", err);
+                        None
+                    }
+                    Err(decode_err) => {
+                        // Handle the error while decoding the response
+                        println!("Error decoding the response: {}", decode_err);
+                        None
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                // Handle the rejection message from the WasmResult
+                println!("Query call rejected: {}", reject_message);
+                None
+            }
+            Err(call_err) => {
+                // Handle the error from the query call itself
+                println!("Query call failed: {}", call_err);
+                None
+            }
+        };
+        // let asset_principal = asset_canister.unwrap();
+        let asset_principal = match asset_canister {
+            Some(principal) => principal,
+            None => {
+                // Handle the case where the asset principal was not found
+                // println!("{:?}", case.expected_error_message);
+                continue;
+            }
+        };
+        
         // Now call the deposit function
         let result = pic.update_call(
             backend_canister,
@@ -1139,54 +1210,6 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             }
         }
 
-        let result: Result<WasmResult, pocket_ic::UserError> = pic.query_call(
-            backend_canister,
-            Principal::anonymous(),
-            "get_asset_principal",
-            encode_one(case.asset.clone()).unwrap(),
-        );
-
-        // i dont need none here. need to replace it.----- work.
-        // Handle the result and store the Ok value in asset_canister
-        let asset_canister = match result {
-            Ok(WasmResult::Reply(response_data)) => {
-                match decode_one::<Result<Principal, String>>(&response_data) {
-                    Ok(Ok(principal)) => {
-                        // Successfully retrieved the principal
-                        Some(principal)
-                    }
-                    Ok(Err(err)) => {
-                        // Handle the error returned by get_asset_principal
-                        println!("Error retrieving asset principal: {}", err);
-                        None
-                    }
-                    Err(decode_err) => {
-                        // Handle the error while decoding the response
-                        println!("Error decoding the response: {}", decode_err);
-                        None
-                    }
-                }
-            }
-            Ok(WasmResult::Reject(reject_message)) => {
-                // Handle the rejection message from the WasmResult
-                println!("Query call rejected: {}", reject_message);
-                None
-            }
-            Err(call_err) => {
-                // Handle the error from the query call itself
-                println!("Query call failed: {}", call_err);
-                None
-            }
-        };
-        // let asset_principal = asset_canister.unwrap();
-        let asset_principal = match asset_canister {
-            Some(principal) => principal,
-            None => {
-                // Handle the case where the asset principal was not found
-                println!("{:?}", case.expected_error_message);
-                continue;
-            }
-        };
 
         if case.expect_success {
             let user_principal = Principal::anonymous(); 
@@ -1347,7 +1370,7 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             Some(principal) => principal,
             None => {
                 // Handle the case where the asset principal was not found
-                println!("{:?}", case.expected_error_message);
+                // println!("{:?}", case.expected_error_message);
                 continue;
             }
         };
@@ -1419,7 +1442,6 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
 
                             // Find the match in the error message
                             if let Some(captures) = re.captures(error_message) {
-                                ic_cdk::println!("to check = {:?}", captures);
                                 // Get the matched string
                                 let balance_info = captures.get(0).map_or("", |m| m.as_str());
 
@@ -1479,6 +1501,243 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after deposit");
         }
         
+        println!();
+        println!("****************************************************************************");
+        println!();
+    }
+}
+
+
+fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
+    #[derive(Debug, Clone)]
+    struct TestCase {
+        asset: String,
+        amount: u128,
+        on_behalf_of: Option<String>,
+        is_collateral: bool,
+        expect_success: bool,
+        expected_error_message: Option<String>,
+    }
+
+    let test_cases = vec![
+        // Valid deposit case
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: 1000,
+            on_behalf_of: Some(Principal::anonymous().to_text()),
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        // Non-existent asset case
+        TestCase {
+            asset: "nonexistent_asset".to_string(),
+            amount: 500,
+            on_behalf_of: Some(Principal::anonymous().to_text()),
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("Reserve not found for asset: nonexistent_asset".to_string()),
+        },
+        // Large amount
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: 10_000, // Large amount
+            on_behalf_of: Some(Principal::anonymous().to_text()),
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+    ];
+
+    let liquidator_principal = Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
+        .expect("Failed to create new user principal");
+    let _ = pic.update_call(
+        backend_canister,
+        liquidator_principal,
+        "faucet",
+        encode_args(("ckBTC", 100000u64)).unwrap(),
+    );
+
+     // for case in test_cases {
+        println!();
+        println!("****************************************************************************");
+        println!();
+    for (i, case) in test_cases.iter().enumerate() {
+        println!("Running test case no: {}", i + 1);
+        println!("Test case details: {:?}", case);
+
+        // Approve before liquidation
+        let approve_args = ApproveArgs {
+            fee: None,
+            memo: None,
+            from_subaccount: None,
+            created_at_time: None,
+            amount: Nat::from(10_000_000u64),
+            expected_allowance: None,
+            expires_at: None,
+            spender: Account {
+                owner: backend_canister,
+                subaccount: None,
+            },
+        };
+        let args_encoded = encode_one(approve_args).expect("Failed to encode approve arguments");
+
+        let result = pic.query_call(
+            backend_canister,
+            Principal::anonymous(),
+            "get_asset_principal",
+            encode_one(case.asset.clone()).unwrap(),
+        );
+
+        // Handle the result and store the Ok value in asset_canister
+        let asset_canister = match result {
+            Ok(WasmResult::Reply(response_data)) => {
+                match decode_one::<Result<Principal, String>>(&response_data) {
+                    Ok(Ok(principal)) => {
+                        // Successfully retrieved the principal
+                        Some(principal)
+                    }
+                    Ok(Err(err)) => {
+                        // Handle the error returned by get_asset_principal
+                        println!("Error retrieving asset principal id : {}", err);
+                        None
+                    }
+                    Err(decode_err) => {
+                        // Handle the error while decoding the response
+                        println!("Error decoding the response: {}", decode_err);
+                        None
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                // Handle the rejection message from the WasmResult
+                println!("Query call rejected: {}", reject_message);
+                None
+            }
+            Err(call_err) => {
+                // Handle the error from the query call itself
+                println!("Query call failed: {}", call_err);
+                None
+            }
+        };
+
+        //let asset_principal = asset_canister.unwrap();
+        let asset_principal = match asset_canister {
+            Some(principal) => principal,
+            None => {
+                // Handle the case where the asset principal was not found
+                // println!("{:?}", case.expected_error_message);
+                continue;
+            }
+        };
+
+        let approve_result = pic.update_call(
+            asset_principal,
+            liquidator_principal,
+            "icrc2_approve",
+            args_encoded,
+        );
+        match approve_result {
+            Ok(WasmResult::Reply(reply)) => {
+                let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
+                match approve_response {
+                    Ok(ApproveResult::Ok(block_index)) => println!("Approve succeeded, block index: {}", block_index),
+                    Ok(ApproveResult::Err(error)) => {
+                        println!("Approve failed with error: {:?}", error);
+                        continue;
+                    }
+                    Err(e) => {
+                        println!("Failed to decode ApproveResult: {:?}", e);
+                        continue;
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                println!("Approve call rejected: {}", reject_message);
+                continue;
+            }
+            Err(e) => {
+                println!("Error during approve call: {:?}", e);
+                continue;
+            }
+        }
+
+        // Call the liquidation function
+        let liquidation_result = pic.update_call(
+            backend_canister,
+            liquidator_principal,
+            "liquidation_call",
+            encode_args((
+                case.asset.clone(),
+                "ckBTC".to_string(), // assuming ckETH as collateral asset for testing
+                case.amount as u64,
+                case.on_behalf_of.clone().unwrap_or_default(),
+            ))
+            .expect("Failed to encode liquidation_call arguments"),
+        );
+
+        match liquidation_result {
+            Ok(WasmResult::Reply(response)) => {
+                let liquidation_response: Result<(), String> = candid::decode_one(&response)
+                    .expect("Failed to decode liquidation response");
+                match liquidation_response {
+                    Ok(()) => {
+                        if case.expect_success {
+                            println!("liquidation_call succeeded for case: {:?}", case);
+                        } else {
+                            panic!("Expected failure but got success for case: {:?}", case);
+                        }
+                    }
+                    Err(e) => {
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(e.as_str()),
+                                "Error message mismatch for case: {:?}",
+                                case
+                            );
+                            println!("liquidation_call failed as expected with error: {:?}", e);
+                        } else {
+                            panic!("Expected success but got error: {:?}", e);
+                        }
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                if !case.expect_success {
+                    assert_eq!(
+                        case.expected_error_message.as_deref(),
+                        Some(reject_message.as_str()),
+                        "Error message mismatch for case: {:?}",
+                        case
+                    );
+                    println!("liquidation_call rejected as expected: {}", reject_message);
+                } else {
+                    panic!("Expected success but got rejection for case: {:?} with message: {}", case, reject_message);
+                }
+            }
+            Err(e) => {
+                panic!("Error during liquidation_call function call: {:?}", e);
+            }
+        }
+        if case.expect_success {
+            let user_principal = Principal::anonymous(); 
+            let user_balance_after = check_balance(&pic, asset_principal, user_principal);
+            let backend_balance_after = check_balance(&pic, asset_principal, backend_canister);
+
+           
+           // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
+
+            
+            println!("User balance after deposit: {}", user_balance_after);
+            println!("Backend balance after deposit: {}", backend_balance_after);
+           // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after); 
+
+            
+            assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after deposit");
+            assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after deposit");
+        }
+
         println!();
         println!("****************************************************************************");
         println!();

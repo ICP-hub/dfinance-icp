@@ -14,8 +14,8 @@ const useUserData = () => {
             const result = await backendActor.get_user_data(user);
             console.log("get_user_data in supplypopup:", result);
 
-            if (result && result.Ok && result.Ok.health_factor) {
-                setHealthFactorBackend(result.Ok.health_factor);
+            if (result && result.Ok && Number(result.Ok.health_factor)/100000000) {
+                setHealthFactorBackend(Number(result.Ok.health_factor)/10000000000);
             } else {
                 setError("Health factor not found");
             }

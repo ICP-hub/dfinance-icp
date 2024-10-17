@@ -16,8 +16,8 @@ const SupplyPopup = ({
   image,
   supplyRateAPR,
   balance,
-  reserveliquidationThreshold,
   liquidationThreshold,
+  reserveliquidationThreshold,
   assetSupply,
   assetBorrow,
   totalCollateral,
@@ -27,6 +27,7 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+ 
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -65,7 +66,18 @@ const SupplyPopup = ({
 
 
   const handleAmountChange = (e) => {
-    const inputAmount = e.target.value;
+    let inputAmount = e.target.value;
+
+    // Check if there's a decimal point and enforce 8 decimal places
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
+      
+      // Limit decimal places to 8
+      if (decimalPart.length > 8) {
+        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
+        e.target.value = inputAmount; // Directly update the value in the field
+      }
+    }
     updateAmountAndUsdValue(inputAmount);
   };
 
@@ -224,7 +236,8 @@ const SupplyPopup = ({
       liquidationThreshold
     );
     console.log("Health Factor:", healthFactor);
-    const ltv = calculateLTV(assetSupply, assetBorrow);
+    const ltv = calculateLTV(totalCollateral,
+      totalDebt);
     console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
@@ -232,11 +245,7 @@ const SupplyPopup = ({
     );
     //|| liquidationThreshold>ltv
 
-    if (ltv * 100 >= reserveliquidationThreshold) {
-      setIsButtonDisabled(true);
-    } else {
-      setIsButtonDisabled(false);
-    }
+    
   }, [
     asset,
     liquidationThreshold,
@@ -276,7 +285,7 @@ const SupplyPopup = ({
     if (totalCollateralValue === 0) {
       return 0;
     }
-    return totalDeptValue / totalCollateralValue;
+    return (totalDeptValue / totalCollateralValue)*100;
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
@@ -302,10 +311,11 @@ const SupplyPopup = ({
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
+                    step="0.00000001" // This allows input up to 8 decimal places
+                    min="0"
                     disabled={supplyBalance === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
-                    min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
@@ -449,7 +459,7 @@ const SupplyPopup = ({
               ? "opacity-50 cursor-not-allowed"
               : ""
               }`}
-            disabled={isLoading || amount <= 0 || null || isButtonDisabled}
+            disabled={isLoading || amount <= 0 || null }
           >
             {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
           </button>

@@ -18,8 +18,8 @@ const Repay = ({
   image,
   supplyRateAPR,
   balance,
-  reserveliquidationThreshold,
   liquidationThreshold,
+  reserveliquidationThreshold,
   assetSupply,
   assetBorrow,
   totalCollateral,
@@ -49,7 +49,18 @@ const Repay = ({
   const value = 5.23;
 
   const handleAmountChange = (e) => {
-    const inputAmount = e.target.value;
+    let inputAmount = e.target.value;
+
+    // Check if there's a decimal point and enforce 8 decimal places
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
+      
+      // Limit decimal places to 8
+      if (decimalPart.length > 8) {
+        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
+        e.target.value = inputAmount; // Directly update the value in the field
+      }
+    }
     updateAmountAndUsdValue(inputAmount);
   };
 
@@ -239,11 +250,7 @@ const Repay = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if ( ltv >= reserveliquidationThreshold) {
-      setIsButtonDisabled(true); // Disable the button
-    } else {
-      setIsButtonDisabled(false); // Enable the button
-    }
+    
   }, [
     asset,
     liquidationThreshold,
@@ -315,6 +322,7 @@ const Repay = ({
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
+                    step="0.00000001"
                     disabled={assetBorrow === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
@@ -451,7 +459,7 @@ const Repay = ({
                   ? "opacity-50 cursor-not-allowed"
                   : ""
                   }`}
-                disabled={isLoading || amount <= 0 || null || isButtonDisabled}
+                disabled={isLoading || amount <= 0 || null }
               >
                 {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
               </button>

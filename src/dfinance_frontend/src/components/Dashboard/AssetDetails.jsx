@@ -66,18 +66,18 @@ const AssetDetails = () => {
   useEffect(() => {
     if (assetData?.Ok) {
       console.log("assetData:", assetData?.Ok);
-      setBorrowRateAPR(assetData.Ok.borrow_rate);
-      setSupplyRateAPR(assetData.Ok.current_liquidity_rate);
-      setTotalBorrowed(assetData.Ok.total_borrowed);
-      setTotalSupplied(assetData.Ok.total_supply);
-      setBorrowCap(assetData.Ok.configuration?.borrow_cap);
-      setSupplyCap(assetData.Ok.configuration?.supply_cap);
-      setLtv(assetData.Ok.configuration?.ltv);
-      setLiquidationBonus(assetData.Ok.configuration?.liquidation_bonus);
+      setBorrowRateAPR(Number(assetData.Ok.borrow_rate) / 100000000);
+      setSupplyRateAPR(Number(assetData.Ok.current_liquidity_rate) / 100000000);
+      setTotalBorrowed(Number(assetData.Ok.total_borrowed) / 100000000);
+      setTotalSupplied(Number(assetData.Ok.total_supply) / 100000000);
+      setBorrowCap(Number(assetData.Ok.configuration?.borrow_cap) / 100000000);
+      setSupplyCap(Number(assetData.Ok.configuration?.supply_cap) / 100000000);
+      setLtv(Number(assetData.Ok.configuration?.ltv) / 100000000);
+      setLiquidationBonus(Number(assetData.Ok.configuration?.liquidation_bonus) / 100000000);
       setLiquidationThreshold(
-        assetData.Ok.configuration?.liquidation_threshold
+        Number(assetData.Ok.configuration?.liquidation_threshold) / 100000000
       );
-      setCanBeCollateral(assetData.Ok.can_be_collateral?.[0]);
+      setCanBeCollateral(Number(assetData.Ok.can_be_collateral?.[0])) / 100000000;
     }
   }, [assetData]);
 
@@ -166,7 +166,7 @@ const AssetDetails = () => {
 
   const { id } = useParams();
 
-   const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const [isFilter, setIsFilter] = React.useState(false);
   const { filteredItems } = useAssetData();
@@ -250,34 +250,34 @@ const AssetDetails = () => {
     }
   };
 
-useEffect(() => {
-  if (ckBTCBalance && ckBTCUsdRate) {
-    const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
-    setCkBTCUsdBalance(balanceInUsd);
-  }
-  
-  if (ckETHBalance && ckETHUsdRate) {
-    const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
-    setCkETHUsdBalance(balanceInUsd);
-  }
-  
-  if (ckUSDCBalance && ckUSDCUsdRate) {
-    const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
-    setCkUSDCUsdBalance(balanceInUsd);
-  }
+  useEffect(() => {
+    if (ckBTCBalance && ckBTCUsdRate) {
+      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
+      setCkBTCUsdBalance(balanceInUsd);
+    }
 
-  if (ckICPBalance && ckICPUsdRate) {
-    const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
-    setCkICPUsdBalance(balanceInUsd);
-  }
-}, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate]);
+    if (ckETHBalance && ckETHUsdRate) {
+      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
+      setCkETHUsdBalance(balanceInUsd);
+    }
+
+    if (ckUSDCBalance && ckUSDCUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
+      setCkUSDCUsdBalance(balanceInUsd);
+    }
+
+    if (ckICPBalance && ckICPUsdRate) {
+      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+      setCkICPUsdBalance(balanceInUsd);
+    }
+  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate]);
 
 
   useEffect(() => {
     console.log("Asset ID from URL parameters:", id);
   }, [id]);
 
- 
+
 
   useEffect(() => {
     if (ckBTCBalance !== null) {
@@ -360,6 +360,7 @@ useEffect(() => {
     image,
     supplyRateAPR,
     ckBalance,
+    reserveliquidationThreshold,
     liquidationThreshold,
     assetSupply,
     assetBorrow,
@@ -374,6 +375,7 @@ useEffect(() => {
       image: image,
       supplyRateAPR: supplyRateAPR,
       ckBalance: ckBalance,
+      reserveliquidationThreshold: reserveliquidationThreshold,
       liquidationThreshold: liquidationThreshold,
       assetSupply: assetSupply,
       assetBorrow: assetBorrow,
@@ -399,6 +401,9 @@ useEffect(() => {
                 image={isModalOpen.image}
                 balance={isModalOpen.ckBalance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                reserveliquidationThreshold={
+                  isModalOpen.reserveliquidationThreshold
+                }
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
@@ -448,12 +453,12 @@ useEffect(() => {
     id === "ckBTC"
       ? ckBTCBalance
       : id === "ckETH"
-      ? ckETHBalance
-      : id === "ckUSDC"
-      ? ckUSDCBalance
-      : id === "ICP"
-      ? ckICPBalance
-      : null;
+        ? ckETHBalance
+        : id === "ckUSDC"
+          ? ckUSDCBalance
+          : id === "ICP"
+            ? ckICPBalance
+            : null;
 
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-16 my-6 gap-6 mb-[5rem]">
@@ -650,14 +655,13 @@ useEffect(() => {
                           (reserveGroup) => reserveGroup[0] === id
                         );
                         console.log("userData", userData);
-                        const assetSupply = (reserveData?.[1]?.asset_supply || 0)/100000000;
-                        const assetBorrow = (reserveData?.[1]?.asset_borrow || 0) / 100000000;
+                        const assetSupply = Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
+                        const assetBorrow = Number(reserveData?.[1]?.asset_borrow || 0n) / 100000000;
 
-                        console.log("Asset Borrow:", assetBorrow); // This will log the asset borrow value or 0 if it's undefined
-                        
-                        const totalCollateral =
-                          userData?.Ok?.total_collateral || 0;
-                        const totalDebt = userData?.Ok?.total_debt || 0;
+                        console.log("Asset Borrow:", assetBorrow); 
+
+                        const totalCollateral = (Number(userData?.Ok?.total_collateral) / 100000000);
+                        const totalDebt = (Number(userData?.Ok?.total_debt) / 100000000);
 
                         const filteredData = filteredItems?.find((item) => {
                           console.log("itemsitems", item[1]?.Ok?.asset_name);
@@ -665,20 +669,23 @@ useEffect(() => {
                         });
 
                         const supplyRateApr =
-                          filteredData[1]?.Ok.current_liquidity_rate || 0;
-                        const liquidationThreshold =
-                          filteredData[1]?.Ok.configuration
-                            .liquidation_threshold || 0;
+                          Number(filteredData[1]?.Ok.current_liquidity_rate) / 100000000 || 0;
+
+                          const liquidationThreshold =
+                               (Number(userData.Ok?.liquidation_threshold)/100000000 )|| 0;
+                        const reserveliquidationThreshold =
+                        Number(filteredData[1]?.Ok.configuration.liquidation_threshold) / 100000000 || 0
+    
                         const ckBalance =
                           id === "ckBTC"
                             ? ckBTCBalance
                             : id === "ckETH"
-                            ? ckETHBalance
-                            : id === "ckUSDC"
-                            ? ckUSDCBalance
-                            : id === "ICP"
-                            ? ckICPBalance
-                            : null;
+                              ? ckETHBalance
+                              : id === "ckUSDC"
+                                ? ckUSDCBalance
+                                : id === "ICP"
+                                  ? ckICPBalance
+                                  : null;
 
                         console.log(
                           "ckBalance",
@@ -701,12 +708,13 @@ useEffect(() => {
                           "supply",
                           id,
                           (id === "ckBTC" && ckbtc) ||
-                            (id === "ckETH" && cketh) ||
-                            (id === "ckUSDC" && ckUSDC) ||
-                            (id === "ICP" && icp),
+                          (id === "ckETH" && cketh) ||
+                          (id === "ckUSDC" && ckUSDC) ||
+                          (id === "ICP" && icp),
                           supplyRateApr,
                           ckBalance,
                           liquidationThreshold,
+                          reserveliquidationThreshold,
                           assetSupply,
                           assetBorrow,
                           totalCollateral,

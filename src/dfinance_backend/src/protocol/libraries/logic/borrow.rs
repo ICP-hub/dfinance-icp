@@ -46,8 +46,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     let amount_nat = Nat::from(params.amount);
 
-    let mut usd_amount = params.amount as f64;
-    let borrow_amount_to_usd = get_exchange_rates(params.asset.clone(), None, params.amount as f64).await;
+    let mut usd_amount = params.amount ;
+    let borrow_amount_to_usd = get_exchange_rates(params.asset.clone(), None, params.amount).await;
     match borrow_amount_to_usd {
         Ok((amount_in_usd, _timestamp)) => {
             // Extracted the amount in USD
@@ -87,8 +87,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     };
      
 
-    if reserve_data.total_borrowed == 0.0 {
-        *&mut reserve_data.debt_index = 1.0;
+    if reserve_data.total_borrowed == 0 {
+        *&mut reserve_data.debt_index = 100000000;
     }
 
     // Fetches the reserve logic cache having the current values
@@ -113,14 +113,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     // .await;
     // ic_cdk::println!("Borrow validated successfully");
 
-    let liquidity_added=0f64;
-    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount.clone());
+    let liquidity_added=0;
+    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount).await;
     ic_cdk::println!("Interest rates updated successfully");
-    *&mut reserve_data.total_borrowed+=usd_amount;  
+    // *&mut reserve_data.total_borrowed+=usd_amount;  
     mutate_state(|state| {
-                let asset_index = &mut state.asset_index;
-                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-    });
+        let asset_index = &mut state.asset_index;
+        asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+});
     // Minting debttoken
     match asset_transfer(
         user_principal,
@@ -216,9 +216,9 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     let repay_amount = Nat::from(params.amount);
 
     // Converting asset value to usdt
-    let mut usd_amount = params.amount as f64;
+    let mut usd_amount = params.amount;
     let repay_amount_to_usd =
-        get_exchange_rates(params.asset.clone(), None, params.amount as f64).await;
+        get_exchange_rates(params.asset.clone(), None, params.amount).await;
     match repay_amount_to_usd {
         Ok((amount_in_usd, _timestamp)) => {
             // Extracted the amount in USD

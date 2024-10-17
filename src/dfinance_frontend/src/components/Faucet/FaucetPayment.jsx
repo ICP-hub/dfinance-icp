@@ -39,7 +39,7 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
                     <Check />
                 </div>
                 <h1 className='font-semibold text-xl'>All done!</h1>
-                <p>You received {amount} {asset}</p>
+                <p>You received {amount.toLocaleString()} {asset}</p>
                 <button
                     onClick={handleClose}
                     className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4"

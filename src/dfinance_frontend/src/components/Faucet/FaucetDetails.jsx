@@ -94,14 +94,14 @@ const FaucetDetails = () => {
           fetchBalance("ICP"),
           fetchConversionRate(),
         ]);
-         // Assuming you fetch assets in one of the fetch functions
-         const allAssets = await backendActor.getAllAssets();  // Fetch assets
-
-         setAssets(allAssets);  // Set assets here after fetch is complete
+         const allAssets = await backendActor.getAllAssets();
+         setAssets(allAssets);
       } catch (error) {
         setError(error);
       } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
       }
     };
 
@@ -163,6 +163,7 @@ const FaucetDetails = () => {
   const filteredReserveData = Object.fromEntries(filteredItems);
   const formatNumber = useFormatNumber();
 
+
   return (
     <div className="w-full">
       <div className="w-full flex items-center px-2">
@@ -173,10 +174,10 @@ const FaucetDetails = () => {
 
       <div className="w-full mt-9 p-0 lg:px-1">
         {loading ? ( 
-          <div className="flex justify-center items-center my-[14rem]">
+          <div className="w-full mt-[220px] mb-[220px] flex justify-center items-center ">
             <Loading isLoading={true}/>
           </div>
-        ) : !currentItems ? (
+        ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
             <div className="w-20 h-15">
               <img
@@ -256,7 +257,7 @@ const FaucetDetails = () => {
                             <center>
                               {item[0] === "ckBTC" && (
                                 <>
-                                  <p className="text-left">{ckBTCBalance}</p>
+                                  <p className="text-left">{Number(ckBTCBalance).toLocaleString()}</p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckBTCUsdBalance)}
                                   </p>
@@ -264,7 +265,7 @@ const FaucetDetails = () => {
                               )}
                               {item[0] === "ckETH" && (
                                 <>
-                                  <p className="text-left">{ckETHBalance}</p>
+                                  <p className="text-left">{Number(ckETHBalance).toLocaleString()}</p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckETHUsdBalance)}
                                   </p>
@@ -272,7 +273,7 @@ const FaucetDetails = () => {
                               )}
                               {item[0] === "ckUSDC" && (
                                 <>
-                                  <p className="text-left">{ckUSDCBalance}</p>
+                                  <p className="text-left">{Number(ckUSDCBalance).toLocaleString()}</p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckUSDCUsdBalance)}
                                   </p>
@@ -280,7 +281,7 @@ const FaucetDetails = () => {
                               )}
                               {item[0] === "ICP" && (
                                 <>
-                                  <p className="text-left">{ckICPBalance}</p>
+                                  <p className="text-left">{Number(ckICPBalance).toLocaleString()}</p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckICPUsdBalance)}
                                   </p>

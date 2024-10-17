@@ -10,17 +10,17 @@ const RiskPopup = ({ onClose, userData }) => {
   const health_Factor_Value =
     userData?.Ok?.health_factor !== undefined &&
       userData?.Ok?.health_factor !== null
-      ? parseFloat(userData.Ok.health_factor) > 100
+      ? parseFloat(Number(userData?.Ok?.health_factor)/100000000) > 100
         ? Infinity
-        : parseFloat(userData.Ok.health_factor)
+        : parseFloat(Number(userData?.Ok?.health_factor)/100000000)
       : 0; // Return 0 if health_factor is not defined
 
-  const Ltv_Value = parseFloat(userData?.Ok?.ltv)
-    ? parseFloat(userData.Ok.ltv * 100)
+  const Ltv_Value = parseFloat(Number(userData?.Ok?.ltv)/100000000)
+    ? parseFloat(Number(userData?.Ok?.ltv)/100000000)
     : 0;
 
-  const liquidationThreshold_Value = userData?.Ok?.liquidation_threshold
-    ? (userData.Ok.liquidation_threshold * 100).toFixed(2)
+  const liquidationThreshold_Value = (Number(userData?.Ok?.liquidation_threshold)/100000000)
+    ? ((Number(userData?.Ok?.liquidation_threshold)/100000000)).toFixed(2)
     : "0.00";
   // const liquidationThreshold_Value = 80
 

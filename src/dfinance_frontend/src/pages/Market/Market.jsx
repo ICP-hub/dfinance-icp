@@ -332,7 +332,7 @@ const WalletDetails = () => {
                       <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_supply_count}</p> */}
-                          <p >${formatNumber(item[1].Ok.total_supply)}</p>
+                          <p >${formatNumber(Number(item[1].Ok.total_supply)/100000000)}</p>
                         </div>
                         <div className="md:hidden justify-center ml-6" onClick={() => handleChevronClick(item[0])}>
                           <ChevronRight size={22} color={chevronColor} />
@@ -340,18 +340,18 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
-                      {(item[1].Ok.current_liquidity_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.current_liquidity_rate * 100).toFixed(2)}%`}</div></td>
+                      {((Number(item?.[1]?.Ok?.current_liquidity_rate)/100000000) * 100) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.current_liquidity_rate)/100000000) * 100).toFixed(2)}%`}</div></td>
                     <td className="p-3 align-center hidden md:table-cell">
                       <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_borrow_count}</p> */}
-                          <p >${formatNumber(item[1].Ok.total_borrowed)}</p>
+                          <p >${formatNumber(Number(item[1].Ok.total_borrowed)/100000000)}</p>
                         </div>
                       </div>
 
                     </td>
                     <td className="p-3 align-center hidden md:table-cell">
-                      <div className="flex justify-center"> {(item[1].Ok.borrow_rate * 100) < 0.1 ? '<0.1%' : `${(item[1].Ok.borrow_rate * 100).toFixed(2)}%`}</div>
+                      <div className="flex justify-center"> {((Number(item?.[1]?.Ok?.borrow_rate)/100000000)  * 100) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.borrow_rate)/100000000)  * 100).toFixed(2)}%`}</div>
                     </td>
                     <td className="p-3 align-center">
                       <div className="w-full flex justify-end align-center">

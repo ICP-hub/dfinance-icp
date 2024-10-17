@@ -26,7 +26,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     principal: currentUserPrincipal,
   } = useAuth();
 
-  console.log("mappeditems", mappedItem);
+  console.log("mappeditems", Number(mappedItem?.item[1]?.health_factor) / 10000000000);
   const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
   const [isApproved, setIsApproved] = useState(false);
@@ -65,14 +65,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
 
-  const { userData, healthFactorBackend:userHealthFactor, refetchUserData } = useUserData();
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   function roundToDecimal(value, decimalPlaces) {
     const factor = Math.pow(10, decimalPlaces);
     return Math.round(value * factor) / factor;
   }
-
-  console.log("health factor", roundToDecimal(userHealthFactor, 2));
 
   const defaultAsset = "cketh";
 
@@ -175,13 +173,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
   const handleApprove = async () => {
     let ledgerActor;
-    if (selectedDebtAsset=== "ckBTC") {
+    if (selectedDebtAsset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
-    } else if (selectedDebtAsset=== "ckETH") {
+    } else if (selectedDebtAsset === "ckETH") {
       ledgerActor = ledgerActors.ckETH;
-    } else if (selectedDebtAsset=== "ckUSDC") {
+    } else if (selectedDebtAsset === "ckUSDC") {
       ledgerActor = ledgerActors.ckUSDC;
-    } else if (selectedDebtAsset=== "ICP") {
+    } else if (selectedDebtAsset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     }
 
@@ -566,67 +564,24 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const { filteredItems } = useAssetData();
 
   const formatNumber = useFormatNumber();
-
-  let asset_name = "";
-  let accrued_to_treasury = "0";
-  let borrow_rate = "0";
-  let supply_cap = "0";
-  let borrow_cap = "0";
-  let ltv = "0";
-  let supply_rate_apr = "0";
-  let total_supply = "0";
-  let total_borrowed = "0";
-  let total_supplied = "0";
-  let current_liquidity_rate = "0";
-  let liquidity_index = "0";
-  let d_token_canister = "";
-  let debt_token_canister = "";
   let liquidation_bonus = "";
-  let liquidation_threshold = "";
 
-
-  // Find the asset in filteredItems based on the selected asset
   const selectedItem = filteredItems.find(item => {
     const assetName = item[1].Ok.asset_name ? item[1].Ok.asset_name[0] : "Unknown";
-    return assetName === selectedAsset; // Compare based on the selected asset
+    return assetName === selectedAsset; 
   });
 
   if (selectedItem && selectedItem[1]?.Ok) {
     const item = selectedItem[1].Ok;
-
-    console.log("item", filteredItems)
-    asset_name = item.asset_name ? item.asset_name[0] : "Unknown";
-    accrued_to_treasury = item.accrued_to_treasury?.toString() || "0";
-    borrow_rate = item.borrow_rate ? item.borrow_rate[0] : "0";
-    supply_cap = item.configuration.supply_cap || "0";
-    borrow_cap = formatNumber(item.configuration.borrow_cap?.toString()) || "0";
-    ltv = item.configuration.ltv?.toString() || "0";
-    liquidation_threshold = item.configuration.liquidation_threshold || "0";
-    liquidation_bonus = item.configuration.liquidation_bonus || "0";
-    supply_rate_apr = item.supply_rate_apr ? item.supply_rate_apr[0] : "0";
-    total_supply = item.total_supply ? formatNumber(item.total_supply) : "0";
-    current_liquidity_rate = item.current_liquidity_rate || "0";
-    liquidity_index = item.liquidity_index?.toString() || "0";
-    d_token_canister = item.d_token_canister ? item.d_token_canister[0] : "N/A";
-    debt_token_canister = item.debt_token_canister
-      ? item.debt_token_canister[0]
-      : "N/A";
-    total_borrowed = item.total_borrowed
-      ? formatNumber(item.total_borrowed)
-      : "0";
-    total_supplied = item.total_supplied
-      ? formatNumber(item.total_supplied)
-      : "0";
+    liquidation_bonus = Number(item?.configuration?.liquidation_bonus || "0")/100000000;
   }
 
   useEffect(() => {
-    // Calculate the reward amount whenever collateral or liquidation_bonus changes
     const calculatedRewardAmount = Math.floor(collateral + collateral * (liquidation_bonus / 100));
     setRewardAmount(calculatedRewardAmount);
   }, [collateral, liquidation_bonus]);
   const [selectedAssetBalance, setSelectedAssetBalance] = useState(0);
 
-  // When an asset is selected, update the balance accordingly
   useEffect(() => {
     switch (selectedDebtAsset) {
       case "ckETH":
@@ -789,8 +744,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   {mappedItem.reserves[0].map((item, index) => {
                     console.log("mappedItesm", mappedItem.reserves[0]);
                     const assetName = item[1]?.reserve;
-                    const assetSupply = (item[1]?.asset_supply) / 100000000;
-                    const assetBorrow = (item[1]?.asset_borrow) / 100000000;
+                    const assetSupply = Number(item?.[1]?.asset_supply  || 0n) / 100000000;
+                    const assetBorrow = Number(item?.[1]?.asset_borrow  || 0n) / 100000000;
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let collateralRate = 0;
@@ -907,10 +862,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 </button>
                 <button
                   className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm  px-6 py-2 relative ${isCollateralAssetSelected &&
-                      amountToRepay + amountToRepay * (liquidation_bonus / 100) <
-                      selectedAssetSupply
-                      ? "opacity-100 cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
+                    amountToRepay + amountToRepay * (liquidation_bonus / 100) <
+                    selectedAssetSupply
+                    ? "opacity-100 cursor-pointer"
+                    : "opacity-50 cursor-not-allowed"
                     }`}
                   onClick={() => {
                     console.log("Button clicked");
@@ -952,10 +907,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[1]?.reserve;
-                    const assetBorrow = item[1]?.asset_borrow / 100000000; // or Math.pow(10, 8)
-
-                    const assetBorrowAmount = Math.floor(assetBorrow / 2);
-
+                    
+                    const assetBorrow = Number(item?.[1]?.asset_borrow  || 0n) / 100000000; // or Math.pow(10, 8)
+                    const assetBorrowAmount = Number(Math.floor(assetBorrow / 2));
+                    console.log("assetBorrow", assetBorrow)
                     let assetBorrowAmountInUSD = 0;
                     if (assetName === "ckBTC" && ckBTCUsdRate) {
                       assetBorrowAmountInUSD = (
@@ -1040,8 +995,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 </button>
                 <button
                   className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
-                      ? "opacity-100"
-                      : "opacity-50 cursor-not-allowed"
+                    ? "opacity-100"
+                    : "opacity-50 cursor-not-allowed"
                     }`}
                   onClick={handleNextClick}
                   disabled={
@@ -1071,16 +1026,19 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   </div>
                 </div>
                 <div className="mb-4">
-                  <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm text-[#F30606]">
+                  <div className="bg-gray-100 dark:bg-darkBackground/30  rounded-md p-2 text-sm text-[#dc5959]">
                     <p className="text-sm font-normal text-[#2A1F9D] dark:text-darkText opacity-50 mb-1 ">
                       User Health Factor
                     </p>
-                    <p className="text-xs font-medium text-[#F30606] ">
+                    <p className="text-xs font-medium ">
                       {parseFloat(
-                        userHealthFactor > 100
-                          ? "Infinity"
-                          : parseFloat(userHealthFactor).toFixed(2)
-                      )}
+                        Number(mappedItem?.item[1]?.health_factor) / 10000000000
+                      ) > 100
+                        ? "Infinity"
+                        : parseFloat(
+                          Number(mappedItem?.item[1]?.health_factor) / 10000000000
+                        ).toFixed(2)}
+
                     </p>
                   </div>
                 </div>

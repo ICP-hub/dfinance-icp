@@ -42,18 +42,18 @@ impl SupplyLogic {
 
         let amount_nat = Nat::from(params.amount);
         // Converting asset to usdt value
-        let mut usd_amount = params.amount as f64;
-
+        let mut usd_amount = params.amount;
+        // let unscaled_amount = params.amount/100000000;
         let supply_amount_to_usd =
-            get_exchange_rates(params.asset.clone(),None, params.amount as f64).await;
+            get_exchange_rates(params.asset.clone(),None, params.amount.clone()).await;
         match supply_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
-                // Extracted the amount in USD
+               
                 usd_amount = amount_in_usd;
                 ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
             }
             Err(e) => {
-                // Handling the error
+              
                 ic_cdk::println!("Error getting exchange rate: {:?}", e);
             }
         }
@@ -98,7 +98,7 @@ impl SupplyLogic {
         // .await;
         // ic_cdk::println!("Supply validated successfully");
 
-        let liquidity_taken=0f64;
+        let liquidity_taken=0;
         let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,usd_amount , liquidity_taken).await;
                
 
@@ -203,9 +203,9 @@ impl SupplyLogic {
         let withdraw_amount = Nat::from(params.amount);
 
         // Converting asset value to usdt
-        let mut usd_amount = params.amount as f64;
+        let mut usd_amount = params.amount;
         let withdraw_amount_to_usd =
-            get_exchange_rates(params.asset.clone(),None, params.amount as f64).await;
+            get_exchange_rates(params.asset.clone(),None, params.amount ).await;
         match withdraw_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
                 // Extracted the amount in USD

@@ -119,8 +119,8 @@ pub fn calculate_interest_rates(
     // let scaling_factor = 100000000 * 100000000;
     ic_cdk::println!("overall_borrow_rate: {:?}", overall_borrow_rate);
     let current_liquidity_rate = overall_borrow_rate
-        .scaled_mul(utilization_rate)
-        .scaled_mul(10000000000 - reserve_factor);
+        .scaled_mul(utilization_rate/100)
+        .scaled_mul(100000000 - (reserve_factor/100));
     ic_cdk::println!("current_liquidity_rate: {:?}", current_liquidity_rate);
     // is it right or not.
     // .scaled_div(scaling_factor);

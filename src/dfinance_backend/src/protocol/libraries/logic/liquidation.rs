@@ -96,11 +96,11 @@ impl LiquidationLogic {
             }
         };
         ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
-        let bonus = (collateral_amount * (reserve_data.configuration.liquidation_bonus  / 100));
+        let bonus = collateral_amount * (reserve_data.configuration.liquidation_bonus  / 100) / 100000000;
         let reward_amount = Nat::from(collateral_amount as u128) + Nat::from(bonus);
-
+        ic_cdk::println!("bonus: {}", bonus);
         let reward_amount_param = collateral_amount as u128 + bonus as u128;
-
+        ic_cdk::println!("reward_amount_param: {}", reward_amount_param);
         let supply_param = ExecuteSupplyParams {
             asset: collateral_asset.to_string(),
             amount: reward_amount_param,

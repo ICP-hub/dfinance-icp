@@ -237,7 +237,7 @@ impl UpdateLogic {
 
 
         
-        user_data.available_borrow = Some(user_data.available_borrow.unwrap() + (usd_amount.scaled_mul(reserve.configuration.ltv)));
+        user_data.available_borrow = Some(user_data.available_borrow.unwrap() + (usd_amount.scaled_mul(reserve.configuration.ltv))/100);
         // Check if the user has a reserve for the asset
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -333,7 +333,7 @@ impl UpdateLogic {
         };
       
         user_data.total_debt = Some(user_data.total_debt.unwrap_or(0) + usd_amount);
-
+        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) - usd_amount);
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0),
             total_borrowed_value: user_data.total_debt.unwrap_or(0),
@@ -517,7 +517,7 @@ impl UpdateLogic {
         
         // user_data.available_borrow = Some(available_borrow);
 
-        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - (usd_amount.scaled_mul(reserve.configuration.ltv)));
+        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - (usd_amount.scaled_mul(reserve.configuration.ltv))/100);
 
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
@@ -599,6 +599,7 @@ impl UpdateLogic {
             liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0),
         };
         user_data.total_debt = Some(user_data.total_debt.unwrap_or(0) - usd_amount);
+        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
         let health_factor = calculate_health_factor(&user_position);
         user_data.health_factor = Some(health_factor);
 

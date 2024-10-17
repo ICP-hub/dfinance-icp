@@ -188,7 +188,7 @@ pub async fn get_exchange_rates(
                     let exchange_rate = quote  / pow as u64 ;
     
                     // Multiplying the exchange rate by the amount
-                    let total_value = (quote as u128 * amount) / 10  ;
+                    let total_value = (quote as u128 * amount) / 1000000000  ;
     
                     // Getting the current time
                     let time = ic_cdk::api::time();

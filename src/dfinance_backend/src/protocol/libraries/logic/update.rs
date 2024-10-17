@@ -1,15 +1,13 @@
 use crate::{
-    api::state_handler::{mutate_state, read_state},
-    declarations::{
+    api::state_handler::{mutate_state, read_state}, declarations::{
         assets::{
             ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
         },
         storable::Candid,
-    },
-    protocol::libraries::{
+    }, implementations::reserve, protocol::libraries::{
         math::{calculate::{cal_average_threshold, calculate_health_factor, calculate_ltv, get_exchange_rates, UserPosition}, math_utils::ScalingMath},
         types::datatypes::UserReserveData,
-    },
+    }
 };
 use candid::Principal;
 use ic_xrc_types::Asset;
@@ -222,17 +220,24 @@ impl UpdateLogic {
     
         // Calculate and update loan-to-value (LTV)
         let ltv = calculate_ltv(&user_position);
+        // let mut avg_ltv=0;
+        // if reserve.configuration.ltv != 0 {
+        //     avg_ltv = user_data.ltv.unwrap()+ (usd_amount.scaled_mul(reserve.configuration.ltv));
+        // } else {
+        // //    user_data.has_zero_ltv_collateral = true;
+        // ic_cdk::println!("ltv {}", reserve.configuration.ltv);
+        // }
         user_data.ltv = Some(ltv);
-
-        let available_borrow = calculate_available_borrows(
-            user_data.total_collateral.unwrap_or(0).clone(),
-            user_data.total_debt.unwrap_or(0).clone(),
-            ltv.clone(), 
-        );
+        // ic_cdk::println!("user updated ltv {}", user_data.ltv.unwrap().clone());
+        // let available_borrow_for_asset = calculate_available_borrows(
+        //     user_data.total_collateral.unwrap_or(0).clone(),
+        //     user_data.total_debt.unwrap_or(0).clone(),
+        //     reserve.configuration.ltv, 
+        // );
 
 
         
-        user_data.available_borrow = Some(available_borrow);
+        user_data.available_borrow = Some(user_data.available_borrow.unwrap() + (usd_amount.scaled_mul(reserve.configuration.ltv)));
         // Check if the user has a reserve for the asset
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -343,15 +348,8 @@ impl UpdateLogic {
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
         
-        let available_borrow = calculate_available_borrows(
-            user_data.total_collateral.unwrap_or(0).clone(),
-            user_data.total_debt.unwrap_or(0).clone(),
-            ltv.clone(), 
-        );
-
-
+       
         
-        user_data.available_borrow = Some(available_borrow);
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -379,7 +377,15 @@ impl UpdateLogic {
 
         };
 
+        // let available_borrow_for_asset = calculate_available_borrows(
+        //     user_data.total_collateral.unwrap_or(0).clone(),
+        //     user_data.total_debt.unwrap_or(0).clone(),
+        //     asset_reserve_data.configuration.ltv, 
+        // );
 
+
+        
+        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount);
 
         //let usd_rate = (usd_amount/params.amount) * 100000000;
         let usd_rate = usd_amount.scaled_div(params.amount);
@@ -501,15 +507,17 @@ impl UpdateLogic {
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
         
-        let available_borrow = calculate_available_borrows(
-            user_data.total_collateral.unwrap_or(0).clone() - usd_amount,
-            user_data.total_debt.unwrap_or(0).clone(),
-            ltv.clone(), 
-        );
+        // let available_borrow = calculate_available_borrows(
+        //     user_data.total_collateral.unwrap_or(0).clone() - usd_amount,
+        //     user_data.total_debt.unwrap_or(0).clone(),
+        //     ltv.clone(), 
+        // );
 
 
         
-        user_data.available_borrow = Some(available_borrow);
+        // user_data.available_borrow = Some(available_borrow);
+
+        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - (usd_amount.scaled_mul(reserve.configuration.ltv)));
 
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
@@ -598,15 +606,17 @@ impl UpdateLogic {
 
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
-        let available_borrow = calculate_available_borrows(
-            user_data.total_collateral.unwrap_or(0).clone() ,
-            user_data.total_debt.unwrap_or(0).clone() - usd_amount,
-            ltv.clone(), 
-        );
+        // let available_borrow = calculate_available_borrows(
+        //     user_data.total_collateral.unwrap_or(0).clone() ,
+        //     user_data.total_debt.unwrap_or(0).clone() - usd_amount,
+        //     ltv.clone(), 
+        // );
 
 
         
-        user_data.available_borrow = Some(available_borrow);
+        // user_data.available_borrow = Some(available_borrow);
+        user_data.available_borrow = Some(user_data.available_borrow.unwrap() + usd_amount);
+
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -652,20 +662,20 @@ impl UpdateLogic {
     }
 }
 
-fn calculate_available_borrows(
-    total_collateral_in_usd: u128,
-    total_debt_in_usd: u128,
-    ltv: u128, 
-) -> u128 {
+// fn calculate_available_borrows(
+//     total_collateral_in_usd: u128,
+//     total_debt_in_usd: u128,
+//     ltv: u128, 
+// ) -> u128 {
 
-    let available_borrows_in_usd = total_collateral_in_usd * ltv /100000000;
+//     let available_borrows_in_usd = (total_collateral_in_usd * ltv/100) /100000000;
+//     ic_cdk::println!("total_collateral_in_usd: {:?}", total_collateral_in_usd);
+//     if available_borrows_in_usd < total_debt_in_usd {
+//         return 0;
+//     }
 
-    if available_borrows_in_usd < total_debt_in_usd {
-        return 0;
-    }
-
-    available_borrows_in_usd - total_debt_in_usd
-}
+//     available_borrows_in_usd - total_debt_in_usd
+// }
 // fn calculate_available_borrows(
 //     total_collateral_in_base_currency: u128,
 //     total_debt_in_base_currency: u128,

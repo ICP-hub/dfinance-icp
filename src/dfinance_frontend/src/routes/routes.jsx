@@ -33,6 +33,14 @@ export default [
     ),
   },
   {
+    path: "/market/asset-details/:id?",
+    element: (
+      <MainDashboard>
+        <AssetDetails />
+      </MainDashboard>
+    ),
+  },
+  {
     path: "/dashboard/asset-details/:id?",
     element: (
       <MainDashboard>

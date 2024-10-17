@@ -16,5 +16,9 @@ export const store = configureStore({
         fees: feeReducer ,
         ledger: ledgerReducer,
         assets: assetReducer,  
-    }
+    },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+          serializableCheck: false, // Disable serializability check
+        }),
 });

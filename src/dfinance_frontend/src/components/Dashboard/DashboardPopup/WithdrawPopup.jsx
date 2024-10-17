@@ -62,7 +62,21 @@ const WithdrawPopup = ({
   }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
-    const inputAmount = e.target.value;
+    let inputAmount = e.target.value;
+
+    // Check if there's a decimal point and enforce 8 decimal places
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
+      
+      // Limit decimal places to 8
+      if (decimalPart.length > 8) {
+        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
+        e.target.value = inputAmount; // Directly update the value in the field
+      }
+    }
+  
+    // Update your state or perform further actions
+    console.log("Validated input:", inputAmount);
 
     const numericAmount = parseFloat(inputAmount);
 
@@ -172,6 +186,7 @@ const WithdrawPopup = ({
 
     if (healthFactor <= 1 || ltv >= reserveliquidationThreshold) {
       setIsButtonDisabled(true);
+      toast.info(" LTV Exceeded!")
     } else {
       setIsButtonDisabled(false);
     }
@@ -235,6 +250,7 @@ const WithdrawPopup = ({
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
+                    step="0.00000001"
                     // disabled={supplyBalance === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"

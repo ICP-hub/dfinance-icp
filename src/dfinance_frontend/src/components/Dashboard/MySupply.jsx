@@ -1898,8 +1898,8 @@ const MySupply = () => {
                                   );
                                 }}
                                 disabled={isTableDisabled}
-                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md font-semibold text-lg"
-                              />
+                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-lg font-inter"
+                                />
                               <Button
                                 title={"Details"}
                                 onClickHandler={() =>
@@ -2106,8 +2106,8 @@ const MySupply = () => {
                                     );
                                   }}
                                   disabled={isTableDisabled}
-                                  className="bg-gradient-to-tr from-[#4659CF] via-[#D379AB] to-[#FCBD78] text-white rounded-md px-3 py-1.5 shadow-md font-semibold text-xs"
-                                />
+                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                  />
                                 <Button
                                   title={"Details"}
                                   onClickHandler={() =>

@@ -130,7 +130,7 @@ const DashboardNav = () => {
       const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
 
       const supplyApy = Number(reserve[1]?.supply_rate || 0n) / 100000000;
-
+console.log("reserves",reserves)
       console.log(
         `Reserve: ${reserve[0]}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
       );

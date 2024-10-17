@@ -3,7 +3,7 @@ import { useAuth } from "../../utils/useAuthClient";
 const useUserData = () => {
     const { backendActor, principal } = useAuth();
     const [userData, setUserData] = useState(null);
-    const [healthFactorBackend, setHealthFactorBackend] = useState(null);
+    const [healthFactorBackend, setHealthFactorBackend] = useState(0);
     const [error, setError] = useState(null);
 
     const getUserData = async (user) => {

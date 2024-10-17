@@ -62,7 +62,7 @@ echo "user data: $user_data"
 dfx identity use default
 
 # Call the borrow function on the backend canister
-borrow_amount=300000000  
+borrow_amount=100000000  
 currency="ckETH" 
 interest_rate=0  
 

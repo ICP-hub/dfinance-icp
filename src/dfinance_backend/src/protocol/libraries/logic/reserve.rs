@@ -227,9 +227,9 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
         curr_liquidity_rate: reserve_data.current_liquidity_rate,
 
          curr_debt_index: reserve_data.debt_index,
-         curr_debt_rate: reserve_data.borrow_rate.clone(),
-         next_debt_rate: 0,
-         next_debt_index: 0,
+         curr_debt_rate: reserve_data.borrow_rate,
+         next_debt_rate: reserve_data.borrow_rate,
+         next_debt_index: reserve_data.debt_index,
          debt_last_update_timestamp: 0,
 
          reserve_factor: reserve_data.configuration.reserve_factor.clone(),
@@ -297,6 +297,7 @@ pub async fn update_interest_rates(
         let asset=reserve_data.asset_name.clone().unwrap_or("no token".to_string());
         let interest_rate_params = initialize_interest_rate_params(&asset);
         ic_cdk::println!("interest rate params {:?}", interest_rate_params);
+        ic_cdk::println!("total debt: {:?}", total_debt);
         let (next_liquidity_rate, next_debt_rate) =
         calculate_interest_rates(
             total_supply,                        // f64
@@ -307,10 +308,10 @@ pub async fn update_interest_rates(
             reserve_cache.reserve_factor,              // InterestRateParams struct
            
         );
-        reserve_data.total_borrowed = total_borrowed;
+        reserve_data.total_borrowed = total_debt;
         reserve_data.total_supply= total_supply;
         reserve_data.current_liquidity_rate = next_liquidity_rate;
         reserve_data.borrow_rate = next_debt_rate;
-
+        ic_cdk::println!("reserve_data.total_borrowed: {:?}", reserve_data.total_borrowed);
 
     }

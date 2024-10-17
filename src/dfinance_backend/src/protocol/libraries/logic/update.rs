@@ -224,13 +224,15 @@ impl UpdateLogic {
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
 
-        // let available_borrow = calculate_available_borrows(
-        //     user_data.total_collateral.unwrap_or(0.0).clone(),
-        //     user_data.total_debt.unwrap_or(0.0).clone(),
-        //     ltv.clone(), 
-        // );
+        let available_borrow = calculate_available_borrows(
+            user_data.total_collateral.unwrap_or(0).clone(),
+            user_data.total_debt.unwrap_or(0).clone(),
+            ltv.clone(), 
+        );
+
+
         
-        // user_data.available_borrow = Some(available_borrow);
+        user_data.available_borrow = Some(available_borrow);
         // Check if the user has a reserve for the asset
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -340,6 +342,16 @@ impl UpdateLogic {
 
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
+        
+        let available_borrow = calculate_available_borrows(
+            user_data.total_collateral.unwrap_or(0).clone(),
+            user_data.total_debt.unwrap_or(0).clone(),
+            ltv.clone(), 
+        );
+
+
+        
+        user_data.available_borrow = Some(available_borrow);
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -488,6 +500,16 @@ impl UpdateLogic {
 
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
+        
+        let available_borrow = calculate_available_borrows(
+            user_data.total_collateral.unwrap_or(0).clone() - usd_amount,
+            user_data.total_debt.unwrap_or(0).clone(),
+            ltv.clone(), 
+        );
+
+
+        
+        user_data.available_borrow = Some(available_borrow);
 
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
@@ -576,7 +598,15 @@ impl UpdateLogic {
 
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
+        let available_borrow = calculate_available_borrows(
+            user_data.total_collateral.unwrap_or(0).clone() ,
+            user_data.total_debt.unwrap_or(0).clone() - usd_amount,
+            ltv.clone(), 
+        );
 
+
+        
+        user_data.available_borrow = Some(available_borrow);
         // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -623,15 +653,15 @@ impl UpdateLogic {
 }
 
 fn calculate_available_borrows(
-    total_collateral_in_usd: f64,
-    total_debt_in_usd: f64,
-    ltv: f64, 
-) -> f64 {
+    total_collateral_in_usd: u128,
+    total_debt_in_usd: u128,
+    ltv: u128, 
+) -> u128 {
 
-    let available_borrows_in_usd = total_collateral_in_usd * ltv;
+    let available_borrows_in_usd = total_collateral_in_usd * ltv /100000000;
 
     if available_borrows_in_usd < total_debt_in_usd {
-        return 0.0;
+        return 0;
     }
 
     available_borrows_in_usd - total_debt_in_usd

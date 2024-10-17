@@ -114,13 +114,13 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     // ic_cdk::println!("Borrow validated successfully");
 
     let liquidity_added=0;
-    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount.clone());
+    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount).await;
     ic_cdk::println!("Interest rates updated successfully");
-    *&mut reserve_data.total_borrowed+=usd_amount;  
+    // *&mut reserve_data.total_borrowed+=usd_amount;  
     mutate_state(|state| {
-                let asset_index = &mut state.asset_index;
-                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-    });
+        let asset_index = &mut state.asset_index;
+        asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+});
     // Minting debttoken
     match asset_transfer(
         user_principal,

@@ -16,8 +16,8 @@ const SupplyPopup = ({
   image,
   supplyRateAPR,
   balance,
-  reserveliquidationThreshold,
   liquidationThreshold,
+  reserveliquidationThreshold,
   assetSupply,
   assetBorrow,
   totalCollateral,
@@ -27,6 +27,21 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+ console.log("props", asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,)
+ 
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -251,7 +266,7 @@ const SupplyPopup = ({
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      reserveliquidationThreshold
+      liquidationThreshold
     );
     console.log("Health Factor:", healthFactor);
     const ltv = calculateLTV(assetSupply, assetBorrow);

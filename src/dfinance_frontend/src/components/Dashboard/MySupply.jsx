@@ -140,9 +140,8 @@ const MySupply = () => {
     image,
     supplyRateAPR,
     balance,
-    reserveliquidationThreshold,
     liquidationThreshold,
-    
+    reserveliquidationThreshold,
     assetSupply,
     assetBorrow,
     totalCollateral,
@@ -156,8 +155,8 @@ const MySupply = () => {
       image: image,
       supplyRateAPR: supplyRateAPR,
       balance: balance,
-      reserveliquidationThreshold: reserveliquidationThreshold,
       liquidationThreshold: liquidationThreshold,
+      reserveliquidationThreshold: reserveliquidationThreshold,
       assetSupply: assetSupply,
       assetBorrow: assetBorrow,
       totalCollateral: totalCollateral,
@@ -206,10 +205,10 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                liquidationThreshold={isModalOpen.liquidationThreshold}
                 reserveliquidationThreshold={
                   isModalOpen.reserveliquidationThreshold
                 }
-                liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
@@ -234,10 +233,10 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                liquidationThreshold={isModalOpen.liquidationThreshold}
                 reserveliquidationThreshold={
                   isModalOpen.reserveliquidationThreshold
                 }
-                liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
@@ -261,10 +260,10 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                liquidationThreshold={isModalOpen.liquidationThreshold}
                 reserveliquidationThreshold={
                   isModalOpen.reserveliquidationThreshold
                 }
-                liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
@@ -303,10 +302,10 @@ const MySupply = () => {
                 image={isModalOpen.image}
                 balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                liquidationThreshold={isModalOpen.liquidationThreshold}
                 reserveliquidationThreshold={
                   isModalOpen.reserveliquidationThreshold
                 }
-                liquidationThreshold={isModalOpen.liquidationThreshold}
                 assetSupply={isModalOpen.assetSupply}
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
@@ -515,7 +514,7 @@ const MySupply = () => {
                               (Number(item?.[1]?.Ok?.current_liquidity_rate)/100000000);
 
                             const liquidationThreshold =
-                              (Number(userData.Ok?.liquidation_threshold)/100000000 ) * 100 ;
+                              (Number(userData.Ok?.liquidation_threshold)/100000000 ) ;
                             const reserveliquidationThreshold =
                             Number(
                               item?.[1]?.Ok.configuration
@@ -612,10 +611,10 @@ const MySupply = () => {
                                       const assetBorrow =
                                       Number(reserveData?.[1]?.asset_borrow  || 0n) / 100000000;
                                       const totalCollateral =
-                                      (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                      parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
 
                                       const totalDebt =
-                                      (Number(userData?.Ok?.total_debt)/100000000) || 0;
+                                      parseFloat(Number(userData?.Ok?.total_debt)/100000000) || 0;
 
                                       console.log(
                                         "totaldebt and total collateral",
@@ -651,9 +650,9 @@ const MySupply = () => {
                                             reserveGroup[0] === item[0]
                                         );
                                       const totalCollateral =
-                                      (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                      parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
                                       const totalDebt =
-                                      (Number(userData?.Ok?.total_debt)/100000000) || 0;
+                                      parseFloat(Number(userData?.Ok?.total_debt)/100000000) || 0;
 
                                       const assetSupply =
                                       Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
@@ -745,7 +744,7 @@ const MySupply = () => {
                               const supplyRateApr =
                                 (Number(item?.[1]?.Ok?.current_liquidity_rate)/100000000) || 0;
                               const liquidationThreshold =
-                               (Number(userData.Ok?.liquidation_threshold)/100000000 ) * 100 || 0;
+                               (Number(userData.Ok?.liquidation_threshold)/100000000 ) || 0;
                               const reserveliquidationThreshold =
                               (Number( item?.[1]?.Ok.configuration
                                 .liquidation_threshold)/100000000) || 0;
@@ -824,9 +823,9 @@ const MySupply = () => {
                                         Number(reserveData?.[1]?.asset_borrow  || 0n) / 100000000;
 
                                         const totalCollateral =
-                                        (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                        parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
                                         const totalDebt =
-                                        (Number(userData?.Ok?.total_debt)/100000000) || 0;
+                                        parseFloat(Number(userData?.Ok?.total_debt)/100000000) || 0;
 
                                         handleModalOpen(
                                           "supply",
@@ -856,9 +855,9 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
                                         const totalCollateral =
-                                        (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                        parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
                                         const totalDebt =
-                                        (Number(userData?.Ok?.total_debt)/100000000) || 0;
+                                        parseFloat(Number(userData?.Ok?.total_debt)/100000000) || 0;
                                         const assetSupply =
                                         Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
                                         const assetBorrow =
@@ -1068,7 +1067,7 @@ const MySupply = () => {
                                       : item[0] === "ICP"
                                       ? ckICPBalance
                                       : null,
-                                      (Number(userData?.Ok?.liquidation_threshold)/100000000) * 100,
+                                      Number(userData?.Ok?.liquidation_threshold)/100000000 ,
                                     Number(
                                       item[1].Ok.configuration
                                         .liquidation_threshold
@@ -1228,9 +1227,9 @@ const MySupply = () => {
                                     const assetBorrow =
                                       Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
                                     const totalCollateral =
-                                    (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                    parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
                                     const totalDebt =
-                                    (Number(userData?.Ok?.total_debt)/100000000) || 0;
+                                    parseFloat(Number(userData?.Ok?.total_debt)/100000000) || 0;
 
 
                                     handleModalOpen(
@@ -1251,7 +1250,7 @@ const MySupply = () => {
                                         : item[0] === "ICP"
                                         ? ckICPBalance
                                         : null,
-                                        (Number(userData.Ok?.liquidation_threshold)/100000000 ) * 100,
+                                        (Number(userData.Ok?.liquidation_threshold)/100000000 ),
                                         Number(item[1]?.Ok.configuration
                                           .liquidation_threshold) /
                                         100000000,
@@ -1439,9 +1438,9 @@ const MySupply = () => {
                                         const assetBorrow =
                                         Number(reserveData?.[1]?.asset_borrow  || 0n) / 100000000;
                                         const totalCollateral =
-                                        (Number(userData?.Ok?.total_collateral)/100000000);
+                                        parseFloat(Number(userData?.Ok?.total_collateral)/100000000);
                                         const totalDebt =
-                                        (Number(userData?.Ok?.total_debt)/100000000);
+                                        parseFloat(Number(userData?.Ok?.total_debt)/100000000);
                                         ;
                                         const Ltv =  (Number(userData?.Ok?.ltv)/100000000) || 0;
                                         ;
@@ -1481,9 +1480,9 @@ const MySupply = () => {
                                         const assetBorrow =
                                         Number(reserveData?.[1]?.asset_borrow  || 0n) / 100000000;
                                         const totalCollateral =
-                                        (Number(userData?.Ok?.total_collateral)/100000000);
+                                        parseFloat(Number(userData?.Ok?.total_collateral)/100000000);
                                         const totalDebt =
-                                        (Number(userData?.Ok?.total_debt)/100000000);
+                                        parseFloat(Number(userData?.Ok?.total_debt)/100000000);
 
                                         handleModalOpen(
                                           "repay",
@@ -1578,7 +1577,7 @@ const MySupply = () => {
                               const borrowRateApr =
                               (Number(item?.[1]?.Ok?.borrow_rate)/100000000) || 0;
                               const liquidationThreshold =
-                               (Number(userData.Ok?.liquidation_threshold)/100000000 ) * 100 || 0;
+                               (Number(userData.Ok?.liquidation_threshold)/100000000 ) || 0;
                               const reserveliquidationThreshold =
                               (Number(item?.[1]?.Ok.configuration
                                 .liquidation_threshold)/100000000) || 0;
@@ -1646,9 +1645,9 @@ const MySupply = () => {
                                         const assetBorrow =
                                         Number(reserveData?.[1]?.asset_borrow  || 0n) / 100000000;
                                         const totalCollateral =
-                                        (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                        parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
                                         const totalDebt =
-                                        (Number(userData?.Ok?.total_debt)/100000000) || 0;
+                                        parseFloat(Number(userData?.Ok?.total_debt)/100000000) || 0;
                                         const Ltv =  (Number(userData?.Ok?.ltv)/100000000) || 0;
                                         
                                         console.log("LTV1", Ltv);
@@ -1687,9 +1686,9 @@ const MySupply = () => {
                                         const assetBorrow =
                                         Number(reserveData?.[1]?.asset_borrow  || 0n) / 100000000;
                                         const totalCollateral =
-                                        (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                        parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
                                         const totalDebt =
-                                        (Number(userData?.Ok?.total_debt)/100000000) || 0 ;
+                                        parseFloat(Number(userData?.Ok?.total_debt)/100000000) || 0 ;
 
                                         handleModalOpen(
                                           "repay",
@@ -1867,9 +1866,9 @@ const MySupply = () => {
                                   const assetBorrow =
                                   Number(reserveData?.[1]?.asset_borrow || 0n) / 100000000;
                                   const totalCollateral =
-                                    (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                    parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
                                   const totalDebt =
-                                    (Number(userData?.Ok?.total_debt)/100000000);
+                                    parseFloat(Number(userData?.Ok?.total_debt)/100000000);
                                   const Ltv = (Number(userData?.Ok?.ltv)/100000000) || 0;
                                   console.log("LTV1", Ltv);
                                   handleModalOpen(
@@ -1888,7 +1887,7 @@ const MySupply = () => {
                                       ? ckUSDCBalance
                                       : null,
 
-                                   (Number(userData.Ok?.liquidation_threshold)/100000000 ) * 100,
+                                   (Number(userData.Ok?.liquidation_threshold)/100000000 ),
                                    (Number(item?.[1]?.Ok?.configuration
                                     .liquidation_threshold)/100000000),
                                     assetSupply,
@@ -2073,9 +2072,9 @@ const MySupply = () => {
                                     const assetBorrow =
                                       Number(reserveData?.[1]?.asset_borrow || 0n) / 100000000;
                                     const totalCollateral =
-                                      (Number(userData?.Ok?.total_collateral)/100000000)  || 0;
+                                      parseFloat(Number(userData?.Ok?.total_collateral)/100000000)  || 0;
                                     const totalDebt =
-                                      (Number(userData?.Ok?.total_debt)/100000000);
+                                      parseFloat(Number(userData?.Ok?.total_debt)/100000000);
                                     const Ltv =(Number(userData?.Ok?.ltv)/100000000) || 0;
                                     
 
@@ -2097,7 +2096,7 @@ const MySupply = () => {
                                         : item[0] === "ckUSDC"
                                         ? ckUSDCBalance
                                         : ckICPBalance,
-                                     (Number(userData.Ok?.liquidation_threshold)/100000000 ) * 100,
+                                     (Number(userData.Ok?.liquidation_threshold)/100000000 ),
                                      (Number(item?.[1]?.Ok?.configuration.liquidation_threshold)/100000000) || 0,
                                       assetSupply,
                                       assetBorrow,

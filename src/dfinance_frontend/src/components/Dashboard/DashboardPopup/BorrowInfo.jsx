@@ -22,7 +22,7 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-             <p> <span >${formatNumber(totalBorrowed)}</span> of <span>${borrowCap ? formatNumber(borrowCap.toString()) : 'N/A'}</span></p>
+             <p> <span >${formatNumber(Number(totalBorrowed))}</span> of <span>${borrowCap ? formatNumber(Number(borrowCap.toString())) : 'N/A'}</span></p>
           </div>
 
           <hr

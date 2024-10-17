@@ -38,9 +38,9 @@ const SupplyInfo = ({
             />
             <p>
               {" "}
-              <span>${formatNumber(totalSupplied)}</span> of{" "}
+              <span>${ formatNumber(Number(totalSupplied))}</span> of{" "}
               <span>
-                ${supplyCap ? formatNumber(supplyCap.toString()) : "N/A"}
+                ${supplyCap ? formatNumber(Number(supplyCap.toString())) : "N/A"}
               </span>
             </p>
           </div>

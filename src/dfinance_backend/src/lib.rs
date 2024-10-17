@@ -52,6 +52,7 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
     }
 }
 
+
 #[update]
 async fn liquidation_call(
     asset: String,

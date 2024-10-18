@@ -194,7 +194,7 @@ const WithdrawPopup = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv >= reserveliquidationThreshold) {
+    if (healthFactor <= 1 || ltv * 100  >= reserveliquidationThreshold) {
       setIsButtonDisabled(true);
       toast.info(" LTV Exceeded!")
     } else {
@@ -318,9 +318,9 @@ const WithdrawPopup = ({
               <div className="w-full flex justify-between items-center my-1">
                 <p>Supply APY</p>
                 <p>
-                  {supplyRateAPR * 100 < 0.1
+                  {supplyRateAPR  < 0.1
                     ? "<0.1%"
-                    : `${(supplyRateAPR * 100).toFixed(2)}%`}
+                    : `${(supplyRateAPR ).toFixed(2)}%`}
                 </p>
 
               </div>

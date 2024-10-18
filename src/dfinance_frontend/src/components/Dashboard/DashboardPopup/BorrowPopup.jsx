@@ -320,9 +320,9 @@ const Borrow = ({
                   <div className="w-full flex justify-between items-center my-1 mb-2">
                     <p>APY, borrow rate</p>
                     <p>
-                      {supplyRateAPR * 100 < 0.1
+                      {supplyRateAPR < 0.1
                         ? "<0.1%"
-                        : `${(supplyRateAPR * 100).toFixed(2)}%`}
+                        : `${(supplyRateAPR).toFixed(2)}%`}
                     </p>
                   </div>
 

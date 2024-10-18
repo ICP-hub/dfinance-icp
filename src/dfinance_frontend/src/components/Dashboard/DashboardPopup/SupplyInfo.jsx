@@ -57,9 +57,9 @@ const SupplyInfo = ({
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
             <p>
-              {supplyRateAPR * 100 < 0.1
+              {supplyRateAPR  < 0.1
                 ? "<0.1%"
-                : `${(supplyRateAPR * 100).toFixed(2)}%`}
+                : `${(supplyRateAPR ).toFixed(2)}%`}
             </p>
           </div>
         </div>

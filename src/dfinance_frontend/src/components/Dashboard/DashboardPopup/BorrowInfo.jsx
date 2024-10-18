@@ -6,7 +6,7 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
 
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
   const totalBorrowPercentage = borrowCapNumber && totalBorrowed 
-    ? (totalBorrowed / borrowCapNumber) * 100 
+    ? (totalBorrowed / borrowCapNumber)  
     : 0; 
 
   return (
@@ -35,7 +35,7 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-            <p>{(borrowRateAPR * 100) < 0.1 ? '<0.1%' : `${(borrowRateAPR * 100).toFixed(2)}%`}</p>
+            <p>{(borrowRateAPR ) < 0.1 ? '<0.1%' : `${(borrowRateAPR ).toFixed(2)}%`}</p>
           </div>
 
         </div>

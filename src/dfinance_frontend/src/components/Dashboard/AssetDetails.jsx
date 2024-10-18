@@ -668,7 +668,7 @@ const AssetDetails = () => {
                           return item[1]?.Ok;
                         });
 
-                        const supplyRateApr =
+                        const supplyRateAPR =
                           Number(filteredData[1]?.Ok.current_liquidity_rate) / 100000000 || 0;
 
                           const liquidationThreshold =
@@ -698,8 +698,8 @@ const AssetDetails = () => {
                           totalCollateral,
                           "totalDebt",
                           totalDebt,
-                          "supplyRateApr",
-                          supplyRateApr,
+                          "supplyRateAPR",
+                          supplyRateAPR,
                           "liquidationThreshold",
                           liquidationThreshold
                         );
@@ -711,7 +711,7 @@ const AssetDetails = () => {
                           (id === "ckETH" && cketh) ||
                           (id === "ckUSDC" && ckUSDC) ||
                           (id === "ICP" && icp),
-                          supplyRateApr,
+                          supplyRateAPR,
                           ckBalance,
                           liquidationThreshold,
                           reserveliquidationThreshold,

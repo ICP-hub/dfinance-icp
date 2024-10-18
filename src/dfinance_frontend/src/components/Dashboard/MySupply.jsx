@@ -42,11 +42,19 @@ const MySupply = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [availableBorrow, setAvailableBorrow] = useState(400);
+  const [availableBorrow, setAvailableBorrow] = useState([]);
   const [borrowableBTC, setBorrowableBTC] = useState(0);
   const [borrowableETH, setBorrowableETH] = useState(0);
   const [borrowableUSDC, setBorrowableUSDC] = useState(0);
   const [borrowableICP, setBorrowableICP] = useState(0);
+
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+
+  useEffect(() => {
+    if (userData?.Ok?.available_borrow) {
+      setAvailableBorrow(Number(userData.Ok.available_borrow) / 100000000);
+    }
+  }, [userData]);
 
   const principalObj = useMemo(
     () => Principal.fromText(principal),
@@ -159,7 +167,7 @@ const MySupply = () => {
     balance: "",
   });
 
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+
 
   const handleModalOpen = (
     type,
@@ -173,7 +181,9 @@ const MySupply = () => {
     assetBorrow,
     totalCollateral,
     totalDebt,
-    Ltv
+    Ltv,
+    availableBorrow,
+    borrowableAsset
   ) => {
     setIsModalOpen({
       isOpen: true,
@@ -189,6 +199,8 @@ const MySupply = () => {
       totalCollateral: totalCollateral,
       totalDebt: totalDebt,
       Ltv: Ltv,
+      availableBorrow: availableBorrow,
+      borrowableAsset: borrowableAsset
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -241,6 +253,8 @@ const MySupply = () => {
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
                 Ltv={isModalOpen.Ltv}
+                availableBorrow={isModalOpen.availableBorrow}
+                borrowableAsset={isModalOpen.borrowableAsset}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -595,7 +609,10 @@ const MySupply = () => {
                                     Asset Supply:
                                   </p>
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                    {assetSupply}
+                                    ${asset === "ckBTC" && formatNumber(assetSupply * ckBTCUsdRate)}
+                                    {asset === "ckETH" && formatNumber(assetSupply * ckETHUsdRate)}
+                                    {asset === "ckUSDC" && formatNumber(assetSupply * ckUSDCUsdRate)}
+                                    {asset === "ICP" && formatNumber(assetSupply * ckICPUsdRate)}
                                   </p>
                                 </div>
 
@@ -819,7 +836,10 @@ const MySupply = () => {
                                   </div>
 
                                   <div className="p-3 align-top flex flex-col">
-                                    {assetSupply}
+                                    ${asset === "ckBTC" && formatNumber(assetSupply * ckBTCUsdRate)}
+                                    {asset === "ckETH" && formatNumber(assetSupply * ckETHUsdRate)}
+                                    {asset === "ckUSDC" && formatNumber(assetSupply * ckUSDCUsdRate)}
+                                    {asset === "ICP" && formatNumber(assetSupply * ckICPUsdRate)}
                                   </div>
                                   <div className=" p-3  align-top flex items-center ">
                                     {supplyRateApr * 100 < 0.1
@@ -1420,7 +1440,16 @@ const MySupply = () => {
                                       Debt
                                     </p>
                                     <div className="text-right text-[#2A1F9D] dark:text-darkText mt-4">
-                                      {assetBorrow}
+                                      {assetBorrow
+                                        ? (assetBorrow >= 1e-8 && assetBorrow < 1e-7
+                                          ? Number(assetBorrow).toFixed(8)
+                                          : (assetBorrow >= 1e-7 && assetBorrow < 1e-6
+                                            ? Number(assetBorrow).toFixed(7)
+                                            : assetBorrow
+                                          )
+                                        )
+                                        : "0"
+                                      }
                                     </div>
                                   </div>
 
@@ -1462,9 +1491,19 @@ const MySupply = () => {
                                           parseFloat(Number(userData?.Ok?.total_collateral) / 100000000);
                                         const totalDebt =
                                           parseFloat(Number(userData?.Ok?.total_debt) / 100000000);
-                                        ;
+
                                         const Ltv = (Number(userData?.Ok?.ltv) / 100000000) || 0;
-                                        ;
+
+
+                                        const borrowableAsset = item[0] === "ckBTC"
+                                          ? borrowableBTC
+                                          : item[0] === "ckETH"
+                                            ? borrowableETH
+                                            : item[0] === "ckUSDC"
+                                              ? borrowableUSDC
+                                              : item[0] === "ICP"
+                                                ? borrowableICP
+                                                : 0;
                                         console.log("LTV1", Ltv);
 
                                         handleModalOpen(
@@ -1482,7 +1521,9 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          Ltv
+                                          Ltv,
+                                          availableBorrow,
+                                          borrowableAsset
                                         );
                                       }}
                                       disabled={isTableDisabled}
@@ -1640,7 +1681,17 @@ const MySupply = () => {
                                   </div>
                                   <div className="p-3">
                                     <div className="flex flex-col">
-                                      {assetBorrow}
+                                      {assetBorrow
+                                        ? (assetBorrow >= 1e-8 && assetBorrow < 1e-7
+                                          ? Number(assetBorrow).toFixed(8)
+                                          : (assetBorrow >= 1e-7 && assetBorrow < 1e-6
+                                            ? Number(assetBorrow).toFixed(7)
+                                            : assetBorrow
+                                          )
+                                        )
+                                        : "0"
+                                      }
+
                                     </div>
                                   </div>
                                   <div className="p-3 ml-1">
@@ -1671,6 +1722,16 @@ const MySupply = () => {
                                           parseFloat(Number(userData?.Ok?.total_debt) / 100000000) || 0;
                                         const Ltv = (Number(userData?.Ok?.ltv) / 100000000) || 0;
 
+                                        const borrowableAsset = item[0] === "ckBTC"
+                                          ? borrowableBTC
+                                          : item[0] === "ckETH"
+                                            ? borrowableETH
+                                            : item[0] === "ckUSDC"
+                                              ? borrowableUSDC
+                                              : item[0] === "ICP"
+                                                ? borrowableICP
+                                                : 0;
+
                                         console.log("LTV1", Ltv);
 
                                         handleModalOpen(
@@ -1688,7 +1749,9 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          Ltv
+                                          Ltv,
+                                          availableBorrow,
+                                          borrowableAsset
                                         );
                                       }}
                                       disabled={isTableDisabled}
@@ -1816,38 +1879,38 @@ const MySupply = () => {
                             </div>
                             <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
                               <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                Wallet Balance:
+                                Available:
                               </p>
                               <p className="text-right text-[#2A1F9D] dark:text-darkText">
                                 {item[0] === "ckBTC" && (
                                   <>
-                                    <p>{ckBTCBalance}</p>
+                                    <p>{borrowableBTC}</p>
                                     <p className="font-light">
-                                      ${formatNumber(ckBTCUsdBalance)}
+                                      ${formatNumber(availableBorrow)}
                                     </p>
                                   </>
                                 )}
                                 {item[0] === "ckETH" && (
                                   <>
-                                    <p>{ckETHBalance}</p>
+                                    <p>{borrowableETH}</p>
                                     <p className="font-light">
-                                      ${formatNumber(ckETHUsdBalance)}
+                                      ${formatNumber(availableBorrow)}
                                     </p>
                                   </>
                                 )}
                                 {item[0] === "ckUSDC" && (
                                   <>
-                                    <p>{ckUSDCBalance}</p>
+                                    <p>{borrowableUSDC}</p>
                                     <p className="font-light">
-                                      ${formatNumber(ckUSDCUsdBalance)}
+                                      ${formatNumber(availableBorrow)}
                                     </p>
                                   </>
                                 )}
                                 {item[0] === "ICP" && (
                                   <>
-                                    <p>{ckICPBalance}</p>
+                                    <p>{borrowableICP}</p>
                                     <p className="font-light">
-                                      ${formatNumber(ckICPUsdBalance)}
+                                      ${formatNumber(availableBorrow)}
                                     </p>
                                   </>
                                 )}
@@ -1890,6 +1953,15 @@ const MySupply = () => {
                                     parseFloat(Number(userData?.Ok?.total_debt) / 100000000);
                                   const Ltv = (Number(userData?.Ok?.ltv) / 100000000) || 0;
                                   console.log("LTV1", Ltv);
+                                  const borrowableAsset = item[0] === "ckBTC"
+                                    ? borrowableBTC
+                                    : item[0] === "ckETH"
+                                      ? borrowableETH
+                                      : item[0] === "ckUSDC"
+                                        ? borrowableUSDC
+                                        : item[0] === "ICP"
+                                          ? borrowableICP
+                                          : 0;
                                   handleModalOpen(
                                     "borrow",
                                     item[0],
@@ -1913,7 +1985,9 @@ const MySupply = () => {
                                     assetBorrow,
                                     totalCollateral,
                                     totalDebt,
-                                    Ltv
+                                    Ltv,
+                                    availableBorrow,
+                                    borrowableAsset
                                   );
                                 }}
                                 disabled={isTableDisabled}
@@ -2096,6 +2170,15 @@ const MySupply = () => {
                                       parseFloat(Number(userData?.Ok?.total_debt) / 100000000);
                                     const Ltv = (Number(userData?.Ok?.ltv) / 100000000) || 0;
 
+                                    const borrowableAsset = item[0] === "ckBTC"
+                                      ? borrowableBTC
+                                      : item[0] === "ckETH"
+                                        ? borrowableETH
+                                        : item[0] === "ckUSDC"
+                                          ? borrowableUSDC
+                                          : item[0] === "ICP"
+                                            ? borrowableICP
+                                            : 0;
 
                                     handleModalOpen(
                                       "borrow",
@@ -2121,7 +2204,9 @@ const MySupply = () => {
                                       assetBorrow,
                                       totalCollateral,
                                       totalDebt,
-                                      Ltv
+                                      Ltv,
+                                      availableBorrow,
+                                      borrowableAsset
                                     );
                                   }}
                                   disabled={isTableDisabled}

@@ -26,6 +26,8 @@ const Borrow = ({
   totalCollateral,
   totalDebt,
   Ltv,
+  availableBorrow,
+  borrowableAsset,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
@@ -219,7 +221,7 @@ const Borrow = ({
     // Check if there's a decimal point and enforce 8 decimal places
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-      
+
       // Limit decimal places to 8
       if (decimalPart.length > 8) {
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
@@ -257,7 +259,7 @@ const Borrow = ({
   };
 
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(totalCollateral).toString();
+    const maxAmount = parseFloat(borrowableAsset).toString();
     updateAmountAndUsdValue(maxAmount);
   };
   return (
@@ -277,7 +279,7 @@ const Borrow = ({
                     value={amount}
                     onChange={handleAmountChange}
                     step="0.00000001"
-                    disabled={totalCollateral === 0}
+                    disabled={availableBorrow === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100  rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                     min="0"
@@ -296,14 +298,14 @@ const Borrow = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(totalCollateral) === 0 ? "text-gray-400 cursor-not-allowed" : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                  <p className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(availableBorrow) === 0 ? "text-gray-400 cursor-not-allowed" : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                     }`}
                     onClick={() => {
-                      if (parseFloat(totalCollateral) > 0) {
+                      if (parseFloat(availableBorrow) > 0) {
                         handleMaxClick();
                       }
                     }}>
-                    ${parseFloat(totalCollateral)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"} Max
+                    ${parseFloat(availableBorrow)?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"} Max
                   </p>
 
                 </div>
@@ -464,7 +466,16 @@ const Borrow = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have borrowed {scaledAmount / 100000000} {asset}
+              You have borrowed  {(scaledAmount / 100000000)
+                ? ((scaledAmount / 100000000) >= 1e-8 && (scaledAmount / 100000000) < 1e-7
+                  ? Number((scaledAmount / 100000000)).toFixed(8)
+                  : ((scaledAmount / 100000000) >= 1e-7 && (scaledAmount / 100000000) < 1e-6
+                    ? Number((scaledAmount / 100000000)).toFixed(7)
+                    : (scaledAmount / 100000000)
+                  )
+                )
+                : "0"
+              }{" "} {asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

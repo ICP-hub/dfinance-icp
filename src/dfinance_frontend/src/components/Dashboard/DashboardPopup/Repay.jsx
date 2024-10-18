@@ -54,7 +54,7 @@ const Repay = ({
     // Check if there's a decimal point and enforce 8 decimal places
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-      
+
       // Limit decimal places to 8
       if (decimalPart.length > 8) {
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
@@ -250,7 +250,7 @@ const Repay = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    
+
   }, [
     asset,
     liquidationThreshold,
@@ -301,7 +301,19 @@ const Repay = ({
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleMaxClick = () => {
-    const maxAmount = assetBorrow.toString();
+   let asset_borrow= assetBorrow
+      ? (assetBorrow >= 1e-8 && assetBorrow < 1e-7
+        ? Number(assetBorrow).toFixed(8)
+        : (assetBorrow >= 1e-7 && assetBorrow < 1e-6
+          ? Number(assetBorrow).toFixed(7)
+          : assetBorrow
+        )
+      )
+      : "0"
+    const maxAmount = asset_borrow.toString();
+
+
+
     updateAmountAndUsdValue(maxAmount);
   };
 
@@ -344,11 +356,11 @@ const Repay = ({
                   </div>
                   <p className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${assetBorrow === 0 ? "text-gray-400 cursor-not-allowed" : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                     }`}
-                  onClick={() => {
-                    if (assetBorrow > 0) {
-                      handleMaxClick();
-                    }
-                  }}>
+                    onClick={() => {
+                      if (assetBorrow > 0) {
+                        handleMaxClick();
+                      }
+                    }}>
                     {assetBorrow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
                   </p>
                 </div>
@@ -459,7 +471,7 @@ const Repay = ({
                   ? "opacity-50 cursor-not-allowed"
                   : ""
                   }`}
-                disabled={isLoading || amount <= 0 || null }
+                disabled={isLoading || amount <= 0 || null}
               >
                 {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
               </button>
@@ -494,7 +506,16 @@ const Repay = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have repayed {scaledAmount / 100000000} d{asset}
+              You have repayed {(scaledAmount / 100000000)
+                ? ((scaledAmount / 100000000) >= 1e-8 && (scaledAmount / 100000000) < 1e-7
+                  ? Number((scaledAmount / 100000000)).toFixed(8)
+                  : ((scaledAmount / 100000000) >= 1e-7 && (scaledAmount / 100000000) < 1e-6
+                    ? Number((scaledAmount / 100000000)).toFixed(7)
+                    : (scaledAmount / 100000000)
+                  )
+                )
+                : "0"
+              }{" "} d{asset}
             </p>
             <button
               onClick={handleClosePaymentPopup}

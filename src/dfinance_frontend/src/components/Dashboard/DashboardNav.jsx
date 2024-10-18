@@ -26,6 +26,8 @@ const DashboardNav = () => {
   const [netDebtApy, setNetDebtApy] = useState(0);
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
+  const [assetBorrow, setAssetBorrow] = useState(0);
+
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
@@ -61,7 +63,10 @@ const DashboardNav = () => {
       console.log("item", item);
       switch (item.id) {
         case 0:
-          return { ...item, count: `$${formatNumber(Number(net_worth[0])/100000000)}` };
+          return {
+            ...item,
+            count: `$${formatNumber(Number(net_worth[0]) / 100000000)}`,
+          };
         case 1:
           return {
             ...item,
@@ -130,7 +135,7 @@ const DashboardNav = () => {
       const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
 
       const supplyApy = Number(reserve[1]?.supply_rate || 0n) / 100000000;
-console.log("reserves",reserves)
+      console.log("reserves", reserves);
       console.log(
         `Reserve: ${reserve[0]}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
       );
@@ -160,9 +165,10 @@ console.log("reserves",reserves)
     let weightedDebtApySum = 0;
 
     reserves.forEach((reserve) => {
-      const assetBorrowed =  Number(reserve[1]?.asset_borrow|| 0n) / 100000000
-      const debtApy = Number(reserve[1]?.borrow_rate|| 0n) / 100000000
-      const assetPriceWhenBorrowed = Number(reserve[1]?.asset_price_when_borrowed|| 0n) / 100000000 || 1;
+      const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
+      const debtApy = Number(reserve[1]?.borrow_rate || 0n) / 100000000;
+      const assetPriceWhenBorrowed =
+        Number(reserve[1]?.asset_price_when_borrowed || 0n) / 100000000 || 1;
 
       console.log(
         `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}, Price When Borrowed: ${assetPriceWhenBorrowed}`
@@ -212,10 +218,13 @@ console.log("reserves",reserves)
 
       setNetApy(calculatedNetApy);
       const reserve = reservesData[0]; // Adjust this index as needed based on your data structure
-
+      let borrows = 0;
       // Accessing asset_supply from the second element of the reserve
       const supply = Number(reserve[1]?.asset_supply || 0n) / 100000000; // Make sure reserve[1] exists
       setAssetSupply(supply);
+      const borrow = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
+      borrows += borrow;
+      setAssetBorrow(borrows);
     }
   }, [userData]);
 
@@ -393,56 +402,60 @@ console.log("reserves",reserves)
                     {(isDashboardSupplyOrMain
                       ? walletDetailTab
                       : walletDetailTabs
-                    ).map((data, index) => (
-                      <div
-                        key={index}
-                        className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
-                        style={{ minWidth: "220px", flex: "1 0 220px" }}
+                    ).map((data, index) => {
+                      // Skip rendering the "Health Factor" block if assetBorrow is 0
+                      if (data.title === "Health Factor" && assetBorrow === 0) {
+                        return null; // Do not render the Health Factor block
+                      }
+
+                      return (
+                        <div
+                          key={index}
+                          className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+                          style={{ minWidth: "220px", flex: "1 0 220px" }}
+                        >
+                          <button className="relative w-full text-left flex justify-between items-center button1">
+                            <span>{data.title}</span>
+                            <span
+                              className={`font-bold text-[20px] ${
+                                data.title === "Health Factor"
+                                  ? data.count === 0 && assetSupply === 0
+                                    ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
+                                    : data.count > 3
+                                    ? "text-green-500" // Green for health factor greater than 3
+                                    : data.count <= 1
+                                    ? "text-red-500" // Red for health factor less than or equal to 1
+                                    : data.count <= 1.5
+                                    ? "text-orange-500" // Orange for health factor less than or equal to 1.5
+                                    : data.count <= 2
+                                    ? "text-orange-300" // Soft orange for health factor less than or equal to 2
+                                    : "text-orange-600" // Vivid orange for other values
+                                  : data.title === "Total Borrows"
+                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Default color for Total Borrows
+                                  : "text-[#2A1F9D] dark:text-darkBlue" // Default color for other titles
+                              }`}
+                            >
+                              {data.count !== null ? data.count : "N/A"}
+                            </span>
+
+                            <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {assetBorrow !== 0 && (
+                    <div className="flex justify-end mt-10 md:mt-0">
+                      <button
+                        className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
+                        onClick={handleOpenPopup}
+                        style={{ minWidth: "220px" }}
                       >
-                        <button className="relative w-full text-left flex justify-between items-center button1">
-                          <span>{data.title}</span>
-                          {console.log("Data Count:", data.count)}
-                          {console.log(
-                            "Asset Supply in healthfactor conmditon:",
-                            assetSupply
-                          )}
-                          <span
-                            className={`font-bold text-[20px] ${
-                              data.title === "Health Factor"
-                                ? data.count === 0 && assetSupply === 0 // Check if health factor is 0
-                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
-                                  : data.count > 3
-                                  ? "text-green-500" // Green for health factor greater than 3
-                                  : data.count <= 1
-                                  ? "text-red-500" // Red for health factor less than or equal to 1
-                                  : data.count <= 1.5
-                                  ? "text-orange-500" // Orange for health factor less than or equal to 1.5
-                                  : data.count <= 2
-                                  ? "text-orange-300" // Soft orange for health factor less than or equal to 2
-                                  : "text-orange-600" // Vivid orange for other values
-                                : data.title === "Total Borrows"
-                                ? "text-[#2A1F9D] dark:text-darkBlue" // Default color for Total Borrows
-                                : "text-[#2A1F9D] dark:text-darkBlue" // Default color for other titles
-                            }`}
-                          >
-                            {data.count !== null ? data.count : "N/A"}
-                          </span>
-
-                          <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-end mt-10 md:mt-0">
-                    <button
-                      className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
-                      onClick={handleOpenPopup}
-                      style={{ minWidth: "220px" }}
-                    >
-                      Risk Details
-                    </button>
-                  </div>
+                        Risk Details
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -454,43 +467,53 @@ console.log("reserves",reserves)
                 (isDashboardSupplyOrMain
                   ? walletDetailTab
                   : walletDetailTabs
-                ).map((data, index) => (
-                  <div key={index} className="relative group">
-                    <button className="relative font-light text-[13px] text-left min-w-[80px] dark:opacity-80 button1">
-                      {data.title}
-                      <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                      <span
-                        className={`font-bold text-[20px] ${
-                          data.title === "Health Factor"
-                            ? data.count === 0 && assetSupply === 0
+                ).map((data, index) => {
+                  // Skip rendering the "Health Factor" block if assetBorrow is 0
+                  if (data.title === "Health Factor" && assetBorrow === 0) {
+                    return null; // Do not render the Health Factor block
+                  }
+
+                  return (
+                    <div key={index} className="relative group">
+                      <button className="relative font-light text-[13px] text-left min-w-[80px] dark:opacity-80 button1">
+                        {data.title}
+                        <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                        <span
+                          className={`font-bold text-[20px] ${
+                            data.title === "Health Factor"
+                              ? data.count === 0 && assetSupply === 0
+                                ? "text-[#2A1F9D] dark:text-darkBlue"
+                                : data.count > 3
+                                ? "text-green-500"
+                                : data.count <= 1
+                                ? "text-red-500"
+                                : data.count <= 1.5
+                                ? "text-orange-500"
+                                : data.count <= 2
+                                ? "text-orange-300"
+                                : "text-orange-600"
+                              : data.title === "Total Borrows"
                               ? "text-[#2A1F9D] dark:text-darkBlue"
-                              : data.count > 3
-                              ? "text-green-500"
-                              : data.count <= 1
-                              ? "text-red-500"
-                              : data.count <= 1.5
-                              ? "text-orange-500"
-                              : data.count <= 2
-                              ? "text-orange-300"
-                              : "text-orange-600"
-                            : data.title === "Total Borrows"
-                            ? "text-[#2A1F9D] dark:text-darkBlue"
-                            : "text-[#2A1F9D] dark:text-darkBlue"
-                        }`}
-                      >
-                        {data.count !== null ? data.count : ""}
-                      </span>
-                    </button>
-                  </div>
-                ))}
-              {isAuthenticated && shouldRenderRiskDetailsButton && (
-                <button
-                  className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md dark:text-darkTextSecondary button1"
-                  onClick={handleOpenPopup}
-                >
-                  Risk Details
-                </button>
-              )}
+                              : "text-[#2A1F9D] dark:text-darkBlue"
+                          }`}
+                        >
+                          {data.count !== null ? data.count : ""}
+                        </span>
+                      </button>
+                    </div>
+                  );
+                })}
+
+              {isAuthenticated &&
+                shouldRenderRiskDetailsButton &&
+                assetBorrow !== 0 && (
+                  <button
+                    className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md dark:text-darkTextSecondary button1"
+                    onClick={handleOpenPopup}
+                  >
+                    Risk Details
+                  </button>
+                )}
             </div>
           )}
           {isPopupOpen && (

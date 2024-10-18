@@ -5,7 +5,7 @@ use crate::{
         },
         storable::Candid,
     }, implementations::reserve, protocol::libraries::{
-        math::{calculate::{cal_average_threshold, calculate_health_factor, calculate_ltv, get_exchange_rates, UserPosition}, math_utils::ScalingMath},
+        math::{calculate::{cal_average_threshold, cal_average_ltv, calculate_health_factor, calculate_ltv, get_exchange_rates, UserPosition}, math_utils::ScalingMath},
         types::datatypes::UserReserveData,
     }
 };
@@ -17,134 +17,7 @@ pub struct UpdateLogic;
 
 impl UpdateLogic {
     // ------------- Update user data function for supply -------------
-    // pub async fn update_user_data_supply(
-    //     user_principal: Principal,
-    //     params: ExecuteSupplyParams,
-    //     reserve: &ReserveData,
-    // ) -> Result<(), String> {
-    //     // Fetchs user data
-    //     let user_data_result = mutate_state(|state| {
-    //         let user_profile_data = &mut state.user_profile;
-    //         user_profile_data
-    //             .get(&user_principal)
-    //             .map(|user| user.0.clone())
-    //             .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-    //     });
-
-
-    //     let mut user_data = match user_data_result {
-    //         Ok(data) => {
-    //             ic_cdk::println!("User found: {:?}", data);
-    //             data
-    //         }
-    //         Err(e) => {
-    //             ic_cdk::println!("Error: {}", e);
-    //             return Err(e);
-    //         }
-    //     };
-    //     let asset_rate_result = get_exchange_rates(reserve.asset_name.clone().expect("REASON"), 1.0).await;
-
-       
-      
-    //     let user_prof = user_data.clone();
-    //     let ckbtc_to_usd_rate = 60554.70f64;
-    //     let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
-
-        
-    //     ic_cdk::println!(
-    //         "Converted ckBTC amount: {} to ICP amount: {} with rate: {}",
-    //         params.amount,
-    //         amount_in_usd,
-    //         ckbtc_to_usd_rate
-    //     );
-    //     user_data.net_worth = Some(user_data.net_worth.unwrap_or(0.0) + amount_in_usd);
-    //     let user_thrs = cal_average_threshold(amount_in_usd, reserve.configuration.liquidation_threshold, user_prof.total_collateral.unwrap_or(0.0), user_prof.liquidation_threshold.unwrap_or(0.0));
-    //     ic_cdk::println!("user_thr {:?}", user_thrs);
-
-    //     user_data.liquidation_threshold = Some(user_thrs);
-    //     user_data.total_collateral =
-    //         Some(user_data.total_collateral.unwrap_or(0.0) + amount_in_usd);
-
-    //     let user_position = UserPosition {
-    //         total_collateral_value: user_data.total_collateral.unwrap_or(0.0),
-    //         total_borrowed_value: user_data.total_debt.unwrap_or(0.0),
-    //         liquidation_threshold: user_thrs,
-    //     };
-
-    //     let health_factor = calculate_health_factor(&user_position);
-    //     user_data.health_factor = Some(health_factor);
-
-    //     ic_cdk::println!("Updated user health factor: {}", health_factor);
-
-    //     let ltv = calculate_ltv(&user_position);
-    //     user_data.ltv = Some(ltv);
-
-    //     // Checks if the reserve data for the asset already exists in the user's reserves
-    //     let user_reserve = match user_data.reserves {
-    //         Some(ref mut reserves) => reserves
-    //             .iter_mut()
-    //             .find(|(asset_name, _)| *asset_name == params.asset),
-    //         None => None,
-    //     };
-        
-    //     // Calculate average threshold
-    //     // let user_thrs = cal_average_threshold(amount_in_usd, reserve.configuration.liquidation_threshold, user_prof.total_collateral.unwrap_or(0.0), user_prof.liquidation_threshold.unwrap_or(0.0));
-    //     // ic_cdk::println!("user_thr {:?}", user_thrs);
-
-    //     // user_data.liquidation_threshold = Some(user_thrs);
-    //     let mut usd_rate = 0.0;
-    //     if let Some((_, reserve_data)) = user_reserve {
-    //         // If Reserve data exists, it will update asset supply
-    //         match asset_rate_result {
-    //             Ok((rate, _)) => {
-    //                 // Assign the `f64` rate to `reserve_data.asset_price_when_supplied`
-    //                 usd_rate = rate;
-
-    //             }
-    //             Err(e) => {
-                    
-    //                 ic_cdk::println!("Failed to get asset rate: {}", e);
-                    
-    //                 reserve_data.asset_price_when_supplied = 0.0; // Default value in case of an error
-    //             }
-    //         }
-    //         reserve_data.asset_price_when_supplied = usd_rate;
-    //         reserve_data.supply_rate = reserve.current_liquidity_rate; 
-    //         reserve_data.asset_supply += params.amount as f64;
-    //         ic_cdk::println!(
-    //             "Updated asset supply for existing reserve: {:?}",
-    //             reserve_data
-    //         );
-    //     } else {
-    //         // Reserve data does not exist, create a new one
-    //         let new_reserve = UserReserveData {
-    //             reserve: params.asset.clone(),
-    //             asset_supply: params.amount as f64,
-    //             supply_rate: reserve.current_liquidity_rate,
-
-    //             asset_price_when_supplied: usd_rate,
-    //             ..Default::default()
-    //         };
-
-    //         if let Some(ref mut reserves) = user_data.reserves {
-    //             reserves.push((params.asset.clone(), new_reserve));
-    //         } else {
-    //             user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
-    //         }
-
-    //         ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
-    //     }
-
-    //     // Save the updated user data back to state
-    //     mutate_state(|state| {
-    //         state
-    //             .user_profile
-    //             .insert(user_principal, Candid(user_data.clone()));
-    //     });
-
-    //     ic_cdk::println!("User data updated successfully: {:?}", user_data);
-    //     Ok(())
-    // }
+    
 
     pub async fn update_user_data_supply(
         user_principal: Principal,
@@ -172,19 +45,7 @@ impl UpdateLogic {
             }
         };
         
-        // Get the exchange rate of the asset
-        // let asset_rate_result = get_exchange_rates(reserve.asset_name.clone().expect("REASON"), 1.0).await;
-        // let amount_in_usd = match exchange_rate_usd(params.asset.clone(), params.amount).await {
-        //     Ok(value) => value,
-        //     Err(e) => {
-        //         ic_cdk::println!("Error fetching exchange rate: {:?}", e);
-        //         return Err(format!("Failed to fetch exchange rate: {}", e));
-        //     }
-        // };
-        // let ckbtc_to_usd_rate = 60554.70f64;
-        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
-        // let unscaled_amount = params.amount/100000000;
-        // let mut usd_rate = usd_amount/params.amount * 100000000; -- changes
+       
         let mut usd_rate = usd_amount.scaled_div(params.amount);
         ic_cdk::println!(
             "Converted ckBTC amount: {} to USD amount: {} with rate: {}",
@@ -195,6 +56,15 @@ impl UpdateLogic {
     
         // Update user's net worth and collateral
         user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
+        let user_max_ltv = cal_average_ltv(
+            usd_amount,
+            0,
+            reserve.configuration.ltv,
+            user_data.total_collateral.unwrap_or(0),
+            user_data.max_ltv.unwrap_or(0),
+        );
+        ic_cdk::println!(" user_max_ltv: {:?}", user_max_ltv);
+        user_data.max_ltv=Some(user_max_ltv);
         let user_thrs = cal_average_threshold(
             usd_amount,
             0,
@@ -220,20 +90,9 @@ impl UpdateLogic {
     
         // Calculate and update loan-to-value (LTV)
         let ltv = calculate_ltv(&user_position);
-        // let mut avg_ltv=0;
-        // if reserve.configuration.ltv != 0 {
-        //     avg_ltv = user_data.ltv.unwrap()+ (usd_amount.scaled_mul(reserve.configuration.ltv));
-        // } else {
-        // //    user_data.has_zero_ltv_collateral = true;
-        // ic_cdk::println!("ltv {}", reserve.configuration.ltv);
-        // }
+        
         user_data.ltv = Some(ltv);
-        // ic_cdk::println!("user updated ltv {}", user_data.ltv.unwrap().clone());
-        // let available_borrow_for_asset = calculate_available_borrows(
-        //     user_data.total_collateral.unwrap_or(0).clone(),
-        //     user_data.total_debt.unwrap_or(0).clone(),
-        //     reserve.configuration.ltv, 
-        // );
+        
 
 
         
@@ -489,6 +348,17 @@ impl UpdateLogic {
         );
         ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
         user_data.liquidation_threshold = Some(user_thrs);
+
+        let user_max_ltv = cal_average_ltv(
+            0,
+            usd_amount.clone(),
+            reserve.configuration.ltv,
+            user_data.total_collateral.unwrap_or(0),
+            user_data.max_ltv.unwrap_or(0),
+        );
+        ic_cdk::println!(" user_max_ltv: {:?}", user_max_ltv);
+        user_data.max_ltv=Some(user_max_ltv);
+        
         if params.is_collateral {
         user_data.total_collateral =
             Some(user_data.total_collateral.unwrap_or(0) - usd_amount);

@@ -619,7 +619,15 @@ const MySupply = () => {
                                   </p>
                                   <div className=" text-right text-[#2A1F9D] dark:text-darkText">
                                     <p className=" text-[#2A1F9D] dark:text-darkText">
-                                      {assetSupply}
+                                       {assetSupply
+                                        ? assetSupply >= 1e-8 &&
+                                          assetSupply < 1e-7
+                                          ? Number(assetSupply).toFixed(8)
+                                          : assetSupply >= 1e-7 &&
+                                            assetSupply < 1e-6
+                                          ? Number(assetSupply).toFixed(7)
+                                          : assetSupply
+                                        : "0"}
                                     </p>
                                     <p className="font-light text-[#2A1F9D] dark:text-darkText">
                                       $
@@ -893,7 +901,15 @@ const MySupply = () => {
 
                                   <div className="p-3 align-top flex flex-col">
                                     <p className=" text-[#2A1F9D] dark:text-darkText">
-                                      {assetSupply}
+                                    {assetSupply
+                                        ? assetSupply >= 1e-8 &&
+                                          assetSupply < 1e-7
+                                          ? Number(assetSupply).toFixed(8)
+                                          : assetSupply >= 1e-7 &&
+                                            assetSupply < 1e-6
+                                          ? Number(assetSupply).toFixed(7)
+                                          : assetSupply
+                                        : "0"}
                                     </p>
                                     <p className=" text-[#2A1F9D] dark:text-darkText font-light">
                                       $

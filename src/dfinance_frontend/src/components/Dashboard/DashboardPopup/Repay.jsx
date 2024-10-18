@@ -11,6 +11,7 @@ import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/toke
 import { useEffect } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
+import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
 const Repay = ({
@@ -65,7 +66,6 @@ const Repay = ({
   };
 
   const updateAmountAndUsdValue = (inputAmount) => {
-
     // Convert input to a number
     const numericAmount = parseFloat(inputAmount);
 
@@ -88,7 +88,8 @@ const Repay = ({
     }
   };
 
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset)
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
 
   useEffect(() => {
     if (amount && conversionRate) {
@@ -125,8 +126,21 @@ const Repay = ({
       ledgerActor = ledgerActors.ICP;
     }
     // Convert amount and transferFee to numbers and add them
-    const amountAsNat64 = Number(amount);
-    const scaledAmount = amountAsNat64 * Number(10 ** 8);
+    const safeAmount = Number(amount) || 0; // This ensures safeAmount is always a number
+
+    // Ensure precision using toFixed to prevent floating point errors
+    // Ensure amount is a valid number and scale it to remove decimals
+    let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); // Scale and round to an integer
+
+    // Now amountAsNat64 is an integer, valid for nat64
+    console.log("Amount as nat64:", amountAsNat64);
+
+    // Pass amountAsNat64 as a valid nat64 argument
+    // Limit to 8 decimal places
+
+    // Perform the multiplication using regular numbers
+    const scaledAmount = amountAsNat64;
+
     const totalAmount = scaledAmount + transferfee;
 
     try {
@@ -185,10 +199,24 @@ const Repay = ({
     console.log("Backend actor", ledgerActor);
 
     try {
-      const amountAsNat64 = parseFloat(amount);
-      const scaledAmount = BigInt(Math.floor(amountAsNat64 * 10 ** 8));
+      const safeAmount = Number(amount) || 0; // This ensures safeAmount is always a number
+
+      // Ensure precision using toFixed to prevent floating point errors
+      // Ensure amount is a valid number and scale it to remove decimals
+      let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); // Scale and round to an integer
+
+      // Now amountAsNat64 is an integer, valid for nat64
+      console.log("Amount as nat64:", amountAsNat64);
+
+      // Pass amountAsNat64 as a valid nat64 argument
+      // Limit to 8 decimal places
+
+      // Perform the multiplication using regular numbers
+      const scaledAmount = amountAsNat64;
 
       const repayResult = await backendActor.repay(asset, scaledAmount, []);
+      const sound = new Audio(coinSound);
+      sound.play();
       toast.success("Repay successful!");
       console.log("Repay result", repayResult);
       setIsPaymentDone(true);
@@ -249,8 +277,6 @@ const Repay = ({
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
-
-
   }, [
     asset,
     liquidationThreshold,
@@ -301,18 +327,14 @@ const Repay = ({
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleMaxClick = () => {
-   let asset_borrow= assetBorrow
-      ? (assetBorrow >= 1e-8 && assetBorrow < 1e-7
+    let asset_borrow = assetBorrow
+      ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
         ? Number(assetBorrow).toFixed(8)
-        : (assetBorrow >= 1e-7 && assetBorrow < 1e-6
-          ? Number(assetBorrow).toFixed(7)
-          : assetBorrow
-        )
-      )
-      : "0"
+        : assetBorrow >= 1e-7 && assetBorrow < 1e-6
+        ? Number(assetBorrow).toFixed(7)
+        : assetBorrow
+      : "0";
     const maxAmount = asset_borrow.toString();
-
-
 
     updateAmountAndUsdValue(maxAmount);
   };
@@ -341,9 +363,13 @@ const Repay = ({
                     min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
+                    {usdValue
+                      ? `$${usdValue.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} USD`
+                      : "$0.00 USD"}
                   </p>
-
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -354,14 +380,28 @@ const Repay = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${assetBorrow === 0 ? "text-gray-400 cursor-not-allowed" : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                  <p
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
+                      assetBorrow === 0
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                     }`}
                     onClick={() => {
                       if (assetBorrow > 0) {
                         handleMaxClick();
                       }
-                    }}>
-                    {assetBorrow.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                    }}
+                  >
+                    {assetBorrow >= 1
+                      ? assetBorrow.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : assetBorrow.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 8,
+                        })}
+                    Max
                   </p>
                 </div>
               </div>
@@ -376,9 +416,12 @@ const Repay = ({
                     <p className="text-nowrap">Remaining debt</p>
                     <div className="w-4/12 flex flex-col items-end">
                       <p className="text-xs mt-2">
-                        {(assetBorrow - amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                        {(assetBorrow - amount).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        Max
                       </p>
-
                     </div>
                   </div>
 
@@ -386,16 +429,17 @@ const Repay = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${healthFactorBackend > 3
-                          ? "text-green-500"
-                          : healthFactorBackend <= 1
+                        className={`${
+                          healthFactorBackend > 3
+                            ? "text-green-500"
+                            : healthFactorBackend <= 1
                             ? "text-red-500"
                             : healthFactorBackend <= 1.5
-                              ? "text-orange-600"
-                              : healthFactorBackend <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : healthFactorBackend <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {parseFloat(
                           healthFactorBackend > 100
@@ -405,16 +449,17 @@ const Repay = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
+                        className={`${
+                          currentHealthFactor > 3
+                            ? "text-green-500"
+                            : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -436,12 +481,11 @@ const Repay = ({
                   <img
                     src={image}
                     alt="asset icon"
-                    className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                    className="object-cover w-5 h-5 rounded-full"
                   />
                   <div className="relative group">
                     <Info size={16} className="ml-2 cursor-pointer" />
 
-                    {/* Tooltip */}
                     <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
                       Fees deducted on every transaction
                     </div>
@@ -467,22 +511,22 @@ const Repay = ({
 
               <button
                 onClick={handleClick}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-                  }`}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
+                  isLoading || amount <= 0 || isButtonDisabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
                 disabled={isLoading || amount <= 0 || null}
               >
                 {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
               </button>
 
-              {/* Fullscreen Loading Overlay with Dim Background */}
               {isLoading && (
                 <div
                   className="fixed inset-0 flex items-center justify-center z-50"
                   style={{
-                    background: "rgba(0, 0, 0, 0.4)", // Dim background
-                    backdropFilter: "blur(1px)", // Blur effect
+                    background: "rgba(0, 0, 0, 0.4)",
+                    backdropFilter: "blur(1px)",
                   }}
                 >
                   <div className="loader"></div>
@@ -505,18 +549,31 @@ const Repay = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p>
-              You have repayed {(scaledAmount / 100000000)
-                ? ((scaledAmount / 100000000) >= 1e-8 && (scaledAmount / 100000000) < 1e-7
-                  ? Number((scaledAmount / 100000000)).toFixed(8)
-                  : ((scaledAmount / 100000000) >= 1e-7 && (scaledAmount / 100000000) < 1e-6
-                    ? Number((scaledAmount / 100000000)).toFixed(7)
-                    : (scaledAmount / 100000000)
-                  )
-                )
-                : "0"
-              }{" "} d{asset}
-            </p>
+            <center>
+              <p className="mt-2">
+                Your Debt was{" "}
+               <strong> {assetBorrow
+                  ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
+                    ? Number(assetBorrow).toFixed(8)
+                    : assetBorrow >= 1e-7 && assetBorrow < 1e-6
+                    ? Number(assetBorrow).toFixed(7)
+                    : assetBorrow
+                  : "0"}</strong>{" "}
+                <strong>{asset}</strong> and you have repayed{" "}<strong>
+                {scaledAmount / 100000000
+                  ? scaledAmount / 100000000 >= 1e-8 &&
+                    scaledAmount / 100000000 < 1e-7
+                    ? Number(scaledAmount / 100000000).toFixed(8)
+                    : scaledAmount / 100000000 >= 1e-7 &&
+                      scaledAmount / 100000000 < 1e-6
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
+                  : "0"}</strong>{" "}
+                <strong>d{asset}</strong> after{" "}
+                {supplyRateAPR < 0.1 ? "<0.1%" : `${supplyRateAPR.toFixed(2)}%`}{" "}
+                borrow rate
+              </p>
+            </center>
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

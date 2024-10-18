@@ -220,10 +220,10 @@ const DashboardNav = () => {
       const reserve = reservesData[0]; // Adjust this index as needed based on your data structure
       let Borrows = 0;
       // Accessing asset_supply from the second element of the reserve
-      console.log("reservein dashboard",reserve[1])
+      console.log("reservein dashboard", reserve[1]);
       const supply = Number(reserve[1]?.asset_supply || 0n) / 100000000; // Make sure reserve[1] exists
       setAssetSupply(supply);
-      console.log("userData",userData)
+      console.log("userData", userData);
       const borrow = Number(userData?.Ok?.total_debt || 0n) / 100000000;
       console.log("Borrow:", borrow);
       setAssetBorrow(borrow);
@@ -363,14 +363,6 @@ const DashboardNav = () => {
             <ChevronLeft size={40} color={chevronColor} />
           </div>
         )}
-        <h1 className="text-[#2A1F9D] text-xl inline-flex items-center dark:text-darkText ml-1 py-10">
-          <img
-            src={icplogo}
-            alt="Icp Logo"
-            className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]"
-          />
-          ICP Market
-        </h1>
 
         <div className="md:hidden flex ml-auto -mt-1">
           <button onClick={toggleMenu} className="p-4 mt-4 rounded-md button1">
@@ -446,7 +438,7 @@ const DashboardNav = () => {
                       );
                     })}
                   </div>
-{console.log("Aset borrow",assetBorrow)}
+                  {console.log("Aset borrow", assetBorrow)}
                   {assetBorrow !== 0 && (
                     <div className="flex justify-end mt-10 md:mt-0">
                       <button
@@ -464,7 +456,7 @@ const DashboardNav = () => {
           </div>
 
           {isAuthenticated && (
-            <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText lg:mb-0 mb-8">
+            <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText lg:mb-0 mb-8 mt-8">
               {pathname !== "/dashboard/transaction-history" &&
                 (isDashboardSupplyOrMain
                   ? walletDetailTab

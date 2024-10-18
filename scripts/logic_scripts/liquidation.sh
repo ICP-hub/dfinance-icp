@@ -81,7 +81,7 @@ echo "Allowance Set: $allow"
 echo "--------------------------------------"
 
 # Calling liquidation function
-amount=1000
+amount=100000000
 liquiation=$(dfx canister call dfinance_backend liquidation_call "(\"ckBTC\", \"ckBTC\", $amount:nat64, \"${ON_BEHALF_OF}\")")
 
 echo "Liquidation Execution Result: $liquidation"

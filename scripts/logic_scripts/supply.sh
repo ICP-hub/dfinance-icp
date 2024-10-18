@@ -46,7 +46,7 @@ user_data=$(../integration_scripts/user_data.sh)
 echo "user data: $user_data"
 
 # Approve the transfer
-approve_amount=200000000  # 2 tokens
+approve_amount=300000000  # 2 tokens
 echo "Approving transfer of $approve_amount from user1 to backend_canister..."
 allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
     from_subaccount=null;
@@ -65,7 +65,7 @@ echo "--------------------------------------"
 dfx identity use default
 
 # Get the principal of the default identity
-deposit_amount=200000000
+deposit_amount=300000000
 currency="ckETH"  
 is_collateral=true
 

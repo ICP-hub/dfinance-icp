@@ -44,6 +44,7 @@ type UserData = record {
   total_debt : opt nat;
   user_id : opt text;
   liquidation_threshold : opt nat;
+  max_ltv : opt nat;
   net_worth : opt nat;
 };
 type UserReserveData = record {

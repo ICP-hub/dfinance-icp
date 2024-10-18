@@ -25,6 +25,7 @@ pub struct UserData {
     pub ltv: Option<u128>,
     pub liquidation_threshold: Option<u128>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
+    pub max_ltv: Option<u128>
     //index
     //total_supply
     
@@ -44,6 +45,7 @@ impl Default for UserData {
             ltv: Some(0),
             liquidation_threshold: Some(0),
             reserves: Default::default(),
+            max_ltv: Some(0)
         }
     }
 }

@@ -26,7 +26,7 @@ const RiskPopup = ({ onClose, userData }) => {
 
   console.log("liquidationThresholdValue", liquidationThreshold_Value);
   const healthFactorMinValue = 1;
-  const Max_Ltv = 50.0;
+  const Max_Ltv = parseFloat(Number((userData?.Ok?.max_ltv)/100000000));
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       onClose();
@@ -356,11 +356,11 @@ const RiskPopup = ({ onClose, userData }) => {
                         style={{ stopColor: "green", stopOpacity: 1 }}
                       />
                       <stop
-                        offset={`${currentMaxLtvPosition}%`} // End of green
+                        offset={`${currentMaxLtvPosition-1}%`} // End of green
                         style={{ stopColor: "green", stopOpacity: 1 }}
                       />
                       <stop
-                        offset={`${currentMaxLtvPosition}%`} // Start of orange
+                        offset={`${currentMaxLtvPosition-1}%`} // Start of orange
                         style={{ stopColor: "#fa6e0d", stopOpacity: 1 }}
                       />
                       <stop

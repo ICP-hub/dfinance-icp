@@ -65,10 +65,28 @@ const Borrow = ({
     setIsAcknowledged(e.target.checked);
   };
   const value = currentHealthFactor;
-  const amountAsNat64 = Number(amount);
-  const scaledAmount = amountAsNat64 * Number(10 ** 8);
-  console.log("amountAsNat64", amountAsNat64)
-  console.log("scaledAmount", scaledAmount)
+  // Ensure precision using toFixed to prevent floating point errors
+// Ensure the amount is a valid number before proceeding
+// Convert amount to a number and ensure it is valid
+const safeAmount = Number(amount) || 0; // This ensures safeAmount is always a number
+
+// Ensure precision using toFixed to prevent floating point errors
+// Ensure amount is a valid number and scale it to remove decimals
+let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); // Scale and round to an integer
+
+// Now amountAsNat64 is an integer, valid for nat64
+console.log("Amount as nat64:", amountAsNat64);
+
+// Pass amountAsNat64 as a valid nat64 argument
+// Limit to 8 decimal places
+
+// Perform the multiplication using regular numbers
+const scaledAmount = amountAsNat64 ;
+
+// Ensure the result is a proper number
+console.log("Scaled Amount:", scaledAmount);
+
+
   const handleBorrowETH = async () => {
     console.log("Borrow function called for", asset, scaledAmount);
     setIsLoading(true);

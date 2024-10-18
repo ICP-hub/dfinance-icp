@@ -218,13 +218,15 @@ const DashboardNav = () => {
 
       setNetApy(calculatedNetApy);
       const reserve = reservesData[0]; // Adjust this index as needed based on your data structure
-      let borrows = 0;
+      let Borrows = 0;
       // Accessing asset_supply from the second element of the reserve
+      console.log("reservein dashboard",reserve[1])
       const supply = Number(reserve[1]?.asset_supply || 0n) / 100000000; // Make sure reserve[1] exists
       setAssetSupply(supply);
-      const borrow = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
-      borrows += borrow;
-      setAssetBorrow(borrows);
+      console.log("userData",userData)
+      const borrow = Number(userData?.Ok?.total_debt || 0n) / 100000000;
+      console.log("Borrow:", borrow);
+      setAssetBorrow(borrow);
     }
   }, [userData]);
 
@@ -444,7 +446,7 @@ const DashboardNav = () => {
                       );
                     })}
                   </div>
-
+{console.log("Aset borrow",assetBorrow)}
                   {assetBorrow !== 0 && (
                     <div className="flex justify-end mt-10 md:mt-0">
                       <button

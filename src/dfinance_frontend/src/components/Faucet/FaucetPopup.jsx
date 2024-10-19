@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { X } from 'lucide-react';
 import FaucetPayment from "./FaucetPayment";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import { useEffect } from "react";
 
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
-  const { backendActor } = useAuth();
-  const [amount, setAmount] = useState("");
-  const [showFaucetPayment, setShowFaucetPayment] = useState(false);
+  const {
+    backendActor,
+  } = useAuth()
+
+  const [faucetBTC, setFaucetBTC] = useState(0);
+  const [faucetETH, setFaucetETH] = useState(0);
+  const [faucetUSDC, setFaucetUSDC] = useState(0);
+  const [faucetICP, setFaucetICP] = useState(0);
   const [exchangeRate, setExchangeRate] = useState(null);
 
   const {
@@ -16,41 +22,106 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     ckETHUsdRate,
     ckUSDCUsdRate,
     ckICPUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    fetchBalance,
   } = useFetchConversionRate();
 
-  // Get exchange rate based on the selected asset
-  const getExchangeRate = () => {
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([
+          fetchBalance("ckBTC"),
+          fetchBalance("ckETH"),
+          fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
+          fetchConversionRate(),
+        ]);
+      } catch (error) {
+        setError(error);
+      }
+    };
+
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
+
+  useEffect(() => {
+    if (ckBTCUsdRate) {
+      const btcAmount = (10000 / ckBTCUsdRate).toFixed(4);
+      setFaucetBTC(btcAmount);
+    }
+
+    if (ckETHUsdRate) {
+      const ethAmount = (10000 / ckETHUsdRate).toFixed(4);
+      setFaucetETH(ethAmount);
+    }
+
+    if (ckUSDCUsdRate) {
+      const usdcAmount = (10000 / ckUSDCUsdRate).toFixed(4);
+      setFaucetUSDC(usdcAmount);
+    }
+
+    if (ckICPUsdRate) {
+      const icpAmount = (10000 / ckICPUsdRate).toFixed(4);
+      setFaucetICP(icpAmount);
+    }
+
+  }, [
+    ckBTCBalance,
+    ckBTCUsdRate,
+    ckETHBalance,
+    ckETHUsdRate,
+    ckUSDCBalance,
+    ckUSDCUsdRate,
+    ckICPBalance,
+    ckICPUsdRate,
+  ]);
+
+  const getFaucetAmount = () => {
     switch (asset) {
       case "ckBTC":
-        return ckBTCUsdRate;
+        return faucetBTC;
       case "ckETH":
-        return ckETHUsdRate;
+        return faucetETH;
       case "ckUSDC":
-        return ckUSDCUsdRate;
+        return faucetUSDC;
       case "ckICP":
       case "ICP":
-        return ckICPUsdRate;
+        return faucetICP;
       default:
-        return null; // Return null if asset is not recognized
+        return null; // Return null if the asset is not recognized
     }
   };
 
-  // Set exchange rate immediately when the asset changes
   useEffect(() => {
-    const rate = getExchangeRate();
-    setExchangeRate(rate);
-  }, [asset, ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate]);
+    const faucetAmount = getFaucetAmount();
+    setExchangeRate(faucetAmount);
+  }, [asset, faucetBTC, faucetETH, faucetUSDC, faucetICP]);
 
-  // Handler for setting the max amount when "Max" is clicked
-  const handleMaxClick = () => {
-    if (exchangeRate) {
-      const tokenAmount = (maxAmount / exchangeRate).toFixed(4);
-      setAmount(tokenAmount); // Set the max token amount
-    }
-  };
+  const [amount, setAmount] = useState("");
+  const [showFaucetPayment, setShowFaucetPayment] = useState(false);
 
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    const value = e.target.value;
+    if (value === "") {
+      setAmount("");
+    } else {
+      const numericValue = Number(value);
+      if (maxAmount) {
+        setAmount(Math.min(numericValue, maxAmount));
+      } else {
+        setAmount(numericValue);
+      }
+    }
+  };
+
+  const handleMaxAmountClick = () => {
+    if (exchangeRate) {
+      setAmount(exchangeRate);
+    }
   };
 
   const handleFaucetETH = (asset) => {
@@ -58,11 +129,13 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     setShowFaucetPayment(true);
     try {
       if (backendActor) {
-        const result = backendActor.faucet(asset, amount * 100000000);
+        const natAmount = Math.round(amount * Math.pow(10, 8));
+        console.log("Scaled amount", natAmount)
+        const result = backendActor.faucet(asset, natAmount);
         console.log("Faucet result.", result);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error:", error)
     }
   };
 
@@ -74,7 +147,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : 'default';
   const transferFee = fees[normalizedAsset] || fees.default;
-  const maxAmount = 10000; // Max USD value for calculation
+  const transferfee = Number(transferFee);
+  const maxAmount = 10000
 
   return (
     <>
@@ -97,7 +171,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                     type="number"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                     min="0"
                   />
@@ -111,14 +185,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  {maxAmount && (
-                    <p
-                      className="button1 cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md button1"
-                      onClick={handleMaxClick} // Max button click
-                    >
-                      {maxAmount.toLocaleString()} Max
-                    </p>
-                  )}
+                  {maxAmount && <p className="button1 cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md button1"
+                    onClick={handleMaxAmountClick}>
+                      ~ ${maxAmount.toLocaleString()} Max
+                  </p>}
                 </div>
               </div>
             </div>
@@ -127,9 +197,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             <button
               onClick={() => handleFaucetETH(asset)}
               disabled={amount <= 0}
-              className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${
-                amount > 0 ? "opacity-100 cursor-pointer" : "opacity-50 cursor-not-allowed"
-              }`}
+              className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${amount > 0
+                ? "opacity-100 cursor-pointer"
+                : "opacity-50 cursor-not-allowed"
+                }`}
             >
               Faucet {asset}
             </button>

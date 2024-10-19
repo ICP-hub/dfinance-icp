@@ -666,7 +666,7 @@ const MySupply = () => {
                                   <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                     Collateral
                                   </p>
-                                  <div className="-mr-3 -mt-4 mb-4">
+                                  <div className="">
                                     <CustomizedSwitches checked={true} />
                                   </div>
                                 </div>

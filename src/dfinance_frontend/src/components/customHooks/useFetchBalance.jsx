@@ -23,7 +23,8 @@ const useFetchBalance = (ledgerActors, principal) => {
           }
 
           const balance = await ledgerActor.icrc1_balance_of(account);
-          const formattedBalance = (balance / BigInt(100000000)).toString();
+          const formattedBalance = Number(balance)/100000000;
+
 
           switch (assetType) {
             case "ckBTC":

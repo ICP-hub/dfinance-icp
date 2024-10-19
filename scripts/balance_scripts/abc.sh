@@ -7,7 +7,7 @@ set -e
 source ../../.env
 
 CANISTER_ID=$CANISTER_ID_DFINANCE_BACKEND
-ASSET="ckETH"                         
+ASSET="ckBTC"                         
 AMOUNT=300000000                       
 
 # Validate the input parameters

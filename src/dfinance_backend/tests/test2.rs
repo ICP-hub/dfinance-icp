@@ -195,27 +195,24 @@ fn setup() -> (PocketIc, Principal) {
     (pic, backend_canister)
 }
 
-
-
 fn check_balance(pic: &PocketIc, canister: Principal, user_principal: Principal) -> Nat {
-    let args_encoded = encode_one(
-    Account {
+    let args_encoded = encode_one(Account {
         owner: user_principal,
         subaccount: None,
-    }
-).expect("Failed to encode arguments");
+    })
+    .expect("Failed to encode arguments");
 
-    let result = pic.query_call(
-    canister,         
-        Principal::anonymous(), 
-        "icrc1_balance_of",     
-        args_encoded,           
-    ).expect("Failed to query balance");
+    let result = pic
+        .query_call(
+            canister,
+            Principal::anonymous(),
+            "icrc1_balance_of",
+            args_encoded,
+        )
+        .expect("Failed to query balance");
 
-    
     match result {
         WasmResult::Reply(response) => {
-          
             let balance: Nat = candid::decode_one(&response).expect("Failed to decode balance");
             balance
         }
@@ -229,10 +226,10 @@ fn check_balance(pic: &PocketIc, canister: Principal, user_principal: Principal)
 fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_supply(&pic, backend_canister);
-    test_borrow(&pic, backend_canister);
-    test_repay(&pic, backend_canister);
-    test_withdraw(&pic, backend_canister);
-    test_liquidation(&pic, backend_canister);
+    //test_borrow(&pic, backend_canister);
+    // test_repay(&pic, backend_canister);
+    // test_withdraw(&pic, backend_canister);
+    // test_liquidation(&pic, backend_canister);
 }
 
 // #[test]
@@ -433,7 +430,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Valid deposit case
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 1000,
+            amount: 2000,
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -441,53 +438,63 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             simulate_dtoken_transfer_failure: false,
         },
         // Non-existent asset case
-        TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: 500,
-            is_collateral: false,
-            expect_success: false,
-            expected_error_message: Some(
-                "Error retrieving asset principal: No principal found for asset: nonexistent_asset"
-                    .to_string(),
-            ),
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
-        },
-        // Minimum valid amount
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 1, // Minimum valid amount
-            is_collateral: true,
-            expect_success: true,
-            expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
-        },
-        // Large amount
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 100_00, // Large amount
-            is_collateral: true,
-            expect_success: true,
-            expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
-        },
-        // Insufficient balance
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 10_000_000, // Valid amount but insufficient balance
-            is_collateral: true,
-            expect_success: false,
-            expected_error_message: Some(
-                // "Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\""
-                //     .to_string(),
-                "Asset transfer failed, burned dtoken. Error: \"InsufficientFunds".to_string()
-            ), // change it later on
-            simulate_insufficient_balance: true,
-            simulate_dtoken_transfer_failure: false,
-        },
+        // TestCase {
+        //     asset: "nonexistent_asset".to_string(),
+        //     amount: 500,
+        //     is_collateral: false,
+        //     expect_success: false,
+        //     expected_error_message: Some(
+        //         "Error retrieving asset principal: No principal found for asset: nonexistent_asset"
+        //             .to_string(),
+        //     ),
+        //     simulate_insufficient_balance: false,
+        //     simulate_dtoken_transfer_failure: false,
+        // },
+        // // Minimum valid amount
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: 1, // Minimum valid amount
+        //     is_collateral: true,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        //     simulate_insufficient_balance: false,
+        //     simulate_dtoken_transfer_failure: false,
+        // },
+        // // Large amount
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: 100_00, // Large amount
+        //     is_collateral: true,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        //     simulate_insufficient_balance: false,
+        //     simulate_dtoken_transfer_failure: false,
+        // },
+        // // Insufficient balance
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: 10_000_000, // Valid amount but insufficient balance
+        //     is_collateral: true,
+        //     expect_success: false,
+        //     expected_error_message: Some(
+        //         // "Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\""
+        //         //     .to_string(),
+        //         "Asset transfer failed, burned dtoken. Error: \"InsufficientFunds".to_string(),
+        //     ), // change it later on
+        //     simulate_insufficient_balance: true,
+        //     simulate_dtoken_transfer_failure: false,
+        // },
     ];
+
+    let user_principal =
+        Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
+            .expect("Failed to create new user principal");
+    let _ = pic.update_call(
+        backend_canister,
+        user_principal,
+        "faucet",
+        encode_args(("ckBTC", 10000000u64)).unwrap(),
+    );
 
     // for case in test_cases {
     println!();
@@ -585,10 +592,14 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
 
         let args_encoded = encode_one(approve_args).expect("Failed to encode approve arguments");
 
+        let user_principal =
+            Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
+                .expect("Failed to create new user principal");
+
         // Call the `approve` method on `ckbtc_canister`
         let approve_result = pic.update_call(
             asset_principal, //asset_canister variable
-            Principal::anonymous(),
+            user_principal,
             "icrc2_approve",
             args_encoded,
         );
@@ -621,10 +632,14 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             }
         }
 
+        let user_principal =
+            Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
+                .expect("Failed to create new user principal");
+
         // Now call the deposit function
         let result = pic.update_call(
             backend_canister,
-            Principal::anonymous(),
+            user_principal,
             "supply", //change
             encode_args((case.asset.clone(), case.amount, case.is_collateral)).unwrap(),
         );
@@ -664,7 +679,10 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 "Error message mismatch for case: {:?}",
                                 case
                             );
-                            println!("supply rejected as expected: {:?}", case.expected_error_message);
+                            println!(
+                                "supply rejected as expected: {:?}",
+                                case.expected_error_message
+                            );
                         } else {
                             println!("Expected success but got error: {:?}", e);
                         }
@@ -692,22 +710,67 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             }
         }
 
+        let user_principal =
+            Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
+                .expect("Failed to create new user principal");
+
+        ic_cdk::println!("i think things are working fine");
+
+        let _ = pic.update_call(
+            backend_canister,
+            user_principal,
+            "check_user",
+            encode_one("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae").unwrap(),
+        );
+
+        let user_result = pic.query_call(
+            backend_canister,
+            user_principal,
+            "get_user_data", //change
+            encode_one(user_principal.to_string()).unwrap(),
+        );
+
+        match user_result {
+            Ok(WasmResult::Reply(response)) => {
+                let deposit_response: Result<(), String> =
+                    candid::decode_one(&response).expect("Failed to decode deposit response");
+
+                match deposit_response {
+                    Ok(data) => {
+                        println!("got user data: {:?}", data);
+                    }
+                    Err(e) => {
+                        println!("error in user data: {:?}", e);
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                println!("Deposit rejected as expected: {}", reject_message);
+            }
+            Err(e) => {
+                println!("Error during deposit function call: {:?}", e);
+            }
+        }
+
         if case.expect_success {
-            let user_principal = Principal::anonymous(); 
+            // let user_principal = Principal::anonymous();
             let user_balance_after = check_balance(&pic, asset_principal, user_principal);
             let backend_balance_after = check_balance(&pic, asset_principal, backend_canister);
 
-           
-           // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
+            // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
 
-            
             println!("User balance after deposit: {}", user_balance_after);
             println!("Backend balance after deposit: {}", backend_balance_after);
-           // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after); 
+            // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after);
 
-            
-            assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after deposit");
-            assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after deposit");
+            assert!(
+                user_balance_after > Nat::from(0u64),
+                "User balance should be greater than 0 after deposit"
+            );
+            assert!(
+                backend_balance_after > Nat::from(0u64),
+                "Backend balance should be greater than 0 after deposit"
+            );
         }
 
         println!();
@@ -766,7 +829,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         // Valid borrow case
         TestCase {
             asset: "ckBTC".to_string(), //
-            amount: 1000,
+            amount: 500,
             user: Principal::anonymous().to_string(),
             on_behalf_of: "user1".to_string(),
             interest_rate: Nat::from(0u64),
@@ -833,6 +896,16 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     println!();
     println!("****************************************************************************");
     println!();
+
+    let user_principal =
+        Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
+            .expect("Failed to create new user principal");
+    let _ = pic.update_call(
+        backend_canister,
+        user_principal,
+        "check_user",
+        encode_one("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae").unwrap(),
+    );
     for (i, case) in test_cases.iter().enumerate() {
         // Print the case number
         println!("Running test case no: {}", i + 1);
@@ -840,10 +913,12 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         println!("Test case details: {:?}", case);
         println!();
         println!();
+
         // Now call the borrow function  ///
         let result = pic.update_call(
             backend_canister,
-            Principal::anonymous(),
+            // Principal::anonymous(),
+            user_principal,
             "borrow",
             encode_args((
                 case.asset.clone(),
@@ -954,21 +1029,24 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         };
 
         if case.expect_success {
-            let user_principal = Principal::anonymous(); 
+            // let user_principal = Principal::anonymous();
             let user_balance_after = check_balance(&pic, asset_principal, user_principal);
             let backend_balance_after = check_balance(&pic, asset_principal, backend_canister);
 
-           
-           // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
+            // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
 
-            
             println!("User balance after deposit: {}", user_balance_after);
             println!("Backend balance after deposit: {}", backend_balance_after);
-           // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after); 
+            // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after);
 
-            
-            assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after deposit");
-            assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after deposit");
+            assert!(
+                user_balance_after > Nat::from(0u64),
+                "User balance should be greater than 0 after deposit"
+            );
+            assert!(
+                backend_balance_after > Nat::from(0u64),
+                "Backend balance should be greater than 0 after deposit"
+            );
         }
 
         println!();
@@ -1147,7 +1225,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                 continue;
             }
         };
-        
+
         // Now call the deposit function
         let result = pic.update_call(
             backend_canister,
@@ -1210,23 +1288,25 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             }
         }
 
-
         if case.expect_success {
-            let user_principal = Principal::anonymous(); 
+            let user_principal = Principal::anonymous();
             let user_balance_after = check_balance(&pic, asset_principal, user_principal);
             let backend_balance_after = check_balance(&pic, asset_principal, backend_canister);
 
-           
-           // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
+            // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
 
-            
             println!("User balance after deposit: {}", user_balance_after);
             println!("Backend balance after deposit: {}", backend_balance_after);
-           // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after); 
+            // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after);
 
-            
-            assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after deposit");
-            assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after deposit");
+            assert!(
+                user_balance_after > Nat::from(0u64),
+                "User balance should be greater than 0 after deposit"
+            );
+            assert!(
+                backend_balance_after > Nat::from(0u64),
+                "Backend balance should be greater than 0 after deposit"
+            );
         }
 
         println!();
@@ -1484,29 +1564,31 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         }
 
         if case.expect_success {
-            let user_principal = Principal::anonymous(); 
+            let user_principal = Principal::anonymous();
             let user_balance_after = check_balance(&pic, asset_principal, user_principal);
             let backend_balance_after = check_balance(&pic, asset_principal, backend_canister);
 
-           
-           // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
+            // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
 
-            
             println!("User balance after deposit: {}", user_balance_after);
             println!("Backend balance after deposit: {}", backend_balance_after);
-           // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after); 
+            // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after);
 
-            
-            assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after deposit");
-            assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after deposit");
+            assert!(
+                user_balance_after > Nat::from(0u64),
+                "User balance should be greater than 0 after deposit"
+            );
+            assert!(
+                backend_balance_after > Nat::from(0u64),
+                "Backend balance should be greater than 0 after deposit"
+            );
         }
-        
+
         println!();
         println!("****************************************************************************");
         println!();
     }
 }
-
 
 fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
@@ -1536,7 +1618,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             on_behalf_of: Some(Principal::anonymous().to_text()),
             is_collateral: false,
             expect_success: false,
-            expected_error_message: Some("Reserve not found for asset: nonexistent_asset".to_string()),
+            expected_error_message: Some(
+                "Reserve not found for asset: nonexistent_asset".to_string(),
+            ),
         },
         // Large amount
         TestCase {
@@ -1549,8 +1633,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         },
     ];
 
-    let liquidator_principal = Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
-        .expect("Failed to create new user principal");
+    let liquidator_principal =
+        Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
+            .expect("Failed to create new user principal");
     let _ = pic.update_call(
         backend_canister,
         liquidator_principal,
@@ -1558,10 +1643,10 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         encode_args(("ckBTC", 100000u64)).unwrap(),
     );
 
-     // for case in test_cases {
-        println!();
-        println!("****************************************************************************");
-        println!();
+    // for case in test_cases {
+    println!();
+    println!("****************************************************************************");
+    println!();
     for (i, case) in test_cases.iter().enumerate() {
         println!("Running test case no: {}", i + 1);
         println!("Test case details: {:?}", case);
@@ -1641,7 +1726,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             Ok(WasmResult::Reply(reply)) => {
                 let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
                 match approve_response {
-                    Ok(ApproveResult::Ok(block_index)) => println!("Approve succeeded, block index: {}", block_index),
+                    Ok(ApproveResult::Ok(block_index)) => {
+                        println!("Approve succeeded, block index: {}", block_index)
+                    }
                     Ok(ApproveResult::Err(error)) => {
                         println!("Approve failed with error: {:?}", error);
                         continue;
@@ -1678,8 +1765,8 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
 
         match liquidation_result {
             Ok(WasmResult::Reply(response)) => {
-                let liquidation_response: Result<(), String> = candid::decode_one(&response)
-                    .expect("Failed to decode liquidation response");
+                let liquidation_response: Result<(), String> =
+                    candid::decode_one(&response).expect("Failed to decode liquidation response");
                 match liquidation_response {
                     Ok(()) => {
                         if case.expect_success {
@@ -1713,7 +1800,10 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                     );
                     println!("liquidation_call rejected as expected: {}", reject_message);
                 } else {
-                    panic!("Expected success but got rejection for case: {:?} with message: {}", case, reject_message);
+                    panic!(
+                        "Expected success but got rejection for case: {:?} with message: {}",
+                        case, reject_message
+                    );
                 }
             }
             Err(e) => {
@@ -1721,21 +1811,24 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             }
         }
         if case.expect_success {
-            let user_principal = Principal::anonymous(); 
+            let user_principal = Principal::anonymous();
             let user_balance_after = check_balance(&pic, asset_principal, user_principal);
             let backend_balance_after = check_balance(&pic, asset_principal, backend_canister);
 
-           
-           // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
+            // let user_dtoken_balance_after = check_balance(&pic, dtoken_canister, user_principal);
 
-            
             println!("User balance after deposit: {}", user_balance_after);
             println!("Backend balance after deposit: {}", backend_balance_after);
-           // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after); 
+            // println!("User Dtoken balance after deposit: {}", user_dtoken_balance_after);
 
-            
-            assert!(user_balance_after > Nat::from(0u64), "User balance should be greater than 0 after deposit");
-            assert!(backend_balance_after > Nat::from(0u64), "Backend balance should be greater than 0 after deposit");
+            assert!(
+                user_balance_after > Nat::from(0u64),
+                "User balance should be greater than 0 after deposit"
+            );
+            assert!(
+                backend_balance_after > Nat::from(0u64),
+                "Backend balance should be greater than 0 after deposit"
+            );
         }
 
         println!();

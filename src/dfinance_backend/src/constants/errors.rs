@@ -11,6 +11,8 @@ pub enum Error {
     HealthFactorLess,
     WithdrawMoreThanSupply,
     RepayMoreThanDebt,
+    InvalidUser,
+    LessRewardAmount
 }
 
 impl Error {
@@ -27,6 +29,8 @@ impl Error {
             Error::HealthFactorLess => "Health factor is falling below 1, will lead to liquidation",
             Error::WithdrawMoreThanSupply => "Withdraw cannot be more than supply",
             Error::RepayMoreThanDebt => "Repay cannot be more than debt",
+            Error::InvalidUser => "User is not equal to the caller",
+            Error::LessRewardAmount => "Total collateral value cannot be less than reward amount"
         }
     }
 }

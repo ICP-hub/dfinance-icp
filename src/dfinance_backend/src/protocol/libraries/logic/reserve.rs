@@ -206,6 +206,8 @@ use crate::declarations::assets::ReserveData;
 
 use crate::protocol::libraries::logic::interest_rate::{calculate_interest_rates, initialize_interest_rate_params};
 use crate::protocol::libraries::math::math_utils::ScalingMath;
+use candid::{Nat, Principal};
+use crate::api::functions::asset_transfer;
 
 
 
@@ -314,4 +316,56 @@ pub async fn update_interest_rates(
         reserve_data.borrow_rate = next_debt_rate;
         ic_cdk::println!("reserve_data.total_borrowed: {:?}", reserve_data.total_borrowed);
 
+    }
+
+    pub struct UserState {
+        pub adjusted_balance: f64, // the balance adjusted by the liquidity index  //reserve_cache.curr_liquidity_index * total_supply
+        pub last_liquidity_index: f64, // stores the previous liquidity index    //reserve_cache.curr_liqui
+    }
+    
+   pub async fn mint_scaled(
+        user_state: &mut UserState,
+        amount: f64,                     // Incoming amount in f64                     //
+        current_liquidity_index: f64,     // The current liquidity index    //reserve_cache.next_liqui
+        user_principal: Principal,        // Principal of the user
+        dtoken_canister_principal: Principal, // dToken canister principal
+        platform_principal: Principal,    // Platform principal
+    ) -> Result<(), String> {
+    
+        // Calculate the amount to mint adjusted by the liquidity index
+        let adjusted_amount = amount / current_liquidity_index;
+        if adjusted_amount == 0.0 {
+            return Err("Invalid mint amount".to_string());
+        }
+    
+        // Calculate interest accrued since the last liquidity index update
+        let balance_increase = (user_state.adjusted_balance * current_liquidity_index)
+            - (user_state.adjusted_balance * user_state.last_liquidity_index);
+    
+        // Update user's adjusted balance with the new deposit and interest
+        user_state.adjusted_balance += adjusted_amount + balance_increase;
+    
+        // Update the user's last liquidity index
+        user_state.last_liquidity_index = current_liquidity_index;
+    
+        // Convert adjusted_amount and balance_increase to Nat (you need to use integer representation)
+        let newmint = adjusted_amount as u128; // Scale it up to represent integer amount
+    
+        // Perform token transfer to the user with the newly minted aTokens
+        match asset_transfer(
+            user_principal,
+            dtoken_canister_principal,
+            platform_principal,
+            Nat::from(newmint), // Transfer the total minted amount including the interest
+        )
+        .await
+        {
+            Ok(_) => {
+                ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+                Ok(())
+            }
+            Err(err) => {
+                Err(format!("Minting failed. Error: {:?}", err))
+            }
+        }
     }

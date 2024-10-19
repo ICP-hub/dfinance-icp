@@ -64,6 +64,7 @@ service : () -> {
   borrow : (text, nat64) -> (Result);
   check_user : (text) -> (Result_1);
   create_multiple_canisters : () -> (vec principal);
+  disable_collateral : (text, nat) -> ();
   faucet : (text, nat64) -> (Result_2);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;

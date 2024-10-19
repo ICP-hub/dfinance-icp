@@ -13,6 +13,9 @@ pub struct Transaction {
     pub transaction_fee: f64,
 }
 
+#[derive(Debug)]
+pub struct Candid<T>(pub T);
+
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,

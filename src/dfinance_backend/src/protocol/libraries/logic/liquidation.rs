@@ -1,7 +1,7 @@
 use crate::{
     api::{functions::asset_transfer, state_handler::mutate_state},
     declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
-    protocol::libraries::{logic::update::UpdateLogic, math::calculate::get_exchange_rates},
+    protocol::libraries::{logic::{update::UpdateLogic, validation::ValidationLogic}, math::calculate::get_exchange_rates},
     repay,
 };
 use candid::{Nat, Principal};
@@ -114,9 +114,9 @@ impl LiquidationLogic {
             amount: reward_amount_param,
         };
 
-        // Validates supply using the reserve_data
-        // ValidationLogic::validate_liquidation(asset_name, amount as f64, liquidator_principal).await;
-        // ic_cdk::println!("Borrow validated successfully");
+        // Validates liquidation using the reserve_data
+        ValidationLogic::validate_liquidation(asset_name, amount, reward_amount_param, liquidator_principal, user_principal).await;
+        ic_cdk::println!("Liquidation validated successfully");
 
         // Repaying debt
         let repay_response = repay(asset.clone(), amount, Some(user_principal.to_string())).await;

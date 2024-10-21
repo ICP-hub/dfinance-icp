@@ -119,7 +119,6 @@
     // pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.
 
 use candid::{CandidType, Deserialize};
-// all the values will store in u128 for better precision
 use serde::Serialize;
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
@@ -137,6 +136,7 @@ pub struct ReserveData {
     pub configuration: ReserveConfiguration,
     pub can_be_collateral: Option<bool>,
     pub last_update_timestamp: u64,
+    pub userlist: Option<Vec<(String, bool)>>
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]

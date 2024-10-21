@@ -102,7 +102,17 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     ic_cdk::println!("Reserve state updated successfully");
 
     // Converting asset to usdt value
-   
+    if let Some(userlist) = &mut reserve_data.userlist {
+            
+        if !userlist.iter().any(|(principal, _)| principal == &user_principal.to_string()) {
+            userlist.push((user_principal.to_string(), true));
+        }
+    } else {
+    
+        reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
+    }
+    
+    ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
     
     // Validates supply using the reserve_data
     // ValidationLogic::validate_borrow(

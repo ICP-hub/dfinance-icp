@@ -28,6 +28,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
+import ColateralPopup from "./DashboardPopup/CollateralDiablePopup";
 
 const MySupply = () => {
   const navigate = useNavigate();
@@ -157,6 +158,7 @@ const MySupply = () => {
   const formatNumber = useFormatNumber();
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
+  const isToggled = useSelector((state) => state.toggle.isToggled); // Generic state for toggle
 
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
@@ -165,7 +167,7 @@ const MySupply = () => {
     image: "",
     balance: "",
   });
-
+console.log("toggle",isToggled)
   const handleModalOpen = (
     type,
     asset,
@@ -180,8 +182,9 @@ const MySupply = () => {
     totalDebt,
     Ltv,
     availableBorrow,
-    borrowableAsset
+    borrowableAsset,
   ) => {
+    console.log("handle toggle : ",isToggled)
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -198,6 +201,7 @@ const MySupply = () => {
       Ltv: Ltv,
       availableBorrow: availableBorrow,
       borrowableAsset: borrowableAsset,
+      istoggled : isToggled,
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -207,6 +211,7 @@ const MySupply = () => {
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
   const [isborrowVisible, setIsborrowVisible] = useState(true);
   const [isSupplyVisible, setIsSupplyVisible] = useState(true);
+  const [toggled, setIsToggled] = useState(true);
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
@@ -224,6 +229,10 @@ const MySupply = () => {
     setSelectedAsset(asset);
     console.log("assetdetailsinMarket", assetData);
     navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
+  };
+  
+  const handleToggleChange = (newStatus) => {
+   dispatch(setIsToggled(newStatus)); // Update the state based on the modal success
   };
   const renderModalOpen = (type) => {
     switch (type) {
@@ -353,10 +362,42 @@ const MySupply = () => {
             }
           />
         );
+        case "collateral":
+        return (
+          <MySupplyModal
+            isModalOpen={isModalOpen.isOpen}
+            handleModalOpen={handleModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            children={
+              <ColateralPopup
+                isModalOpen={isModalOpen.isOpen}
+                handleModalOpen={handleModalOpen}
+                asset={isModalOpen.asset}
+                image={isModalOpen.image}
+                balance={isModalOpen.balance}
+                supplyRateAPR={isModalOpen.supplyRateAPR}
+                liquidationThreshold={isModalOpen.liquidationThreshold}
+                reserveliquidationThreshold={
+                  isModalOpen.reserveliquidationThreshold
+                }
+                assetSupply={isModalOpen.assetSupply}
+                assetBorrow={isModalOpen.assetBorrow}
+                totalCollateral={isModalOpen.totalCollateral}
+                totalDebt={isModalOpen.totalDebt}
+                Ltv={isModalOpen.Ltv}
+                availableBorrow={isModalOpen.availableBorrow}
+                borrowableAsset={isModalOpen.borrowableAsset}
+                setIsModalOpen={setIsModalOpen}
+              />
+             
+            }
+          />
+        );
       default:
         return null;
     }
   };
+  // console.log("toggle in popup",isToggled)
   const hasNoBorrows = MY_BORROW_ASSET_TABLE_ROWS.length === 0;
   const noBorrowMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
@@ -461,7 +502,7 @@ const MySupply = () => {
       setCalculatedReserves(reservesWithCalculations);
     }
   }, [userData]);
-
+ 
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 -mt-10">
       <div className="flex justify-center -mb-38 lg:hidden">
@@ -937,9 +978,50 @@ const MySupply = () => {
                                       : `${supplyRateApr.toFixed(2)}%`}
                                   </div>
 
-                                  <div className=" align-top flex items-center ml-0 mr-0  lg:ml-6 lg:-mr-7">
-                                    <CustomizedSwitches checked={true} />
-                                  </div>
+                                  <div className="align-top flex items-center ml-0 mr-0 lg:ml-6 lg:-mr-7">
+  <CustomizedSwitches
+    checked={isToggled} // This checks whether the switch is toggled on or off
+    onChange={() => {
+      const reserveData =
+        userData?.Ok?.reserves[0]?.find(
+          (reserveGroup) => reserveGroup[0] === item[0]
+        );
+      const assetSupply =
+        Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
+      const assetBorrow =
+        Number(reserveData?.[1]?.asset_borrow || 0n) / 100000000;
+
+      const totalCollateral =
+        parseFloat(
+          Number(userData?.Ok?.total_collateral) / 100000000
+        ) || 0;
+      const totalDebt =
+        parseFloat(
+          Number(userData?.Ok?.total_debt) / 100000000
+        ) || 0;
+console.log("togle",isToggled)
+      // Open the modal and pass the necessary data
+      handleModalOpen(
+        "collateral",
+        asset,
+        (asset === "ckBTC" && ckBTC) ||
+          (asset === "ckETH" && ckETH) ||
+          (asset === "ckUSDC" && ckUSDC) ||
+          (asset === "ICP" && icp),
+        supplyRateApr,
+        ckBalance,
+        liquidationThreshold,
+        reserveliquidationThreshold,
+        assetSupply,
+        assetBorrow,
+        totalCollateral,
+        totalDebt,
+        isToggled
+      );
+    }}
+  />
+</div>
+
                                   <div className="p-3 align-top flex gap-2 pt-2">
                                     <Button
                                       title={"Supply"}

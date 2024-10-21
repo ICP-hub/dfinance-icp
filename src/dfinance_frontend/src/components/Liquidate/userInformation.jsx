@@ -226,7 +226,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const handleConfirmLiquidation = async () => {
     setIsLoading(true);
     try {
-      const supplyAmount = BigInt(Math.floor(amountToRepay));
+      const supplyAmount = BigInt((amountToRepay).toFixed(8)*100000000);
       console.log("backend actor", backendActor);
 
       if (!backendActor) {
@@ -450,9 +450,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {Math.floor(
+                {(
                   collateral + collateral * (liquidation_bonus / 100)
-                )}
+                ).toFixed(8)}
               </p>
             </div>
           </div>
@@ -481,9 +481,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {Math.floor(
+                {(
                   collateral + collateral * (liquidation_bonus / 100)
-                )}
+                ).toFixed(8)}
               </p>
             </div>
           </div>
@@ -514,9 +514,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {Math.floor(
+                {(
                   collateral + collateral * (liquidation_bonus / 100)
-                )}
+                ).toFixed(8)}
               </p>
             </div>
           </div>
@@ -547,9 +547,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 Reward Amount
               </p>
               <p className="text-sm font-medium text-green-500">
-                {Math.floor(
+                {(
                   collateral + collateral * (liquidation_bonus / 100)
-                )}
+                ).toFixed(8)}
               </p>
             </div>
           </div>
@@ -909,25 +909,25 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     const assetName = item[1]?.reserve;
                     
                     const assetBorrow = Number(item?.[1]?.asset_borrow  || 0n) / 100000000; // or Math.pow(10, 8)
-                    const assetBorrowAmount = Number(Math.floor(assetBorrow / 2));
+                    const assetBorrowAmount = Number(assetBorrow / 2);
                     console.log("assetBorrow", assetBorrow)
                     let assetBorrowAmountInUSD = 0;
                     if (assetName === "ckBTC" && ckBTCUsdRate) {
                       assetBorrowAmountInUSD = (
                         assetBorrowAmount * ckBTCUsdRate
-                      ).toFixed(2);
+                      );
                     } else if (assetName === "ckETH" && ckETHUsdRate) {
                       assetBorrowAmountInUSD = (
                         assetBorrowAmount * ckETHUsdRate
-                      ).toFixed(2);
+                      );
                     } else if (assetName === "ckUSDC" && ckUSDCUsdRate) {
                       assetBorrowAmountInUSD = (
                         assetBorrowAmount * ckUSDCUsdRate
-                      ).toFixed(2);
+                      );
                     } else if (assetName === "ICP" && ckICPUsdRate) {
                       assetBorrowAmountInUSD = (
                         assetBorrowAmount * ckICPUsdRate
-                      ).toFixed(2);
+                      );
                     }
                     if (assetBorrow > 0) {
                       return (

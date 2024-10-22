@@ -1,6 +1,8 @@
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 
+use crate::constants::asset_address::DEFAULT;
+
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
     pub transaction_hash: String,
@@ -67,6 +69,7 @@ pub struct UserReserveData {
     pub asset_price_when_borrowed: u128,
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
+    pub is_borrowed: bool,
 }
 impl Default for UserReserveData {
     fn default() -> Self {
@@ -83,7 +86,8 @@ impl Default for UserReserveData {
             asset_price_when_supplied: Default::default(),
             asset_price_when_borrowed: Default::default(),
             is_using_as_collateral_or_borrow: Default::default(),
-            is_collateral: Default::default()
+            is_collateral: Default::default(),
+            is_borrowed: Default::default(),
         }
     }
 }

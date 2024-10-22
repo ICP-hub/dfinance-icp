@@ -122,7 +122,9 @@ impl UpdateLogic {
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.asset_supply += params.amount;
             reserve_data.asset_price_when_supplied = usd_rate;
-    
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.is_collateral = true;
+
             ic_cdk::println!(
                 "Updated asset supply for existing reserve: {:?}",
                 reserve_data
@@ -268,7 +270,8 @@ impl UpdateLogic {
            
             reserve_data.borrow_rate=asset_reserve_data.borrow_rate;
             reserve_data.asset_price_when_borrowed = usd_rate;
-
+            reserve_data.is_borrowed = true;
+            reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.asset_borrow += params.amount;
             ic_cdk::println!(
                 "Updated asset borrow for existing reserve: {:?}",

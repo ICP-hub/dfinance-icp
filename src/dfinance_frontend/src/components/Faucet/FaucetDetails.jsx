@@ -101,7 +101,7 @@ const FaucetDetails = () => {
       } finally {
         setTimeout(() => {
           setLoading(false);
-        }, 1000);
+        }, 1500);
       }
     };
 
@@ -174,9 +174,9 @@ const FaucetDetails = () => {
 
       <div className="w-full mt-9 p-0 lg:px-1">
         {loading ? ( 
-          <div className="w-full mt-[220px] mb-[220px] flex justify-center items-center ">
-            <Loading isLoading={true}/>
-          </div>
+         <div className="w-full mt-[180px] mb-[300px] flex justify-center items-center ">
+         <Loading isLoading={true} />
+       </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
             <div className="w-20 h-15">

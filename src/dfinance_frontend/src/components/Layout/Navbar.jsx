@@ -134,7 +134,8 @@ export default function Navbar({ isHomeNav }) {
     } else {
       // Perform transaction
       console.log(
-        `Transaction initiated with ${selectedToken} and amount ${selectedToken === "ETH" ? ethValue : oneInchValue
+        `Transaction initiated with ${selectedToken} and amount ${
+          selectedToken === "ETH" ? ethValue : oneInchValue
         }`
       );
     }
@@ -371,12 +372,12 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleLogoClick = () => {
-    if (location.pathname === '/') {
+    if (location.pathname === "/") {
       // Scroll to top if on the home page
       window.scrollTo(0, 0);
     } else {
       // Navigate to '/dashboard' if not on the home page
-      navigate('/dashboard');
+      navigate("/dashboard");
       setTimeout(() => {
         window.scrollTo(0, 0);
       }, 100);
@@ -393,7 +394,12 @@ export default function Navbar({ isHomeNav }) {
                 alt="DFinance"
                 onClick={handleLogoClick}
                 className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0 cursor-pointer"
+                style={{
+                  imageRendering: "-webkit-optimize-contrast",
+                  imageRendering: "crisp-edges",
+                }}
               />
+
               {!isHomeNav && isTestnetMode && (
                 <button
                   className="bg-[#4659CF] z-50  hover:bg-blue-700 text-white font-bold rounded  text-[12px] px-2 py-[1px] pt-[2px] lg:ml-[63px] dxl:ml-3  sxs3:ml-10"
@@ -432,65 +438,65 @@ export default function Navbar({ isHomeNav }) {
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                      if (link.alwaysPresent) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      } else if (isTestnetMode && link.testnet) {
-                        return (
-                          <React.Fragment key={index}>
+                        if (link.alwaysPresent) {
+                          return (
                             <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        } else if (isTestnetMode && link.testnet) {
+                          return (
+                            <React.Fragment key={index}>
+                              <NavLink
+                                to={link.route}
+                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                              >
+                                {link.title}
+                              </NavLink>
+                              {link.title === "Faucet" && (
+                                <>
+                                  <span
+                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
+                                    onClick={handlePopupToggle}
+                                  >
+                                    •••
+                                  </span>
+                                  {isPopupVisible && (
+                                    <Popup
+                                      position={popupPosition}
+                                      onClose={() => setIsPopupVisible(false)}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </React.Fragment>
+                          );
+                        } else if (!isTestnetMode && !link.testnet) {
+                          return (
+                            <NavLink
+                              key={index}
                               to={link.route}
                               className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                             >
                               {link.title}
                             </NavLink>
-                            {link.title === "Faucet" && (
-                              <>
-                                <span
-                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
-                                  onClick={handlePopupToggle}
-                                >
-                                  •••
-                                </span>
-                                {isPopupVisible && (
-                                  <Popup
-                                    position={popupPosition}
-                                    onClose={() => setIsPopupVisible(false)}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </React.Fragment>
-                        );
-                      } else if (!isTestnetMode && !link.testnet) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      }
-                      return null;
-                    })
+                          );
+                        }
+                        return null;
+                      })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                      <NavLink
-                        key={index}
-                        to={link.route}
-                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                      >
-                        {link.title}
-                      </NavLink>
-                    ))}
+                        <NavLink
+                          key={index}
+                          to={link.route}
+                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
                 </div>
               </>
             )}

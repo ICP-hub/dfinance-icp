@@ -49,7 +49,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     assets.insert("ckETH", (
         cketh_principal,
         ReserveData {
-            asset_name: Some("ckEth".to_string()),
+            asset_name: Some("ckETH".to_string()),
             last_update_timestamp: time(),
             current_liquidity_rate: 0,
             borrow_rate: 0,

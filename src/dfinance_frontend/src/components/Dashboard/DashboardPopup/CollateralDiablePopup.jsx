@@ -1,17 +1,18 @@
 import React, { useState, useRef } from "react";
-import { Info, Check, Wallet, X } from "lucide-react";
+import { Info, Check, Wallet, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
+import { setIsToggled } from "../../../redux/reducers/toggleReducer";
 
-const SupplyPopup = ({
+const ColateralPopup = ({
   asset,
   image,
   supplyRateAPR,
@@ -27,12 +28,15 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
+  const isToggled = useSelector((state) => state.toggle.isToggled); // Generic state for toggle
 
   const transactionFee = 0.01;
+  const dispatch=useDispatch()
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
@@ -42,8 +46,7 @@ const SupplyPopup = ({
   const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
-  const supplyBalance = numericBalance - transferfee;
-  const hasEnoughBalance = balance >= transactionFee;
+  
   const value = currentHealthFactor;
 
   const [usdValue, setUsdValue] = useState(0);
@@ -64,133 +67,43 @@ const SupplyPopup = ({
     }
   }, [isLoading, onLoadingChange]);
 
-  const handleAmountChange = (e) => {
-    let inputAmount = e.target.value;
-
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-
-      if (decimalPart.length > 8) {
-        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount;
-      }
-    }
-    updateAmountAndUsdValue(inputAmount);
-  };
-
-  const updateAmountAndUsdValue = (inputAmount) => {
-    const numericAmount = parseFloat(inputAmount);
-
-    if (!isNaN(numericAmount) && numericAmount >= 0 && supplyBalance >= 0) {
-      if (numericAmount <= supplyBalance) {
-        const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2)));
-        setAmount(inputAmount);
-        setError("");
-      } else {
-        setError("Amount exceeds the supply balance");
-      }
-    } else if (inputAmount === "") {
-      setAmount("");
-      setError("");
-    } else {
-      setError("Amount must be a positive number");
-    }
-  };
-
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const convertedValue = parseFloat(amount) * conversionRate;
-      setUsdValue(convertedValue);
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
 
-  const handleApprove = async () => {
-    let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActors.ckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActors.ckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActors.ckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActors.ICP;
-    }
-    const safeAmount = Number(amount) || 0;
-    let amountAsNat64 = Math.round(amount * Math.pow(10, 8));
-    console.log("Amount as nat64:", amountAsNat64);
-    const scaledAmount = amountAsNat64;
-
-    const totalAmount = scaledAmount + transferfee;
-
+  async function toggleCollateral(asset, assetSupply) {
     try {
-      const approval = await ledgerActor.icrc2_approve({
-        fee: [],
-        memo: [],
-        from_subaccount: [],
-        created_at_time: [],
-        amount: totalAmount,
-        expected_allowance: [],
-        expires_at: [],
-        spender: {
-          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
-          subaccount: [],
-        },
-      });
-      console.log("Approve", approval);
-      setIsApproved(true);
-      console.log("isApproved state after approval:", isApproved);
-      toast.success("Approval successful!");
+      // Call the backend function `toggle_collateral` with the asset, assetSupply, and addedAmount (which is 0)
+      await backendActor.toggle_collateral(
+        asset,
+        BigInt(assetSupply),
+        BigInt(0)
+      );
+
+      // Since the function returns `()`, there's no result to handle
+      console.log("Collateral toggled successfully");
     } catch (error) {
-      console.error("Approval failed:", error);
-      toast.error(`Error: ${error.message || "Approval failed!"}`);
+      console.error("Error toggling collateral:", error);
+      throw error; // Re-throw the error to handle it in the caller
     }
-  };
+  }
 
-  const isCollateral = true;
-  const safeAmount = Number(amount) || 0;
-  let amountAsNat64 = Math.round(amount * Math.pow(10, 8));
-
-  console.log("Amount as nat64:", amountAsNat64);
-  const scaledAmount = amountAsNat64;
-
-  const handleSupplyETH = async () => {
+  const handleToggleCollateral = async () => {
+    setIsLoading(true); // Start loading
     try {
-      console.log("Supply function called for", asset, amount);
+      // Call the function
+      await toggleCollateral(asset, assetSupply);
 
-      let ledgerActor;
-      if (asset === "ckBTC") {
-        ledgerActor = ledgerActors.ckBTC;
-      } else if (asset === "ckETH") {
-        ledgerActor = ledgerActors.ckETH;
-      } else if (asset === "ckUSDC") {
-        ledgerActor = ledgerActors.ckUSDC;
-      } else if (asset === "ICP") {
-        ledgerActor = ledgerActors.ICP;
-      }
-
-      console.log("amountAsNat64", amountAsNat64);
-      console.log("scaledAmount", scaledAmount);
-      console.log("Backend actor", backendActor);
-
-      const sup = await backendActor.supply(asset, scaledAmount, true);
-      console.log("Supply", sup);
-
+      // If no error, display success message
+      toast.success("Collateral updated successfully!");
+      
       setIsPaymentDone(true);
       setIsVisible(false);
-
-      const sound = new Audio(coinSound);
-      sound.play();
-      toast.success("Supply successful!");
     } catch (error) {
-      console.error("Supply failed:", error);
-
-      toast.error(`Error: ${error.message || "Supply action failed!"}`);
+      // Display an error message if something goes wrong
+      console.error("Error toggling collateral");
+      toast.error("Error updating collateral.");
+    } finally {
+      setIsLoading(false); // Stop loading
     }
   };
 
@@ -216,36 +129,36 @@ const SupplyPopup = ({
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    window.location.reload();
+    // window.location.reload();
+    dispatch(setIsToggled(!isToggled));
   };
 
-  const handleClick = async () => {
-    setIsLoading(true);
-    try {
-      if (isApproved) {
-        await handleSupplyETH();
-      } else {
-        await handleApprove();
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+console.log("toggle status ",isToggled)
   useEffect(() => {
+    const adjustedCollateral = isToggled
+    ? totalCollateral - assetSupply // Subtract when collateral is active (disabling)
+    : totalCollateral + assetSupply; // Add when collateral is inactive (enabling)
+
     const healthFactor = calculateHealthFactor(
-      totalCollateral,
+      adjustedCollateral, // Use adjusted collateral
       totalDebt,
       liquidationThreshold
     );
     console.log("Health Factor:", healthFactor);
-    const ltv = calculateLTV(totalCollateral, totalDebt);
+
+    const ltv = calculateLTV(adjustedCollateral, totalDebt); // Adjust LTV as well
     console.log("LTV:", ltv);
+
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
-    //|| liquidationThreshold>ltv
+    if (healthFactor <= 1) {
+      setIsButtonDisabled(true);
+      toast.info(" Health Factor Less than 1 ");
+    } else {
+      setIsButtonDisabled(false);
+    }
   }, [
     asset,
     liquidationThreshold,
@@ -299,97 +212,58 @@ const SupplyPopup = ({
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
-
-  const handleMaxClick = () => {
-    const maxAmount = supplyBalance.toString();
-    updateAmountAndUsdValue(maxAmount);
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      if (isApproved) {
+        await handleSupplyETH();
+      } else {
+        await handleApprove();
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
-
   return (
     <>
       {isVisible && (
         <div className="supply-popup" ref={modalRef}>
-          <h1 className="font-semibold text-xl">Supply {asset}</h1>
+          <h1 className="font-normal text-xl">Review tx {asset}</h1>
           <div className="flex flex-col gap-2 mt-5 text-sm">
-            <div className="w-full">
-              <div className="w-full flex justify-between my-2 dark:text-darkText">
-                <h1>Amount</h1>
+          {isToggled ? (
+              <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
+                <p className="text-yellow-700 dark:text-yellow-500">
+                  Disabling {asset} as collateral affects your borrowing power and
+                  Health Factor.
+                </p>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                <div className="w-[50%]">
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    step="0.00000001" // This allows input up to 8 decimal places
-                    min="0"
-                    disabled={supplyBalance === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
-                  />
-                  <p className="text-xs text-gray-500 px-2">
-                    {usdValue
-                      ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
-                      : "$0.00 USD"}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end">
+            ) : (
+              <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
+                <p className="text-yellow-700 dark:text-yellow-500">
+                Enabling {asset} as collateral increases your borrowing power and Health Factor. However, it can get liquidated if your health factor drops below 1.
+                </p>
+              </div>
+            )}
+
+            <div className="w-full">
+              <div className="w-full flex justify-between my-2">
+                <h1>Transaction overview</h1>
+              </div>
+              <div className="w-full bg-gray-100 cursor-pointer p-3  rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="w-full flex justify-between items-center my-3">
+                  <p>Supply Balance</p>
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
                       className="object-cover w-6 h-6 rounded-full"
                     />
+                    <span className="text-lg">{assetSupply}</span>
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      supplyBalance === 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
-                    onClick={() => {
-                      if (supplyBalance > 0) {
-                        handleMaxClick();
-                      }
-                    }}
-                  >
-                    {supplyBalance.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    Max
-                  </p>
                 </div>
-              </div>
-            </div>
-            <div className="w-full">
-              <div className="w-full flex justify-between my-2">
-                <h1>Transaction overview</h1>
-              </div>
-              <div className="w-full bg-gray-100 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="w-full flex justify-between items-center my-1">
-                  <p>Supply APY</p>
-                  <p>
-                    {supplyRateAPR < 0.1
-                      ? "<0.1%"
-                      : `${supplyRateAPR.toFixed(2)}%`}
-                  </p>
-                </div>
-                <div className="w-full flex justify-between items-center my-1">
-                  <p>Collateralization</p>
-                  <p
-                    className={`font-semibold ${
-                      isCollateral ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {isCollateral ? "Enabled" : "Disabled"}
-                  </p>
-                </div>
-                <div className="w-full flex flex-col my-1">
+
+                <div className="w-full flex flex-col my-2">
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>
@@ -436,16 +310,6 @@ const SupplyPopup = ({
             </div>
           </div>
 
-          {!hasEnoughBalance && (
-            <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
-              <p className="text-yellow-700">
-                You do not have enough {asset} in your account to pay for
-                transaction fees on the Ethereum Sepolia network. Please deposit{" "}
-                {asset} from another account.
-              </p>
-            </div>
-          )}
-
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
               <Fuel className="w-4 h-4 mr-1" />
@@ -464,30 +328,35 @@ const SupplyPopup = ({
                 </div>
               </div>
             </div>
-
-            <div className="flex items-center">
-              <p
-                className={`text-xs whitespace-nowrap ${
-                  isApproved ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {isApproved
-                  ? "Approved with signed message"
-                  : "Approve with signed message"}
-              </p>
-            </div>
           </div>
+          {value <= 1 ? (
+            <div className="w-full flex flex-col my-3 space-y-2">
+              <div className="w-full flex bg-[#BA5858] p-3 rounded-lg">
+                <div className="w-1/12 flex items-center justify-center">
+                  <div className="warning-icon-container">
+                    <TriangleAlert />
+                  </div>
+                </div>
+                <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                  Switching collateral may trigger a liquidation call and
+                  increase the risk of liquidation.
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <button
-            onClick={handleClick}
+            onClick={handleToggleCollateral}
             className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
-              isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled
+              isButtonDisabled || isLoading
                 ? "opacity-50 cursor-not-allowed"
                 : ""
             }`}
-            disabled={isLoading || amount <= 0 || null}
+            disabled={isButtonDisabled || isLoading} // Disable the button during loading
           >
-            {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
+           {isToggled
+              ? `Disable ${asset} as collateral`
+              : `Enable ${asset} as collateral`}
           </button>
 
           {/* Fullscreen Loading Overlay with Dim Background */}
@@ -519,33 +388,10 @@ const SupplyPopup = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-              You have supplied{" "}
-              <strong>
-              {scaledAmount / 100000000
-                  ? scaledAmount / 100000000 >= 1e-8 &&
-                    scaledAmount / 100000000 < 1e-7
-                    ? Number(scaledAmount / 100000000).toFixed(8)
-                    : scaledAmount / 100000000 >= 1e-7 &&
-                      scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
-                  : "0"} {asset}
-              </strong>
-            </p>
-            <p>
-              You have received{" "}
-              <strong>
-              {scaledAmount / 100000000
-                  ? scaledAmount / 100000000 >= 1e-8 &&
-                    scaledAmount / 100000000 < 1e-7
-                    ? Number(scaledAmount / 100000000).toFixed(8)
-                    : scaledAmount / 100000000 >= 1e-7 &&
-                      scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
-                  : "0"} d{asset}
-              </strong>
-            </p>
+  Your {asset} is {isToggled ? " not used" : "used"} as collateral
+</p>
+
+
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
@@ -559,4 +405,4 @@ const SupplyPopup = ({
   );
 };
 
-export default SupplyPopup;
+export default ColateralPopup;

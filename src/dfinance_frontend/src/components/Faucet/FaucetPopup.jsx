@@ -3,10 +3,103 @@ import { X } from 'lucide-react';
 import FaucetPayment from "./FaucetPayment";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
+import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import { useEffect } from "react";
+
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const {
     backendActor,
   } = useAuth()
+
+  const [faucetBTC, setFaucetBTC] = useState(0);
+  const [faucetETH, setFaucetETH] = useState(0);
+  const [faucetUSDC, setFaucetUSDC] = useState(0);
+  const [faucetICP, setFaucetICP] = useState(0);
+  const [exchangeRate, setExchangeRate] = useState(null);
+
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    fetchBalance,
+  } = useFetchConversionRate();
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([
+          fetchBalance("ckBTC"),
+          fetchBalance("ckETH"),
+          fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
+          fetchConversionRate(),
+        ]);
+      } catch (error) {
+        setError(error);
+      }
+    };
+
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
+
+  useEffect(() => {
+    if (ckBTCUsdRate) {
+      const btcAmount = (10000 / ckBTCUsdRate).toFixed(4);
+      setFaucetBTC(btcAmount);
+    }
+
+    if (ckETHUsdRate) {
+      const ethAmount = (10000 / ckETHUsdRate).toFixed(4);
+      setFaucetETH(ethAmount);
+    }
+
+    if (ckUSDCUsdRate) {
+      const usdcAmount = (10000 / ckUSDCUsdRate).toFixed(4);
+      setFaucetUSDC(usdcAmount);
+    }
+
+    if (ckICPUsdRate) {
+      const icpAmount = (10000 / ckICPUsdRate).toFixed(4);
+      setFaucetICP(icpAmount);
+    }
+
+  }, [
+    ckBTCBalance,
+    ckBTCUsdRate,
+    ckETHBalance,
+    ckETHUsdRate,
+    ckUSDCBalance,
+    ckUSDCUsdRate,
+    ckICPBalance,
+    ckICPUsdRate,
+  ]);
+
+  const getFaucetAmount = () => {
+    switch (asset) {
+      case "ckBTC":
+        return faucetBTC;
+      case "ckETH":
+        return faucetETH;
+      case "ckUSDC":
+        return faucetUSDC;
+      case "ckICP":
+      case "ICP":
+        return faucetICP;
+      default:
+        return null; // Return null if the asset is not recognized
+    }
+  };
+
+  useEffect(() => {
+    const faucetAmount = getFaucetAmount();
+    setExchangeRate(faucetAmount);
+  }, [asset, faucetBTC, faucetETH, faucetUSDC, faucetICP]);
 
   const [amount, setAmount] = useState("");
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
@@ -26,8 +119,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   };
 
   const handleMaxAmountClick = () => {
-    if (maxAmount) {
-      setAmount(maxAmount);
+    if (exchangeRate) {
+      setAmount(exchangeRate);
     }
   };
 
@@ -36,7 +129,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     setShowFaucetPayment(true);
     try {
       if (backendActor) {
-        const result = backendActor.faucet(asset, amount * 100000000);
+        const natAmount = Math.round(amount * Math.pow(10, 8));
+        console.log("Scaled amount", natAmount)
+        const result = backendActor.faucet(asset, natAmount);
         console.log("Faucet result.", result);
       }
     } catch (error) {
@@ -53,7 +148,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const normalizedAsset = asset ? asset.toLowerCase() : 'default';
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
-  const maxAmount = asset === "ckUSDC" ? 10000 : 500;
+  const maxAmount = 10000
 
   return (
     <>
@@ -91,7 +186,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                     <span className="text-lg">{asset}</span>
                   </div>
                   {maxAmount && <p className="button1 cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md button1"
-                    onClick={handleMaxAmountClick}>{maxAmount.toLocaleString()} Max
+                    onClick={handleMaxAmountClick}>
+                      ~ ${maxAmount.toLocaleString()} Max
                   </p>}
                 </div>
               </div>

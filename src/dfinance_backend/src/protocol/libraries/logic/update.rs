@@ -12,6 +12,7 @@ use crate::{
 use candid::Principal;
 use ic_xrc_types::Asset;
 use crate::declarations::assets::ReserveData;
+use ic_cdk::update;
 
 pub struct UpdateLogic;
 
@@ -571,3 +572,114 @@ impl UpdateLogic {
 //     available_borrows_in_base_currency -= total_debt_in_base_currency;
 //     available_borrows_in_base_currency
 // }
+#[update]
+// pub fn disable_collateral(asset: String, amount:u128) {
+    pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
+        let user_principal = ic_cdk::caller();
+    
+        // to retrieve user data.
+        let user_data_result = mutate_state(|state| {
+            let user_profile_data = &mut state.user_profile;
+            user_profile_data
+                .get(&user_principal)
+                .map(|user| user.0.clone())
+                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+        });
+    
+        let mut user_data = match user_data_result {
+            Ok(data) => {
+                ic_cdk::println!("User found: {:?}", data);
+                data
+            }
+            Err(e) => {
+                ic_cdk::println!("Error: {}", e);
+                return;
+            }
+        };
+    
+        // Reads the reserve data from the asset
+        let reserve_data_result = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&asset.to_string().clone())
+                .map(|reserve| reserve.0.clone())
+                .ok_or_else(|| format!("Reserve not found for asset: {}", asset.to_string()))
+        });
+    
+        let reserve_data = match reserve_data_result {
+            Ok(data) => {
+                ic_cdk::println!("Reserve data found for asset: {:?}", data);
+                data
+            }
+            Err(e) => {
+                ic_cdk::println!("Error: {}", e);
+                return;
+            }
+        };
+    
+        // exchanging amount to usd.
+        let exchange_amount = get_exchange_rates(asset.clone(), None, amount).await;
+        let usd_amount = match exchange_amount {
+            Ok((amount_in_usd, _timestamp)) => {
+                // Extracted the amount in USD
+                ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
+                amount_in_usd
+            }
+            Err(e) => {
+                // Handling the error
+                ic_cdk::println!("Error getting exchange rate: {:?}", e);
+                return
+            }
+        };
+    
+        let exchange_rate = get_exchange_rates(asset.clone(), None, added_amount).await;
+       let added_usd_amount =  match exchange_rate {
+            Ok((amount_in_usd, _timestamp)) => {
+                // Extracted the amount in USD
+                ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
+                amount_in_usd
+            }
+            Err(e) => {
+                // Handling the error
+                ic_cdk::println!("Error getting exchange rate: {:?}", e);
+                return
+            }
+        };
+    
+        let user_thrs = cal_average_threshold(
+            0,
+            amount,
+            reserve_data.configuration.liquidation_threshold,
+            // what collateral value am  i need to send new or old.
+            user_data.total_collateral.unwrap(),
+            // updated_collateral,
+            user_data.liquidation_threshold.unwrap(),
+        );
+    
+        user_data.total_collateral = Some(user_data.total_collateral.unwrap() - usd_amount + added_usd_amount);
+        user_data.liquidation_threshold = Some(user_thrs);
+        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount);
+    
+        ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
+    
+        let user_position = UserPosition {
+            total_collateral_value: user_data.total_collateral.unwrap_or(0),
+            total_borrowed_value: user_data.total_debt.unwrap_or(0),
+            liquidation_threshold: user_thrs,
+        };
+    
+        let user_ltv = calculate_ltv(&user_position);
+        user_data.ltv = Some(user_ltv);
+    
+        let user_health = calculate_health_factor(&user_position);
+        user_data.health_factor = Some(user_health);
+    
+        // Save the updated user data back to state
+        mutate_state(|state| {
+            state
+                .user_profile
+                .insert(user_principal, Candid(user_data.clone()));
+        });
+    
+        ic_cdk::println!("User data updated successfully: {:?}", user_data);
+    }

@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
-
+import coinSound from "../../../../public/sound/caching_duck_habbo.mp3"
 const WithdrawPopup = ({
   asset,
   image,
@@ -47,7 +47,8 @@ const WithdrawPopup = ({
 
   const isCollateral = true;
 
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
 
   const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
@@ -61,18 +62,13 @@ const WithdrawPopup = ({
     }
   }, [isLoading, onLoadingChange]);
 
-
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
-
-    // Check if there's a decimal point and enforce 8 decimal places
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-      
-      // Limit decimal places to 8
       if (decimalPart.length > 8) {
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount; // Directly update the value in the field
+        e.target.value = inputAmount; 
       }
     }
     updateAmountAndUsdValue(inputAmount);
@@ -89,24 +85,24 @@ const WithdrawPopup = ({
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-        // setUsdValue(0);
+       
       }
     } else if (inputAmount === "") {
       setAmount("");
-      // setUsdValue(0);
+     
       setError("");
     } else {
       setError("Amount must be a positive number");
-      // setUsdValue(0);
+      
     }
   };
 
   useEffect(() => {
     if (amount && conversionRate) {
       const convertedValue = parseFloat(amount) * conversionRate;
-      setUsdValue(convertedValue); // Update USD value
+      setUsdValue(convertedValue); 
     } else {
-      setUsdValue(0); // Reset USD value if conditions are not met
+      setUsdValue(0); 
     }
   }, [amount, conversionRate]);
 
@@ -114,14 +110,15 @@ const WithdrawPopup = ({
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
 
-  const amountAsNat64 = Number(amount);
-  const scaledAmount = amountAsNat64 * Number(10 ** 8);
+  const safeAmount = Number(amount) || 0; 
+  let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); 
+
+  console.log("Amount as nat64:", amountAsNat64);
+  const scaledAmount = amountAsNat64;
   const handleWithdraw = async () => {
     console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
     let ledgerActor;
-
-    // Example logic to select the correct backend actor based on the asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
@@ -133,9 +130,12 @@ const WithdrawPopup = ({
     }
 
     try {
-      const amountAsNat64 = parseFloat(amount);
-      const scaledAmount = BigInt(Math.floor(amountAsNat64 * 10 ** 8));
-      // Call the withdraw function on the selected ledger actor
+      const safeAmount = Number(amount) || 0;
+
+      
+      let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); 
+      console.log("Amount as nat64:", amountAsNat64);
+      const scaledAmount = amountAsNat64;
       const withdrawResult = await backendActor.withdraw(
         asset,
         scaledAmount,
@@ -143,15 +143,14 @@ const WithdrawPopup = ({
         true
       );
       console.log("Withdraw result", withdrawResult);
+      const sound = new Audio(coinSound);
+      sound.play();
       toast.success("Withdraw successful!");
       setIsPaymentDone(true);
       setIsVisible(false);
-
-      // Handle success, e.g., show success message, update UI, etc.
     } catch (error) {
       console.error("Error withdrawing:", error);
       setIsLoading(false);
-      // Handle error state, e.g., show error message
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
     }
   };
@@ -194,9 +193,9 @@ const WithdrawPopup = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv * 100  >= reserveliquidationThreshold) {
+    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold) {
       setIsButtonDisabled(true);
-      toast.info(" LTV Exceeded!")
+      toast.info(" LTV Exceeded!");
     } else {
       setIsButtonDisabled(false);
     }
@@ -245,7 +244,14 @@ const WithdrawPopup = ({
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleMaxClick = () => {
-    const maxAmount = assetSupply.toString();
+    let asset_supply = assetSupply
+      ? assetSupply >= 1e-8 && assetSupply < 1e-7
+        ? Number(assetSupply).toFixed(8)
+        : assetSupply >= 1e-7 && assetSupply < 1e-6
+        ? Number(assetSupply).toFixed(7)
+        : assetSupply
+      : "0";
+    const maxAmount = asset_supply.toString();
     updateAmountAndUsdValue(maxAmount);
   };
 
@@ -272,9 +278,13 @@ const WithdrawPopup = ({
                     min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
+                    {usdValue
+                      ? `$${usdValue.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} USD`
+                      : "$0.00 USD"}
                   </p>
-
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="w-auto flex items-center gap-2">
@@ -285,13 +295,24 @@ const WithdrawPopup = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4 cursor-pointer bg-blue-100 dark:bg-gray-700/45 p-2 py-1 rounded-md button1"
+                  <p
+                    className="text-xs mt-4 cursor-pointer bg-blue-100 dark:bg-gray-700/45 p-2 py-1 rounded-md button1"
                     onClick={() => {
                       if (assetSupply > 0) {
                         handleMaxClick();
                       }
-                    }}>
-                    {assetSupply.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                    }}
+                  >
+                    {assetSupply >= 1
+                      ? assetSupply.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : assetSupply.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 8,
+                        })}
+                    Max {/* Adjust maximumFractionDigits as needed */}
                   </p>
                 </div>
               </div>
@@ -306,7 +327,11 @@ const WithdrawPopup = ({
                 </div>
                 <div className="w-4/12 flex flex-col items-end">
                   <p className="text-xs mt-2">
-                    {(assetSupply - amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Max
+                    {(assetSupply - amount).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    Max
                   </p>
                 </div>
               </div>
@@ -318,17 +343,17 @@ const WithdrawPopup = ({
               <div className="w-full flex justify-between items-center my-1">
                 <p>Supply APY</p>
                 <p>
-                  {supplyRateAPR  < 0.1
+                  {supplyRateAPR < 0.1
                     ? "<0.1%"
-                    : `${(supplyRateAPR ).toFixed(2)}%`}
+                    : `${supplyRateAPR.toFixed(2)}%`}
                 </p>
-
               </div>
               <div className="w-full flex justify-between items-center my-1">
                 <p>Collateralization</p>
                 <p
-                  className={`font-semibold ${isCollateral ? "text-green-500" : "text-red-500"
-                    }`}
+                  className={`font-semibold ${
+                    isCollateral ? "text-green-500" : "text-red-500"
+                  }`}
                 >
                   {isCollateral ? "Enabled" : "Disabled"}
                 </p>
@@ -338,16 +363,17 @@ const WithdrawPopup = ({
                   <p>Health Factor</p>
                   <p>
                     <span
-                      className={`${healthFactorBackend > 3
-                        ? "text-green-500"
-                        : healthFactorBackend <= 1
+                      className={`${
+                        healthFactorBackend > 3
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
                           ? "text-red-500"
                           : healthFactorBackend <= 1.5
-                            ? "text-orange-600"
-                            : healthFactorBackend <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                        }`}
+                          ? "text-orange-600"
+                          : healthFactorBackend <= 2
+                          ? "text-orange-400"
+                          : "text-orange-300"
+                      }`}
                     >
                       {parseFloat(
                         healthFactorBackend > 100
@@ -357,16 +383,17 @@ const WithdrawPopup = ({
                     </span>
                     <span className="text-gray-500 mx-1">→</span>
                     <span
-                      className={`${currentHealthFactor > 3
-                        ? "text-green-500"
-                        : currentHealthFactor <= 1
+                      className={`${
+                        currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                           ? "text-red-500"
                           : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                        }`}
+                          ? "text-orange-600"
+                          : currentHealthFactor <= 2
+                          ? "text-orange-400"
+                          : "text-orange-300"
+                      }`}
                     >
                       {currentHealthFactor}
                     </span>
@@ -405,10 +432,11 @@ const WithdrawPopup = ({
                   ? null
                   : handleWithdraw
               }
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-                }`}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
+                isLoading || amount <= 0 || isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               title="Withdraw"
             />
           </div>
@@ -438,9 +466,21 @@ const WithdrawPopup = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p className="mt-2">
-              You have withdrawn {scaledAmount / 100000000} d{asset}
-            </p>
+            <center><p className="mt-2">
+              Your Supply was <strong>{assetSupply} {asset} </strong> and you have withdrawn <strong>{scaledAmount / 100000000
+                ? scaledAmount / 100000000 >= 1e-8 &&
+                  scaledAmount / 100000000 < 1e-7
+                  ? Number(scaledAmount / 100000000).toFixed(8)
+                  : scaledAmount / 100000000 >= 1e-7 &&
+                    scaledAmount / 100000000 < 1e-6
+                  ? Number(scaledAmount / 100000000).toFixed(7)
+                  : scaledAmount / 100000000
+                : "0"}</strong>{" "} <strong>d{asset}</strong>after {" "}
+                  {supplyRateAPR < 0.1
+                    ? "<0.1%"
+                    : `${supplyRateAPR.toFixed(2)}%`} 
+                {" "} apy
+            </p></center>
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

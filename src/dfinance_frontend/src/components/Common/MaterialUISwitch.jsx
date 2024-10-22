@@ -43,7 +43,7 @@ export default function CustomizedSwitches({ checked, onChange }) {
       <FormControlLabel
         control={
           <IOSSwitch 
-            sx={{ m: 1 }} 
+            sx={{ m: 1}} 
             checked={checked} 
             onChange={onChange} // Allow toggling
           />

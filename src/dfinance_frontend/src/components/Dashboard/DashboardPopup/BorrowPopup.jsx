@@ -9,11 +9,11 @@ import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useEffect } from "react";
-import { toast } from "react-toastify"; // Import Toastify if not already done
+import { toast } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
-
+import coinSound from "../../../../public/sound/caching_duck_habbo.mp3"
 const Borrow = ({
   asset,
   image,
@@ -46,7 +46,7 @@ const Borrow = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const modalRef = useRef(null); // Reference to the modal container
+  const modalRef = useRef(null); 
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
 
@@ -64,11 +64,14 @@ const Borrow = ({
   const handleAcknowledgeChange = (e) => {
     setIsAcknowledged(e.target.checked);
   };
-  const value = currentHealthFactor;
-  const amountAsNat64 = Number(amount);
-  const scaledAmount = amountAsNat64 * Number(10 ** 8);
-  console.log("amountAsNat64", amountAsNat64)
-  console.log("scaledAmount", scaledAmount)
+  const value = currentHealthFactor
+const safeAmount = Number(amount) || 0; 
+let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); 
+console.log("Amount as nat64:", amountAsNat64);
+const scaledAmount = amountAsNat64 ;
+console.log("Scaled Amount:", scaledAmount);
+
+
   const handleBorrowETH = async () => {
     console.log("Borrow function called for", asset, scaledAmount);
     setIsLoading(true);
@@ -88,6 +91,8 @@ const Borrow = ({
       console.log("Borrow result", borrowResult);
       setIsPaymentDone(true);
       setIsVisible(false);
+      const sound = new Audio(coinSound);
+      sound.play();
       toast.success("Borrow successful!");
     } catch (error) {
       console.error("Error borrowing:", error);
@@ -218,14 +223,14 @@ const Borrow = ({
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
-    // Check if there's a decimal point and enforce 8 decimal places
+    
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
-      // Limit decimal places to 8
+      
       if (decimalPart.length > 8) {
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount; // Directly update the value in the field
+        e.target.value = inputAmount; 
       }
     }
     console.log("Validated input:", inputAmount);

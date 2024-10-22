@@ -32,12 +32,16 @@ const Footer = () => {
         </div>
         <div className="w-full flex flex-wrap p-4">
           <div className="w-full md:w-3/12 text-white mb-10 md:mb-0 lg:mb-0">
-            <img
-              src={DFinanceDark}
-              alt="DFinance"
-              onClick={handleLogoClick}
-              style={{ cursor: 'pointer' }}
-            />
+          <img
+                src={DFinanceDark}
+                alt="DFinance"
+                onClick={handleLogoClick}
+                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0 cursor-pointer"
+                style={{
+                  imageRendering: "-webkit-optimize-contrast",
+                  imageRendering: "crisp-edges",
+                }}
+              />
             <p className="mt-6 font-light text-[13px]">
               DFinance is a decentralized lending and borrowing protocol on ICP. The protocol uniquely combines liquidity mining with deflationary buy and burn mechanics.
             </p>

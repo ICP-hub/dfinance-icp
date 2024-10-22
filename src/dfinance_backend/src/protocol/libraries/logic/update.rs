@@ -108,17 +108,7 @@ impl UpdateLogic {
     
         
         if let Some((_, reserve_data)) = user_reserve {
-            // If Reserve data exists, update the asset supply and rates
-            // match asset_rate_result {
-            //     Ok((rate, _)) => {
-            //         reserve_data.asset_price_when_supplied = rate;
-            //         usd_rate = rate;
-            //     }
-            //     Err(e) => {
-            //         ic_cdk::println!("Failed to get asset rate: {}", e);
-            //         reserve_data.asset_price_when_supplied = 0.0; // Default in case of error
-            //     }
-            // }
+          
     
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.asset_supply += params.amount;
@@ -137,6 +127,8 @@ impl UpdateLogic {
                 asset_supply: params.amount,
                 supply_rate: reserve.current_liquidity_rate,
                 asset_price_when_supplied: usd_rate,
+                is_using_as_collateral_or_borrow: true,
+                is_collateral: true,
                 ..Default::default()
             };
     
@@ -286,6 +278,8 @@ impl UpdateLogic {
 
                 asset_price_when_borrowed: usd_rate,
                 asset_borrow: params.amount,
+                is_borrowed: true,
+                is_using_as_collateral_or_borrow: true,
                 ..Default::default()
             };
 
@@ -647,8 +641,8 @@ impl UpdateLogic {
         };
     
         let user_thrs = cal_average_threshold(
-            0,
-            amount,
+            added_usd_amount,
+            usd_amount,
             reserve_data.configuration.liquidation_threshold,
             // what collateral value am  i need to send new or old.
             user_data.total_collateral.unwrap(),
@@ -658,7 +652,7 @@ impl UpdateLogic {
     
         user_data.total_collateral = Some(user_data.total_collateral.unwrap() - usd_amount + added_usd_amount);
         user_data.liquidation_threshold = Some(user_thrs);
-        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount);
+        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount + added_usd_amount);
     
         ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
     
@@ -673,13 +667,45 @@ impl UpdateLogic {
     
         let user_health = calculate_health_factor(&user_position);
         user_data.health_factor = Some(user_health);
+        
     
+        let user_reserve = match user_data.reserves {
+            Some(ref mut reserves) => reserves
+                .iter_mut()
+                .find(|(asset_name, _)| *asset_name == asset.clone()),
+            None => None,
+        };
+        
+        if let Some((_, user_reserve_data)) = user_reserve {
+            // Toggle the `is_collateral` value
+            user_reserve_data.is_collateral = !user_reserve_data.is_collateral;
+        
+           
+            if user_reserve_data.is_using_as_collateral_or_borrow {
+                if user_reserve_data.is_borrowed {
+                  
+                    user_reserve_data.is_using_as_collateral_or_borrow = true;
+                } else {
+                   
+                    user_reserve_data.is_using_as_collateral_or_borrow = false;
+                }
+            } else {
+               
+                user_reserve_data.is_using_as_collateral_or_borrow = user_reserve_data.is_collateral;
+            }
+        
+            ic_cdk::println!(
+                "Updated asset borrow for existing reserve: {:?}",
+                user_reserve_data
+            );
+        }
+        
         // Save the updated user data back to state
         mutate_state(|state| {
             state
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()));
         });
-    
+        
         ic_cdk::println!("User data updated successfully: {:?}", user_data);
     }

@@ -198,6 +198,8 @@ body{
 }
 /* App.css */
 .custom-toast {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
   max-width: 90%; 
   margin: 0 auto; 
 }
@@ -205,7 +207,7 @@ body{
 @media (max-width: 600px) {
   .custom-toast {
     max-width: 80%; 
-    font-size: 14px;
+    font-size: 12px;
     border-radius: 5px; 
   }
 }
@@ -359,4 +361,3 @@ button:active{
 .button1:active{
   transform: scale(0.9);
 }
-

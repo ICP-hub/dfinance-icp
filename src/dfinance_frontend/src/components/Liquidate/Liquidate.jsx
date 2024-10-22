@@ -136,11 +136,9 @@ const Liquidate = () => {
     return (
         <>
             <div className="full">
-                <div className="flex h-[60px] gap-5 -ml-3">
-                    <div className="lg1:-mt-0 mt-[20px] cursor-pointer" onClick={() => navigate(-1)}>
-                        <ChevronLeft size={30} color={chevronColor} />
-                    </div>
-                    <h1 className="text-[#2A1F9D] text-xl font-bold inline-flex items-center lg1:mt-0 mt-10 mb-8 dark:text-darkText ml-1">
+                <div className="flex h-[60px] justify-start align-center place-content-center -ml-2">
+                    <h1 className="text-[#2A1F9D] text-[19px] md:text-2xl lg:text-2xl font-bold inline-flex items-center dark:text-darkText">
+                    <ChevronLeft size={30} color={chevronColor} className='mr-2'/>
                         Liquidation
                     </h1>
                 </div>
@@ -172,7 +170,7 @@ const Liquidate = () => {
                 )}
 
                 {(isSwitchingWallet || !isAuthenticated) && (
-                    <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+                    <Modal open={isWalletModalOpen} onClose={handleWalletConnect} >
                         <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                             {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
                             <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">

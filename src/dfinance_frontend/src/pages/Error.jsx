@@ -153,7 +153,7 @@ const Error = () => {
             </div>
 
             {(isSwitchingWallet || !isAuthenticated) && (
-                <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+                <Modal open={isWalletModalOpen} onClose={handleWalletConnect} >
                     <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                         {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
                         <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">

@@ -17,6 +17,11 @@ import { useCallback } from "react";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
+import { useParams } from "react-router-dom";
+import ckBTC from "../../../public/assests-icon/ckBTC.png";
+import ckETH from "../../../public/assests-icon/CKETH.svg";
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
 
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
@@ -153,8 +158,7 @@ const DashboardNav = () => {
       totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
 
     console.log(
-      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${
-        netApy * 100
+      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${netApy * 100
       }`
     );
     return netApy * 100;
@@ -187,8 +191,7 @@ const DashboardNav = () => {
       totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
 
     console.log(
-      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${
-        netDebtApy * 100
+      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${netDebtApy * 100
       }`
     );
     return netDebtApy * 100;
@@ -345,40 +348,64 @@ const DashboardNav = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
+  const isAssetDetailsPage = location.pathname.startsWith("/dashboard/asset-details/") ||
+    location.pathname.startsWith("/market/asset-details/");
+
+  const { id } = useParams();
+
+  const assetImages = {
+    'ckBTC': ckBTC,
+    'ckETH': ckETH,
+    'ckUSDC': ckUSDC,
+    'ICP': icp,
+  };
+
+  const assetImage = assetImages[id] || null;
 
   return (
     <div className="w-full ">
       {["/dashboard", "/market", "/governance"].includes(pathname) && (
-        <h1 className="text-[#2A1F9D] font-bold font-poppins text-2xl md:text-2xl lg:text-2xl dark:text-darkText">
+        <h1 className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText my-4">
           {dashboardTitle}
         </h1>
       )}
 
+
       <div className="flex gap-5 -ml-3">
         {!["/dashboard", "/market", "/governance"].includes(pathname) && (
           <div
-            className=" lg1:-mt-1 mt-[20px] cursor-pointer flex justify-center align-center items-center"
+            className=" text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-5"
             onClick={() => navigate(-1)}
           >
-            <ChevronLeft size={40} color={chevronColor} />
+            <div className="flex -mt-2">
+              <ChevronLeft size={40} color={chevronColor} />
+
+              {isAssetDetailsPage && (
+                <h1 className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-1 ml-3">
+                  {isAssetDetailsPage && assetImage && (
+                    <img src={assetImage} alt={id} className="w-8 h-8 inline-block mr-2 rounded-[50%]" />
+                  )}
+                  {id}
+                </h1>
+              )}
+            </div>
           </div>
         )}
 
-        <div className="md:hidden flex ml-auto -mt-1">
-          <button onClick={toggleMenu} className="p-4 mt-4 rounded-md button1">
-            <EllipsisVertical color={checkColor} size={18} />
+        <div className={`md:hidden flex ml-auto ${isAssetDetailsPage ? 'mt-1' : '-mt-[3.95rem]'}`}>
+          <button onClick={toggleMenu} className="rounded-md button1 z-10">
+            <EllipsisVertical color={checkColor} size={30} />
           </button>
         </div>
       </div>
 
-      <div className="w-full flex flex-wrap justify-start items-center gap-2 mb-8 lg:mb-2">
+      <div className="w-full flex flex-wrap justify-start items-center gap-2 sxs3:mb-2 md:mb-9 lg:mb-2">
         <div className="flex">
           {/* Menu button for small screens */}
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -411,23 +438,22 @@ const DashboardNav = () => {
                           <button className="relative w-full text-left flex justify-between items-center button1">
                             <span>{data.title}</span>
                             <span
-                              className={`font-bold text-[20px] ${
-                                data.title === "Health Factor"
-                                  ? data.count === 0 && assetSupply === 0
-                                    ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
-                                    : data.count > 3
+                              className={`font-bold text-[20px] ${data.title === "Health Factor"
+                                ? data.count === 0 && assetSupply === 0
+                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
+                                  : data.count > 3
                                     ? "text-green-500" // Green for health factor greater than 3
                                     : data.count <= 1
-                                    ? "text-red-500" // Red for health factor less than or equal to 1
-                                    : data.count <= 1.5
-                                    ? "text-orange-500" // Orange for health factor less than or equal to 1.5
-                                    : data.count <= 2
-                                    ? "text-orange-300" // Soft orange for health factor less than or equal to 2
-                                    : "text-orange-600" // Vivid orange for other values
-                                  : data.title === "Total Borrows"
+                                      ? "text-red-500" // Red for health factor less than or equal to 1
+                                      : data.count <= 1.5
+                                        ? "text-orange-500" // Orange for health factor less than or equal to 1.5
+                                        : data.count <= 2
+                                          ? "text-orange-300" // Soft orange for health factor less than or equal to 2
+                                          : "text-orange-600" // Vivid orange for other values
+                                : data.title === "Total Borrows"
                                   ? "text-[#2A1F9D] dark:text-darkBlue" // Default color for Total Borrows
                                   : "text-[#2A1F9D] dark:text-darkBlue" // Default color for other titles
-                              }`}
+                                }`}
                             >
                               {data.count !== null ? data.count : "N/A"}
                             </span>
@@ -473,23 +499,22 @@ const DashboardNav = () => {
                         {data.title}
                         <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                         <span
-                          className={`font-bold text-[20px] ${
-                            data.title === "Health Factor"
-                              ? data.count === 0 && assetSupply === 0
-                                ? "text-[#2A1F9D] dark:text-darkBlue"
-                                : data.count > 3
+                          className={`font-bold text-[20px] ${data.title === "Health Factor"
+                            ? data.count === 0 && assetSupply === 0
+                              ? "text-[#2A1F9D] dark:text-darkBlue"
+                              : data.count > 3
                                 ? "text-green-500"
                                 : data.count <= 1
-                                ? "text-red-500"
-                                : data.count <= 1.5
-                                ? "text-orange-500"
-                                : data.count <= 2
-                                ? "text-orange-300"
-                                : "text-orange-600"
-                              : data.title === "Total Borrows"
+                                  ? "text-red-500"
+                                  : data.count <= 1.5
+                                    ? "text-orange-500"
+                                    : data.count <= 2
+                                      ? "text-orange-300"
+                                      : "text-orange-600"
+                            : data.title === "Total Borrows"
                               ? "text-[#2A1F9D] dark:text-darkBlue"
                               : "text-[#2A1F9D] dark:text-darkBlue"
-                          }`}
+                            }`}
                         >
                           {data.count !== null ? data.count : ""}
                         </span>

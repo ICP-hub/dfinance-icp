@@ -211,13 +211,31 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       console.log("isApproved state after approval:", isApproved);
 
       // Show success notification
-      toast.success("Approval successful!");
+      toast.success(`Approval successful!`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } catch (error) {
       // Log the error
       console.error("Approval failed:", error);
 
       // Show error notification using Toastify
-      toast.error(`Error: ${error.message || "Approval failed!"}`);
+      toast.error(`Error: ${error.message || "Approval failed!"}`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } finally {
       setIsLoading(false); // Stop loading once the function is done
     }
@@ -241,13 +259,31 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       );
 
       if ("Ok" in result) {
-        toast.success("Liquidation successful!");
+        toast.success(`Liquidation successful!`,  {
+          className: 'custom-toast',
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
         console.log("Liquidation call result:", result);
         setTransactionResult("success");
       } else if ("Err" in result) {
         // Handle the error returned in the result
         const errorMsg = result.Err;
-        toast.error(`Liquidation failed: ${errorMsg}`);
+        toast.error(`Liquidation failed: ${errorMsg}`, {
+          className: 'custom-toast',
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
         console.error("Liquidation call error:", errorMsg);
         setTransactionResult("failure");
       }
@@ -568,12 +604,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
   const selectedItem = filteredItems.find(item => {
     const assetName = item[1].Ok.asset_name ? item[1].Ok.asset_name[0] : "Unknown";
-    return assetName === selectedAsset; 
+    return assetName === selectedAsset;
   });
 
   if (selectedItem && selectedItem[1]?.Ok) {
     const item = selectedItem[1].Ok;
-    liquidation_bonus = Number(item?.configuration?.liquidation_bonus || "0")/100000000;
+    liquidation_bonus = Number(item?.configuration?.liquidation_bonus || "0") / 100000000;
   }
 
   useEffect(() => {
@@ -744,8 +780,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   {mappedItem.reserves[0].map((item, index) => {
                     console.log("mappedItesm", mappedItem.reserves[0]);
                     const assetName = item[1]?.reserve;
-                    const assetSupply = Number(item?.[1]?.asset_supply  || 0n) / 100000000;
-                    const assetBorrow = Number(item?.[1]?.asset_borrow  || 0n) / 100000000;
+                    const assetSupply = Number(item?.[1]?.asset_supply || 0n) / 100000000;
+                    const assetBorrow = Number(item?.[1]?.asset_borrow || 0n) / 100000000;
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let collateralRate = 0;
@@ -855,13 +891,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               <div className="flex justify-between mt-4">
                 <button
                   title="Back"
-                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-darkText button2"
+                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg  sxs3:text-[12px] md:text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-darkText button2"
                   onClick={() => setIsCollateralOverlay(false)}
                 >
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm  px-6 py-2 relative ${isCollateralAssetSelected &&
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${isCollateralAssetSelected &&
                     amountToRepay + amountToRepay * (liquidation_bonus / 100) <
                     selectedAssetSupply
                     ? "opacity-100 cursor-pointer"
@@ -907,8 +943,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[1]?.reserve;
-                    
-                    const assetBorrow = Number(item?.[1]?.asset_borrow  || 0n) / 100000000; // or Math.pow(10, 8)
+
+                    const assetBorrow = Number(item?.[1]?.asset_borrow || 0n) / 100000000; // or Math.pow(10, 8)
                     const assetBorrowAmount = Number(Math.floor(assetBorrow / 2));
                     console.log("assetBorrow", assetBorrow)
                     let assetBorrowAmountInUSD = 0;
@@ -988,13 +1024,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               <div className="flex justify-between mt-4">
                 <button
                   title="Back"
-                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2"
+                  className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg  sxs3:text-[12px] md:text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2"
                   onClick={() => setIsDebtInfo(false)} // Go back to User Info view
                 >
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
                     ? "opacity-100"
                     : "opacity-50 cursor-not-allowed"
                     }`}
@@ -1047,7 +1083,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               <div className="flex justify-end mt-4">
                 <button
                   onClick={handleNextClick}
-                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
+                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm cursor-pointer px-6 py-2 relative"
                 >
                   NEXT
                 </button>

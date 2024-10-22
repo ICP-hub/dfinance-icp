@@ -8,14 +8,14 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     const {
         principal,
         backendActor,
-      } = useAuth();
+    } = useAuth();
     const {
         ckBTCBalance,
         ckETHBalance,
         ckUSDCBalance,
         ckICPBalance,
         fetchBalance,
-      } = useFetchBalance(ledgerActors, principal);
+    } = useFetchBalance(ledgerActors, principal);
 
     const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
     const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
@@ -38,15 +38,37 @@ const useFetchConversionRate = (pollInterval = 2000) => {
                 throw new Error("Response was not valid JSON");
             }
 
-            setCkBTCUsdRate(data.bitcoin.usd);
-            setCkETHUsdRate(data.ethereum.usd);
-            setCkUSDCUsdRate(data["usd-coin"].usd);
-            setCkICPUsdRate(data["internet-computer"].usd);
+            if (data.bitcoin && data.ethereum && data["usd-coin"] && data["internet-computer"]) {
+                setCkBTCUsdRate(data.bitcoin.usd);
+                setCkETHUsdRate(data.ethereum.usd);
+                setCkUSDCUsdRate(data["usd-coin"].usd);
+                setCkICPUsdRate(data["internet-computer"].usd);
+                return;
+            }
+
+            if (data.data) {
+                const assets = data.data;
+                setCkBTCUsdRate(assets.find(asset => asset.id === 'bitcoin').priceUsd);
+                setCkETHUsdRate(assets.find(asset => asset.id === 'ethereum').priceUsd);
+                setCkUSDCUsdRate(assets.find(asset => asset.id === 'usd-coin').priceUsd);
+                setCkICPUsdRate(assets.find(asset => asset.id === 'internet-computer').priceUsd);
+                return;
+            }
+
+            if (data.RAW) {
+                const rates = data.RAW;
+                setCkBTCUsdRate(rates.BTC.USD.PRICE);
+                setCkETHUsdRate(rates.ETH.USD.PRICE);
+                setCkUSDCUsdRate(rates.USDC.USD.PRICE);
+                setCkICPUsdRate(rates.ICP.USD.PRICE);
+                return;
+            }
+            
         } catch (error) {
             console.error("Error fetching conversion rates:", error);
             setError(error);
         }
-}, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
+    }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
 
     useEffect(() => {
         const intervalId = setInterval(() => {

@@ -461,11 +461,11 @@ const AssetDetails = () => {
             : null;
 
   return (
-    <div className="w-full flex flex-col lg1:flex-row mt-16 my-6 gap-6 mb-[5rem]">
+    <div className="w-full flex flex-col lg1:flex-row mt-7 md:-mt-7 lg:mt-10 my-6 gap-6 mb-[5rem]">
       <div className="w-full lg1:w-9/12  p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
         <h1 className="text-[#2A1F9D] font-bold my-2 dark:text-darkText">
           Reserve status & configuration
-        </h1>
+        </h1> 
         <div className="w-full mt-8  lg:flex">
           <div className="mb-6 text-auto md:block xl:hidden">
             <div className="flex items-center justify-start gap-3 sxs3:justify-start sxs3:px-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%] dark:text-darkText">
@@ -743,7 +743,7 @@ const AssetDetails = () => {
       )}
 
       {(isSwitchingWallet || !isAuthenticated) && (
-        <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+        <Modal open={isWalletModalOpen} onClose={handleWalletConnect} >
           <div className="w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins">
             {connectedWallet ? (
               <h1 className="font-bold text-[#2A1F9D] dark:text-darkText">

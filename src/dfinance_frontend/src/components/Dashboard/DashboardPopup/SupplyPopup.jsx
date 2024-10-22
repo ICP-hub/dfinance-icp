@@ -145,10 +145,28 @@ const SupplyPopup = ({
       console.log("Approve", approval);
       setIsApproved(true);
       console.log("isApproved state after approval:", isApproved);
-      toast.success("Approval successful!");
+      toast.success(`Approval successful!`,  {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } catch (error) {
       console.error("Approval failed:", error);
-      toast.error(`Error: ${error.message || "Approval failed!"}`);
+      toast.error(`Error: ${error.message || "Approval failed!"}`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }
   };
 
@@ -186,11 +204,29 @@ const SupplyPopup = ({
 
       const sound = new Audio(coinSound);
       sound.play();
-      toast.success("Supply successful!");
+      toast.success(`Supply successful!`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } catch (error) {
       console.error("Supply failed:", error);
 
-      toast.error(`Error: ${error.message || "Supply action failed!"}`);
+      toast.error(`Error: ${error.message || "Supply action failed!"}`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }
   };
 
@@ -438,7 +474,7 @@ const SupplyPopup = ({
 
           {!hasEnoughBalance && (
             <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
-              <p className="text-yellow-700">
+              <p className="text-yellow-700 dark:text-yellow-500">
                 You do not have enough {asset} in your account to pay for
                 transaction fees on the Ethereum Sepolia network. Please deposit{" "}
                 {asset} from another account.

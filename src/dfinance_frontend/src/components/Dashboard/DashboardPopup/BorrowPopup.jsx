@@ -9,7 +9,7 @@ import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useEffect } from "react";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
@@ -39,14 +39,14 @@ const Borrow = ({
   const [amount, setAmount] = useState(null);
 
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [error, setError] = useState("");
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const modalRef = useRef(null); 
+  const modalRef = useRef(null);
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
 
@@ -65,11 +65,11 @@ const Borrow = ({
     setIsAcknowledged(e.target.checked);
   };
   const value = currentHealthFactor
-const safeAmount = Number(amount) || 0; 
-let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); 
-console.log("Amount as nat64:", amountAsNat64);
-const scaledAmount = amountAsNat64 ;
-console.log("Scaled Amount:", scaledAmount);
+  const safeAmount = Number(amount) || 0;
+  let amountAsNat64 = Math.round(amount * Math.pow(10, 8));
+  console.log("Amount as nat64:", amountAsNat64);
+  const scaledAmount = amountAsNat64;
+  console.log("Scaled Amount:", scaledAmount);
 
 
   const handleBorrowETH = async () => {
@@ -93,10 +93,28 @@ console.log("Scaled Amount:", scaledAmount);
       setIsVisible(false);
       const sound = new Audio(coinSound);
       sound.play();
-      toast.success("Borrow successful!");
+      toast.success(`Borrow successful!`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } catch (error) {
       console.error("Error borrowing:", error);
-      toast.error(`Error: ${error.message || "Borrow action failed!"}`);
+      toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       setIsPaymentDone(false);
       setIsVisible(true);
       setIsLoading(false);
@@ -165,16 +183,22 @@ console.log("Scaled Amount:", scaledAmount);
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold) {
+    if (value < 2 && value > 1) {
+      setIsAcknowledgmentRequired(true);
+    } else {
+      setIsAcknowledgmentRequired(false);
+      setIsAcknowledged(false); // Reset the acknowledgment when it's not required
+    }
+
+    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold || (isAcknowledgmentRequired && !isAcknowledged)) {
       setIsButtonDisabled(true);
-      toast.info(" LTV Exceeded!")
+      toast.info("LTV Exceeded!");
     } else {
       setIsButtonDisabled(false);
     }
-
-    if (isAcknowledged) {
-      setIsButtonDisabled(false);
-    }
+    // if (isAcknowledged) {
+    //   setIsButtonDisabled(false);
+    // }
   }, [
     asset,
     reserveliquidationThreshold,
@@ -184,6 +208,8 @@ console.log("Scaled Amount:", scaledAmount);
     amount,
     usdValue,
     isAcknowledged,
+    value,
+    isAcknowledgmentRequired,
     setIsAcknowledged,
   ]);
 
@@ -218,19 +244,17 @@ console.log("Scaled Amount:", scaledAmount);
 
   const [availableBorrows, setAvailableBorrows] = useState(0);
 
-  const ltv2 = 0.7;
-
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
-    
+
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
-      
+
       if (decimalPart.length > 8) {
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount; 
+        e.target.value = inputAmount;
       }
     }
     console.log("Validated input:", inputAmount);
@@ -264,7 +288,7 @@ console.log("Scaled Amount:", scaledAmount);
   };
 
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableAsset).toString();
+    const maxAmount = parseFloat(borrowableAsset.toFixed(8)).toString();
     updateAmountAndUsdValue(maxAmount);
   };
   return (
@@ -415,7 +439,7 @@ console.log("Scaled Amount:", scaledAmount);
                       </div>
 
                       <div className="w-full flex flex-col my-3 space-y-2">
-                        <div className="w-full flex bg-[#BA5858] p-3 rounded-lg">
+                        <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
                           <div className="w-1/12 flex items-center justify-center">
                             <div className="warning-icon-container">
                               <TriangleAlert />

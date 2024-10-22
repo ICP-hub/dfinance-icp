@@ -145,13 +145,31 @@ const WithdrawPopup = ({
       console.log("Withdraw result", withdrawResult);
       const sound = new Audio(coinSound);
       sound.play();
-      toast.success("Withdraw successful!");
+      toast.success(`Withdraw successful!`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       setIsPaymentDone(true);
       setIsVisible(false);
     } catch (error) {
       console.error("Error withdrawing:", error);
       setIsLoading(false);
-      toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
+      toast.error(`Error: ${error.message || "Withdraw action failed!"}`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }
   };
 
@@ -467,7 +485,7 @@ const WithdrawPopup = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <center><p className="mt-2">
-              Your Supply was <strong>{assetSupply} {asset} </strong> and you have withdrawn <strong>{scaledAmount / 100000000
+              Your supply was <strong>{assetSupply} {asset} </strong> and you have withdrawn <strong>{scaledAmount / 100000000
                 ? scaledAmount / 100000000 >= 1e-8 &&
                   scaledAmount / 100000000 < 1e-7
                   ? Number(scaledAmount / 100000000).toFixed(8)
@@ -475,7 +493,7 @@ const WithdrawPopup = ({
                     scaledAmount / 100000000 < 1e-6
                   ? Number(scaledAmount / 100000000).toFixed(7)
                   : scaledAmount / 100000000
-                : "0"}</strong>{" "} <strong>d{asset}</strong>after {" "}
+                : "0"}</strong>{" "} <strong>d{asset}</strong> after {" "}
                   {supplyRateAPR < 0.1
                     ? "<0.1%"
                     : `${supplyRateAPR.toFixed(2)}%`} 

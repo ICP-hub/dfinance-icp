@@ -224,9 +224,9 @@ const WalletDetails = () => {
 
   return (
     <div className="w-full">
-      <div className="w-full md:h-[40px] flex items-center px-3 -mt-5 lg:mt-8 ">
+      <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText -ml-3">ICP Assets</h1>
-        <div className="ml-auto   ">
+        <div className="ml-auto -pr-5">
           {Showsearch && (
             <input
               type="text"
@@ -234,7 +234,7 @@ const WalletDetails = () => {
               id="search"
               placeholder="Search assets"
               style={{ fontSize: '0.75rem' }}
-              className={`placeholder-gray-500 w-[400px] md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
+              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                 ? "animate-fade-left flex"
                 : "animate-fade-right hidden"
                 }`}
@@ -243,7 +243,7 @@ const WalletDetails = () => {
             />
           )}
         </div>
-        <svg onClick={showSearchBar} className="cursor-pointer button" width="55" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg onClick={showSearchBar} className="cursor-pointer button" width="25" height="25" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z" stroke="url(#paint0_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           <path d="M11.2613 11.5531L13.4638 13.75" stroke="url(#paint1_linear_293_865)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           <defs>
@@ -263,7 +263,7 @@ const WalletDetails = () => {
           name="search"
           id="search"
           placeholder="Search assets"
-          className={`placeholder-gray-500 w-[300px] block md:hidden z-20 px-4 py-[2px] mt-2 focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
+          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
             ? "animate-fade-left flex"
             : "animate-fade-right hidden"
             }`}
@@ -287,7 +287,7 @@ const WalletDetails = () => {
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                   {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                     <td key={index} className=" whitespace-nowrap">
-                      <div className={`flex ${index === 0 ? 'justify-start' : 'justify-center'}`}>
+                      <div className={`flex ${index === 0 ? 'justify-start sxs3:pl-2 md:pl-0' : 'justify-center'}`}>
                         {item.header}
                       </div>
                     </td>
@@ -309,9 +309,9 @@ const WalletDetails = () => {
                 {currentItems.map((item, index) => (
                   <tr
                     key={index}
-                    className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
+                    className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg  ${index !== currentItems.length - 1 ? "gradient-line-bottom" : ""}`}
                   >
-                    <td className=" align-center py-6">
+                    <td className=" align-center py-6 sxs3:pl-2 md:pl-0">
                       <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
                         {item[0] === "ckBTC" && (
                           <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
@@ -329,29 +329,29 @@ const WalletDetails = () => {
                       </div>
                     </td>
                     <td className="p-2 align-center py-6">
-                      <div className="flex justify-center flex-row">
-                        <div>
-                          {/* <p>{item.total_supply_count}</p> */}
-                          <p >${formatNumber(Number(item[1].Ok.total_supply)/100000000)}</p>
+                      <div className="flex justify-center items-center flex-row">
+                        <div className="flex-grow text-center">
+                          <p>${formatNumber(Number(item[1].Ok.total_supply) / 100000000)}</p>
                         </div>
                         <div className="md:hidden justify-center ml-6" onClick={() => handleChevronClick(item[0])}>
                           <ChevronRight size={22} color={chevronColor} />
                         </div>
                       </div>
                     </td>
+
                     <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
-                      {((Number(item?.[1]?.Ok?.current_liquidity_rate)/100000000)) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.current_liquidity_rate)/100000000)).toFixed(2)}%`}</div></td>
+                      {((Number(item?.[1]?.Ok?.current_liquidity_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.current_liquidity_rate) / 100000000)).toFixed(2)}%`}</div></td>
                     <td className="p-3 align-center hidden md:table-cell">
                       <div className="flex justify-center flex-row">
                         <div>
                           {/* <p>{item.total_borrow_count}</p> */}
-                          <p >${formatNumber(Number(item[1].Ok.total_borrowed)/100000000)}</p>
+                          <p >${formatNumber(Number(item[1].Ok.total_borrowed) / 100000000)}</p>
                         </div>
                       </div>
 
                     </td>
                     <td className="p-3 align-center hidden md:table-cell">
-                      <div className="flex justify-center"> {((Number(item?.[1]?.Ok?.borrow_rate)/100000000)) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.borrow_rate)/100000000)).toFixed(2)}%`}</div>
+                      <div className="flex justify-center"> {((Number(item?.[1]?.Ok?.borrow_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.borrow_rate) / 100000000)).toFixed(2)}%`}</div>
                     </td>
                     <td className="p-3 align-center">
                       <div className="w-full flex justify-end align-center">
@@ -406,12 +406,12 @@ const WalletDetails = () => {
                       <p className="text-sm dark:text-darkTextSecondary">Total Supply:</p>
                       <div className="flex flex-col">
                         {/* <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAssetData[1].Ok.total_supply }M</p> */}
-                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">{selectedAssetData[1].Ok.total_supply}</p>
+                        <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">${formatNumber(Number(selectedAssetData[1].Ok.total_supply) / 100000000)}</p>
                       </div>
                     </div>
                     <div className="flex justify-between">
                       <p className="text-sm dark:text-darkTextSecondary">Supply APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.current_liquidity_rate}%</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText"> {((Number(selectedAssetData[1].Ok.current_liquidity_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(selectedAssetData[1].Ok.current_liquidity_rate) / 100000000)).toFixed(2)}%`}</p>
                     </div>
 
 
@@ -420,13 +420,13 @@ const WalletDetails = () => {
                       <div className="flex flex-col">
                         {/* <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAssetData[1].Ok.supply_apy}M</p> */}
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          {selectedAssetData[1].Ok.total_borrow > 0 ? selectedAssetData[1].Ok.total_borrow : "0"}
+                          ${formatNumber(Number(selectedAssetData[1].Ok.total_borrowed) / 100000000)}
                         </p>
                       </div>
                     </div>
                     <div className="flex justify-between mb-4">
                       <p className="text-sm dark:text-darkTextSecondary">Borrow APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{selectedAssetData[1].Ok.borrow_rate}%</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{((Number(selectedAssetData[1].Ok.borrow_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(selectedAssetData[1].Ok.borrow_rate) / 100000000)).toFixed(2)}%`}</p>
                     </div>
                   </div>
 
@@ -435,7 +435,7 @@ const WalletDetails = () => {
                 <div className="flex w-full justify-center">
                   <button
                     className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
-                    onClick={() => handleDetailsClick(`${selectedAssetData[0]}`)}
+                    onClick={() => handleDetailsClick(selectedAssetData[0], selectedAssetData[1])}
                   >
                     Details
                   </button>
@@ -446,7 +446,7 @@ const WalletDetails = () => {
 
 
           {(isSwitchingWallet || !isAuthenticated) && (
-            <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+            <Modal open={isWalletModalOpen} onClose={handleWalletConnect} >
               <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                 {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
                 <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">

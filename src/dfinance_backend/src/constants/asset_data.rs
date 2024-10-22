@@ -38,6 +38,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 reserve_factor: ScalingMath::to_scaled(20)
             },
             debt_index: 0,
+            userlist: None,
         }
     ));
 
@@ -57,7 +58,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
             debt_token_canister: Some(debtcketh.to_string()),
             total_supply: 0,
             total_borrowed:0,
-            can_be_collateral: Some(false),
+            can_be_collateral: Some(true),
             liquidity_index:  ScalingMath::to_scaled(1),
             id: 2,
             configuration: ReserveConfiguration {
@@ -65,6 +66,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 reserve_factor: ScalingMath::to_scaled(15)
             },
             debt_index: 0,
+            userlist: None,
         }
     ));
     
@@ -91,6 +93,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 reserve_factor: ScalingMath::to_scaled(10)
             },
             debt_index: 0,
+            userlist: None,
         }
     ));
     let icp_principal = create_testtoken_canister("ICP", "ICP").await;;
@@ -116,7 +119,8 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 ltv: ScalingMath::to_scaled(58), liquidation_threshold: ScalingMath::to_scaled(63), liquidation_bonus:0, borrowing_enabled:true, frozen:false, active:true, paused:false, borrow_cap: ScalingMath::to_scaled(10000000000), supply_cap: ScalingMath::to_scaled(10000000000), liquidation_protocol_fee:0,
                 reserve_factor: ScalingMath::to_scaled(20)
             },
-            debt_index: 0
+            debt_index: 0,
+            userlist: None,
         }
     ));
     // Add more assets as needed...

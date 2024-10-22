@@ -245,4 +245,20 @@ pub async fn withdraw(
 //asset principal as ledger
 //amount as amount
 
+
+// fn login(user_id: u64, user_state: &UserState) {
+  
+//     let mut state = user_state.lock().unwrap();
+
+//     if let Some(user) = state.get_mut(&user_id) {
+   
+//         println!("User {} logged in. Updating state...", user.username);
+//         update_user_state(user);
+//     } else {
+//         // Handle case where user is not found
+//         println!("User with ID {} not found", user_id);
+//     }
+// }
+
+
 export_candid!();

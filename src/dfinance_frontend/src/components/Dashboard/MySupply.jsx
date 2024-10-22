@@ -167,7 +167,7 @@ const MySupply = () => {
     image: "",
     balance: "",
   });
-console.log("toggle",isToggled)
+  console.log("toggle", isToggled);
   const handleModalOpen = (
     type,
     asset,
@@ -182,9 +182,9 @@ console.log("toggle",isToggled)
     totalDebt,
     Ltv,
     availableBorrow,
-    borrowableAsset,
+    borrowableAsset
   ) => {
-    console.log("handle toggle : ",isToggled)
+    console.log("handle toggle : ", isToggled);
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -201,7 +201,7 @@ console.log("toggle",isToggled)
       Ltv: Ltv,
       availableBorrow: availableBorrow,
       borrowableAsset: borrowableAsset,
-      istoggled : isToggled,
+      istoggled: isToggled,
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -230,9 +230,9 @@ console.log("toggle",isToggled)
     console.log("assetdetailsinMarket", assetData);
     navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
   };
-  
+
   const handleToggleChange = (newStatus) => {
-   dispatch(setIsToggled(newStatus)); // Update the state based on the modal success
+    dispatch(setIsToggled(newStatus)); // Update the state based on the modal success
   };
   const renderModalOpen = (type) => {
     switch (type) {
@@ -362,7 +362,7 @@ console.log("toggle",isToggled)
             }
           />
         );
-        case "collateral":
+      case "collateral":
         return (
           <MySupplyModal
             isModalOpen={isModalOpen.isOpen}
@@ -389,7 +389,6 @@ console.log("toggle",isToggled)
                 borrowableAsset={isModalOpen.borrowableAsset}
                 setIsModalOpen={setIsModalOpen}
               />
-             
             }
           />
         );
@@ -502,7 +501,7 @@ console.log("toggle",isToggled)
       setCalculatedReserves(reservesWithCalculations);
     }
   }, [userData]);
- 
+
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 -mt-10">
       <div className="flex justify-center -mb-38 lg:hidden">
@@ -660,7 +659,7 @@ console.log("toggle",isToggled)
                                   </p>
                                   <div className=" text-right text-[#2A1F9D] dark:text-darkText">
                                     <p className=" text-[#2A1F9D] dark:text-darkText">
-                                       {assetSupply
+                                      {assetSupply
                                         ? assetSupply >= 1e-8 &&
                                           assetSupply < 1e-7
                                           ? Number(assetSupply).toFixed(8)
@@ -708,7 +707,55 @@ console.log("toggle",isToggled)
                                     Collateral
                                   </p>
                                   <div className="">
-                                    <CustomizedSwitches checked={true} />
+                                    <CustomizedSwitches
+                                      checked={isToggled} // This checks whether the switch is toggled on or off
+                                      onChange={() => {
+                                        const reserveData =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0]
+                                          );
+                                        const assetSupply =
+                                          Number(
+                                            reserveData?.[1]?.asset_supply || 0n
+                                          ) / 100000000;
+                                        const assetBorrow =
+                                          Number(
+                                            reserveData?.[1]?.asset_borrow || 0n
+                                          ) / 100000000;
+
+                                        const totalCollateral =
+                                          parseFloat(
+                                            Number(
+                                              userData?.Ok?.total_collateral
+                                            ) / 100000000
+                                          ) || 0;
+                                        const totalDebt =
+                                          parseFloat(
+                                            Number(userData?.Ok?.total_debt) /
+                                              100000000
+                                          ) || 0;
+                                        console.log("togle", isToggled);
+                                        // Open the modal and pass the necessary data
+                                        handleModalOpen(
+                                          "collateral",
+                                          asset,
+                                          (asset === "ckBTC" && ckBTC) ||
+                                            (asset === "ckETH" && ckETH) ||
+                                            (asset === "ckUSDC" && ckUSDC) ||
+                                            (asset === "ICP" && icp),
+                                          supplyRateApr,
+                                          ckBalance,
+                                          liquidationThreshold,
+                                          reserveliquidationThreshold,
+                                          assetSupply,
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt,
+                                          isToggled
+                                        );
+                                      }}
+                                    />
                                   </div>
                                 </div>
 
@@ -942,7 +989,7 @@ console.log("toggle",isToggled)
 
                                   <div className="p-3 align-top flex flex-col">
                                     <p className=" text-[#2A1F9D] dark:text-darkText">
-                                    {assetSupply
+                                      {assetSupply
                                         ? assetSupply >= 1e-8 &&
                                           assetSupply < 1e-7
                                           ? Number(assetSupply).toFixed(8)
@@ -979,48 +1026,56 @@ console.log("toggle",isToggled)
                                   </div>
 
                                   <div className="align-top flex items-center ml-0 mr-0 lg:ml-6 lg:-mr-7">
-  <CustomizedSwitches
-    checked={isToggled} // This checks whether the switch is toggled on or off
-    onChange={() => {
-      const reserveData =
-        userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === item[0]
-        );
-      const assetSupply =
-        Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
-      const assetBorrow =
-        Number(reserveData?.[1]?.asset_borrow || 0n) / 100000000;
+                                    <CustomizedSwitches
+                                      checked={isToggled} // This checks whether the switch is toggled on or off
+                                      onChange={() => {
+                                        const reserveData =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0]
+                                          );
+                                        const assetSupply =
+                                          Number(
+                                            reserveData?.[1]?.asset_supply || 0n
+                                          ) / 100000000;
+                                        const assetBorrow =
+                                          Number(
+                                            reserveData?.[1]?.asset_borrow || 0n
+                                          ) / 100000000;
 
-      const totalCollateral =
-        parseFloat(
-          Number(userData?.Ok?.total_collateral) / 100000000
-        ) || 0;
-      const totalDebt =
-        parseFloat(
-          Number(userData?.Ok?.total_debt) / 100000000
-        ) || 0;
-console.log("togle",isToggled)
-      // Open the modal and pass the necessary data
-      handleModalOpen(
-        "collateral",
-        asset,
-        (asset === "ckBTC" && ckBTC) ||
-          (asset === "ckETH" && ckETH) ||
-          (asset === "ckUSDC" && ckUSDC) ||
-          (asset === "ICP" && icp),
-        supplyRateApr,
-        ckBalance,
-        liquidationThreshold,
-        reserveliquidationThreshold,
-        assetSupply,
-        assetBorrow,
-        totalCollateral,
-        totalDebt,
-        isToggled
-      );
-    }}
-  />
-</div>
+                                        const totalCollateral =
+                                          parseFloat(
+                                            Number(
+                                              userData?.Ok?.total_collateral
+                                            ) / 100000000
+                                          ) || 0;
+                                        const totalDebt =
+                                          parseFloat(
+                                            Number(userData?.Ok?.total_debt) /
+                                              100000000
+                                          ) || 0;
+                                        console.log("togle", isToggled);
+                                        // Open the modal and pass the necessary data
+                                        handleModalOpen(
+                                          "collateral",
+                                          asset,
+                                          (asset === "ckBTC" && ckBTC) ||
+                                            (asset === "ckETH" && ckETH) ||
+                                            (asset === "ckUSDC" && ckUSDC) ||
+                                            (asset === "ICP" && icp),
+                                          supplyRateApr,
+                                          ckBalance,
+                                          liquidationThreshold,
+                                          reserveliquidationThreshold,
+                                          assetSupply,
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt,
+                                          isToggled
+                                        );
+                                      }}
+                                    />
+                                  </div>
 
                                   <div className="p-3 align-top flex gap-2 pt-2">
                                     <Button
@@ -2213,34 +2268,38 @@ console.log("togle",isToggled)
                               <p className="text-right text-[#2A1F9D] dark:text-darkText">
                                 {item[0] === "ckBTC" && (
                                   <>
-                                    <p>{borrowableBTC}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(availableBorrow)}
-                                    </p>
+                                     <p>{Number(borrowableBTC) ? Number(borrowableBTC).toFixed(4) : '0.0000'}</p>
+<p className="font-light">
+  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
+</p>
+
                                   </>
                                 )}
                                 {item[0] === "ckETH" && (
                                   <>
-                                    <p>{borrowableETH}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(availableBorrow)}
-                                    </p>
+                                     <p>{Number(borrowableETH) ? Number(borrowableETH).toFixed(4) : '0.0000'}</p>
+<p className="font-light">
+  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
+</p>
+
                                   </>
                                 )}
                                 {item[0] === "ckUSDC" && (
                                   <>
-                                    <p>{borrowableUSDC}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(availableBorrow)}
-                                    </p>
+                                    <p>{Number(borrowableUSDC) ? Number(borrowableUSDC).toFixed(4) : '0.0000'}</p>
+<p className="font-light">
+  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
+</p>
                                   </>
                                 )}
                                 {item[0] === "ICP" && (
                                   <>
-                                    <p>{borrowableICP}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(availableBorrow)}
-                                    </p>
+                                  <p>{Number(borrowableICP) ? Number(borrowableICP).toFixed(4) : '0.0000'}</p>
+<p className="font-light">
+  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
+</p>
+
+
                                   </>
                                 )}
                               </p>
@@ -2439,34 +2498,42 @@ console.log("togle",isToggled)
                               <div className="p-3 lgx:pl-6  align-top flex flex-col">
                                 {item[0] === "ckBTC" && (
                                   <>
-                                    <p>{borrowableBTC}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(availableBorrow)}
-                                    </p>
+                                   <p>{Number(borrowableBTC) ? Number(borrowableBTC).toFixed(4) : '0.0000'}</p>
+<p className="font-light">
+  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
+</p>
+
+
                                   </>
                                 )}
                                 {item[0] === "ckETH" && (
                                   <>
-                                    <p>{borrowableETH}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(availableBorrow)}
-                                    </p>
+                                  <p>{Number(borrowableETH) ? Number(borrowableETH).toFixed(4) : '0.0000'}</p>
+<p className="font-light">
+  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
+</p>
+
+
                                   </>
                                 )}
                                 {item[0] === "ckUSDC" && (
                                   <>
-                                    <p>{borrowableUSDC}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(availableBorrow)}
-                                    </p>
+                                  <p>{Number(borrowableUSDC) ? Number(borrowableUSDC).toFixed(4) : '0.0000'}</p>
+<p className="font-light">
+  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
+</p>
+
+
                                   </>
                                 )}
                                 {item[0] === "ICP" && (
                                   <>
-                                    <p>{borrowableICP}</p>
-                                    <p className="font-light">
-                                      ${formatNumber(availableBorrow)}
-                                    </p>
+                                  <p>{Number(borrowableICP) ? Number(borrowableICP).toFixed(4) : '0.0000'}</p>
+<p className="font-light">
+  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
+</p>
+
+
                                   </>
                                 )}
                               </div>

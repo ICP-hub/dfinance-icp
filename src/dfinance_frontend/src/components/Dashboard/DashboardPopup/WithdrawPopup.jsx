@@ -63,39 +63,54 @@ const WithdrawPopup = ({
   }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value;
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-      if (decimalPart.length > 8) {
-        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount; 
-      }
+  let inputAmount = e.target.value.replace(/,/g, ''); // Remove commas for processing
+
+  // Limit decimal places to 8 digits
+  if (inputAmount.includes(".")) {
+    const [integerPart, decimalPart] = inputAmount.split(".");
+    if (decimalPart.length > 8) {
+      inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`; // Limit decimal places to 8
     }
-    updateAmountAndUsdValue(inputAmount);
-  };
+  }
 
-  const updateAmountAndUsdValue = (inputAmount) => {
-    const numericAmount = parseFloat(inputAmount);
+  updateAmountAndUsdValue(inputAmount);
+};
 
-    if (!isNaN(numericAmount) && numericAmount >= 0) {
-      if (numericAmount <= assetSupply) {
-        const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2)));
-        setAmount(inputAmount);
-        setError("");
-      } else {
-        setError("Amount exceeds the supply balance");
-       
-      }
-    } else if (inputAmount === "") {
-      setAmount("");
-     
+const updateAmountAndUsdValue = (inputAmount) => {
+  const numericAmount = parseFloat(inputAmount);
+
+  if (!isNaN(numericAmount) && numericAmount >= 0) {
+    if (numericAmount <= assetSupply) {
+      const convertedValue = numericAmount * conversionRate;
+
+      // Format the integer part with commas
+      const formattedAmount = formatAmountWithCommas(inputAmount);
+
+      setUsdValue(parseFloat(convertedValue.toFixed(2))); // Round USD to 2 decimal places
+      setAmount(formattedAmount); // Update the amount with commas
       setError("");
     } else {
-      setError("Amount must be a positive number");
-      
+      setError("Amount exceeds the supply balance");
     }
-  };
+  } else if (inputAmount === "") {
+    setAmount(""); // Clear the amount in state
+    setError("");
+  } else {
+    setError("Amount must be a positive number");
+  }
+};
+
+// Utility function to format the amount with commas
+const formatAmountWithCommas = (amount) => {
+  const parts = amount.split(".");
+
+  // Format the integer part with commas
+  parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
+
+  // Join back the integer and decimal parts (if any)
+  return parts.length > 1 ? parts.join(".") : parts[0];
+};
+
 
   useEffect(() => {
     if (amount && conversionRate) {
@@ -110,11 +125,12 @@ const WithdrawPopup = ({
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
 
-  const safeAmount = Number(amount) || 0; 
-  let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); 
+  const safeAmount = Number((amount || '').replace(/,/g, '')) || 0; // Ensure amount is not null
+let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
 
-  console.log("Amount as nat64:", amountAsNat64);
-  const scaledAmount = amountAsNat64;
+console.log("Amount as nat64:", amountAsNat64);
+
+const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
   const handleWithdraw = async () => {
     console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
@@ -130,12 +146,12 @@ const WithdrawPopup = ({
     }
 
     try {
-      const safeAmount = Number(amount) || 0;
+      const safeAmount = Number((amount || '').replace(/,/g, '')) || 0; // Ensure amount is not null
+let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
 
-      
-      let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); 
-      console.log("Amount as nat64:", amountAsNat64);
-      const scaledAmount = amountAsNat64;
+console.log("Amount as nat64:", amountAsNat64);
+
+const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
       const withdrawResult = await backendActor.withdraw(
         asset,
         scaledAmount,
@@ -267,16 +283,14 @@ const WithdrawPopup = ({
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-3 rounded-md">
                 <div className="w-[50%]">
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    step="0.00000001"
-                    // disabled={supplyBalance === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
-                    min="0"
-                  />
+                <input
+  type="text" // Use text input to allow formatting
+  value={amount}
+  onChange={handleAmountChange}
+  disabled={supplyBalance === 0}
+  className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+  placeholder="Enter Amount"
+/>
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
@@ -327,7 +341,7 @@ const WithdrawPopup = ({
                 </div>
                 <div className="w-4/12 flex flex-col items-end">
                   <p className="text-xs mt-2">
-                    {(assetSupply - amount).toLocaleString(undefined, {
+                    {(assetSupply - amount.replace(/,/g, '')).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}{" "}

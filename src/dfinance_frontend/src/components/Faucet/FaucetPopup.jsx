@@ -110,8 +110,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       setAmount("");
     } else {
       const numericValue = Number(value);
-      if (maxAmount) {
-        setAmount(Math.min(numericValue, maxAmount));
+      if (exchangeRate) {
+        setAmount(Math.min(numericValue, exchangeRate));
       } else {
         setAmount(numericValue);
       }

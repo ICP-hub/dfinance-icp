@@ -16,5 +16,6 @@ if [ -z "$ASSET" ] || [ -z "$AMOUNT" ]; then
   exit 1
 fi
 
-dfx identity use liquidator
+dfx identity use default
+# dfx identity use liquidator
 dfx canister call "$CANISTER_ID" faucet "(\"$ASSET\", $AMOUNT)"

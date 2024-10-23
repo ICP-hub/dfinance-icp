@@ -10,13 +10,13 @@ ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai"
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
 debt_canister="aax3a-h4aaa-aaaaa-qaahq-cai"
 approve_method="icrc2_approve"
-disable_collateral_method="disable_collateral"
+toggle_collateral_method="toggle_collateral"
 reserve_data_method="get_reserve_data"
 
-# Get the principal for the user1 identity (disable_collateral)
+# Get the principal for the user1 identity (toggle_collateral)
 dfx identity use default
 user1_principal=$(dfx identity get-principal)
-echo "User1 Principal (disable_collateral): $user1_principal"
+echo "User1 Principal (toggle_collateral): $user1_principal"
 
 # Get the principal for the backend_canister (lender)
 backend_canister_principal=$(dfx canister id $backend_canister)
@@ -45,16 +45,17 @@ echo "user data: $user_data"
 
 dfx identity use default
 
-# Call the disable_collateral function on the backend canister
+# Call the toggle_collateral function on the backend canister
 # borrow_amount=300000000
+collateral_added_amount=0
 collateral_amount=300000
 currency="ckETH" 
 # interest_rate=0  
 
 #echo "Borrowing $borrow_amount from backend_canister..."
 echo "collateral $collateral_amount from backend_canister..."
-disable_collateral_result=$(dfx canister call $backend_canister $disable_collateral_method "(\"$currency\", $collateral_amount:nat)")
-echo "disable_collateral Result: $disable_collateral_result"
+toggle_collateral_result=$(dfx canister call $backend_canister $toggle_collateral_method "(\"$currency\", $collateral_amount:nat, $collateral_added_amount)")
+echo "toggle_collateral Result: $toggle_collateral_result"
 echo "--------------------------------------"
 
 # Check balances after borrow

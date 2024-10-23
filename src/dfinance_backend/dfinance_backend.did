@@ -64,7 +64,6 @@ service : () -> {
   borrow : (text, nat64) -> (Result);
   check_user : (text) -> (Result_1);
   create_multiple_canisters : () -> (vec principal);
-  disable_collateral : (text, nat) -> ();
   faucet : (text, nat64) -> (Result_2);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
@@ -74,9 +73,9 @@ service : () -> {
   get_reserve_data : (text) -> (Result_5) query;
   get_user_data : (text) -> (Result_6) query;
   initialize_reserve : () -> ();
-  liquidation_call : (text, text, nat64, text) -> (Result);
   repay : (text, nat, opt text) -> (Result);
   supply : (text, nat64, bool) -> (Result);
+  toggle_collateral : (text, nat, nat) -> ();
   transfer : (nat, text) -> (Result_2);
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

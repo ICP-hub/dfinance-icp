@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
-import { setIsToggled } from "../../../redux/reducers/toggleReducer";
+
 
 const ColateralPopup = ({
   asset,
@@ -23,17 +23,32 @@ const ColateralPopup = ({
   assetBorrow,
   totalCollateral,
   totalDebt,
+  currentCollateralStatus  ,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  
+  console.log("props", asset,
+    image,
+    supplyRateAPR,
+    balance,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    totalCollateral,
+    totalDebt,
+    currentCollateralStatus ,
+    isModalOpen,
+    handleModalOpen,
+    setIsModalOpen,
+    onLoadingChange,)
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
-  const isToggled = useSelector((state) => state.toggle.isToggled); // Generic state for toggle
+  const [isCollateral, setIsCollateral] = useState(currentCollateralStatus );
 
   const transactionFee = 0.01;
   const dispatch=useDispatch()
@@ -72,20 +87,28 @@ const ColateralPopup = ({
 
   async function toggleCollateral(asset, assetSupply) {
     try {
-      // Call the backend function `toggle_collateral` with the asset, assetSupply, and addedAmount (which is 0)
+      // Scale factor for two decimal places (adjust if needed)
+      const scaleFactor = 100; 
+  
+      // Determine the values based on the isCollateral condition
+      const addedAmount = currentCollateralStatus  ? BigInt(0) : BigInt(Math.round(assetSupply * 100000000)); // Pass assetSupply as added amount if toggled is false
+      const amount =currentCollateralStatus ? BigInt(Math.round(assetSupply * 100000000)) : BigInt(0); // Pass assetSupply if toggled is true, otherwise 0
+  
+      // Call the backend function `toggle_collateral` with the asset, amount, and addedAmount
       await backendActor.toggle_collateral(
         asset,
-        BigInt(assetSupply),
-        BigInt(0)
+        Number(amount) / scaleFactor, // Convert back to a decimal for the backend if necessary
+        addedAmount
       );
-
-      // Since the function returns `()`, there's no result to handle
+      setIsCollateral(!currentCollateralStatus );
       console.log("Collateral toggled successfully");
     } catch (error) {
       console.error("Error toggling collateral:", error);
       throw error; // Re-throw the error to handle it in the caller
     }
   }
+  
+  
 
   const handleToggleCollateral = async () => {
     setIsLoading(true); // Start loading
@@ -129,13 +152,13 @@ const ColateralPopup = ({
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    // window.location.reload();
-    dispatch(setIsToggled(!isToggled));
+    window.location.reload();
+    
   };
 
-console.log("toggle status ",isToggled)
+console.log("toggle status ",currentCollateralStatus )
   useEffect(() => {
-    const adjustedCollateral = isToggled
+    const adjustedCollateral = currentCollateralStatus 
     ? totalCollateral - assetSupply // Subtract when collateral is active (disabling)
     : totalCollateral + assetSupply; // Add when collateral is inactive (enabling)
 
@@ -230,7 +253,7 @@ console.log("toggle status ",isToggled)
         <div className="supply-popup" ref={modalRef}>
           <h1 className="font-normal text-xl">Review tx {asset}</h1>
           <div className="flex flex-col gap-2 mt-5 text-sm">
-          {isToggled ? (
+          {currentCollateralStatus  ? (
               <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
                 <p className="text-yellow-700 dark:text-yellow-500">
                   Disabling {asset} as collateral affects your borrowing power and
@@ -354,7 +377,7 @@ console.log("toggle status ",isToggled)
             }`}
             disabled={isButtonDisabled || isLoading} // Disable the button during loading
           >
-           {isToggled
+           {currentCollateralStatus 
               ? `Disable ${asset} as collateral`
               : `Enable ${asset} as collateral`}
           </button>
@@ -388,7 +411,7 @@ console.log("toggle status ",isToggled)
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-  Your {asset} is {isToggled ? " not used" : "used"} as collateral
+  Your {asset} is {currentCollateralStatus  ? " not used" : "used"} as collateral
 </p>
 
 

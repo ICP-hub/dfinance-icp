@@ -27,6 +27,7 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);

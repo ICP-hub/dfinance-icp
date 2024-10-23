@@ -33,6 +33,25 @@ const Borrow = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  console.log("props in borrow ",  asset,
+    image,
+    supplyRateAPR,
+    balance,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    totalCollateral,
+    totalDebt,
+    Ltv,
+    availableBorrow,
+    borrowableAsset,
+    isModalOpen,
+    handleModalOpen,
+    setIsModalOpen,
+    onLoadingChange,)
+    console.log(" avaialbele borrow ,borowable asset",availableBorrow,
+      borrowableAsset,)
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);

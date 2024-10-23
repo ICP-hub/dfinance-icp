@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import React from "react";
 import {
@@ -29,9 +29,11 @@ import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import ColateralPopup from "./DashboardPopup/CollateralDiablePopup";
+// import {setToggle} from "../../redux/reducers/toggleReducer"
 
 const MySupply = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { state, pathname } = useLocation();
 
   const { principal, backendActor } = useAuth();
@@ -53,6 +55,7 @@ const MySupply = () => {
 
   useEffect(() => {
     if (userData?.Ok?.available_borrow) {
+      // dispatch(setToggled(user))
       setAvailableBorrow(Number(userData.Ok.available_borrow) / 100000000);
     }
   }, [userData]);
@@ -153,12 +156,12 @@ const MySupply = () => {
 
   const filteredReserveData = Object.fromEntries(filteredItems);
 
-  const [isCollateral, setIsCollateral] = useState(true);
+  const [Collateral, setCollateral] = useState(true);
 
   const formatNumber = useFormatNumber();
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
-  const isToggled = useSelector((state) => state.toggle.isToggled); // Generic state for toggle
+  const toggles = useSelector((state) => state.toggle.toggles); // Generic state for toggle
 
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
@@ -167,7 +170,7 @@ const MySupply = () => {
     image: "",
     balance: "",
   });
-  console.log("toggle", isToggled);
+  console.log("toggle", toggles);
   const handleModalOpen = (
     type,
     asset,
@@ -180,11 +183,13 @@ const MySupply = () => {
     assetBorrow,
     totalCollateral,
     totalDebt,
+    currentCollateralStatus ,
     Ltv,
     availableBorrow,
-    borrowableAsset
+    borrowableAsset,
+    
   ) => {
-    console.log("handle toggle : ", isToggled);
+    console.log("handle toggle : ", Collateral);
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -198,10 +203,11 @@ const MySupply = () => {
       assetBorrow: assetBorrow,
       totalCollateral: totalCollateral,
       totalDebt: totalDebt,
+      currentCollateralStatus :currentCollateralStatus,
       Ltv: Ltv,
       availableBorrow: availableBorrow,
-      borrowableAsset: borrowableAsset,
-      istoggled: isToggled,
+      borrowableAsset: borrowableAsset
+      
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -211,7 +217,7 @@ const MySupply = () => {
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
   const [isborrowVisible, setIsborrowVisible] = useState(true);
   const [isSupplyVisible, setIsSupplyVisible] = useState(true);
-  const [toggled, setIsToggled] = useState(true);
+  const [toggled, set] = useState(true);
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
@@ -232,7 +238,7 @@ const MySupply = () => {
   };
 
   const handleToggleChange = (newStatus) => {
-    dispatch(setIsToggled(newStatus)); // Update the state based on the modal success
+    dispatch(set(newStatus)); // Update the state based on the modal success
   };
   const renderModalOpen = (type) => {
     switch (type) {
@@ -363,6 +369,19 @@ const MySupply = () => {
           />
         );
       case "collateral":
+        console.log("Opening collateral modal with data:", {
+          asset: isModalOpen.asset,
+          image: isModalOpen.image,
+          supplyRateAPR: isModalOpen.supplyRateAPR,
+          balance: isModalOpen.balance,
+          liquidationThreshold: isModalOpen.liquidationThreshold,
+          reserveliquidationThreshold: isModalOpen.reserveliquidationThreshold,
+          assetSupply: isModalOpen.assetSupply,
+          assetBorrow: isModalOpen.assetBorrow,
+          totalCollateral: isModalOpen.totalCollateral,
+          totalDebt: isModalOpen.totalDebt,
+          currentCollateralStatus : isModalOpen.currentCollateralStatus ,
+        });
         return (
           <MySupplyModal
             isModalOpen={isModalOpen.isOpen}
@@ -374,8 +393,8 @@ const MySupply = () => {
                 handleModalOpen={handleModalOpen}
                 asset={isModalOpen.asset}
                 image={isModalOpen.image}
-                balance={isModalOpen.balance}
                 supplyRateAPR={isModalOpen.supplyRateAPR}
+                balance={isModalOpen.balance}
                 liquidationThreshold={isModalOpen.liquidationThreshold}
                 reserveliquidationThreshold={
                   isModalOpen.reserveliquidationThreshold
@@ -384,9 +403,7 @@ const MySupply = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
-                Ltv={isModalOpen.Ltv}
-                availableBorrow={isModalOpen.availableBorrow}
-                borrowableAsset={isModalOpen.borrowableAsset}
+                currentCollateralStatus ={isModalOpen.currentCollateralStatus }
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -396,7 +413,7 @@ const MySupply = () => {
         return null;
     }
   };
-  // console.log("toggle in popup",isToggled)
+  // console.log("toggle in popup",)
   const hasNoBorrows = MY_BORROW_ASSET_TABLE_ROWS.length === 0;
   const noBorrowMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
@@ -439,7 +456,7 @@ const MySupply = () => {
     </div>
   );
 
-  const [collateral, setCollateral] = useState(false);
+  
   const isTableDisabled =
     !userData?.Ok?.reserves ||
     !userData?.Ok?.reserves[0] ||
@@ -580,13 +597,30 @@ const MySupply = () => {
                       >
                         {userData?.Ok?.reserves[0]?.map(
                           (reserveGroup, index) => {
+                            console.log("userData", userData?.Ok?.reserves);
                             const asset = reserveGroup[1]?.reserve;
                             const assetSupply =
                               Number(reserveGroup[1]?.asset_supply || 0n) /
                               100000000;
+
                             const assetBorrow =
                               Number(reserveGroup[1]?.asset_borrow || 0n) /
                               100000000;
+                            {
+                              console.log(
+                                reserveGroup[1]?.is_collateral,
+                                "clt"
+                              );
+                            }
+                            // dispatch(set(reserveGroup[1]?.is_collateral))
+                            const collateralStatus = reserveGroup[1]?.is_collateral;
+
+                            // You can now store or use the isCollateral value as needed
+                            console.log(
+                              collateralStatus,
+                              "is_collateral for asset:",
+                              asset
+                            );
 
                             if (assetSupply <= 0) return null;
 
@@ -708,7 +742,7 @@ const MySupply = () => {
                                   </p>
                                   <div className="">
                                     <CustomizedSwitches
-                                      checked={isToggled} // This checks whether the switch is toggled on or off
+                                      checked={collateralStatus} // This checks whether the switch is toggled on or off
                                       onChange={() => {
                                         const reserveData =
                                           userData?.Ok?.reserves[0]?.find(
@@ -723,7 +757,9 @@ const MySupply = () => {
                                           Number(
                                             reserveData?.[1]?.asset_borrow || 0n
                                           ) / 100000000;
+                                          const currentCollateralStatus = reserveData[1]?.is_collateral;
 
+                                          console.log("currentCollateralStatus in on change", currentCollateralStatus); 
                                         const totalCollateral =
                                           parseFloat(
                                             Number(
@@ -735,7 +771,7 @@ const MySupply = () => {
                                             Number(userData?.Ok?.total_debt) /
                                               100000000
                                           ) || 0;
-                                        console.log("togle", isToggled);
+                                        
                                         // Open the modal and pass the necessary data
                                         handleModalOpen(
                                           "collateral",
@@ -752,7 +788,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          isToggled
+                                          currentCollateralStatus 
                                         );
                                       }}
                                     />
@@ -922,7 +958,15 @@ const MySupply = () => {
                               const assetBorrow =
                                 Number(reserveGroup[1]?.asset_borrow || 0n) /
                                 100000000;
+                              const collateralStatus =
+                                reserveGroup[1]?.is_collateral;
 
+                              // You can now store or use the Collateral value as needed
+                              console.log(
+                                collateralStatus,
+                                "is_collateral for asset:",
+                                asset
+                              );
                               if (assetSupply <= 0) return null;
 
                               const item = filteredItems.find(
@@ -1027,13 +1071,16 @@ const MySupply = () => {
 
                                   <div className="align-top flex items-center ml-0 mr-0 lg:ml-6 lg:-mr-7">
                                     <CustomizedSwitches
-                                      checked={isToggled} // This checks whether the switch is toggled on or off
+                                      checked={collateralStatus} // This checks whether the switch is toggled on or off
                                       onChange={() => {
                                         const reserveData =
                                           userData?.Ok?.reserves[0]?.find(
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
+                                          const currentCollateralStatus = reserveData[1]?.is_collateral;
+
+                                          console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -1054,7 +1101,7 @@ const MySupply = () => {
                                             Number(userData?.Ok?.total_debt) /
                                               100000000
                                           ) || 0;
-                                        console.log("togle", isToggled);
+
                                         // Open the modal and pass the necessary data
                                         handleModalOpen(
                                           "collateral",
@@ -1071,7 +1118,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          isToggled
+                                          currentCollateralStatus 
                                         );
                                       }}
                                     />
@@ -1792,6 +1839,9 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
+                                          const currentCollateralStatus = reserveData[1]?.is_collateral;
+
+                                          console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -1842,6 +1892,7 @@ const MySupply = () => {
                                           totalCollateral,
                                           totalDebt,
                                           Ltv,
+                                          currentCollateralStatus,
                                           availableBorrow,
                                           borrowableAsset
                                         );
@@ -2069,6 +2120,9 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
+                                          const currentCollateralStatus = reserveData[1]?.is_collateral;
+
+                                          console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -2121,6 +2175,7 @@ const MySupply = () => {
                                           totalCollateral,
                                           totalDebt,
                                           Ltv,
+                                          currentCollateralStatus,
                                           availableBorrow,
                                           borrowableAsset
                                         );
@@ -2268,38 +2323,70 @@ const MySupply = () => {
                               <p className="text-right text-[#2A1F9D] dark:text-darkText">
                                 {item[0] === "ckBTC" && (
                                   <>
-                                     <p>{Number(borrowableBTC) ? Number(borrowableBTC).toFixed(4) : '0.0000'}</p>
-<p className="font-light">
-  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
-</p>
-
+                                    <p>
+                                      {Number(borrowableBTC)
+                                        ? Number(borrowableBTC).toFixed(4)
+                                        : "0.0000"}
+                                    </p>
+                                    <p className="font-light">
+                                      $
+                                      {Number(availableBorrow)
+                                        ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                        : "0.0000"}
+                                    </p>
                                   </>
                                 )}
                                 {item[0] === "ckETH" && (
                                   <>
-                                     <p>{Number(borrowableETH) ? Number(borrowableETH).toFixed(4) : '0.0000'}</p>
-<p className="font-light">
-  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
-</p>
-
+                                    <p>
+                                      {Number(borrowableETH)
+                                        ? Number(borrowableETH).toFixed(4)
+                                        : "0.0000"}
+                                    </p>
+                                    <p className="font-light">
+                                      $
+                                      {Number(availableBorrow)
+                                        ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                        : "0.0000"}
+                                    </p>
                                   </>
                                 )}
                                 {item[0] === "ckUSDC" && (
                                   <>
-                                    <p>{Number(borrowableUSDC) ? Number(borrowableUSDC).toFixed(4) : '0.0000'}</p>
-<p className="font-light">
-  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
-</p>
+                                    <p>
+                                      {Number(borrowableUSDC)
+                                        ? Number(borrowableUSDC).toFixed(4)
+                                        : "0.0000"}
+                                    </p>
+                                    <p className="font-light">
+                                      $
+                                      {Number(availableBorrow)
+                                        ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                        : "0.0000"}
+                                    </p>
                                   </>
                                 )}
                                 {item[0] === "ICP" && (
                                   <>
-                                  <p>{Number(borrowableICP) ? Number(borrowableICP).toFixed(4) : '0.0000'}</p>
-<p className="font-light">
-  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
-</p>
-
-
+                                    <p>
+                                      {Number(borrowableICP)
+                                        ? Number(borrowableICP).toFixed(4)
+                                        : "0.0000"}
+                                    </p>
+                                    <p className="font-light">
+                                      $
+                                      {Number(availableBorrow)
+                                        ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                        : "0.0000"}
+                                    </p>
                                   </>
                                 )}
                               </p>
@@ -2332,6 +2419,10 @@ const MySupply = () => {
                                     Number(
                                       reserveData?.[1]?.asset_supply || 0n
                                     ) / 100000000;
+
+                                    const currentCollateralStatus = reserveData[1]?.is_collateral;
+
+                                    console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                   const assetBorrow =
                                     Number(
                                       reserveData?.[1]?.asset_borrow || 0n
@@ -2384,6 +2475,7 @@ const MySupply = () => {
                                     totalCollateral,
                                     totalDebt,
                                     Ltv,
+                                    currentCollateralStatus,
                                     availableBorrow,
                                     borrowableAsset
                                   );
@@ -2498,42 +2590,70 @@ const MySupply = () => {
                               <div className="p-3 lgx:pl-6  align-top flex flex-col">
                                 {item[0] === "ckBTC" && (
                                   <>
-                                   <p>{Number(borrowableBTC) ? Number(borrowableBTC).toFixed(4) : '0.0000'}</p>
-<p className="font-light">
-  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
-</p>
-
-
+                                    <p>
+                                      {Number(borrowableBTC)
+                                        ? Number(borrowableBTC).toFixed(4)
+                                        : "0.0000"}
+                                    </p>
+                                    <p className="font-light">
+                                      $
+                                      {Number(availableBorrow)
+                                        ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                        : "0.0000"}
+                                    </p>
                                   </>
                                 )}
                                 {item[0] === "ckETH" && (
                                   <>
-                                  <p>{Number(borrowableETH) ? Number(borrowableETH).toFixed(4) : '0.0000'}</p>
-<p className="font-light">
-  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
-</p>
-
-
+                                    <p>
+                                      {Number(borrowableETH)
+                                        ? Number(borrowableETH).toFixed(4)
+                                        : "0.0000"}
+                                    </p>
+                                    <p className="font-light">
+                                      $
+                                      {Number(availableBorrow)
+                                        ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                        : "0.0000"}
+                                    </p>
                                   </>
                                 )}
                                 {item[0] === "ckUSDC" && (
                                   <>
-                                  <p>{Number(borrowableUSDC) ? Number(borrowableUSDC).toFixed(4) : '0.0000'}</p>
-<p className="font-light">
-  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
-</p>
-
-
+                                    <p>
+                                      {Number(borrowableUSDC)
+                                        ? Number(borrowableUSDC).toFixed(4)
+                                        : "0.0000"}
+                                    </p>
+                                    <p className="font-light">
+                                      $
+                                      {Number(availableBorrow)
+                                        ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                        : "0.0000"}
+                                    </p>
                                   </>
                                 )}
                                 {item[0] === "ICP" && (
                                   <>
-                                  <p>{Number(borrowableICP) ? Number(borrowableICP).toFixed(4) : '0.0000'}</p>
-<p className="font-light">
-  ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : '0.0000'}
-</p>
-
-
+                                    <p>
+                                      {Number(borrowableICP)
+                                        ? Number(borrowableICP).toFixed(4)
+                                        : "0.0000"}
+                                    </p>
+                                    <p className="font-light">
+                                      $
+                                      {Number(availableBorrow)
+                                        ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                        : "0.0000"}
+                                    </p>
                                   </>
                                 )}
                               </div>
@@ -2564,6 +2684,9 @@ const MySupply = () => {
                                         (reserveGroup) =>
                                           reserveGroup[0] === item[0]
                                       );
+                                      const currentCollateralStatus = reserveData[1]?.is_collateral;
+
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                     const assetSupply =
                                       Number(
                                         reserveData?.[1]?.asset_supply || 0n
@@ -2627,6 +2750,7 @@ const MySupply = () => {
                                       totalCollateral,
                                       totalDebt,
                                       Ltv,
+                                      currentCollateralStatus,
                                       availableBorrow,
                                       borrowableAsset
                                     );

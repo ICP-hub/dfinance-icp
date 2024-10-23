@@ -30,6 +30,7 @@ const Repay = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null); // Reference to the modal container
   const { createLedgerActor, backendActor, principal } = useAuth();
@@ -50,31 +51,35 @@ const Repay = ({
   const value = 5.23;
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value;
-
+    let inputAmount = e.target.value.replace(/,/g, ''); // Remove commas for processing
+  
     // Check if there's a decimal point and enforce 8 decimal places
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-
+  
       // Limit decimal places to 8
       if (decimalPart.length > 8) {
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
         e.target.value = inputAmount; // Directly update the value in the field
       }
     }
+  
     updateAmountAndUsdValue(inputAmount);
   };
-
+  
   const updateAmountAndUsdValue = (inputAmount) => {
     // Convert input to a number
     const numericAmount = parseFloat(inputAmount);
-
+  
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetBorrow) {
+        // Format the amount with commas before setting it
+        const formattedAmount = formatAmountWithCommas(inputAmount);
+  
         // Calculate and format the USD value
         const convertedValue = numericAmount * conversionRate;
         setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
-        setAmount(inputAmount);
+        setAmount(formattedAmount); // Set formatted amount with commas
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
@@ -82,23 +87,34 @@ const Repay = ({
     } else if (inputAmount === "") {
       // Allow empty input and reset error
       setAmount("");
+      setUsdValue(0);
       setError("");
     } else {
       setError("Amount must be a positive number");
     }
   };
-
+  
+  // Utility function to format the amount with commas
+  const formatAmountWithCommas = (amount) => {
+    const parts = amount.split(".");
+  
+    // Format the integer part with commas
+    parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
+  
+    // Join back the integer and decimal parts (if any)
+    return parts.length > 1 ? parts.join(".") : parts[0];
+  };
   const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
-
+  useRealTimeConversionRate(asset);
   useEffect(() => {
     if (amount && conversionRate) {
-      const convertedValue = parseFloat(amount) * conversionRate;
+      const convertedValue = parseFloat(amount.replace(/,/g, '')) * conversionRate;
       setUsdValue(convertedValue); // Update USD value
     } else {
       setUsdValue(0); // Reset USD value if conditions are not met
     }
   }, [amount, conversionRate]);
+  
 
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
@@ -125,20 +141,9 @@ const Repay = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     }
-    // Convert amount and transferFee to numbers and add them
-    const safeAmount = Number(amount) || 0; // This ensures safeAmount is always a number
-
-    // Ensure precision using toFixed to prevent floating point errors
-    // Ensure amount is a valid number and scale it to remove decimals
-    let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); // Scale and round to an integer
-
-    // Now amountAsNat64 is an integer, valid for nat64
+    const safeAmount = Number(amount.replace(/,/g, '')) || 0;
+    let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
     console.log("Amount as nat64:", amountAsNat64);
-
-    // Pass amountAsNat64 as a valid nat64 argument
-    // Limit to 8 decimal places
-
-    // Perform the multiplication using regular numbers
     const scaledAmount = amountAsNat64;
 
     const totalAmount = scaledAmount + transferfee;
@@ -217,20 +222,10 @@ const Repay = ({
     console.log("Backend actor", ledgerActor);
 
     try {
-      const safeAmount = Number(amount) || 0; // This ensures safeAmount is always a number
-
-      // Ensure precision using toFixed to prevent floating point errors
-      // Ensure amount is a valid number and scale it to remove decimals
-      let amountAsNat64 = Math.round(amount * Math.pow(10, 8)); // Scale and round to an integer
-
-      // Now amountAsNat64 is an integer, valid for nat64
-      console.log("Amount as nat64:", amountAsNat64);
-
-      // Pass amountAsNat64 as a valid nat64 argument
-      // Limit to 8 decimal places
-
-      // Perform the multiplication using regular numbers
-      const scaledAmount = amountAsNat64;
+      const safeAmount = Number(amount.replace(/,/g, '')) || 0;
+    let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
+    console.log("Amount as nat64:", amountAsNat64);
+    const scaledAmount = amountAsNat64;
 
       const repayResult = await backendActor.repay(asset, scaledAmount, []);
       const sound = new Audio(coinSound);
@@ -388,16 +383,14 @@ const Repay = ({
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-[50%]">
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    step="0.00000001"
-                    disabled={assetBorrow === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100  rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
-                    min="0"
-                  />
+                <input
+  type="text" // Use text input to allow formatting
+  value={amount}
+  onChange={handleAmountChange}
+  disabled={supplyBalance === 0}
+  className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+  placeholder="Enter Amount"
+/>
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {

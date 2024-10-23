@@ -33,6 +33,25 @@ const Borrow = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  console.log("props in borrow ",  asset,
+    image,
+    supplyRateAPR,
+    balance,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    totalCollateral,
+    totalDebt,
+    Ltv,
+    availableBorrow,
+    borrowableAsset,
+    isModalOpen,
+    handleModalOpen,
+    setIsModalOpen,
+    onLoadingChange,)
+    console.log(" avaialbele borrow ,borowable asset",availableBorrow,
+      borrowableAsset,)
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -65,11 +84,13 @@ const Borrow = ({
     setIsAcknowledged(e.target.checked);
   };
   const value = currentHealthFactor
-  const safeAmount = Number(amount) || 0;
-  let amountAsNat64 = Math.round(amount * Math.pow(10, 8));
+  const safeAmount = Number((amount || '').replace(/,/g, '')) || 0; // Ensure amount is not null
+  let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
+  
   console.log("Amount as nat64:", amountAsNat64);
-  const scaledAmount = amountAsNat64;
-  console.log("Scaled Amount:", scaledAmount);
+  
+  const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
+console.log("Scaled Amount:", scaledAmount);
 
 
   const handleBorrowETH = async () => {
@@ -245,52 +266,87 @@ const Borrow = ({
   const [availableBorrows, setAvailableBorrows] = useState(0);
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value;
-
-
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-
-
-      if (decimalPart.length > 8) {
-        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount;
-      }
+    // Get the input value and remove commas for processing
+    let inputAmount = e.target.value.replace(/,/g, '');
+    
+    // Allow only numbers and decimals
+    if (!/^\d*\.?\d*$/.test(inputAmount)) {
+      return; // If invalid input, do nothing
     }
-    console.log("Validated input:", inputAmount);
-    updateAmountAndUsdValue(inputAmount);
-  };
-  const updateAmountAndUsdValue = (inputAmount) => {
-
+  
+    // Convert to number for comparison with borrowableAsset
     const numericAmount = parseFloat(inputAmount);
-
+  
+    // Limit input value to borrowableAsset
+    if (numericAmount > parseFloat(borrowableAsset)) {
+      return; // If input exceeds borrowableAsset, do nothing
+    }
+  
+    let formattedAmount;
+    if (inputAmount.includes('.')) {
+      const [integerPart, decimalPart] = inputAmount.split('.');
+  
+      // Format the integer part with commas and limit decimal places to 8 digits
+      formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart.slice(0, 8)}`;
+    } else {
+      // If no decimal, format the integer part with commas
+      formattedAmount = parseInt(inputAmount).toLocaleString('en-US');
+    }
+  
+    // Update the input field value with the formatted number (with commas)
+    setAmount(formattedAmount);
+  
+    // Pass the numeric value (without commas) for internal calculations
+    updateAmountAndUsdValue(inputAmount); // Pass raw numeric value for calculations
+  };
+  
+  
+  const updateAmountAndUsdValue = (inputAmount) => {
+    // Ensure that the numeric value is used for calculations (no commas)
+    const numericAmount = parseFloat(inputAmount.replace(/,/g, ''));
+  
+    // Handle the case when the input is cleared (empty value)
+    if (inputAmount === "") {
+      setAmount(''); // Clear the amount in state
+      setUsdValue(0); // Reset USD value
+      return;
+    }
+  
+    // Update USD value only if the input is a valid positive number
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       const convertedValue = numericAmount * conversionRate;
-      setUsdValue(parseFloat(convertedValue.toFixed(2)));
-      setAmount(inputAmount);
-      setError("");
-    } else if (inputAmount === "") {
-      setAmount("");
-      setUsdValue(0);
+      setUsdValue(parseFloat(convertedValue.toFixed(2))); // Round USD to 2 decimal places
       setError("");
     } else {
       setError("Amount must be a positive number");
+      setUsdValue(0); // Reset USD value if invalid
+    }
+  };
+  
+  // Sync conversion when either amount or conversionRate changes
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const convertedValue = parseFloat(amount.replace(/,/g, '')) * conversionRate;
+      setUsdValue(parseFloat(convertedValue.toFixed(2)));
+    } else {
       setUsdValue(0);
     }
-    useEffect(() => {
-      if (amount && conversionRate) {
-        const convertedValue = parseFloat(amount) * conversionRate;
-        setUsdValue(convertedValue);
-      } else {
-        setUsdValue(0);
-      }
-    }, [amount, conversionRate]);
-  };
+  }, [amount, conversionRate]);
+  console.log("borowableasset",borrowableAsset)
+  // Handle max button click to set max amount
+  // Function to handle max button click
+const handleMaxClick = () => {
+  console.log("borrowableAsset", borrowableAsset); // Log to verify value
 
-  const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableAsset.toFixed(8)).toString();
-    updateAmountAndUsdValue(maxAmount);
-  };
+  // Ensure that borrowableAsset is a number, then convert to string
+  const maxAmount = parseFloat(borrowableAsset).toString();
+  setAmount(maxAmount.toString());
+  // Pass the max amount to the function that updates the values
+  updateAmountAndUsdValue(maxAmount);
+};
+
+  
+  
   return (
     <>
       {isVisible && (
@@ -303,16 +359,14 @@ const Borrow = ({
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-[50%]">
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    step="0.00000001"
-                    disabled={availableBorrow === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100  rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
-                    min="0"
-                  />
+                <input
+  type="text" // Use text input to allow formatting
+  value={amount}
+  onChange={handleAmountChange}
+  disabled={supplyBalance === 0}
+  className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+  placeholder="Enter Amount"
+/>
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "$0.00 USD"}
                   </p>

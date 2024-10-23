@@ -6,7 +6,7 @@ import testnetReducer from "./reducers/testnetReducer";
 import feeReducer from "./reducers/feeReducer";
 import ledgerReducer from "./reducers/ledgerRedcuer";
 import assetReducer from "./reducers/assetReducer";
-
+import toggleReducer from "./reducers/toggleReducer";
 export const store = configureStore({
     reducer: {
         user: userReducer,
@@ -16,6 +16,7 @@ export const store = configureStore({
         fees: feeReducer ,
         ledger: ledgerReducer,
         assets: assetReducer,  
+        toggle: toggleReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

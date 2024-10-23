@@ -101,9 +101,21 @@ impl SupplyLogic {
         let liquidity_taken=0;
         let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,usd_amount , liquidity_taken).await;
                
-
+       
         ic_cdk::println!("Interest rates updated successfully");
         
+        if let Some(userlist) = &mut reserve_data.userlist {
+            
+            if !userlist.iter().any(|(principal, _)| principal == &user_principal.to_string()) {
+                userlist.push((user_principal.to_string(), true));
+            }
+        } else {
+        
+            reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
+        }
+        
+        ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
+
         mutate_state(|state| {
                     let asset_index = &mut state.asset_index;
                     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
@@ -140,6 +152,7 @@ impl SupplyLogic {
             Ok(new_balance) => {
                 println!("Asset transfer from user to backend canister executed successfully");
                 // ----------- Update logic here -------------
+                
                 let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data, usd_amount.clone()).await;
                 
         
@@ -264,6 +277,7 @@ impl SupplyLogic {
         // )
         // .await;
         // ic_cdk::println!("Withdraw validated successfully");
+        
 
         reserve_data.total_supply-=usd_amount;
 

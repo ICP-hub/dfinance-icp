@@ -27,6 +27,7 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -65,42 +66,73 @@ const SupplyPopup = ({
   }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value;
-
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-
-      if (decimalPart.length > 8) {
-        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount;
-      }
+    // Get the input value and remove commas for processing
+    let inputAmount = e.target.value.replace(/,/g, '');
+  
+    // Allow only numbers and decimals
+    if (!/^\d*\.?\d*$/.test(inputAmount)) {
+      return; // If invalid input, do nothing
     }
-    updateAmountAndUsdValue(inputAmount);
-  };
-
-  const updateAmountAndUsdValue = (inputAmount) => {
+  
+    // Convert inputAmount to a number for comparison with supplyBalance
     const numericAmount = parseFloat(inputAmount);
-
-    if (!isNaN(numericAmount) && numericAmount >= 0 && supplyBalance >= 0) {
+  
+    // Prevent the user from typing an amount greater than the supplyBalance
+    if (numericAmount > supplyBalance) {
+      // Do not update the input field or the state if the value exceeds supplyBalance
+      setError(`Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString('en-US')}`);
+      return;
+    } else {
+      setError(''); // Clear any previous error
+    }
+  
+    // Split the integer and decimal parts, if applicable
+    let formattedAmount;
+    if (inputAmount.includes('.')) {
+      const [integerPart, decimalPart] = inputAmount.split('.');
+  
+      // Format the integer part with commas and limit decimal places to 8 digits
+      formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart.slice(0, 8)}`;
+    } else {
+      // If no decimal, format the integer part with commas
+      formattedAmount = parseInt(inputAmount).toLocaleString('en-US');
+    }
+  
+    // Update the input field value with the formatted number (with commas)
+    setAmount(formattedAmount); // Set the formatted amount in the state
+  
+    // Pass the numeric value (without commas) for internal calculations
+    updateAmountAndUsdValue(inputAmount); // Pass raw numeric value for calculations
+  };
+  
+  const updateAmountAndUsdValue = (inputAmount) => {
+    // Ensure that the numeric value is used for calculations (no commas)
+    const numericAmount = parseFloat(inputAmount.replace(/,/g, ''));
+  
+    // Handle the case when the input is cleared (empty value)
+    if (inputAmount === "") {
+      setAmount(''); // Clear the amount in state
+      setUsdValue(0); // Reset USD value
+      return;
+    }
+  
+    if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
         const convertedValue = numericAmount * conversionRate;
         setUsdValue(parseFloat(convertedValue.toFixed(2)));
-        setAmount(inputAmount);
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
       }
-    } else if (inputAmount === "") {
-      setAmount("");
-      setError("");
     } else {
       setError("Amount must be a positive number");
     }
   };
-
+  
+  
   useEffect(() => {
     if (amount && conversionRate) {
-      const convertedValue = parseFloat(amount) * conversionRate;
+      const convertedValue = parseFloat(amount.replace(/,/g, '')) * conversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
@@ -121,8 +153,8 @@ const SupplyPopup = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     }
-    const safeAmount = Number(amount) || 0;
-    let amountAsNat64 = Math.round(amount * Math.pow(10, 8));
+    const safeAmount = Number(amount.replace(/,/g, '')) || 0;
+    let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
     console.log("Amount as nat64:", amountAsNat64);
     const scaledAmount = amountAsNat64;
 
@@ -171,11 +203,14 @@ const SupplyPopup = ({
   };
 
   const isCollateral = true;
-  const safeAmount = Number(amount) || 0;
-  let amountAsNat64 = Math.round(amount * Math.pow(10, 8));
+  const safeAmount = Number((amount || '').replace(/,/g, '')) || 0; // Ensure amount is not null
+let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
 
-  console.log("Amount as nat64:", amountAsNat64);
-  const scaledAmount = amountAsNat64;
+console.log("Amount as nat64:", amountAsNat64);
+
+const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
+
+  
 
   const handleSupplyETH = async () => {
     try {
@@ -337,9 +372,14 @@ const SupplyPopup = ({
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleMaxClick = () => {
-    const maxAmount = supplyBalance.toString();
-    updateAmountAndUsdValue(maxAmount);
+    const maxAmount = supplyBalance.toFixed(8); 
+    const [integerPart, decimalPart] = maxAmount.split('.');
+    const formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart}`;
+    setAmount(formattedAmount);
+    updateAmountAndUsdValue(maxAmount); 
   };
+  
+  
 
   return (
     <>
@@ -353,16 +393,16 @@ const SupplyPopup = ({
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="w-[50%]">
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    step="0.00000001" // This allows input up to 8 decimal places
-                    min="0"
-                    disabled={supplyBalance === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2  w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
-                  />
+                <input
+  type="text" // Use text input to allow formatting
+  value={amount}
+  onChange={handleAmountChange}
+  disabled={supplyBalance === 0}
+  className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+  placeholder="Enter Amount"
+/>
+
+
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {

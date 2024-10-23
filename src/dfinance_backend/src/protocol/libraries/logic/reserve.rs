@@ -308,7 +308,7 @@ pub async fn update_interest_rates(
             reserve_cache.reserve_factor,              // InterestRateParams struct
            
         );
-        reserve_data.total_borrowed = total_debt;
+        reserve_data.total_borrowed = total_borrowed;
         reserve_data.total_supply= total_supply;
         reserve_data.current_liquidity_rate = next_liquidity_rate;
         reserve_data.borrow_rate = next_debt_rate;

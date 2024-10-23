@@ -181,7 +181,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
     const transferfee = BigInt(100);
     // Convert amount and transferFee to numbers and add them
-    const supplyAmount = BigInt(Math.floor(amountToRepay));
+    const supplyAmount = BigInt(amountToRepay.toFixed(8) * 100000000);
     const totalAmount = supplyAmount + transferfee;
 
     try {

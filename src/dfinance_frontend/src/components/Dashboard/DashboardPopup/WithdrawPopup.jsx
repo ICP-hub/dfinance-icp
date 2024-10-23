@@ -213,9 +213,12 @@ const scaledAmount = amountAsNat64; // Use scaled amount for further calculation
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv * 100 >= reserveliquidationThreshold) {
+    if (ltv * 100 >= liquidationThreshold ){
+      toast.info("LTV Exceeded!");
+    }
+    if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
       setIsButtonDisabled(true);
-      toast.info(" LTV Exceeded!");
+      
     } else {
       setIsButtonDisabled(false);
     }

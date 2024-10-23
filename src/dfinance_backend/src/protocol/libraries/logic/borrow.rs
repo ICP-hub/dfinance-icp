@@ -1,7 +1,7 @@
 use crate::api::functions::{asset_transfer, asset_transfer_from};
 use crate::api::state_handler::*;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::protocol::libraries::logic::reserve;
+use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 // use crate::protocol::libraries::logic::validation::ValidationLogic;
@@ -15,7 +15,6 @@ use dotenv::dotenv;
 // -------------------------------------
 
 pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> {
-  
     ic_cdk::println!("Starting execute_borrow with params: {:?}", params);
 
     // Fetched canister ids, user principal and amount
@@ -112,31 +111,30 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         liquidity_added,
         usd_amount.clone(),
     );
-    let liquidity_added=0;
-    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount).await;
+    let liquidity_added = 0;
+    let _ = reserve::update_interest_rates(
+        &mut reserve_data,
+        &mut reserve_cache,
+        liquidity_added,
+        usd_amount,
+    )
+    .await;
     ic_cdk::println!("Interest rates updated successfully");
-    // *&mut reserve_data.total_borrowed+=usd_amount;  
+    // *&mut reserve_data.total_borrowed+=usd_amount;
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-});
-    // Minting debttoken
-    match asset_transfer(
+    });
+
+    // ----------- Update logic here -------------
+    let _ = UpdateLogic::update_user_data_borrow(
         user_principal,
-        debttoken_canister_id,
-        platform_principal,
-        amount_nat.clone(),
+        &reserve_cache,
+        params,
+        &reserve_data,
+        usd_amount,
     )
-    .await
-    {
-        Ok(balance) => {
-            ic_cdk::println!("Debttoken transfer from backend to user executed successfully");
-            balance
-        }
-        Err(err) => {
-            return Err(format!("Minting failed. Error: {:?}", err));
-        }
-    };
+    .await;
 
     // Transfers borrow amount from the pool to the user
     match asset_transfer_from(
@@ -149,20 +147,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     {
         Ok(new_balance) => {
             ic_cdk::println!("Asset transfer from backend to user executed successfully");
-            // ----------- Update logic here -------------
-            let _ = UpdateLogic::update_user_data_borrow(user_principal, params, usd_amount).await;
 
             Ok(new_balance)
         }
         Err(e) => {
-            // Burning debttoken
-            asset_transfer(
-                platform_principal,
-                debttoken_canister_id,
-                user_principal,
-                amount_nat.clone(),
-            )
-            .await?;
             return Err(format!(
                 "Asset transfer failed, burned debttoken. Error: {:?}",
                 e
@@ -280,25 +268,16 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
         let asset_index = &mut state.asset_index;
         asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
     });
-    // Burn debttoken
-    match asset_transfer(
-        platform_principal,
-        debttoken_canister_id,
+
+    // ----------- Update logic here -------------
+    let _ = UpdateLogic::update_user_data_repay(
         user_principal,
-        repay_amount.clone(),
+        &reserve_cache,
+        params.clone(),
+        &reserve_data,
+        params.amount,
     )
-    .await
-    {
-        Ok(balance) => {
-            ic_cdk::println!(
-                "Debttoken Asset transfer from user to backend canister executed successfully"
-            );
-            balance
-        }
-        Err(err) => {
-            return Err(format!("Burn failed. Error: {:?}", err));
-        }
-    };
+    .await;
 
     // Transfers the asset from the user to our backend cansiter
     match asset_transfer_from(
@@ -311,20 +290,9 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     {
         Ok(new_balance) => {
             println!("Asset transfer from user to backend executed successfully");
-            // ----------- Update logic here -------------
-            let _ = UpdateLogic::update_user_data_repay(user_principal, params, usd_amount.clone())
-                .await;
             Ok(new_balance)
         }
         Err(e) => {
-            // Minting debttoken
-            asset_transfer(
-                user_principal,
-                debttoken_canister_id,
-                platform_principal,
-                repay_amount.clone(),
-            )
-            .await?;
             return Err(format!(
                 "Asset transfer failed, minted debttoken. Error: {:?}",
                 e

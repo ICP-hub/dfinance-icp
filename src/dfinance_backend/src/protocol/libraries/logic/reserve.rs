@@ -317,36 +317,48 @@ pub async fn update_interest_rates(
         ic_cdk::println!("reserve_data.total_borrowed: {:?}", reserve_data.total_borrowed);
 
     }
-
+    #[derive(Debug)]
     pub struct UserState {
-        pub adjusted_balance: f64, // the balance adjusted by the liquidity index  //reserve_cache.curr_liquidity_index * total_supply
-        pub last_liquidity_index: f64, // stores the previous liquidity index    //reserve_cache.curr_liqui
+        pub adjusted_balance: u128, // the balance adjusted by the liquidity index  //reserve_cache.curr_liquidity_index * total_supply
+        pub last_liquidity_index: u128, // stores the previous liquidity index    //reserve_cache.curr_liqui
     }
     
    pub async fn mint_scaled(
         user_state: &mut UserState,
-        amount: f64,                     // Incoming amount in f64                     //
-        current_liquidity_index: f64,     // The current liquidity index    //reserve_cache.next_liqui
+        amount: u128,                     // Incoming amount in f64                     //
+        current_liquidity_index: u128,     // The current liquidity index    //reserve_cache.next_liqui
         user_principal: Principal,        // Principal of the user
-        dtoken_canister_principal: Principal, // dToken canister principal
+        token_canister_principal: Principal, // dToken canister principal
         platform_principal: Principal,    // Platform principal
     ) -> Result<(), String> {
+
+        ic_cdk::println!("user state value = {:?}",user_state);
+        ic_cdk::println!("amount value = {}",amount);
+        ic_cdk::println!("current_liquidity_index value = {}",current_liquidity_index);
+        ic_cdk::println!("user_principal value = {}",user_principal);
+        ic_cdk::println!("token_canister_principal value = {}",token_canister_principal);
+        ic_cdk::println!("platform_principal value = {}",platform_principal);
     
         // Calculate the amount to mint adjusted by the liquidity index
-        let adjusted_amount = amount / current_liquidity_index;
-        if adjusted_amount == 0.0 {
+        let adjusted_amount: u128 = amount.scaled_div(current_liquidity_index) ;
+        if adjusted_amount == 0 {
             return Err("Invalid mint amount".to_string());
         }
+
+        ic_cdk::println!("adjusted_amount value = {}",adjusted_amount);
     
         // Calculate interest accrued since the last liquidity index update
-        let balance_increase = (user_state.adjusted_balance * current_liquidity_index)
-            - (user_state.adjusted_balance * user_state.last_liquidity_index);
-    
+        let balance_increase = (user_state.adjusted_balance.scaled_mul(current_liquidity_index))
+            - (user_state.adjusted_balance.scaled_mul(user_state.last_liquidity_index));
+
+            
         // Update user's adjusted balance with the new deposit and interest
         user_state.adjusted_balance += adjusted_amount + balance_increase;
     
         // Update the user's last liquidity index
         user_state.last_liquidity_index = current_liquidity_index;
+
+        ic_cdk::println!("updated user state value = {:?}",user_state);
     
         // Convert adjusted_amount and balance_increase to Nat (you need to use integer representation)
         let newmint = adjusted_amount as u128; // Scale it up to represent integer amount
@@ -354,7 +366,7 @@ pub async fn update_interest_rates(
         // Perform token transfer to the user with the newly minted aTokens
         match asset_transfer(
             user_principal,
-            dtoken_canister_principal,
+            token_canister_principal,
             platform_principal,
             Nat::from(newmint), // Transfer the total minted amount including the interest
         )
@@ -369,3 +381,65 @@ pub async fn update_interest_rates(
             }
         }
     }
+
+
+    pub async fn burn_scaled(
+        user_state: &mut UserState,
+        amount: u128,                     // Incoming amount in f64
+        current_liquidity_index: u128,    // The current liquidity index
+        user_principal: Principal,       // Principal of the user
+        token_canister_principal: Principal, // dToken canister principal
+        platform_principal: Principal,   // Platform principal
+    ) -> Result<(), String> {
+
+        ic_cdk::println!("user state value = {:?}",user_state);
+        ic_cdk::println!("amount value = {}",amount);
+        ic_cdk::println!("current_liquidity_index value = {}",current_liquidity_index);
+        ic_cdk::println!("user_principal value = {}",user_principal);
+        ic_cdk::println!("token_canister_principal value = {}",token_canister_principal);
+        ic_cdk::println!("platform_principal value = {}",platform_principal);
+    
+        // Calculate the amount to burn adjusted by the liquidity index
+        let adjusted_amount = amount.scaled_div(current_liquidity_index);
+
+        if adjusted_amount == 0 {
+            return Err("Invalid burn amount".to_string());
+        }
+    
+        // Calculate interest accrued since the last liquidity index update
+        let balance_increase = (user_state.adjusted_balance.scaled_mul(current_liquidity_index))
+            - (user_state.adjusted_balance.scaled_mul(user_state.last_liquidity_index));
+    
+        // Ensure user has enough balance to burn
+        if adjusted_amount > user_state.adjusted_balance + balance_increase {
+            return Err("Insufficient balance to burn".to_string());
+        }
+    
+        // Update user's adjusted balance by subtracting the burn amount
+        user_state.adjusted_balance -= adjusted_amount;
+    
+        // Update the user's last liquidity index
+        user_state.last_liquidity_index = current_liquidity_index;
+    
+        // Convert adjusted_amount to Nat (you need to use integer representation)
+        let burn_amount = adjusted_amount as u128; // Scale it up to represent integer amount
+    
+        // Perform token transfer from the user to the platform to burn the tokens
+        match asset_transfer(
+            user_principal,
+            platform_principal,
+            token_canister_principal,
+            Nat::from(burn_amount), // Transfer the total burnt amount
+        )
+        .await
+        {
+            Ok(_) => {
+                ic_cdk::println!("Dtoken transfer from user to backend executed successfully");
+                Ok(())
+            }
+            Err(err) => {
+                Err(format!("Burning failed. Error: {:?}", err))
+            }
+        }
+    }
+    

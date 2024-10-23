@@ -1,3 +1,5 @@
+use std::string;
+
 use candid::types::principal;
 use candid::Nat;
 use candid::Principal;
@@ -7,6 +9,7 @@ use declarations::assets::{
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
+use implementations::reserve;
 mod api;
 mod constants;
 pub mod declarations;
@@ -20,7 +23,7 @@ use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow;
-use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
+// use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
 
@@ -52,32 +55,31 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
     }
 }
 
-
-#[update]
-async fn liquidation_call(
-    asset: String,
-    collateral_asset: String,
-    amount: u64,
-    on_behalf_of: String,
-) -> Result<(), String> {
-    match LiquidationLogic::execute_liquidation(
-        asset,
-        collateral_asset,
-        amount as u128,
-        on_behalf_of,
-    )
-    .await
-    {
-        Ok(_) => {
-            ic_cdk::println!("execute_liquidation function called successfully");
-            Ok(())
-        }
-        Err(e) => {
-            ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
-            Err(e)
-        }
-    }
-}
+// #[update]
+// async fn liquidation_call(
+//     asset: String,
+//     collateral_asset: String,
+//     amount: u64,
+//     on_behalf_of: String,
+// ) -> Result<(), String> {
+//     match LiquidationLogic::execute_liquidation(
+//         asset,
+//         collateral_asset,
+//         amount as u128,
+//         on_behalf_of,
+//     )
+//     .await
+//     {
+//         Ok(_) => {
+//             ic_cdk::println!("execute_liquidation function called successfully");
+//             Ok(())
+//         }
+//         Err(e) => {
+//             ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
+//             Err(e)
+//         }
+//     }
+// }
 // Function to fetch the reserve-data based on the asset
 #[query]
 fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
@@ -236,7 +238,49 @@ pub async fn withdraw(
     }
 }
 
+// #[update]
+// pub fn login() -> Result<(), string>{
+//     let user_principal = ic_cdk::caller();
 
+//     // fetch user data.
+//     let user_data_result = mutate_state(|state| {
+//         let user_profile_data = &mut state.user_profile;
+//         user_profile_data
+//             .get(&user_principal)
+//             .map(|user| user.0.clone())
+//             .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+//     });
+
+//     let user_data = match user_data_result {
+//         Ok(data) => data,
+//         Err(err) => return Err(err),
+//     };
+
+//     let user_reserve = match user_data.reserves {
+//         Some(ref mut data) => data.iter_mut().find(|(reserve_name, _)| {
+//             reserve_name == &user_principal.to_string() // Compare the reserve name with user_principal
+//         }),
+        
+//         None => {
+//             return Err("not able to find reserves field of the user {}".to_string());
+//         }
+//     };
+
+//     if let Some((_, reserve_data)) = user_reserve {
+//         let current_timestamp = ic_cdk::api::time() / 1_000_000_000;
+
+//         ic_cdk::println!("Current timestamp: {}", current_timestamp);
+
+//         if reserve_data.last_update_timestamp == current_timestamp {
+//             return Err("last and current timestamp both are same".to_string());
+//         }
+
+//         reserve_data.last_update_timestamp = current_timestamp;
+//     }else {
+//         return Err("last and current timestamp both are same".to_string());
+//     }
+//     Ok(())
+// }
 
 //approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve
 //call approve transfer function -- function.rs

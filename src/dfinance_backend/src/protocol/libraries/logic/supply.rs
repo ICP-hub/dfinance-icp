@@ -113,50 +113,15 @@ impl SupplyLogic {
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
 
-        // stuct replica of the userstate.
-        let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index as f64
-                * reserve_data.total_supply as f64,
-            last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
-        };
-
-        // function to update or mint tokens to keep track of exact numbers of tokens.
-        let minted_result = mint_scaled(
-            &mut update_user_state,
-            params.amount as f64,
-            reserve_cache.next_liquidity_index as f64,
+        // ----------- Update logic here -------------
+        let _ = UpdateLogic::update_user_data_supply(
             user_principal,
-            dtoken_canister_principal,
-            platform_principal,
+            &reserve_cache,
+            params.clone(),
+            &reserve_data,
+            usd_amount.clone(),
         )
         .await;
-
-        match minted_result {
-            Ok(()) => {
-                println!("i think things are working properly");
-            }
-            Err(e) => {
-                panic!("Get error in minting the dtokens {:?}", e);
-            }
-        }
-
-        // Minting dtoken
-        match asset_transfer(
-            user_principal,
-            dtoken_canister_principal,
-            platform_principal,
-            amount_nat.clone(),
-        )
-        .await
-        {
-            Ok(balance) => {
-                ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
-                balance
-            }
-            Err(err) => {
-                return Err(format!("Minting failed. Error: {:?}", err));
-            }
-        };
 
         // Transfers the asset from the user to our backend cansiter
         match asset_transfer_from(
@@ -169,26 +134,9 @@ impl SupplyLogic {
         {
             Ok(new_balance) => {
                 println!("Asset transfer from user to backend canister executed successfully");
-                // ----------- Update logic here -------------
-                let _ = UpdateLogic::update_user_data_supply(
-                    user_principal,
-                    params,
-                    &reserve_data,
-                    usd_amount.clone(),
-                )
-                .await;
-
                 Ok(new_balance)
             }
             Err(e) => {
-                // Burning dtoken
-                asset_transfer(
-                    platform_principal,
-                    dtoken_canister_principal,
-                    user_principal,
-                    amount_nat.clone(),
-                )
-                .await?;
                 return Err(format!(
                     "Asset transfer failed, burned dtoken. Error: {:?}",
                     e
@@ -307,25 +255,15 @@ impl SupplyLogic {
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
 
-        // Burn dtoken
-        match asset_transfer(
-            platform_principal,
-            dtoken_canister_principal,
+        // ----------- Update logic here -------------
+        let _ = UpdateLogic::update_user_data_withdraw(
             user_principal,
-            withdraw_amount.clone(),
+            &reserve_cache,
+            params,
+            &reserve_data,
+            usd_amount.clone(),
         )
-        .await
-        {
-            Ok(balance) => {
-                ic_cdk::println!(
-                    "Dtoken Asset transfer from user to backend canister executed successfully"
-                );
-                balance
-            }
-            Err(err) => {
-                return Err(format!("Burn failed. Error: {:?}", err));
-            }
-        };
+        .await;
 
         // Transfers the asset from the user to our backend cansiter
         match asset_transfer_from(
@@ -338,27 +276,10 @@ impl SupplyLogic {
         {
             Ok(new_balance) => {
                 println!("Asset transfer from backend to user executed successfully");
-                // ----------- Update logic here -------------
-                let _ = UpdateLogic::update_user_data_withdraw(
-                    user_principal,
-                    params,
-                    &reserve_data,
-                    usd_amount.clone(),
-                )
-                .await;
-
 
                 Ok(new_balance)
             }
             Err(e) => {
-                // Minted dtoken
-                asset_transfer(
-                    user_principal,
-                    dtoken_canister_principal,
-                    platform_principal,
-                    withdraw_amount.clone(),
-                )
-                .await?;
                 return Err(format!(
                     "Asset transfer failed, minted dtoken. Error: {:?}",
                     e

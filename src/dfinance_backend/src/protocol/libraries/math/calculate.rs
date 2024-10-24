@@ -3,7 +3,6 @@ use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateRes
 
 use super::math_utils::ScalingMath;
 
-
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
     pub total_collateral_value: u128,
@@ -16,44 +15,57 @@ pub fn calculate_health_factor(position: &UserPosition) -> u128 {
     }
 
     (position.total_collateral_value * position.liquidation_threshold)
-        / position.total_borrowed_value                                   
+        / position.total_borrowed_value
 }
 
 pub fn calculate_ltv(position: &UserPosition) -> u128 {
     if position.total_collateral_value == 0 {
-        return 0; 
+        return 0;
     }
 
-    position.total_borrowed_value.scaled_div(position.total_collateral_value)
+    position
+        .total_borrowed_value
+        .scaled_div(position.total_collateral_value)
 }
 
 pub fn cal_average_threshold(
-    amount: u128, 
+    amount: u128,
     amount_taken: u128,
-    reserve_liq_thres: u128, 
-    user_total_collateral: u128, 
-    user_liq_thres: u128
+    reserve_liq_thres: u128,
+    user_total_collateral: u128,
+    user_liq_thres: u128,
 ) -> u128 {
-    
-    let result = ((amount.scaled_mul(reserve_liq_thres)) + (user_total_collateral.scaled_mul(user_liq_thres)) - (amount_taken.scaled_mul(reserve_liq_thres))).scaled_div(amount + user_total_collateral - amount_taken);
+    let numerator = (amount.scaled_mul(reserve_liq_thres))
+        + (user_total_collateral.scaled_mul(user_liq_thres))
+        - (amount_taken.scaled_mul(reserve_liq_thres));
+
+    let denominator = amount + user_total_collateral - amount_taken;
+
+    if denominator == 0 {
+        return 0u128;
+    }
+
+    let result = numerator.scaled_div(denominator);
     result
 }
 
-
 pub fn cal_average_ltv(
-    amount: u128, 
+    amount: u128,
     amount_taken: u128,
-    reserve_ltv: u128, 
-    user_total_collateral: u128, 
-    user_max_ltv: u128
+    reserve_ltv: u128,
+    user_total_collateral: u128,
+    user_max_ltv: u128,
 ) -> u128 {
-    
-    let result = ((amount.scaled_mul(reserve_ltv)) + (user_total_collateral.scaled_mul(user_max_ltv)) - (amount_taken.scaled_mul(reserve_ltv))).scaled_div(amount + user_total_collateral - amount_taken);
+    if user_total_collateral-amount_taken == 0 {
+        return 0;
+    }
+    let result = ((amount.scaled_mul(reserve_ltv))
+        + (user_total_collateral.scaled_mul(user_max_ltv))
+        - (amount_taken.scaled_mul(reserve_ltv)))
+    .scaled_div(amount + user_total_collateral - amount_taken);
     result
 }
 // ------------ Real time asset data using XRC ------------
-
-
 
 #[ic_cdk_macros::update]
 pub async fn get_exchange_rates(
@@ -102,54 +114,52 @@ pub async fn get_exchange_rates(
         },
     };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
-            ic_cdk::api::call::call_with_payment128(
-                // i am changing this id.
-                Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-                // Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
-                "get_exchange_rate",
-                (args,),
-                1_000_000_000,
-            )
-            .await;
-    
-        match res {
-            Ok(res_value) => match res_value.0 {
-                GetExchangeRateResult::Ok(v) => {
-                    let quote = v.rate;
-                    let pow = 10usize.pow(v.metadata.decimals);
-                    let exchange_rate = quote  / pow as u64 ;
-    
-                    // Multiplying the exchange rate by the amount
-                    let total_value = (quote as u128 * amount) / 1000000000  ;
-    
-                    // Getting the current time
-                    let time = ic_cdk::api::time();
-    
-                    // Return the total value and the time
-                    Ok((total_value, time))
-                }
-                GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
-            },
-            Err(error) => Err(format!(
-                "Could not get USD/{} Rate - {:?} - {}",
-                base_asset_symbol.clone(),
-                error.0,
-                error.1
-            )),
-        }
-    }
-    
+        ic_cdk::api::call::call_with_payment128(
+            // i am changing this id.
+            Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
+            // Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+            "get_exchange_rate",
+            (args,),
+            1_000_000_000,
+        )
+        .await;
 
+    match res {
+        Ok(res_value) => match res_value.0 {
+            GetExchangeRateResult::Ok(v) => {
+                let quote = v.rate;
+                let pow = 10usize.pow(v.metadata.decimals);
+                let exchange_rate = quote / pow as u64;
+
+                // Multiplying the exchange rate by the amount
+                let total_value = (quote as u128 * amount) / 1000000000;
+
+                // Getting the current time
+                let time = ic_cdk::api::time();
+
+                // Return the total value and the time
+                Ok((total_value, time))
+            }
+            GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
+        },
+        Err(error) => Err(format!(
+            "Could not get USD/{} Rate - {:?} - {}",
+            base_asset_symbol.clone(),
+            error.0,
+            error.1
+        )),
+    }
+}
 
 //  async fn check_and_update_prices() {
 //         ic_cdk::spawn(async {
 //             ASSET_INDEX.with(|asset_index| {
 //                 let mut assets = asset_index.borrow().clone();
-    
+
 //                 for (asset_symbol, reserve_data) in assets.iter_mut() {
 //                     // Fetch the current price using get_exchange_rates
 //                     let current_price_result = get_exchange_rates(asset_symbol.clone(), Some("USD".to_string()), 1u128).await;
-    
+
 //                     match current_price_result {
 //                         Ok((current_price, _timestamp)) => {
 //                             // Compare current and previous prices (assuming `last_update_timestamp` stores the previous price)
@@ -161,7 +171,7 @@ pub async fn get_exchange_rates(
 //                                         update_user_data_for_asset(user_principal, asset_symbol.clone(), current_price).await;
 //                                     }
 //                                 }
-    
+
 //                                 // Update the asset's last price in ReserveData
 //                                 reserve_data.current_liquidity_rate = current_price;
 //                             }
@@ -174,7 +184,7 @@ pub async fn get_exchange_rates(
 //             });
 //         });
 //     }
-    
+
 //     // Function to update user data for a specific asset if the price changes
 //     async fn update_user_data_for_asset(user_principal: Principal, asset_symbol: String, new_price: u128) {
 //         USER_PROFILES.with(|user_profiles| {
@@ -190,29 +200,29 @@ pub async fn get_exchange_rates(
 //             }
 //         });
 //     }
-    
+
 //     // Function to recalculate the health factor based on the new price
 //     fn recalculate_health_factor(user_data: &mut UserData, reserve_data: &mut UserReserveData, new_price: u128) {
 //         // Example calculation of health factor (modify according to your business logic)
 //         let new_health_factor = (reserve_data.asset_supply * new_price) / reserve_data.asset_borrow;
 //         user_data.health_factor = Some(new_health_factor);
-    
+
 //         ic_cdk::println!("Updated health factor for user: {:?}", user_data);
 //     }
-    
+
 //     // Timer initialization
 //     #[init]
 //     fn init() {
 //         start_timer();
 //         ic_cdk::println!("Timer initialized to check and update asset prices every minute.");
 //     }
-    
+
 //     // Reinitialize the timer after upgrade
 //     #[post_upgrade]
 //     fn post_upgrade() {
 //         init();
 //     }
-    
+
 //     // Start the timer to call the function every 1 minute
 //     #[update]
 //     fn start_timer() {
@@ -226,7 +236,7 @@ pub async fn get_exchange_rates(
 //             }
 //         });
 //     }
-    
+
 //     // Stop the timer dynamically
 //     #[update]
 //     fn stop_timer() {
@@ -239,7 +249,7 @@ pub async fn get_exchange_rates(
 //             }
 //         });
 //     }
-    
+
 //     // Query to check if the timer is active
 //     #[query]
 //     fn timer_active() -> String {

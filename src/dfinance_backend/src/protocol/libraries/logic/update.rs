@@ -431,6 +431,7 @@ impl UpdateLogic {
 
             if reserve_data.asset_supply >= params.amount {
                 reserve_data.asset_supply -= params.amount;
+               
                 ic_cdk::println!(
                     "Reduced asset supply for existing reserve: {:?}",
                     reserve_data

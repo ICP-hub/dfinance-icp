@@ -121,7 +121,7 @@ impl SupplyLogic {
                     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
         
-
+        let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data, usd_amount.clone()).await;
         // Minting dtoken
         match asset_transfer(
             user_principal,
@@ -153,7 +153,7 @@ impl SupplyLogic {
                 println!("Asset transfer from user to backend canister executed successfully");
                 // ----------- Update logic here -------------
                 
-                let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data, usd_amount.clone()).await;
+               
                 
         
                 Ok(new_balance)
@@ -279,8 +279,8 @@ impl SupplyLogic {
         // ic_cdk::println!("Withdraw validated successfully");
         
 
-        reserve_data.total_supply-=usd_amount;
-
+        reserve_data.total_supply = (reserve_data.total_supply as i128 -usd_amount as i128).max(0) as u128;
+        
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));

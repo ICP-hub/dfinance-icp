@@ -161,7 +161,7 @@ console.log("toggle status ",currentCollateralStatus )
     const adjustedCollateral = currentCollateralStatus 
     ? totalCollateral - assetSupply // Subtract when collateral is active (disabling)
     : totalCollateral + assetSupply; // Add when collateral is inactive (enabling)
-
+    console.log("adjustedCollateral",adjustedCollateral, totalCollateral);
     const healthFactor = calculateHealthFactor(
       adjustedCollateral, // Use adjusted collateral
       totalDebt,
@@ -197,12 +197,11 @@ console.log("toggle status ",currentCollateralStatus )
     totalDebt,
     liquidationThreshold
   ) => {
-    const amountTaken = 0;
-    const amountAdded = usdValue || 0;
+    // const amountTaken = 0;
+    // const amountAdded = usdValue || 0;
 
     console.log(
-      "amount added",
-      amountAdded,
+      
       "totalCollateral",
       totalCollateral,
       "totalDebt",
@@ -212,11 +211,11 @@ console.log("toggle status ",currentCollateralStatus )
     );
 
     const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
+      parseFloat(totalCollateral);
+    const totalDeptValue = parseFloat(totalDebt);
     console.log("totalCollateralValue", totalCollateralValue);
     console.log("totalDeptValue", totalDeptValue);
-    console.log("amountAdded", amountAdded);
+    // console.log("amountAdded", amountAdded);
     console.log("liquidationThreshold", liquidationThreshold);
     console.log("totalDebt", totalDebt);
     if (totalDeptValue === 0) {

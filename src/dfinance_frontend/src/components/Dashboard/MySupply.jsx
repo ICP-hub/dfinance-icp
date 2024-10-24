@@ -280,21 +280,22 @@ const MySupply = () => {
             setIsModalOpen={setIsModalOpen}
             children={
               <SupplyPopup
-                isModalOpen={isModalOpen.isOpen}
-                handleModalOpen={handleModalOpen}
-                asset={isModalOpen.asset}
-                image={isModalOpen.image}
-                balance={isModalOpen.balance}
-                supplyRateAPR={isModalOpen.supplyRateAPR}
-                liquidationThreshold={isModalOpen.liquidationThreshold}
-                reserveliquidationThreshold={
-                  isModalOpen.reserveliquidationThreshold
-                }
-                assetSupply={isModalOpen.assetSupply}
-                assetBorrow={isModalOpen.assetBorrow}
-                totalCollateral={isModalOpen.totalCollateral}
-                totalDebt={isModalOpen.totalDebt}
-                setIsModalOpen={setIsModalOpen}
+              isModalOpen={isModalOpen.isOpen}
+              handleModalOpen={handleModalOpen}
+              asset={isModalOpen.asset}
+              image={isModalOpen.image}
+              supplyRateAPR={isModalOpen.supplyRateAPR}
+              balance={isModalOpen.balance}
+              liquidationThreshold={isModalOpen.liquidationThreshold}
+              reserveliquidationThreshold={
+                isModalOpen.reserveliquidationThreshold
+              }
+              assetSupply={isModalOpen.assetSupply}
+              assetBorrow={isModalOpen.assetBorrow}
+              totalCollateral={isModalOpen.totalCollateral}
+              totalDebt={isModalOpen.totalDebt}
+              currentCollateralStatus ={isModalOpen.currentCollateralStatus }
+              setIsModalOpen={setIsModalOpen}
               />
             }
           />
@@ -806,6 +807,9 @@ const MySupply = () => {
                                         Number(
                                           reserveData?.[1]?.asset_borrow || 0n
                                         ) / 100000000;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+
+                                          console.log("currentCollateralStatus in on change", currentCollateralStatus); 
                                       const totalCollateral =
                                         parseFloat(
                                           Number(
@@ -838,7 +842,8 @@ const MySupply = () => {
                                         assetSupply,
                                         assetBorrow,
                                         totalCollateral,
-                                        totalDebt
+                                        totalDebt,
+                                        currentCollateralStatus
                                       );
                                     }}
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -1146,7 +1151,9 @@ const MySupply = () => {
                                             Number(userData?.Ok?.total_debt) /
                                             100000000
                                           ) || 0;
+                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
+                                          console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
                                         handleModalOpen(
                                           "supply",
                                           asset,
@@ -1161,7 +1168,8 @@ const MySupply = () => {
                                           assetSupply,
                                           assetBorrow,
                                           totalCollateral,
-                                          totalDebt
+                                          totalDebt,
+                                          currentCollateralStatus 
                                         );
                                       }}
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
@@ -1383,6 +1391,9 @@ const MySupply = () => {
                                     Number(
                                       reserveData?.[1]?.asset_borrow || 0n
                                     ) / 100000000;
+                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+
+                                          console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
                                   const totalCollateral =
                                     Number(
                                       userData?.Ok?.total_collateral || 0n
@@ -1420,7 +1431,8 @@ const MySupply = () => {
                                     assetSupply,
                                     assetBorrow,
                                     totalCollateral,
-                                    totalDebt
+                                    totalDebt,
+                                    currentCollateralStatus 
                                   );
                                 }}
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -1581,6 +1593,9 @@ const MySupply = () => {
                                       Number(
                                         reserveData?.[1]?.asset_supply || 0n
                                       ) / 100000000;
+                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+
+                                          console.log("currentCollateralStatus in on change", currentCollateralStatus); 
                                     const totalCollateral =
                                       parseFloat(
                                         Number(userData?.Ok?.total_collateral) /
@@ -1621,7 +1636,8 @@ const MySupply = () => {
                                       assetSupply,
                                       assetBorrow,
                                       totalCollateral,
-                                      totalDebt
+                                      totalDebt,
+                                      currentCollateralStatus ,
                                     );
                                   }}
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"

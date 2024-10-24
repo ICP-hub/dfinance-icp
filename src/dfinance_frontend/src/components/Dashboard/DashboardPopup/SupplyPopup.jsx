@@ -22,12 +22,13 @@ const SupplyPopup = ({
   assetBorrow,
   totalCollateral,
   totalDebt,
+  currentCollateralStatus ,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
-  onLoadingChange,
+  onLoadingChange
 }) => {
-
+console.log("currentColletralStatus",currentCollateralStatus)
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -231,7 +232,7 @@ const scaledAmount = amountAsNat64; // Use scaled amount for further calculation
       console.log("scaledAmount", scaledAmount);
       console.log("Backend actor", backendActor);
 
-      const sup = await backendActor.supply(asset, scaledAmount, true);
+      const sup = await backendActor.supply(asset, scaledAmount,  currentCollateralStatus );
       console.log("Supply", sup);
 
       setIsPaymentDone(true);
@@ -459,10 +460,10 @@ const scaledAmount = amountAsNat64; // Use scaled amount for further calculation
                   <p>Collateralization</p>
                   <p
                     className={`font-semibold ${
-                      isCollateral ? "text-green-500" : "text-red-500"
+                       currentCollateralStatus  ? "text-green-500" : "text-red-500"
                     }`}
                   >
-                    {isCollateral ? "Enabled" : "Disabled"}
+                    { currentCollateralStatus  ? "Enabled" : "Disabled"}
                   </p>
                 </div>
                 <div className="w-full flex flex-col my-1">

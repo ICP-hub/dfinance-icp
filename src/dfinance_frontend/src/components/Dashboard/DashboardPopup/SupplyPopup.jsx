@@ -22,13 +22,13 @@ const SupplyPopup = ({
   assetBorrow,
   totalCollateral,
   totalDebt,
-  currentCollateralStatus ,
+  currentCollateralStatus,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
   onLoadingChange
 }) => {
-console.log("currentColletralStatus",currentCollateralStatus)
+  console.log("currentColletralStatus", currentCollateralStatus)
   const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -232,8 +232,8 @@ console.log("currentColletralStatus",currentCollateralStatus)
       console.log("amountAsNat64", amountAsNat64);
       console.log("scaledAmount", scaledAmount);
       console.log("Backend actor", backendActor);
-console.log(" current colletral status while supply ",currentCollateralStatus)
-      const sup = await backendActor.supply(asset, scaledAmount,  currentCollateralStatus );
+      console.log(" current colletral status while supply ", currentCollateralStatus)
+      const sup = await backendActor.supply(asset, scaledAmount, currentCollateralStatus);
       console.log("Supply", sup);
 
       setIsPaymentDone(true);
@@ -315,7 +315,7 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
 
     const amountTaken = 0;
     const amountAdded = collateral ? (usdValue || 0) : 0;
-    
+
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
@@ -433,8 +433,8 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
                       if (supplyBalance > 0) {
@@ -467,11 +467,10 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
                   <p
-                    className={`font-semibold ${
-                       currentCollateralStatus  ? "text-green-500" : "text-red-500"
-                    }`}
+                    className={`font-semibold ${currentCollateralStatus ? "text-green-500" : "text-red-500"
+                      }`}
                   >
-                    { currentCollateralStatus  ? "Enabled" : "Disabled"}
+                    {currentCollateralStatus ? "Enabled" : "Disabled"}
                   </p>
                 </div>
                 <div className="w-full flex flex-col my-1">
@@ -480,14 +479,14 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
                     <p>
                       <span
                         className={`${healthFactorBackend > 3
-                            ? "text-green-500"
-                            : healthFactorBackend <= 1
-                              ? "text-red-500"
-                              : healthFactorBackend <= 1.5
-                                ? "text-orange-600"
-                                : healthFactorBackend <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {healthFactorBackend > 100
@@ -497,14 +496,14 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${value > 3
-                            ? "text-green-500"
-                            : value <= 1
-                              ? "text-red-500"
-                              : value <= 1.5
-                                ? "text-orange-600"
-                                : value <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                              ? "text-orange-600"
+                              : value <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -563,8 +562,8 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
           <button
             onClick={handleClick}
             className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+              ? "opacity-50 cursor-not-allowed"
+              : ""
               }`}
             disabled={isLoading || amount <= 0 || null}
           >

@@ -275,7 +275,7 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
     <>
       {isVisible && (
         <div className="supply-popup" ref={modalRef}>
-          <h1 className="font-normal text-xl">Review tx {asset}</h1>
+          <h1 className="font-normal text-xl">Review {asset}</h1>
           <div className="flex flex-col gap-2 mt-5 text-sm">
           {currentCollateralStatus  ? (
               <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">

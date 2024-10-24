@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState ,useRef } from "react";
 import { X } from "lucide-react";
 import FaucetPayment from "./FaucetPayment";
 import { useSelector } from "react-redux";
@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const { backendActor } = useAuth();
-
+  const modalRef = useRef(null);
   const [faucetBTC, setFaucetBTC] = useState(0);
   const [faucetETH, setFaucetETH] = useState(0);
   const [faucetUSDC, setFaucetUSDC] = useState(0);
@@ -104,7 +104,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const handleAmountChange = (e) => {
     // Get the input value and remove commas for processing
     let inputAmount = e.target.value.replace(/,/g, "");
-
+    
+    if (inputAmount === "") {
+      setAmount(""); // Clear the amount if input is empty
+      return;
+    }
     // Allow only numbers and decimals
     if (!/^\d*\.?\d*$/.test(inputAmount)) {
       return; // If invalid input, do nothing
@@ -178,7 +182,21 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       console.error("Error:", error);
     }
   };
+  const handleClickOutside = (event) => {
+    if (modalRef.current && !modalRef.current.contains(event.target)) {
+      handleClose();
+    }
+  };
 
+  useEffect(() => {
+    // Add event listener for clicks
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Cleanup event listener on component unmount
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   const handleClose = () => {
     setShowFaucetPayment(false);
     onClose();
@@ -192,7 +210,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
   return (
     <>
+    
       {!showFaucetPayment && (
+         <div className="modal" ref={modalRef}>
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl rounded-[1rem] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-7 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="flex justify-between items-center mb-4">
             <h1 className="font-semibold text-xl">Faucet {asset}</h1>
@@ -256,6 +276,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               Faucet {asset}
             </button>
           </div>
+        </div>
         </div>
       )}
       {showFaucetPayment && (

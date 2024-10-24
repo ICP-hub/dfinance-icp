@@ -28,27 +28,45 @@ pub fn calculate_ltv(position: &UserPosition) -> u128 {
 }
 
 pub fn cal_average_threshold(
-    amount: u128, 
+    amount: u128,
     amount_taken: u128,
-    reserve_liq_thres: u128, 
-    user_total_collateral: u128, 
-    user_liq_thres: u128
+    reserve_liq_thres: u128,
+    user_total_collateral: u128,
+    user_liq_thres: u128,
 ) -> u128 {
-    
-    let result = ((amount.scaled_mul(reserve_liq_thres)) + (user_total_collateral.scaled_mul(user_liq_thres)) - (amount_taken.scaled_mul(reserve_liq_thres))).scaled_div(amount + user_total_collateral - amount_taken);
+    let numerator = (amount.scaled_mul(reserve_liq_thres))
+        + (user_total_collateral.scaled_mul(user_liq_thres))
+        - (amount_taken.scaled_mul(reserve_liq_thres));
+
+    let denominator = amount + user_total_collateral - amount_taken;
+
+    if denominator == 0 {
+        return 0u128;
+    }
+
+    let result = numerator.scaled_div(denominator);
     result
 }
 
-
 pub fn cal_average_ltv(
-    amount: u128, 
+    amount: u128,
     amount_taken: u128,
-    reserve_ltv: u128, 
-    user_total_collateral: u128, 
-    user_max_ltv: u128
+    reserve_ltv: u128,
+    user_total_collateral: u128,
+    user_max_ltv: u128,
 ) -> u128 {
     
-    let result = ((amount.scaled_mul(reserve_ltv)) + (user_total_collateral.scaled_mul(user_max_ltv)) - (amount_taken.scaled_mul(reserve_ltv))).scaled_div(amount + user_total_collateral - amount_taken);
+    let numerator = (amount.scaled_mul(reserve_ltv))
+    + (user_total_collateral.scaled_mul(user_max_ltv))
+    - (amount_taken.scaled_mul(reserve_ltv));
+
+    let denominator = amount + user_total_collateral - amount_taken;
+
+    if denominator == 0 {
+        return 0u128;
+    }
+
+    let result = numerator.scaled_div(denominator);
     result
 }
 // ------------ Real time asset data using XRC ------------

@@ -601,7 +601,20 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(7)
                   : scaledAmount / 100000000
                 : "0"}{" "}
-              {asset}
+              <strong>{asset}</strong>
+            </p>
+            <p>
+              You have received{" "}
+              {scaledAmount / 100000000
+                ? scaledAmount / 100000000 >= 1e-8 &&
+                  scaledAmount / 100000000 < 1e-7
+                  ? Number(scaledAmount / 100000000).toFixed(8)
+                  : scaledAmount / 100000000 >= 1e-7 &&
+                    scaledAmount / 100000000 < 1e-6
+                  ? Number(scaledAmount / 100000000).toFixed(7)
+                  : scaledAmount / 100000000
+                : "0"}{" "}
+              <strong>debt{asset}</strong>
             </p>
             <button
               onClick={handleClosePaymentPopup}

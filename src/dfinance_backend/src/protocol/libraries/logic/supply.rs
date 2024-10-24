@@ -279,7 +279,7 @@ impl SupplyLogic {
         // ic_cdk::println!("Withdraw validated successfully");
         
 
-        reserve_data.total_supply-=usd_amount;
+        reserve_data.total_supply = (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;

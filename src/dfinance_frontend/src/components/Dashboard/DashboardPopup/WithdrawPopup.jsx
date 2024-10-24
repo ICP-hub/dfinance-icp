@@ -253,10 +253,10 @@ const WithdrawPopup = ({
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (ltv * 100 >= liquidationThreshold) {
+    if ((ltv * 100 >= liquidationThreshold) && currentCollateralStatus) {
       toast.info("LTV Exceeded!");
     }
-    if (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) {
+    if ((healthFactor <= 1 || ltv * 100 >= liquidationThreshold) && currentCollateralStatus) {
       setIsButtonDisabled(true);
 
     } else {

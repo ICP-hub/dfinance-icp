@@ -278,7 +278,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
  
-    *&mut reserve_data.total_borrowed-=usd_amount;
+    *&mut reserve_data.total_borrowed = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
     // Validates supply using the reserve_data
     // ValidationLogic::validate_repay(
     //     &reserve_data,

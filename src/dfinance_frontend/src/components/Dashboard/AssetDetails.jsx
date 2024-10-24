@@ -40,13 +40,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 
 const AssetDetails = () => {
-  const {
-    isAuthenticated,
-    login,
-    logout,
-    principal,
-    backendActor,
-  } = useAuth();
+  const { isAuthenticated, login, logout, principal, backendActor } = useAuth();
 
   const location = useLocation();
   const { assetData } = location.state || {};
@@ -62,7 +56,6 @@ const AssetDetails = () => {
   const [liquidationThreshold, setLiquidationThreshold] = useState(null);
   const [canBeCollateral, setCanBeCollateral] = useState(null);
 
-
   useEffect(() => {
     if (assetData?.Ok) {
       console.log("assetData:", assetData?.Ok);
@@ -73,11 +66,14 @@ const AssetDetails = () => {
       setBorrowCap(Number(assetData.Ok.configuration?.borrow_cap) / 100000000);
       setSupplyCap(Number(assetData.Ok.configuration?.supply_cap) / 100000000);
       setLtv(Number(assetData.Ok.configuration?.ltv) / 100000000);
-      setLiquidationBonus(Number(assetData.Ok.configuration?.liquidation_bonus) / 100000000);
+      setLiquidationBonus(
+        Number(assetData.Ok.configuration?.liquidation_bonus) / 100000000
+      );
       setLiquidationThreshold(
         Number(assetData.Ok.configuration?.liquidation_threshold) / 100000000
       );
-      setCanBeCollateral(Number(assetData.Ok.can_be_collateral?.[0])) / 100000000;
+      setCanBeCollateral(Number(assetData.Ok.can_be_collateral?.[0])) /
+        100000000;
     }
   }, [assetData]);
 
@@ -101,7 +97,7 @@ const AssetDetails = () => {
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
-    fetchBalance
+    fetchBalance,
   } = useFetchConversionRate();
 
   const handleWalletConnect = () => {
@@ -173,19 +169,13 @@ const AssetDetails = () => {
 
   const { assetDetailFilter } = useSelector((state) => state.utility);
 
-
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
-
-
-
 
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-
 
   const handleFilter = (value) => {
     setIsFilter(false);
@@ -262,7 +252,9 @@ const AssetDetails = () => {
     }
 
     if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
+      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(
+        2
+      );
       setCkUSDCUsdBalance(balanceInUsd);
     }
 
@@ -270,14 +262,20 @@ const AssetDetails = () => {
       const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
-  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate]);
-
+  }, [
+    ckBTCBalance,
+    ckBTCUsdRate,
+    ckETHBalance,
+    ckETHUsdRate,
+    ckUSDCBalance,
+    ckUSDCUsdRate,
+    ckICPBalance,
+    ckICPUsdRate,
+  ]);
 
   useEffect(() => {
     console.log("Asset ID from URL parameters:", id);
   }, [id]);
-
-
 
   useEffect(() => {
     if (ckBTCBalance !== null) {
@@ -310,7 +308,6 @@ const AssetDetails = () => {
       console.error("No valid asset ID found in URL parameters.");
     }
   }, [id, fetchBalance]);
-
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -365,7 +362,8 @@ const AssetDetails = () => {
     assetSupply,
     assetBorrow,
     totalCollateral,
-    totalDebt
+    totalDebt,
+    currentCollateralStatus
   ) => {
     console.log("Handle modal opened");
     setIsModalOpen({
@@ -381,6 +379,7 @@ const AssetDetails = () => {
       assetBorrow: assetBorrow,
       totalCollateral: totalCollateral,
       totalDebt: totalDebt,
+      currentCollateralStatus: currentCollateralStatus,
     });
   };
 
@@ -409,6 +408,7 @@ const AssetDetails = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
+                currentCollateralStatus={isModalOpen.currentCollateralStatus}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -453,19 +453,19 @@ const AssetDetails = () => {
     id === "ckBTC"
       ? ckBTCBalance
       : id === "ckETH"
-        ? ckETHBalance
-        : id === "ckUSDC"
-          ? ckUSDCBalance
-          : id === "ICP"
-            ? ckICPBalance
-            : null;
+      ? ckETHBalance
+      : id === "ckUSDC"
+      ? ckUSDCBalance
+      : id === "ICP"
+      ? ckICPBalance
+      : null;
 
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-7 md:-mt-7 lg:mt-10 my-6 gap-6 mb-[5rem]">
       <div className="w-full lg1:w-9/12  p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
         <h1 className="text-[#2A1F9D] font-bold my-2 dark:text-darkText">
           Reserve status & configuration
-        </h1> 
+        </h1>
         <div className="w-full mt-8  lg:flex">
           <div className="mb-6 text-auto md:block xl:hidden">
             <div className="flex items-center justify-start gap-3 sxs3:justify-start sxs3:px-3 cursor-pointer text-[#2A1F9D] relative sxs3:w-[40%] dark:text-darkText">
@@ -655,13 +655,25 @@ const AssetDetails = () => {
                           (reserveGroup) => reserveGroup[0] === id
                         );
                         console.log("userData", userData);
-                        const assetSupply = Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
-                        const assetBorrow = Number(reserveData?.[1]?.asset_borrow || 0n) / 100000000;
+                        const assetSupply =
+                          Number(reserveData?.[1]?.asset_supply || 0n) /
+                          100000000;
+                        const assetBorrow =
+                          Number(reserveData?.[1]?.asset_borrow || 0n) /
+                          100000000;
+                        const currentCollateralStatus =
+                          reserveData?.[1]?.is_collateral;
 
-                        console.log("Asset Borrow:", assetBorrow); 
+                        console.log(
+                          "currentCollateralStatus in on change",
+                          currentCollateralStatus
+                        );
+                        console.log("Asset Borrow:", assetBorrow);
 
-                        const totalCollateral = (Number(userData?.Ok?.total_collateral) / 100000000);
-                        const totalDebt = (Number(userData?.Ok?.total_debt) / 100000000);
+                        const totalCollateral =
+                          Number(userData?.Ok?.total_collateral) / 100000000;
+                        const totalDebt =
+                          Number(userData?.Ok?.total_debt) / 100000000;
 
                         const filteredData = filteredItems?.find((item) => {
                           console.log("itemsitems", item[1]?.Ok?.asset_name);
@@ -669,23 +681,28 @@ const AssetDetails = () => {
                         });
 
                         const supplyRateAPR =
-                          Number(filteredData[1]?.Ok.current_liquidity_rate) / 100000000 || 0;
+                          Number(filteredData[1]?.Ok.current_liquidity_rate) /
+                            100000000 || 0;
 
-                          const liquidationThreshold =
-                               (Number(userData.Ok?.liquidation_threshold)/100000000 )|| 0;
+                        const liquidationThreshold =
+                          Number(userData.Ok?.liquidation_threshold) /
+                            100000000 || 0;
                         const reserveliquidationThreshold =
-                        Number(filteredData[1]?.Ok.configuration.liquidation_threshold) / 100000000 || 0
-    
+                          Number(
+                            filteredData[1]?.Ok.configuration
+                              .liquidation_threshold
+                          ) / 100000000 || 0;
+
                         const ckBalance =
                           id === "ckBTC"
                             ? ckBTCBalance
                             : id === "ckETH"
-                              ? ckETHBalance
-                              : id === "ckUSDC"
-                                ? ckUSDCBalance
-                                : id === "ICP"
-                                  ? ckICPBalance
-                                  : null;
+                            ? ckETHBalance
+                            : id === "ckUSDC"
+                            ? ckUSDCBalance
+                            : id === "ICP"
+                            ? ckICPBalance
+                            : null;
 
                         console.log(
                           "ckBalance",
@@ -701,16 +718,18 @@ const AssetDetails = () => {
                           "supplyRateAPR",
                           supplyRateAPR,
                           "liquidationThreshold",
-                          liquidationThreshold
+                          liquidationThreshold,
+                          "currentCollateralStatus",
+                          currentCollateralStatus ,
                         );
 
                         handleModalOpen(
                           "supply",
                           id,
                           (id === "ckBTC" && ckbtc) ||
-                          (id === "ckETH" && cketh) ||
-                          (id === "ckUSDC" && ckUSDC) ||
-                          (id === "ICP" && icp),
+                            (id === "ckETH" && cketh) ||
+                            (id === "ckUSDC" && ckUSDC) ||
+                            (id === "ICP" && icp),
                           supplyRateAPR,
                           ckBalance,
                           liquidationThreshold,
@@ -718,7 +737,8 @@ const AssetDetails = () => {
                           assetSupply,
                           assetBorrow,
                           totalCollateral,
-                          totalDebt
+                          totalDebt,
+                          currentCollateralStatus ,
                         );
                       }}
                       className={
@@ -743,7 +763,7 @@ const AssetDetails = () => {
       )}
 
       {(isSwitchingWallet || !isAuthenticated) && (
-        <Modal open={isWalletModalOpen} onClose={handleWalletConnect} >
+        <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
           <div className="w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins">
             {connectedWallet ? (
               <h1 className="font-bold text-[#2A1F9D] dark:text-darkText">

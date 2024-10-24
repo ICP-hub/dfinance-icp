@@ -322,6 +322,7 @@ const MySupply = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
+                currentCollateralStatus ={isModalOpen.currentCollateralStatus }
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -877,6 +878,9 @@ const MySupply = () => {
                                         Number(
                                           reserveData?.[1]?.asset_borrow || 0n
                                         ) / 100000000;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       handleModalOpen(
                                         "withdraw",
                                         asset,
@@ -891,7 +895,8 @@ const MySupply = () => {
                                         assetSupply,
                                         assetBorrow,
                                         totalCollateral,
-                                        totalDebt
+                                        totalDebt,
+                                        currentCollateralStatus 
                                       );
                                     }}
                                     className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -920,7 +925,7 @@ const MySupply = () => {
                   {!userData?.Ok?.reserves ||
                     !userData?.Ok?.reserves[0] ||
                     userData?.Ok?.reserves[0].every(
-                      (reserveGroup) => reserveGroup[1]?.asset_supply === 0
+                      (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
                     ) ? (
                     noSupplyMessage
                   ) : (
@@ -1201,6 +1206,9 @@ const MySupply = () => {
                                           Number(
                                             reserveData?.[1]?.asset_borrow || 0n
                                           ) / 100000000;
+                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+
+                                          console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         handleModalOpen(
                                           "withdraw",
                                           asset,
@@ -1215,7 +1223,8 @@ const MySupply = () => {
                                           assetSupply,
                                           assetBorrow,
                                           totalCollateral,
-                                          totalDebt
+                                          totalDebt,
+                                          currentCollateralStatus 
                                         );
                                       }}
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"

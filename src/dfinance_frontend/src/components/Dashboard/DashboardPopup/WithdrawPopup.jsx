@@ -21,6 +21,7 @@ const WithdrawPopup = ({
   assetBorrow,
   totalCollateral,
   totalDebt,
+  currentCollateralStatus,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
@@ -135,45 +136,75 @@ let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^
 console.log("Amount as nat64:", amountAsNat64);
 
 const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
-  const handleWithdraw = async () => {
-    console.log("Withdraw function called for", asset, amount);
-    setIsLoading(true);
-    let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActors.ckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActors.ckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActors.ckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActors.ICP;
-    }
+ 
+const handleWithdraw = async () => {
+  console.log("Withdraw function called for", asset, amount);
+  setIsLoading(true);
+  let ledgerActor;
 
-    try {
-      const safeAmount = Number((amount || '').replace(/,/g, '')) || 0; // Ensure amount is not null
-let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
+  if (asset === "ckBTC") {
+    ledgerActor = ledgerActors.ckBTC;
+  } else if (asset === "ckETH") {
+    ledgerActor = ledgerActors.ckETH;
+  } else if (asset === "ckUSDC") {
+    ledgerActor = ledgerActors.ckUSDC;
+  } else if (asset === "ICP") {
+    ledgerActor = ledgerActors.ICP;
+  }
 
-console.log("Amount as nat64:", amountAsNat64);
-
-const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
+  try {
+    const safeAmount = Number((amount || '').replace(/,/g, '')) || 0;
+    let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+    console.log("Amount as nat64:", amountAsNat64);
+    const scaledAmount = amountAsNat64;
+    
+    console.log(" current colletral status while withdraw ",currentCollateralStatus)
+// Use scaled amount for further calculations
       const withdrawResult = await backendActor.withdraw(
         asset,
         scaledAmount,
         [],
-        true
+        currentCollateralStatus
       );
-      console.log("Withdraw result", withdrawResult);
+    console.log("Withdraw result", withdrawResult);
+
+    if ("Ok" in withdrawResult) {
       const sound = new Audio(coinSound);
       sound.play();
-      toast.success("Withdraw successful!");
+      toast.success("Withdraw successful!", {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       setIsPaymentDone(true);
       setIsVisible(false);
-    } catch (error) {
-      console.error("Error withdrawing:", error);
-      setIsLoading(false);
-      toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
+    } else if ("Err" in withdrawResult) {
+      const errorMsg = withdrawResult.Err;
+      toast.error(`Withdraw failed: ${errorMsg}`, {
+        className: 'custom-toast',
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      console.error("Withdraw error:", errorMsg);
     }
-  };
+  } catch (error) {
+    console.error("Error withdrawing:", error);
+    toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
+  } finally {
+    setIsLoading(false); // Stop loading once the function is done
+  }
+};
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -374,10 +405,10 @@ const scaledAmount = amountAsNat64; // Use scaled amount for further calculation
                 <p>Collateralization</p>
                 <p
                   className={`font-semibold ${
-                    isCollateral ? "text-green-500" : "text-red-500"
+                    currentCollateralStatus ? "text-green-500" : "text-red-500"
                   }`}
                 >
-                  {isCollateral ? "Enabled" : "Disabled"}
+                  {currentCollateralStatus ? "Enabled" : "Disabled"}
                 </p>
               </div>
               <div className="w-full flex flex-col my-1">

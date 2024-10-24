@@ -351,16 +351,12 @@ const Borrow = ({
   // Handle max button click to set max amount
   // Function to handle max button click
   const handleMaxClick = () => {
-    console.log("borrowableAsset", borrowableAsset); // Log to verify value
-
-    // Ensure that borrowableAsset is a number, then convert to string
-    const maxAmount = parseFloat(borrowableAsset).toString();
-    setAmount(maxAmount);
-
-    // Pass the max amount to the function that updates the values
-    updateAmountAndUsdValue(maxAmount);
+    const maxAmount = borrowableAsset.toFixed(8); 
+    const [integerPart, decimalPart] = maxAmount.split('.');
+    const formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart}`;
+    setAmount(formattedAmount);
+    updateAmountAndUsdValue(maxAmount); 
   };
-
   return (
     <>
       {isVisible && (

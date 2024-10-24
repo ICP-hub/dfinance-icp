@@ -577,7 +577,7 @@ const MySupply = () => {
                 <>
                   {!userData?.Ok?.reserves?.[0]?.length ||
                     userData.Ok.reserves[0].every(
-                      (reserveGroup) => reserveGroup[1]?.asset_supply === 0
+                      (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
                     ) ? (
                     noSupplyMessage
                   ) : (

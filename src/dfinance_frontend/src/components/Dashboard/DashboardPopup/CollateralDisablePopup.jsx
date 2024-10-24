@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
-
+import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 
 const ColateralPopup = ({
   asset,
@@ -49,7 +49,18 @@ const ColateralPopup = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [isCollateral, setIsCollateral] = useState(currentCollateralStatus);
-
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    fetchBalance,
+  } = useFetchConversionRate();
   const transactionFee = 0.01;
   const dispatch=useDispatch()
   const fees = useSelector((state) => state.fees.fees);
@@ -107,15 +118,29 @@ const ColateralPopup = ({
       throw error; // Re-throw the error to handle it in the caller
     }
   }
+  const assetRates = {
+    ckBTC: ckBTCUsdRate,
+    ckETH: ckETHUsdRate,
+    ckUSDC: ckUSDCUsdRate,
+    ICP: ckICPUsdRate,
+  };
+  console.log("assetRates",assetRates)
+  const calculateAssetValue = (asset, assetSupply) => {
+    const rate = assetRates[asset]; // Get the corresponding rate for the asset
+    console.log("rate in popup",rate)
+    return rate ? assetSupply * rate : null; // Calculate the value if rate exists
+   
+  };
   
-  
-
   const handleToggleCollateral = async () => {
     setIsLoading(true); // Start loading
     try {
-      // Call the function
-      await toggleCollateral(asset, assetSupply);
-
+      // Calculate the asset value
+      const assetValue = calculateAssetValue(asset, assetSupply);
+  
+      // Call the function with the calculated asset value
+      await toggleCollateral(asset, assetValue);
+  
       // If no error, display success message
       toast.success("Collateral updated successfully!");
       
@@ -123,12 +148,13 @@ const ColateralPopup = ({
       setIsVisible(false);
     } catch (error) {
       // Display an error message if something goes wrong
-      console.error("Error toggling collateral");
+      console.error("Error toggling collateral", error);
       toast.error("Error updating collateral.");
     } finally {
       setIsLoading(false); // Stop loading
     }
   };
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -157,40 +183,53 @@ const ColateralPopup = ({
   };
 
 console.log("toggle status ",currentCollateralStatus )
-  useEffect(() => {
-    const adjustedCollateral = currentCollateralStatus 
-    ? totalCollateral - assetSupply // Subtract when collateral is active (disabling)
-    : totalCollateral + assetSupply; // Add when collateral is inactive (enabling)
+useEffect(() => {
+  // Calculate the asset value using the corresponding rate
+  const assetValue = calculateAssetValue(asset, assetSupply); // Assuming this function returns the correct value
 
-    const healthFactor = calculateHealthFactor(
-      adjustedCollateral, // Use adjusted collateral
-      totalDebt,
-      liquidationThreshold
-    );
-    console.log("Health Factor:", healthFactor);
+  const adjustedCollateral = currentCollateralStatus 
+  ? Math.max(totalCollateral - assetValue, 0) // Subtract asset value when collateral is active and ensure it's not negative
+  : Math.max(totalCollateral + assetValue, 0); // Add asset value and ensure it's not negative
 
-    const ltv = calculateLTV(adjustedCollateral, totalDebt); // Adjust LTV as well
-    console.log("LTV:", ltv);
+   // Add asset value when collateral is inactive (enabling)
+console.log("asset value ", assetValue ,adjustedCollateral, totalCollateral)
+  const healthFactor = calculateHealthFactor(
+    adjustedCollateral, // Use adjusted collateral
+    totalDebt,
+    liquidationThreshold
+  );
+  console.log("Health Factor:", healthFactor);
 
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-    if (healthFactor <= 1) {
-      setIsButtonDisabled(true);
-      toast.info(" Health Factor Less than 1 ");
-    } else {
-      setIsButtonDisabled(false);
-    }
-  }, [
-    asset,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-  ]);
+  const ltv = calculateLTV(adjustedCollateral, totalDebt); // Adjust LTV as well
+  console.log("LTV:", ltv);
+
+  setPrevHealthFactor(currentHealthFactor);
+  
+  // Set the current health factor, converting to "Infinity" if > 100
+  setCurrentHealthFactor(
+    healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+  );
+
+  // Disable the button if the health factor is less than or equal to 1
+  setIsButtonDisabled(healthFactor <= 1);
+  
+  if (healthFactor <= 1) {
+    toast.info("Health Factor Less than 1");
+  }
+
+}, [
+  asset,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  amount,
+  usdValue,
+  currentCollateralStatus, // Make sure to include currentCollateralStatus in dependencies
+  totalCollateral,         // Include totalCollateral to trigger the effect when it changes
+  totalDebt                // Include totalDebt for health factor calculations
+]);
+
 
   const calculateHealthFactor = (
     totalCollateral,

@@ -463,7 +463,7 @@ const MySupply = () => {
     !userData?.Ok?.reserves ||
     !userData?.Ok?.reserves[0] ||
     userData?.Ok?.reserves[0].every(
-      (reserveGroup) => reserveGroup[1]?.asset_supply === 0
+      (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
     );
 
   useEffect(() => {
@@ -2509,7 +2509,7 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                   {(!userData?.Ok?.reserves ||
                     !userData?.Ok?.reserves[0] ||
                     userData?.Ok?.reserves[0].every(
-                      (reserveGroup) => reserveGroup[1]?.asset_supply === 0
+                      (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
                     )) && (
                       <div className="bg-[#6d6c89] opacity-80 mt-2 px-2 py-2 mb-2 rounded-lg flex items-center">
                         <span className="text-white dark:text-darkText ms-4 text-sm">

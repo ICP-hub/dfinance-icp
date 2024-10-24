@@ -205,7 +205,7 @@ impl UpdateLogic {
         };
 
         user_data.total_debt = Some(user_data.total_debt.unwrap_or(0) + usd_amount);
-        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) - usd_amount);
+        user_data.net_worth = Some((user_data.net_worth.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0),
             total_borrowed_value: user_data.total_debt.unwrap_or(0),
@@ -344,7 +344,7 @@ impl UpdateLogic {
         // ic_cdk::println!("user_thr {:?}", user_thrs);
 
         // user_data.liquidation_threshold = Some(user_thrs);
-        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) - usd_amount);
+        user_data.net_worth = Some((user_data.net_worth.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
         if params.is_collateral {
             let user_thrs = cal_average_threshold(
                 0,
@@ -441,6 +441,9 @@ impl UpdateLogic {
                     "Insufficient supply for withdrawal: requested {}, available {}",
                     params.amount, reserve_data.asset_supply
                 ));
+            }
+            if reserve_data.asset_supply == 0 {
+                reserve_data.is_collateral = true;
             }
         } else {
             // If Reserve data does not exist,it returns an error since we cannot withdraw what is not supplied

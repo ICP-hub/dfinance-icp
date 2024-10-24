@@ -86,7 +86,7 @@ impl Default for UserReserveData {
             asset_price_when_supplied: Default::default(),
             asset_price_when_borrowed: Default::default(),
             is_using_as_collateral_or_borrow: Default::default(),
-            is_collateral: Default::default(),
+            is_collateral: true,
             is_borrowed: Default::default(),
         }
     }

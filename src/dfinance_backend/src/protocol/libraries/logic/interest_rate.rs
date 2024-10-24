@@ -23,18 +23,18 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     ic_cdk::println!("asset name in initialize {:?}", asset.to_string());
     match asset {
         "ckBTC" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(45), // 45% utilization
-            max_excess_usage_ratio: ScalingMath::to_scaled(55), // 20% up to 100%
-            base_variable_borrow_rate: ScalingMath::to_scaled(0), // 2% base variable rate
-            variable_rate_slope1: ScalingMath::to_scaled(4), // 4% slope before optimal usage
-            variable_rate_slope2: ScalingMath::to_scaled(30), // 75% slope after optimal usage
+            optimal_usage_ratio: ScalingMath::to_scaled(45),
+            max_excess_usage_ratio: ScalingMath::to_scaled(55), 
+            base_variable_borrow_rate: ScalingMath::to_scaled(0),
+            variable_rate_slope1: ScalingMath::to_scaled(4), 
+            variable_rate_slope2: ScalingMath::to_scaled(30), 
         },
         "ckETH" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(45), // Custom utilization for ckETH
-            max_excess_usage_ratio: ScalingMath::to_scaled(55), // Custom excess usage
-            base_variable_borrow_rate: ScalingMath::to_scaled(0), // 3% base variable rate for ckETH
-            variable_rate_slope1: ScalingMath::to_scaled(4), // 5% slope before optimal usage
-            variable_rate_slope2: ScalingMath::to_scaled(30), // 80% slope after optimal usage          //review the value
+            optimal_usage_ratio: ScalingMath::to_scaled(45), 
+            max_excess_usage_ratio: ScalingMath::to_scaled(55), 
+            base_variable_borrow_rate: ScalingMath::to_scaled(0), 
+            variable_rate_slope1: ScalingMath::to_scaled(4), 
+            variable_rate_slope2: ScalingMath::to_scaled(30),        //review the value
         },
         "ICP" => InterestRateParams {
             optimal_usage_ratio: ScalingMath::to_scaled(45),
@@ -44,14 +44,14 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
             variable_rate_slope2: ScalingMath::to_scaled(30), // review
         },
         "ckUSDC" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(80), // 75% utilization for ckUSDC
-            max_excess_usage_ratio: ScalingMath::to_scaled(20), // 25% excess usage
-            base_variable_borrow_rate: ScalingMath::to_scaled(0), // 1.5% base variable rate for ckUSDC
-            variable_rate_slope1: ScalingMath::to_scaled(4),      // 3.5% slope before optimal usage
-            variable_rate_slope2: ScalingMath::to_scaled(75),     // 65% slope after optimal usage
+            optimal_usage_ratio: ScalingMath::to_scaled(80), 
+            max_excess_usage_ratio: ScalingMath::to_scaled(20), 
+            base_variable_borrow_rate: ScalingMath::to_scaled(0), 
+            variable_rate_slope1: ScalingMath::to_scaled(4),      
+            variable_rate_slope2: ScalingMath::to_scaled(75),     
         },
         _ => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(80), // Default values
+            optimal_usage_ratio: ScalingMath::to_scaled(80),
             max_excess_usage_ratio: ScalingMath::to_scaled(20),
             base_variable_borrow_rate: ScalingMath::to_scaled(0),
             variable_rate_slope1: ScalingMath::to_scaled(4),

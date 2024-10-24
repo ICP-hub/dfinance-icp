@@ -5,10 +5,10 @@ set -e
 source ../../.env
 
 # Set variables
-ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
+ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai" 
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-debt_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
-dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
+debt_canister="aax3a-h4aaa-aaaaa-qaahq-cai"
+dtoken_canister="ahw5u-keaaa-aaaaa-qaaha-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 reserve_data_method="get_reserve_data"
@@ -48,7 +48,7 @@ echo "--------------------------------------"
 
 # Echo the reserve data
 echo "Fetching reserve data..."
-asset="ckBTC"
+asset="ckETH"
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
@@ -63,9 +63,10 @@ dfx identity use default
 # Get the principal of the default identity
 ON_BEHALF_OF=$(dfx identity get-principal)
 
+
 dfx identity use liquidator
 # Approve the transfer
-approve_amount=10000000 # Set the amount you want to approve
+approve_amount=100000000 # Set the amount you want to approve
 echo "Approving transfer of $approve_amount from liquidator to backend_canister..."
 allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
     from_subaccount=null;
@@ -80,9 +81,10 @@ allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
 echo "Allowance Set: $allow"
 echo "--------------------------------------"
 
+
 # Calling liquidation function
 amount=100000000
-liquiation=$(dfx canister call dfinance_backend liquidation_call "(\"ckBTC\", \"ckBTC\", $amount:nat64, \"${ON_BEHALF_OF}\")")
+liquiation=$(dfx canister call dfinance_backend liquidation_call "(\"ckETH\", \"ckETH\", $amount:nat64, \"${ON_BEHALF_OF}\")")
 
 echo "Liquidation Execution Result: $liquidation"
 

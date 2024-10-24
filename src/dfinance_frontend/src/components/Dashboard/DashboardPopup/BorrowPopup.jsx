@@ -193,19 +193,12 @@ const Borrow = ({
       totalDebt,
       liquidationThreshold
     );
-    console.log("Health Factor:", healthFactor);
     const amountTaken = usdValue || 0;
-    console.log("amount taken", amountTaken);
+    const amountAdded = 0;
+    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-    console.log(
-      "NextTotalDebt",
-      nextTotalDebt,
-      "TOtal Collateral",
-      totalCollateral,
-      "threshold",
-      liquidationThreshold
-    );
-    const ltv = calculateLTV(nextTotalDebt, totalCollateral);
+  
+    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
     console.log("LTV:", ltv * 100);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(

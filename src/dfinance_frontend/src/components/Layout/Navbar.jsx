@@ -472,7 +472,7 @@ export default function Navbar({ isHomeNav }) {
                               {link.title === "Faucet" && (
                                 <>
                                   <span
-                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
+                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
                                     onClick={handlePopupToggle}
                                   >
                                     •••

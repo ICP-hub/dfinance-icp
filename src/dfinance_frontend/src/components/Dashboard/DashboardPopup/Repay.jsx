@@ -30,7 +30,7 @@ const Repay = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  
+
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null); // Reference to the modal container
   const { createLedgerActor, backendActor, principal } = useAuth();
@@ -52,30 +52,30 @@ const Repay = ({
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value.replace(/,/g, ''); // Remove commas for processing
-  
+
     // Check if there's a decimal point and enforce 8 decimal places
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-  
+
       // Limit decimal places to 8
       if (decimalPart.length > 8) {
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
         e.target.value = inputAmount; // Directly update the value in the field
       }
     }
-  
+
     updateAmountAndUsdValue(inputAmount);
   };
-  
+
   const updateAmountAndUsdValue = (inputAmount) => {
     // Convert input to a number
     const numericAmount = parseFloat(inputAmount);
-  
+
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetBorrow) {
         // Format the amount with commas before setting it
         const formattedAmount = formatAmountWithCommas(inputAmount);
-  
+
         // Calculate and format the USD value
         const convertedValue = numericAmount * conversionRate;
         setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
@@ -93,19 +93,19 @@ const Repay = ({
       setError("Amount must be a positive number");
     }
   };
-  
+
   // Utility function to format the amount with commas
   const formatAmountWithCommas = (amount) => {
     const parts = amount.split(".");
-  
+
     // Format the integer part with commas
     parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
-  
+
     // Join back the integer and decimal parts (if any)
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
   const { conversionRate, error: conversionError } =
-  useRealTimeConversionRate(asset);
+    useRealTimeConversionRate(asset);
   useEffect(() => {
     if (amount && conversionRate) {
       const convertedValue = parseFloat(amount.replace(/,/g, '')) * conversionRate;
@@ -114,7 +114,7 @@ const Repay = ({
       setUsdValue(0); // Reset USD value if conditions are not met
     }
   }, [amount, conversionRate]);
-  
+
 
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
@@ -223,9 +223,9 @@ const Repay = ({
 
     try {
       const safeAmount = Number(amount.replace(/,/g, '')) || 0;
-    let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
-    console.log("Amount as nat64:", amountAsNat64);
-    const scaledAmount = amountAsNat64;
+      let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
+      console.log("Amount as nat64:", amountAsNat64);
+      const scaledAmount = amountAsNat64;
 
       const repayResult = await backendActor.repay(asset, scaledAmount, []);
       const sound = new Audio(coinSound);
@@ -302,7 +302,11 @@ const Repay = ({
       liquidationThreshold
     );
     console.log("Health Factor:", healthFactor);
-    const ltv = calculateLTV(totalCollateral, totalDebt);
+    const amountTaken = 0;
+    const amountAdded = usdValue || 0;
+    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountTaken);
+    const totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
+    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
@@ -383,14 +387,14 @@ const Repay = ({
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-[50%]">
-                <input
-  type="text" // Use text input to allow formatting
-  value={amount}
-  onChange={handleAmountChange}
-  disabled={supplyBalance === 0}
-  className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-  placeholder="Enter Amount"
-/>
+                  <input
+                    type="text" // Use text input to allow formatting
+                    value={amount}
+                    onChange={handleAmountChange}
+                    disabled={supplyBalance === 0}
+                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder="Enter Amount"
+                  />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
@@ -411,8 +415,8 @@ const Repay = ({
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${assetBorrow === 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
                       if (assetBorrow > 0) {
@@ -458,14 +462,14 @@ const Repay = ({
                     <p>
                       <span
                         className={`${healthFactorBackend > 3
-                            ? "text-green-500"
-                            : healthFactorBackend <= 1
-                              ? "text-red-500"
-                              : healthFactorBackend <= 1.5
-                                ? "text-orange-600"
-                                : healthFactorBackend <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : healthFactorBackend <= 1
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
+                              ? "text-orange-600"
+                              : healthFactorBackend <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {parseFloat(
@@ -477,14 +481,14 @@ const Repay = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
-                              ? "text-red-500"
-                              : currentHealthFactor <= 1.5
-                                ? "text-orange-600"
-                                : currentHealthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -538,8 +542,8 @@ const Repay = ({
               <button
                 onClick={handleClick}
                 className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                   }`}
                 disabled={isLoading || amount <= 0 || null}
               >

@@ -28,7 +28,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
-import ColateralPopup from "./DashboardPopup/CollateralDiablePopup";
+import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
 // import {setToggle} from "../../redux/reducers/toggleReducer"
 
 const MySupply = () => {

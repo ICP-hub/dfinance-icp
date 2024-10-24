@@ -355,7 +355,7 @@ const Borrow = ({
 
     // Ensure that borrowableAsset is a number, then convert to string
     const maxAmount = parseFloat(borrowableAsset).toString();
-    setAmount(maxAmount.toFixed(8));
+    setAmount(maxAmount);
 
     // Pass the max amount to the function that updates the values
     updateAmountAndUsdValue(maxAmount);

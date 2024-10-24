@@ -231,7 +231,7 @@ const scaledAmount = amountAsNat64; // Use scaled amount for further calculation
       console.log("amountAsNat64", amountAsNat64);
       console.log("scaledAmount", scaledAmount);
       console.log("Backend actor", backendActor);
-
+console.log(" current colletral status while supply ",currentCollateralStatus)
       const sup = await backendActor.supply(asset, scaledAmount,  currentCollateralStatus );
       console.log("Supply", sup);
 

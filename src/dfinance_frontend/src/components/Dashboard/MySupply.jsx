@@ -807,9 +807,9 @@ const MySupply = () => {
                                         Number(
                                           reserveData?.[1]?.asset_borrow || 0n
                                         ) / 100000000;
-                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus); 
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       const totalCollateral =
                                         parseFloat(
                                           Number(
@@ -1151,9 +1151,9 @@ const MySupply = () => {
                                             Number(userData?.Ok?.total_debt) /
                                             100000000
                                           ) || 0;
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                          console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         handleModalOpen(
                                           "supply",
                                           asset,
@@ -1391,9 +1391,10 @@ const MySupply = () => {
                                     Number(
                                       reserveData?.[1]?.asset_borrow || 0n
                                     ) / 100000000;
-                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                          console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
+console.log("currentCollateralStatus in on change", currentCollateralStatus);
+
                                   const totalCollateral =
                                     Number(
                                       userData?.Ok?.total_collateral || 0n
@@ -1593,9 +1594,10 @@ const MySupply = () => {
                                       Number(
                                         reserveData?.[1]?.asset_supply || 0n
                                       ) / 100000000;
-                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus); 
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                      
                                     const totalCollateral =
                                       parseFloat(
                                         Number(userData?.Ok?.total_collateral) /

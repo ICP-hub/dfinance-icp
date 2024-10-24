@@ -205,9 +205,9 @@ const Repay = ({
 
   const handleRepayETH = async () => {
     console.log("Repay function called for", asset);
-
+  
     let ledgerActor;
-
+  
     // Select the correct backend actor based on the asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -218,31 +218,48 @@ const Repay = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     }
-
+  
     console.log("Backend actor", ledgerActor);
-
+  
     try {
       const safeAmount = Number(amount.replace(/,/g, '')) || 0;
       let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
       console.log("Amount as nat64:", amountAsNat64);
       const scaledAmount = amountAsNat64;
-
+  
       const repayResult = await backendActor.repay(asset, scaledAmount, []);
-      const sound = new Audio(coinSound);
-      sound.play();
-      toast.success(`Repay successful!`, {
-        className: 'custom-toast',
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
       console.log("Repay result", repayResult);
-      setIsPaymentDone(true);
-      setIsVisible(false);
+  
+      if ("Ok" in repayResult) {
+        const sound = new Audio(coinSound);
+        sound.play();
+        toast.success("Repay successful!", {
+          className: 'custom-toast',
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        setIsPaymentDone(true);
+        setIsVisible(false);
+      } else if ("Err" in repayResult) {
+        const errorMsg = repayResult.Err;
+        toast.error(`Repay failed: ${errorMsg}`, {
+          className: 'custom-toast',
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        console.error("Repay error:", errorMsg);
+      }
+  
     } catch (error) {
       console.error("Error repaying:", error);
       toast.error(`Error: ${error.message || "Repay action failed!"}`, {
@@ -255,9 +272,9 @@ const Repay = ({
         draggable: true,
         progress: undefined,
       });
-      // Handle error state, e.g., show error message
     }
   };
+  
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);

@@ -405,7 +405,7 @@ const MySupply = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
-                currentCollateralStatus ={isModalOpen.currentCollateralStatus }
+                currentCollateralStatus ={isModalOpen.currentCollateralStatus}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -1082,7 +1082,6 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
                                           const currentCollateralStatus = reserveData?.[1]?.is_collateral;
-
                                           console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
@@ -1206,9 +1205,9 @@ const MySupply = () => {
                                           Number(
                                             reserveData?.[1]?.asset_borrow || 0n
                                           ) / 100000000;
+
                                           const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         handleModalOpen(
                                           "withdraw",
                                           asset,

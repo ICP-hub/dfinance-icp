@@ -33,6 +33,7 @@ console.log("currentColletralStatus",currentCollateralStatus)
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
+  const [collateral, setCollateral] = useState(currentCollateralStatus);
 
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
@@ -69,15 +70,15 @@ console.log("currentColletralStatus",currentCollateralStatus)
   const handleAmountChange = (e) => {
     // Get the input value and remove commas for processing
     let inputAmount = e.target.value.replace(/,/g, '');
-  
+
     // Allow only numbers and decimals
     if (!/^\d*\.?\d*$/.test(inputAmount)) {
       return; // If invalid input, do nothing
     }
-  
+
     // Convert inputAmount to a number for comparison with supplyBalance
     const numericAmount = parseFloat(inputAmount);
-  
+
     // Prevent the user from typing an amount greater than the supplyBalance
     if (numericAmount > supplyBalance) {
       // Do not update the input field or the state if the value exceeds supplyBalance
@@ -86,37 +87,37 @@ console.log("currentColletralStatus",currentCollateralStatus)
     } else {
       setError(''); // Clear any previous error
     }
-  
+
     // Split the integer and decimal parts, if applicable
     let formattedAmount;
     if (inputAmount.includes('.')) {
       const [integerPart, decimalPart] = inputAmount.split('.');
-  
+
       // Format the integer part with commas and limit decimal places to 8 digits
       formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart.slice(0, 8)}`;
     } else {
       // If no decimal, format the integer part with commas
       formattedAmount = parseInt(inputAmount).toLocaleString('en-US');
     }
-  
+
     // Update the input field value with the formatted number (with commas)
     setAmount(formattedAmount); // Set the formatted amount in the state
-  
+
     // Pass the numeric value (without commas) for internal calculations
     updateAmountAndUsdValue(inputAmount); // Pass raw numeric value for calculations
   };
-  
+
   const updateAmountAndUsdValue = (inputAmount) => {
     // Ensure that the numeric value is used for calculations (no commas)
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ''));
-  
+
     // Handle the case when the input is cleared (empty value)
     if (inputAmount === "") {
       setAmount(''); // Clear the amount in state
       setUsdValue(0); // Reset USD value
       return;
     }
-  
+
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
         const convertedValue = numericAmount * conversionRate;
@@ -129,8 +130,8 @@ console.log("currentColletralStatus",currentCollateralStatus)
       setError("Amount must be a positive number");
     }
   };
-  
-  
+
+
   useEffect(() => {
     if (amount && conversionRate) {
       const convertedValue = parseFloat(amount.replace(/,/g, '')) * conversionRate;
@@ -178,7 +179,7 @@ console.log("currentColletralStatus",currentCollateralStatus)
       console.log("Approve", approval);
       setIsApproved(true);
       console.log("isApproved state after approval:", isApproved);
-      toast.success(`Approval successful!`,  {
+      toast.success(`Approval successful!`, {
         className: 'custom-toast',
         position: "top-center",
         autoClose: 3000,
@@ -205,13 +206,13 @@ console.log("currentColletralStatus",currentCollateralStatus)
 
   const isCollateral = true;
   const safeAmount = Number((amount || '').replace(/,/g, '')) || 0; // Ensure amount is not null
-let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
+  let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
 
-console.log("Amount as nat64:", amountAsNat64);
+  console.log("Amount as nat64:", amountAsNat64);
 
-const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
+  const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
 
-  
+
 
   const handleSupplyETH = async () => {
     try {
@@ -311,7 +312,15 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
       liquidationThreshold
     );
     console.log("Health Factor:", healthFactor);
-    const ltv = calculateLTV(totalCollateral, totalDebt);
+
+    const amountTaken = 0;
+    const amountAdded = collateral ? (usdValue || 0) : 0;
+    
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
+    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
+
+    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
@@ -334,7 +343,7 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
     liquidationThreshold
   ) => {
     const amountTaken = 0;
-    const amountAdded = usdValue || 0;
+    const amountAdded = collateral ? (usdValue || 0) : 0;
 
     console.log(
       "amount added",
@@ -373,14 +382,14 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleMaxClick = () => {
-    const maxAmount = supplyBalance.toFixed(8); 
+    const maxAmount = supplyBalance.toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split('.');
     const formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart}`;
     setAmount(formattedAmount);
-    updateAmountAndUsdValue(maxAmount); 
+    updateAmountAndUsdValue(maxAmount);
   };
-  
-  
+
+
 
   return (
     <>
@@ -394,22 +403,22 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="w-[50%]">
-                <input
-  type="text" // Use text input to allow formatting
-  value={amount}
-  onChange={handleAmountChange}
-  disabled={supplyBalance === 0}
-  className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-  placeholder="Enter Amount"
-/>
+                  <input
+                    type="text" // Use text input to allow formatting
+                    value={amount}
+                    onChange={handleAmountChange}
+                    disabled={supplyBalance === 0}
+                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder="Enter Amount"
+                  />
 
 
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -423,11 +432,10 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      supplyBalance === 0
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                      }`}
                     onClick={() => {
                       if (supplyBalance > 0) {
                         handleMaxClick();
@@ -471,17 +479,16 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          healthFactorBackend > 3
+                        className={`${healthFactorBackend > 3
                             ? "text-green-500"
                             : healthFactorBackend <= 1
-                            ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                            ? "text-orange-600"
-                            : healthFactorBackend <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : healthFactorBackend <= 1.5
+                                ? "text-orange-600"
+                                : healthFactorBackend <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {healthFactorBackend > 100
                           ? "Infinity"
@@ -489,17 +496,16 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          value > 3
+                        className={`${value > 3
                             ? "text-green-500"
                             : value <= 1
-                            ? "text-red-500"
-                            : value <= 1.5
-                            ? "text-orange-600"
-                            : value <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : value <= 1.5
+                                ? "text-orange-600"
+                                : value <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -544,9 +550,8 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
 
             <div className="flex items-center">
               <p
-                className={`text-xs whitespace-nowrap ${
-                  isApproved ? "text-green-500" : "text-red-500"
-                }`}
+                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
+                  }`}
               >
                 {isApproved
                   ? "Approved with signed message"
@@ -557,11 +562,10 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
 
           <button
             onClick={handleClick}
-            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
-              isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled
+            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled
                 ? "opacity-50 cursor-not-allowed"
                 : ""
-            }`}
+              }`}
             disabled={isLoading || amount <= 0 || null}
           >
             {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
@@ -598,28 +602,28 @@ console.log(" current colletral status while supply ",currentCollateralStatus)
             <p>
               You have supplied{" "}
               <strong>
-              {scaledAmount / 100000000
+                {scaledAmount / 100000000
                   ? scaledAmount / 100000000 >= 1e-8 &&
                     scaledAmount / 100000000 < 1e-7
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+                      ? Number(scaledAmount / 100000000).toFixed(7)
+                      : scaledAmount / 100000000
                   : "0"} {asset}
               </strong>
             </p>
             <p>
               You have received{" "}
               <strong>
-              {scaledAmount / 100000000
+                {scaledAmount / 100000000
                   ? scaledAmount / 100000000 >= 1e-8 &&
                     scaledAmount / 100000000 < 1e-7
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+                      ? Number(scaledAmount / 100000000).toFixed(7)
+                      : scaledAmount / 100000000
                   : "0"} d{asset}
               </strong>
             </p>

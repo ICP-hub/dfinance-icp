@@ -442,6 +442,9 @@ impl UpdateLogic {
                     params.amount, reserve_data.asset_supply
                 ));
             }
+            if reserve_data.asset_supply == 0 {
+                reserve_data.is_collateral = true;
+            }
         } else {
             // If Reserve data does not exist,it returns an error since we cannot withdraw what is not supplied
             ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);

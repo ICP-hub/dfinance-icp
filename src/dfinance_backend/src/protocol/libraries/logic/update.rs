@@ -566,9 +566,11 @@ impl UpdateLogic {
 //     available_borrows_in_base_currency -= total_debt_in_base_currency;
 //     available_borrows_in_base_currency
 // }
+
+
 #[update]
-// pub fn disable_collateral(asset: String, amount:u128) {
-    pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
+
+pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
         let user_principal = ic_cdk::caller();
     
         // to retrieve user data.
@@ -641,8 +643,8 @@ impl UpdateLogic {
         };
     
         let user_thrs = cal_average_threshold(
-            added_usd_amount,
-            usd_amount,
+            added_usd_amount.clone(),
+            usd_amount.clone(),
             reserve_data.configuration.liquidation_threshold,
             // what collateral value am  i need to send new or old.
             user_data.total_collateral.unwrap(),
@@ -650,10 +652,15 @@ impl UpdateLogic {
             user_data.liquidation_threshold.unwrap(),
         );
     
-        user_data.total_collateral = Some(user_data.total_collateral.unwrap() - usd_amount + added_usd_amount);
+        // user_data.total_collateral = Some(user_data.total_collateral.unwrap() - usd_amount.clone() + added_usd_amount.clone());
+        user_data.total_collateral = Some(
+            ((user_data.total_collateral.unwrap() as i128 - usd_amount.clone() as i128 + added_usd_amount.clone() as i128).max(0)) as u128
+        );
         user_data.liquidation_threshold = Some(user_thrs);
-        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount + added_usd_amount);
-    
+        // user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount.clone() + added_usd_amount.clone());
+        user_data.available_borrow = Some(
+            ((user_data.available_borrow.unwrap() as i128 - usd_amount.clone() as i128 + added_usd_amount.clone() as i128).max(0)) as u128
+        );
         ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
     
         let user_position = UserPosition {

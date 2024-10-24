@@ -88,7 +88,7 @@ const ColateralPopup = ({
   async function toggleCollateral(asset, assetSupply) {
     try {
       // Scale factor for two decimal places (adjust if needed)
-      const scaleFactor = 100; 
+      // const scaleFactor = 100; 
   
       // Determine the values based on the isCollateral condition
       const addedAmount = currentCollateralStatus  ? BigInt(0) : BigInt(Math.round(assetSupply * 100000000)); // Pass assetSupply as added amount if toggled is false
@@ -97,7 +97,7 @@ const ColateralPopup = ({
       // Call the backend function `toggle_collateral` with the asset, amount, and addedAmount
       await backendActor.toggle_collateral(
         asset,
-        Number(amount) / scaleFactor, // Convert back to a decimal for the backend if necessary
+        Number(amount),// Convert back to a decimal for the backend if necessary
         addedAmount
       );
       setIsCollateral(!currentCollateralStatus);

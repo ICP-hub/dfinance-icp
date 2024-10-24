@@ -64,6 +64,7 @@ impl UpdateLogic {
 
         // Update user's net worth and collateral
         user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
+        
         if params.is_collateral {
             let user_max_ltv = cal_average_ltv(
                 usd_amount,
@@ -122,8 +123,17 @@ impl UpdateLogic {
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.asset_supply += params.amount;
             reserve_data.asset_price_when_supplied = usd_rate;
-            reserve_data.is_using_as_collateral_or_borrow = true;
-            reserve_data.is_collateral = true;
+            reserve_data.is_collateral = params.is_collateral;
+            if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
+                if reserve_data.is_borrowed {
+                    reserve_data.is_using_as_collateral_or_borrow = true;
+                } else {
+                    reserve_data.is_using_as_collateral_or_borrow = false;
+                }
+            } else {
+                reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
+            }
+           
 
             ic_cdk::println!(
                 "Updated asset supply for existing reserve: {:?}",

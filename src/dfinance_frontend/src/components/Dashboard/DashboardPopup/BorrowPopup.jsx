@@ -236,7 +236,9 @@ const Borrow = ({
       setIsAcknowledged(false); // Reset the acknowledgment when it's not required
     }
     if (ltv * 100 >= liquidationThreshold) {
-      toast.info("LTV Exceeded!");
+      // Dismiss any existing toasts before showing a new one
+      toast.dismiss(); // This will remove all active toasts
+      toast.info("LTV Exceeded!"); // Show the new toast
     }
     if (
       healthFactor <= 1 ||

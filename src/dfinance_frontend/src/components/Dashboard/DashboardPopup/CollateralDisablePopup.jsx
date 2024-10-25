@@ -199,6 +199,7 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
   setIsButtonDisabled(healthFactor <= 1);
   
   if (healthFactor <= 1) {
+    toast.dismiss();
     toast.info("Health Factor Less than 1");
   }
 
@@ -217,37 +218,34 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
 
 
   const calculateHealthFactor = (
-    totalCollateral,
+    adjustedCollateral,
     totalDebt,
     liquidationThreshold
   ) => {
     const amountTaken = 0;
-    const amountAdded = usdValue || 0;
+    
 
     console.log(
-      "amount added",
-      amountAdded,
       "totalCollateral",
-      totalCollateral,
+      adjustedCollateral,
       "totalDebt",
       totalDebt,
       "liquidationThreshold",
       liquidationThreshold
     );
 
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
+    // const totalCollateralValue =
+    //   parseFloat(adjustedCollateral) + parseFloat(amountAdded);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
-    console.log("totalCollateralValue", totalCollateralValue);
+    console.log("totalCollateralValue", adjustedCollateral);
     console.log("totalDeptValue", totalDeptValue);
-    console.log("amountAdded", amountAdded);
     console.log("liquidationThreshold", liquidationThreshold);
     console.log("totalDebt", totalDebt);
     if (totalDeptValue === 0) {
       return Infinity;
     }
     return (
-      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+      (adjustedCollateral * (liquidationThreshold / 100)) / totalDeptValue
     );
   };
 

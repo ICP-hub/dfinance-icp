@@ -388,7 +388,7 @@ const WithdrawPopup = ({
                       }
                     }}
                   >
-                    {maxUsdValue.toLocaleString(4)}
+                    ${maxUsdValue.toLocaleString(4)}
                     Max {/* Adjust maximumFractionDigits as needed */}
                   </p>
                 </div>

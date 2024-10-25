@@ -2731,14 +2731,16 @@ const MySupply = () => {
                                       Number(userData?.Ok?.ltv) / 100000000 || 0;
                                     console.log("LTV1", Ltv);
                                     const borrowableAsset =
-                                      item[0] === "ckBTC"
-                                        ? borrowableBTC
-                                        : item[0] === "ckETH"
-                                          ? borrowableETH
-                                          : item[0] === "ckUSDC"
-                                            ? borrowableUSDC
-                                            : item[0] === "ICP"
-                                              ? borrowableICP
+                                    item[0] === "ckBTC"
+                                      ? borrowableBTC
+                                      : item[0] === "ckETH"
+                                        ? borrowableETH
+                                        : item[0] === "ckUSDC"
+                                          ? borrowableUSDC
+                                          : item[0] === "ICP"
+                                            ? borrowableICP
+                                            : item[0] === "ckUSDT"
+                                              ? borrowableUSDT
                                               : 0;
                                     handleModalOpen(
                                       "borrow",
@@ -3020,7 +3022,7 @@ const MySupply = () => {
                                         Number(userData?.Ok?.ltv) / 100000000 ||
                                         0;
 
-                                      const borrowableAsset =
+                                        const borrowableAsset =
                                         item[0] === "ckBTC"
                                           ? borrowableBTC
                                           : item[0] === "ckETH"
@@ -3029,33 +3031,31 @@ const MySupply = () => {
                                               ? borrowableUSDC
                                               : item[0] === "ICP"
                                                 ? borrowableICP
-                                                : item[0] === "ckUSDT" // New condition for ckUSDT
+                                                : item[0] === "ckUSDT"
                                                   ? borrowableUSDT
                                                   : 0;
 
                                       handleModalOpen(
                                         "borrow",
                                         item[0],
-                                        item[0] === "ckBTC"
-                                          ? ckBTC
-                                          : item[0] === "ckETH"
-                                            ? ckETH
-                                            : item[0] === "ckUSDC"
-                                              ? ckUSDC
-                                              : item[0] === "ckUSDT"
-                                              ? ckUSDT
-                                              : icp,
+                                        (item[0] === "ckBTC" && ckBTC) ||
+                                      (item[0] === "ckETH" && ckETH) ||
+                                      (item[0] === "ckUSDC" && ckUSDC) ||
+                                      (item[0] === "ICP" && icp) ||
+                                      (item[0] === "ckUSDT" && ckUSDT),
                                         Number(item[1].Ok.borrow_rate) /
                                         100000000,
                                         item[0] === "ckBTC"
-                                          ? ckBTCBalance
-                                          : item[0] === "ckETH"
-                                            ? ckETHBalance
-                                            : item[0] === "ckUSDC"
-                                              ? ckUSDCBalance
-                                              : item[0] === "ckUSDT"
-                                              ? ckUSDTBalance
-                                              : ckICPBalance,
+                                        ? ckBTCBalance
+                                        : item[0] === "ckETH"
+                                          ? ckETHBalance
+                                          : item[0] === "ckUSDC"
+                                            ? ckUSDCBalance
+                                            : item[0] === "ICP"
+                                            ? ckICPBalance
+                                            : item[0] === "ckUSDT"
+                                            ? ckUSDTBalance
+                                            : null,
                                         Number(
                                           userData.Ok?.liquidation_threshold
                                         ) / 100000000,

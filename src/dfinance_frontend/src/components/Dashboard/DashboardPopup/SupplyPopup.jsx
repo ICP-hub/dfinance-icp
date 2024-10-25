@@ -454,7 +454,7 @@ const SupplyPopup = ({
                       }
                     }}
                   >
-                    {maxUsdValue.toLocaleString(undefined, {
+                    ${maxUsdValue.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}{" "}

@@ -7,10 +7,10 @@ const RiskPopup = ({ onClose, userData }) => {
   const popupRef = useRef(null);
 
   console.log("userdata in risk", userData);
-  const health_Factor_Value =
-  userData?.Ok?.health_factor / 10000000000 > 100
-    ? "Infinity"
-    : parseFloat((userData?.Ok?.health_factor / 10000000000).toFixed(2))
+  const health_Factor_Value = userData?.Ok?.health_factor / 10000000000 > 100
+    ? Infinity
+    : parseFloat(Number(userData?.Ok?.health_factor / 10000000000).toFixed(2));
+
   const Ltv_Value = parseFloat(Number((userData?.Ok?.ltv)/100000000)*100)
     ? parseFloat(Number((userData?.Ok?.ltv)/100000000)*100)
     : 0;

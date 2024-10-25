@@ -76,7 +76,8 @@ const DashboardNav = () => {
         case 1:
           return {
             ...item,
-            count: `${netApy.toFixed(2) < 0.01 ? "<0.01" : netApy.toFixed(2)}%`,
+            count: `${(netApy / 100).toFixed(2) < 0.01 ? "<0.01" : (netApy / 100).toFixed(2)}%`,
+
           };
         case 2:
           const healthValue =

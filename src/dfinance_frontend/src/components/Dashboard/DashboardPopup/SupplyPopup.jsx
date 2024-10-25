@@ -142,7 +142,9 @@ const SupplyPopup = ({
   }, [amount, conversionRate]);
   useEffect(() => {
     if (balance && conversionRate) {
+      console.log("balance in supplypopup",balance, conversionRate);
       const convertedMaxValue = parseFloat(balance) * conversionRate;
+      console.log("converted in supplypopup",convertedMaxValue);
       setMaxUsdValue(convertedMaxValue);
     } else {
       setMaxUsdValue(0);

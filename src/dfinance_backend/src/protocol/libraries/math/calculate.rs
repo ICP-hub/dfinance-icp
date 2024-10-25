@@ -85,6 +85,8 @@ pub async fn get_exchange_rates(
         "eth".to_string()
     } else if base_asset_symbol == "ckUSDC" {
         "usdc".to_string()
+    }  else if base_asset_symbol == "ckUSDT" {
+        "usdt".to_string()
     } else {
         base_asset_symbol.to_string()
     };
@@ -121,8 +123,8 @@ pub async fn get_exchange_rates(
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
             ic_cdk::api::call::call_with_payment128(
                 // i am changing this id.
-                // Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-                Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+                Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
+                // Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
                 "get_exchange_rate",
                 (args,),
                 1_000_000_000,
@@ -134,10 +136,11 @@ pub async fn get_exchange_rates(
                 GetExchangeRateResult::Ok(v) => {
                     let quote = v.rate;
                     let pow = 10usize.pow(v.metadata.decimals);
+                    ic_cdk::println!("pow {:?}",pow);
                     let exchange_rate = quote  / pow as u64 ;
     
                     // Multiplying the exchange rate by the amount
-                    let total_value = (quote as u128 * amount) / 1000000000  ;
+                    let total_value = ((quote as u128 * amount)) / (pow as u128 - 100000000) ;
     
                     // Getting the current time
                     let time = ic_cdk::api::time();

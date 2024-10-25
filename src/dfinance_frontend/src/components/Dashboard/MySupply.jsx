@@ -1801,7 +1801,10 @@ const MySupply = () => {
                                               ? ckUSDCBalance
                                               : item[0] === "ICP"
                                                 ? ckICPBalance
-                                                : null,
+                                                : item[0] === "ckUSDT"
+                                                  ? ckUSDTBalance
+                                                  : null,
+
                                         Number(
                                           userData.Ok?.liquidation_threshold
                                         ) / 100000000,
@@ -2743,7 +2746,8 @@ const MySupply = () => {
                                       (item[0] === "ckBTC" && ckBTC) ||
                                       (item[0] === "ckETH" && ckETH) ||
                                       (item[0] === "ckUSDC" && ckUSDC) ||
-                                      (item[0] === "ICP" && icp),
+                                      (item[0] === "ICP" && icp) ||
+                                      (item[0] === "ckUSDT" && ckUSDT),
                                       Number(item[1].Ok.borrow_rate) / 100000000,
                                       item[0] === "ckBTC"
                                         ? ckBTCBalance
@@ -2751,6 +2755,10 @@ const MySupply = () => {
                                           ? ckETHBalance
                                           : item[0] === "ckUSDC"
                                             ? ckUSDCBalance
+                                            : item[0] === "ICP"
+                                            ? ckICPBalance
+                                            : item[0] === "ckUSDT"
+                                            ? ckUSDTBalance
                                             : null,
 
                                       Number(userData.Ok?.liquidation_threshold) /
@@ -3034,6 +3042,8 @@ const MySupply = () => {
                                             ? ckETH
                                             : item[0] === "ckUSDC"
                                               ? ckUSDC
+                                              : item[0] === "ckUSDT"
+                                              ? ckUSDT
                                               : icp,
                                         Number(item[1].Ok.borrow_rate) /
                                         100000000,
@@ -3043,6 +3053,8 @@ const MySupply = () => {
                                             ? ckETHBalance
                                             : item[0] === "ckUSDC"
                                               ? ckUSDCBalance
+                                              : item[0] === "ckUSDT"
+                                              ? ckUSDTBalance
                                               : ckICPBalance,
                                         Number(
                                           userData.Ok?.liquidation_threshold
@@ -3079,8 +3091,8 @@ const MySupply = () => {
                         <div className="flex justify-center mt-4">
                           <button
                             onClick={toggleShowAll}
-                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg"
                           >
                             {showAll ? (
                               <FaArrowUp size={18} />

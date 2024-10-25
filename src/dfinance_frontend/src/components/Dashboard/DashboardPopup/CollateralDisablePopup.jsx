@@ -96,12 +96,13 @@ const ColateralPopup = ({
       const amount =currentCollateralStatus ? BigInt(Math.round(assetSupply * 100000000)) : BigInt(0); // Pass assetSupply if toggled is true, otherwise 0
   
       // Call the backend function `toggle_collateral` with the asset, amount, and addedAmount
+      console.log("added amount & amount", addedAmount, amount);
       await backendActor.toggle_collateral(
         asset,
         Number(amount),// Convert back to a decimal for the backend if necessary
         addedAmount
       );
-      setIsCollateral(!currentCollateralStatus);
+      setIsCollateral(currentCollateralStatus);
       console.log("Collateral toggled successfully", isCollateral);
     } catch (error) {
       console.error("Error toggling collateral:", error);
@@ -124,7 +125,7 @@ const ColateralPopup = ({
       
   
       // Call the function with the calculated asset value
-      await toggleCollateral(asset, usdValue);
+      await toggleCollateral(asset, assetSupply);
   
       // If no error, display success message
       toast.success("Collateral updated successfully!");

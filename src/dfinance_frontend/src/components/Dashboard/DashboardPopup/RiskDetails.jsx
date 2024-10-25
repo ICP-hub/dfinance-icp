@@ -8,13 +8,9 @@ const RiskPopup = ({ onClose, userData }) => {
 
   console.log("userdata in risk", userData);
   const health_Factor_Value =
-    userData?.Ok?.health_factor !== undefined &&
-      userData?.Ok?.health_factor !== null
-      ? parseFloat(Number(userData?.Ok?.health_factor)/100000000) > 100
-        ? Infinity
-        : parseFloat(Number(userData?.Ok?.health_factor)/100000000)
-      : 0; // Return 0 if health_factor is not defined
-
+  userData?.Ok?.health_factor / 10000000000 > 100
+    ? "Infinity"
+    : parseFloat((userData?.Ok?.health_factor / 10000000000).toFixed(2))
   const Ltv_Value = parseFloat(Number((userData?.Ok?.ltv)/100000000)*100)
     ? parseFloat(Number((userData?.Ok?.ltv)/100000000)*100)
     : 0;

@@ -31,6 +31,9 @@ const useRealTimeConversionRate = (asset) => {
                         case "ICP":
                             rate = data["internet-computer"]?.usd;
                             break;
+                        case "ckUSDT":
+                            rate = data["tether"]?.usd;
+                            break;
                         default:
                             console.error(`Unsupported asset: ${asset}`);
                             return;
@@ -51,6 +54,10 @@ const useRealTimeConversionRate = (asset) => {
                         case "ICP":
                             rate = assets.find(asset => asset.id === 'internet-computer')?.priceUsd;
                             break;
+                        case "ckUSDT":
+                            rate = assets.find(asset => asset.id === 'tether')?.priceUsd;
+                            break;
+                            break;
                         default:
                             console.error(`Unsupported asset: ${asset}`);
                             return;
@@ -70,6 +77,9 @@ const useRealTimeConversionRate = (asset) => {
                             break;
                         case "ICP":
                             rate = rates.ICP.USD.PRICE;
+                            break;
+                        case "ckUSDT":
+                            rate = rates.USDT.USD.PRICE;
                             break;
                         default:
                             console.error(`Unsupported asset: ${asset}`);

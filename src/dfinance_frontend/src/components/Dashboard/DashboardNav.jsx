@@ -21,6 +21,7 @@ import { useParams } from "react-router-dom";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.png";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 
 const DashboardNav = () => {

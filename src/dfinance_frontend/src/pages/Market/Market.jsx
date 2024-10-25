@@ -17,6 +17,7 @@ import Pagination from "../../components/Common/pagination";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import cekTH from '../../../public/assests-icon/cekTH.png';
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.png";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssets from "../../components/Common/useAssets"
 import useAssetData from "../../components/Common/useAssets"
@@ -325,6 +326,9 @@ const WalletDetails = () => {
                         {item[0] === "ICP" && (
                           <img src={icp} alt="cketh logo" className="w-8 h-8 rounded-full" />
                         )}
+                        {item[0] === "ckUSDT" && ( // Added condition for ckUSDT
+                          <img src={ckUSDT} alt="ckusdt logo" className="w-8 h-8 rounded-full" />
+                        )}
                         {item[0]}
                       </div>
                     </td>
@@ -397,6 +401,9 @@ const WalletDetails = () => {
                     )}
                     {selectedAssetData[0] === "ckUSDC" && (
                       <img src={ckUSDC} alt="ckUSDC logo" className="w-8 h-8 rounded-full" />
+                    )}
+                    {selectedAssetData[0] === "ckUSDT" && ( // Added condition for ckUSDT
+                      <img src={ckUSDT} alt="ckUSDT logo" className="w-8 h-8 rounded-full" />
                     )}
                     <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">{selectedAssetData[0]}</p>
                   </div>

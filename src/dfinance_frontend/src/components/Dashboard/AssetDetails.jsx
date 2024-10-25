@@ -32,6 +32,7 @@ import SupplyPopup from "./DashboardPopup/SupplyPopup";
 import ckbtc from "../../../public/assests-icon/ckBTC.png";
 import cketh from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.png";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 import useFormatNumber from "../customHooks/useFormatNumber";
@@ -92,11 +93,13 @@ const AssetDetails = () => {
     ckETHUsdRate,
     ckUSDCUsdRate,
     ckICPUsdRate,
+    ckUSDTUsdRate,
     fetchConversionRate,
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
+    ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
 
@@ -174,6 +177,7 @@ const AssetDetails = () => {
 
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
+  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -192,7 +196,7 @@ const AssetDetails = () => {
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
             setAssetPrincipal((prev) => ({
@@ -210,6 +214,7 @@ const AssetDetails = () => {
 
     fetchAssetPrinciple();
   }, [principal, backendActor]);
+
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -229,10 +234,13 @@ const AssetDetails = () => {
         case "ICP":
           result = await backendActor.get_asset_principal("ICP");
           break;
+        case "ckUSDT":
+          result = await backendActor.get_asset_principal("ckUSDT");
+          break;
+
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-
       return result.Ok.toText();
     } catch (error) {
       console.error(`Error fetching asset principal for ${asset}:`, error);
@@ -262,6 +270,12 @@ const AssetDetails = () => {
       const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
+
+    if (ckUSDTBalance && ckUSDTUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(2);
+      setCkUSDTUsdBalance(balanceInUsd);
+    }
+
   }, [
     ckBTCBalance,
     ckBTCUsdRate,
@@ -271,6 +285,8 @@ const AssetDetails = () => {
     ckUSDCUsdRate,
     ckICPBalance,
     ckICPUsdRate,
+    ckUSDTBalance,
+    ckUSDTUsdRate,
   ]);
 
   useEffect(() => {
@@ -318,6 +334,7 @@ const AssetDetails = () => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
       } catch (error) {
@@ -334,6 +351,7 @@ const AssetDetails = () => {
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
+    ckUSDTBalance
   ]);
 
   const formatNumber = useFormatNumber();
@@ -453,12 +471,14 @@ const AssetDetails = () => {
     id === "ckBTC"
       ? ckBTCBalance
       : id === "ckETH"
-      ? ckETHBalance
-      : id === "ckUSDC"
-      ? ckUSDCBalance
-      : id === "ICP"
-      ? ckICPBalance
-      : null;
+        ? ckETHBalance
+        : id === "ckUSDC"
+          ? ckUSDCBalance
+          : id === "ICP"
+            ? ckICPBalance
+            : id === "ckUSDT" // Add check for ckUSDT after ICP
+              ? ckUSDTBalance
+              : null;
 
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-7 md:-mt-7 lg:mt-10 my-6 gap-6 mb-[5rem]">
@@ -588,6 +608,13 @@ const AssetDetails = () => {
                       </p>
                     </>
                   )}
+                  {id === "ckUSDT" && (
+                    <>
+                      <p>
+                        {ckUSDTBalance} {id}
+                      </p>
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -645,6 +672,16 @@ const AssetDetails = () => {
                           </p>
                         </>
                       )}
+                      {id === "ckUSDT" && ( // Added conditional rendering for ckUSDT here
+                        <>
+                          <p>
+                            {ckUSDTBalance} {id}
+                          </p>
+                          <p className="text-[11px] font-light">
+                            ${formatNumber(ckUSDTUsdBalance)} {/* Assuming you have ckUSDTUsdBalance */}
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="ml-auto">
@@ -682,11 +719,11 @@ const AssetDetails = () => {
 
                         const supplyRateAPR =
                           Number(filteredData[1]?.Ok.current_liquidity_rate) /
-                            100000000 || 0;
+                          100000000 || 0;
 
                         const liquidationThreshold =
                           Number(userData.Ok?.liquidation_threshold) /
-                            100000000 || 0;
+                          100000000 || 0;
                         const reserveliquidationThreshold =
                           Number(
                             filteredData[1]?.Ok.configuration
@@ -697,12 +734,14 @@ const AssetDetails = () => {
                           id === "ckBTC"
                             ? ckBTCBalance
                             : id === "ckETH"
-                            ? ckETHBalance
-                            : id === "ckUSDC"
-                            ? ckUSDCBalance
-                            : id === "ICP"
-                            ? ckICPBalance
-                            : null;
+                              ? ckETHBalance
+                              : id === "ckUSDC"
+                                ? ckUSDCBalance
+                                : id === "ICP"
+                                  ? ckICPBalance
+                                  : id === "ckUSDT" // Added condition for ckUSDT after ICP
+                                    ? ckUSDTBalance
+                                    : null;
 
                         console.log(
                           "ckBalance",
@@ -720,16 +759,17 @@ const AssetDetails = () => {
                           "liquidationThreshold",
                           liquidationThreshold,
                           "currentCollateralStatus",
-                          currentCollateralStatus ,
+                          currentCollateralStatus,
                         );
 
                         handleModalOpen(
                           "supply",
                           id,
                           (id === "ckBTC" && ckbtc) ||
-                            (id === "ckETH" && cketh) ||
-                            (id === "ckUSDC" && ckUSDC) ||
-                            (id === "ICP" && icp),
+                          (id === "ckETH" && cketh) ||
+                          (id === "ckUSDC" && ckUSDC) ||
+                          (id === "ICP" && icp) ||
+                          (id === "ckUSDT" && ckUSDT),
                           supplyRateAPR,
                           ckBalance,
                           liquidationThreshold,
@@ -738,7 +778,7 @@ const AssetDetails = () => {
                           assetBorrow,
                           totalCollateral,
                           totalDebt,
-                          currentCollateralStatus ,
+                          currentCollateralStatus,
                         );
                       }}
                       className={

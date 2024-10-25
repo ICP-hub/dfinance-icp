@@ -24,6 +24,7 @@ import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.png";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
@@ -42,6 +43,7 @@ const MySupply = () => {
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
+  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -50,6 +52,7 @@ const MySupply = () => {
   const [borrowableETH, setBorrowableETH] = useState(0);
   const [borrowableUSDC, setBorrowableUSDC] = useState(0);
   const [borrowableICP, setBorrowableICP] = useState(0);
+  const [borrowableUSDT, setBorrowableUSDT] = useState(0);
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
@@ -70,11 +73,13 @@ const MySupply = () => {
     ckETHUsdRate,
     ckUSDCUsdRate,
     ckICPUsdRate,
+    ckUSDTUsdRate,
     fetchConversionRate,
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
+    ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
 
@@ -101,8 +106,13 @@ const MySupply = () => {
       setCkICPUsdBalance(balanceInUsd);
     }
 
+    if (ckUSDTBalance && ckUSDTUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(2);
+      setCkUSDTUsdBalance(balanceInUsd);
+    }
+
     if (ckBTCUsdRate) {
-      const btcAmount = (availableBorrow / ckBTCUsdRate); 
+      const btcAmount = (availableBorrow / ckBTCUsdRate);
       setBorrowableBTC(btcAmount);
     }
 
@@ -116,6 +126,11 @@ const MySupply = () => {
       setBorrowableUSDC(usdcAmount);
     }
 
+    if (ckUSDTUsdRate) { // New available borrow for ckUSDT
+      const usdtAmount = availableBorrow / ckUSDTUsdRate;
+      setBorrowableUSDT(usdtAmount);
+    }
+
     if (ckICPUsdRate) {
       const icpAmount = (availableBorrow / ckICPUsdRate);
       setBorrowableICP(icpAmount);
@@ -127,6 +142,8 @@ const MySupply = () => {
     ckETHUsdRate,
     ckUSDCBalance,
     ckUSDCUsdRate,
+    ckUSDTBalance,
+    ckUSDTUsdRate,
     ckICPBalance,
     ckICPUsdRate,
   ]);
@@ -140,6 +157,7 @@ const MySupply = () => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
       } catch (error) {
@@ -183,11 +201,11 @@ const MySupply = () => {
     assetBorrow,
     totalCollateral,
     totalDebt,
-    currentCollateralStatus ,
+    currentCollateralStatus,
     Ltv,
     availableBorrow,
     borrowableAsset,
-    
+
   ) => {
     console.log("handle toggle : ", Collateral);
     setIsModalOpen({
@@ -203,11 +221,11 @@ const MySupply = () => {
       assetBorrow: assetBorrow,
       totalCollateral: totalCollateral,
       totalDebt: totalDebt,
-      currentCollateralStatus :currentCollateralStatus,
+      currentCollateralStatus: currentCollateralStatus,
       Ltv: Ltv,
       availableBorrow: availableBorrow,
       borrowableAsset: borrowableAsset
-      
+
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -280,22 +298,22 @@ const MySupply = () => {
             setIsModalOpen={setIsModalOpen}
             children={
               <SupplyPopup
-              isModalOpen={isModalOpen.isOpen}
-              handleModalOpen={handleModalOpen}
-              asset={isModalOpen.asset}
-              image={isModalOpen.image}
-              supplyRateAPR={isModalOpen.supplyRateAPR}
-              balance={isModalOpen.balance}
-              liquidationThreshold={isModalOpen.liquidationThreshold}
-              reserveliquidationThreshold={
-                isModalOpen.reserveliquidationThreshold
-              }
-              assetSupply={isModalOpen.assetSupply}
-              assetBorrow={isModalOpen.assetBorrow}
-              totalCollateral={isModalOpen.totalCollateral}
-              totalDebt={isModalOpen.totalDebt}
-              currentCollateralStatus ={isModalOpen.currentCollateralStatus }
-              setIsModalOpen={setIsModalOpen}
+                isModalOpen={isModalOpen.isOpen}
+                handleModalOpen={handleModalOpen}
+                asset={isModalOpen.asset}
+                image={isModalOpen.image}
+                supplyRateAPR={isModalOpen.supplyRateAPR}
+                balance={isModalOpen.balance}
+                liquidationThreshold={isModalOpen.liquidationThreshold}
+                reserveliquidationThreshold={
+                  isModalOpen.reserveliquidationThreshold
+                }
+                assetSupply={isModalOpen.assetSupply}
+                assetBorrow={isModalOpen.assetBorrow}
+                totalCollateral={isModalOpen.totalCollateral}
+                totalDebt={isModalOpen.totalDebt}
+                currentCollateralStatus={isModalOpen.currentCollateralStatus}
+                setIsModalOpen={setIsModalOpen}
               />
             }
           />
@@ -322,7 +340,7 @@ const MySupply = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
-                currentCollateralStatus ={isModalOpen.currentCollateralStatus }
+                currentCollateralStatus={isModalOpen.currentCollateralStatus}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -382,7 +400,7 @@ const MySupply = () => {
           assetBorrow: isModalOpen.assetBorrow,
           totalCollateral: isModalOpen.totalCollateral,
           totalDebt: isModalOpen.totalDebt,
-          currentCollateralStatus : isModalOpen.currentCollateralStatus ,
+          currentCollateralStatus: isModalOpen.currentCollateralStatus,
         });
         return (
           <MySupplyModal
@@ -405,7 +423,7 @@ const MySupply = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
-                currentCollateralStatus ={isModalOpen.currentCollateralStatus}
+                currentCollateralStatus={isModalOpen.currentCollateralStatus}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -458,15 +476,15 @@ const MySupply = () => {
     </div>
   );
 
-  
+
   const isTableDisabled =
-  !userData?.Ok?.reserves ||
-  !userData?.Ok?.reserves[0] ||
-  userData?.Ok?.reserves[0].every(
-    (reserveGroup) => 
-      reserveGroup[1]?.asset_supply === 0n || 
-      reserveGroup[1]?.is_collateral === false
-  );
+    !userData?.Ok?.reserves ||
+    !userData?.Ok?.reserves[0] ||
+    userData?.Ok?.reserves[0].every(
+      (reserveGroup) =>
+        reserveGroup[1]?.asset_supply === 0n ||
+        reserveGroup[1]?.is_collateral === false
+    );
 
 
   useEffect(() => {
@@ -638,6 +656,7 @@ const MySupply = () => {
                                 item?.[1]?.Ok.configuration
                                   .liquidation_threshold
                               ) / 100000000;
+
                             const ckBalance =
                               asset === "ckBTC"
                                 ? ckBTCBalance
@@ -647,7 +666,9 @@ const MySupply = () => {
                                     ? ckUSDCBalance
                                     : asset === "ICP"
                                       ? ckICPBalance
-                                      : null;
+                                      : asset === "ckUSDT"
+                                        ? ckUSDTBalance
+                                        : null;
 
                             return (
                               <div
@@ -680,6 +701,13 @@ const MySupply = () => {
                                     <img
                                       src={icp}
                                       alt="ICP logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {asset === "ckUSDT" && (
+                                    <img
+                                      src={ckUSDT}
+                                      alt="ckUSDT logo"
                                       className="w-8 h-8 rounded-full"
                                     />
                                   )}
@@ -720,6 +748,8 @@ const MySupply = () => {
                                         formatNumber(
                                           assetSupply * ckICPUsdRate
                                         )}
+                                      {asset === "ckUSDT" &&
+                                        formatNumber(assetSupply * ckUSDTUsdRate)}
                                     </p>
                                   </div>
                                 </div>
@@ -756,9 +786,9 @@ const MySupply = () => {
                                           Number(
                                             reserveData?.[1]?.asset_borrow || 0n
                                           ) / 100000000;
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus); 
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         const totalCollateral =
                                           parseFloat(
                                             Number(
@@ -768,17 +798,18 @@ const MySupply = () => {
                                         const totalDebt =
                                           parseFloat(
                                             Number(userData?.Ok?.total_debt) /
-                                              100000000
+                                            100000000
                                           ) || 0;
-                                        
+
                                         // Open the modal and pass the necessary data
                                         handleModalOpen(
                                           "collateral",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -787,7 +818,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          currentCollateralStatus 
+                                          currentCollateralStatus
                                         );
                                       }}
                                     />
@@ -811,9 +842,9 @@ const MySupply = () => {
                                         Number(
                                           reserveData?.[1]?.asset_borrow || 0n
                                         ) / 100000000;
-                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       const totalCollateral =
                                         parseFloat(
                                           Number(
@@ -838,7 +869,8 @@ const MySupply = () => {
                                         (asset === "ckBTC" && ckBTC) ||
                                         (asset === "ckETH" && ckETH) ||
                                         (asset === "ckUSDC" && ckUSDC) ||
-                                        (asset === "ICP" && icp),
+                                        (asset === "ICP" && icp) ||
+                                        (asset === "ckUSDT" && ckUSDT),
                                         supplyRateApr,
                                         ckBalance,
                                         liquidationThreshold,
@@ -881,16 +913,17 @@ const MySupply = () => {
                                         Number(
                                           reserveData?.[1]?.asset_borrow || 0n
                                         ) / 100000000;
-                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       handleModalOpen(
                                         "withdraw",
                                         asset,
                                         (asset === "ckBTC" && ckBTC) ||
                                         (asset === "ckETH" && ckETH) ||
                                         (asset === "ckUSDC" && ckUSDC) ||
-                                        (asset === "ICP" && icp),
+                                        (asset === "ICP" && icp) ||
+                                        (asset === "ckUSDT" && ckUSDT),
                                         supplyRateApr,
                                         ckBalance,
                                         liquidationThreshold,
@@ -899,7 +932,7 @@ const MySupply = () => {
                                         assetBorrow,
                                         totalCollateral,
                                         totalDebt,
-                                        currentCollateralStatus 
+                                        currentCollateralStatus
                                       );
                                     }}
                                     className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -989,6 +1022,7 @@ const MySupply = () => {
                                   item?.[1]?.Ok.configuration
                                     .liquidation_threshold
                                 ) / 100000000 || 0;
+
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
@@ -998,7 +1032,9 @@ const MySupply = () => {
                                       ? ckUSDCBalance
                                       : asset === "ICP"
                                         ? ckICPBalance
-                                        : null;
+                                        : asset === "ckUSDT"
+                                          ? ckUSDTBalance
+                                          : null;
 
                               return (
                                 <div
@@ -1031,6 +1067,13 @@ const MySupply = () => {
                                       <img
                                         src={icp}
                                         alt="ICP logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    {asset === "ckUSDT" && (
+                                      <img
+                                        src={ckUSDT}
+                                        alt="ckUSDT logo"
                                         className="w-8 h-8 rounded-full"
                                       />
                                     )}
@@ -1067,6 +1110,8 @@ const MySupply = () => {
                                         formatNumber(
                                           assetSupply * ckICPUsdRate
                                         )}
+                                      {asset === "ckUSDT" &&
+                                        formatNumber(assetSupply * ckUSDTUsdRate)}
                                     </p>
                                   </div>
                                   <div className=" p-3  align-top flex items-center ">
@@ -1084,8 +1129,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
-                                          console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -1104,7 +1149,7 @@ const MySupply = () => {
                                         const totalDebt =
                                           parseFloat(
                                             Number(userData?.Ok?.total_debt) /
-                                              100000000
+                                            100000000
                                           ) || 0;
 
                                         // Open the modal and pass the necessary data
@@ -1112,9 +1157,10 @@ const MySupply = () => {
                                           "collateral",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1123,7 +1169,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          currentCollateralStatus 
+                                          currentCollateralStatus
                                         );
                                       }}
                                     />
@@ -1158,16 +1204,17 @@ const MySupply = () => {
                                             Number(userData?.Ok?.total_debt) /
                                             100000000
                                           ) || 0;
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         handleModalOpen(
                                           "supply",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1176,7 +1223,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          currentCollateralStatus 
+                                          currentCollateralStatus
                                         );
                                       }}
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
@@ -1209,7 +1256,7 @@ const MySupply = () => {
                                             reserveData?.[1]?.asset_borrow || 0n
                                           ) / 100000000;
 
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
                                         handleModalOpen(
                                           "withdraw",
@@ -1217,7 +1264,8 @@ const MySupply = () => {
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1226,7 +1274,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          currentCollateralStatus 
+                                          currentCollateralStatus
                                         );
                                       }}
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
@@ -1309,6 +1357,13 @@ const MySupply = () => {
                                   className="w-8 h-8 rounded-full"
                                 />
                               )}
+                              {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                <img
+                                  src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                  alt="ckUSDT logo"
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              )}
                               <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
                                 {item[0]}
                               </span>
@@ -1358,6 +1413,12 @@ const MySupply = () => {
                                     </p>
                                   </>
                                 )}
+                                {item[0] === "ckUSDT" && (
+                                  <>
+                                    <p>{Number(ckUSDTBalance).toLocaleString()}</p>
+                                    <p className="font-light">${formatNumber(ckUSDTUsdBalance)}</p>
+                                  </>
+                                )}
                               </p>
                             </div>
 
@@ -1402,9 +1463,9 @@ const MySupply = () => {
                                     Number(
                                       reserveData?.[1]?.asset_borrow || 0n
                                     ) / 100000000;
-                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                  const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                  console.log("currentCollateralStatus in on change", currentCollateralStatus);
 
                                   const totalCollateral =
                                     Number(
@@ -1420,7 +1481,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                     (item[0] === "ckBTC" && ckBTC) ||
                                     (item[0] === "ckETH" && ckETH) ||
                                     (item[0] === "ckUSDC" && ckUSDC) ||
-                                    (item[0] === "ICP" && icp),
+                                    (item[0] === "ICP" && icp) ||
+                                    (item[0] === "ckUSDT" && ckUSDT),
                                     Number(item[1]?.Ok.current_liquidity_rate) /
                                     100000000,
                                     item[0] === "ckBTC"
@@ -1431,7 +1493,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           ? ckUSDCBalance
                                           : item[0] === "ICP"
                                             ? ckICPBalance
-                                            : null,
+                                            : item[0] === "ckUSDT"
+                                              ? ckUSDTBalance
+                                              : null,
                                     Number(
                                       userData?.Ok?.liquidation_threshold
                                     ) / 100000000,
@@ -1444,7 +1508,7 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                     assetBorrow,
                                     totalCollateral,
                                     totalDebt,
-                                    currentCollateralStatus 
+                                    currentCollateralStatus
                                   );
                                 }}
                                 className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -1528,6 +1592,13 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                     className="w-8 h-8 rounded-full"
                                   />
                                 )}
+                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                  <img
+                                    src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                    alt="ckUSDT logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
+                                )}
                                 {item[0]}
                               </div>
                               <div className="p-3 align-top flex flex-col">
@@ -1571,6 +1642,12 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                     </p>
                                   </>
                                 )}
+                                {item[0] === "ckUSDT" && (
+                                  <>
+                                    <p>{Number(ckUSDTBalance).toLocaleString()}</p>
+                                    <p className="font-light">${formatNumber(ckUSDTUsdBalance)}</p>
+                                  </>
+                                )}
                               </div>
 
                               <div className="ml-2 align-top">
@@ -1605,10 +1682,10 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       Number(
                                         reserveData?.[1]?.asset_supply || 0n
                                       ) / 100000000;
-                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
-                                      
+                                    console.log("currentCollateralStatus in on change", currentCollateralStatus);
+
                                     const totalCollateral =
                                       parseFloat(
                                         Number(userData?.Ok?.total_collateral) /
@@ -1626,7 +1703,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       (item[0] === "ckBTC" && ckBTC) ||
                                       (item[0] === "ckETH" && ckETH) ||
                                       (item[0] === "ckUSDC" && ckUSDC) ||
-                                      (item[0] === "ICP" && icp),
+                                      (item[0] === "ICP" && icp) ||
+                                      (item[0] === "ckUSDT" && ckUSDT),
                                       Number(
                                         item[1]?.Ok.current_liquidity_rate
                                       ) / 100000000,
@@ -1638,7 +1716,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                             ? ckUSDCBalance
                                             : item[0] === "ICP"
                                               ? ckICPBalance
-                                              : null,
+                                              : item[0] === "ckUSDT"
+                                                ? ckUSDTBalance
+                                                : null,
                                       Number(
                                         userData.Ok?.liquidation_threshold
                                       ) / 100000000,
@@ -1650,7 +1730,7 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       assetBorrow,
                                       totalCollateral,
                                       totalDebt,
-                                      currentCollateralStatus ,
+                                      currentCollateralStatus,
                                     );
                                   }}
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
@@ -1745,7 +1825,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       ? ckUSDCBalance
                                       : asset === "ICP"
                                         ? ckICPBalance
-                                        : null;
+                                        : asset === "ckUSDT"
+                                          ? ckUSDTBalance
+                                          : null;
                               const borrowRateApr =
                                 Number(item?.[1]?.Ok?.borrow_rate) /
                                 100000000 || 0;
@@ -1792,6 +1874,13 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         className="w-8 h-8 rounded-full"
                                       />
                                     )}
+                                    {asset === "ckUSDT" && (
+                                      <img
+                                        src={ckUSDT}
+                                        alt="ckUSDT logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
                                     {asset}
                                   </div>
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
@@ -1826,6 +1915,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           formatNumber(
                                             assetBorrow * ckICPUsdRate
                                           )}
+                                        {asset === "ckUSDT" && // New condition for ckUSDT
+                                          formatNumber(assetBorrow * ckUSDTUsdRate)}
                                       </p>
                                     </div>
                                   </div>
@@ -1858,9 +1949,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -1892,7 +1983,10 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                                 ? borrowableUSDC
                                                 : item[0] === "ICP"
                                                   ? borrowableICP
-                                                  : 0;
+                                                  : item[0] === "ckUSDT"
+                                                    ? borrowableUSDT
+                                                    : 0;
+
                                         console.log("LTV1", Ltv);
 
                                         handleModalOpen(
@@ -1901,7 +1995,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1951,7 +2046,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -2040,7 +2136,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       ? ckUSDCBalance
                                       : asset === "ICP"
                                         ? ckICPBalance
-                                        : null;
+                                        : asset === "ckUSDT" // New condition for ckUSDT
+                                          ? ckUSDTBalance
+                                          : null;
                               const borrowRateApr =
                                 Number(item?.[1]?.Ok?.borrow_rate) /
                                 100000000 || 0;
@@ -2086,6 +2184,13 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         className="w-8 h-8 rounded-full"
                                       />
                                     )}
+                                    {asset === "ckUSDT" && ( // New condition for ckUSDT
+                                      <img
+                                        src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                        alt="ckUSDT logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
                                     {asset}
                                   </div>
                                   <div className="p-3">
@@ -2117,6 +2222,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           formatNumber(
                                             assetBorrow * ckICPUsdRate
                                           )}
+                                        {asset === "ckUSDT" && // New condition for ckUSDT
+                                          formatNumber(assetSupply * ckUSDTUsdRate)}
                                       </p>
                                     </div>
                                   </div>
@@ -2138,9 +2245,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -2173,7 +2280,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                                 ? borrowableUSDC
                                                 : item[0] === "ICP"
                                                   ? borrowableICP
-                                                  : 0;
+                                                  : item[0] === "ckUSDT"
+                                                    ? borrowableUSDT
+                                                    : 0;
 
                                         console.log("LTV1", Ltv);
 
@@ -2183,7 +2292,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -2235,7 +2345,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -2328,6 +2439,13 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                   className="w-8 h-8 rounded-full"
                                 />
                               )}
+                              {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                <img
+                                  src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                  alt="ckUSDT logo"
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              )}
                               <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
                                 {item[0]}
                               </span>
@@ -2344,8 +2462,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       $
                                       {Number(availableBorrow)
                                         ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
+                                          Number(availableBorrow).toFixed(4)
+                                        )
                                         : "0.0000"}
                                     </p>
                                   </>
@@ -2357,8 +2475,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       $
                                       {Number(availableBorrow)
                                         ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
+                                          Number(availableBorrow).toFixed(4)
+                                        )
                                         : "0.0000"}
                                     </p>
                                   </>
@@ -2370,8 +2488,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       $
                                       {Number(availableBorrow)
                                         ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
+                                          Number(availableBorrow).toFixed(4)
+                                        )
                                         : "0.0000"}
                                     </p>
                                   </>
@@ -2383,9 +2501,17 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       $
                                       {Number(availableBorrow)
                                         ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
+                                          Number(availableBorrow).toFixed(4)
+                                        )
                                         : "0.0000"}
+                                    </p>
+                                  </>
+                                )}
+                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                  <>
+                                    <p>{borrowableUSDT.toFixed(4)}</p>
+                                    <p className="font-light">
+                                      ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : "0.0000"}
                                     </p>
                                   </>
                                 )}
@@ -2420,9 +2546,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       reserveData?.[1]?.asset_supply || 0n
                                     ) / 100000000;
 
-                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                  const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                    console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                  console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                   const assetBorrow =
                                     Number(
                                       reserveData?.[1]?.asset_borrow || 0n
@@ -2447,21 +2573,26 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           ? borrowableUSDC
                                           : item[0] === "ICP"
                                             ? borrowableICP
-                                            : 0;
+                                            : item[0] === "ckUSDT" // New condition for ckUSDT
+                                              ? borrowableUSDT
+                                              : 0;
                                   handleModalOpen(
                                     "borrow",
                                     item[0],
                                     (item[0] === "ckBTC" && ckBTC) ||
                                     (item[0] === "ckETH" && ckETH) ||
                                     (item[0] === "ckUSDC" && ckUSDC) ||
-                                    (item[0] === "ICP" && icp),
+                                    (item[0] === "ICP" && icp) ||
+                                    (item[0] === "ckUSDT" && ckUSDT),
                                     Number(item[1].Ok.borrow_rate) / 100000000,
                                     item[0] === "ckBTC"
-                                      ? ckBTCBalance
-                                      : item[0] === "ckETH"
-                                        ? ckETHBalance
-                                        : item[0] === "ckUSDC"
-                                          ? ckUSDCBalance
+                                    ? ckBTCBalance
+                                    : item[0] === "ckETH"
+                                      ? ckETHBalance
+                                      : item[0] === "ckUSDC"
+                                        ? ckUSDCBalance
+                                        : item[0] === "ckUSDT" // New condition for ckUSDT
+                                          ? ckUSDTBalance     // Assuming ckUSDTBalance is defined in your state
                                           : null,
 
                                     Number(userData.Ok?.liquidation_threshold) /
@@ -2489,7 +2620,7 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                   handleDetailsClick(item[0], item[1])
                                 }
                                 disabled={isTableDisabled}
-                               className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
                               />
                             </div>
                             {index !== filteredItems.length - 1 && (
@@ -2582,6 +2713,13 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                     className="w-8 h-8 rounded-full"
                                   />
                                 )}
+                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                <img
+                                  src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                  alt="ckUSDT logo"
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              )}
                                 <span>{item[0]}</span>
                               </div>
 
@@ -2594,8 +2732,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       $
                                       {Number(availableBorrow)
                                         ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
+                                          Number(availableBorrow).toFixed(4)
+                                        )
                                         : "0.0000"}
                                     </p>
                                   </>
@@ -2607,8 +2745,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       $
                                       {Number(availableBorrow)
                                         ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
+                                          Number(availableBorrow).toFixed(4)
+                                        )
                                         : "0.0000"}
                                     </p>
                                   </>
@@ -2620,8 +2758,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       $
                                       {Number(availableBorrow)
                                         ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
+                                          Number(availableBorrow).toFixed(4)
+                                        )
                                         : "0.0000"}
                                     </p>
                                   </>
@@ -2633,9 +2771,17 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       $
                                       {Number(availableBorrow)
                                         ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
+                                          Number(availableBorrow).toFixed(4)
+                                        )
                                         : "0.0000"}
+                                    </p>
+                                  </>
+                                )}
+                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                  <>
+                                    <p>{borrowableUSDT.toFixed(4)}</p>
+                                    <p className="font-light">
+                                      ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : "0.0000"}
                                     </p>
                                   </>
                                 )}
@@ -2667,9 +2813,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         (reserveGroup) =>
                                           reserveGroup[0] === item[0]
                                       );
-                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                    console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                     const assetSupply =
                                       Number(
                                         reserveData?.[1]?.asset_supply || 0n
@@ -2691,7 +2837,7 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       Number(userData?.Ok?.ltv) / 100000000 ||
                                       0;
 
-                                    const borrowableAsset =
+                                      const borrowableAsset =
                                       item[0] === "ckBTC"
                                         ? borrowableBTC
                                         : item[0] === "ckETH"
@@ -2700,27 +2846,35 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                             ? borrowableUSDC
                                             : item[0] === "ICP"
                                               ? borrowableICP
-                                              : 0;
+                                              : item[0] === "ckUSDT" // New condition for ckUSDT
+                                                ? borrowableUSDT
+                                                : 0;
 
                                     handleModalOpen(
                                       "borrow",
                                       item[0],
                                       item[0] === "ckBTC"
-                                        ? ckBTC
-                                        : item[0] === "ckETH"
-                                          ? ckETH
-                                          : item[0] === "ckUSDC"
-                                            ? ckUSDC
-                                            : icp,
+                                      ? ckBTC
+                                      : item[0] === "ckETH"
+                                        ? ckETH
+                                        : item[0] === "ckUSDC"
+                                          ? ckUSDC
+                                          : item[0] === "ICP" // Check for ICP first
+                                            ? icp            // Assuming icp is defined in your assets
+                                            : item[0] === "ckUSDT" // Condition for ckUSDT
+                                              ? ckUSDT        // Assuming ckUSDT is defined in your assets
+                                              : null,
                                       Number(item[1].Ok.borrow_rate) /
                                       100000000,
                                       item[0] === "ckBTC"
-                                        ? ckBTCBalance
-                                        : item[0] === "ckETH"
-                                          ? ckETHBalance
-                                          : item[0] === "ckUSDC"
-                                            ? ckUSDCBalance
-                                            : ckICPBalance,
+                                    ? ckBTCBalance
+                                    : item[0] === "ckETH"
+                                      ? ckETHBalance
+                                      : item[0] === "ckUSDC"
+                                        ? ckUSDCBalance
+                                        : item[0] === "ckUSDT" // New condition for ckUSDT
+                                          ? ckUSDTBalance     // Assuming ckUSDTBalance is defined in your state
+                                          : null,
                                       Number(
                                         userData.Ok?.liquidation_threshold
                                       ) / 100000000,

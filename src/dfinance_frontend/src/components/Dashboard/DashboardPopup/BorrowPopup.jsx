@@ -104,8 +104,6 @@ const Borrow = ({
     console.log("Borrow function called for", asset, scaledAmount);
     setIsLoading(true);
     let ledgerActor;
-  
-    // Select the correct backend actor based on the asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
@@ -114,12 +112,14 @@ const Borrow = ({
       ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
+    } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+      ledgerActor = ledgerActors.ckUSDT;
     }
-  
+
     try {
       const borrowResult = await backendActor.borrow(asset, scaledAmount);
       console.log("Borrow result", borrowResult);
-  
+
       // Check if the result is "Ok" or "Err"
       if ("Ok" in borrowResult) {
         const sound = new Audio(coinSound);
@@ -152,7 +152,7 @@ const Borrow = ({
         setIsPaymentDone(false);
         setIsVisible(true);
       }
-  
+
     } catch (error) {
       console.error("Error borrowing:", error);
       toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
@@ -171,7 +171,7 @@ const Borrow = ({
       setIsLoading(false); // Ensure loading is stopped after the process is done
     }
   };
-  
+
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -221,7 +221,7 @@ const Borrow = ({
     const amountAdded = 0;
     const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-  
+
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
     console.log("LTV:", ltv * 100);
     setPrevHealthFactor(currentHealthFactor);
@@ -233,7 +233,7 @@ const Borrow = ({
       setIsAcknowledgmentRequired(true);
     } else {
       setIsAcknowledgmentRequired(false);
-      setIsAcknowledged(false); // Reset the acknowledgment when it's not required
+      setIsAcknowledged(false); 
     }
     if (ltv * 100 >= liquidationThreshold) {
       toast.info("LTV Exceeded!");
@@ -368,11 +368,11 @@ const Borrow = ({
   // Handle max button click to set max amount
   // Function to handle max button click
   const handleMaxClick = () => {
-    const maxAmount = borrowableAsset.toFixed(8); 
+    const maxAmount = borrowableAsset.toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split('.');
     const formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart}`;
     setAmount(formattedAmount);
-    updateAmountAndUsdValue(maxAmount); 
+    updateAmountAndUsdValue(maxAmount);
   };
   return (
     <>
@@ -396,9 +396,9 @@ const Borrow = ({
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -412,11 +412,10 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      parseFloat(availableBorrow) === 0
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(availableBorrow) === 0
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                      }`}
                     onClick={() => {
                       if (parseFloat(availableBorrow) > 0) {
                         handleMaxClick();
@@ -452,17 +451,16 @@ const Borrow = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          healthFactorBackend > 3
+                        className={`${healthFactorBackend > 3
                             ? "text-green-500"
                             : healthFactorBackend <= 1
-                            ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                            ? "text-orange-600"
-                            : healthFactorBackend <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : healthFactorBackend <= 1.5
+                                ? "text-orange-600"
+                                : healthFactorBackend <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {parseFloat(
                           healthFactorBackend > 100
@@ -472,17 +470,16 @@ const Borrow = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
+                        className={`${currentHealthFactor > 3
                             ? "text-green-500"
                             : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : currentHealthFactor <= 1.5
+                                ? "text-orange-600"
+                                : currentHealthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -553,11 +550,10 @@ const Borrow = ({
 
               <button
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""
-                }`}
+                  }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}
@@ -598,8 +594,8 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
@@ -611,8 +607,8 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

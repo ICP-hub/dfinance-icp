@@ -241,33 +241,14 @@ impl UpdateLogic {
             }
         };
 
-        // let available_borrow_for_asset = calculate_available_borrows(
-        //     user_data.total_collateral.unwrap_or(0).clone(),
-        //     user_data.total_debt.unwrap_or(0).clone(),
-        //     asset_reserve_data.configuration.ltv,
-        // );
+        
 
-        user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount);
+        user_data.available_borrow = Some((user_data.available_borrow.unwrap() as i128 - usd_amount as i128).max(0) as u128);
 
-        //let usd_rate = (usd_amount/params.amount) * 100000000;
+   
         let usd_rate = usd_amount.scaled_div(params.amount);
         if let Some((_, reserve_data)) = user_reserve {
-            // If Reserve data exists, it updates asset supply
-            // let asset_rate_result = get_exchange_rates(params.asset.clone(), 1.0).await;
-
-            // match asset_rate_result {
-            //     Ok((rate, _)) => {
-            //         // Assign the `f64` rate to `reserve_data.asset_price_when_supplied`
-            //         usd_rate = rate;
-
-            //     }
-            //     Err(e) => {
-
-            //         ic_cdk::println!("Failed to get asset rate: {}", e);
-
-            //         reserve_data.asset_price_when_borrowed = 0; // Default value in case of an error
-            //     }
-            // }
+            
 
             reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
             reserve_data.asset_price_when_borrowed = usd_rate;
@@ -279,7 +260,7 @@ impl UpdateLogic {
                 reserve_data
             );
         } else {
-            // If Reserve data does not exist, it creates a new one
+            
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
                 borrow_rate: asset_reserve_data.current_liquidity_rate,

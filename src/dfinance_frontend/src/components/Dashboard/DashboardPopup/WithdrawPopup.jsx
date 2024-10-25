@@ -32,7 +32,7 @@ const WithdrawPopup = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
-
+  
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset);
   console.log("Fees:", fees);
@@ -41,6 +41,7 @@ const WithdrawPopup = ({
   console.log("Current Collateral Status", collateral);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const [amount, setAmount] = useState("");
+  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +70,7 @@ const WithdrawPopup = ({
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value.replace(/,/g, ''); // Remove commas for processing
-
+  
     // Limit decimal places to 8 digits
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
@@ -77,21 +78,31 @@ const WithdrawPopup = ({
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`; // Limit decimal places to 8
       }
     }
+  
+    // Convert input amount to number for comparison
+    const numericAmount = parseFloat(inputAmount);
+  
+    // Check if the amount exceeds assetSupply
+    if (numericAmount > assetSupply) {
+      inputAmount = assetSupply.toString(); // Limit input amount to assetSupply
+    }
+  
     let formattedAmount;
     if (inputAmount.includes('.')) {
       const [integerPart, decimalPart] = inputAmount.split('.');
-
+  
       // Format the integer part with commas and limit decimal places to 8 digits
       formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart.slice(0, 8)}`;
     } else {
       // If no decimal, format the integer part with commas
       formattedAmount = parseInt(inputAmount).toLocaleString('en-US');
     }
-
+  
     // Update the input field value with the formatted number (with commas)
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ''));
@@ -127,6 +138,14 @@ const WithdrawPopup = ({
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+  useEffect(() => {
+    if (assetSupply && conversionRate) {
+      const convertedMaxValue = parseFloat(assetSupply) * conversionRate;
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
     }
   }, [amount, conversionRate]);
 
@@ -208,7 +227,7 @@ const WithdrawPopup = ({
       setIsLoading(false); // Stop loading once the function is done
     }
   };
-
+ 
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -255,8 +274,11 @@ const WithdrawPopup = ({
     );
 
     if ((ltv * 100 >= liquidationThreshold) && currentCollateralStatus) {
-      toast.info("LTV Exceeded!");
+      // Dismiss any existing toasts before showing a new one
+      toast.dismiss(); // This will remove all active toasts
+      toast.info("LTV Exceeded!"); // Show the new toast
     }
+    
     if ((healthFactor <= 1 || ltv * 100 >= liquidationThreshold) && currentCollateralStatus) {
       setIsButtonDisabled(true);
 
@@ -366,15 +388,7 @@ const WithdrawPopup = ({
                       }
                     }}
                   >
-                    {assetSupply >= 1
-                      ? assetSupply.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                      : assetSupply.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 8,
-                      })}
+                    {maxUsdValue.toLocaleString(4)}
                     Max {/* Adjust maximumFractionDigits as needed */}
                   </p>
                 </div>

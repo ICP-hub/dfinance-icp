@@ -24,24 +24,29 @@ import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.png";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
 // import {setToggle} from "../../redux/reducers/toggleReducer"
-
+import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 const MySupply = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state, pathname } = useLocation();
 
   const { principal, backendActor } = useAuth();
+  const [showAll, setShowAll] = useState(false);
 
+  // Toggle between showing 4 items and all items
+  const toggleShowAll = () => setShowAll((prev) => !prev);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
+  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -50,6 +55,7 @@ const MySupply = () => {
   const [borrowableETH, setBorrowableETH] = useState(0);
   const [borrowableUSDC, setBorrowableUSDC] = useState(0);
   const [borrowableICP, setBorrowableICP] = useState(0);
+  const [borrowableUSDT, setBorrowableUSDT] = useState(0);
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
@@ -70,11 +76,13 @@ const MySupply = () => {
     ckETHUsdRate,
     ckUSDCUsdRate,
     ckICPUsdRate,
+    ckUSDTUsdRate,
     fetchConversionRate,
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
+    ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
 
@@ -101,23 +109,33 @@ const MySupply = () => {
       setCkICPUsdBalance(balanceInUsd);
     }
 
+    if (ckUSDTBalance && ckUSDTUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(2);
+      setCkUSDTUsdBalance(balanceInUsd);
+    }
+
     if (ckBTCUsdRate) {
-      const btcAmount = (availableBorrow / ckBTCUsdRate); 
+      const btcAmount = availableBorrow / ckBTCUsdRate;
       setBorrowableBTC(btcAmount);
     }
 
     if (ckETHUsdRate) {
-      const ethAmount = (availableBorrow / ckETHUsdRate);
+      const ethAmount = availableBorrow / ckETHUsdRate;
       setBorrowableETH(ethAmount);
     }
 
     if (ckUSDCUsdRate) {
-      const usdcAmount = (availableBorrow / ckUSDCUsdRate);
+      const usdcAmount = availableBorrow / ckUSDCUsdRate;
       setBorrowableUSDC(usdcAmount);
     }
 
+    if (ckUSDTUsdRate) { // New available borrow for ckUSDT
+      const usdtAmount = availableBorrow / ckUSDTUsdRate;
+      setBorrowableUSDT(usdtAmount);
+    }
+
     if (ckICPUsdRate) {
-      const icpAmount = (availableBorrow / ckICPUsdRate);
+      const icpAmount = availableBorrow / ckICPUsdRate;
       setBorrowableICP(icpAmount);
     }
   }, [
@@ -127,6 +145,8 @@ const MySupply = () => {
     ckETHUsdRate,
     ckUSDCBalance,
     ckUSDCUsdRate,
+    ckUSDTBalance,
+    ckUSDTUsdRate,
     ckICPBalance,
     ckICPUsdRate,
   ]);
@@ -140,6 +160,7 @@ const MySupply = () => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
       } catch (error) {
@@ -183,11 +204,10 @@ const MySupply = () => {
     assetBorrow,
     totalCollateral,
     totalDebt,
-    currentCollateralStatus ,
+    currentCollateralStatus,
     Ltv,
     availableBorrow,
-    borrowableAsset,
-    
+    borrowableAsset
   ) => {
     console.log("handle toggle : ", Collateral);
     setIsModalOpen({
@@ -203,11 +223,11 @@ const MySupply = () => {
       assetBorrow: assetBorrow,
       totalCollateral: totalCollateral,
       totalDebt: totalDebt,
-      currentCollateralStatus :currentCollateralStatus,
+      currentCollateralStatus: currentCollateralStatus,
       Ltv: Ltv,
       availableBorrow: availableBorrow,
       borrowableAsset: borrowableAsset
-      
+
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -280,22 +300,22 @@ const MySupply = () => {
             setIsModalOpen={setIsModalOpen}
             children={
               <SupplyPopup
-              isModalOpen={isModalOpen.isOpen}
-              handleModalOpen={handleModalOpen}
-              asset={isModalOpen.asset}
-              image={isModalOpen.image}
-              supplyRateAPR={isModalOpen.supplyRateAPR}
-              balance={isModalOpen.balance}
-              liquidationThreshold={isModalOpen.liquidationThreshold}
-              reserveliquidationThreshold={
-                isModalOpen.reserveliquidationThreshold
-              }
-              assetSupply={isModalOpen.assetSupply}
-              assetBorrow={isModalOpen.assetBorrow}
-              totalCollateral={isModalOpen.totalCollateral}
-              totalDebt={isModalOpen.totalDebt}
-              currentCollateralStatus ={isModalOpen.currentCollateralStatus }
-              setIsModalOpen={setIsModalOpen}
+                isModalOpen={isModalOpen.isOpen}
+                handleModalOpen={handleModalOpen}
+                asset={isModalOpen.asset}
+                image={isModalOpen.image}
+                supplyRateAPR={isModalOpen.supplyRateAPR}
+                balance={isModalOpen.balance}
+                liquidationThreshold={isModalOpen.liquidationThreshold}
+                reserveliquidationThreshold={
+                  isModalOpen.reserveliquidationThreshold
+                }
+                assetSupply={isModalOpen.assetSupply}
+                assetBorrow={isModalOpen.assetBorrow}
+                totalCollateral={isModalOpen.totalCollateral}
+                totalDebt={isModalOpen.totalDebt}
+                currentCollateralStatus={isModalOpen.currentCollateralStatus}
+                setIsModalOpen={setIsModalOpen}
               />
             }
           />
@@ -322,7 +342,7 @@ const MySupply = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
-                currentCollateralStatus ={isModalOpen.currentCollateralStatus }
+                currentCollateralStatus={isModalOpen.currentCollateralStatus}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -382,7 +402,7 @@ const MySupply = () => {
           assetBorrow: isModalOpen.assetBorrow,
           totalCollateral: isModalOpen.totalCollateral,
           totalDebt: isModalOpen.totalDebt,
-          currentCollateralStatus : isModalOpen.currentCollateralStatus ,
+          currentCollateralStatus: isModalOpen.currentCollateralStatus,
         });
         return (
           <MySupplyModal
@@ -405,7 +425,7 @@ const MySupply = () => {
                 assetBorrow={isModalOpen.assetBorrow}
                 totalCollateral={isModalOpen.totalCollateral}
                 totalDebt={isModalOpen.totalDebt}
-                currentCollateralStatus ={isModalOpen.currentCollateralStatus}
+                currentCollateralStatus={isModalOpen.currentCollateralStatus}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -458,16 +478,14 @@ const MySupply = () => {
     </div>
   );
 
-  
   const isTableDisabled =
-  !userData?.Ok?.reserves ||
-  !userData?.Ok?.reserves[0] ||
-  userData?.Ok?.reserves[0].every(
-    (reserveGroup) => 
-      reserveGroup[1]?.asset_supply === 0n || 
-      reserveGroup[1]?.is_collateral === false
-  );
-
+    !userData?.Ok?.reserves ||
+    !userData?.Ok?.reserves[0] ||
+    userData?.Ok?.reserves[0].every(
+      (reserveGroup) =>
+        reserveGroup[1]?.asset_supply === 0n ||
+        reserveGroup[1]?.is_collateral === false
+    );
 
   useEffect(() => {
     if (filteredItems && filteredItems.length > 0) {
@@ -529,8 +547,8 @@ const MySupply = () => {
       <div className="flex justify-center -mb-30 lg:hidden">
         <button
           className={`w-1/2 py-2 button1 ${activeSection === "supply"
-            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
+              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
             }`}
           onClick={() => setActiveSection("supply")}
         >
@@ -538,8 +556,8 @@ const MySupply = () => {
         </button>
         <button
           className={`w-1/2 py-2 button1 ${activeSection === "borrow"
-            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
+              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
             }`}
           onClick={() => setActiveSection("borrow")}
         >
@@ -586,16 +604,17 @@ const MySupply = () => {
                   ) : (
                     <div
                       className={`relative mt-4 overflow-y-auto overflow-x-hidden scrollbar-custom ${filteredItems.length > 1
-                        ? "max-h-[1250px]"
-                        : "max-h-auto"
+                          ? "max-h-[1250px]"
+                          : "max-h-auto"
                         }`}
                     >
                       <div
                         className={`w-full ${filteredItems.length > 1 ? "h-full" : ""
                           }`}
                       >
-                        {userData?.Ok?.reserves[0]?.map(
-                          (reserveGroup, index) => {
+                        {userData?.Ok?.reserves[0]
+                          ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                          .map((reserveGroup, index) => {
                             console.log("userData", userData?.Ok?.reserves);
                             const asset = reserveGroup[1]?.reserve;
                             const assetSupply =
@@ -612,7 +631,8 @@ const MySupply = () => {
                               );
                             }
                             // dispatch(set(reserveGroup[1]?.is_collateral))
-                            const collateralStatus = reserveGroup[1]?.is_collateral;
+                            const collateralStatus =
+                              reserveGroup[1]?.is_collateral;
 
                             // You can now store or use the isCollateral value as needed
                             console.log(
@@ -638,6 +658,7 @@ const MySupply = () => {
                                 item?.[1]?.Ok.configuration
                                   .liquidation_threshold
                               ) / 100000000;
+
                             const ckBalance =
                               asset === "ckBTC"
                                 ? ckBTCBalance
@@ -647,7 +668,9 @@ const MySupply = () => {
                                     ? ckUSDCBalance
                                     : asset === "ICP"
                                       ? ckICPBalance
-                                      : null;
+                                      : asset === "ckUSDT"
+                                        ? ckUSDTBalance
+                                        : null;
 
                             return (
                               <div
@@ -680,6 +703,13 @@ const MySupply = () => {
                                     <img
                                       src={icp}
                                       alt="ICP logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {asset === "ckUSDT" && (
+                                    <img
+                                      src={ckUSDT}
+                                      alt="ckUSDT logo"
                                       className="w-8 h-8 rounded-full"
                                     />
                                   )}
@@ -720,6 +750,8 @@ const MySupply = () => {
                                         formatNumber(
                                           assetSupply * ckICPUsdRate
                                         )}
+                                      {asset === "ckUSDT" &&
+                                        formatNumber(assetSupply * ckUSDTUsdRate)}
                                     </p>
                                   </div>
                                 </div>
@@ -756,9 +788,9 @@ const MySupply = () => {
                                           Number(
                                             reserveData?.[1]?.asset_borrow || 0n
                                           ) / 100000000;
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus); 
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         const totalCollateral =
                                           parseFloat(
                                             Number(
@@ -768,17 +800,18 @@ const MySupply = () => {
                                         const totalDebt =
                                           parseFloat(
                                             Number(userData?.Ok?.total_debt) /
-                                              100000000
+                                            100000000
                                           ) || 0;
-                                        
+
                                         // Open the modal and pass the necessary data
                                         handleModalOpen(
                                           "collateral",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -787,7 +820,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          currentCollateralStatus 
+                                          currentCollateralStatus
                                         );
                                       }}
                                     />
@@ -811,9 +844,9 @@ const MySupply = () => {
                                         Number(
                                           reserveData?.[1]?.asset_borrow || 0n
                                         ) / 100000000;
-                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       const totalCollateral =
                                         parseFloat(
                                           Number(
@@ -838,7 +871,8 @@ const MySupply = () => {
                                         (asset === "ckBTC" && ckBTC) ||
                                         (asset === "ckETH" && ckETH) ||
                                         (asset === "ckUSDC" && ckUSDC) ||
-                                        (asset === "ICP" && icp),
+                                        (asset === "ICP" && icp) ||
+                                        (asset === "ckUSDT" && ckUSDT),
                                         supplyRateApr,
                                         ckBalance,
                                         liquidationThreshold,
@@ -881,16 +915,17 @@ const MySupply = () => {
                                         Number(
                                           reserveData?.[1]?.asset_borrow || 0n
                                         ) / 100000000;
-                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       handleModalOpen(
                                         "withdraw",
                                         asset,
                                         (asset === "ckBTC" && ckBTC) ||
                                         (asset === "ckETH" && ckETH) ||
                                         (asset === "ckUSDC" && ckUSDC) ||
-                                        (asset === "ICP" && icp),
+                                        (asset === "ICP" && icp) ||
+                                        (asset === "ckUSDT" && ckUSDT),
                                         supplyRateApr,
                                         ckBalance,
                                         liquidationThreshold,
@@ -899,7 +934,7 @@ const MySupply = () => {
                                         assetBorrow,
                                         totalCollateral,
                                         totalDebt,
-                                        currentCollateralStatus 
+                                        currentCollateralStatus
                                       );
                                     }}
                                     className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -913,7 +948,20 @@ const MySupply = () => {
                               </div>
                             );
                           }
-                        )}
+                          )}
+                      </div>
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={toggleShowAll}
+                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {showAll ? (
+                            <FaArrowUp size={18} />
+                          ) : (
+                            <FaArrowDown size={18} />
+                          )}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -949,13 +997,14 @@ const MySupply = () => {
                         className={`w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_supply > 0
                         ).length > 3
-                          ? "h-[260px]"
-                          : ""
+                            ? "h-[260px]"
+                            : ""
                           }`}
                       >
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                          {userData?.Ok?.reserves[0]?.map(
-                            (reserveGroup, index) => {
+                          {userData?.Ok?.reserves[0]
+                            ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                            .map((reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               const assetSupply =
                                 Number(reserveGroup[1]?.asset_supply || 0n) /
@@ -989,6 +1038,7 @@ const MySupply = () => {
                                   item?.[1]?.Ok.configuration
                                     .liquidation_threshold
                                 ) / 100000000 || 0;
+
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
@@ -998,7 +1048,9 @@ const MySupply = () => {
                                       ? ckUSDCBalance
                                       : asset === "ICP"
                                         ? ckICPBalance
-                                        : null;
+                                        : asset === "ckUSDT"
+                                          ? ckUSDTBalance
+                                          : null;
 
                               return (
                                 <div
@@ -1031,6 +1083,13 @@ const MySupply = () => {
                                       <img
                                         src={icp}
                                         alt="ICP logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    {asset === "ckUSDT" && (
+                                      <img
+                                        src={ckUSDT}
+                                        alt="ckUSDT logo"
                                         className="w-8 h-8 rounded-full"
                                       />
                                     )}
@@ -1067,6 +1126,8 @@ const MySupply = () => {
                                         formatNumber(
                                           assetSupply * ckICPUsdRate
                                         )}
+                                      {asset === "ckUSDT" &&
+                                        formatNumber(assetSupply * ckUSDTUsdRate)}
                                     </p>
                                   </div>
                                   <div className=" p-3  align-top flex items-center ">
@@ -1084,8 +1145,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
-                                          console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        console.log("currentCollateralStatus in on change desktop", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -1104,7 +1165,7 @@ const MySupply = () => {
                                         const totalDebt =
                                           parseFloat(
                                             Number(userData?.Ok?.total_debt) /
-                                              100000000
+                                            100000000
                                           ) || 0;
 
                                         // Open the modal and pass the necessary data
@@ -1112,9 +1173,10 @@ const MySupply = () => {
                                           "collateral",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp),
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1123,7 +1185,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          currentCollateralStatus 
+                                          currentCollateralStatus
                                         );
                                       }}
                                     />
@@ -1158,16 +1220,17 @@ const MySupply = () => {
                                             Number(userData?.Ok?.total_debt) /
                                             100000000
                                           ) || 0;
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         handleModalOpen(
                                           "supply",
                                           asset,
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1176,7 +1239,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          currentCollateralStatus 
+                                          currentCollateralStatus
                                         );
                                       }}
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
@@ -1209,7 +1272,7 @@ const MySupply = () => {
                                             reserveData?.[1]?.asset_borrow || 0n
                                           ) / 100000000;
 
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
                                         handleModalOpen(
                                           "withdraw",
@@ -1217,7 +1280,8 @@ const MySupply = () => {
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           supplyRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1226,7 +1290,7 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          currentCollateralStatus 
+                                          currentCollateralStatus
                                         );
                                       }}
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
@@ -1235,8 +1299,21 @@ const MySupply = () => {
                                 </div>
                               );
                             }
-                          )}
+                            )}
                         </div>
+                      </div>
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={toggleShowAll}
+                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {showAll ? (
+                            <FaArrowUp size={18} />
+                          ) : (
+                            <FaArrowDown size={18} />
+                          )}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -1275,231 +1352,14 @@ const MySupply = () => {
                     <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-custom">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {filteredItems.slice(0, 8).map((item, index) => (
-                          <div
-                            key={index}
-                            className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
-                          >
-                            <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                              {item[0] === "ckBTC" && (
-                                <img
-                                  src={ckBTC}
-                                  alt="ckbtc logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckETH" && (
-                                <img
-                                  src={ckETH}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckUSDC" && (
-                                <img
-                                  src={ckUSDC}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ICP" && (
-                                <img
-                                  src={icp}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
-                                {item[0]}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                Wallet Balance:
-                              </p>
-                              <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                {item[0] === "ckBTC" && (
-                                  <>
-                                    <p>
-                                      {Number(ckBTCBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckBTCUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <>
-                                    <p>
-                                      {Number(ckETHBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckETHUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <>
-                                    <p>
-                                      {Number(ckUSDCBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckUSDCUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ICP" && (
-                                  <>
-                                    <p>
-                                      {Number(ckICPBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckICPUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                              </p>
-                            </div>
-
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-2">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                APY:
-                              </p>
-                              <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
-                                {Number(item[1].Ok.current_liquidity_rate) /
-                                  100000000 <
-                                  0.1
-                                  ? "<0.1%"
-                                  : `${(
-                                    Number(
-                                      item[1].Ok.current_liquidity_rate
-                                    ) / 100000000
-                                  ).toFixed(2)}%`}
-                              </p>
-                            </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
-                              <p className="text-nowrap text-[#233D63] dark:text-darkText dark:opacity-50">
-                                Can Be Collateral
-                              </p>
-                              <div className="w-full flex items-center justify-end dark:text-darkText mb-2">
-                                <Check color={checkColor} size={16} />
-                              </div>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <Button
-                                title={"Supply"}
-                                onClickHandler={() => {
-                                  const reserveData =
-                                    userData?.Ok?.reserves[0]?.find(
-                                      (reserveGroup) =>
-                                        reserveGroup[0] === item[0]
-                                    );
-                                  const assetSupply =
-                                    Number(
-                                      reserveData?.[1]?.asset_supply || 0n
-                                    ) / 100000000;
-                                  const assetBorrow =
-                                    Number(
-                                      reserveData?.[1]?.asset_borrow || 0n
-                                    ) / 100000000;
-                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
-
-console.log("currentCollateralStatus in on change", currentCollateralStatus);
-
-                                  const totalCollateral =
-                                    Number(
-                                      userData?.Ok?.total_collateral || 0n
-                                    ) / 100000000;
-                                  const totalDebt =
-                                    Number(userData?.Ok?.total_debt || 0n) /
-                                    100000000;
-
-                                  handleModalOpen(
-                                    "supply",
-                                    item[0],
-                                    (item[0] === "ckBTC" && ckBTC) ||
-                                    (item[0] === "ckETH" && ckETH) ||
-                                    (item[0] === "ckUSDC" && ckUSDC) ||
-                                    (item[0] === "ICP" && icp),
-                                    Number(item[1]?.Ok.current_liquidity_rate) /
-                                    100000000,
-                                    item[0] === "ckBTC"
-                                      ? ckBTCBalance
-                                      : item[0] === "ckETH"
-                                        ? ckETHBalance
-                                        : item[0] === "ckUSDC"
-                                          ? ckUSDCBalance
-                                          : item[0] === "ICP"
-                                            ? ckICPBalance
-                                            : null,
-                                    Number(
-                                      userData?.Ok?.liquidation_threshold
-                                    ) / 100000000,
-                                    Number(
-                                      item[1].Ok.configuration
-                                        .liquidation_threshold
-                                    ) / 100000000,
-
-                                    assetSupply,
-                                    assetBorrow,
-                                    totalCollateral,
-                                    totalDebt,
-                                    currentCollateralStatus 
-                                  );
-                                }}
-                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
-                              />
-
-                              <Button
-                                title={"Details"}
-                                onClickHandler={() =>
-                                  handleDetailsClick(item[0], item[1])
-                                }
-                                className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
-                              />
-                            </div>
-                            {index !== filteredItems.length - 1 && (
-                              <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* for desktop screen */}
-            <div className="hidden xl:block">
-              {isVisible && (
-                <>
-                  {filteredItems.length === 0 ? (
-                    noAssetsToSupplyMessage
-                  ) : (
-                    // <div className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden">
-                    <div className="w-full h-auto mt-4 ">
-                      {/* Fixed Header */}
-                      <div className="w-full z-10 sticky top-0 ">
-                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          <div className="p-5 pl-4">Asset</div>
-                          <div className="p-5">Wallet Balance</div>
-                          <div className="p-5">Apy</div>
-                          <div className="p-5">Can be Collateral</div>
-                          <div className="p-5"></div>
-                        </div>
-                      </div>
-
-                      {/* className="w-full h-auto max-h-[200px] overflow-y-auto scrollbar-custom" */}
-                      {/* Scrollable Content Area */}
-                      <div className="w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom">
-                        <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                          {filteredItems.slice(0, 8).map((item, index) => (
+                        {filteredItems
+                          .slice(0, showAll ? filteredItems.length : 4)
+                          .map((item, index) => (
                             <div
                               key={index}
-                              className="grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                              className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
                             >
-                              <div className="p-3 pl-4 align-top flex items-center gap-2">
+                              <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                                 {item[0] === "ckBTC" && (
                                   <img
                                     src={ckBTC}
@@ -1517,78 +1377,107 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                 {item[0] === "ckUSDC" && (
                                   <img
                                     src={ckUSDC}
-                                    alt="ckusdc logo"
+                                    alt="cketh logo"
                                     className="w-8 h-8 rounded-full"
                                   />
                                 )}
                                 {item[0] === "ICP" && (
                                   <img
                                     src={icp}
-                                    alt="icp logo"
+                                    alt="cketh logo"
                                     className="w-8 h-8 rounded-full"
                                   />
                                 )}
-                                {item[0]}
+                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                  <img
+                                    src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                    alt="ckUSDT logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
+                                )}
+                                <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
+                                  {item[0]}
+                                </span>
                               </div>
-                              <div className="p-3 align-top flex flex-col">
-                                {item[0] === "ckBTC" && (
-                                  <>
-                                    <p>
-                                      {Number(ckBTCBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckBTCUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <>
-                                    <p>
-                                      {Number(ckETHBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckETHUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <>
-                                    <p>
-                                      {Number(ckUSDCBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckUSDCUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ICP" && (
-                                  <>
-                                    <p>
-                                      {Number(ckICPBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckICPUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
+                              <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
+                                <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                  Wallet Balance:
+                                </p>
+                                <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                                  {item[0] === "ckBTC" && (
+                                    <>
+                                      <p>
+                                        {Number(ckBTCBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckBTCUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <>
+                                      <p>
+                                        {Number(ckETHBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckETHUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <>
+                                      <p>
+                                        {Number(ckUSDCBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckUSDCUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <>
+                                      <p>
+                                        {Number(ckICPBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckICPUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDT" && (
+                                    <>
+                                      <p>{Number(ckUSDTBalance).toLocaleString()}</p>
+                                      <p className="font-light">${formatNumber(ckUSDTUsdBalance)}</p>
+                                    </>
+                                  )}
+                                </p>
                               </div>
 
-                              <div className="ml-2 align-top">
-                                {Number(item[1].Ok.current_liquidity_rate) /
-                                  100000000 <
-                                  0.1
-                                  ? "<0.1%"
-                                  : `${(
-                                    Number(
-                                      item[1].Ok.current_liquidity_rate
-                                    ) / 100000000
-                                  ).toFixed(2)}%`}
+                              <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-2">
+                                <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                  APY:
+                                </p>
+                                <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
+                                  {Number(item[1].Ok.current_liquidity_rate) /
+                                    100000000 <
+                                    0.1
+                                    ? "<0.1%"
+                                    : `${(
+                                      Number(
+                                        item[1].Ok.current_liquidity_rate
+                                      ) / 100000000
+                                    ).toFixed(2)}%`}
+                                </p>
                               </div>
-
-                              <div className="p-3 -ml-3 align-top flex items-center justify-center dark:text-darkText">
-                                <Check color={checkColor} size={16} />
+                              <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
+                                <p className="text-nowrap text-[#233D63] dark:text-darkText dark:opacity-50">
+                                  Can Be Collateral
+                                </p>
+                                <div className="w-full flex items-center justify-end dark:text-darkText mb-2">
+                                  <Check color={checkColor} size={16} />
+                                </div>
                               </div>
-                              <div className="p-3 align-top flex gap-2 pt-2">
+                              <div className="flex justify-between gap-4">
                                 <Button
                                   title={"Supply"}
                                   onClickHandler={() => {
@@ -1603,22 +1492,19 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       ) / 100000000;
                                     const assetBorrow =
                                       Number(
-                                        reserveData?.[1]?.asset_supply || 0n
+                                        reserveData?.[1]?.asset_borrow || 0n
                                       ) / 100000000;
-                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
-                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
-                                      
+                                    console.log("currentCollateralStatus in on change", currentCollateralStatus);
+
                                     const totalCollateral =
-                                      parseFloat(
-                                        Number(userData?.Ok?.total_collateral) /
-                                        100000000
-                                      ) || 0;
+                                      Number(
+                                        userData?.Ok?.total_collateral || 0n
+                                      ) / 100000000;
                                     const totalDebt =
-                                      parseFloat(
-                                        Number(userData?.Ok?.total_debt) /
-                                        100000000
-                                      ) || 0;
+                                      Number(userData?.Ok?.total_debt || 0n) /
+                                      100000000;
 
                                     handleModalOpen(
                                       "supply",
@@ -1626,10 +1512,10 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       (item[0] === "ckBTC" && ckBTC) ||
                                       (item[0] === "ckETH" && ckETH) ||
                                       (item[0] === "ckUSDC" && ckUSDC) ||
-                                      (item[0] === "ICP" && icp),
-                                      Number(
-                                        item[1]?.Ok.current_liquidity_rate
-                                      ) / 100000000,
+                                      (item[0] === "ICP" && icp) ||
+                                      (item[0] === "ckUSDT" && ckUSDT),
+                                      Number(item[1]?.Ok.current_liquidity_rate) /
+                                      100000000,
                                       item[0] === "ckBTC"
                                         ? ckBTCBalance
                                         : item[0] === "ckETH"
@@ -1638,34 +1524,278 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                             ? ckUSDCBalance
                                             : item[0] === "ICP"
                                               ? ckICPBalance
-                                              : null,
+                                              : item[0] === "ckUSDT"
+                                                ? ckUSDTBalance
+                                                : null,
                                       Number(
-                                        userData.Ok?.liquidation_threshold
+                                        userData?.Ok?.liquidation_threshold
                                       ) / 100000000,
                                       Number(
-                                        item[1]?.Ok.configuration
+                                        item[1].Ok.configuration
                                           .liquidation_threshold
                                       ) / 100000000,
+
                                       assetSupply,
                                       assetBorrow,
                                       totalCollateral,
                                       totalDebt,
-                                      currentCollateralStatus ,
+                                      currentCollateralStatus
                                     );
                                   }}
-                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
                                 />
+
                                 <Button
                                   title={"Details"}
                                   onClickHandler={() =>
                                     handleDetailsClick(item[0], item[1])
                                   }
-                                  className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                  className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
                                 />
                               </div>
+                              {index !== filteredItems.length - 1 && (
+                                <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                              )}
                             </div>
                           ))}
+                      </div>
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={toggleShowAll}
+                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {showAll ? (
+                            <FaArrowUp size={18} />
+                          ) : (
+                            <FaArrowDown size={18} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* for desktop screen */}
+            <div className="hidden xl:block">
+              {isVisible && (
+                <>
+                  {filteredItems.length === 0 ? (
+                    noAssetsToSupplyMessage
+                  ) : (
+                    <div className="w-full h-auto mt-4">
+                      {/* Fixed Header */}
+                      <div className="w-full z-10 sticky top-0 ">
+                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+                          <div className="p-5 pl-4">Asset</div>
+                          <div className="p-5">Wallet Balance</div>
+                          <div className="p-5">Apy</div>
+                          <div className="p-5">Can be Collateral</div>
+                          <div className="p-5"></div>
                         </div>
+                      </div>
+
+                      {/* Scrollable Content Area */}
+                      <div className="w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom">
+                        <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
+                          {filteredItems
+                            .slice(0, showAll ? filteredItems.length : 4)
+                            .map((item, index) => (
+                              <div
+                                key={index}
+                                className="grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                              >
+                                <div className="p-3 pl-4 align-top flex items-center gap-2">
+                                  {item[0] === "ckBTC" && (
+                                    <img
+                                      src={ckBTC}
+                                      alt="ckbtc logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <img
+                                      src={ckETH}
+                                      alt="cketh logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <img
+                                      src={ckUSDC}
+                                      alt="ckusdc logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <img
+                                      src={icp}
+                                      alt="icp logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                    <img
+                                      src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                      alt="ckUSDT logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0]}
+                                </div>
+                                <div className="p-3 align-top flex flex-col">
+                                  {item[0] === "ckBTC" && (
+                                    <>
+                                      <p>
+                                        {Number(ckBTCBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckBTCUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <>
+                                      <p>
+                                        {Number(ckETHBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckETHUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <>
+                                      <p>
+                                        {Number(ckUSDCBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckUSDCUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <>
+                                      <p>
+                                        {Number(ckICPBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckICPUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+
+                                <div className="ml-2 align-top">
+                                  {Number(item[1].Ok.current_liquidity_rate) /
+                                    100000000 <
+                                    0.1
+                                    ? "<0.1%"
+                                    : `${(
+                                      Number(
+                                        item[1].Ok.current_liquidity_rate
+                                      ) / 100000000
+                                    ).toFixed(2)}%`}
+                                </div>
+
+                                <div className="p-3 -ml-3 align-top flex items-center justify-center dark:text-darkText">
+                                  <Check color={checkColor} size={16} />
+                                </div>
+                                <div className="p-3 align-top flex gap-2 pt-2">
+                                  <Button
+                                    title={"Supply"}
+                                    onClickHandler={() => {
+                                      const reserveData =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0]
+                                        );
+                                      const assetSupply =
+                                        Number(
+                                          reserveData?.[1]?.asset_supply || 0n
+                                        ) / 100000000;
+                                      const assetBorrow =
+                                        Number(
+                                          reserveData?.[1]?.asset_supply || 0n
+                                        ) / 100000000;
+                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
+
+                                      const totalCollateral =
+                                        parseFloat(
+                                          Number(userData?.Ok?.total_collateral) /
+                                          100000000
+                                        ) || 0;
+                                      const totalDebt =
+                                        parseFloat(
+                                          Number(userData?.Ok?.total_debt) /
+                                          100000000
+                                        ) || 0;
+
+                                      handleModalOpen(
+                                        "supply",
+                                        item[0],
+                                        (item[0] === "ckBTC" && ckBTC) ||
+                                        (item[0] === "ckETH" && ckETH) ||
+                                        (item[0] === "ckUSDC" && ckUSDC) ||
+                                        (item[0] === "ICP" && icp),
+                                        Number(
+                                          item[1]?.Ok.current_liquidity_rate
+                                        ) / 100000000,
+                                        item[0] === "ckBTC"
+                                          ? ckBTCBalance
+                                          : item[0] === "ckETH"
+                                            ? ckETHBalance
+                                            : item[0] === "ckUSDC"
+                                              ? ckUSDCBalance
+                                              : item[0] === "ICP"
+                                                ? ckICPBalance
+                                                : null,
+                                        Number(
+                                          userData.Ok?.liquidation_threshold
+                                        ) / 100000000,
+                                        Number(
+                                          item[1]?.Ok.configuration
+                                            .liquidation_threshold
+                                        ) / 100000000,
+                                        assetSupply,
+                                        assetBorrow,
+                                        totalCollateral,
+                                        totalDebt,
+                                        currentCollateralStatus,
+                                      );
+                                    }}
+                                    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                  />
+                                  <Button
+                                    title={"Details"}
+                                    onClickHandler={() =>
+                                      handleDetailsClick(item[0], item[1])
+                                    }
+                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Arrow Button to Show/Hide more assets */}
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={toggleShowAll}
+                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {showAll ? (
+                            <FaArrowUp size={18} />
+                          ) : (
+                            <FaArrowDown size={18} />
+                          )}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -1713,15 +1843,16 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                     noBorrowMessage
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-                      <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-custom">
+                      <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none ">
                         {/* Container for the content */}
                         <div className="w-full">
                           {console.log(
                             "user data in my borrow",
                             userData?.Ok?.reserves[0]
                           )}
-                          {userData?.Ok?.reserves[0]?.map(
-                            (reserveGroup, index) => {
+                          {userData?.Ok?.reserves[0]
+                            ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4) // Showing 3 items initially
+                            .map((reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               console.log("Reserve group", reserveGroup[1]);
                               if (reserveGroup[1]?.asset_borrow <= 0)
@@ -1745,7 +1876,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       ? ckUSDCBalance
                                       : asset === "ICP"
                                         ? ckICPBalance
-                                        : null;
+                                        : asset === "ckUSDT"
+                                          ? ckUSDTBalance
+                                          : null;
                               const borrowRateApr =
                                 Number(item?.[1]?.Ok?.borrow_rate) /
                                 100000000 || 0;
@@ -1792,6 +1925,13 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         className="w-8 h-8 rounded-full"
                                       />
                                     )}
+                                    {asset === "ckUSDT" && (
+                                      <img
+                                        src={ckUSDT}
+                                        alt="ckUSDT logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
                                     {asset}
                                   </div>
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
@@ -1826,6 +1966,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           formatNumber(
                                             assetBorrow * ckICPUsdRate
                                           )}
+                                        {asset === "ckUSDT" && // New condition for ckUSDT
+                                          formatNumber(assetBorrow * ckUSDTUsdRate)}
                                       </p>
                                     </div>
                                   </div>
@@ -1858,9 +2000,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -1892,7 +2034,10 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                                 ? borrowableUSDC
                                                 : item[0] === "ICP"
                                                   ? borrowableICP
-                                                  : 0;
+                                                  : item[0] === "ckUSDT"
+                                                    ? borrowableUSDT
+                                                    : 0;
+
                                         console.log("LTV1", Ltv);
 
                                         handleModalOpen(
@@ -1901,7 +2046,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1951,7 +2097,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -1971,8 +2118,21 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                 </div>
                               );
                             }
-                          )}
+                            )}
                         </div>
+                      </div>
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={toggleShowAll}
+                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {showAll ? (
+                            <FaArrowUp size={18} />
+                          ) : (
+                            <FaArrowDown size={18} />
+                          )}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -2008,13 +2168,14 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                         className={`w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_borrow > 0
                         ).length > 3
-                          ? "h-[260px]"
-                          : ""
+                            ? "h-[260px]"
+                            : ""
                           }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
-                          {userData?.Ok?.reserves[0]?.map(
-                            (reserveGroup, index) => {
+                          {userData?.Ok?.reserves[0]
+                            ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                            .map((reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               if (
                                 Number(reserveGroup[1]?.asset_borrow || 0n) /
@@ -2040,7 +2201,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       ? ckUSDCBalance
                                       : asset === "ICP"
                                         ? ckICPBalance
-                                        : null;
+                                        : asset === "ckUSDT" // New condition for ckUSDT
+                                          ? ckUSDTBalance
+                                          : null;
                               const borrowRateApr =
                                 Number(item?.[1]?.Ok?.borrow_rate) /
                                 100000000 || 0;
@@ -2086,6 +2249,13 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         className="w-8 h-8 rounded-full"
                                       />
                                     )}
+                                    {asset === "ckUSDT" && ( // New condition for ckUSDT
+                                      <img
+                                        src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                        alt="ckUSDT logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
                                     {asset}
                                   </div>
                                   <div className="p-3">
@@ -2117,6 +2287,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           formatNumber(
                                             assetBorrow * ckICPUsdRate
                                           )}
+                                        {asset === "ckUSDT" && // New condition for ckUSDT
+                                          formatNumber(assetSupply * ckUSDTUsdRate)}
                                       </p>
                                     </div>
                                   </div>
@@ -2138,9 +2310,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                          const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                          console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                         const assetSupply =
                                           Number(
                                             reserveData?.[1]?.asset_supply || 0n
@@ -2173,7 +2345,9 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                                 ? borrowableUSDC
                                                 : item[0] === "ICP"
                                                   ? borrowableICP
-                                                  : 0;
+                                                  : item[0] === "ckUSDT"
+                                                    ? borrowableUSDT
+                                                    : 0;
 
                                         console.log("LTV1", Ltv);
 
@@ -2183,7 +2357,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -2235,7 +2410,8 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                           (asset === "ckBTC" && ckBTC) ||
                                           (asset === "ckETH" && ckETH) ||
                                           (asset === "ckUSDC" && ckUSDC) ||
-                                          (asset === "ICP" && icp),
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -2252,8 +2428,21 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                 </div>
                               );
                             }
-                          )}
+                            )}
                         </div>
+                      </div>
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={toggleShowAll}
+                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {showAll ? (
+                            <FaArrowUp size={18} />
+                          ) : (
+                            <FaArrowDown size={18} />
+                          )}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -2263,7 +2452,7 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
           </div>
 
           <div
-            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
+            className={`w-full mt-6 scrollbar-none lgx:overflow-none hide-scrollbar ${isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
               } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
@@ -2288,215 +2477,245 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                   {filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
-                    <div className="relative mt-4 max-h-[880px] overflow-y-auto scrollbar-custom">
+                    <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none ">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {filteredItems.slice(0, 8).map((item, index) => (
-                          <div
-                            key={index}
-                            className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${isTableDisabled
-                              ? "opacity-50 pointer-events-none"
-                              : ""
-                              }`}
-                          >
-                            <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                              {item[0] === "ckBTC" && (
-                                <img
-                                  src={ckBTC}
-                                  alt="ckbtc logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckETH" && (
-                                <img
-                                  src={ckETH}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckUSDC" && (
-                                <img
-                                  src={ckUSDC}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ICP" && (
-                                <img
-                                  src={icp}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
-                                {item[0]}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                Available:
-                              </p>
-                              <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                        {filteredItems
+                          .slice(0, showAll ? filteredItems.length : 4)
+                          .map((item, index) => (
+                            <div
+                              key={index}
+                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${isTableDisabled
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
+                                }`}
+                            >
+                              <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                                 {item[0] === "ckBTC" && (
-                                  <>
-                                    <p>{borrowableBTC.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
+                                  <img
+                                    src={ckBTC}
+                                    alt="ckbtc logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
                                 )}
                                 {item[0] === "ckETH" && (
-                                  <>
-                                    <p>{borrowableETH.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
+                                  <img
+                                    src={ckETH}
+                                    alt="cketh logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
                                 )}
                                 {item[0] === "ckUSDC" && (
-                                  <>
-                                    <p>{borrowableUSDC.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                            Number(availableBorrow).toFixed(4)
-                                          )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
+                                  <img
+                                    src={ckUSDC}
+                                    alt="cketh logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
                                 )}
                                 {item[0] === "ICP" && (
-                                  <>
-                                    <p>{borrowableICP.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
+                                  <img
+                                    src={icp}
+                                    alt="cketh logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
+                                )}
+                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                  <img
+                                    src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                    alt="ckUSDT logo"
+                                    className="w-8 h-8 rounded-full"
+                                  />
+                                )}
+                                <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
+                                  {item[0]}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
+                                <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                  Available:
+                                </p>
+                                <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                                  {item[0] === "ckBTC" && (
+                                    <>
+                                      <p>{borrowableBTC.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        $
+                                        {Number(availableBorrow)
+                                          ? formatNumber(
                                             Number(availableBorrow).toFixed(4)
                                           )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                              </p>
-                            </div>
+                                          : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <>
+                                      <p>{borrowableETH.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        $
+                                        {Number(availableBorrow)
+                                          ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                          : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <>
+                                      <p>{borrowableUSDC.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        $
+                                        {Number(availableBorrow)
+                                          ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                          : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <>
+                                      <p>{borrowableICP.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        $
+                                        {Number(availableBorrow)
+                                          ? formatNumber(
+                                            Number(availableBorrow).toFixed(4)
+                                          )
+                                          : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                    <>
+                                      <p>{borrowableUSDT.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                </p>
+                              </div>
 
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-1">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                APY:
-                              </p>
-                              <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                {Number(item[1].Ok.borrow_rate) / 100000000 <
-                                  0.1
-                                  ? "<0.1%"
-                                  : `${(
-                                    Number(item[1].Ok.borrow_rate) / 100000000
-                                  ).toFixed(2)}%`}
-                              </p>
-                            </div>
+                              <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-1">
+                                <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                  APY:
+                                </p>
+                                <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
+                                  {Number(item[1].Ok.borrow_rate) / 100000000 <
+                                    0.1
+                                    ? "<0.1%"
+                                    : `${(
+                                      Number(item[1].Ok.borrow_rate) / 100000000
+                                    ).toFixed(2)}%`}
+                                </p>
+                              </div>
 
-                            <div className="flex justify-between gap-4">
-                              <Button
-                                title={"Borrow"}
-                                onClickHandler={() => {
-                                  const reserveData =
-                                    userData?.Ok?.reserves[0]?.find(
-                                      (reserveGroup) =>
-                                        reserveGroup[0] === item[0]
-                                    );
-                                  const assetSupply =
-                                    Number(
-                                      reserveData?.[1]?.asset_supply || 0n
-                                    ) / 100000000;
+                              <div className="flex justify-between gap-4">
+                                <Button
+                                  title={"Borrow"}
+                                  onClickHandler={() => {
+                                    const reserveData =
+                                      userData?.Ok?.reserves[0]?.find(
+                                        (reserveGroup) =>
+                                          reserveGroup[0] === item[0]
+                                      );
+                                    const assetSupply =
+                                      Number(
+                                        reserveData?.[1]?.asset_supply || 0n
+                                      ) / 100000000;
 
-                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                  const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
                                     console.log("currentCollateralStatus in on change", currentCollateralStatus);
-                                  const assetBorrow =
-                                    Number(
-                                      reserveData?.[1]?.asset_borrow || 0n
-                                    ) / 100000000;
-                                  const totalCollateral =
-                                    parseFloat(
-                                      Number(userData?.Ok?.total_collateral) /
-                                      100000000
-                                    ) || 0;
-                                  const totalDebt = parseFloat(
-                                    Number(userData?.Ok?.total_debt) / 100000000
-                                  );
-                                  const Ltv =
-                                    Number(userData?.Ok?.ltv) / 100000000 || 0;
-                                  console.log("LTV1", Ltv);
-                                  const borrowableAsset =
-                                    item[0] === "ckBTC"
-                                      ? borrowableBTC
-                                      : item[0] === "ckETH"
-                                        ? borrowableETH
-                                        : item[0] === "ckUSDC"
-                                          ? borrowableUSDC
-                                          : item[0] === "ICP"
-                                            ? borrowableICP
-                                            : 0;
-                                  handleModalOpen(
-                                    "borrow",
-                                    item[0],
-                                    (item[0] === "ckBTC" && ckBTC) ||
-                                    (item[0] === "ckETH" && ckETH) ||
-                                    (item[0] === "ckUSDC" && ckUSDC) ||
-                                    (item[0] === "ICP" && icp),
-                                    Number(item[1].Ok.borrow_rate) / 100000000,
-                                    item[0] === "ckBTC"
-                                      ? ckBTCBalance
-                                      : item[0] === "ckETH"
-                                        ? ckETHBalance
-                                        : item[0] === "ckUSDC"
-                                          ? ckUSDCBalance
-                                          : null,
+                                    const assetBorrow =
+                                      Number(
+                                        reserveData?.[1]?.asset_borrow || 0n
+                                      ) / 100000000;
+                                    const totalCollateral =
+                                      parseFloat(
+                                        Number(userData?.Ok?.total_collateral) /
+                                        100000000
+                                      ) || 0;
+                                    const totalDebt = parseFloat(
+                                      Number(userData?.Ok?.total_debt) / 100000000
+                                    );
+                                    const Ltv =
+                                      Number(userData?.Ok?.ltv) / 100000000 || 0;
+                                    console.log("LTV1", Ltv);
+                                    const borrowableAsset =
+                                      item[0] === "ckBTC"
+                                        ? borrowableBTC
+                                        : item[0] === "ckETH"
+                                          ? borrowableETH
+                                          : item[0] === "ckUSDC"
+                                            ? borrowableUSDC
+                                            : item[0] === "ICP"
+                                              ? borrowableICP
+                                              : 0;
+                                    handleModalOpen(
+                                      "borrow",
+                                      item[0],
+                                      (item[0] === "ckBTC" && ckBTC) ||
+                                      (item[0] === "ckETH" && ckETH) ||
+                                      (item[0] === "ckUSDC" && ckUSDC) ||
+                                      (item[0] === "ICP" && icp),
+                                      Number(item[1].Ok.borrow_rate) / 100000000,
+                                      item[0] === "ckBTC"
+                                        ? ckBTCBalance
+                                        : item[0] === "ckETH"
+                                          ? ckETHBalance
+                                          : item[0] === "ckUSDC"
+                                            ? ckUSDCBalance
+                                            : null,
 
-                                    Number(userData.Ok?.liquidation_threshold) /
-                                    100000000,
-                                    Number(
-                                      item?.[1]?.Ok?.configuration
-                                        .liquidation_threshold
-                                    ) / 100000000,
-                                    assetSupply,
-                                    assetBorrow,
-                                    totalCollateral,
-                                    totalDebt,
-                                    Ltv,
-                                    currentCollateralStatus,
-                                    availableBorrow,
-                                    borrowableAsset
-                                  );
-                                }}
-                                disabled={isTableDisabled}
-                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
-                              />
-                              <Button
-                                title={"Details"}
-                                onClickHandler={() =>
-                                  handleDetailsClick(item[0], item[1])
-                                }
-                                disabled={isTableDisabled}
-                               className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
-                              />
+                                      Number(userData.Ok?.liquidation_threshold) /
+                                      100000000,
+                                      Number(
+                                        item?.[1]?.Ok?.configuration
+                                          .liquidation_threshold
+                                      ) / 100000000,
+                                      assetSupply,
+                                      assetBorrow,
+                                      totalCollateral,
+                                      totalDebt,
+                                      Ltv,
+                                      currentCollateralStatus,
+                                      availableBorrow,
+                                      borrowableAsset
+                                    );
+                                  }}
+                                  disabled={isTableDisabled}
+                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                />
+                                <Button
+                                  title={"Details"}
+                                  onClickHandler={() =>
+                                    handleDetailsClick(item[0], item[1])
+                                  }
+                                  disabled={isTableDisabled}
+                                  className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                />
+                              </div>
+                              {index !== filteredItems.length - 1 && (
+                                <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                              )}
                             </div>
-                            {index !== filteredItems.length - 1 && (
-                              <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
-                            )}
-                          </div>
-                        ))}
+                          ))}
+                      </div>
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={toggleShowAll}
+                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {showAll ? (
+                            <FaArrowUp size={18} />
+                          ) : (
+                            <FaArrowDown size={18} />
+                          )}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -2522,15 +2741,15 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                       </div>
                     )}
 
-                  <div className="w-full max-h-[300px] ">
+                  <div className="w-full h-auto mt-4">
                     {/* Supply Section */}
                     {filteredItems.length === 0 ? (
                       noAssetsToBorrowMessage
                     ) : (
                       <div
                         className={`w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4 ${isTableDisabled
-                          ? "opacity-50 pointer-events-none"
-                          : ""
+                            ? "opacity-50 pointer-events-none"
+                            : ""
                           }`}
                       >
                         {/* Header */}
@@ -2545,151 +2764,168 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                           ))}
                         </div>
                         {/* className="w-full max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-custom" */}
-                        <div className="w-full max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-custom">
+                        <div className="w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom">
                           {/* Body */}
-                          {filteredItems.slice(0, 8).map((item, index) => (
-                            <div
-                              key={index}
-                              className="grid grid-cols-[3fr_2fr_2fr_1fr_2fr] items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
-                            >
-                              {/* Asset Column */}
-                              <div className="p-3 lgx:pl-4  align-top flex items-center min-w-[80px] gap-2 whitespace-nowrap mt-2">
-                                {item[0] === "ckBTC" && (
-                                  <img
-                                    src={ckBTC}
-                                    alt="ckbtc logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <img
-                                    src={ckETH}
-                                    alt="cketh logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <img
-                                    src={ckUSDC}
-                                    alt="ckusdc logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                {item[0] === "ICP" && (
-                                  <img
-                                    src={icp}
-                                    alt="icp logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                <span>{item[0]}</span>
-                              </div>
+                          {filteredItems
+                            .slice(0, showAll ? filteredItems.length : 4)
+                            .map((item, index) => (
+                              <div
+                                key={index}
+                                className="grid grid-cols-[3fr_2fr_2fr_1fr_2fr] items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                              >
+                                {/* Asset Column */}
+                                <div className="p-3 lgx:pl-4  align-top flex items-center min-w-[80px] gap-2 whitespace-nowrap mt-2">
+                                  {item[0] === "ckBTC" && (
+                                    <img
+                                      src={ckBTC}
+                                      alt="ckbtc logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <img
+                                      src={ckETH}
+                                      alt="cketh logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <img
+                                      src={ckUSDC}
+                                      alt="ckusdc logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <img
+                                      src={icp}
+                                      alt="icp logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                    <img
+                                      src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                      alt="ckUSDT logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  <span>{item[0]}</span>
+                                </div>
 
-                              {/* Balance Column */}
-                              <div className="p-3 lgx:pl-6  align-top flex flex-col">
-                                {item[0] === "ckBTC" && (
-                                  <>
-                                    <p>{borrowableBTC.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
+                                {/* Balance Column */}
+                                <div className="p-3 lgx:pl-6  align-top flex flex-col">
+                                  {item[0] === "ckBTC" && (
+                                    <>
+                                      <p>{borrowableBTC.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        $
+                                        {Number(availableBorrow)
+                                          ? formatNumber(
                                             Number(availableBorrow).toFixed(4)
                                           )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <>
-                                    <p>{borrowableETH.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
+                                          : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <>
+                                      <p>{borrowableETH.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        $
+                                        {Number(availableBorrow)
+                                          ? formatNumber(
                                             Number(availableBorrow).toFixed(4)
                                           )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <>
-                                    <p>{borrowableUSDC.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
+                                          : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <>
+                                      <p>{borrowableUSDC.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        $
+                                        {Number(availableBorrow)
+                                          ? formatNumber(
                                             Number(availableBorrow).toFixed(4)
                                           )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ICP" && (
-                                  <>
-                                    <p>{borrowableICP.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
+                                          : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <>
+                                      <p>{borrowableICP.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        $
+                                        {Number(availableBorrow)
+                                          ? formatNumber(
                                             Number(availableBorrow).toFixed(4)
                                           )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                              </div>
+                                          : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDT" && ( // New condition for ckUSDT
+                                    <>
+                                      <p>{borrowableUSDT.toFixed(4)}</p>
+                                      <p className="font-light">
+                                        ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : "0.0000"}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
 
-                              {/* Borrow Rate Column */}
-                              <div className="p-3 lgx:pl-6 align-center flex items-center">
-                                <p className="mt-1.5">
-                                  {Number(item[1].Ok.borrow_rate) / 100000000 <
-                                    0.1
-                                    ? "<0.1%"
-                                    : `${(
-                                      Number(item[1].Ok.borrow_rate) /
-                                      100000000
-                                    ).toFixed(2)}%`}
-                                </p>
-                              </div>
-
-                              {/* Empty Spacer Column */}
-                              <div className="p-3 text-center"></div>
-
-                              {/* Actions Column */}
-                              <div className="p-3 flex gap-3 justify-end">
-                                <Button
-                                  title={"Borrow"}
-                                  onClickHandler={() => {
-                                    const reserveData =
-                                      userData?.Ok?.reserves[0]?.find(
-                                        (reserveGroup) =>
-                                          reserveGroup[0] === item[0]
-                                      );
-                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral;
-
-                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
-                                    const assetSupply =
-                                      Number(
-                                        reserveData?.[1]?.asset_supply || 0n
-                                      ) / 100000000;
-                                    const assetBorrow =
-                                      Number(
-                                        reserveData?.[1]?.asset_borrow || 0n
-                                      ) / 100000000;
-                                    const totalCollateral =
-                                      parseFloat(
-                                        Number(userData?.Ok?.total_collateral) /
+                                {/* Borrow Rate Column */}
+                                <div className="p-3 lgx:pl-6 align-center flex items-center">
+                                  <p className="mt-1.5">
+                                    {Number(item[1].Ok.borrow_rate) / 100000000 <
+                                      0.1
+                                      ? "<0.1%"
+                                      : `${(
+                                        Number(item[1].Ok.borrow_rate) /
                                         100000000
-                                      ) || 0;
-                                    const totalDebt = parseFloat(
-                                      Number(userData?.Ok?.total_debt) /
-                                      100000000
-                                    );
-                                    const Ltv =
-                                      Number(userData?.Ok?.ltv) / 100000000 ||
-                                      0;
+                                      ).toFixed(2)}%`}
+                                  </p>
+                                </div>
+
+                                {/* Empty Spacer Column */}
+                                <div className="p-3 text-center"></div>
+
+                                {/* Actions Column */}
+                                <div className="p-3 flex gap-3 justify-end">
+                                  <Button
+                                    title={"Borrow"}
+                                    onClickHandler={() => {
+                                      const reserveData =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0]
+                                        );
+                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+
+                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                      const assetSupply =
+                                        Number(
+                                          reserveData?.[1]?.asset_supply || 0n
+                                        ) / 100000000;
+                                      const assetBorrow =
+                                        Number(
+                                          reserveData?.[1]?.asset_borrow || 0n
+                                        ) / 100000000;
+                                      const totalCollateral =
+                                        parseFloat(
+                                          Number(userData?.Ok?.total_collateral) /
+                                          100000000
+                                        ) || 0;
+                                      const totalDebt = parseFloat(
+                                        Number(userData?.Ok?.total_debt) /
+                                        100000000
+                                      );
+                                      const Ltv =
+                                        Number(userData?.Ok?.ltv) / 100000000 ||
+                                        0;
 
                                     const borrowableAsset =
                                       item[0] === "ckBTC"
@@ -2700,58 +2936,73 @@ console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                             ? borrowableUSDC
                                             : item[0] === "ICP"
                                               ? borrowableICP
-                                              : 0;
+                                              : item[0] === "ckUSDT" // New condition for ckUSDT
+                                                ? borrowableUSDT
+                                                : 0;
 
-                                    handleModalOpen(
-                                      "borrow",
-                                      item[0],
-                                      item[0] === "ckBTC"
-                                        ? ckBTC
-                                        : item[0] === "ckETH"
-                                          ? ckETH
-                                          : item[0] === "ckUSDC"
-                                            ? ckUSDC
-                                            : icp,
-                                      Number(item[1].Ok.borrow_rate) /
-                                      100000000,
-                                      item[0] === "ckBTC"
-                                        ? ckBTCBalance
-                                        : item[0] === "ckETH"
-                                          ? ckETHBalance
-                                          : item[0] === "ckUSDC"
-                                            ? ckUSDCBalance
-                                            : ckICPBalance,
-                                      Number(
-                                        userData.Ok?.liquidation_threshold
-                                      ) / 100000000,
-                                      Number(
-                                        item?.[1]?.Ok?.configuration
-                                          .liquidation_threshold
-                                      ) / 100000000 || 0,
-                                      assetSupply,
-                                      assetBorrow,
-                                      totalCollateral,
-                                      totalDebt,
-                                      Ltv,
-                                      currentCollateralStatus,
-                                      availableBorrow,
-                                      borrowableAsset
-                                    );
-                                  }}
-                                  disabled={isTableDisabled}
-                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
-                                />
-                                <Button
-                                  title={"Details"}
-                                  onClickHandler={() =>
-                                    handleDetailsClick(item[0], item[1])
-                                  }
-                                  disabled={isTableDisabled}
-                                  className="bg-gradient-to-r from-[#4659CF] to-[#2A1F9D] text-white rounded-md px-3 py-1.5 shadow-md font-semibold text-xs"
-                                />
+                                      handleModalOpen(
+                                        "borrow",
+                                        item[0],
+                                        item[0] === "ckBTC"
+                                          ? ckBTC
+                                          : item[0] === "ckETH"
+                                            ? ckETH
+                                            : item[0] === "ckUSDC"
+                                              ? ckUSDC
+                                              : icp,
+                                        Number(item[1].Ok.borrow_rate) /
+                                        100000000,
+                                        item[0] === "ckBTC"
+                                          ? ckBTCBalance
+                                          : item[0] === "ckETH"
+                                            ? ckETHBalance
+                                            : item[0] === "ckUSDC"
+                                              ? ckUSDCBalance
+                                              : ckICPBalance,
+                                        Number(
+                                          userData.Ok?.liquidation_threshold
+                                        ) / 100000000,
+                                        Number(
+                                          item?.[1]?.Ok?.configuration
+                                            .liquidation_threshold
+                                        ) / 100000000 || 0,
+                                        assetSupply,
+                                        assetBorrow,
+                                        totalCollateral,
+                                        totalDebt,
+                                        Ltv,
+                                        currentCollateralStatus,
+                                        availableBorrow,
+                                        borrowableAsset
+                                      );
+                                    }}
+                                    disabled={isTableDisabled}
+                                    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                  />
+                                  <Button
+                                    title={"Details"}
+                                    onClickHandler={() =>
+                                      handleDetailsClick(item[0], item[1])
+                                    }
+                                    disabled={isTableDisabled}
+                                    className="bg-gradient-to-r from-[#4659CF] to-[#2A1F9D] text-white rounded-md px-3 py-1.5 shadow-md font-semibold text-xs"
+                                  />
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                        </div>
+                        <div className="flex justify-center mt-4">
+                          <button
+                            onClick={toggleShowAll}
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                          >
+                            {showAll ? (
+                              <FaArrowUp size={18} />
+                            ) : (
+                              <FaArrowDown size={18} />
+                            )}
+                          </button>
                         </div>
                       </div>
                     )}

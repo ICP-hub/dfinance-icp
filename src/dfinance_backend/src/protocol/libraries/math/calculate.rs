@@ -119,42 +119,44 @@ pub async fn get_exchange_rates(
         },
     };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
-        ic_cdk::api::call::call_with_payment128(
-            // i am changing this id.
-            Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-            // Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
-            "get_exchange_rate",
-            (args,),
-            1_000_000_000,
-        )
-        .await;
-
-    match res {
-        Ok(res_value) => match res_value.0 {
-            GetExchangeRateResult::Ok(v) => {
-                let quote = v.rate;
-                let pow = 10usize.pow(v.metadata.decimals);
-                let exchange_rate = quote / pow as u64;
-
-                // Multiplying the exchange rate by the amount
-                let total_value = (quote as u128 * amount) / 1000000000;
-
-                // Getting the current time
-                let time = ic_cdk::api::time();
-
-                // Return the total value and the time
-                Ok((total_value, time))
-            }
-            GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
-        },
-        Err(error) => Err(format!(
-            "Could not get USD/{} Rate - {:?} - {}",
-            base_asset_symbol.clone(),
-            error.0,
-            error.1
-        )),
+            ic_cdk::api::call::call_with_payment128(
+                // i am changing this id.
+                // Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
+                Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+                "get_exchange_rate",
+                (args,),
+                1_000_000_000,
+            )
+            .await;
+    
+        match res {
+            Ok(res_value) => match res_value.0 {
+                GetExchangeRateResult::Ok(v) => {
+                    let quote = v.rate;
+                    let pow = 10usize.pow(v.metadata.decimals);
+                    let exchange_rate = quote  / pow as u64 ;
+    
+                    // Multiplying the exchange rate by the amount
+                    let total_value = (quote as u128 * amount) / 1000000000  ;
+    
+                    // Getting the current time
+                    let time = ic_cdk::api::time();
+    
+                    // Return the total value and the time
+                    Ok((total_value, time))
+                }
+                GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
+            },
+            Err(error) => Err(format!(
+                "Could not get USD/{} Rate - {:?} - {}",
+                base_asset_symbol.clone(),
+                error.0,
+                error.1
+            )),
+        }
     }
-}
+    
+
 
 //  async fn check_and_update_prices() {
 //         ic_cdk::spawn(async {

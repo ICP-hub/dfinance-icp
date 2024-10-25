@@ -163,7 +163,6 @@ const WithdrawPopup = ({
     console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
     let ledgerActor;
-
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
@@ -172,6 +171,8 @@ const WithdrawPopup = ({
       ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
+    } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+      ledgerActor = ledgerActors.ckUSDT;
     }
 
     try {

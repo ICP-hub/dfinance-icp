@@ -13,6 +13,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [faucetETH, setFaucetETH] = useState(0);
   const [faucetUSDC, setFaucetUSDC] = useState(0);
   const [faucetICP, setFaucetICP] = useState(0);
+  const [faucetUSDT, setFaucetUSDT] = useState(0);
   const [exchangeRate, setExchangeRate] = useState(null);
 
   const {
@@ -20,11 +21,13 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     ckETHUsdRate,
     ckUSDCUsdRate,
     ckICPUsdRate,
+    ckUSDTUsdRate,
     fetchConversionRate,
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
+    ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
 
@@ -36,6 +39,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
       } catch (error) {
@@ -85,9 +89,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         return faucetETH;
       case "ckUSDC":
         return faucetUSDC;
-      case "ckICP":
       case "ICP":
         return faucetICP;
+        case "ckUSDT": // Added case for ckUSDT
+      return faucetUSDT; 
       default:
         return null; // Return null if the asset is not recognized
     }

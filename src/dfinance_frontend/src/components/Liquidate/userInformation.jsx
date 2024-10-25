@@ -9,6 +9,7 @@ import { useMemo } from "react";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.png";
 import { useCallback } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
@@ -39,12 +40,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const [transactionResult, setTransactionResult] = useState(null); // State to handle transaction
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
-  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
 
   const [userdata, setUserData] = useState();
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
+  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
+  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -152,11 +154,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     ckETHUsdRate,
     ckUSDCUsdRate,
     ckICPUsdRate,
+    ckUSDTUsdRate,
     fetchConversionRate,
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
+    ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
 
@@ -177,6 +181,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       ledgerActor = ledgerActors.ckUSDC;
     } else if (selectedDebtAsset === "ICP") {
       ledgerActor = ledgerActors.ICP;
+    } else if (selectedDebtAsset === "ckUSDT") {
+      // Added case for ckUSDT
+      ledgerActor = ledgerActors.ckUSDT; // Ensure this exists in ledgerActors
     }
 
     const transferfee = BigInt(100);
@@ -341,6 +348,16 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   }, [ckICPBalance, ckICPUsdRate]);
 
   useEffect(() => {
+    if (ckUSDTBalance && ckUSDTUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(
+        2
+      );
+      setCkUSDTUsdBalance(balanceInUsd);
+      console.log(`ckUSDT Balance in USD: ${balanceInUsd}`);
+    }
+  }, [ckUSDTBalance, ckUSDTUsdRate]);
+
+  useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
@@ -349,6 +366,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
           fetchConversionRate(), // Fetch ckBTC and ckETH rates
         ]);
       } catch (error) {
@@ -453,10 +471,33 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             </div>
           </>
         );
+      case "ckUSDT": // New case for ckUSDT
+        return (
+          <>
+            <div className="w-full h-[0.8px] bg-gradient-to-r from-[#EB8863] to-[#81198E] my-4 "></div>
+            <div>
+              <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
+                My Section
+              </h3>
+              <div className="mb-4">
+                <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm text-gray-900 ">
+                  <p className="text-sm font-normal font-Poppins text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
+                    My Wallet Balance
+                  </p>
+                  <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
+                    {ckUSDTBalance.toLocaleString()}{" "}
+                    {/* Ensure ckUSDTBalance is defined */}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        );
       default:
         return null;
     }
   };
+
   const renderAssetDetails = (asset) => {
     console.log("asset", asset);
     switch (asset) {
@@ -590,6 +631,38 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
         );
 
         return null;
+      case "ckUSDT":
+        return (
+          <div className="mt-4">
+            <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+                ckUSDT Price
+              </p>
+              <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
+                {Number(collateralRate).toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+                ckUSDT Liquidation Bonus %
+              </p>
+              <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
+                {liquidation_bonus}%
+              </p>
+            </div>
+            <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
+              <p className="text-sm font-normal text-[#2A1F9D] opacity-80 mb-1 dark:text-darkText dark:opacity-80">
+                Reward Amount
+              </p>
+              <p className="text-sm font-medium text-green-500">
+                {(collateral + collateral * (liquidation_bonus / 100))
+                  .toFixed(8)
+                  .toLocaleString()}
+              </p>
+            </div>
+          </div>
+        );
+        return null;
       default:
         return null;
     }
@@ -634,6 +707,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       case "ICP":
         setSelectedAssetBalance(ckICPBalance);
         break;
+      case "ckUSDT":
+        setSelectedAssetBalance(ckUSDTBalance);
+        break;
       default:
         setSelectedAssetBalance(0);
     }
@@ -643,6 +719,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     ckBTCBalance,
     ckUSDCBalance,
     ckICPBalance,
+    ckUSDTBalance
   ]);
 
   return (
@@ -720,9 +797,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             {isCheckboxChecked ? (
               // Button for "Call Liquidation"
               <button
-                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 onClick={handleConfirmLiquidation}
                 disabled={isLoading} // Disable the button while loading
               >
@@ -762,8 +838,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               {isCollateralOverlay
                 ? "Collateral Information"
                 : isDebtInfo
-                ? "Debt Information"
-                : "User Information"}
+                  ? "Debt Information"
+                  : "User Information"}
             </h2>
             <button
               onClick={onClose}
@@ -801,6 +877,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       collateralRate = ckUSDCUsdRate;
                     } else if (assetName === "ICP" && ckICPUsdRate) {
                       collateralRate = ckICPUsdRate;
+                    } else if (assetName === "ckUSDT" && ckUSDTUsdRate) {
+                      collateralRate = ckUSDTUsdRate;
                     }
 
                     console.log("collateralRate", collateralRate);
@@ -811,12 +889,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       assetName === "ckBTC"
                         ? ckBTCBalance
                         : assetName === "ckETH"
-                        ? ckETHBalance
-                        : assetName === "ckUSDC"
-                        ? ckUSDCBalance
-                        : assetName === "ICP"
-                        ? ckICPBalance
-                        : 0;
+                          ? ckETHBalance
+                          : assetName === "ckUSDC"
+                            ? ckUSDCBalance
+                            : assetName === "ICP"
+                              ? ckICPBalance
+                              : assetName === "ckUSDT"
+                                ? ckUSDTBalance
+                                : 0;
 
                     if (assetSupply > 0) {
                       return (
@@ -841,12 +921,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                               assetName === "ckBTC"
                                 ? ckBTC
                                 : assetName === "ckETH"
-                                ? ckETH
-                                : assetName === "ckUSDC"
-                                ? ckUSDC
-                                : assetName === "ICP"
-                                ? icp
-                                : undefined
+                                  ? ckETH
+                                  : assetName === "ckUSDC"
+                                    ? ckUSDC
+                                    : assetName === "ICP"
+                                      ? icp
+                                      : assetName === "ckUSDT"
+                                        ? ckUSDT
+                                        : undefined
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -894,6 +976,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
                     />
                   )}
+                  {selectedAsset === "ckUSDT" && (
+                    <img
+                      src={ckUSDT}
+                      alt="ckUSDT icon"
+                      className="object-cover w-5 h-5 rounded-full"
+                    />
+                  )}
                 </div>
               </div>
               <div className="flex justify-between mt-4">
@@ -905,13 +994,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${
-                    isCollateralAssetSelected &&
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${isCollateralAssetSelected &&
                     amountToRepay + amountToRepay * (liquidation_bonus / 100) <
-                      selectedAssetSupply
-                      ? "opacity-100 cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
+                    selectedAssetSupply
+                    ? "opacity-100 cursor-pointer"
+                    : "opacity-50 cursor-not-allowed"
+                    }`}
                   onClick={() => {
                     console.log("Button clicked");
                     isApproved ? handleCallLiquidation() : handleApprove();
@@ -967,6 +1055,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                         assetBorrowAmount * ckUSDCUsdRate;
                     } else if (assetName === "ICP" && ckICPUsdRate) {
                       assetBorrowAmountInUSD = assetBorrowAmount * ckICPUsdRate;
+                    } else if (assetName === "ckUSDT" && ckUSDTUsdRate) {
+                      assetBorrowAmountInUSD = assetBorrowAmount * ckUSDTUsdRate;
                     }
                     if (assetBorrow > 0) {
                       return (
@@ -990,12 +1080,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                               assetName === "ckBTC"
                                 ? ckBTC
                                 : assetName === "ckETH"
-                                ? ckETH
-                                : assetName === "ckUSDC"
-                                ? ckUSDC
-                                : assetName === "ICP"
-                                ? icp
-                                : undefined
+                                  ? ckETH
+                                  : assetName === "ckUSDC"
+                                    ? ckUSDC
+                                    : assetName === "ICP"
+                                      ? icp
+                                      : assetName === "ckUSDT"
+                                        ? ckUSDT
+                                        : undefined
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -1049,11 +1141,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm px-6 py-2 relative ${
-                    isDebtAssetSelected && amountToRepay <= selectedAssetBalance
-                      ? "opacity-100"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
+                    ? "opacity-100"
+                    : "opacity-50 cursor-not-allowed"
+                    }`}
                   onClick={handleNextClick}
                   disabled={
                     !isDebtAssetSelected ||
@@ -1092,9 +1183,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       ) > 100
                         ? "Infinity"
                         : parseFloat(
-                            Number(mappedItem?.item[1]?.health_factor) /
-                              10000000000
-                          ).toFixed(2)}
+                          Number(mappedItem?.item[1]?.health_factor) /
+                          10000000000
+                        ).toFixed(2)}
                     </p>
                   </div>
                 </div>

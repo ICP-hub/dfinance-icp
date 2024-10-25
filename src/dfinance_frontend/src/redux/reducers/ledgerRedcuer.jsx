@@ -5,6 +5,7 @@ const initialState = {
   ckBTC: null,
   ckETH: null,
   ckUSDC: null,
+  ckUSDT: null, 
   ICP: null,
 };
 
@@ -20,6 +21,7 @@ const ledgerSlice = createSlice({
       state.ckBTC = null;
       state.ckETH = null;
       state.ckUSDC = null;
+      state.ckUSDT = null; 
       state.ICP = null;
     },
   },

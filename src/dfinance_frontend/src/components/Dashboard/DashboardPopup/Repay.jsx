@@ -147,6 +147,8 @@ const Repay = ({
       ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
+    } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+      ledgerActor = ledgerActors.ckUSDT;
     }
     const safeAmount = Number(amount.replace(/,/g, '')) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
@@ -212,10 +214,8 @@ const Repay = ({
 
   const handleRepayETH = async () => {
     console.log("Repay function called for", asset);
-  
+
     let ledgerActor;
-  
-    // Select the correct backend actor based on the asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
@@ -224,19 +224,21 @@ const Repay = ({
       ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
+    } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+      ledgerActor = ledgerActors.ckUSDT;
     }
-  
+
     console.log("Backend actor", ledgerActor);
-  
+
     try {
       const safeAmount = Number(amount.replace(/,/g, '')) || 0;
       let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
       console.log("Amount as nat64:", amountAsNat64);
       const scaledAmount = amountAsNat64;
-  
+
       const repayResult = await backendActor.repay(asset, scaledAmount, []);
       console.log("Repay result", repayResult);
-  
+
       if ("Ok" in repayResult) {
         const sound = new Audio(coinSound);
         sound.play();
@@ -266,7 +268,7 @@ const Repay = ({
         });
         console.error("Repay error:", errorMsg);
       }
-  
+
     } catch (error) {
       console.error("Error repaying:", error);
       toast.error(`Error: ${error.message || "Repay action failed!"}`, {
@@ -281,7 +283,7 @@ const Repay = ({
       });
     }
   };
-  
+
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);

@@ -161,6 +161,8 @@ const SupplyPopup = ({
       ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
+    } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+      ledgerActor = ledgerActors.ckUSDT;
     }
     const safeAmount = Number(amount.replace(/,/g, '')) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
@@ -234,8 +236,9 @@ const SupplyPopup = ({
         ledgerActor = ledgerActors.ckUSDC;
       } else if (asset === "ICP") {
         ledgerActor = ledgerActors.ICP;
+      } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+        ledgerActor = ledgerActors.ckUSDT;
       }
-
       console.log("amountAsNat64", amountAsNat64);
       console.log("scaledAmount", scaledAmount);
       console.log("Backend actor", backendActor);

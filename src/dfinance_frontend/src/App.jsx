@@ -35,11 +35,12 @@ export default function App() {
     () => Principal.fromText(principal),
     [principal]
   );
+  
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
       if (backendActor) {
         try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
+          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
             setAssetPrincipal((prev) => ({
@@ -74,9 +75,13 @@ export default function App() {
         case "ckUSDC":
           result = await backendActor.get_asset_principal("ckUSDC");
           break;
-        case "ICP":
+          case "ICP":
           result = await backendActor.get_asset_principal("ICP");
           break;
+          case "ckUSDT": 
+          result = await backendActor.get_asset_principal("ckUSDT");
+          break;
+        
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
@@ -107,6 +112,11 @@ export default function App() {
       const actor = createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory);
       dispatch(setLedgerActor({ asset: 'ICP', actor }));
     }
+    if (assetPrincipal.ckUSDT) { 
+      const actor = createLedgerActor(assetPrincipal.ckUSDT, ledgerIdlFactory);
+      dispatch(setLedgerActor({ asset: 'ckUSDT', actor }));
+    }
+
   }, [assetPrincipal, dispatch]);
 
  

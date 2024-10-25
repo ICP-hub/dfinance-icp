@@ -13,6 +13,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
         ckBTCBalance,
         ckETHBalance,
         ckUSDCBalance,
+        ckUSDTBalance, 
         ckICPBalance,
         fetchBalance,
     } = useFetchBalance(ledgerActors, principal);
@@ -20,6 +21,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
     const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
     const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
+    const [ckUSDTUsdRate, setCkUSDTUsdRate] = useState(null);
     const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
     const [error, setError] = useState(null);
 
@@ -43,6 +45,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
                 setCkETHUsdRate(data.ethereum.usd);
                 setCkUSDCUsdRate(data["usd-coin"].usd);
                 setCkICPUsdRate(data["internet-computer"].usd);
+                setCkUSDTUsdRate(data["tether"].usd);
                 return;
             }
 
@@ -52,6 +55,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
                 setCkETHUsdRate(assets.find(asset => asset.id === 'ethereum').priceUsd);
                 setCkUSDCUsdRate(assets.find(asset => asset.id === 'usd-coin').priceUsd);
                 setCkICPUsdRate(assets.find(asset => asset.id === 'internet-computer').priceUsd);
+                setCkUSDTUsdRate(assets.find(asset => asset.id === 'tether').priceUsd);
                 return;
             }
 
@@ -61,6 +65,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
                 setCkETHUsdRate(rates.ETH.USD.PRICE);
                 setCkUSDCUsdRate(rates.USDC.USD.PRICE);
                 setCkICPUsdRate(rates.ICP.USD.PRICE);
+                setCkUSDTUsdRate(rates.USDT.USD.PRICE);
                 return;
             }
             
@@ -68,7 +73,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
             console.error("Error fetching conversion rates:", error);
             setError(error);
         }
-    }, [ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, pollInterval]);
+    }, [ckBTCBalance, ckETHBalance, ckUSDCBalance,ckUSDTBalance, ckICPBalance, pollInterval]);
 
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -81,12 +86,14 @@ const useFetchConversionRate = (pollInterval = 2000) => {
         ckBTCUsdRate,
         ckETHUsdRate,
         ckUSDCUsdRate,
+        ckUSDTUsdRate, 
         ckICPUsdRate,
         error,
         fetchConversionRate,
         ckBTCBalance,
         ckETHBalance,
         ckUSDCBalance,
+        ckUSDTBalance, 
         ckICPBalance,
         fetchBalance
     };

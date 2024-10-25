@@ -48,7 +48,7 @@ const SupplyPopup = ({
   const supplyBalance = numericBalance - transferfee;
   const hasEnoughBalance = balance >= transactionFee;
   const value = currentHealthFactor;
-
+  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
@@ -140,7 +140,14 @@ const SupplyPopup = ({
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
-
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const convertedMaxValue = parseFloat(balance) * conversionRate;
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
+    }
+  }, [amount, conversionRate]);
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
 
@@ -442,7 +449,7 @@ const SupplyPopup = ({
                       }
                     }}
                   >
-                    {supplyBalance.toLocaleString(undefined, {
+                    {maxUsdValue.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}{" "}

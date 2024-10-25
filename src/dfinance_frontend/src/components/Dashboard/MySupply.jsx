@@ -934,19 +934,21 @@ const MySupply = () => {
                           }
                         )}
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAll}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+    >
+      {showAll ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
                     </div>
                   )}
                 </>
@@ -1283,19 +1285,21 @@ const MySupply = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAll}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+    >
+      {showAll ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
                     </div>
                   )}
                 </>
@@ -1529,19 +1533,22 @@ const MySupply = () => {
                           </div>
                         ))}
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {filteredItems.length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAll}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+    >
+      {showAll ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
+
                     </div>
                   )}
                 </>
@@ -1747,19 +1754,21 @@ const MySupply = () => {
                       </div>
 
                       {/* Arrow Button to Show/Hide more assets */}
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {filteredItems.length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAll}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+    >
+      {showAll ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
                     </div>
                   )}
                 </>
@@ -2074,19 +2083,21 @@ const MySupply = () => {
                           )}
                         </div>
                       </div>
-                     <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAll}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+    >
+      {showAll ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
                     </div>
                   )}
                 </>
@@ -2374,19 +2385,21 @@ const MySupply = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAll}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+    >
+      {showAll ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
                     </div>
                   )}
                 </>
@@ -2638,19 +2651,21 @@ const MySupply = () => {
                           </div>
                         ))}
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {filteredItems.length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAll}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+    >
+      {showAll ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
                     </div>
                   )}
                 </>
@@ -2913,19 +2928,21 @@ const MySupply = () => {
                             </div>
                           ))}
                         </div>
-                        <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                        {filteredItems.length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAll}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+    >
+      {showAll ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
                       </div>
                     )}
                   </div>

@@ -40,7 +40,7 @@ const Repay = ({
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [usdValue, setUsdValue] = useState(0);
-
+  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
 
@@ -114,7 +114,14 @@ const Repay = ({
       setUsdValue(0); // Reset USD value if conditions are not met
     }
   }, [amount, conversionRate]);
-
+  useEffect(() => {
+    if (assetBorrow && conversionRate) {
+      const convertedMaxValue = parseFloat(assetBorrow) * conversionRate;
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
+    }
+  }, [amount, conversionRate]);
 
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset); // Check what asset value is being passed
@@ -441,15 +448,10 @@ const Repay = ({
                       }
                     }}
                   >
-                    {assetBorrow >= 1
-                      ? assetBorrow.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                      : assetBorrow.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 8,
-                      })}
+                     {maxUsdValue.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
                     Max
                   </p>
                 </div>

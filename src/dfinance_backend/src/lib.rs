@@ -238,27 +238,84 @@ pub async fn withdraw(
 
 
 
-//approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve
-//call approve transfer function -- function.rs
-// backend canister as spender
-//caller as from
-//asset principal as ledger
-//amount as amount
+// #[update]
+// pub fn login() -> Result<(), String> {
+//     let user_principal = ic_cdk::caller();
 
+//     let mut user_data = mutate_state(|state| {
+//         state.user_profile.get(&user_principal).clone()
+//     }).ok_or_else(|| format!("User not found: {}", user_principal.to_string()))?;
 
-// fn login(user_id: u64, user_state: &UserState) {
-  
-//     let mut state = user_state.lock().unwrap();
+//     let reserves = user_data.reserves.as_mut().ok_or_else(|| {
+//         format!("Reserves not found for user {}", user_principal.to_string())
+//     })?;
 
-//     if let Some(user) = state.get_mut(&user_id) {
+//     let current_timestamp = ic_cdk::api::time() / 1_000_000_000;
+
+//     let mut total_collateral = user_data.total_collateral.unwrap_or(0);
+
+//     for (reserve_name, reserve_data) in reserves.iter_mut() {
+//         ic_cdk::println!("Processing reserve: {}", reserve_name);
+
+//         // Update the liquidity index based on APY and time difference
+//         let delta_time = current_timestamp - reserve_data.last_update_timestamp;
+//         let apy = reserve_data.supply_rate; // Assuming supply_rate represents APY in basis points
+//         update_liquidity_index(reserve_data, apy, delta_time)?;
+
+       
+//         let updated_balance = calculate_dynamic_balance(
+//             reserve_data.asset_supply, 
+//             reserve_data.liquidity_index, 
+//             reserve_data.variable_borrow_index 
+//         );
+
+      
+//         reserve_data.asset_supply = updated_balance;
+
+//         if reserve_data.is_collateral {
+//             total_collateral += updated_balance - reserve_data.asset_supply;  
+//         }
+
    
-//         println!("User {} logged in. Updating state...", user.username);
-//         update_user_state(user);
-//     } else {
-//         // Handle case where user is not found
-//         println!("User with ID {} not found", user_id);
+//         if reserve_data.is_collateral || reserve_data.is_borrowed {
+//             user_data.health_factor = Some(calculate_health_factor(&reserve_data));
+//             user_data.ltv = Some(calculate_ltv(&reserve_data));
+//         }
+
+//         reserve_data.last_update_timestamp = current_timestamp;
 //     }
+
+//     user_data.total_collateral = Some(total_collateral);
+
+//     mutate_state(|state| {
+//         state.user_profile.insert(user_principal, user_data);
+//     });
+
+//     Ok(())
 // }
+
+
+// //approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve
+// //call approve transfer function -- function.rs
+// // backend canister as spender
+// //caller as from
+// //asset principal as ledger
+// //amount as amount
+
+
+// // fn login(user_id: u64, user_state: &UserState) {
+  
+// //     let mut state = user_state.lock().unwrap();
+
+// //     if let Some(user) = state.get_mut(&user_id) {
+   
+// //         println!("User {} logged in. Updating state...", user.username);
+// //         update_user_state(user);
+// //     } else {
+// //         // Handle case where user is not found
+// //         println!("User with ID {} not found", user_id);
+// //     }
+// // }
 
 
 export_candid!();

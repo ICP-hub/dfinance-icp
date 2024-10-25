@@ -21,7 +21,7 @@ import { useParams } from "react-router-dom";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.png";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 
 const DashboardNav = () => {
@@ -123,10 +123,13 @@ const DashboardNav = () => {
         return ckUSDCUsdRate;
       case "ICP":
         return ckICPUsdRate;
+      case "ckUSDT":
+        return ckUSDTUsdRate; // Added ckUSDT case
       default:
         return null;
     }
   };
+
 
   useEffect(() => {
     fetchConversionRate();
@@ -359,7 +362,8 @@ const DashboardNav = () => {
     'ckETH': ckETH,
     'ckUSDC': ckUSDC,
     'ICP': icp,
-  };
+    'ckUSDT': ckUSDT, // Added ckUSDT
+};
 
   const assetImage = assetImages[id] || null;
 

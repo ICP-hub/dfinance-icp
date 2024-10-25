@@ -358,7 +358,7 @@ const WithdrawPopup = ({
                     type="text" // Use text input to allow formatting
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0}
+                    // disabled={supplyBalance === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
                   />

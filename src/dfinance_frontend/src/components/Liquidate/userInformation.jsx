@@ -9,7 +9,7 @@ import { useMemo } from "react";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.png";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import { useCallback } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";
@@ -1107,7 +1107,15 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     50%
                   </p>
                 </div>
-                <div className="bg-gray-100 dark:bg-darkBackground/30   rounded-md p-2 text-sm text-[#c25252] mt-4 flex justify-between items-center">
+                <div className="flex justify-end mt-3">
+  {!amountToRepay && (
+    <span className="text-red-500 text-[11px] text-normal mb-0">
+      Select a debt asset to see repayment
+    </span>
+  )}
+</div>
+
+                <div className="bg-gray-100 dark:bg-darkBackground/30   rounded-md p-2 text-sm text-[#c25252] mt-2 flex justify-between items-center">
                   <p className="text-base font-bold text-[#2A1F9D] dark:text-darkText ">
                     Amount to Repay
                   </p>
@@ -1116,7 +1124,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       Number(amountToRepay).toLocaleString()
                     ) : (
                       <span className="text-gray-300 text-[11px] text-normal">
-                        Select a debt asset to see repayment
+                       --
                       </span>
                     )}
                   </p>

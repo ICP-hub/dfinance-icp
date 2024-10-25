@@ -24,7 +24,7 @@ import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.png";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
@@ -575,43 +575,43 @@ const MySupply = () => {
             } lg:block`}
         >
           <div
-            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar  ${isSupplyVisible ? "min-h-[200px]" : "min-h-[100px]"
+            className={`w-full  lgx:overflow-none   ${isSupplyVisible ? "min-h-auto" : "min-h-[100px]"
               } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             {/* Header */}
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
-               <div className="flex">
-               <h1>Your supplies</h1>
-               <div className="ml-5">
-                {userData?.Ok?.reserves[0]
-                  ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
-                  .map((reserveGroup, index) => {
-                    const asset = reserveGroup[1]?.reserve;
-                    const assetSupply = Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
-                    let usdValue = 0;
+                <div className="flex">
+                  <h1>Your supplies</h1>
+                  <div className="ml-5">
+                    {userData?.Ok?.reserves[0]
+                      ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                      .map((reserveGroup, index) => {
+                        const asset = reserveGroup[1]?.reserve;
+                        const assetSupply = Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
+                        let usdValue = 0;
 
-                    if (asset === "ckBTC") {
-                      usdValue = assetSupply * ckBTCUsdRate;
-                    } else if (asset === "ckETH") {
-                      usdValue = assetSupply * ckETHUsdRate;
-                    } else if (asset === "ckUSDC") {
-                      usdValue = assetSupply * ckUSDCUsdRate;
-                    } else if (asset === "ICP") {
-                      usdValue = assetSupply * ckICPUsdRate;
-                    } else if (asset === "ckUSDT") {
-                      usdValue = assetSupply * ckUSDTUsdRate;
-                    }
-                    totalUsdValueSupply += usdValue; 
-                    if (assetSupply <= 0) return null;
-                  })}
-                <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
-                <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">Total</span>{" "} ${formatNumber(totalUsdValueSupply)}
+                        if (asset === "ckBTC") {
+                          usdValue = assetSupply * ckBTCUsdRate;
+                        } else if (asset === "ckETH") {
+                          usdValue = assetSupply * ckETHUsdRate;
+                        } else if (asset === "ckUSDC") {
+                          usdValue = assetSupply * ckUSDCUsdRate;
+                        } else if (asset === "ICP") {
+                          usdValue = assetSupply * ckICPUsdRate;
+                        } else if (asset === "ckUSDT") {
+                          usdValue = assetSupply * ckUSDTUsdRate;
+                        }
+                        totalUsdValueSupply += usdValue;
+                        if (assetSupply <= 0) return null;
+                      })}
+                    <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                      <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">Total</span>{" "} ${formatNumber(totalUsdValueSupply)}
+                    </div>
+                  </div>
                 </div>
-              </div>
-               </div>
               </h1>
-             
+
               <button
                 className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-4 button1"
                 onClick={toggleSupplyVisibility}
@@ -636,7 +636,7 @@ const MySupply = () => {
                     noSupplyMessage
                   ) : (
                     <div
-                      className={`relative mt-4 overflow-y-auto overflow-x-hidden scrollbar-custom ${filteredItems.length > 1
+                      className={`relative mt-4 overflow-y-auto overflow-x-hidden  ${filteredItems.length > 1
                         ? "max-h-[1250px]"
                         : "max-h-auto"
                         }`}
@@ -983,19 +983,21 @@ const MySupply = () => {
                           }
                           )}
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
+                        <div className="flex justify-center mt-4">
+                          <button
+                            onClick={toggleShowAll}
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
+                          >
+                            {showAll ? (
+                              <FaArrowUp size={18} />
+                            ) : (
+                              <FaArrowDown size={18} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
@@ -1015,7 +1017,7 @@ const MySupply = () => {
                   ) : (
                     // className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden"
                     <div className="w-full h-auto mt-4 relative  overflow-hidden">
-                      <div className="w-full z-10 sticky top-0">
+                      <div className="w-full z-10">
                         <div className="grid grid-cols-[2fr_1.14fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-5 pl-4">Asset</div>
                           <div className="p-5">Asset Supply</div>
@@ -1027,7 +1029,7 @@ const MySupply = () => {
 
                       {/* Scrollable Content Area */}
                       <div
-                        className={`w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                        className={`w-full h-auto max-h-auto overflow-y-auto scrollbar-none ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_supply > 0
                         ).length > 3
                           ? "h-[260px]"
@@ -1335,19 +1337,21 @@ const MySupply = () => {
                             )}
                         </div>
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
+                        <div className="flex justify-center mt-4">
+                          <button
+                            onClick={toggleShowAll}
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
+                          >
+                            {showAll ? (
+                              <FaArrowUp size={18} />
+                            ) : (
+                              <FaArrowDown size={18} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
@@ -1356,7 +1360,7 @@ const MySupply = () => {
           </div>
 
           <div
-            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${isVisible ? "min-h-[200px]" : "min-h-[100px]"
+            className={`w-full mt-6  lgx:overflow-none  ${isVisible ? "min-h-auto" : "min-h-[100px]"
               } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40  rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
@@ -1382,7 +1386,7 @@ const MySupply = () => {
                   {filteredItems.length === 0 ? (
                     noAssetsToSupplyMessage
                   ) : (
-                    <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-custom">
+                    <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
                       {/* Container for the content */}
                       <div className="w-full">
                         {filteredItems
@@ -1592,19 +1596,22 @@ const MySupply = () => {
                             </div>
                           ))}
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {filteredItems.length > 4 && (
+                        <div className="flex justify-center mt-4">
+                          <button
+                            onClick={toggleShowAll}
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
+                          >
+                            {showAll ? (
+                              <FaArrowUp size={18} />
+                            ) : (
+                              <FaArrowDown size={18} />
+                            )}
+                          </button>
+                        </div>
+                      )}
+
                     </div>
                   )}
                 </>
@@ -1620,7 +1627,7 @@ const MySupply = () => {
                   ) : (
                     <div className="w-full h-auto mt-4">
                       {/* Fixed Header */}
-                      <div className="w-full z-10 sticky top-0 ">
+                      <div className="w-full z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-5 pl-4">Asset</div>
                           <div className="p-5">Wallet Balance</div>
@@ -1630,8 +1637,9 @@ const MySupply = () => {
                         </div>
                       </div>
 
+
                       {/* Scrollable Content Area */}
-                      <div className="w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom">
+                      <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {filteredItems
                             .slice(0, showAll ? filteredItems.length : 4)
@@ -1719,6 +1727,12 @@ const MySupply = () => {
                                       </p>
                                     </>
                                   )}
+                                  {item[0] === "ckUSDT" && (
+                                    <>
+                                      <p>{Number(ckUSDTBalance).toLocaleString()}</p>
+                                      <p className="font-light">${formatNumber(ckUSDTUsdBalance)}</p>
+                                    </>
+                                  )}
                                 </div>
 
                                 <div className="ml-2 align-top">
@@ -1774,7 +1788,8 @@ const MySupply = () => {
                                         (item[0] === "ckBTC" && ckBTC) ||
                                         (item[0] === "ckETH" && ckETH) ||
                                         (item[0] === "ckUSDC" && ckUSDC) ||
-                                        (item[0] === "ICP" && icp),
+                                        (item[0] === "ICP" && icp) ||
+                                        (item[0] === "ckUSDT" && ckUSDT),
                                         Number(
                                           item[1]?.Ok.current_liquidity_rate
                                         ) / 100000000,
@@ -1817,19 +1832,21 @@ const MySupply = () => {
                       </div>
 
                       {/* Arrow Button to Show/Hide more assets */}
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {filteredItems.length > 4 && (
+                        <div className="flex justify-center mt-4">
+                          <button
+                            onClick={toggleShowAll}
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
+                          >
+                            {showAll ? (
+                              <FaArrowUp size={18} />
+                            ) : (
+                              <FaArrowDown size={18} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
@@ -1844,7 +1861,7 @@ const MySupply = () => {
             } lg:block`}
         >
           <div
-            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar sxs3:-mt-6 md:-mt-0 ${isborrowVisible ? "min-h-[200px]" : "min-h-[100px]"
+            className={`w-full  lgx:overflow-none  sxs3:-mt-6 md:-mt-0 ${isborrowVisible ? "min-h-auto" : "min-h-[100px]"
               } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
@@ -1852,34 +1869,34 @@ const MySupply = () => {
                 <div className="flex">
                   <h1>Your borrow</h1>
                   <div className="ml-5">
-                {userData?.Ok?.reserves[0]
-                  ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
-                  .map((reserveGroup, index) => {
-                    const asset = reserveGroup[1]?.reserve;
-                    const assetBorrow = Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
-                    let usdValue = 0;
-                    
-                    if (asset === "ckBTC") {
-                      usdValue = assetBorrow * ckBTCUsdRate;
-                    } else if (asset === "ckETH") {
-                      usdValue = assetBorrow * ckETHUsdRate;
-                    } else if (asset === "ckUSDC") {
-                      usdValue = assetBorrow * ckUSDCUsdRate;
-                    } else if (asset === "ICP") {
-                      usdValue = assetBorrow * ckICPUsdRate;
-                    } else if (asset === "ckUSDT") {
-                      usdValue = assetBorrow * ckUSDTUsdRate;
-                    }
-                    totalUsdValueBorrow += usdValue; 
-                    if (assetBorrow <= 0) return null;
-                  })}
-                <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
-                <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">Total</span>{" "} ${formatNumber(totalUsdValueBorrow)}
-                </div>
-              </div>
+                    {userData?.Ok?.reserves[0]
+                      ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                      .map((reserveGroup, index) => {
+                        const asset = reserveGroup[1]?.reserve;
+                        const assetBorrow = Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
+                        let usdValue = 0;
+
+                        if (asset === "ckBTC") {
+                          usdValue = assetBorrow * ckBTCUsdRate;
+                        } else if (asset === "ckETH") {
+                          usdValue = assetBorrow * ckETHUsdRate;
+                        } else if (asset === "ckUSDC") {
+                          usdValue = assetBorrow * ckUSDCUsdRate;
+                        } else if (asset === "ICP") {
+                          usdValue = assetBorrow * ckICPUsdRate;
+                        } else if (asset === "ckUSDT") {
+                          usdValue = assetBorrow * ckUSDTUsdRate;
+                        }
+                        totalUsdValueBorrow += usdValue;
+                        if (assetBorrow <= 0) return null;
+                      })}
+                    <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                      <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">Total</span>{" "} ${formatNumber(totalUsdValueBorrow)}
+                    </div>
+                  </div>
                 </div>
               </h1>
-              
+
               <button
                 className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-auto md:ml-0 button1"
                 onClick={toggleborrowVisibility}
@@ -2183,19 +2200,21 @@ const MySupply = () => {
                             )}
                         </div>
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
+                        <div className="flex justify-center mt-4">
+                          <button
+                            onClick={toggleShowAll}
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
+                          >
+                            {showAll ? (
+                              <FaArrowUp size={18} />
+                            ) : (
+                              <FaArrowDown size={18} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
@@ -2216,7 +2235,7 @@ const MySupply = () => {
                     // className="w-full h-auto mt-6 relative max-h-[300px] overflow-hidden"
                     <div className="w-full h-auto mt-6 relative  overflow-hidden">
                       {/* Container for the fixed header */}
-                      <div className="w-full sticky top-0 z-10">
+                      <div className="w-full z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-3  pl-4">Asset</div>
                           <div className="p-3 -ml-[4px]">Debt</div>
@@ -2493,19 +2512,21 @@ const MySupply = () => {
                             )}
                         </div>
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
+                        <div className="flex justify-center mt-4">
+                          <button
+                            onClick={toggleShowAll}
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
+                          >
+                            {showAll ? (
+                              <FaArrowUp size={18} />
+                            ) : (
+                              <FaArrowDown size={18} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
@@ -2766,19 +2787,21 @@ const MySupply = () => {
                             </div>
                           ))}
                       </div>
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={toggleShowAll}
-                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          {showAll ? (
-                            <FaArrowUp size={18} />
-                          ) : (
-                            <FaArrowDown size={18} />
-                          )}
-                        </button>
-                      </div>
+                      {filteredItems.length > 4 && (
+                        <div className="flex justify-center mt-4">
+                          <button
+                            onClick={toggleShowAll}
+                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
+                          >
+                            {showAll ? (
+                              <FaArrowUp size={18} />
+                            ) : (
+                              <FaArrowDown size={18} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
@@ -2815,7 +2838,7 @@ const MySupply = () => {
                           }`}
                       >
                         {/* Header */}
-                        <div className="grid grid-cols-[3fr_2fr_3fr_1fr_2fr] text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 sticky top-0  z-10">
+                        <div className="grid grid-cols-[3fr_2fr_3fr_1fr_2fr] text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 z-10">
                           {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
                             <div
                               key={index}
@@ -2826,7 +2849,7 @@ const MySupply = () => {
                           ))}
                         </div>
                         {/* className="w-full max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-custom" */}
-                        <div className="w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom">
+                        <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                           {/* Body */}
                           {filteredItems
                             .slice(0, showAll ? filteredItems.length : 4)

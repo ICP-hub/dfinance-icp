@@ -121,7 +121,7 @@ impl SupplyLogic {
                     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
         
-
+        let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data, usd_amount.clone()).await;
         // Minting dtoken
         match asset_transfer(
             user_principal,
@@ -153,7 +153,7 @@ impl SupplyLogic {
                 println!("Asset transfer from user to backend canister executed successfully");
                 // ----------- Update logic here -------------
                 
-                let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data, usd_amount.clone()).await;
+               
                 
         
                 Ok(new_balance)

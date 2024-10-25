@@ -237,18 +237,28 @@ pub async fn withdraw(
 }
 
 
-
 // #[update]
 // pub fn login() -> Result<(), String> {
 //     let user_principal = ic_cdk::caller();
 
-//     let mut user_data = mutate_state(|state| {
-//         state.user_profile.get(&user_principal).clone()
-//     }).ok_or_else(|| format!("User not found: {}", user_principal.to_string()))?;
+//     // fetch user data.
+//     let user_data_result = mutate_state(|state| {
+//         state
+//             .user_profile
+//             .get(&user_principal)
+//             .map(|user| user.0.clone())
+//             .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+//     });
 
-//     let reserves = user_data.reserves.as_mut().ok_or_else(|| {
-//         format!("Reserves not found for user {}", user_principal.to_string())
-//     })?;
+//     let mut user_data = match user_data_result {
+//         Ok(data) => data,
+//         Err(err) => return Err(err),
+//     };
+//     // Ensure reserves exist for the user
+//     let reserves = user_data
+//         .reserves
+//         .as_mut()
+//         .ok_or_else(|| format!("Reserves not found for user {}", user_principal.to_string()))?;
 
 //     let current_timestamp = ic_cdk::api::time() / 1_000_000_000;
 
@@ -262,38 +272,47 @@ pub async fn withdraw(
 //         let apy = reserve_data.supply_rate; // Assuming supply_rate represents APY in basis points
 //         update_liquidity_index(reserve_data, apy, delta_time)?;
 
-       
+//         // Dynamically calculate the user's updated balance using the liquidity index
 //         let updated_balance = calculate_dynamic_balance(
-//             reserve_data.asset_supply, 
-//             reserve_data.liquidity_index, 
-//             reserve_data.variable_borrow_index 
+//             reserve_data.asset_supply,
+//             reserve_data.liquidity_index,
+//             reserve_data.variable_borrow_index, // Assuming this is the initial liquidity index
 //         );
 
-      
 //         reserve_data.asset_supply = updated_balance;
 
-//         if reserve_data.is_collateral {
-//             total_collateral += updated_balance - reserve_data.asset_supply;  
+//         // Update the user's total collateral based on the updated reserve balance
+//         if reserve_data.asset_supply > 0 {
+//             total_collateral += updated_balance - reserve_data.asset_supply;
 //         }
 
-   
-//         if reserve_data.is_collateral || reserve_data.is_borrowed {
-//             user_data.health_factor = Some(calculate_health_factor(&reserve_data));
-//             user_data.ltv = Some(calculate_ltv(&reserve_data));
+//         let user_position = UserPosition {
+//             total_collateral_value: total_collateral,
+//             total_borrowed_value: user_data.total_debt.unwrap(),
+//             liquidation_threshold: user_data.liquidation_threshold.unwrap(),
+//         };
+
+//         if reserve_data.asset_supply > 0 || reserve_data.asset_borrow > 0 {
+//             user_data.health_factor = Some(calculate_health_factor(&user_position));
+//             user_data.ltv = Some(calculate_ltv(&user_position));
 //         }
 
+//         // Update the timestamp for this reserve
 //         reserve_data.last_update_timestamp = current_timestamp;
 //     }
 
+//     // Update the user's total collateral value
 //     user_data.total_collateral = Some(total_collateral);
 
+//     // Update the user profile with the new state
 //     mutate_state(|state| {
-//         state.user_profile.insert(user_principal, user_data);
+//         state
+//             .user_profile
+//             .insert(user_principal, declarations::storable::Candid(user_data));
 //     });
 
 //     Ok(())
 // }
-
 
 // //approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve
 // //call approve transfer function -- function.rs

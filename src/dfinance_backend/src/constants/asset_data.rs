@@ -129,15 +129,15 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     let debtusdt=create_token_canister("debtckUSDT", "debtckUSDT").await;
 
     assets.insert("ckUSDT", (
-        icp_principal,
+        ckusdt_principal,
         ReserveData {
             asset_name: Some("ckUSDT".to_string()),
             last_update_timestamp: time(),
             current_liquidity_rate: 0,
             borrow_rate: 0,
             supply_rate_apr: Some(0),
-            d_token_canister:  Some(dicp.to_string()),
-            debt_token_canister:  Some(debticp.to_string()),
+            d_token_canister:  Some(dusdt.to_string()),
+            debt_token_canister:  Some(debtusdt.to_string()),
             total_supply: 0,
             total_borrowed:0,
             can_be_collateral: Some(true),

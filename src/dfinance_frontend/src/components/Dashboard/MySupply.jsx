@@ -39,9 +39,14 @@ const MySupply = () => {
 
   const { principal, backendActor } = useAuth();
   const [showAll, setShowAll] = useState(false);
-
+  const [showAllYourBorrow, setShowAllYourBorrow] = useState(false);
+  const [showAllAssetoBorrow, setshowAllAssetoBorrow] = useState(false);
+  const [showAllSupplies, setShowAllSupplies] = useState(false);
   // Toggle between showing 4 items and all items
   const toggleShowAll = () => setShowAll((prev) => !prev);
+  const toggleShowAllBorrow = () => setShowAllYourBorrow((prev) => !prev);
+  const toggleshowAllAssetoBorrow = () => setshowAllAssetoBorrow((prev) => !prev);
+  const toggleshowAllSupplies = () => setShowAllSupplies((prev) => !prev);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
@@ -635,16 +640,9 @@ const MySupply = () => {
                     ) ? (
                     noSupplyMessage
                   ) : (
-                    <div
-                      className={`relative mt-4 overflow-y-auto overflow-x-hidden  ${filteredItems.length > 1
-                        ? "max-h-[1250px]"
-                        : "max-h-auto"
-                        }`}
-                    >
-                      <div
-                        className={`w-full ${filteredItems.length > 1 ? "h-full" : ""
-                          }`}
-                      >
+                    <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
+                      {/* Container for the content */}
+                      <div className="w-full">
                         {userData?.Ok?.reserves[0]
                           ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
                           .map((reserveGroup, index) => {
@@ -1390,7 +1388,7 @@ const MySupply = () => {
                       {/* Container for the content */}
                       <div className="w-full">
                         {filteredItems
-                          .slice(0, showAll ? filteredItems.length : 4)
+                          .slice(0, showAllSupplies ? filteredItems.length : 4)
                           .map((item, index) => (
                             <div
                               key={index}
@@ -1599,11 +1597,11 @@ const MySupply = () => {
                       {filteredItems.length > 4 && (
                         <div className="flex justify-center mt-4">
                           <button
-                            onClick={toggleShowAll}
+                            onClick={toggleshowAllSupplies}
                             className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
          text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
                           >
-                            {showAll ? (
+                            {showAllSupplies ? (
                               <FaArrowUp size={18} />
                             ) : (
                               <FaArrowDown size={18} />
@@ -1642,7 +1640,7 @@ const MySupply = () => {
                       <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {filteredItems
-                            .slice(0, showAll ? filteredItems.length : 4)
+                            .slice(0, showAllSupplies ? filteredItems.length : 4)
                             .map((item, index) => (
                               <div
                                 key={index}
@@ -1838,11 +1836,11 @@ const MySupply = () => {
                       {filteredItems.length > 4 && (
                         <div className="flex justify-center mt-4">
                           <button
-                            onClick={toggleShowAll}
+                            onClick={toggleshowAllSupplies}
                             className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
          text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
                           >
-                            {showAll ? (
+                            {showAllSupplies ? (
                               <FaArrowUp size={18} />
                             ) : (
                               <FaArrowDown size={18} />
@@ -1873,7 +1871,7 @@ const MySupply = () => {
                   <h1>Your borrow</h1>
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]
-                      ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                      ?.slice(0, showAllYourBorrow ? userData?.Ok?.reserves[0].length : 4)
                       .map((reserveGroup, index) => {
                         const asset = reserveGroup[1]?.reserve;
                         const assetBorrow = Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
@@ -1925,7 +1923,7 @@ const MySupply = () => {
                     noBorrowMessage
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-                      <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none ">
+                      <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none ">
                         {/* Container for the content */}
                         <div className="w-full">
                           {console.log(
@@ -1933,7 +1931,7 @@ const MySupply = () => {
                             userData?.Ok?.reserves[0]
                           )}
                           {userData?.Ok?.reserves[0]
-                            ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4) // Showing 3 items initially
+                            ?.slice(0, showAllYourBorrow ? userData?.Ok?.reserves[0].length : 4) // Showing 3 items initially
                             .map((reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               console.log("Reserve group", reserveGroup[1]);
@@ -2203,21 +2201,26 @@ const MySupply = () => {
                             )}
                         </div>
                       </div>
-                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
-                        <div className="flex justify-center mt-4">
-                          <button
-                            onClick={toggleShowAll}
-                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
-         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
-                          >
-                            {showAll ? (
-                              <FaArrowUp size={18} />
-                            ) : (
-                              <FaArrowDown size={18} />
-                            )}
-                          </button>
-                        </div>
-                      )}
+                      {userData?.Ok?.reserves &&
+ userData?.Ok?.reserves[0] &&
+ userData?.Ok?.reserves[0].filter(
+   (reserveGroup) => reserveGroup[1]?.asset_borrow > 0n
+ ).length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAllBorrow}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+      text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg"
+    >
+      {showAllYourBorrow ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
+
                     </div>
                   )}
                 </>
@@ -2236,7 +2239,7 @@ const MySupply = () => {
                     noBorrowMessage
                   ) : (
                     // className="w-full h-auto mt-6 relative max-h-[300px] overflow-hidden"
-                    <div className="w-full h-auto mt-6 relative  overflow-hidden">
+                    <div className="w-full h-auto mt-6">
                       {/* Container for the fixed header */}
                       <div className="w-full z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
@@ -2249,7 +2252,7 @@ const MySupply = () => {
                       </div>
                       {/* Scrollable table body */}
                       <div
-                        className={`w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                        className={`w-full h-auto  max-h-auto overflow-y-auto scrollbar-none ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_borrow > 0
                         ).length > 3
                           ? "h-[260px]"
@@ -2258,7 +2261,7 @@ const MySupply = () => {
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
                           {userData?.Ok?.reserves[0]
-                            ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                            ?.slice(0, showAllYourBorrow ? userData?.Ok?.reserves[0].length : 4)
                             .map((reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               if (
@@ -2515,21 +2518,25 @@ const MySupply = () => {
                             )}
                         </div>
                       </div>
-                      {userData?.Ok?.reserves?.[0]?.length > 4 && (
-                        <div className="flex justify-center mt-4">
-                          <button
-                            onClick={toggleShowAll}
-                            className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
-         text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
-                          >
-                            {showAll ? (
-                              <FaArrowUp size={18} />
-                            ) : (
-                              <FaArrowDown size={18} />
-                            )}
-                          </button>
-                        </div>
-                      )}
+                      {userData?.Ok?.reserves &&
+ userData?.Ok?.reserves[0] &&
+ userData?.Ok?.reserves[0].filter(
+   (reserveGroup) => reserveGroup[1]?.asset_borrow > 0n
+ ).length > 4 && (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={toggleShowAllBorrow}
+      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
+      text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg"
+    >
+      {showAllYourBorrow ? (
+        <FaArrowUp size={18} />
+      ) : (
+        <FaArrowDown size={18} />
+      )}
+    </button>
+  </div>
+)}
                     </div>
                   )}
                 </>
@@ -2567,7 +2574,7 @@ const MySupply = () => {
                       {/* Container for the content */}
                       <div className="w-full">
                         {filteredItems
-                          .slice(0, showAll ? filteredItems.length : 4)
+                          .slice(0, showAllAssetoBorrow ? filteredItems.length : 4)
                           .map((item, index) => (
                             <div
                               key={index}
@@ -2800,11 +2807,11 @@ const MySupply = () => {
                       {filteredItems.length > 4 && (
                         <div className="flex justify-center mt-4">
                           <button
-                            onClick={toggleShowAll}
+                            onClick={toggleshowAllAssetoBorrow}
                             className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
          text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg "
                           >
-                            {showAll ? (
+                            {showAllAssetoBorrow ? (
                               <FaArrowUp size={18} />
                             ) : (
                               <FaArrowDown size={18} />
@@ -2862,7 +2869,7 @@ const MySupply = () => {
                         <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                           {/* Body */}
                           {filteredItems
-                            .slice(0, showAll ? filteredItems.length : 4)
+                            .slice(0, showAllAssetoBorrow ? filteredItems.length : 4)
                             .map((item, index) => (
                               <div
                                 key={index}
@@ -3090,11 +3097,11 @@ const MySupply = () => {
                         </div>
                         <div className="flex justify-center mt-4">
                           <button
-                            onClick={toggleShowAll}
+                            onClick={toggleshowAllAssetoBorrow}
                             className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400/40 border-gray-600/40 
          text-gray-800 dark:text-white bg-white/50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors backdrop-blur-lg"
                           >
-                            {showAll ? (
+                            {showAllAssetoBorrow ? (
                               <FaArrowUp size={18} />
                             ) : (
                               <FaArrowDown size={18} />

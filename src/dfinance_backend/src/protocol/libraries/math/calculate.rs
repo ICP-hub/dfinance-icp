@@ -56,13 +56,18 @@ pub fn cal_average_ltv(
     user_total_collateral: u128,
     user_max_ltv: u128,
 ) -> u128 {
-    if user_total_collateral-amount_taken == 0 {
-        return 0;
+    
+    let numerator = (amount.scaled_mul(reserve_ltv))
+    + (user_total_collateral.scaled_mul(user_max_ltv))
+    - (amount_taken.scaled_mul(reserve_ltv));
+
+    let denominator = amount + user_total_collateral - amount_taken;
+
+    if denominator == 0 {
+        return 0u128;
     }
-    let result = ((amount.scaled_mul(reserve_ltv))
-        + (user_total_collateral.scaled_mul(user_max_ltv))
-        - (amount_taken.scaled_mul(reserve_ltv)))
-    .scaled_div(amount + user_total_collateral - amount_taken);
+
+    let result = numerator.scaled_div(denominator);
     result
 }
 // ------------ Real time asset data using XRC ------------

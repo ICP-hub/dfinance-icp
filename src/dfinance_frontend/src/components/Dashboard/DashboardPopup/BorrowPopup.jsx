@@ -104,7 +104,8 @@ const Borrow = ({
     console.log("Borrow function called for", asset, scaledAmount);
     setIsLoading(true);
     let ledgerActor;
-
+  
+    // Select the correct backend actor based on the asset
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
@@ -114,23 +115,44 @@ const Borrow = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     }
+  
     try {
       const borrowResult = await backendActor.borrow(asset, scaledAmount);
       console.log("Borrow result", borrowResult);
-      setIsPaymentDone(true);
-      setIsVisible(false);
-      const sound = new Audio(coinSound);
-      sound.play();
-      toast.success(`Borrow successful!`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+  
+      // Check if the result is "Ok" or "Err"
+      if ("Ok" in borrowResult) {
+        const sound = new Audio(coinSound);
+        sound.play();
+        toast.success(`Borrow successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        setIsPaymentDone(true);
+        setIsVisible(false);
+      } else if ("Err" in borrowResult) {
+        const errorMsg = borrowResult.Err;
+        toast.error(`Borrow failed: ${errorMsg}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        console.error("Borrow error:", errorMsg);
+        setIsPaymentDone(false);
+        setIsVisible(true);
+      }
+  
     } catch (error) {
       console.error("Error borrowing:", error);
       toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
@@ -145,9 +167,11 @@ const Borrow = ({
       });
       setIsPaymentDone(false);
       setIsVisible(true);
-      setIsLoading(false);
+    } finally {
+      setIsLoading(false); // Ensure loading is stopped after the process is done
     }
   };
+  
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);

@@ -460,11 +460,14 @@ const MySupply = () => {
 
   
   const isTableDisabled =
-    !userData?.Ok?.reserves ||
-    !userData?.Ok?.reserves[0] ||
-    userData?.Ok?.reserves[0].every(
-      (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
-    );
+  !userData?.Ok?.reserves ||
+  !userData?.Ok?.reserves[0] ||
+  userData?.Ok?.reserves[0].every(
+    (reserveGroup) => 
+      reserveGroup[1]?.asset_supply === 0n || 
+      reserveGroup[1]?.is_collateral === false
+  );
+
 
   useEffect(() => {
     if (filteredItems && filteredItems.length > 0) {

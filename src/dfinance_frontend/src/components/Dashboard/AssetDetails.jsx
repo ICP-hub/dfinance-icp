@@ -32,7 +32,7 @@ import SupplyPopup from "./DashboardPopup/SupplyPopup";
 import ckbtc from "../../../public/assests-icon/ckBTC.png";
 import cketh from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.png";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 import useFormatNumber from "../customHooks/useFormatNumber";

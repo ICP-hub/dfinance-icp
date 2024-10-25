@@ -24,7 +24,7 @@ import UserInformationPopup from "./userInformation"
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.png";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber"
 

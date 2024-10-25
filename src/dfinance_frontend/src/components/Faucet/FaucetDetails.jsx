@@ -12,7 +12,7 @@ import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.png";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";

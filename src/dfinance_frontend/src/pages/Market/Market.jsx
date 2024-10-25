@@ -17,7 +17,7 @@ import Pagination from "../../components/Common/pagination";
 import ckBTC from '../../../public/assests-icon/ckBTC.png';
 import cekTH from '../../../public/assests-icon/cekTH.png';
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.png";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssets from "../../components/Common/useAssets"
 import useAssetData from "../../components/Common/useAssets"

@@ -9,7 +9,7 @@ import { useMemo } from "react";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.png";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import { useCallback } from "react";
 import { toast } from "react-toastify"; // Import Toastify if not already done
 import "react-toastify/dist/ReactToastify.css";

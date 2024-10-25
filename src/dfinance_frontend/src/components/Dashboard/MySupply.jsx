@@ -571,7 +571,7 @@ const MySupply = () => {
             } lg:block`}
         >
           <div
-            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar  ${isSupplyVisible ? "min-h-[200px]" : "min-h-[100px]"
+            className={`w-full  lgx:overflow-none   ${isSupplyVisible ? "min-h-auto" : "min-h-[100px]"
               } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             {/* Header */}
@@ -603,7 +603,7 @@ const MySupply = () => {
                     noSupplyMessage
                   ) : (
                     <div
-                      className={`relative mt-4 overflow-y-auto overflow-x-hidden scrollbar-custom ${filteredItems.length > 1
+                      className={`relative mt-4 overflow-y-auto overflow-x-hidden  ${filteredItems.length > 1
                           ? "max-h-[1250px]"
                           : "max-h-auto"
                         }`}
@@ -996,7 +996,7 @@ const MySupply = () => {
 
                       {/* Scrollable Content Area */}
                       <div
-                        className={`w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
+                        className={`w-full h-auto max-h-auto overflow-y-auto scrollbar-none ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_supply > 0
                         ).length > 3
                             ? "h-[260px]"
@@ -1327,7 +1327,7 @@ const MySupply = () => {
           </div>
 
           <div
-            className={`w-full mt-6 overflow-scroll lgx:overflow-none hide-scrollbar ${isVisible ? "min-h-[200px]" : "min-h-[100px]"
+            className={`w-full mt-6  lgx:overflow-none  ${isVisible ? "min-h-auto" : "min-h-[100px]"
               } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40  rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
@@ -1353,7 +1353,7 @@ const MySupply = () => {
                   {filteredItems.length === 0 ? (
                     noAssetsToSupplyMessage
                   ) : (
-                    <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-custom">
+                    <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
                       {/* Container for the content */}
                       <div className="w-full">
                         {filteredItems
@@ -1605,7 +1605,7 @@ const MySupply = () => {
                       </div>
 
                       {/* Scrollable Content Area */}
-                      <div className="w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom">
+                      <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {filteredItems
                             .slice(0, showAll ? filteredItems.length : 4)
@@ -1820,7 +1820,7 @@ const MySupply = () => {
             } lg:block`}
         >
           <div
-            className={`w-full overflow-scroll lgx:overflow-none hide-scrollbar sxs3:-mt-6 md:-mt-0 ${isborrowVisible ? "min-h-[200px]" : "min-h-[100px]"
+            className={`w-full  lgx:overflow-none  sxs3:-mt-6 md:-mt-0 ${isborrowVisible ? "min-h-auto" : "min-h-[100px]"
               } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
@@ -2779,7 +2779,7 @@ const MySupply = () => {
                           ))}
                         </div>
                         {/* className="w-full max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-custom" */}
-                        <div className="w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom">
+                        <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                           {/* Body */}
                           {filteredItems
                             .slice(0, showAll ? filteredItems.length : 4)
@@ -3006,21 +3006,19 @@ const MySupply = () => {
                               </div>
                             ))}
                         </div>
-                        {filteredItems.length > 4 && (
-  <div className="flex justify-center mt-4">
-    <button
-      onClick={toggleShowAll}
-      className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
-         text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-    >
-      {showAll ? (
-        <FaArrowUp size={18} />
-      ) : (
-        <FaArrowDown size={18} />
-      )}
-    </button>
-  </div>
-)}
+                        <div className="flex justify-center mt-4">
+                        <button
+                          onClick={toggleShowAll}
+                          className="text-center text-xs font-semibold p-2 rounded-full border dark:border-gray-400 border-gray-800 
+                             text-black dark:text-white bg-white dark:bg-black hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          {showAll ? (
+                            <FaArrowUp size={18} />
+                          ) : (
+                            <FaArrowDown size={18} />
+                          )}
+                        </button>
+                      </div>
                       </div>
                     )}
                   </div>

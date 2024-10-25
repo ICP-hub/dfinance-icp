@@ -542,13 +542,17 @@ const MySupply = () => {
     }
   }, [userData]);
 
+
+  let totalUsdValueSupply = 0;
+  let totalUsdValueBorrow = 0;
+
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 md:-mt-[3rem]">
       <div className="flex justify-center -mb-30 lg:hidden">
         <button
           className={`w-1/2 py-2 button1 ${activeSection === "supply"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
             }`}
           onClick={() => setActiveSection("supply")}
         >
@@ -556,8 +560,8 @@ const MySupply = () => {
         </button>
         <button
           className={`w-1/2 py-2 button1 ${activeSection === "borrow"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
             }`}
           onClick={() => setActiveSection("borrow")}
         >
@@ -577,8 +581,37 @@ const MySupply = () => {
             {/* Header */}
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
-                Your supplies
+               <div className="flex">
+               <h1>Your supplies</h1>
+               <div className="ml-5">
+                {userData?.Ok?.reserves[0]
+                  ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                  .map((reserveGroup, index) => {
+                    const asset = reserveGroup[1]?.reserve;
+                    const assetSupply = Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
+                    let usdValue = 0;
+
+                    if (asset === "ckBTC") {
+                      usdValue = assetSupply * ckBTCUsdRate;
+                    } else if (asset === "ckETH") {
+                      usdValue = assetSupply * ckETHUsdRate;
+                    } else if (asset === "ckUSDC") {
+                      usdValue = assetSupply * ckUSDCUsdRate;
+                    } else if (asset === "ICP") {
+                      usdValue = assetSupply * ckICPUsdRate;
+                    } else if (asset === "ckUSDT") {
+                      usdValue = assetSupply * ckUSDTUsdRate;
+                    }
+                    totalUsdValueSupply += usdValue; 
+                    if (assetSupply <= 0) return null;
+                  })}
+                <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">Total</span>{" "} ${formatNumber(totalUsdValueSupply)}
+                </div>
+              </div>
+               </div>
               </h1>
+             
               <button
                 className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-4 button1"
                 onClick={toggleSupplyVisibility}
@@ -604,8 +637,8 @@ const MySupply = () => {
                   ) : (
                     <div
                       className={`relative mt-4 overflow-y-auto overflow-x-hidden scrollbar-custom ${filteredItems.length > 1
-                          ? "max-h-[1250px]"
-                          : "max-h-auto"
+                        ? "max-h-[1250px]"
+                        : "max-h-auto"
                         }`}
                     >
                       <div
@@ -997,8 +1030,8 @@ const MySupply = () => {
                         className={`w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_supply > 0
                         ).length > 3
-                            ? "h-[260px]"
-                            : ""
+                          ? "h-[260px]"
+                          : ""
                           }`}
                       >
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
@@ -1816,8 +1849,37 @@ const MySupply = () => {
           >
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
-                Your borrow
+                <div className="flex">
+                  <h1>Your borrow</h1>
+                  <div className="ml-5">
+                {userData?.Ok?.reserves[0]
+                  ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
+                  .map((reserveGroup, index) => {
+                    const asset = reserveGroup[1]?.reserve;
+                    const assetBorrow = Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
+                    let usdValue = 0;
+                    
+                    if (asset === "ckBTC") {
+                      usdValue = assetBorrow * ckBTCUsdRate;
+                    } else if (asset === "ckETH") {
+                      usdValue = assetBorrow * ckETHUsdRate;
+                    } else if (asset === "ckUSDC") {
+                      usdValue = assetBorrow * ckUSDCUsdRate;
+                    } else if (asset === "ICP") {
+                      usdValue = assetBorrow * ckICPUsdRate;
+                    } else if (asset === "ckUSDT") {
+                      usdValue = assetBorrow * ckUSDTUsdRate;
+                    }
+                    totalUsdValueBorrow += usdValue; 
+                    if (assetBorrow <= 0) return null;
+                  })}
+                <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">Total</span>{" "} ${formatNumber(totalUsdValueBorrow)}
+                </div>
+              </div>
+                </div>
               </h1>
+              
               <button
                 className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-auto md:ml-0 button1"
                 onClick={toggleborrowVisibility}
@@ -2168,8 +2230,8 @@ const MySupply = () => {
                         className={`w-full h-auto max-h-[300px] overflow-y-auto scrollbar-custom ${userData?.Ok?.reserves[0]?.filter(
                           (reserveGroup) => reserveGroup[1].asset_borrow > 0
                         ).length > 3
-                            ? "h-[260px]"
-                            : ""
+                          ? "h-[260px]"
+                          : ""
                           }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
@@ -2486,8 +2548,8 @@ const MySupply = () => {
                             <div
                               key={index}
                               className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${isTableDisabled
-                                  ? "opacity-50 pointer-events-none"
-                                  : ""
+                                ? "opacity-50 pointer-events-none"
+                                : ""
                                 }`}
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
@@ -2626,7 +2688,7 @@ const MySupply = () => {
                                         reserveData?.[1]?.asset_supply || 0n
                                       ) / 100000000;
 
-                                  const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
                                     console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                     const assetBorrow =
@@ -2748,8 +2810,8 @@ const MySupply = () => {
                     ) : (
                       <div
                         className={`w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4 ${isTableDisabled
-                            ? "opacity-50 pointer-events-none"
-                            : ""
+                          ? "opacity-50 pointer-events-none"
+                          : ""
                           }`}
                       >
                         {/* Header */}
@@ -2903,9 +2965,9 @@ const MySupply = () => {
                                           (reserveGroup) =>
                                             reserveGroup[0] === item[0]
                                         );
-                                        const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                                      const currentCollateralStatus = reserveData?.[1]?.is_collateral;
 
-                                        console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                      console.log("currentCollateralStatus in on change", currentCollateralStatus);
                                       const assetSupply =
                                         Number(
                                           reserveData?.[1]?.asset_supply || 0n
@@ -2927,18 +2989,18 @@ const MySupply = () => {
                                         Number(userData?.Ok?.ltv) / 100000000 ||
                                         0;
 
-                                    const borrowableAsset =
-                                      item[0] === "ckBTC"
-                                        ? borrowableBTC
-                                        : item[0] === "ckETH"
-                                          ? borrowableETH
-                                          : item[0] === "ckUSDC"
-                                            ? borrowableUSDC
-                                            : item[0] === "ICP"
-                                              ? borrowableICP
-                                              : item[0] === "ckUSDT" // New condition for ckUSDT
-                                                ? borrowableUSDT
-                                                : 0;
+                                      const borrowableAsset =
+                                        item[0] === "ckBTC"
+                                          ? borrowableBTC
+                                          : item[0] === "ckETH"
+                                            ? borrowableETH
+                                            : item[0] === "ckUSDC"
+                                              ? borrowableUSDC
+                                              : item[0] === "ICP"
+                                                ? borrowableICP
+                                                : item[0] === "ckUSDT" // New condition for ckUSDT
+                                                  ? borrowableUSDT
+                                                  : 0;
 
                                       handleModalOpen(
                                         "borrow",

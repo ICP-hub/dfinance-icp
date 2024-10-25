@@ -222,10 +222,11 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
     totalDebt,
     liquidationThreshold
   ) => {
-    const amountTaken = 0;
-    
+    // const amountTaken = 0;
+    // const amountAdded = usdValue || 0;
 
     console.log(
+      
       "totalCollateral",
       adjustedCollateral,
       "totalDebt",
@@ -234,11 +235,12 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
       liquidationThreshold
     );
 
-    // const totalCollateralValue =
-    //   parseFloat(adjustedCollateral) + parseFloat(amountAdded);
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
-    console.log("totalCollateralValue", adjustedCollateral);
+    const totalCollateralValue =
+      parseFloat(totalCollateral);
+    const totalDeptValue = parseFloat(totalDebt);
+    console.log("totalCollateralValue", totalCollateralValue);
     console.log("totalDeptValue", totalDeptValue);
+    // console.log("amountAdded", amountAdded);
     console.log("liquidationThreshold", liquidationThreshold);
     console.log("totalDebt", totalDebt);
     if (totalDeptValue === 0) {

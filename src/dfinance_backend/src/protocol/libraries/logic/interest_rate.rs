@@ -50,6 +50,13 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
             variable_rate_slope1: ScalingMath::to_scaled(4),      
             variable_rate_slope2: ScalingMath::to_scaled(75),     
         },
+        "ckUSDT" => InterestRateParams {
+            optimal_usage_ratio: ScalingMath::to_scaled(92), 
+            max_excess_usage_ratio: ScalingMath::to_scaled(20), 
+            base_variable_borrow_rate: ScalingMath::to_scaled(0), 
+            variable_rate_slope1: ScalingMath::to_scaled(4),      
+            variable_rate_slope2: ScalingMath::to_scaled(75),     
+        },
         _ => InterestRateParams {
             optimal_usage_ratio: ScalingMath::to_scaled(80),
             max_excess_usage_ratio: ScalingMath::to_scaled(20),

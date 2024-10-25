@@ -124,6 +124,7 @@ const FaucetDetails = () => {
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
+    ckICPBalance,
     ckUSDTBalance
   ]);
 

@@ -110,6 +110,7 @@ const DashboardNav = () => {
     ckETHUsdRate,
     ckUSDCUsdRate,
     ckICPUsdRate,
+    ckUSDTUsdRate,
     fetchConversionRate,
   } = useFetchConversionRate();
 

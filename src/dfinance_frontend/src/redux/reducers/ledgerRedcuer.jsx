@@ -4,9 +4,9 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   ckBTC: null,
   ckETH: null,
-  ckUSDC: null,
-  ckUSDT: null, 
+  ckUSDC: null, 
   ICP: null,
+  ckUSDT: null,
 };
 
 const ledgerSlice = createSlice({
@@ -21,8 +21,8 @@ const ledgerSlice = createSlice({
       state.ckBTC = null;
       state.ckETH = null;
       state.ckUSDC = null;
-      state.ckUSDT = null; 
       state.ICP = null;
+      state.ckUSDT = null; 
     },
   },
 });

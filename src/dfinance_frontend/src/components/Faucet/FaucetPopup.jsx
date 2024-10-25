@@ -70,6 +70,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       const icpAmount = (10000 / ckICPUsdRate).toFixed(4);
       setFaucetICP(icpAmount);
     }
+    if (ckUSDTUsdRate) {
+      const usdTAmount = (10000 / ckUSDTUsdRate).toFixed(4);
+      setFaucetUSDT(usdTAmount);
+    }
   }, [
     ckBTCBalance,
     ckBTCUsdRate,
@@ -79,6 +83,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     ckUSDCUsdRate,
     ckICPBalance,
     ckICPUsdRate,
+    ckUSDTUsdRate,
+    ckUSDTBalance
   ]);
 
   const getFaucetAmount = () => {
@@ -101,7 +107,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   useEffect(() => {
     const faucetAmount = getFaucetAmount();
     setExchangeRate(faucetAmount);
-  }, [asset, faucetBTC, faucetETH, faucetUSDC, faucetICP]);
+  }, [asset, faucetBTC, faucetETH, faucetUSDC, faucetICP ,faucetUSDT]);
 
   const [amount, setAmount] = useState("");
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);

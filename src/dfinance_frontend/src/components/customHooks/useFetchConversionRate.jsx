@@ -13,8 +13,8 @@ const useFetchConversionRate = (pollInterval = 2000) => {
         ckBTCBalance,
         ckETHBalance,
         ckUSDCBalance,
-        ckUSDTBalance, 
         ckICPBalance,
+        ckUSDTBalance, 
         fetchBalance,
     } = useFetchBalance(ledgerActors, principal);
 
@@ -86,15 +86,15 @@ const useFetchConversionRate = (pollInterval = 2000) => {
         ckBTCUsdRate,
         ckETHUsdRate,
         ckUSDCUsdRate,
-        ckUSDTUsdRate, 
         ckICPUsdRate,
+        ckUSDTUsdRate, 
         error,
         fetchConversionRate,
         ckBTCBalance,
         ckETHBalance,
         ckUSDCBalance,
-        ckUSDTBalance, 
         ckICPBalance,
+        ckUSDTBalance,
         fetchBalance
     };
 };

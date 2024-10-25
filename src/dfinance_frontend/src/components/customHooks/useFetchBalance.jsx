@@ -59,8 +59,8 @@ const useFetchBalance = (ledgerActors, principal) => {
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
-    ckUSDTBalance,
     ckICPBalance,
+    ckUSDTBalance,
     fetchBalance,
     error,
   };

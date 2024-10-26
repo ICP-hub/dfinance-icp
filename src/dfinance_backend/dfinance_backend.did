@@ -66,6 +66,7 @@ type UserReserveData = record {
 };
 service : () -> {
   borrow : (text, nat64) -> (Result);
+  call_test : () -> (principal);
   check_user : (text) -> (Result_1);
   create_multiple_canisters : () -> (vec principal);
   faucet : (text, nat64) -> (Result_2);
@@ -76,7 +77,7 @@ service : () -> {
   get_exchange_rates : (text, opt text, nat) -> (Result_4);
   get_reserve_data : (text) -> (Result_5) query;
   get_user_data : (text) -> (Result_6) query;
-  initialize_reserve : () -> ();
+  initialize_reserve : () -> (Result);
   liquidation_call : (text, text, nat64, text) -> (Result);
   repay : (text, nat, opt text) -> (Result);
   supply : (text, nat64, bool) -> (Result);

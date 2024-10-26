@@ -1,2 +1,2 @@
-pub const DEFAULT: &str = "gsyb3-neiyj-ybncb-5xjnt-nh2kf-u3h3b-bvtqm-4uyzh-uqkvk-yrvqd-oae";
+pub const DEFAULT: &str = "dztei-6p52i-acwy2-vtilb-rsgpe-3zbmx-ypji7-rxlkf-4gjw4-w4up5-xqe";
 

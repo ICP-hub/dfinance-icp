@@ -27,7 +27,8 @@ const useFetchConversionRate = (pollInterval = 2000) => {
 
     const fetchConversionRate = useCallback(async () => {
         try {
-            const response = await fetch("http://localhost:5000/conversion-rates");
+            // const response = await fetch("http://localhost:5000/conversion-rates");
+            const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
             if (!response.ok) {
                 throw new Error("Network response was not ok");
             }

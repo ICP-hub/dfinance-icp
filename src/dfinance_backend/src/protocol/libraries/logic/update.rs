@@ -56,7 +56,7 @@ impl UpdateLogic {
 
         let mut usd_rate = usd_amount.scaled_div(params.amount);
         ic_cdk::println!(
-            "Converted ckBTC amount: {} to USD amount: {} with rate: {}",
+            "Converted amount: {} to USD amount: {} with rate: {}",
             params.amount.clone(),
             usd_amount,
             usd_rate
@@ -220,7 +220,6 @@ impl UpdateLogic {
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
 
-        // Checks if the reserve data for the asset already exists in the user's reserves
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
                 .iter_mut()
@@ -281,7 +280,7 @@ impl UpdateLogic {
             ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
         }
 
-        // Saves the updated user data back to state
+        
         mutate_state(|state| {
             state
                 .user_profile
@@ -632,7 +631,7 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
     let usd_amount = match exchange_amount {
         Ok((amount_in_usd, _timestamp)) => {
             // Extracted the amount in USD
-            ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
+            ic_cdk::println!(" amount in USD: {:?}", amount_in_usd);
             amount_in_usd
         }
         Err(e) => {
@@ -646,7 +645,7 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
     let added_usd_amount = match exchange_rate {
         Ok((amount_in_usd, _timestamp)) => {
             // Extracted the amount in USD
-            ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
+            ic_cdk::println!("added amount in USD: {:?}", amount_in_usd);
             amount_in_usd
         }
         Err(e) => {

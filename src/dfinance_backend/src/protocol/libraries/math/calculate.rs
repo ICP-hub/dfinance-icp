@@ -100,8 +100,8 @@ pub async fn get_exchange_rates(
                 "eth".to_string()
             } else if symbol == "ckUSDC" {
                 "usdc".to_string()
-            } else if symbol == "USDT" {
-                "USDT".to_string()
+            } else if symbol == "ckUSDT" {
+                "usdt".to_string()
             } else {
                 symbol.to_string()
             }
@@ -123,8 +123,8 @@ pub async fn get_exchange_rates(
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
             ic_cdk::api::call::call_with_payment128(
                 // i am changing this id.
-                Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-                // Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+                // Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
+                Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
                 "get_exchange_rate",
                 (args,),
                 1_000_000_000,

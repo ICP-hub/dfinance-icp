@@ -862,6 +862,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   {mappedItem.reserves[0].map((item, index) => {
                     console.log("mappedItesm", mappedItem.reserves[0]);
                     const assetName = item[1]?.reserve;
+                    console.log("assetName", assetName);
                     const assetSupply =
                       Number(item?.[1]?.asset_supply || 0n) / 100000000;
                     const assetBorrow =
@@ -995,7 +996,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 </button>
                 <button
                   className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${isCollateralAssetSelected &&
-                    amountToRepay + amountToRepay * (liquidation_bonus / 100) <
+                    collateral + collateral * (liquidation_bonus / 100) <
                     selectedAssetSupply
                     ? "opacity-100 cursor-pointer"
                     : "opacity-50 cursor-not-allowed"
@@ -1008,7 +1009,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     isLoading ||
                     !isCollateralAssetSelected ||
                     !(
-                      collateral + collateral * (liquidation_bonus / 100) <
+                      collateral + (collateral * (liquidation_bonus / 100)) <
                       selectedAssetSupply
                     )
                   }

@@ -2375,7 +2375,7 @@ const MySupply = () => {
                                             assetBorrow * ckICPUsdRate
                                           )}
                                         {asset === "ckUSDT" && // New condition for ckUSDT
-                                          formatNumber(assetSupply * ckUSDTUsdRate)}
+                                          formatNumber(assetBorrow * ckUSDTUsdRate)}
                                       </p>
                                     </div>
                                   </div>

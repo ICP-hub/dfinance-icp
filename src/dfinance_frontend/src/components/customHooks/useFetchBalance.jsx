@@ -6,6 +6,7 @@ const useFetchBalance = (ledgerActors, principal) => {
   const [ckBTCBalance, setCkBTCBalance] = useState(null);
   const [ckETHBalance, setCkETHBalance] = useState(null);
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
+  const [ckUSDTBalance, setCkUSDTBalance] = useState(null);
   const [ckICPBalance, setCkICPBalance] = useState(null);
   const [error, setError] = useState(null);
 
@@ -23,7 +24,8 @@ const useFetchBalance = (ledgerActors, principal) => {
           }
 
           const balance = await ledgerActor.icrc1_balance_of(account);
-          const formattedBalance = (balance / BigInt(100000000)).toString();
+          const formattedBalance = Number(balance) / 100000000;
+
 
           switch (assetType) {
             case "ckBTC":
@@ -38,6 +40,9 @@ const useFetchBalance = (ledgerActors, principal) => {
             case "ICP":
               setCkICPBalance(formattedBalance);
               break;
+              case "ckUSDT":
+                setCkUSDTBalance(formattedBalance);
+                break;
             default:
               throw new Error("Unsupported asset type");
           }
@@ -55,6 +60,7 @@ const useFetchBalance = (ledgerActors, principal) => {
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
+    ckUSDTBalance,
     fetchBalance,
     error,
   };

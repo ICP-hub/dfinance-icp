@@ -107,6 +107,18 @@ impl SupplyLogic {
         .await;
 
         ic_cdk::println!("Interest rates updated successfully");
+        
+        if let Some(userlist) = &mut reserve_data.userlist {
+            
+            if !userlist.iter().any(|(principal, _)| principal == &user_principal.to_string()) {
+                userlist.push((user_principal.to_string(), true));
+            }
+        } else {
+        
+            reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
+        }
+        
+        ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
@@ -248,7 +260,7 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Withdraw validated successfully");
 
-        reserve_data.total_supply -= usd_amount;
+        reserve_data.total_supply = (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;

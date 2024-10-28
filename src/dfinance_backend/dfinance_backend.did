@@ -14,6 +14,7 @@ type ReserveConfiguration = record {
 type ReserveData = record {
   id : nat16;
   asset_name : opt text;
+  userlist : opt vec record { text; bool };
   can_be_collateral : opt bool;
   debt_token_canister : opt text;
   last_update_timestamp : nat64;
@@ -53,12 +54,15 @@ type UserReserveData = record {
   principal_stable_debt : nat64;
   asset_borrow : nat;
   last_update_timestamp : nat64;
+  is_collateral : bool;
   asset_price_when_borrowed : nat;
   liquidity_index : nat;
   variable_borrow_index : nat;
   reserve : text;
   asset_supply : nat;
   borrow_rate : nat;
+  is_using_as_collateral_or_borrow : bool;
+  is_borrowed : bool;
 };
 service : () -> {
   borrow : (text, nat64) -> (Result);

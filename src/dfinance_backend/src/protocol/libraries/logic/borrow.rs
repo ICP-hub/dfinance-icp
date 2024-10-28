@@ -99,10 +99,26 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     ic_cdk::println!("Reserve state updated successfully");
 
     // Converting asset to usdt value
-
-    // Validates borrow using the reserve_data
-    ValidationLogic::validate_borrow(&reserve_data, params.amount, user_principal).await;
-    ic_cdk::println!("Borrow validated successfully");
+    if let Some(userlist) = &mut reserve_data.userlist {
+            
+        if !userlist.iter().any(|(principal, _)| principal == &user_principal.to_string()) {
+            userlist.push((user_principal.to_string(), true));
+        }
+    } else {
+    
+        reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
+    }
+    
+    ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
+    
+    // Validates supply using the reserve_data
+    // ValidationLogic::validate_borrow(
+    //     &reserve_data,
+    //     borrow_amount_to_usd,
+    //     user_principal,
+    // )
+    // .await;
+    // ic_cdk::println!("Borrow validated successfully");
 
     let liquidity_added = 0;
     let _ = reserve::update_interest_rates(
@@ -252,7 +268,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-    *&mut reserve_data.total_borrowed -= usd_amount;
+    *&mut reserve_data.total_borrowed = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
 
     // Validates repay using the reserve_data
     ValidationLogic::validate_repay(

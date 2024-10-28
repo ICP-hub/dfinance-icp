@@ -19,6 +19,20 @@ body{
     font-style: normal !important;
 }
 
+.navlink{
+  transition: color 0.3s ease;
+}
+
+.navlink:hover{
+  color: transparent; /* Hide the actual text color on hover */
+  background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
+  background-clip: text;
+  -webkit-background-clip: text; /* For Safari/older browsers */
+  -webkit-text-fill-color: transparent; /* Hide the actual text color */
+  transition: none; /* Disable transition for the gradient effect */
+  font-weight: 800;
+}
+
 @keyframes subtle-bounce {
   0%, 100% {
     transform: translateY(0);
@@ -198,6 +212,8 @@ body{
 }
 /* App.css */
 .custom-toast {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
   max-width: 90%; 
   margin: 0 auto; 
 }
@@ -205,7 +221,7 @@ body{
 @media (max-width: 600px) {
   .custom-toast {
     max-width: 80%; 
-    font-size: 14px;
+    font-size: 12px;
     border-radius: 5px; 
   }
 }
@@ -359,4 +375,3 @@ button:active{
 .button1:active{
   transform: scale(0.9);
 }
-

@@ -12,6 +12,7 @@ import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
@@ -42,6 +43,7 @@ const FaucetDetails = () => {
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
+  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
@@ -53,12 +55,14 @@ const FaucetDetails = () => {
     ckETHUsdRate,
     ckUSDCUsdRate,
     ckICPUsdRate,
+    ckUSDTUsdRate,
     fetchConversionRate,
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
-    fetchBalance
+    ckUSDTBalance,
+    fetchBalance,
   } = useFetchConversionRate();
 
   useEffect(() => {
@@ -81,7 +85,14 @@ const FaucetDetails = () => {
       const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
-  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate]);
+
+    if (ckUSDTBalance && ckUSDTUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(2);
+      setCkUSDTUsdBalance(balanceInUsd);
+    }
+
+  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate, ckUSDTBalance,
+    ckUSDTUsdRate]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -92,16 +103,17 @@ const FaucetDetails = () => {
           fetchBalance("ckETH"),
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
-         const allAssets = await backendActor.getAllAssets();
-         setAssets(allAssets);
+        const allAssets = await backendActor.getAllAssets();
+        setAssets(allAssets);
       } catch (error) {
         setError(error);
       } finally {
         setTimeout(() => {
           setLoading(false);
-        }, 1000);
+        }, 1500);
       }
     };
 
@@ -112,6 +124,8 @@ const FaucetDetails = () => {
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance
   ]);
 
   const handlePreviousPage = () => {
@@ -143,6 +157,9 @@ const FaucetDetails = () => {
       case "ICP":
         assetImage = icp;
         break;
+      case "ckUSDT": // Added case for ckUSDT
+        assetImage = ckUSDT; // Ensure ckUSDT is defined or imported
+        break;
       default:
         assetImage = null;
     }
@@ -173,9 +190,9 @@ const FaucetDetails = () => {
       </div>
 
       <div className="w-full mt-9 p-0 lg:px-1">
-        {loading ? ( 
-          <div className="w-full mt-[220px] mb-[220px] flex justify-center items-center ">
-            <Loading isLoading={true}/>
+        {loading ? (
+          <div className="w-full mt-[180px] mb-[300px] flex justify-center items-center ">
+            <Loading isLoading={true} />
           </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
@@ -214,8 +231,8 @@ const FaucetDetails = () => {
                     <tr
                       key={index}
                       className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${index !== currentItems.length - 1
-                          ? "gradient-line-bottom"
-                          : ""
+                        ? "gradient-line-bottom"
+                        : ""
                         }`}
                     >
                       <td className="p-3 align-center py-7 px-2">
@@ -245,6 +262,13 @@ const FaucetDetails = () => {
                             <img
                               src={icp}
                               alt="cketh logo"
+                              className="w-8 h-8 rounded-full mr-2"
+                            />
+                          )}
+                          {item[0] === "ckUSDT" && (  // Added for ckUSDT
+                            <img
+                              src={ckUSDT} // Ensure ckUSDT is defined or imported
+                              alt="ckusdt logo"
                               className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
@@ -284,6 +308,14 @@ const FaucetDetails = () => {
                                   <p className="text-left">{Number(ckICPBalance).toLocaleString()}</p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckICPUsdBalance)}
+                                  </p>
+                                </>
+                              )}
+                              {item[0] === "ckUSDT" && (  // Added for ckUSDT
+                                <>
+                                  <p className="text-left">{Number(ckUSDTBalance).toLocaleString()}</p>
+                                  <p className="font-light text-left text-[11px]">
+                                    ${formatNumber(ckUSDTUsdBalance)}
                                   </p>
                                 </>
                               )}

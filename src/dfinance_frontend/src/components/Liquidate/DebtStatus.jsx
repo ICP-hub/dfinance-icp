@@ -24,6 +24,7 @@ import UserInformationPopup from "./userInformation"
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber"
 
@@ -133,7 +134,7 @@ const DebtStatus = () => {
       const mappedItem = {
         reserves: item[1].reserves,
         principal: item[0].toText(),
-        healthFactor: Number(item[1]?.health_factor)/100000000,
+        healthFactor: Number(item[1]?.health_factor) / 100000000,
         item,
       };
       return mappedItem;
@@ -257,7 +258,8 @@ const DebtStatus = () => {
                                     : assetName === "ckETH" ? ckETH
                                       : assetName === "ckUSDC" ? ckUSDC
                                         : assetName === "ICP" ? icp
-                                          : undefined
+                                          : assetName === "ckUSDT" ? ckUSDT // Added case for ckUSDT
+                                            : undefined
                                 }
                                 alt={assetName}
                                 className="rounded-[50%] w-7"
@@ -288,7 +290,8 @@ const DebtStatus = () => {
                                     : assetName === "ckETH" ? ckETH
                                       : assetName === "ckUSDC" ? ckUSDC
                                         : assetName === "ICP" ? icp
-                                          : undefined
+                                          : assetName === "ckUSDT" ? ckUSDT // Added case for ckUSDT
+                                            : undefined
                                 }
                                 alt={assetName}
                                 className="rounded-[50%] w-7"

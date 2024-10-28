@@ -21,9 +21,9 @@ import { useParams } from "react-router-dom";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-
+import { FaInfoCircle } from "react-icons/fa";
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
     useAuth();
@@ -33,7 +33,11 @@ const DashboardNav = () => {
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
 
+  const toggleTooltip = () => {
+    setIsTooltipVisible(!isTooltipVisible);
+  };
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
@@ -76,8 +80,11 @@ const DashboardNav = () => {
         case 1:
           return {
             ...item,
-            count: `${(netApy / 100).toFixed(2) < 0.01 ? "<0.01" : (netApy / 100).toFixed(2)}%`,
-
+            count: `${
+              (netApy / 100).toFixed(2) < 0.01
+                ? "<0.01"
+                : (netApy / 100).toFixed(2)
+            }%`,
           };
         case 2:
           const healthValue =
@@ -132,7 +139,6 @@ const DashboardNav = () => {
     }
   };
 
-
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate]);
@@ -164,7 +170,8 @@ const DashboardNav = () => {
       totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
 
     console.log(
-      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${netApy * 100
+      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${
+        netApy * 100
       }`
     );
     return netApy * 100;
@@ -197,7 +204,8 @@ const DashboardNav = () => {
       totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
 
     console.log(
-      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${netDebtApy * 100
+      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${
+        netDebtApy * 100
       }`
     );
     return netDebtApy * 100;
@@ -354,18 +362,19 @@ const DashboardNav = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
-  const isAssetDetailsPage = location.pathname.startsWith("/dashboard/asset-details/") ||
+  const isAssetDetailsPage =
+    location.pathname.startsWith("/dashboard/asset-details/") ||
     location.pathname.startsWith("/market/asset-details/");
 
   const { id } = useParams();
 
   const assetImages = {
-    'ckBTC': ckBTC,
-    'ckETH': ckETH,
-    'ckUSDC': ckUSDC,
-    'ICP': icp,
-    'ckUSDT': ckUSDT, // Added ckUSDT
-};
+    ckBTC: ckBTC,
+    ckETH: ckETH,
+    ckUSDC: ckUSDC,
+    ICP: icp,
+    ckUSDT: ckUSDT, // Added ckUSDT
+  };
 
   const assetImage = assetImages[id] || null;
 
@@ -376,7 +385,6 @@ const DashboardNav = () => {
           {dashboardTitle}
         </h1>
       )}
-
 
       <div className="flex gap-5 -ml-3">
         {!["/dashboard", "/market", "/governance"].includes(pathname) && (
@@ -390,7 +398,11 @@ const DashboardNav = () => {
               {isAssetDetailsPage && (
                 <h1 className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-1 ml-3">
                   {isAssetDetailsPage && assetImage && (
-                    <img src={assetImage} alt={id} className="w-8 h-8 inline-block mr-2 rounded-[50%]" />
+                    <img
+                      src={assetImage}
+                      alt={id}
+                      className="w-8 h-8 inline-block mr-2 rounded-[50%]"
+                    />
                   )}
                   {id}
                 </h1>
@@ -399,7 +411,11 @@ const DashboardNav = () => {
           </div>
         )}
 
-        <div className={`md:hidden flex ml-auto ${isAssetDetailsPage ? 'mt-1' : '-mt-[3.95rem]'}`}>
+        <div
+          className={`md:hidden flex ml-auto ${
+            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+          }`}
+        >
           <button onClick={toggleMenu} className="rounded-md button1 z-10">
             <EllipsisVertical color={checkColor} size={30} />
           </button>
@@ -411,8 +427,9 @@ const DashboardNav = () => {
           {/* Menu button for small screens */}
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
-                } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
+                isMenuOpen ? "block" : "hidden"
+              } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -442,30 +459,56 @@ const DashboardNav = () => {
                           className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                           style={{ minWidth: "220px", flex: "1 0 220px" }}
                         >
-                          <button className="relative w-full text-left flex justify-between items-center button1">
-                            <span>{data.title}</span>
-                            <span
-                              className={`font-bold text-[20px] ${data.title === "Health Factor"
-                                ? data.count === 0 && assetSupply === 0
-                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
-                                  : data.count > 3
-                                    ? "text-green-500" // Green for health factor greater than 3
-                                    : data.count <= 1
-                                      ? "text-red-500" // Red for health factor less than or equal to 1
-                                      : data.count <= 1.5
-                                        ? "text-orange-500" // Orange for health factor less than or equal to 1.5
-                                        : data.count <= 2
-                                          ? "text-orange-300" // Soft orange for health factor less than or equal to 2
-                                          : "text-orange-600" // Vivid orange for other values
-                                : data.title === "Total Borrows"
-                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Default color for Total Borrows
-                                  : "text-[#2A1F9D] dark:text-darkBlue" // Default color for other titles
-                                }`}
-                            >
-                              {data.count !== null ? data.count : "N/A"}
-                            </span>
+                          <button className="relative font-light text-[13px] text-left min-w-[80px] dark:opacity-80 button1">
+                            {data.title}
 
-                            <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                            {data.title === "Net APY" && (
+                              <span className="relative inline-block ml-1">
+                                {/* Info icon with click handler */}
+                                <FaInfoCircle
+                                  className="text-gray-500 dark:text-gray-300 text-[16px] cursor-pointer"
+                                  onClick={toggleTooltip}
+                                />
+
+                                {/* Toggleable box */}
+                                {isTooltipVisible && (
+                                  <div
+                                    className="absolute bottom-full left-36 transform -translate-x-[60%] mb-2 px-4 py-2 text-white bg-black/60 dark:bg-white dark:text-black rounded text-xs shadow-lg z-100 w-[200px]"
+                                    style={{ minWidth: "200px" }}
+                                  >
+                                    Net APY is the combined effect of all supply
+                                    and borrow positions on net worth, including
+                                    incentives. It is possible to have a
+                                    negative net APY if debt APY is higher than
+                                    supply APY.
+                                  </div>
+                                )}
+                              </span>
+                            )}
+
+                            <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+
+                            <span
+                              className={`font-bold text-[20px] ${
+                                data.title === "Health Factor"
+                                  ? data.count === 0 && assetSupply === 0
+                                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                                    : data.count > 3
+                                    ? "text-green-500"
+                                    : data.count <= 1
+                                    ? "text-red-500"
+                                    : data.count <= 1.5
+                                    ? "text-orange-500"
+                                    : data.count <= 2
+                                    ? "text-orange-300"
+                                    : "text-orange-600"
+                                  : data.title === "Total Borrows"
+                                  ? "text-[#2A1F9D] dark:text-darkBlue"
+                                  : "text-[#2A1F9D] dark:text-darkBlue"
+                              }`}
+                            >
+                              {data.count !== null ? data.count : ""}
+                            </span>
                           </button>
                         </div>
                       );
@@ -477,7 +520,10 @@ const DashboardNav = () => {
                       <button
                         className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
                         onClick={handleOpenPopup}
-                        style={{ minWidth: "220px" }}
+                        style={{
+                          minWidth: "220px",
+                          transition: " 400ms ease !important",
+                        }}
                       >
                         Risk Details
                       </button>
@@ -504,24 +550,50 @@ const DashboardNav = () => {
                     <div key={index} className="relative group">
                       <button className="relative font-light text-[13px] text-left min-w-[80px] dark:opacity-80 button1">
                         {data.title}
+                        {data.title === "Net APY" && (
+                          <span className="relative inline-block ml-1">
+                            {/* Info icon with click handler */}
+                            <FaInfoCircle
+                              className="text-gray-500 dark:text-gray-300 text-[16px] cursor-pointer"
+                              onClick={toggleTooltip}
+                            />
+
+                            {/* Toggleable box */}
+                            {isTooltipVisible && (
+                              <div
+                                className="absolute bottom-full left-1/2 x-1/6 mb-2 px-4 py-2 text-white bg-black/60 dark:bg-white dark:text-black  rounded text-xs shadow-lg z-100  w-[200px]"
+                                style={{
+                                  minWidth: "200px",
+                                  transition: " 400ms ease !important",
+                                }}
+                              >
+                                Net APY is the combined effect of all supply and
+                                borrow positions on net worth, including
+                                incentives. It is possible to have a negative
+                                net APY if debt APY is higher than supply APY.
+                              </div>
+                            )}
+                          </span>
+                        )}
                         <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                         <span
-                          className={`font-bold text-[20px] ${data.title === "Health Factor"
-                            ? data.count === 0 && assetSupply === 0
-                              ? "text-[#2A1F9D] dark:text-darkBlue"
-                              : data.count > 3
+                          className={`font-bold text-[20px] ${
+                            data.title === "Health Factor"
+                              ? data.count === 0 && assetSupply === 0
+                                ? "text-[#2A1F9D] dark:text-darkBlue"
+                                : data.count > 3
                                 ? "text-green-500"
                                 : data.count <= 1
-                                  ? "text-red-500"
-                                  : data.count <= 1.5
-                                    ? "text-orange-500"
-                                    : data.count <= 2
-                                      ? "text-orange-300"
-                                      : "text-orange-600"
-                            : data.title === "Total Borrows"
+                                ? "text-red-500"
+                                : data.count <= 1.5
+                                ? "text-orange-500"
+                                : data.count <= 2
+                                ? "text-orange-300"
+                                : "text-orange-600"
+                              : data.title === "Total Borrows"
                               ? "text-[#2A1F9D] dark:text-darkBlue"
                               : "text-[#2A1F9D] dark:text-darkBlue"
-                            }`}
+                          }`}
                         >
                           {data.count !== null ? data.count : ""}
                         </span>

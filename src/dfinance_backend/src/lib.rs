@@ -338,13 +338,14 @@ pub fn login() -> Result<(), String> {
 
     for (reserve_name, user_reserve_data) in reserves.iter_mut() {
         ic_cdk::println!("Processing reserve: {}", reserve_name);
-
+        let prev_liq_index = user_reserve_data.liquidity_index.clone();
         update_user_reserve_state(user_reserve_data)?;
 
         let updated_balance = calculate_dynamic_balance(
             user_reserve_data.asset_supply,
+            prev_liq_index,
             user_reserve_data.liquidity_index,
-            user_reserve_data.variable_borrow_index,
+           
         );
         ic_cdk::println!(
             "Updated balance calculated using liquidity index {}: {}",
@@ -359,10 +360,12 @@ pub fn login() -> Result<(), String> {
             user_reserve_data.asset_supply
         );
 
+        //TODO: calculate updated debt balance also like we did for asset_supply
+
     
         if user_reserve_data.asset_supply > 0 && user_reserve_data.is_collateral {
             let added_collateral = updated_balance - user_reserve_data.asset_supply;
-            total_collateral += added_collateral;
+            total_collateral += added_collateral;  //TODO: add the usd converted value here
             ic_cdk::println!(
                 "Added to total collateral from reserve {}: {} (New total: {})",
                 reserve_name,
@@ -370,6 +373,8 @@ pub fn login() -> Result<(), String> {
                 total_collateral
             );
         }
+
+        //TODO update total_dept also with usd converted value of updated_debt_balance
 
         let user_position = UserPosition {
             total_collateral_value: total_collateral,
@@ -387,7 +392,7 @@ pub fn login() -> Result<(), String> {
                 user_data.ltv.unwrap()
             );
         }
-
+        //TODO check if we are updating it before while update state call then no need to update it again 
         user_reserve_data.last_update_timestamp = current_timestamp;
         ic_cdk::println!(
             "Updated last update timestamp for reserve {}: {}",
@@ -509,11 +514,11 @@ pub fn login() -> Result<(), String> {
 
 fn calculate_dynamic_balance(
     initial_deposit: u128,         // The initial deposit amount (asset_supply)
-    current_liquidity_index: u128, // The updated liquidity index
-    deposit_liquidity_index: u128, // The liquidity index at the time of deposit
+    prev_liquidity_index: u128, // The updated liquidity index
+    new_liquidity_index: u128, // The liquidity index at the time of deposit
 ) -> u128 {
     // Calculate the dynamically updated balance using the liquidity index
-    initial_deposit * current_liquidity_index / deposit_liquidity_index
+    initial_deposit * new_liquidity_index / prev_liquidity_index
 }
 
 // //approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve

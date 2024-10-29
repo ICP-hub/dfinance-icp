@@ -342,6 +342,7 @@ pub async fn login() -> Result<(), String> {
     for (reserve_name, user_reserve_data) in reserves.iter_mut() {
         ic_cdk::println!("Processing reserve: {}", reserve_name);
         let prev_liq_index = user_reserve_data.liquidity_index.clone();
+        let prev_borrow_index = user_reserve_data.variable_borrow_index.clone();
         update_user_reserve_state(user_reserve_data)?;
 
         let updated_balance = calculate_dynamic_balance(

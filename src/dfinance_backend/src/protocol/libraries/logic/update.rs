@@ -22,8 +22,11 @@ use crate::{
 };
 use candid::Principal;
 use ic_cdk::update;
+use ic_cdk::api::time;
 use ic_xrc_types::Asset;
-
+fn current_timestamp() -> u64 {
+    time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds
+}
 pub struct UpdateLogic;
 
 impl UpdateLogic {
@@ -126,6 +129,7 @@ impl UpdateLogic {
             reserve_data.asset_supply += params.amount;
             reserve_data.asset_price_when_supplied = usd_rate;
             reserve_data.is_collateral = params.is_collateral;
+            reserve_data.last_update_timestamp = current_timestamp();
             if reserve_data.liquidity_index == 0 {
                 reserve_data.liquidity_index=100000000;
             }
@@ -159,6 +163,7 @@ impl UpdateLogic {
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
                 liquidity_index: 100000000,
+                last_update_timestamp: current_timestamp(),
                 ..Default::default()
             };
 
@@ -298,6 +303,7 @@ impl UpdateLogic {
             reserve_data.is_borrowed = true;
             reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.asset_borrow += params.amount;
+            reserve_data.last_update_timestamp = current_timestamp();
             if reserve_data.variable_borrow_index == 0 {
                 reserve_data.variable_borrow_index=100000000;
             }
@@ -320,6 +326,7 @@ impl UpdateLogic {
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 variable_borrow_index: 100000000,
+                last_update_timestamp: current_timestamp(),
                 ..Default::default()
             };
 

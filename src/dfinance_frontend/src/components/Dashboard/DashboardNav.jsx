@@ -23,10 +23,11 @@ import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-import { FaInfoCircle } from "react-icons/fa";
+import { Info } from "lucide-react";
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
     useAuth();
+
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
   const [netSupplyApy, setNetSupplyApy] = useState(0);
   const [netDebtApy, setNetDebtApy] = useState(0);
@@ -35,9 +36,27 @@ const DashboardNav = () => {
   const [assetBorrow, setAssetBorrow] = useState(0);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
 
+  const tooltipRef = useRef(null);
+
   const toggleTooltip = () => {
-    setIsTooltipVisible(!isTooltipVisible);
+    setIsTooltipVisible((prev) => !prev);
   };
+
+  // Effect to handle clicks outside the tooltip
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setIsTooltipVisible(false);
+      }
+    };
+
+    // Attach event listener
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
@@ -454,37 +473,61 @@ const DashboardNav = () => {
                       }
 
                       return (
-                        <div
+                         <div
                           key={index}
                           className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                           style={{ minWidth: "220px", flex: "1 0 220px" }}
                         >
-                          <button className="relative font-light text-[13px] text-left min-w-[80px] dark:opacity-80 button1">
-                            {data.title}
+                         
+                          <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
+                            {/* Title and Info Icon */}
+                            <div className="flex items-center">
+                              {data.title}
+                              {data.title === "Net APY" && (
+                                <span className="relative inline-block ml-1">
+                                  {/* Info icon aligned with title */}
+                                  <Info
+                                    size={15}
+                                    className="ml-1 align-middle "
+                                    onClick={toggleTooltip}
+                                  />
 
-                            {data.title === "Net APY" && (
-                              <span className="relative inline-block ml-1">
-                                {/* Info icon with click handler */}
-                                <FaInfoCircle
-                                  className="text-gray-500 dark:text-gray-300 text-[16px] cursor-pointer"
-                                  onClick={toggleTooltip}
-                                />
+                                  {/* Tooltip with full-screen blur */}
+                                  {isTooltipVisible && (
+                                    <>
+                                      {/* Fullscreen backdrop with blur effect */}
+                                      {/* <div className="fixed inset-0 backdrop-blur-md bg-black bg-opacity-40 z-40"></div> */}
 
-                                {/* Toggleable box */}
-                                {isTooltipVisible && (
-                                  <div
-                                    className="absolute bottom-full left-36 transform -translate-x-[60%] mb-2 px-4 py-2 text-white bg-black/60 dark:bg-white dark:text-black rounded text-xs shadow-lg z-100 w-[200px]"
-                                    style={{ minWidth: "200px" }}
-                                  >
-                                    Net APY is the combined effect of all supply
-                                    and borrow positions on net worth, including
-                                    incentives. It is possible to have a
-                                    negative net APY if debt APY is higher than
-                                    supply APY.
-                                  </div>
-                                )}
-                              </span>
-                            )}
+                                      {/* Tooltip content */}
+                                      <div
+                                        ref={tooltipRef}
+                                        className="absolute bottom-full left-36 transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#ffdfdf] rounded-lg shadow-lg p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[350px]"
+                                      >
+                                        <span className="text-black dark:text-darkText">
+                                          Net APY represents the overall
+                                          annualized yield, calculated as the
+                                          difference between your supply APY and
+                                          debt APY.
+                                          <br />A positive Net APY indicates a
+                                          net gain, while a negative value
+                                          suggests more is borrowed than
+                                          supplied.
+                                        </span>
+
+                                        {/* Tooltip arrow */}
+                                        {/* <span
+                                          className={`tooltip-arrow ${
+                                            theme === "dark"
+                                              ? "tooltip-arrow-dark"
+                                              : ""
+                                          }`}
+                                        ></span> */}
+                                      </div>
+                                    </>
+                                  )}
+                                </span>
+                              )}
+                            </div>
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
@@ -548,34 +591,57 @@ const DashboardNav = () => {
 
                   return (
                     <div key={index} className="relative group">
-                      <button className="relative font-light text-[13px] text-left min-w-[80px] dark:opacity-80 button1">
-                        {data.title}
-                        {data.title === "Net APY" && (
-                          <span className="relative inline-block ml-1">
-                            {/* Info icon with click handler */}
-                            <FaInfoCircle
-                              className="text-gray-500 dark:text-gray-300 text-[16px] cursor-pointer"
-                              onClick={toggleTooltip}
-                            />
+                     
+                      <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
+                        {/* Title and Info Icon */}
+                        <div className="flex items-center">
+                          {data.title}
+                          {data.title === "Net APY" && (
+                            <span className="relative inline-block ml-1">
+                              {/* Info icon aligned with title */}
+                              <Info
+                                size={15}
+                                className="ml-1 align-middle"
+                                onClick={toggleTooltip}
+                              />
 
-                            {/* Toggleable box */}
-                            {isTooltipVisible && (
-                              <div
-                                className="absolute bottom-full left-1/2 x-1/6 mb-2 px-4 py-2 text-white bg-black/60 dark:bg-white dark:text-black  rounded text-xs shadow-lg z-100  w-[200px]"
-                                style={{
-                                  minWidth: "200px",
-                                  transition: " 400ms ease !important",
-                                }}
-                              >
-                                Net APY is the combined effect of all supply and
-                                borrow positions on net worth, including
-                                incentives. It is possible to have a negative
-                                net APY if debt APY is higher than supply APY.
-                              </div>
-                            )}
-                          </span>
-                        )}
+                              {/* Tooltip with full-screen blur */}
+                              {isTooltipVisible && (
+                                <>
+                                  {/* Fullscreen backdrop */}
+                                  {/* <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-40 z-40" /> */}
+
+                                  {/* Tooltip content */}
+                                  <div
+                                    ref={tooltipRef}
+                                    className="absolute bottom-full left-1/2  transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#e9c6c6] rounded-lg shadow-lg p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
+                                  >
+                                    <span className="text-gray-700 dark:text-darkText">
+                                      Net APY represents the overall annualized
+                                      yield, calculated as the difference
+                                      between your supply APY and debt APY.
+                                      <br />A positive Net APY indicates a net
+                                      gain, while a negative value suggests more
+                                      is borrowed than supplied.
+                                    </span>
+
+                                    {/* Tooltip arrow */}
+                                    <span
+                                      className={`tooltip-arrow ${
+                                        theme === "dark"
+                                          ? "tooltip-arrow-dark"
+                                          : ""
+                                      }`}
+                                    ></span>
+                                  </div>
+                                </>
+                              )}
+                            </span>
+                          )}
+                        </div>
+
                         <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+
                         <span
                           className={`font-bold text-[20px] ${
                             data.title === "Health Factor"

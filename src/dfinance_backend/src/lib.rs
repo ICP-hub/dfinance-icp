@@ -12,6 +12,7 @@ use ic_cdk_macros::update;
 use implementations::reserve;
 use protocol::libraries::math::calculate::calculate_health_factor;
 use protocol::libraries::math::calculate::calculate_ltv;
+use protocol::libraries::math::calculate::get_exchange_rates;
 use protocol::libraries::math::calculate::UserPosition;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -244,9 +245,6 @@ pub async fn withdraw(
     }
 }
 
-
-
-
 fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<(), String> {
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
@@ -268,7 +266,8 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
             user_reserve_data.supply_rate
         );
 
-        user_reserve_data.liquidity_index = cumulated_liquidity_interest.scaled_mul(user_reserve_data.liquidity_index);
+        user_reserve_data.liquidity_index =
+            cumulated_liquidity_interest.scaled_mul(user_reserve_data.liquidity_index);
         ic_cdk::println!(
             "Updated liquidity index: {} for reserve",
             user_reserve_data.liquidity_index
@@ -288,7 +287,8 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
             user_reserve_data.borrow_rate
         );
 
-        user_reserve_data.variable_borrow_index = cumulated_borrow_interest.scaled_mul(user_reserve_data.variable_borrow_index);
+        user_reserve_data.variable_borrow_index =
+            cumulated_borrow_interest.scaled_mul(user_reserve_data.variable_borrow_index);
         ic_cdk::println!(
             "Updated variable borrow index: {} for reserve",
             user_reserve_data.variable_borrow_index
@@ -306,7 +306,7 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
 }
 
 #[update]
-pub fn login() -> Result<(), String> {
+pub async fn login() -> Result<(), String> {
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {}", user_principal);
 
@@ -336,6 +336,9 @@ pub fn login() -> Result<(), String> {
     let mut total_collateral = user_data.total_collateral.unwrap_or(0);
     ic_cdk::println!("Initial total collateral: {}", total_collateral);
 
+    let mut total_debt = user_data.total_debt.unwrap_or(0);
+    ic_cdk::println!("Initial total debt: {}", total_debt);
+
     for (reserve_name, user_reserve_data) in reserves.iter_mut() {
         ic_cdk::println!("Processing reserve: {}", reserve_name);
         let prev_liq_index = user_reserve_data.liquidity_index.clone();
@@ -345,8 +348,8 @@ pub fn login() -> Result<(), String> {
             user_reserve_data.asset_supply,
             prev_liq_index,
             user_reserve_data.liquidity_index,
-           
         );
+        ic_cdk::println!("asset supply = {}", user_reserve_data.asset_supply);
         ic_cdk::println!(
             "Updated balance calculated using liquidity index {}: {}",
             user_reserve_data.liquidity_index,
@@ -360,12 +363,21 @@ pub fn login() -> Result<(), String> {
             user_reserve_data.asset_supply
         );
 
-        //TODO: calculate updated debt balance also like we did for asset_supply
-
-    
         if user_reserve_data.asset_supply > 0 && user_reserve_data.is_collateral {
             let added_collateral = updated_balance - user_reserve_data.asset_supply;
-            total_collateral += added_collateral;  //TODO: add the usd converted value here
+
+            let added_collateral_amount_to_usd =
+                get_exchange_rates(user_reserve_data.reserve.clone(), None, added_collateral).await;
+
+            match added_collateral_amount_to_usd {
+                Ok((amount, _timestamp)) => {
+                    total_collateral += amount;
+                }
+                Err(err) => {
+                    println!("getting error in the conversion {}", err);
+                }
+            }
+            // total_collateral += get_exchange_rates(user_reserve_data.reserve, None, added_collateral); //TODO: add the usd converted value here
             ic_cdk::println!(
                 "Added to total collateral from reserve {}: {} (New total: {})",
                 reserve_name,
@@ -374,7 +386,44 @@ pub fn login() -> Result<(), String> {
             );
         }
 
+        //TODO: calculate updated debt balance also like we did for asset_supply
+        // updating borrow.
+        let borrow_updated_balance = calculate_dynamic_balance(
+            user_reserve_data.asset_borrow,
+            prev_liq_index,
+            user_reserve_data.liquidity_index,
+        );
+        ic_cdk::println!("asset borrow = {}", user_reserve_data.asset_borrow);
+        ic_cdk::println!(
+            "Updated borrow balance calculated using liquidity index {}: {}",
+            user_reserve_data.liquidity_index,
+            borrow_updated_balance
+        );
+
+        user_reserve_data.asset_borrow = borrow_updated_balance;
+
         //TODO update total_dept also with usd converted value of updated_debt_balance
+        if user_reserve_data.asset_borrow > 0 && user_reserve_data.is_borrowed {
+            let added_borrowed = borrow_updated_balance - user_reserve_data.asset_borrow;
+
+            let added_borrowed_amount_to_usd =
+                get_exchange_rates(user_reserve_data.reserve.clone(), None, added_borrowed).await;
+
+            match added_borrowed_amount_to_usd {
+                Ok((amount, _timestamp)) => {
+                    total_debt += amount;
+                }
+                Err(err) => {
+                    println!("getting error in the conversion {}", err);
+                }
+            }
+            ic_cdk::println!(
+                "Added to total collateral from reserve {}: {} (New total: {})",
+                reserve_name,
+                total_debt,
+                total_collateral
+            );
+        }
 
         let user_position = UserPosition {
             total_collateral_value: total_collateral,
@@ -382,7 +431,6 @@ pub fn login() -> Result<(), String> {
             liquidation_threshold: user_data.liquidation_threshold.unwrap(),
         };
 
-  
         if user_reserve_data.asset_supply > 0 || user_reserve_data.asset_borrow > 0 {
             user_data.health_factor = Some(calculate_health_factor(&user_position));
             user_data.ltv = Some(calculate_ltv(&user_position));
@@ -392,29 +440,34 @@ pub fn login() -> Result<(), String> {
                 user_data.ltv.unwrap()
             );
         }
-        //TODO check if we are updating it before while update state call then no need to update it again 
-        user_reserve_data.last_update_timestamp = current_timestamp;
-        ic_cdk::println!(
-            "Updated last update timestamp for reserve {}: {}",
-            reserve_name,
-            user_reserve_data.last_update_timestamp
-        );
+        //TODO check if we are updating it before while update state call then no need to update it again
+        if user_reserve_data.last_update_timestamp != current_timestamp {
+            user_reserve_data.last_update_timestamp = current_timestamp;
+            ic_cdk::println!(
+                "Updated last update timestamp for reserve {}: {}",
+                reserve_name,
+                user_reserve_data.last_update_timestamp
+            );
+        }
     }
-
 
     user_data.total_collateral = Some(total_collateral);
     ic_cdk::println!("Final total collateral: {}", total_collateral);
+    user_data.total_debt = Some(total_debt);
+    ic_cdk::println!("final total debt: {}", total_debt);
 
     mutate_state(|state| {
         state
             .user_profile
             .insert(user_principal, declarations::storable::Candid(user_data));
     });
-    ic_cdk::println!("User profile updated successfully for user: {}", user_principal);
+    ic_cdk::println!(
+        "User profile updated successfully for user: {}",
+        user_principal
+    );
 
     Ok(())
 }
-
 
 // #[update]
 // pub fn login() -> Result<(), String> {
@@ -513,9 +566,9 @@ pub fn login() -> Result<(), String> {
 // }
 
 fn calculate_dynamic_balance(
-    initial_deposit: u128,         // The initial deposit amount (asset_supply)
+    initial_deposit: u128,      // The initial deposit amount (asset_supply)
     prev_liquidity_index: u128, // The updated liquidity index
-    new_liquidity_index: u128, // The liquidity index at the time of deposit
+    new_liquidity_index: u128,  // The liquidity index at the time of deposit
 ) -> u128 {
     // Calculate the dynamically updated balance using the liquidity index
     initial_deposit * new_liquidity_index / prev_liquidity_index

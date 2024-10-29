@@ -126,6 +126,9 @@ impl UpdateLogic {
             reserve_data.asset_supply += params.amount;
             reserve_data.asset_price_when_supplied = usd_rate;
             reserve_data.is_collateral = params.is_collateral;
+            if reserve_data.liquidity_index == 0 {
+                reserve_data.liquidity_index=100000000;
+            }
             if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
                 if reserve_data.is_borrowed {
                     reserve_data.is_using_as_collateral_or_borrow = true;
@@ -155,6 +158,7 @@ impl UpdateLogic {
                 asset_price_when_supplied: usd_rate,
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
+                liquidity_index: 100000000,
                 ..Default::default()
             };
 
@@ -294,6 +298,9 @@ impl UpdateLogic {
             reserve_data.is_borrowed = true;
             reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.asset_borrow += params.amount;
+            if reserve_data.variable_borrow_index == 0 {
+                reserve_data.variable_borrow_index=100000000;
+            }
             ic_cdk::println!(
                 "Updated asset borrow for existing reserve: {:?}",
                 reserve_data
@@ -312,6 +319,7 @@ impl UpdateLogic {
                 asset_borrow: params.amount,
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
+                variable_borrow_index: 100000000,
                 ..Default::default()
             };
 

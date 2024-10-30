@@ -10,6 +10,8 @@ import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
+import { trackEvent } from "../../../utils/googleAnalytics";
+import { useMemo } from "react";
 
 const SupplyPopup = ({
   asset,
@@ -60,6 +62,11 @@ const SupplyPopup = ({
 
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
+
+    const principalObj = useMemo(
+      () => Principal.fromText(principal),
+      [principal]
+    );
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -142,9 +149,9 @@ const SupplyPopup = ({
   }, [amount, conversionRate]);
   useEffect(() => {
     if (balance && conversionRate) {
-      console.log("balance in supplypopup",balance, conversionRate);
+      console.log("balance in supplypopup", balance, conversionRate);
       const convertedMaxValue = parseFloat(balance) * conversionRate;
-      console.log("converted in supplypopup",convertedMaxValue);
+      console.log("converted in supplypopup", convertedMaxValue);
       setMaxUsdValue(convertedMaxValue);
     } else {
       setMaxUsdValue(0);
@@ -247,6 +254,19 @@ const SupplyPopup = ({
       console.log(" current colletral status while supply ", currentCollateralStatus)
       const sup = await backendActor.supply(asset, scaledAmount, currentCollateralStatus);
       console.log("Supply", sup);
+      
+      trackEvent(
+        "Supply Action",
+        "Assets",
+        asset,
+        scaledAmount / 100000000, 
+        { 
+          Amount: scaledAmount / 100000000,
+          currentCollateralStatus: currentCollateralStatus,
+          user: principalObj.toString() 
+        }
+      );
+
 
       setIsPaymentDone(true);
       setIsVisible(false);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState ,useMemo } from "react";
-import { useRoutes } from "react-router-dom";
+import { useLocation, useRoutes } from "react-router-dom";
 import { useAuth } from "./utils/useAuthClient";
 import routesList from './routes/routes';
 import { useSelector } from 'react-redux';
@@ -10,9 +10,13 @@ import { setLedgerActor } from './redux/reducers/ledgerRedcuer';
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
 import { Principal } from "@dfinity/principal";
 import { useCallback } from "react";
+import ReactGA from "react-ga4";
+import { initGA, setUserId, trackPageView, trackEvent } from "./utils/googleAnalytics";
+import posthog from 'posthog-js';
+
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
- 
+  let TRACKING_ID = "G-EVCJPRHQYX";
   
   const {
     isAuthenticated,
@@ -35,6 +39,18 @@ export default function App() {
     () => Principal.fromText(principal),
     [principal]
   );
+
+  useEffect(() => {
+    initGA(TRACKING_ID);
+    setUserId(principalObj.toString());
+  }, [principalObj]);
+
+  const location = useLocation();
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location]);
+
+  console.log("pricipalOBJ", principalObj.toString())
   
   useEffect(() => {
     const fetchAssetPrinciple = async () => {

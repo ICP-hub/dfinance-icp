@@ -1,5 +1,6 @@
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled, UserState};
+use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::state_handler::{mutate_state, read_state},
     declarations::{
@@ -40,13 +41,7 @@ impl UpdateLogic {
         usd_amount: u128,
     ) -> Result<(), String> {
         // Fetch user data
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user_principal)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-        });
+        let user_data_result = user_data(user_principal);
 
         let mut user_data = match user_data_result {
             Ok(data) => {
@@ -113,13 +108,9 @@ impl UpdateLogic {
                     + (usd_amount.scaled_mul(reserve.configuration.ltv)) / 100,
             );
         }
+        
         // Check if the user has a reserve for the asset
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| asset_name == &params.asset),
-            None => None,
-        };
+        let user_reserve = user_reserve(&mut user_data,&params.asset);
 
         let mut user_reserve_data = UserReserveData {
             ..Default::default()
@@ -229,13 +220,7 @@ impl UpdateLogic {
                 .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
         });
 
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user_principal)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-        });
+        let user_data_result = user_data(user_principal);
 
         let mut user_data = match user_data_result {
             Ok(data) => {
@@ -265,7 +250,7 @@ impl UpdateLogic {
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
 
-
+        // let user
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
                 .iter_mut()
@@ -384,13 +369,7 @@ impl UpdateLogic {
         usd_amount: u128,
     ) -> Result<(), String> {
         // Fetchs user data
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user_principal)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-        });
+        let user_data_result = user_data(user_principal);
 
         let mut user_data = match user_data_result {
             Ok(data) => {
@@ -569,13 +548,7 @@ impl UpdateLogic {
         reserve: &ReserveData,
         usd_amount: u128,
     ) -> Result<(), String> {
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user_principal)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-        });
+        let user_data_result = user_data(user_principal);
 
         let mut user_data = match user_data_result {
             Ok(data) => {
@@ -728,7 +701,6 @@ impl UpdateLogic {
 // }
 
 #[update]
-
 pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
     let user_principal = ic_cdk::caller();
 
@@ -879,3 +851,27 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
 //TODO try to make a common update_user function for all logic
 //dry run it for all logics and check if its adding all functionality differ in all logic 
 //then comment out the above code, and use this update_user function in each logic and compare it with previous result, if there any change or missing functionality
+
+pub fn user_data(user_principal: Principal) -> Result<UserData, String>{
+    let user_data_result = mutate_state(|state| {
+        let user_profile_data = &mut state.user_profile;
+        user_profile_data
+            .get(&user_principal)
+            .map(|user| user.0.clone())
+            .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+    });
+    user_data_result
+}
+
+// need to understand life-times more.
+// need to use this in three other places.
+pub fn user_reserve<'a>(user_data: &'a mut UserData, asset_name: &'a String)-> std::option::Option<&'a mut (std::string::String, UserReserveData)> {
+
+    let user_reserve = match user_data.reserves {
+        Some(ref mut reserves) => reserves
+            .iter_mut()
+            .find(|(name, _)| name == asset_name),
+        None => None,
+    };
+    user_reserve
+}

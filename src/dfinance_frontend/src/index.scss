@@ -389,34 +389,8 @@ button:active{
 }
 
 .tooltip-arrow-dark {
-  border-top-color: #333333; /* Dark mode arrow color */
+  border-top-color: #252347; /* Dark mode arrow color */
 }
 /* Tooltip box */
-.tooltip-box {
-  position: relative;
-  background-color: white; /* Default light background */
-}
 
-/* Tooltip arrow on the bottom left */
-.tooltip-box::before {
-  content: '';
-  position: absolute;
-  bottom: -8px; /* Position below the tooltip box */
-  left: 8px; /* Offset slightly from the left */
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid white; /* Light mode arrow color */
-}
 
-/* Dark mode arrow */
-.dark .tooltip-box::before {
-  border-top-color: #333333; /* Dark mode arrow color */
-}
-.dark-tooltip {
-  background-color: #333;
-  color: #fff;
-}
-.light-tooltip {
-  background-color: #fff;
-  color: #333;
-}

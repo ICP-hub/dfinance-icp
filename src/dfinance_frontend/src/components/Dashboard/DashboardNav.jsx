@@ -473,25 +473,23 @@ const DashboardNav = () => {
                       }
 
                       return (
-                         <div
+                        <div
                           key={index}
                           className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                           style={{ minWidth: "220px", flex: "1 0 220px" }}
                         >
-                         
                           <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
                             {/* Title and Info Icon */}
                             <div className="flex items-center">
                               {data.title}
                               {data.title === "Net APY" && (
-                                <span className="relative inline-block ml-1">
-                                  {/* Info icon aligned with title */}
-                                  <Info
-                                    size={15}
-                                    className="ml-1 align-middle "
-                                    onClick={toggleTooltip}
-                                  />
-
+                                 <span className="relative inline-block ml-1">
+                                 {/* Info icon aligned with title */}
+                                 <Info
+                                   size={15}
+                                   className="ml-1 align-middle "
+                                   onClick={toggleTooltip}
+                                 />
                                   {/* Tooltip with full-screen blur */}
                                   {isTooltipVisible && (
                                     <>
@@ -501,9 +499,9 @@ const DashboardNav = () => {
                                       {/* Tooltip content */}
                                       <div
                                         ref={tooltipRef}
-                                        className="absolute bottom-full left-36 transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#ffdfdf] rounded-lg shadow-lg p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[350px]"
+                                        className="absolute bottom-full left-36  sxxs:left-20 sxx2:left-24  transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-lg shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 md:w-[400px] sxs3:w-[350px] sxxs:w-[250px]"
                                       >
-                                        <span className="text-black dark:text-darkText">
+                                        <span className="text-gray-700 dark:text-darkText">
                                           Net APY represents the overall
                                           annualized yield, calculated as the
                                           difference between your supply APY and
@@ -557,7 +555,7 @@ const DashboardNav = () => {
                       );
                     })}
                   </div>
-                  {console.log("Aset borrow", assetBorrow)}
+                 
                   {assetBorrow !== 0 && (
                     <div className="flex justify-end mt-10 md:mt-0">
                       <button
@@ -591,19 +589,19 @@ const DashboardNav = () => {
 
                   return (
                     <div key={index} className="relative group">
-                     
                       <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
                         {/* Title and Info Icon */}
                         <div className="flex items-center">
                           {data.title}
                           {data.title === "Net APY" && (
-                            <span className="relative inline-block ml-1">
-                              {/* Info icon aligned with title */}
-                              <Info
-                                size={15}
-                                className="ml-1 align-middle"
-                                onClick={toggleTooltip}
-                              />
+                           <span
+                           className="relative inline-block ml-1"
+                           onMouseEnter={() => setIsTooltipVisible(true)}
+                           onMouseLeave={() => setIsTooltipVisible(false)}
+                         >
+                           {/* Info icon with hover-triggered tooltip */}
+                           <Info size={15} className="ml-1 align-middle cursor-pointer" />
+             
 
                               {/* Tooltip with full-screen blur */}
                               {isTooltipVisible && (
@@ -614,7 +612,7 @@ const DashboardNav = () => {
                                   {/* Tooltip content */}
                                   <div
                                     ref={tooltipRef}
-                                    className="absolute bottom-full left-1/2  transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#e9c6c6] rounded-lg shadow-lg p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
+                                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-lg shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
                                   >
                                     <span className="text-gray-700 dark:text-darkText">
                                       Net APY represents the overall annualized

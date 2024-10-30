@@ -164,7 +164,7 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 200_000_000_000)
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 300_000_000_000)
         .await
         .unwrap()
         .0
@@ -269,7 +269,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 200_000_000_000)
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 300_000_000_000)
         .await
         .unwrap()
         .0

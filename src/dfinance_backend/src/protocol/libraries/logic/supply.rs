@@ -42,18 +42,18 @@ impl SupplyLogic {
 
         let amount_nat = Nat::from(params.amount);
         // Converting asset to usdt value
-        let mut usd_amount = params.amount as f64;
-
+        let mut usd_amount = params.amount;
+        // let unscaled_amount = params.amount/100000000;
         let supply_amount_to_usd =
-            get_exchange_rates(params.asset.clone(),None, params.amount as f64).await;
+            get_exchange_rates(params.asset.clone(),None, params.amount.clone()).await;
         match supply_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
-                // Extracted the amount in USD
+               
                 usd_amount = amount_in_usd;
                 ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
             }
             Err(e) => {
-                // Handling the error
+              
                 ic_cdk::println!("Error getting exchange rate: {:?}", e);
             }
         }
@@ -98,18 +98,30 @@ impl SupplyLogic {
         // .await;
         // ic_cdk::println!("Supply validated successfully");
 
-        let liquidity_taken=0f64;
+        let liquidity_taken=0;
         let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,usd_amount , liquidity_taken).await;
                
-
+       
         ic_cdk::println!("Interest rates updated successfully");
         
+        if let Some(userlist) = &mut reserve_data.userlist {
+            
+            if !userlist.iter().any(|(principal, _)| principal == &user_principal.to_string()) {
+                userlist.push((user_principal.to_string(), true));
+            }
+        } else {
+        
+            reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
+        }
+        
+        ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
+
         mutate_state(|state| {
                     let asset_index = &mut state.asset_index;
                     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
         
-
+        let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data, usd_amount.clone()).await;
         // Minting dtoken
         match asset_transfer(
             user_principal,
@@ -140,7 +152,8 @@ impl SupplyLogic {
             Ok(new_balance) => {
                 println!("Asset transfer from user to backend canister executed successfully");
                 // ----------- Update logic here -------------
-                let _ = UpdateLogic::update_user_data_supply(user_principal, params, &reserve_data, usd_amount.clone()).await;
+                
+               
                 
         
                 Ok(new_balance)
@@ -203,9 +216,9 @@ impl SupplyLogic {
         let withdraw_amount = Nat::from(params.amount);
 
         // Converting asset value to usdt
-        let mut usd_amount = params.amount as f64;
+        let mut usd_amount = params.amount;
         let withdraw_amount_to_usd =
-            get_exchange_rates(params.asset.clone(),None, params.amount as f64).await;
+            get_exchange_rates(params.asset.clone(),None, params.amount ).await;
         match withdraw_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
                 // Extracted the amount in USD
@@ -264,8 +277,9 @@ impl SupplyLogic {
         // )
         // .await;
         // ic_cdk::println!("Withdraw validated successfully");
+        
 
-        reserve_data.total_supply-=usd_amount;
+        reserve_data.total_supply = (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;

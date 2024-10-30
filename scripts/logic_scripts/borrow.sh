@@ -6,9 +6,9 @@ set -e
 source ../../.env
 
 # Set variables
-ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai" 
+ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai" 
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
+debt_canister="aax3a-h4aaa-aaaaa-qaahq-cai"
 approve_method="icrc2_approve"
 borrow_method="borrow"
 reserve_data_method="get_reserve_data"
@@ -34,7 +34,7 @@ echo "--------------------------------------"
 
 
 echo "Fetching reserve data..."
-asset="ckBTC"
+asset="ckETH"
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
@@ -62,8 +62,8 @@ echo "user data: $user_data"
 dfx identity use default
 
 # Call the borrow function on the backend canister
-borrow_amount=2000  
-currency="ckBTC" 
+borrow_amount=100000000  
+currency="ckETH" 
 interest_rate=0  
 
 echo "Borrowing $borrow_amount from backend_canister..."

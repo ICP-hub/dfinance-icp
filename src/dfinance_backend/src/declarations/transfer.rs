@@ -1,5 +1,6 @@
 use candid::{CandidType, Deserialize};
 use candid::{Nat, Principal};
+use serde::Serialize;
 
 
 #[derive(CandidType, Deserialize)]
@@ -46,4 +47,34 @@ pub enum TransferFromError {
     CreatedInFuture { ledger_time: u64 },
     TooOld,
     InsufficientFunds { balance: Nat },
+}
+#[derive(CandidType, Deserialize)]
+pub struct ApproveArgs {
+    pub fee: Option<Nat>,
+    pub memo: Option<Vec<u8>>,
+    pub from_subaccount: Option<Vec<u8>>,
+    pub created_at_time: Option<u64>,
+    pub amount: Nat,
+    pub expected_allowance: Option<Nat>,
+    pub expires_at: Option<u64>,
+    pub spender: TransferAccount,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Debug)]
+pub enum ApproveError {
+    GenericError { message: String, error_code: Nat },
+    TemporarilyUnavailable,
+    Duplicate { duplicate_of: Nat },
+    BadFee { expected_fee: Nat },
+    AllowanceChanged { current_allowance: Nat },
+    CreatedInFuture { ledger_time: Nat },
+    TooOld,
+    Expired { ledger_time: Nat },
+    InsufficientFunds { balance: Nat },
+}
+
+#[derive(CandidType, Deserialize, Serialize, Debug)]
+pub enum ApproveResult {
+    Ok(Nat),
+    Err(ApproveError),
 }

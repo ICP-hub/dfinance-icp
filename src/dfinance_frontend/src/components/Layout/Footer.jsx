@@ -21,7 +21,7 @@ const Footer = () => {
   };
 
   return (
-    <div className="w-full bg-[#233D63] font-poppins mt-24">
+    <div className="w-full bg-[#233D63] font-poppins mt-20">
       <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] relative">
         {/* Background Overlay */}
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
@@ -32,12 +32,16 @@ const Footer = () => {
         </div>
         <div className="w-full flex flex-wrap p-4">
           <div className="w-full md:w-3/12 text-white mb-10 md:mb-0 lg:mb-0">
-            <img
-              src={DFinanceDark}
-              alt="DFinance"
-              onClick={handleLogoClick}
-              style={{ cursor: 'pointer' }}
-            />
+          <img
+                src={DFinanceDark}
+                alt="DFinance"
+                onClick={handleLogoClick}
+                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0 cursor-pointer"
+                style={{
+                  imageRendering: "-webkit-optimize-contrast",
+                  imageRendering: "crisp-edges",
+                }}
+              />
             <p className="mt-6 font-light text-[13px]">
               DFinance is a decentralized lending and borrowing protocol on ICP. The protocol uniquely combines liquidity mining with deflationary buy and burn mechanics.
             </p>
@@ -69,16 +73,16 @@ const Footer = () => {
                 <img src="./social/discord.svg" alt="discord" className="w-full h-full object-contain" />
               </span> */}
               <a target="_blank" href="https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all">
-                <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
-                  <img src="./social/in.svg" alt="Linkedin" className="w-full h-full object-contain" />
+                <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
+                  <img src="./social/linkedin.png" alt="Linkedin" className="w-full h-full object-contain" />
                 </span>
               </a>
               {/* <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                 <img src="./social/instagram.svg" alt="instagram" className="w-full h-full object-contain" />
               </span> */}
                <a target="_blank" href="https://x.com/dfinance_app">
-              <span className="bg-[#8CC0D7] p-2 w-8 h-8 flex items-center justify-center rounded-md">
-                <img src="./social/twitter.svg" alt="twitter" className="w-full h-full object-contain" />
+              <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
+                <img src="./social/X.png" alt="X" className="w-full h-full object-contain" />
               </span>
               </a>
             </div>

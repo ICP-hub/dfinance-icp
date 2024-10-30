@@ -7,26 +7,22 @@ const RiskPopup = ({ onClose, userData }) => {
   const popupRef = useRef(null);
 
   console.log("userdata in risk", userData);
-  const health_Factor_Value =
-    userData?.Ok?.health_factor !== undefined &&
-      userData?.Ok?.health_factor !== null
-      ? parseFloat(userData.Ok.health_factor) > 100
-        ? Infinity
-        : parseFloat(userData.Ok.health_factor)
-      : 0; // Return 0 if health_factor is not defined
+  const health_Factor_Value = userData?.Ok?.health_factor / 10000000000 > 100
+    ? Infinity
+    : parseFloat(Number(userData?.Ok?.health_factor / 10000000000).toFixed(2));
 
-  const Ltv_Value = parseFloat(userData?.Ok?.ltv)
-    ? parseFloat(userData.Ok.ltv * 100)
+  const Ltv_Value = parseFloat(Number((userData?.Ok?.ltv)/100000000)*100)
+    ? parseFloat(Number((userData?.Ok?.ltv)/100000000)*100)
     : 0;
 
-  const liquidationThreshold_Value = userData?.Ok?.liquidation_threshold
-    ? (userData.Ok.liquidation_threshold * 100).toFixed(2)
+  const liquidationThreshold_Value = (Number(userData?.Ok?.liquidation_threshold)/100000000)
+    ? ((Number(userData?.Ok?.liquidation_threshold)/100000000)).toFixed(2)
     : "0.00";
   // const liquidationThreshold_Value = 80
 
   console.log("liquidationThresholdValue", liquidationThreshold_Value);
   const healthFactorMinValue = 1;
-  const Max_Ltv = 50.0;
+  const Max_Ltv = parseFloat(Number((userData?.Ok?.max_ltv)/100000000));
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       onClose();
@@ -356,11 +352,11 @@ const RiskPopup = ({ onClose, userData }) => {
                         style={{ stopColor: "green", stopOpacity: 1 }}
                       />
                       <stop
-                        offset={`${currentMaxLtvPosition}%`} // End of green
+                        offset={`${currentMaxLtvPosition-1}%`} // End of green
                         style={{ stopColor: "green", stopOpacity: 1 }}
                       />
                       <stop
-                        offset={`${currentMaxLtvPosition}%`} // Start of orange
+                        offset={`${currentMaxLtvPosition-1}%`} // Start of orange
                         style={{ stopColor: "#fa6e0d", stopOpacity: 1 }}
                       />
                       <stop

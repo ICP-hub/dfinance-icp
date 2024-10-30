@@ -131,17 +131,27 @@ const MobileTopNav = ({
       navigator.clipboard
         .writeText(principal)
         .then(() => {
-          toast.success("Principal copied to clipboard", {
+          toast.success(`Principal copied to clipboard`,  {
+            className: 'custom-toast',
             position: "top-center",
             autoClose: 3000,
-            className: 'custom-toast', // Add custom CSS class
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
           });
         })
         .catch((err) => {
-          toast.error("Failed to copy: " + err, {
+          toast.error(`Failed to copy: ` + err,  {
+            className: 'custom-toast',
             position: "top-center",
             autoClose: 3000,
-            className: 'custom-toast', // Add custom CSS class
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
           });
         });
     }
@@ -198,7 +208,7 @@ const MobileTopNav = ({
         },
       }}
     >
-      <div className="flex flex-col pt-6 p-4 bg-white dark:bg-darkOverlayBackground font-poppins w-full h-full">
+      <div className="flex flex-col pt-6 p-4 bg-white dark:bg-darkOverlayBackground font-poppins w-full h-[85%]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-semibold text-[#AEADCB] dark:text-darkTextPrimary">
             Menu
@@ -212,7 +222,7 @@ const MobileTopNav = ({
         </div>
 
         {isAuthenticated && isMobile2 && (
-          <div className="flex items-center gap-1 my-2 mx-2 mb-4 p-1 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
+          <div className="flex items-center gap-1 my-2 mx-2 mb-4 p-1 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-[12px] cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
             <div
               className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden button1"
               onClick={() => {
@@ -397,12 +407,12 @@ const MobileTopNav = ({
         <h2 className="text-sm my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2 mt-8">
           Settings
         </h2>
-        <div className="p-2 dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 transition-colors duration-300 ease-in-out mx-2 my-1">
+        <div className="p-2 dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 transition-colors duration-300 ease-in-out mx-2 my-1 text-sm">
           <div className="flex flex-col space-y-1 ">
             <div className="flex items-center justify-between">
               <label
                 htmlFor="darkMode"
-                className="ml-1 text-lg text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
+                className="ml-1 text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
               >
                 Dark Mode
               </label>
@@ -421,10 +431,10 @@ const MobileTopNav = ({
             </div>
 
             {isAuthenticated && (
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-sm">
                 <label
                   htmlFor="testnetMode"
-                  className="ml-1 text-lg text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
+                  className="ml-1 text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
                 >
                   Testnet Mode
                 </label>
@@ -445,12 +455,12 @@ const MobileTopNav = ({
       <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
         <Button
           title="Switch Wallet"
-          className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
+          className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
           onClickHandler={switchWallet}
         />
         <Button
           title="Disconnect"
-          className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-2 px-9 shadow-lg text-sm font-poppins"
+          className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-3 px-9 shadow-lg text-sm font-poppins"
           onClickHandler={handleLogout}
         />
 

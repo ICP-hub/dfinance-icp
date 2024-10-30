@@ -1,3 +1,5 @@
+use candid::types::principal;
+use candid::Nat;
 use candid::Principal;
 use declarations::assets::{
     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
@@ -5,7 +7,6 @@ use declarations::assets::{
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
-use candid::Nat;
 mod api;
 mod constants;
 pub mod declarations;
@@ -50,6 +51,7 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
         }
     }
 }
+
 
 #[update]
 async fn liquidation_call(
@@ -145,11 +147,9 @@ pub fn get_all_assets() -> Vec<String> {
 
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, String> {
-    read_state(|state| {
-        match state.reserve_list.get(&asset_name) {
-            Some(principal) => Ok(principal),
-            None => Err(format!("No principal found for asset: {}", asset_name)),
-        }
+    read_state(|state| match state.reserve_list.get(&asset_name) {
+        Some(principal) => Ok(principal),
+        None => Err(format!("No principal found for asset: {}", asset_name)),
     })
 }
 
@@ -235,5 +235,106 @@ pub async fn withdraw(
         }
     }
 }
+
+
+// #[update]
+// pub fn login() -> Result<(), String> {
+//     let user_principal = ic_cdk::caller();
+
+//     // fetch user data.
+//     let user_data_result = mutate_state(|state| {
+//         state
+//             .user_profile
+//             .get(&user_principal)
+//             .map(|user| user.0.clone())
+//             .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+//     });
+
+//     let mut user_data = match user_data_result {
+//         Ok(data) => data,
+//         Err(err) => return Err(err),
+//     };
+//     // Ensure reserves exist for the user
+//     let reserves = user_data
+//         .reserves
+//         .as_mut()
+//         .ok_or_else(|| format!("Reserves not found for user {}", user_principal.to_string()))?;
+
+//     let current_timestamp = ic_cdk::api::time() / 1_000_000_000;
+
+//     let mut total_collateral = user_data.total_collateral.unwrap_or(0);
+
+//     for (reserve_name, reserve_data) in reserves.iter_mut() {
+//         ic_cdk::println!("Processing reserve: {}", reserve_name);
+
+//         // Update the liquidity index based on APY and time difference
+//         let delta_time = current_timestamp - reserve_data.last_update_timestamp;
+//         let apy = reserve_data.supply_rate; // Assuming supply_rate represents APY in basis points
+//         update_liquidity_index(reserve_data, apy, delta_time)?;
+
+//         // Dynamically calculate the user's updated balance using the liquidity index
+//         let updated_balance = calculate_dynamic_balance(
+//             reserve_data.asset_supply,
+//             reserve_data.liquidity_index,
+//             reserve_data.variable_borrow_index, // Assuming this is the initial liquidity index
+//         );
+
+//         reserve_data.asset_supply = updated_balance;
+
+//         // Update the user's total collateral based on the updated reserve balance
+//         if reserve_data.asset_supply > 0 {
+//             total_collateral += updated_balance - reserve_data.asset_supply;
+//         }
+
+//         let user_position = UserPosition {
+//             total_collateral_value: total_collateral,
+//             total_borrowed_value: user_data.total_debt.unwrap(),
+//             liquidation_threshold: user_data.liquidation_threshold.unwrap(),
+//         };
+
+//         if reserve_data.asset_supply > 0 || reserve_data.asset_borrow > 0 {
+//             user_data.health_factor = Some(calculate_health_factor(&user_position));
+//             user_data.ltv = Some(calculate_ltv(&user_position));
+//         }
+
+//         // Update the timestamp for this reserve
+//         reserve_data.last_update_timestamp = current_timestamp;
+//     }
+
+//     // Update the user's total collateral value
+//     user_data.total_collateral = Some(total_collateral);
+
+//     // Update the user profile with the new state
+//     mutate_state(|state| {
+//         state
+//             .user_profile
+//             .insert(user_principal, declarations::storable::Candid(user_data));
+//     });
+
+//     Ok(())
+// }
+
+// //approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve
+// //call approve transfer function -- function.rs
+// // backend canister as spender
+// //caller as from
+// //asset principal as ledger
+// //amount as amount
+
+
+// // fn login(user_id: u64, user_state: &UserState) {
+  
+// //     let mut state = user_state.lock().unwrap();
+
+// //     if let Some(user) = state.get_mut(&user_id) {
+   
+// //         println!("User {} logged in. Updating state...", user.username);
+// //         update_user_state(user);
+// //     } else {
+// //         // Handle case where user is not found
+// //         println!("User with ID {} not found", user_id);
+// //     }
+// // }
+
 
 export_candid!();

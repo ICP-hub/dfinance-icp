@@ -7,7 +7,7 @@ export function usePageLoading() {
     const handleLoad = () => {
       setTimeout(() => {
         setIsLoading(false);
-      }, 1000);
+      }, 0);
     };
 
     const handleBeforeUnload = () => {
@@ -20,7 +20,7 @@ export function usePageLoading() {
     if (document.readyState === 'complete') {
       setTimeout(() => {
         setIsLoading(false);
-      }, 1000); 
+      }, 0); 
     }
 
     return () => {

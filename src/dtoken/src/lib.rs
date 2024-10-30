@@ -316,6 +316,7 @@ fn icrc1_minting_account() -> Option<Account> {
 fn icrc1_balance_of(account: Account) -> Nat {
     Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into())
 }
+//TODO add a update balance function that directly update balance of user in ledger.balances
 
 #[query(name = "icrc1_total_supply")]
 #[candid_method(query, rename = "icrc1_total_supply")]

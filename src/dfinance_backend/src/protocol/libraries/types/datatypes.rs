@@ -21,13 +21,13 @@ pub struct Candid<T>(pub T);
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,
-    pub net_worth: Option<u128>,
+    pub net_worth: Option<u128>, //FIXME i think we can remove this
     pub total_collateral: Option<u128>,
     pub total_debt: Option<u128>,
-    pub available_borrow: Option<u128>,
-    pub net_apy: Option<u128>,
-    pub health_factor: Option<u128>,
-    pub ltv: Option<u128>,
+    pub available_borrow: Option<u128>, 
+    pub net_apy: Option<u128>, //FIXME i think we can remove this
+    pub health_factor: Option<u128>, //FIXME can we remove this or just keep this
+    pub ltv: Option<u128>, //F
     pub liquidation_threshold: Option<u128>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
     pub max_ltv: Option<u128>

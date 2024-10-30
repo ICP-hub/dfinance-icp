@@ -2,6 +2,46 @@ use candid::{CandidType, Deserialize, Principal};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 
 use super::math_utils::ScalingMath;
+use std::collections::HashMap;
+use std::time::{Duration, SystemTime};
+
+#[derive(Debug, Clone)]
+struct CachedPrice {
+    price: u128,
+    timestamp: u64,
+}
+
+pub struct PriceCache {
+    cache: HashMap<String, CachedPrice>,
+    cache_duration: Duration,
+}
+//TODO check if we can use this systemTIme of not
+//TODO should we maintain this duration cache or just make a simple one, implement a simple one also and comment out the code.
+impl PriceCache {
+    fn new(cache_duration: Duration) -> Self {
+        Self {
+            cache: HashMap::new(),
+            cache_duration,
+        }
+    }
+
+    fn get_cached_price(&self, asset: &str) -> Option<(u128, u64)> {
+        if let Some(cached_price) = self.cache.get(asset) {
+            let current_time = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_secs();
+            if current_time - cached_price.timestamp <= self.cache_duration.as_secs() {
+                return Some((cached_price.price, cached_price.timestamp));
+            }
+        }
+        None
+    }
+
+    fn set_price(&mut self, asset: String, price: u128, timestamp: u64) {
+        self.cache.insert(asset, CachedPrice { price, timestamp });
+    }
+}
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
@@ -71,7 +111,7 @@ pub fn cal_average_ltv(
     result
 }
 // ------------ Real time asset data using XRC ------------
-
+//TODO resolve the error
 #[ic_cdk_macros::update]
 pub async fn get_exchange_rates(
     base_asset_symbol: String,
@@ -90,6 +130,12 @@ pub async fn get_exchange_rates(
     } else {
         base_asset_symbol.to_string()
     };
+    
+    //TODO check if its required here or not.
+    if let Some((cached_price, timestamp)) = price_cache.get_cached_price(&base_asset) {
+        
+        return Ok((cached_price * amount, timestamp));
+    }
 
     // If the quote_asset_symbol is provided, use it. Otherwise, default to "USDT".
     let quote_asset = match quote_asset_symbol {
@@ -139,13 +185,14 @@ pub async fn get_exchange_rates(
                     ic_cdk::println!("pow {:?}",pow);
                     let exchange_rate = quote  / pow as u64 ;
     
-                    // Multiplying the exchange rate by the amount
+                    
                     let total_value = ((quote as u128 * amount)) / (pow as u128 - 100000000) ;
     
-                    // Getting the current time
+                   
                     let time = ic_cdk::api::time();
-    
-                    // Return the total value and the time
+                    
+                    price_cache.set_price(base_asset.clone(), exchange_rate as u128, time);
+                    
                     Ok((total_value, time))
                 }
                 GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
@@ -159,6 +206,7 @@ pub async fn get_exchange_rates(
         }
     }
     
+
 
 
 //  async fn check_and_update_prices() {

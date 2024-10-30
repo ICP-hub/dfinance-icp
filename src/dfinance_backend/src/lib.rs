@@ -305,6 +305,18 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
     Ok(())
 }
 
+
+//TODO make a common update_user_state function that can be called from every logic and even every login to platform 
+// make a common query_user_state function
+//avoid update call make it a query call if possible
+// avoid storing and updating unnecessary variables
+// just calculate it right there where needed
+//modify user struct 
+
+
+
+
+
 #[update]
 pub async fn login() -> Result<(), String> {
     let user_principal = ic_cdk::caller();
@@ -387,12 +399,11 @@ pub async fn login() -> Result<(), String> {
             );
         }
 
-        //TODO: calculate updated debt balance also like we did for asset_supply
-        // updating borrow.
+   
         let borrow_updated_balance = calculate_dynamic_balance(
             user_reserve_data.asset_borrow,
-            prev_liq_index,
-            user_reserve_data.liquidity_index,
+            prev_borrow_index,
+            user_reserve_data.variable_borrow_index,
         );
         ic_cdk::println!("asset borrow = {}", user_reserve_data.asset_borrow);
         ic_cdk::println!(
@@ -403,7 +414,7 @@ pub async fn login() -> Result<(), String> {
 
         user_reserve_data.asset_borrow = borrow_updated_balance;
 
-        //TODO update total_dept also with usd converted value of updated_debt_balance
+        //TODO optimize it
         if user_reserve_data.asset_borrow > 0 && user_reserve_data.is_borrowed {
             let added_borrowed = borrow_updated_balance - user_reserve_data.asset_borrow;
 
@@ -442,6 +453,7 @@ pub async fn login() -> Result<(), String> {
             );
         }
         //TODO check if we are updating it before while update state call then no need to update it again
+        // did you check it?
         if user_reserve_data.last_update_timestamp != current_timestamp {
             user_reserve_data.last_update_timestamp = current_timestamp;
             ic_cdk::println!(
@@ -468,6 +480,28 @@ pub async fn login() -> Result<(), String> {
     );
 
     Ok(())
+}
+
+//TODO remove priceCache from input use it directly inside the function
+#[query]
+pub fn get_cached_exchange_rate(
+    base_asset_symbol: String,
+    amount: u128,
+    price_cache: &PriceCache,
+) -> Result<(u128, u64), String> {
+    let base_asset = match base_asset_symbol.as_str() {
+        "ckBTC" => "btc",
+        "ckETH" => "eth",
+        "ckUSDC" => "usdc",
+        "ckUSDT" => "usdt",
+        _ => base_asset_symbol.as_str(),
+    };
+
+    if let Some((cached_price, timestamp)) = price_cache.get_cached_price(base_asset) {
+        return Ok((cached_price * amount, timestamp));
+    } else {
+        Err("No cached exchange rate available; please perform an update call.".to_string())
+    }
 }
 
 // #[update]

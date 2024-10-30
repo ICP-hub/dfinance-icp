@@ -305,7 +305,7 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
     Ok(())
 }
 
-
+//ignore this Todo this is not for you
 //TODO make a common update_user_state function that can be called from every logic and even every login to platform 
 // make a common query_user_state function
 //avoid update call make it a query call if possible

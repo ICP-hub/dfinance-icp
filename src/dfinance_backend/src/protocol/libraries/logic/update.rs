@@ -874,3 +874,8 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
 
     ic_cdk::println!("User data updated successfully: {:?}", user_data);
 }
+
+
+//TODO try to make a common update_user function for all logic
+//dry run it for all logics and check if its adding all functionality differ in all logic 
+//then comment out the above code, and use this update_user function in each logic and compare it with previous result, if there any change or missing functionality

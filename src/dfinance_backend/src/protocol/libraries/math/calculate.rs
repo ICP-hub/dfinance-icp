@@ -15,22 +15,29 @@ pub struct PriceCache {
     cache: HashMap<String, CachedPrice>,
     cache_duration: Duration,
 }
-//TODO check if we can use this systemTIme of not
-//TODO should we maintain this duration cache or just make a simple one, implement a simple one also and comment out the code.
+
 impl PriceCache {
-    fn new(cache_duration: Duration) -> Self {
+   pub fn new(cache_duration: Duration) -> Self {
         Self {
             cache: HashMap::new(),
             cache_duration,
         }
     }
 
-    fn get_cached_price(&self, asset: &str) -> Option<(u128, u64)> {
+    // Simple cache implementation without duration check
+    /*
+    fn get_cached_price_simple(&self, asset: &str) -> Option<u128> {
+        self.cache.get(asset).map(|cached_price| cached_price.price)
+    }
+    */
+
+   pub fn get_cached_price(&self, asset: &str) -> Option<(u128, u64)> {
         if let Some(cached_price) = self.cache.get(asset) {
             let current_time = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .expect("Time went backwards")
                 .as_secs();
+            // Duration cache check
             if current_time - cached_price.timestamp <= self.cache_duration.as_secs() {
                 return Some((cached_price.price, cached_price.timestamp));
             }
@@ -42,7 +49,6 @@ impl PriceCache {
         self.cache.insert(asset, CachedPrice { price, timestamp });
     }
 }
-
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
     pub total_collateral_value: u128,
@@ -96,10 +102,9 @@ pub fn cal_average_ltv(
     user_total_collateral: u128,
     user_max_ltv: u128,
 ) -> u128 {
-    
     let numerator = (amount.scaled_mul(reserve_ltv))
-    + (user_total_collateral.scaled_mul(user_max_ltv))
-    - (amount_taken.scaled_mul(reserve_ltv));
+        + (user_total_collateral.scaled_mul(user_max_ltv))
+        - (amount_taken.scaled_mul(reserve_ltv));
 
     let denominator = amount + user_total_collateral - amount_taken;
 
@@ -125,15 +130,16 @@ pub async fn get_exchange_rates(
         "eth".to_string()
     } else if base_asset_symbol == "ckUSDC" {
         "usdc".to_string()
-    }  else if base_asset_symbol == "ckUSDT" {
+    } else if base_asset_symbol == "ckUSDT" {
         "usdt".to_string()
     } else {
         base_asset_symbol.to_string()
     };
-    
+
     //TODO check if its required here or not.
+    // we can edit duration of the price cashe as per our need.
+    let mut price_cache = PriceCache::new(Duration::new(10, 3));
     if let Some((cached_price, timestamp)) = price_cache.get_cached_price(&base_asset) {
-        
         return Ok((cached_price * amount, timestamp));
     }
 
@@ -167,47 +173,42 @@ pub async fn get_exchange_rates(
         },
     };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
-            ic_cdk::api::call::call_with_payment128(
-                // i am changing this id.
-                Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-                //Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
-                "get_exchange_rate",
-                (args,),
-                1_000_000_000,
-            )
-            .await;
-    
-        match res {
-            Ok(res_value) => match res_value.0 {
-                GetExchangeRateResult::Ok(v) => {
-                    let quote = v.rate;
-                    let pow = 10usize.pow(v.metadata.decimals);
-                    ic_cdk::println!("pow {:?}",pow);
-                    let exchange_rate = quote  / pow as u64 ;
-    
-                    
-                    let total_value = ((quote as u128 * amount)) / (pow as u128 - 100000000) ;
-    
-                   
-                    let time = ic_cdk::api::time();
-                    
-                    price_cache.set_price(base_asset.clone(), exchange_rate as u128, time);
-                    
-                    Ok((total_value, time))
-                }
-                GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
-            },
-            Err(error) => Err(format!(
-                "Could not get USD/{} Rate - {:?} - {}",
-                base_asset_symbol.clone(),
-                error.0,
-                error.1
-            )),
-        }
+        ic_cdk::api::call::call_with_payment128(
+            // i am changing this id.
+            Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
+            //Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+            "get_exchange_rate",
+            (args,),
+            1_000_000_000,
+        )
+        .await;
+
+    match res {
+        Ok(res_value) => match res_value.0 {
+            GetExchangeRateResult::Ok(v) => {
+                let quote = v.rate;
+                let pow = 10usize.pow(v.metadata.decimals);
+                ic_cdk::println!("pow {:?}", pow);
+                let exchange_rate = quote / pow as u64;
+
+                let total_value = (quote as u128 * amount) / (pow as u128 - 100000000);
+
+                let time = ic_cdk::api::time();
+               
+                price_cache.set_price(base_asset.clone(), exchange_rate as u128, time);
+
+                Ok((total_value, time))
+            }
+            GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
+        },
+        Err(error) => Err(format!(
+            "Could not get USD/{} Rate - {:?} - {}",
+            base_asset_symbol.clone(),
+            error.0,
+            error.1
+        )),
     }
-    
-
-
+}
 
 //  async fn check_and_update_prices() {
 //         ic_cdk::spawn(async {

@@ -101,7 +101,6 @@ const Leaderboard = () => {
                   <th className="py-2 px-6 text-nowrap ">Total Points</th>
                 </tr>
               </thead>
-  
               <tbody>
                 {userRank && !isUserRankOnCurrentPage && (
                   <>

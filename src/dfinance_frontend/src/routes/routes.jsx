@@ -10,10 +10,19 @@ import Faucet from "../pages/Faucet/faucet"
 import TransactionDetail from "../components/Dashboard/Transaction"
 import Liquidate from "../components/Liquidate/Liquidate"
 import DebtStatus from "../components/Liquidate/DebtStatus"
+import PointSystemPage from "../components/pointSystem/pointSystem"
 export default [
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/pointsystem",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <PointSystemPage />
+      </MainDashboard>
+    ),
   },
   
   {

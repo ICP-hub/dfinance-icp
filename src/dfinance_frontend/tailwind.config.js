@@ -15,6 +15,8 @@ export default {
       boxShadow: {
 
         "custom": '0px 4px 24px 0px hsla(225, 33%, 17%, 0.5)',
+      },  backgroundImage: {
+        'bottom-left-to-top-right-gradient': 'radial-gradient(circle at bottom left, #27234F, #0D123C)',
       },
       colors: {
         border: "hsl(var(--border))",

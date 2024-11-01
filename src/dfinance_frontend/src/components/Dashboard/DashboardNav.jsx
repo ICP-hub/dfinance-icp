@@ -499,7 +499,7 @@ const DashboardNav = () => {
                                       {/* Tooltip content */}
                                       <div
                                         ref={tooltipRef}
-                                        className="absolute bottom-full left-36  sxxs:left-20 sxx2:left-24  transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-lg shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 md:w-[400px] sxs3:w-[350px] sxxs:w-[250px]"
+                                        className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
                                       >
                                         <span className="text-gray-700 dark:text-darkText">
                                           Net APY represents the overall
@@ -600,7 +600,7 @@ const DashboardNav = () => {
                            onMouseLeave={() => setIsTooltipVisible(false)}
                          >
                            {/* Info icon with hover-triggered tooltip */}
-                           <Info size={15} className="ml-1 align-middle cursor-pointer" />
+                           <Info size={15} className="ml-1 align-middle cursor-pointer"  onClick={toggleTooltip}/>
              
 
                               {/* Tooltip with full-screen blur */}
@@ -612,7 +612,7 @@ const DashboardNav = () => {
                                   {/* Tooltip content */}
                                   <div
                                     ref={tooltipRef}
-                                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-lg shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
+                                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
                                   >
                                     <span className="text-gray-700 dark:text-darkText">
                                       Net APY represents the overall annualized

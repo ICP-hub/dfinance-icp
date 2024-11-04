@@ -1,23 +1,28 @@
 use candid::{CandidType, Deserialize, Principal};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
-
-use super::math_utils::ScalingMath;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
+use super::math_utils::ScalingMath;
+
+// Define the cached price structure
 #[derive(Debug, Clone)]
 struct CachedPrice {
     price: u128,
     timestamp: u64,
 }
 
+// Define the price cache structure
+#[derive(Debug)]
 pub struct PriceCache {
     cache: HashMap<String, CachedPrice>,
     cache_duration: Duration,
 }
 
 impl PriceCache {
-   pub fn new(cache_duration: Duration) -> Self {
+    pub fn new(cache_duration: Duration) -> Self {
         Self {
             cache: HashMap::new(),
             cache_duration,
@@ -25,29 +30,37 @@ impl PriceCache {
     }
 
     // Simple cache implementation without duration check
-    /*
-    fn get_cached_price_simple(&self, asset: &str) -> Option<u128> {
+    pub fn get_cached_price_simple(&self, asset: &str) -> Option<u128> {
         self.cache.get(asset).map(|cached_price| cached_price.price)
     }
-    */
 
-   pub fn get_cached_price(&self, asset: &str) -> Option<(u128, u64)> {
-        if let Some(cached_price) = self.cache.get(asset) {
-            let current_time = SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .expect("Time went backwards")
-                .as_secs();
-            // Duration cache check
-            if current_time - cached_price.timestamp <= self.cache_duration.as_secs() {
-                return Some((cached_price.price, cached_price.timestamp));
-            }
-        }
-        None
-    }
+    // pub fn get_cached_price(&self, asset: &str) -> Option<(u128, u64)> {
+    //     if let Some(cached_price) = self.cache.get(asset) {
+    //         let current_time = SystemTime::now()
+    //             .duration_since(SystemTime::UNIX_EPOCH)
+    //             .expect("Time went backwards")
+    //             .as_secs();
+    //         if current_time - cached_price.timestamp <= self.cache_duration.as_secs() {
+    //             return Some((cached_price.price, cached_price.timestamp));
+    //         }
+    //     }
+    //     None
+    // }
 
-    fn set_price(&mut self, asset: String, price: u128, timestamp: u64) {
+    pub fn set_price(&mut self, asset: String, price: u128, timestamp: u64) {
         self.cache.insert(asset, CachedPrice { price, timestamp });
     }
+}
+
+thread_local! {
+    static PRICE_CACHE: Arc<Mutex<PriceCache>> = Arc::new(Mutex::new(PriceCache::new(Duration::new(10, 0))));
+}
+
+pub fn with_price_cache<T, F: FnOnce(&mut PriceCache) -> T>(f: F) -> T {
+    PRICE_CACHE.with(|cache| {
+        let mut cache = cache.lock().unwrap();
+        f(&mut *cache)
+    })
 }
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
@@ -120,45 +133,37 @@ pub fn cal_average_ltv(
 #[ic_cdk_macros::update]
 pub async fn get_exchange_rates(
     base_asset_symbol: String,
-    quote_asset_symbol: Option<String>, // Make the quote_asset_symbol optional
+    quote_asset_symbol: Option<String>,
     amount: u128,
 ) -> Result<(u128, u64), String> {
-    // Map the base asset to its corresponding cryptocurrency symbol
-    let base_asset = if base_asset_symbol == "ckBTC" {
-        "btc".to_string()
-    } else if base_asset_symbol == "ckETH" {
-        "eth".to_string()
-    } else if base_asset_symbol == "ckUSDC" {
-        "usdc".to_string()
-    } else if base_asset_symbol == "ckUSDT" {
-        "usdt".to_string()
-    } else {
-        base_asset_symbol.to_string()
+    ic_cdk::println!("amount in get asset = {}", amount);
+    let base_asset = match base_asset_symbol.as_str() {
+        "ckBTC" => "btc".to_string(),
+        "ckETH" => "eth".to_string(),
+        "ckUSDC" => "usdc".to_string(),
+        "ckUSDT" => "usdt".to_string(),
+        _ => base_asset_symbol.clone(),
     };
 
-    //TODO check if its required here or not.
-    // we can edit duration of the price cashe as per our need.
-    let mut price_cache = PriceCache::new(Duration::new(10, 3));
-    if let Some((cached_price, timestamp)) = price_cache.get_cached_price(&base_asset) {
-        return Ok((cached_price * amount, timestamp));
+    let cached_price = with_price_cache(|cache| cache.get_cached_price_simple(&base_asset));
+    // if let Some((cached_price, timestamp)) = cached_price {
+    //     return Ok((cached_price * amount, timestamp));
+    // }
+
+    ic_cdk::println!("cached price = {:?}",cached_price);
+    if let Some(cached_price) = cached_price {
+        return Ok((cached_price * amount, 0));
     }
 
-    // If the quote_asset_symbol is provided, use it. Otherwise, default to "USDT".
     let quote_asset = match quote_asset_symbol {
-        Some(symbol) => {
-            if symbol == "ckBTC" {
-                "btc".to_string()
-            } else if symbol == "ckETH" {
-                "eth".to_string()
-            } else if symbol == "ckUSDC" {
-                "usdc".to_string()
-            } else if symbol == "ckUSDT" {
-                "usdt".to_string()
-            } else {
-                symbol.to_string()
-            }
-        }
-        None => "USDT".to_string(), // Default quote asset to USDT if none is provided
+        Some(symbol) => match symbol.as_str() {
+            "ckBTC" => "btc".to_string(),
+            "ckETH" => "eth".to_string(),
+            "ckUSDC" => "usdc".to_string(),
+            "ckUSDT" => "usdt".to_string(),
+            _ => symbol,
+        },
+        None => "USDT".to_string(),
     };
 
     let args = GetExchangeRateRequest {
@@ -174,9 +179,7 @@ pub async fn get_exchange_rates(
     };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
-            // i am changing this id.
             Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-            //Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
             1_000_000_000,
@@ -188,24 +191,24 @@ pub async fn get_exchange_rates(
             GetExchangeRateResult::Ok(v) => {
                 let quote = v.rate;
                 let pow = 10usize.pow(v.metadata.decimals);
-                ic_cdk::println!("pow {:?}", pow);
                 let exchange_rate = quote / pow as u64;
 
-                let total_value = (quote as u128 * amount) / (pow as u128 - 100000000);
+                let total_value: u128 = (quote as u128 * amount) / (pow as u128 - 100000000);
 
                 let time = ic_cdk::api::time();
-               
-                price_cache.set_price(base_asset.clone(), exchange_rate as u128, time);
 
+                with_price_cache(|cache| {
+                    cache.set_price(base_asset.clone(), exchange_rate as u128, time)
+                });
+
+                ic_cdk::println!("total value = {}", total_value);
                 Ok((total_value, time))
             }
             GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
         },
         Err(error) => Err(format!(
             "Could not get USD/{} Rate - {:?} - {}",
-            base_asset_symbol.clone(),
-            error.0,
-            error.1
+            base_asset_symbol, error.0, error.1
         )),
     }
 }

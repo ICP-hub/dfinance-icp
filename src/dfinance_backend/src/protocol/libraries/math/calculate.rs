@@ -52,6 +52,7 @@ impl PriceCache {
     }
 }
 
+//TODO store it in dfinance_backend/src/protocol/libraries/types/assets.rs then use it
 thread_local! {
     static PRICE_CACHE: Arc<Mutex<PriceCache>> = Arc::new(Mutex::new(PriceCache::new(Duration::new(10, 0))));
 }
@@ -62,6 +63,10 @@ pub fn with_price_cache<T, F: FnOnce(&mut PriceCache) -> T>(f: F) -> T {
         f(&mut *cache)
     })
 }
+
+//TODO UPDATE_RESERVES_PRICE function -> iter over the reservelist -> asset name -> get_exchange_rate function -> update price_cache using set_price function
+
+
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
     pub total_collateral_value: u128,
@@ -128,6 +133,10 @@ pub fn cal_average_ltv(
     let result = numerator.scaled_div(denominator);
     result
 }
+
+
+
+
 // ------------ Real time asset data using XRC ------------
 //TODO resolve the error
 #[ic_cdk_macros::update]
@@ -145,15 +154,15 @@ pub async fn get_exchange_rates(
         _ => base_asset_symbol.clone(),
     };
 
-    let cached_price = with_price_cache(|cache| cache.get_cached_price_simple(&base_asset));
+    // let cached_price = with_price_cache(|cache| cache.get_cached_price_simple(&base_asset));
     // if let Some((cached_price, timestamp)) = cached_price {
     //     return Ok((cached_price * amount, timestamp));
     // }
 
-    ic_cdk::println!("cached price = {:?}",cached_price);
-    if let Some(cached_price) = cached_price {
-        return Ok((cached_price * amount, 0));
-    }
+    // ic_cdk::println!("cached price = {:?}",cached_price);
+    // if let Some(cached_price) = cached_price {
+    //     return Ok((cached_price * amount, 0));
+    // }
 
     let quote_asset = match quote_asset_symbol {
         Some(symbol) => match symbol.as_str() {

@@ -20,6 +20,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
+import { trackEvent } from "../../utils/googleAnalytics";
 
 const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const { backendActor, principal: currentUserPrincipal } = useAuth();
@@ -262,6 +263,11 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
       );
 
       if ("Ok" in result) {
+        trackEvent(
+          "Liq:" + selectedDebtAsset + "," + selectedAsset + ","+ Number(amountToRepay).toLocaleString() +"," + mappedItem.principal.toString(),
+          "Assets",
+          "Liq:" + selectedDebtAsset + "," + selectedAsset + ","+ Number(amountToRepay).toLocaleString() +"," + mappedItem.principal.toString()
+        );
         toast.success(`Liquidation successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -1109,12 +1115,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   </p>
                 </div>
                 <div className="flex justify-end mt-3">
-  {!amountToRepay && (
-    <span className="text-red-500 text-[11px] text-normal mb-0">
-      Select a debt asset to see repayment
-    </span>
-  )}
-</div>
+                  {!amountToRepay && (
+                    <span className="text-red-500 text-[11px] text-normal mb-0">
+                      Select a debt asset to see repayment
+                    </span>
+                  )}
+                </div>
 
                 <div className="bg-gray-100 dark:bg-darkBackground/30   rounded-md p-2 text-sm text-[#c25252] mt-2 flex justify-between items-center">
                   <p className="text-base font-bold text-[#2A1F9D] dark:text-darkText ">
@@ -1125,7 +1131,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       Number(amountToRepay).toLocaleString()
                     ) : (
                       <span className="text-gray-300 text-[11px] text-normal">
-                       --
+                        --
                       </span>
                     )}
                   </p>

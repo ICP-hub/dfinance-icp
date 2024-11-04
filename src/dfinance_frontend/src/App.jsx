@@ -40,10 +40,10 @@ export default function App() {
     [principal]
   );
 
-  useEffect(() => {
-    initGA(TRACKING_ID);
-    setUserId(principalObj.toString());
-  }, [principalObj]);
+  // useEffect(() => {
+  //   initGA(TRACKING_ID);
+  //   setUserId(principalObj.toString());
+  // }, [principalObj]);
 
   const location = useLocation();
   useEffect(() => {

@@ -6,6 +6,7 @@ import { createActor, idlFactory } from "../../../declarations/dfinance_backend/
 import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
 import useAssetData from "../components/Common/useAssets";
 import { useSelector } from "react-redux";
+import { initGA, setUserId } from "./googleAnalytics";
 
 // Create a React context for authentication state
 const AuthContext = createContext();
@@ -138,6 +139,8 @@ export const useAuthClient = (options = defaultOptions) => {
       const principal = identity.getPrincipal();
       setPrincipal(principal.toString());
       // console.log('principal', principal.toString());
+      initGA("G-EVCJPRHQYX");
+      setUserId(principal.toString());
 
       const accountId = AccountIdentifier.fromPrincipal({ principal });
       setAccountId(toHexString(accountId.bytes));

@@ -36,7 +36,7 @@ const SupplyPopup = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
-
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
@@ -63,10 +63,10 @@ const SupplyPopup = ({
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
 
-    const principalObj = useMemo(
-      () => Principal.fromText(principal),
-      [principal]
-    );
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -233,6 +233,7 @@ const SupplyPopup = ({
 
 
   const handleSupplyETH = async () => {
+
     try {
       console.log("Supply function called for", asset, amount);
 
@@ -254,25 +255,22 @@ const SupplyPopup = ({
       console.log(" current colletral status while supply ", currentCollateralStatus)
       const sup = await backendActor.supply(asset, scaledAmount, currentCollateralStatus);
       console.log("Supply", sup);
-      
-      trackEvent(
-        "Supply Action",
-        "Assets",
-        asset,
-        scaledAmount / 100000000, 
-        { 
-          Amount: scaledAmount / 100000000,
-          currentCollateralStatus: currentCollateralStatus,
-          user: principalObj.toString() 
-        }
-      );
 
+      trackEvent(
+        "Supply," + asset + "," + (scaledAmount / 100000000)+"," + currentCollateralStatus + "," + principalObj.toString(),
+        "Assets",
+        "Supply," + asset + "," + (scaledAmount / 100000000)+"," + currentCollateralStatus + "," + principalObj.toString(),
+        "Assets",
+      );
 
       setIsPaymentDone(true);
       setIsVisible(false);
 
-      const sound = new Audio(coinSound);
-      sound.play();
+      if (isSoundOn) {
+        const sound = new Audio(coinSound);
+        sound.play();
+      }
+
       toast.success(`Supply successful!`, {
         className: 'custom-toast',
         position: "top-center",

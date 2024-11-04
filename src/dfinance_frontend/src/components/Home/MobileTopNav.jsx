@@ -9,7 +9,7 @@ import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { toggleSound } from "../../redux/reducers/soundReducer";
 
 
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
@@ -45,6 +45,12 @@ const MobileTopNav = ({
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
+
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+
+  const handleSoundToggle = () => {
+    dispatch(toggleSound());
+  };
 
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
@@ -449,6 +455,27 @@ const MobileTopNav = ({
                 </div>
               </div>
             )}
+
+<div className="flex items-center justify-between">
+              <label
+                htmlFor="darkMode"
+                className="ml-1 text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
+              >
+                Sound
+              </label>
+              <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
+                {isSoundOn ? "On" : "Off"}
+
+                <div className="-mr-4">
+                  <CustomizedSwitches
+                    checked={isSoundOn}
+                    onChange={handleSoundToggle}
+                  />
+                </div>
+
+              </div>
+
+            </div>
           </div>
         </div>
       </div>

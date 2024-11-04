@@ -10,6 +10,9 @@ import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3"
+import { Principal } from "@dfinity/principal";
+import { trackEvent } from "../../../utils/googleAnalytics";
+import { useMemo } from "react";
 
 const WithdrawPopup = ({
   asset,
@@ -28,11 +31,16 @@ const WithdrawPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
-  
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset);
   console.log("Fees:", fees);
@@ -149,7 +157,7 @@ const WithdrawPopup = ({
     }
   }, [amount, conversionRate]);
 
-  const { createLedgerActor, backendActor, principal } = useAuth();
+ 
   const ledgerActors = useSelector((state) => state.ledger);
   console.log("ledgerActors", ledgerActors);
 
@@ -192,8 +200,15 @@ const WithdrawPopup = ({
       console.log("Withdraw result", withdrawResult);
 
       if ("Ok" in withdrawResult) {
-        const sound = new Audio(coinSound);
-        sound.play();
+        trackEvent(
+          "Withdraw," + asset + "," + (scaledAmount / 100000000) + "," + currentCollateralStatus + "," +  principalObj.toString(),
+          "Assets",
+          "Withdraw," + asset + "," + (scaledAmount / 100000000) + "," + currentCollateralStatus + ", " +  principalObj.toString()
+        );
+        if (isSoundOn) {
+          const sound = new Audio(coinSound);
+          sound.play();
+        }
         toast.success("Withdraw successful!", {
           className: 'custom-toast',
           position: "top-center",

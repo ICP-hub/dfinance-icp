@@ -17,10 +17,11 @@ impl LiquidationLogic {
         on_behalf_of: String,
     ) -> Result<Nat, String> {
         // Reads the reserve data from the asset
-        let mut usd_amount = amount as f64;
+        ic_cdk::println!("params asset_name and collateral_asset {:?} {:?}",asset_name,collateral_asset);
+        let mut usd_amount = amount ;
 
         let supply_amount_to_usd =
-            get_exchange_rates(asset_name.clone(), None, amount as f64).await;
+            get_exchange_rates(asset_name.clone(), None, amount ).await;
         match supply_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
                 // Extracted the amount in USD
@@ -92,16 +93,15 @@ impl LiquidationLogic {
             Err(e) => {
                 // Handle the error case
                 ic_cdk::println!("Error fetching exchange rate: {}", e);
-                0.0 // Or handle the error as appropriate for your logic
+                0 // Or handle the error as appropriate for your logic
             }
         };
         ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
-        let bonus = (collateral_amount * (reserve_data.configuration.liquidation_bonus as f64 / 100f64))
-            .round() as u64;
+        let bonus = collateral_amount * (reserve_data.configuration.liquidation_bonus  / 100) / 100000000;
         let reward_amount = Nat::from(collateral_amount as u128) + Nat::from(bonus);
-
+        ic_cdk::println!("bonus: {}", bonus);
         let reward_amount_param = collateral_amount as u128 + bonus as u128;
-
+        ic_cdk::println!("reward_amount_param: {}", reward_amount_param);
         let supply_param = ExecuteSupplyParams {
             asset: collateral_asset.to_string(),
             amount: reward_amount_param,
@@ -146,7 +146,7 @@ impl LiquidationLogic {
                 return Err(format!("Burn failed. Error: {:?}", err));
             }
         };
-        let usd_amount=60812.2;
+        let usd_amount=60812;                                             //change it
         // Minting dtoken
         match asset_transfer(
             liquidator_principal,
@@ -161,7 +161,7 @@ impl LiquidationLogic {
                     "Dtoken Asset transfer from backend to liquidator executed successfully"
                 );
                 let _ =
-                    UpdateLogic::update_user_data_withdraw(user_principal, withdraw_param, &reserve_data, 0.0).await;
+                    UpdateLogic::update_user_data_withdraw(user_principal, withdraw_param, &reserve_data, 0).await;
                 let _ = UpdateLogic::update_user_data_supply(
                     liquidator_principal,
                     supply_param,

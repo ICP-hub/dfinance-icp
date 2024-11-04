@@ -4,25 +4,25 @@ import { Info } from "lucide-react";
 import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Check, Wallet, X } from "lucide-react";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
-import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
-import { useMemo } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
+import useUserData from "../../customHooks/useUserData";
+import coinSound from "../../../../public/sound/caching_duck_habbo.mp3"
 
 const WithdrawPopup = ({
   asset,
   image,
   supplyRateAPR,
   balance,
-  reserveliquidationThreshold,
   liquidationThreshold,
+  reserveliquidationThreshold,
   assetSupply,
   assetBorrow,
   totalCollateral,
   totalDebt,
+  currentCollateralStatus,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
@@ -31,14 +31,17 @@ const WithdrawPopup = ({
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
-
+  const [collateral, setCollateral] = useState(currentCollateralStatus);
+  
   const fees = useSelector((state) => state.fees.fees);
   console.log("Asset:", asset);
   console.log("Fees:", fees);
   console.log("assetSupply:", assetSupply);
+
+  console.log("Current Collateral Status", collateral);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const [amount, setAmount] = useState("");
-  const [conversionRate, setConversionRate] = useState(0);
+  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,59 +53,15 @@ const WithdrawPopup = ({
 
   const isCollateral = true;
 
-  useEffect(() => {
-    const fetchConversionRate = async () => {
-      try {
-        const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch conversion rates from server");
-        }
-
-        const data = await response.json();
-
-        let rate;
-        switch (asset) {
-          case "ckBTC":
-            rate = data.bitcoin?.usd;
-            break;
-          case "ckETH":
-            rate = data.ethereum?.usd;
-            break;
-          case "ckUSDC":
-            rate = data["usd-coin"]?.usd;
-            break;
-          case "ICP":
-            rate = data["internet-computer"]?.usd;
-            break;
-          default:
-            console.error(`Unsupported asset: ${asset}`);
-            return;
-        }
-        if (rate) {
-          console.log(`Rate for ${asset}:`, rate);
-          setConversionRate(rate);
-        } else {
-          console.error("Conversion rate not found for asset:", asset);
-        }
-      } catch (error) {
-        console.error(
-          "Error fetching conversion rate from server:",
-          error.message
-        );
-      }
-    };
-
-    if (asset) {
-      fetchConversionRate();
-    }
-  }, [asset]);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
 
   const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
   const modalRef = useRef(null);
+
   useEffect(() => {
     if (onLoadingChange) {
       onLoadingChange(isLoading);
@@ -110,157 +69,165 @@ const WithdrawPopup = ({
   }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
-    const inputAmount = e.target.value;
-
+    let inputAmount = e.target.value.replace(/,/g, ''); // Remove commas for processing
+  
+    // Limit decimal places to 8 digits
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
+      if (decimalPart.length > 8) {
+        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`; // Limit decimal places to 8
+      }
+    }
+  
+    // Convert input amount to number for comparison
     const numericAmount = parseFloat(inputAmount);
+  
+    // Check if the amount exceeds assetSupply
+    if (numericAmount > assetSupply) {
+      inputAmount = assetSupply.toString(); // Limit input amount to assetSupply
+    }
+  
+    let formattedAmount;
+    if (inputAmount.includes('.')) {
+      const [integerPart, decimalPart] = inputAmount.split('.');
+  
+      // Format the integer part with commas and limit decimal places to 8 digits
+      formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart.slice(0, 8)}`;
+    } else {
+      // If no decimal, format the integer part with commas
+      formattedAmount = parseInt(inputAmount).toLocaleString('en-US');
+    }
+  
+    // Update the input field value with the formatted number (with commas)
+    setAmount(formattedAmount);
+    updateAmountAndUsdValue(inputAmount);
+  };
+  
+
+  const updateAmountAndUsdValue = (inputAmount) => {
+    const numericAmount = parseFloat(inputAmount.replace(/,/g, ''));
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
         const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2)));
-        setAmount(inputAmount);
+
+        // Format the integer part with commas
+
+
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Round USD to 2 decimal places
+        setAmount(formattedAmount); // Update the amount with commas
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
-        setUsdValue(0);
       }
     } else if (inputAmount === "") {
-      setAmount("");
-      setUsdValue(0);
+      setAmount(""); // Clear the amount in state
       setError("");
     } else {
       setError("Amount must be a positive number");
-      setUsdValue(0);
     }
   };
 
-  const { createLedgerActor, backendActor, principal } = useAuth();
+  // Utility function to format the amount with commas
 
-  const [assetPrincipal, setAssetPrincipal] = useState({});
+
 
   useEffect(() => {
-    const fetchAssetPrinciple = async () => {
-      if (backendActor) {
-        try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP"];
-          for (const asset of assets) {
-            const result = await getAssetPrinciple(asset);
-
-            setAssetPrincipal((prev) => ({
-              ...prev,
-              [asset]: result,
-            }));
-          }
-        } catch (error) {
-          console.error("Error fetching asset principal:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-
-    fetchAssetPrinciple();
-  }, [principal, backendActor]);
-
-  const getAssetPrinciple = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
+    if (amount && conversionRate) {
+      const convertedValue = parseFloat(amount.replace(/,/g, '')) * conversionRate;
+      setUsdValue(convertedValue);
+    } else {
+      setUsdValue(0);
     }
-    try {
-      let result;
-      switch (asset) {
-        case "ckBTC":
-          result = await backendActor.get_asset_principal("ckBTC");
-          break;
-        case "ckETH":
-          result = await backendActor.get_asset_principal("ckETH");
-          break;
-        case "ckUSDC":
-          result = await backendActor.get_asset_principal("ckUSDC");
-          break;
-        case "ICP":
-          result = await backendActor.get_asset_principal("ICP");
-          break;
-        default:
-          throw new Error(`Unknown asset: ${asset}`);
-      }
-      return result.Ok.toText();
-    } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
-      throw error;
+  }, [amount, conversionRate]);
+  useEffect(() => {
+    if (assetSupply && conversionRate) {
+      const convertedMaxValue = parseFloat(assetSupply) * conversionRate;
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
     }
-  };
+  }, [amount, conversionRate]);
 
-  const ledgerActorckBTC = useMemo(
-    () =>
-      assetPrincipal.ckBTC
-        ? createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckBTC]
-  );
+  const { createLedgerActor, backendActor, principal } = useAuth();
+  const ledgerActors = useSelector((state) => state.ledger);
+  console.log("ledgerActors", ledgerActors);
 
-  const ledgerActorckETH = useMemo(
-    () =>
-      assetPrincipal.ckETH
-        ? createLedgerActor(assetPrincipal.ckETH, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckETH]
-  );
+  const safeAmount = Number((amount || '').replace(/,/g, '')) || 0;
+  let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+  console.log("Amount as nat64:", amountAsNat64);
 
-  const ledgerActorckUSDC = useMemo(
-    () =>
-      assetPrincipal.ckUSDC
-        ? createLedgerActor(assetPrincipal.ckUSDC, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ckUSDC]
-  );
-
-  const ledgerActorICP = useMemo(
-    () =>
-      assetPrincipal.ICP
-        ? createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory)
-        : null,
-    [createLedgerActor, assetPrincipal.ICP]
-  );
+  const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
 
   const handleWithdraw = async () => {
     console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
     let ledgerActor;
-
-    // Example logic to select the correct backend actor based on the asset
     if (asset === "ckBTC") {
-      ledgerActor = ledgerActorckBTC;
+      ledgerActor = ledgerActors.ckBTC;
     } else if (asset === "ckETH") {
-      ledgerActor = ledgerActorckETH;
+      ledgerActor = ledgerActors.ckETH;
     } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActorckUSDC;
+      ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
-      ledgerActor = ledgerActorICP;
+      ledgerActor = ledgerActors.ICP;
+    } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+      ledgerActor = ledgerActors.ckUSDT;
     }
 
     try {
-      const amountInUnits = BigInt(amount);
-      // Call the withdraw function on the selected ledger actor
+      const safeAmount = Number((amount || '').replace(/,/g, '')) || 0;
+      let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+      console.log("Amount as nat64:", amountAsNat64);
+      const scaledAmount = amountAsNat64;
+
+      console.log(" current colletral status while withdraw ", currentCollateralStatus)
+      // Use scaled amount for further calculations
       const withdrawResult = await backendActor.withdraw(
         asset,
-        amountInUnits,
+        scaledAmount,
         [],
-        true
+        currentCollateralStatus
       );
       console.log("Withdraw result", withdrawResult);
-      toast.success("Withdraw successful!");
-      setIsPaymentDone(true);
-      setIsVisible(false);
 
-      // Handle success, e.g., show success message, update UI, etc.
+      if ("Ok" in withdrawResult) {
+        const sound = new Audio(coinSound);
+        sound.play();
+        toast.success("Withdraw successful!", {
+          className: 'custom-toast',
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        setIsPaymentDone(true);
+        setIsVisible(false);
+      } else if ("Err" in withdrawResult) {
+        const errorMsg = withdrawResult.Err;
+        toast.error(`Withdraw failed: ${errorMsg}`, {
+          className: 'custom-toast',
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        console.error("Withdraw error:", errorMsg);
+      }
     } catch (error) {
       console.error("Error withdrawing:", error);
-      setIsLoading(false);
-      // Handle error state, e.g., show error message
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
+    } finally {
+      setIsLoading(false); // Stop loading once the function is done
     }
   };
+ 
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -293,15 +260,28 @@ const WithdrawPopup = ({
       liquidationThreshold
     );
     console.log("Health Factor:", healthFactor);
-    const ltv = calculateLTV(assetSupply, assetBorrow);
+
+    const amountTaken = collateral ? (usdValue || 0) : 0;
+    const amountAdded = 0;
+    const totalCollateralValue = parseFloat(totalCollateral) - parseFloat(amountTaken);
+    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
+
+    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
-    if (healthFactor <= 1 || ltv >= reserveliquidationThreshold) {
+    if ((ltv * 100 >= liquidationThreshold) && currentCollateralStatus) {
+      // Dismiss any existing toasts before showing a new one
+      toast.dismiss(); // This will remove all active toasts
+      toast.info("LTV Exceeded!"); // Show the new toast
+    }
+    
+    if ((healthFactor <= 1 || ltv * 100 >= liquidationThreshold) && currentCollateralStatus) {
       setIsButtonDisabled(true);
+
     } else {
       setIsButtonDisabled(false);
     }
@@ -320,21 +300,21 @@ const WithdrawPopup = ({
     totalDebt,
     liquidationThreshold
   ) => {
-    const amountTaken = usdValue || 0; // Ensure usdValue is treated as a number
-    const amountAdded = 0; // No amount added for now, but keeping it in case of future use
-
-    // Ensure totalCollateral and totalDebt are numbers to prevent string concatenation
-    const totalCollateralValue =
-      parseFloat(totalCollateral) - parseFloat(amountTaken);
+    const amountTaken = collateral ? (usdValue || 0) : 0;
+    const amountAdded = 0;
+    const totalCollateralValue = parseFloat(totalCollateral) - parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
+
     console.log("totalCollateralValue", totalCollateralValue);
     console.log("totalDeptValue", totalDeptValue);
     console.log("amountAdded", amountAdded);
     console.log("liquidationThreshold", liquidationThreshold);
     console.log("totalDebt", totalDebt);
+
     if (totalDeptValue === 0) {
       return Infinity;
     }
+
     return (
       (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
     );
@@ -347,45 +327,19 @@ const WithdrawPopup = ({
     return totalDeptValue / totalCollateralValue;
   };
 
-  const [healthFactorBackend, setHealthFactorBackend] = useState(null);
-  const [userData, setUserData] = useState();
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (backendActor) {
-        try {
-          const result = await getUserData(principal.toString());
-          console.log("get_user_data:", result);
-          setUserData(result);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        console.error("Backend actor initialization failed.");
-      }
-    };
-    fetchUserData();
-  }, [principal, backendActor]);
-
-  const getUserData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_data(user);
-      console.log("get_user_data in supplypopup:", result);
-
-      // Check if the result is in the expected format (Ok.health_factor)
-      if (result && result.Ok && result.Ok.health_factor) {
-        setHealthFactorBackend(result.Ok.health_factor); // Store health_factor in state
-      } else {
-        setError("Health factor not found");
-      }
-      return result;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setError(error.message);
-    }
+  const handleMaxClick = () => {
+    let asset_supply = assetSupply
+      ? assetSupply >= 1e-8 && assetSupply < 1e-7
+        ? Number(assetSupply).toFixed(8)
+        : assetSupply >= 1e-7 && assetSupply < 1e-6
+          ? Number(assetSupply).toFixed(7)
+          : assetSupply
+      : "0";
+    const maxAmount = asset_supply.toString();
+    setAmount(maxAmount.toString());
+    updateAmountAndUsdValue(maxAmount);
   };
 
   return (
@@ -401,16 +355,20 @@ const WithdrawPopup = ({
               <div className="w-full flex items-center justify-between bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-3 rounded-md">
                 <div className="w-[50%]">
                   <input
-                    type="number"
+                    type="text" // Use text input to allow formatting
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0}
+                    // disabled={supplyBalance === 0}
                     className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder="Enter Amount"
-                    min="0"
                   />
                   <p className="text-xs text-gray-500 px-2">
-                    {usdValue ? `$${usdValue.toFixed(2)} USD` : "$0 USD"}
+                    {usdValue
+                      ? `$${usdValue.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
+                      : "$0.00 USD"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
@@ -422,7 +380,17 @@ const WithdrawPopup = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-xs mt-4">{assetSupply.toFixed(2)} Max</p>
+                  <p
+                    className="text-xs mt-4 cursor-pointer bg-blue-100 dark:bg-gray-700/45 p-2 py-1 rounded-md button1"
+                    onClick={() => {
+                      if (assetSupply > 0) {
+                        handleMaxClick();
+                      }
+                    }}
+                  >
+                    ${maxUsdValue.toLocaleString(4)}
+                    Max {/* Adjust maximumFractionDigits as needed */}
+                  </p>
                 </div>
               </div>
             </div>
@@ -435,7 +403,13 @@ const WithdrawPopup = ({
                   <p className="text-sm">Remaining supply</p>
                 </div>
                 <div className="w-4/12 flex flex-col items-end">
-                  <p className="text-xs mt-2">{assetSupply - amount} Max</p>
+                  <p className="text-xs mt-2">
+                    {(assetSupply - amount.replace(/,/g, '')).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    Max
+                  </p>
                 </div>
               </div>
             </div>
@@ -446,18 +420,18 @@ const WithdrawPopup = ({
               <div className="w-full flex justify-between items-center my-1">
                 <p>Supply APY</p>
                 <p>
-                  {supplyRateAPR * 100 < 0.1
+                  {supplyRateAPR < 0.1
                     ? "<0.1%"
-                    : `${supplyRateAPR * 100}%`}
+                    : `${supplyRateAPR.toFixed(2)}%`}
                 </p>
               </div>
               <div className="w-full flex justify-between items-center my-1">
                 <p>Collateralization</p>
                 <p
-                  className={`font-semibold ${isCollateral ? "text-green-500" : "text-red-500"
+                  className={`font-semibold ${currentCollateralStatus ? "text-green-500" : "text-red-500"
                     }`}
                 >
-                  {isCollateral ? "Enabled" : "Disabled"}
+                  {currentCollateralStatus ? "Enabled" : "Disabled"}
                 </p>
               </div>
               <div className="w-full flex flex-col my-1">
@@ -466,14 +440,14 @@ const WithdrawPopup = ({
                   <p>
                     <span
                       className={`${healthFactorBackend > 3
-                          ? "text-green-500"
-                          : healthFactorBackend <= 1
-                            ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                              ? "text-orange-600"
-                              : healthFactorBackend <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                        ? "text-green-500"
+                        : healthFactorBackend <= 1
+                          ? "text-red-500"
+                          : healthFactorBackend <= 1.5
+                            ? "text-orange-600"
+                            : healthFactorBackend <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}
                     >
                       {parseFloat(
@@ -485,14 +459,14 @@ const WithdrawPopup = ({
                     <span className="text-gray-500 mx-1">→</span>
                     <span
                       className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                        ? "text-green-500"
+                        : currentHealthFactor <= 1
+                          ? "text-red-500"
+                          : currentHealthFactor <= 1.5
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}
                     >
                       {currentHealthFactor}
@@ -533,8 +507,8 @@ const WithdrawPopup = ({
                   : handleWithdraw
               }
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               title="Withdraw"
             />
@@ -565,19 +539,21 @@ const WithdrawPopup = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p className="mt-2">
-              You have withdrawn {amount} d{asset}
-            </p>
-
-            {/* <div className="w-full my-2 focus:outline-none bg-gradient-to-r mt-6 bg-[#F6F6F6] rounded-md p-3 px-8 shadow-lg text-sm placeholder:text-white flex flex-col gap-3 items-center dark:bg-[#1D1B40] dark:text-darkText">
-              <div className="flex items-center gap-3 mt-3 text-nowrap text-[11px] lg1:text-[13px]">
-                <span>Add dToken to wallet to track your balance.</span>
-              </div>
-              <button className="my-2 bg-[#AEADCB] rounded-md p-3 px-2 shadow-lg font-semibold text-sm flex items-center gap-2 mb-2">
-                <Wallet />
-                Add to wallet
-              </button>
-            </div> */}
+            <center><p className="mt-2">
+              Your Supply was <strong>{assetSupply} {asset} </strong> and you have withdrawn <strong>{scaledAmount / 100000000
+                ? scaledAmount / 100000000 >= 1e-8 &&
+                  scaledAmount / 100000000 < 1e-7
+                  ? Number(scaledAmount / 100000000).toFixed(8)
+                  : scaledAmount / 100000000 >= 1e-7 &&
+                    scaledAmount / 100000000 < 1e-6
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
+                : "0"}</strong>{" "} <strong>d{asset}</strong>after {" "}
+              {supplyRateAPR < 0.1
+                ? "<0.1%"
+                : `${supplyRateAPR.toFixed(2)}%`}
+              {" "} apy
+            </p></center>
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

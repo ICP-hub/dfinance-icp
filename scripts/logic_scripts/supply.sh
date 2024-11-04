@@ -3,13 +3,13 @@
 set -e
 
 # Load environment variables from .env
-source ../../.env
+source ../../.env 
 
 # Set variables
 # ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
-ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
+ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai"
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
+dtoken_canister="ahw5u-keaaa-aaaaa-qaaha-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 reserve_data_method="get_reserve_data"
@@ -36,7 +36,7 @@ echo "--------------------------------------"
 
 # Echo the reserve data
 echo "Fetching reserve data..."
-asset="ckBTC"
+asset="ckETH"
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
@@ -46,7 +46,7 @@ user_data=$(../integration_scripts/user_data.sh)
 echo "user data: $user_data"
 
 # Approve the transfer
-approve_amount=10000  # Set the amount you want to approve
+approve_amount=300000000  # 2 tokens
 echo "Approving transfer of $approve_amount from user1 to backend_canister..."
 allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
     from_subaccount=null;
@@ -65,8 +65,8 @@ echo "--------------------------------------"
 dfx identity use default
 
 # Get the principal of the default identity
-deposit_amount=50
-currency="ckBTC"  
+deposit_amount=300000000
+currency="ckETH"  
 is_collateral=true
 
 # call the execute supply function

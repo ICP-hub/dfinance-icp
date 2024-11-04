@@ -4,21 +4,21 @@ use std::ops::{Add, Div, Mul, Sub};
 const SCALING_FACTOR: u128 = 100_000_000; //10^8
 const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
 //leap year calculation
-pub fn calculate_linear_interest(rate: f64, last_update_timestamp: u64) -> u128 {
+pub fn calculate_linear_interest(rate: u128, last_update_timestamp: u64) -> u128 {
     let current_timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
     let time_delta = current_timestamp - last_update_timestamp;
-    let rate = (0.02 * SCALING_FACTOR as f64) as u128;
+    // let rate = (0.02 * SCALING_FACTOR as f64) as u128;
     let result = rate * time_delta as u128 / SECONDS_PER_YEAR as u128;
     SCALING_FACTOR + result
 }
 
 pub fn calculate_compounded_interest(
-    rate: f64,
+    rate: u128,
     last_update_timestamp: u64,
     current_timestamp: u64,
 ) -> u128 {
     let exp = current_timestamp - last_update_timestamp;
-    let rate = (rate * SCALING_FACTOR as f64) as u128;
+    // let rate = (rate * SCALING_FACTOR as f64) as u128;
     if exp == 0 {
         return SCALING_FACTOR;
     }
@@ -37,7 +37,7 @@ pub fn calculate_compounded_interest(
 }
 
 pub fn calculate_compounded_interest_with_current_timestamp(
-    rate: f64,
+    rate: u128,
     last_update_timestamp: u64,
 ) -> u128 {
     let current_timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
@@ -49,6 +49,7 @@ pub trait ScalingMath {
     fn scaled_mul(self, other: Self) -> Self;
     fn scaled_div(self, other: Self) -> Self;
     fn scaled_to_float(self) -> f64;
+    fn to_scaled(self) -> u128;
 }
 
 impl ScalingMath for u128 {
@@ -62,5 +63,9 @@ impl ScalingMath for u128 {
 
     fn scaled_to_float(self) -> f64 {
         self.div(SCALING_FACTOR) as f64
+    }
+
+    fn to_scaled(self) -> u128 {
+        self.mul(SCALING_FACTOR)
     }
 }

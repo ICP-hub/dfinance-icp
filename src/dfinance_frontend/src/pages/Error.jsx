@@ -113,7 +113,7 @@ const Error = () => {
 
     return (
         <div className="relative w-full md:w-9/12 mx-auto my-6 min-h-[380px] md:min-h-[530px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-            <div className="absolute right-0 top-0 h-full w-full md:w-1/2 pointer-events-none">
+            <div className="absolute right-0 top-0 h-full w-full ss1:w-full lg:w-1/2 md:w-full pointer-events-none">
                 <img
                     src={Element}
                     alt="Elements"
@@ -153,7 +153,7 @@ const Error = () => {
             </div>
 
             {(isSwitchingWallet || !isAuthenticated) && (
-                <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+                <Modal open={isWalletModalOpen} onClose={handleWalletConnect} >
                     <div className='w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins'>
                         {connectedWallet ? <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Switch wallet</h1> : <h1 className='font-bold text-[#2A1F9D] dark:text-darkText'>Connect a wallet</h1>}
                         <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">

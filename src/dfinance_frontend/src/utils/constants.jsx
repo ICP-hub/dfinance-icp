@@ -43,7 +43,7 @@ export const FOOTER_LINK_1 = [
   // },
   {
     id: 1,
-    title: "Liquidate",
+    title: "Liquidation",
     route: "/Liquidate",
     icon: "",
   },
@@ -742,8 +742,7 @@ export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
   },
   {
     col_id: 2,
-    header1: "APY, variable",
-    header2: "APY, borrow rate",
+    header1: "APY (variable)",
   }
 ]
 export const MY_ASSET_TO_BORROW_TABLE_COL = [

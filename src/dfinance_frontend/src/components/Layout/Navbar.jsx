@@ -215,15 +215,27 @@ export default function Navbar({ isHomeNav }) {
       navigator.clipboard
         .writeText(principal)
         .then(() => {
-          toast.success("Principal copied to clipboard", {
-            position: "top-center", // Use string directly
+          toast.success(`Principal copied to clipboard`,  {
+            className: 'custom-toast',
+            position: "top-center",
             autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
           });
         })
         .catch((err) => {
-          toast.error("Failed to copy: " + err, {
-            position: "top-center", // Use string directly
+          toast.error(`Failed to copy: ` + err, {
+            className: 'custom-toast',
+            position: "top-center",
             autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
           });
         });
     }
@@ -371,25 +383,43 @@ export default function Navbar({ isHomeNav }) {
     dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
   };
 
+  const handleLogoClick = () => {
+    if (location.pathname === "/") {
+      // Scroll to top if on the home page
+      window.scrollTo(0, 0);
+    } else {
+      // Navigate to '/dashboard' if not on the home page
+      navigate("/dashboard");
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+    }
+  };
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
         <div className="w-full">
-          <nav className="w-full py-4 lg:py-10  flex items-center justify-between">
-            <div className="lg:block lgx:block dxl:flex justify-center items-center sxs3:block sxs3:mt-3">
+          <nav className="w-full py-4 md:py-5 dxl:py-9 flex items-center justify-between">
+            <div className="flex justify-center items-center ">
               <img
                 src={theme === "dark" ? DFinanceDark : DFinanceLight}
                 alt="DFinance"
-                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0"
+                onClick={handleLogoClick}
+                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0 cursor-pointer"
+                style={{
+                  imageRendering: "-webkit-optimize-contrast",
+                  imageRendering: "crisp-edges",
+                }}
               />
+
               {!isHomeNav && isTestnetMode && (
                 <button
-                  className="bg-[#4659CF] z-50  hover:bg-blue-700 text-white font-bold rounded  text-[12px] px-2 py-[1px] pt-[2px] lg:ml-[63px] dxl:ml-3  sxs3:ml-10"
+                  className="bg-[#4659CF]  z-50  hover:bg-blue-700 text-white font-bold rounded-full md:rounded  text-[12px] p-1 md:px-2 md:py-[1px] md:pt-[2px] mt-[1px] ml-3"
                   onClick={handleButtonClick}
                 >
                   <div className="flex items-center justify-center">
-                    <p>TESTNET</p>
-                    <Info size={10} className="ml-1 -mt-[1px]" />
+                    <p className="hidden md:flex">TESTNET</p>
+                    <Info size={15} className=" ml-0 md:ml-1 -mt-[1px]" />
                   </div>
                 </button>
               )}
@@ -442,7 +472,7 @@ export default function Navbar({ isHomeNav }) {
                               {link.title === "Faucet" && (
                                 <>
                                   <span
-                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer"
+                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
                                     onClick={handlePopupToggle}
                                   >
                                     •••

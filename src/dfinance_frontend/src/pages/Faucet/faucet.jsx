@@ -107,16 +107,9 @@ const Faucet = () => {
     <>
       {isTestnetMode && (
         <>
-          <h1 className="text-[#2A1F9D] text-xl inline-flex items-center  dark:text-darkText -ml-1 py-2">
-            <img
-              src={icplogo}
-              alt="Icp Logo"
-              className="mx-2 w-9 h-9 mr-3 border-2 border-[#2A1F9D] rounded-[50%]"
-            />
-            ICP Market
-          </h1>
-          <div className="w-[85%] py-8 ml-2">
-            <p className="text-[#707086] text-[14px] text-justify  dark:text-darkTextSecondary leading-relaxed">
+          
+          <div className="w-[85%] mb-10 ml-2">
+            <p className="text-[#707086] text-[14px] text-justify  dark:text-darkTextSecondary leading-relaxed mt-3">
               With testnet Faucet you can get free assets to test the Dfinance
               Protocol. Make sure to switch your wallet provider to the
               appropriate testnet network, select desired asset, and click
@@ -149,7 +142,7 @@ const Faucet = () => {
               />
 
               {(isSwitchingWallet || !isAuthenticated) && (
-                <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>
+                <Modal open={isWalletModalOpen} onClose={handleWalletConnect} >
                   <div className="w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins">
                     {connectedWallet ? (
                       <h1 className="font-bold text-[#2A1F9D] dark:text-darkText">

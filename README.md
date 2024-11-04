@@ -41,7 +41,7 @@ npm start
 
 ## License
 
-[Full license](././)
+[Full license](./LICENSE)
 
 Copyright (c) 2024, ICP-hub
 

@@ -53,6 +53,7 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
     let account = Account {
         owner: principal,
         subaccount: None,
+
     };
 
     let encoded_args = encode_args((account,)).unwrap();
@@ -65,6 +66,27 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
     
     balance
 }
+
+// TODO : update balance function similar to the get balance function
+#[update]
+pub async fn update_balance(canister: Principal, principal: Principal) -> Nat {
+    let account = Account {
+        owner: principal,
+        subaccount: None,
+        
+    };
+
+    let encoded_args = encode_args((account,)).unwrap();
+
+    let raw_response = ic_cdk::api::call::call_raw(canister, "icrc1_update_balance_of", &encoded_args, 0)
+        .await
+        .unwrap();
+
+    let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
+    
+    balance
+}
+
 
 // Icrc1_fee inter canister call
 pub async fn get_fees(canister: Principal) -> Nat {

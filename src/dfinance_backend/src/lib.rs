@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::string;
 use std::time::Duration;
 
+use candid::encode_args;
 use candid::types::principal;
 use candid::Nat;
 use candid::Principal;
@@ -15,6 +16,8 @@ use implementations::reserve;
 use protocol::libraries::math::calculate::calculate_health_factor;
 use protocol::libraries::math::calculate::calculate_ltv;
 use protocol::libraries::math::calculate::get_exchange_rates;
+use protocol::libraries::math::calculate::with_price_cache;
+// use protocol::libraries::math::calculate::get_price;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::calculate::UserPosition;
 use protocol::libraries::math::math_utils;
@@ -319,6 +322,7 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
 #[update]
 pub async fn login() -> Result<(), String> {
     let user_principal = ic_cdk::caller();
+    let canister_id: Principal = ic_cdk::api::id();
     ic_cdk::println!("User principal: {}", user_principal);
 
     // Fetch user data
@@ -361,6 +365,12 @@ pub async fn login() -> Result<(), String> {
             prev_liq_index,
             user_reserve_data.liquidity_index,
         );
+
+        // need to update balance for dtoken canister.
+        let encoded_args = encode_args((updated_balance,)).unwrap();
+        let _ =
+            ic_cdk::api::call::call_raw(canister_id, "icrc1_update_balance_of", &encoded_args, 0);
+
         ic_cdk::println!("asset supply = {}", user_reserve_data.asset_supply);
         ic_cdk::println!(
             "Updated balance calculated using liquidity index {}: {}",
@@ -382,14 +392,19 @@ pub async fn login() -> Result<(), String> {
             let added_collateral_amount_to_usd =
                 get_exchange_rates(user_reserve_data.reserve.clone(), None, added_collateral).await;
 
+            ic_cdk::println!("added collateral = {:?}", added_collateral_amount_to_usd);
+
             match added_collateral_amount_to_usd {
                 Ok((amount, _timestamp)) => {
+                    ic_cdk::println!("amount  = {}", amount);
                     usd_amount = Some(amount);
                 }
                 Err(err) => {
                     println!("getting error in the conversion {}", err);
                 }
             }
+
+            ic_cdk::println!("usd amount = {:?}", usd_amount);
             //TODO: add the usd converted value here
             total_collateral += usd_amount.unwrap();
             ic_cdk::println!(
@@ -489,10 +504,18 @@ pub fn get_cached_exchange_rate(
         _ => base_asset_symbol.as_str(),
     };
 
-     // we can edit duration of the price cashe as per our need.
-     let price_cache = PriceCache::new(Duration::new(10, 3));
-    if let Some((cached_price, timestamp)) = price_cache.get_cached_price(&base_asset) {
-        return Ok((cached_price * amount, timestamp));
+    // we can edit duration of the price cashe as per our need.
+    // let price_cache = PriceCache::new(Duration::new(10, 3));
+    // if let Some((cached_price, timestamp)) = price_cache.get_cached_price(&base_asset) {
+    // if let Some((cached_price, timestamp)) = get_price(&base_asset) {
+    //     return Ok((cached_price * amount, timestamp));
+    // } else {
+    //     Err("No cached exchange rate available; please perform an update call.".to_string())
+    // }
+
+    let cached_price = with_price_cache(|cache| cache.get_cached_price_simple(&base_asset));
+    if let Some((cached_price)) = cached_price {
+        return Ok((cached_price * amount, 0));
     } else {
         Err("No cached exchange rate available; please perform an update call.".to_string())
     }

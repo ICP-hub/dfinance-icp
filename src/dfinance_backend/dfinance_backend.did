@@ -73,6 +73,7 @@ service : () -> {
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_3) query;
   get_balance : (principal, principal) -> (nat) query;
+  get_cached_exchange_rate : (text, nat) -> (Result_4) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_4);
   get_reserve_data : (text) -> (Result_5) query;
   get_user_data : (text) -> (Result_6) query;
@@ -82,5 +83,6 @@ service : () -> {
   supply : (text, nat64, bool) -> (Result);
   toggle_collateral : (text, nat, nat) -> ();
   transfer : (nat, text) -> (Result_2);
+  update_balance : (principal, principal) -> (nat);
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

@@ -6,7 +6,7 @@ DFinance is a decentralized lending and borrowing protocol on ICP. The protocol 
 
 <br>
 
-## Setup [Local]
+## ⚙️ Setup
 
 Clone the repository and follow the below commands:
 
@@ -33,13 +33,13 @@ npm start
 
 <br>
 
-## Documentation
+## 📄 Documentation
 
 - [DFinance Notion](https://dfinance.notion.site/bbe01eaf7d414148bc4b9843675a532f?v=8b792ba254da44ecab1c0c016331c8af)
 
 <br>
 
-## License
+## 🪪 License
 
 [Full license](./LICENSE)
 

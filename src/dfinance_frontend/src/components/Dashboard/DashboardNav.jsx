@@ -81,9 +81,9 @@ const DashboardNav = () => {
           return {
             ...item,
             count: `${
-              (netApy / 100).toFixed(2) < 0.01
+              (netApy).toFixed(2) < 0.01
                 ? "<0.01"
-                : (netApy / 100).toFixed(2)
+                : (netApy).toFixed(2)
             }%`,
           };
         case 2:

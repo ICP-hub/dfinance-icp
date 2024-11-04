@@ -1,10 +1,9 @@
-// Leaderboard.jsx
 import React, { useEffect, useState } from "react";
 import { leaderboardData as originalLeaderboardData } from "../../utils/constants";
 import Pagination from "../Common/pagination";
 import { useAuth } from "../../utils/useAuthClient";
 
-const ITEMS_PER_PAGE = 50;
+const ITEMS_PER_PAGE = 10;
 const BREAKPOINT = 1280;
 
 const Leaderboard = () => {
@@ -48,16 +47,12 @@ const Leaderboard = () => {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentItems = sortedLeaderboardData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const isUserRankOnCurrentPage = currentItems.some(
-    (entry) => entry.principal === principal
-  );
-
   const getRankStyle = (rank) => {
     switch (rank) {
       case "#1":
         return { color: "#FFD700", fontWeight: "bold" }; // Gold color for 1st place
       case "#2":
-        return { color: "#456", fontWeight: "bold" }; // Silver color for 2nd place
+        return { color: "#C0c0c0", fontWeight: "bold" }; // Silver color for 2nd place
       case "#3":
         return { color: "#CD7F32", fontWeight: "bold" }; // Bronze color for 3rd place
       default:
@@ -81,15 +76,14 @@ const Leaderboard = () => {
         return "border-gray-300 ring-gray-300"; // Default for others
     }
   };
-  
 
   return (
-    <div className="w-full max-w-8xl mx-auto lg:px-0.5 p-10 -mt-24">
+    <div className="w-full max-w-8xl mx-auto lg:px-0.5 p-10 -mt-8 ">
       <div className="w-full max-w-8xl mx-auto lg:px-0.5">
         
         {isTableView ? (
           <div className="w-full max-w-10xl overflow-x-auto">
-            <table className="w-full text-[#2A1F9D] font-medium text-xs md:text-sm lg:text-base dark:text-darkText mt-2">
+            <table className="w-full text-[#2A1F9D] font-medium text-xs md:text-sm lg:text-base dark:text-darkText mt-1  ">
               <thead>
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary1">
                   <th className="py-2 px-6 ">Rank</th>
@@ -101,30 +95,31 @@ const Leaderboard = () => {
                   <th className="py-2 px-6 text-nowrap ">Total Points</th>
                 </tr>
               </thead>
-              <tbody>
-                {userRank && !isUserRankOnCurrentPage && (
+              <tbody className="mt-2">
+                {userRank && (
                   <>
-                    <tr className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer mt-2 ${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
-                      <td className="py-2 px-6" style={getRankStyle(userRank.rank)}>{userRank.rank}</td>
-                      <td className="py-2 px-6">{truncatePrincipal(userRank.principal)}</td>
-                      <td className="py-2 px-10 ">{userRank.supplyPoints}</td>
-                      <td className="py-2 px-6">{userRank.borrowPoints}</td>
-                      <td className="py-2 px-10">{userRank.liquidityPoints}</td>
-                      <td className="py-2 px-6">{userRank.boosts}</td>
-                      <td className="py-2 px-6">{userRank.totalPoints}</td>
+                    <tr className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
+                      <td className="py-6 px-6" style={getRankStyle(userRank.rank)}>{userRank.rank}</td>
+                      <td className="py-6 px-6">{truncatePrincipal(userRank.principal)}</td>
+                      <td className="py-6 px-10 ">{userRank.supplyPoints}</td>
+                      <td className="py-6 px-6">{userRank.borrowPoints}</td>
+                      <td className="py-6 px-10">{userRank.liquidityPoints}</td>
+                      <td className="py-6 px-6">{userRank.boosts}</td>
+                      <td className="py-6 px-6">{userRank.totalPoints}</td>
                     </tr>
                     <tr>
-                      <td colSpan="7">
-                        <hr className="my-2 border-gray-500 dark:border-gray-600" />
+                      <td colSpan="7" className="text-center">
+                      <hr className="my-4 border-gray-600 dark:border-gray-600 w-20 mx-auto " />
+
                       </td>
                     </tr>
                   </>
                 )}
-  
+
                 {currentItems.map((entry) => (
                   <tr
                     key={entry.id}
-                    className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer mt-2 ${getCardBorderColorClass(entry.rank, entry.principal)}`}
+                    className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer mt-8 ${getCardBorderColorClass(entry.rank, entry.principal)}`}
                   >
                     <td className="py-2 px-6" style={getRankStyle(entry.rank)}>{entry.rank}</td>
                     <td className="py-2 px-6">{truncatePrincipal(entry.principal)}</td>
@@ -140,9 +135,9 @@ const Leaderboard = () => {
           </div>
         ) : (
           <div className="block">
-            {userRank && !isUserRankOnCurrentPage && (
+            {userRank && (
               <>
-                <div className={`p-4 mb-4 text-[#2A1F9D] font-medium text-xs md:text-sm lg:text-base dark:text-darkText rounded-md shadow-md ring-4 ${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
+                <div className={`p-4 mb-4 mt-6 text-[#2A1F9D] font-medium text-xs md:text-sm lg:text-base dark:text-darkText rounded-md shadow-md ring-1 ${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
                   <div className="flex justify-between items-center">
                     <span style={getRankStyle(userRank.rank)}>{userRank.rank}</span>
                     <span className="font-semibold">{truncatePrincipal(userRank.principal)}</span>
@@ -157,20 +152,21 @@ const Leaderboard = () => {
                     Total Points: {userRank.totalPoints}
                   </div>
                 </div>
-                <hr className="my-4 border-gray-600 dark:border-gray-600" />
+                <hr className="my-4 border-gray-600 dark:border-white w-20 mx-auto px-5" />
+
               </>
             )}
-  
+
             {currentItems.map((entry) => (
               <div
                 key={entry.id}
-                className={`p-4 mb-4 rounded-md text-sm text-[#2A1F9D] font-medium md:text-sm lg:text-base dark:text-darkText shadow-md border-2 ring-4 ${getCardBorderColorClass(entry.rank, entry.principal)}`}
+                className={`p-4 mb-4 rounded-md text-sm text-[#2A1F9D] font-medium md:text-sm lg:text-base dark:text-darkText shadow-md border-1 ring-1 ${getCardBorderColorClass(entry.rank, entry.principal)}`}
               >
                 <div className="flex justify-between items-center">
                   <span style={getRankStyle(entry.rank)}>{entry.rank}</span>
                   <span className="font-semibold">{truncatePrincipal(entry.principal)}</span>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <div className="mt-2 grid grid-cols-2 gap-2">
                   <div>Supply Points: {entry.supplyPoints}</div>
                   <div>Borrow Points: {entry.borrowPoints}</div>
                   <div>Liquidity Points: {entry.liquidityPoints}</div>
@@ -183,9 +179,8 @@ const Leaderboard = () => {
             ))}
           </div>
         )}
-      </div>
-  
-      {sortedLeaderboardData.length > 0 && (
+
+{sortedLeaderboardData.length > 0 && (
         <div className="flex justify-center mt-4 gap-2">
           <Pagination
             currentPage={currentPage}
@@ -194,9 +189,9 @@ const Leaderboard = () => {
           />
         </div>
       )}
+      </div>
     </div>
   );
-  
 };
 
 export default Leaderboard;

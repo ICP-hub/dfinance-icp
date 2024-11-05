@@ -106,7 +106,7 @@ const DashboardNav = () => {
             //     ? "<0.01"
             //     : (netApy).toFixed(2)
             // }%`,
-            count: `${(netApy).toFixed(5)}%`,
+            count: `${(netApy).toFixed(4)}%`,
           };
         case 2:
           const healthValue =
@@ -128,7 +128,7 @@ const DashboardNav = () => {
   };
 
   useEffect(() => {
-    if (userData ,reserveData) {
+    if (userData,reserveData) {
       updateWalletDetailTab(userData);
     }
   }, [userData ,reserveData]);
@@ -219,13 +219,6 @@ const DashboardNav = () => {
     console.log(`Calculated Net Supply APY: ${netApy}`);
     return netApy;
 };
-
-useEffect(() => {
-    if (netApy !== null) {
-        console.log("Updated Net APY:", netApy);
-        // Perform any additional actions after netApy is updated
-    }
-}, [netApy]);
   useEffect(() => {
     if (userData && userData?.Ok?.reserves[0] && reserveData) {
         const reservesData = userData?.Ok?.reserves[0];

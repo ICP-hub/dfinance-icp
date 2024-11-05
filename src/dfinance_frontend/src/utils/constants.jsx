@@ -1710,7 +1710,7 @@ export const leaderboardData = [
   {
     id: 16,
     rank: "#16",
-    principal: "mcjgd-ajlke-qtd7j-ekqgg-btkk6-saosr-xfhom-rrwiw-7qih4-fziik-xae",
+    principal: "ljsfa-bptgv-4qqug-jclqc-tcxc3-ybaxp-esiia-nen4j-3vdhu-o2d6v-uqe",
     supplyPoints: 100,
     borrowPoints: 23849250000,
     liquidityPoints: 500,

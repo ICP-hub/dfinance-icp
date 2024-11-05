@@ -375,3 +375,21 @@ button:active{
 .button1:active{
   transform: scale(0.9);
 }
+
+/* Add this to your CSS file or a <style> block */
+.tooltip-arrow {
+  position: absolute;
+  bottom: -8px; /* Position below the tooltip box */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white; /* Light mode arrow color */
+}
+
+.tooltip-arrow-dark {
+  border-top-color: #252347; /* Dark mode arrow color */
+}
+/* Tooltip box */

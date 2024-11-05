@@ -21,19 +21,44 @@ import { useParams } from "react-router-dom";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
+import { Info } from "lucide-react";
 
 const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
     useAuth();
+    const { reserveData} = useAssetData();
+    console.log("reserveDta",reserveData)
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
   const [netSupplyApy, setNetSupplyApy] = useState(0);
   const [netDebtApy, setNetDebtApy] = useState(0);
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
 
+  const tooltipRef = useRef(null);
+
+  const toggleTooltip = () => {
+    setIsTooltipVisible((prev) => !prev);
+  };
+
+  // Effect to handle clicks outside the tooltip
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setIsTooltipVisible(false);
+      }
+    };
+
+    // Attach event listener
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
@@ -76,8 +101,12 @@ const DashboardNav = () => {
         case 1:
           return {
             ...item,
-            count: `${(netApy / 100).toFixed(2) < 0.01 ? "<0.01" : (netApy / 100).toFixed(2)}%`,
-
+            // count: `${
+            //   (netApy).toFixed(2) < 0.01
+            //     ? "<0.01"
+            //     : (netApy).toFixed(2)
+            // }%`,
+            count: `${(netApy).toFixed(5)}%`,
           };
         case 2:
           const healthValue =
@@ -99,10 +128,10 @@ const DashboardNav = () => {
   };
 
   useEffect(() => {
-    if (userData) {
+    if (userData ,reserveData) {
       updateWalletDetailTab(userData);
     }
-  }, [userData]);
+  }, [userData ,reserveData]);
 
   const [error, setError] = useState(null);
 
@@ -132,112 +161,97 @@ const DashboardNav = () => {
     }
   };
 
-
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate]);
-
-  const calculateNetSupplyApy = (reserves) => {
+  console.log("reservedata in reserve1 ",reserveData)
+ 
+  const calculateNetSupplyApy = (reserves, reserveData) => {
+    console.log("reserveData at start of function:", reserveData);
     let totalSuppliedInUSD = 0;
     let weightedApySum = 0;
-
-    reserves.forEach((reserve) => {
-      const conversionRate = getConversionRate(reserve[0]);
-      const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
-
-      const supplyApy = Number(reserve[1]?.supply_rate || 0n) / 100000000;
-      console.log("reserves", reserves);
-      console.log(
-        `Reserve: ${reserve[0]}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
-      );
-
-      const assetSupplyInUSD = assetSupply * conversionRate;
-      totalSuppliedInUSD += assetSupplyInUSD;
-      weightedApySum += assetSupplyInUSD * supplyApy;
-
-      console.log(
-        `Asset Supply in USD: ${assetSupplyInUSD}, Weighted APY Sum: ${weightedApySum}`
-      );
-    });
-
-    const netApy =
-      totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
-
-    console.log(
-      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${netApy * 100
-      }`
-    );
-    return netApy * 100;
-  };
-
-  const calculateNetDebtApy = (reserves) => {
     let totalBorrowedInUSD = 0;
     let weightedDebtApySum = 0;
+    let numerator = 0;
+    let denominator = 0;
 
     reserves.forEach((reserve) => {
-      const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
-      const debtApy = Number(reserve[1]?.borrow_rate || 0n) / 100000000;
-      const assetPriceWhenBorrowed =
-        Number(reserve[1]?.asset_price_when_borrowed || 0n) / 100000000 || 1;
+        const assetKey = reserve[0];
+        console.log(`Processing assetKey: ${assetKey}`);
+        
+       
+        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok) {
+            console.warn(`Missing or incomplete data for asset: ${assetKey}`);
+            return; 
+        }
 
-      console.log(
-        `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}, Price When Borrowed: ${assetPriceWhenBorrowed}`
-      );
+        const conversionRate = getConversionRate(assetKey);
+        const supplyApy = Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) / 100000000;
+        const debtApy = Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
 
-      const assetBorrowedInUSD = assetBorrowed * assetPriceWhenBorrowed;
-      totalBorrowedInUSD += assetBorrowedInUSD;
-      weightedDebtApySum += assetBorrowedInUSD * debtApy;
+        const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
+        const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
 
-      console.log(
-        `Asset Borrowed in USD: ${assetBorrowedInUSD}, Weighted Debt APY Sum: ${weightedDebtApySum}`
+        console.log(
+            `Reserve: ${assetKey}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
+        );
+        console.log(
+            `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}`
+        );
+
+        const assetBorrowedInUSD = assetBorrowed * conversionRate;
+        totalBorrowedInUSD += assetBorrowedInUSD;
+        weightedDebtApySum += assetBorrowedInUSD * debtApy;
+
+        const assetSupplyInUSD = assetSupply * conversionRate;
+        totalSuppliedInUSD += assetSupplyInUSD;
+        weightedApySum += assetSupplyInUSD * supplyApy;
+
+        numerator += (weightedApySum - weightedDebtApySum);
+        denominator += (totalSuppliedInUSD - totalBorrowedInUSD);
+        console.log(
+          `Numerator: ${numerator}, denominator ${denominator}`
       );
     });
 
-    const netDebtApy =
-      totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
+    const netApy = denominator > 0 ? numerator / denominator : 0;
 
-    console.log(
-      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${netDebtApy * 100
-      }`
-    );
-    return netDebtApy * 100;
-  };
-
-  const calculateNetApy = (reserves) => {
-    const supplyApy = calculateNetSupplyApy(reserves);
-    console.log(`Calculated Supply APY: ${supplyApy}`);
-
-    const debtApy = calculateNetDebtApy(reserves);
-    console.log(`Calculated Debt APY: ${debtApy}`);
-
-    const netApy = supplyApy - debtApy;
-    console.log(`Net APY (Supply APY - Debt APY): ${netApy}`);
-
+    console.log(`Calculated Net Supply APY: ${netApy}`);
     return netApy;
-  };
+};
 
-  useEffect(() => {
-    if (userData && userData?.Ok?.reserves[0]) {
-      const reservesData = userData?.Ok?.reserves[0];
-      console.log("reserveData in dashboard nav", reservesData);
-      console.log("UserData Reserves in Dashboard:", reservesData);
-
-      const calculatedNetApy = calculateNetApy(reservesData);
-      console.log("Calculated Net APY:", calculatedNetApy);
-
-      setNetApy(calculatedNetApy);
-      const reserve = reservesData[0]; // Adjust this index as needed based on your data structure
-      let Borrows = 0;
-      // Accessing asset_supply from the second element of the reserve
-      console.log("reservein dashboard", reserve[1]);
-      const supply = Number(reserve[1]?.asset_supply || 0n) / 100000000; // Make sure reserve[1] exists
-      setAssetSupply(supply);
-      console.log("userData", userData);
-      const borrow = Number(userData?.Ok?.total_debt || 0n) / 100000000;
-      console.log("Borrow:", borrow);
-      setAssetBorrow(borrow);
+useEffect(() => {
+    if (netApy !== null) {
+        console.log("Updated Net APY:", netApy);
+        // Perform any additional actions after netApy is updated
     }
-  }, [userData]);
+}, [netApy]);
+  useEffect(() => {
+    if (userData && userData?.Ok?.reserves[0] && reserveData) {
+        const reservesData = userData?.Ok?.reserves[0];
+        console.log("reserveData in dashboard nav", reservesData);
+        console.log("UserData Reserves in Dashboard:", reservesData);
+
+        // Now calculate net APY
+        const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
+        console.log("Calculated Net APY:", calculatedNetApy);
+        setNetApy(calculatedNetApy);
+
+        const reserve = reservesData[0];
+        console.log("reservein dashboard", reserve[1]);
+
+        // Ensure `reserve[1]` exists before accessing properties
+        const supply = reserve[1] ? Number(reserve[1].asset_supply || 0n) / 100000000 : 0;
+        setAssetSupply(supply);
+        console.log("userData", userData);
+
+        // Calculate borrow amount
+        const borrow = Number(userData?.Ok?.total_debt || 0n) / 100000000;
+        console.log("Borrow:", borrow);
+        setAssetBorrow(borrow);
+    }
+}, [userData, reserveData ]);
+
 
   const updateWalletDetailTabs = () => {
     const updatedTabs = walletDetailTabs.map((item) => {
@@ -354,18 +368,19 @@ const DashboardNav = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
-  const isAssetDetailsPage = location.pathname.startsWith("/dashboard/asset-details/") ||
+  const isAssetDetailsPage =
+    location.pathname.startsWith("/dashboard/asset-details/") ||
     location.pathname.startsWith("/market/asset-details/");
 
   const { id } = useParams();
 
   const assetImages = {
-    'ckBTC': ckBTC,
-    'ckETH': ckETH,
-    'ckUSDC': ckUSDC,
-    'ICP': icp,
-    'ckUSDT': ckUSDT, // Added ckUSDT
-};
+    ckBTC: ckBTC,
+    ckETH: ckETH,
+    ckUSDC: ckUSDC,
+    ICP: icp,
+    ckUSDT: ckUSDT, // Added ckUSDT
+  };
 
   const assetImage = assetImages[id] || null;
 
@@ -376,7 +391,6 @@ const DashboardNav = () => {
           {dashboardTitle}
         </h1>
       )}
-
 
       <div className="flex gap-5 -ml-3">
         {!["/dashboard", "/market", "/governance"].includes(pathname) && (
@@ -390,7 +404,11 @@ const DashboardNav = () => {
               {isAssetDetailsPage && (
                 <h1 className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-1 ml-3">
                   {isAssetDetailsPage && assetImage && (
-                    <img src={assetImage} alt={id} className="w-8 h-8 inline-block mr-2 rounded-[50%]" />
+                    <img
+                      src={assetImage}
+                      alt={id}
+                      className="w-8 h-8 inline-block mr-2 rounded-[50%]"
+                    />
                   )}
                   {id}
                 </h1>
@@ -399,7 +417,11 @@ const DashboardNav = () => {
           </div>
         )}
 
-        <div className={`md:hidden flex ml-auto ${isAssetDetailsPage ? 'mt-1' : '-mt-[3.95rem]'}`}>
+        <div
+          className={`md:hidden flex ml-auto ${
+            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+          }`}
+        >
           <button onClick={toggleMenu} className="rounded-md button1 z-10">
             <EllipsisVertical color={checkColor} size={30} />
           </button>
@@ -411,8 +433,9 @@ const DashboardNav = () => {
           {/* Menu button for small screens */}
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
-                } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
+                isMenuOpen ? "block" : "hidden"
+              } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -442,42 +465,93 @@ const DashboardNav = () => {
                           className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
                           style={{ minWidth: "220px", flex: "1 0 220px" }}
                         >
-                          <button className="relative w-full text-left flex justify-between items-center button1">
-                            <span>{data.title}</span>
-                            <span
-                              className={`font-bold text-[20px] ${data.title === "Health Factor"
-                                ? data.count === 0 && assetSupply === 0
-                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Set color to blue when health factor is 0
-                                  : data.count > 3
-                                    ? "text-green-500" // Green for health factor greater than 3
-                                    : data.count <= 1
-                                      ? "text-red-500" // Red for health factor less than or equal to 1
-                                      : data.count <= 1.5
-                                        ? "text-orange-500" // Orange for health factor less than or equal to 1.5
-                                        : data.count <= 2
-                                          ? "text-orange-300" // Soft orange for health factor less than or equal to 2
-                                          : "text-orange-600" // Vivid orange for other values
-                                : data.title === "Total Borrows"
-                                  ? "text-[#2A1F9D] dark:text-darkBlue" // Default color for Total Borrows
-                                  : "text-[#2A1F9D] dark:text-darkBlue" // Default color for other titles
-                                }`}
-                            >
-                              {data.count !== null ? data.count : "N/A"}
-                            </span>
+                          <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
+                            {/* Title and Info Icon */}
+                            <div className="flex items-center">
+                              {data.title}
+                              {data.title === "Net APY" && (
+                                 <span className="relative inline-block ml-1">
+                                 {/* Info icon aligned with title */}
+                                 <Info
+                                   size={15}
+                                   className="ml-1 align-middle "
+                                   onClick={toggleTooltip}
+                                 />
+                                  {/* Tooltip with full-screen blur */}
+                                  {isTooltipVisible && (
+                                    <>
+                                      {/* Fullscreen backdrop with blur effect */}
+                                      {/* <div className="fixed inset-0 backdrop-blur-md bg-black bg-opacity-40 z-40"></div> */}
 
-                            <hr className="absolute bottom-0 left-0 ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+                                      {/* Tooltip content */}
+                                      <div
+                                        ref={tooltipRef}
+                                        className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
+                                      >
+                                        <span className="text-gray-700 dark:text-darkText">
+                                          Net APY represents the overall
+                                          annualized yield, calculated as the
+                                          difference between your supply APY and
+                                          debt APY.
+                                          <br />A positive Net APY indicates a
+                                          net gain, while a negative value
+                                          suggests more is borrowed than
+                                          supplied.
+                                        </span>
+
+                                        {/* Tooltip arrow */}
+                                        {/* <span
+                                          className={`tooltip-arrow ${
+                                            theme === "dark"
+                                              ? "tooltip-arrow-dark"
+                                              : ""
+                                          }`}
+                                        ></span> */}
+                                      </div>
+                                    </>
+                                  )}
+                                </span>
+                              )}
+                            </div>
+
+                            <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+
+                            <span
+                              className={`font-bold text-[20px] ${
+                                data.title === "Health Factor"
+                                  ? data.count === 0 && assetSupply === 0
+                                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                                    : data.count > 3
+                                    ? "text-green-500"
+                                    : data.count <= 1
+                                    ? "text-red-500"
+                                    : data.count <= 1.5
+                                    ? "text-orange-500"
+                                    : data.count <= 2
+                                    ? "text-orange-300"
+                                    : "text-orange-600"
+                                  : data.title === "Total Borrows"
+                                  ? "text-[#2A1F9D] dark:text-darkBlue"
+                                  : "text-[#2A1F9D] dark:text-darkBlue"
+                              }`}
+                            >
+                              {data.count !== null ? data.count : ""}
+                            </span>
                           </button>
                         </div>
                       );
                     })}
                   </div>
-                  {console.log("Aset borrow", assetBorrow)}
+                 
                   {assetBorrow !== 0 && (
                     <div className="flex justify-end mt-10 md:mt-0">
                       <button
                         className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
                         onClick={handleOpenPopup}
-                        style={{ minWidth: "220px" }}
+                        style={{
+                          minWidth: "220px",
+                          transition: " 400ms ease !important",
+                        }}
                       >
                         Risk Details
                       </button>
@@ -502,26 +576,75 @@ const DashboardNav = () => {
 
                   return (
                     <div key={index} className="relative group">
-                      <button className="relative font-light text-[13px] text-left min-w-[80px] dark:opacity-80 button1">
-                        {data.title}
+                      <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
+                        {/* Title and Info Icon */}
+                        <div className="flex items-center">
+                          {data.title}
+                          {data.title === "Net APY" && (
+                           <span
+                           className="relative inline-block ml-1"
+                           onMouseEnter={() => setIsTooltipVisible(true)}
+                           onMouseLeave={() => setIsTooltipVisible(false)}
+                         >
+                           {/* Info icon with hover-triggered tooltip */}
+                           <Info size={15} className="ml-1 align-middle cursor-pointer"  onClick={toggleTooltip}/>
+             
+
+                              {/* Tooltip with full-screen blur */}
+                              {isTooltipVisible && (
+                                <>
+                                  {/* Fullscreen backdrop */}
+                                  {/* <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-40 z-40" /> */}
+
+                                  {/* Tooltip content */}
+                                  <div
+                                    ref={tooltipRef}
+                                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
+                                  >
+                                    <span className="text-gray-700 dark:text-darkText">
+                                      Net APY represents the overall annualized
+                                      yield, calculated as the difference
+                                      between your supply APY and debt APY.
+                                      <br />A positive Net APY indicates a net
+                                      gain, while a negative value suggests more
+                                      is borrowed than supplied.
+                                    </span>
+
+                                    {/* Tooltip arrow */}
+                                    <span
+                                      className={`tooltip-arrow ${
+                                        theme === "dark"
+                                          ? "tooltip-arrow-dark"
+                                          : ""
+                                      }`}
+                                    ></span>
+                                  </div>
+                                </>
+                              )}
+                            </span>
+                          )}
+                        </div>
+
                         <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+
                         <span
-                          className={`font-bold text-[20px] ${data.title === "Health Factor"
-                            ? data.count === 0 && assetSupply === 0
-                              ? "text-[#2A1F9D] dark:text-darkBlue"
-                              : data.count > 3
+                          className={`font-bold text-[20px] ${
+                            data.title === "Health Factor"
+                              ? data.count === 0 && assetSupply === 0
+                                ? "text-[#2A1F9D] dark:text-darkBlue"
+                                : data.count > 3
                                 ? "text-green-500"
                                 : data.count <= 1
-                                  ? "text-red-500"
-                                  : data.count <= 1.5
-                                    ? "text-orange-500"
-                                    : data.count <= 2
-                                      ? "text-orange-300"
-                                      : "text-orange-600"
-                            : data.title === "Total Borrows"
+                                ? "text-red-500"
+                                : data.count <= 1.5
+                                ? "text-orange-500"
+                                : data.count <= 2
+                                ? "text-orange-300"
+                                : "text-orange-600"
+                              : data.title === "Total Borrows"
                               ? "text-[#2A1F9D] dark:text-darkBlue"
                               : "text-[#2A1F9D] dark:text-darkBlue"
-                            }`}
+                          }`}
                         >
                           {data.count !== null ? data.count : ""}
                         </span>

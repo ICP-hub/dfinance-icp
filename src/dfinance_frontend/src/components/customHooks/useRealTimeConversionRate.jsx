@@ -7,7 +7,6 @@ const useRealTimeConversionRate = (asset) => {
     useEffect(() => {
         const fetchConversionRate = async () => {
             try {
-                // const response = await fetch("http://localhost:5000/conversion-rates");
                 const response = await fetch("https://dfinance.kaifoundry.com/conversion-rates");
                 if (!response.ok) {
                     throw new Error("Failed to fetch conversion rates from server");

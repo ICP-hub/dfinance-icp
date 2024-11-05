@@ -210,7 +210,6 @@ const DashboardNav = () => {
     return denominator > 0 ? numerator / denominator : 0;
 }, [reserveData]);
 useEffect(() => {
-  // Check if both userData and reserveData are available
   if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
           const reservesData = userData.Ok.reserves[0];

@@ -181,7 +181,7 @@ const Leaderboard = () => {
         )}
 
 {sortedLeaderboardData.length > 0 && (
-        <div className="flex justify-center mt-4 gap-2">
+        <div className="flex justify-center mt-10 gap-2">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

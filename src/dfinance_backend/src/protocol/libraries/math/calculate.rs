@@ -1,33 +1,35 @@
 use candid::{CandidType, Deserialize, Principal};
+use ic_cdk::update;
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
-use std::cell::RefCell;
+use serde::Serialize;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime};
+
+use crate::api::state_handler::{mutate_state, read_state};
+use crate::declarations::storable::Candid;
 
 use super::math_utils::ScalingMath;
 
 // Define the cached price structure
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 struct CachedPrice {
     price: u128,
-    timestamp: u64,
+    // timestamp: u64,
 }
 
 // Define the price cache structure
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
 pub struct PriceCache {
     cache: HashMap<String, CachedPrice>,
-    cache_duration: Duration,
+    // cache_duration: Duration,
 }
 
 impl PriceCache {
-    pub fn new(cache_duration: Duration) -> Self {
-        Self {
-            cache: HashMap::new(),
-            cache_duration,
-        }
-    }
+    // pub fn new(cache_duration: Duration) -> Self {
+    //     Self {
+    //         cache: HashMap::new(),
+    //         // cache_duration,
+    //     }
+    // }
 
     // Simple cache implementation without duration check
     pub fn get_cached_price_simple(&self, asset: &str) -> Option<u128> {
@@ -47,25 +49,28 @@ impl PriceCache {
     //     None
     // }
 
-    pub fn set_price(&mut self, asset: String, price: u128, timestamp: u64) {
-        self.cache.insert(asset, CachedPrice { price, timestamp });
+    pub fn set_price(&mut self, asset: String, price: u128) {
+        self.cache.insert(asset, CachedPrice { price });
     }
 }
 
-//TODO store it in dfinance_backend/src/protocol/libraries/types/assets.rs then use it
-thread_local! {
-    static PRICE_CACHE: Arc<Mutex<PriceCache>> = Arc::new(Mutex::new(PriceCache::new(Duration::new(10, 0))));
-}
-
-pub fn with_price_cache<T, F: FnOnce(&mut PriceCache) -> T>(f: F) -> T {
-    PRICE_CACHE.with(|cache| {
-        let mut cache = cache.lock().unwrap();
-        f(&mut *cache)
-    })
-}
-
 //TODO UPDATE_RESERVES_PRICE function -> iter over the reservelist -> asset name -> get_exchange_rate function -> update price_cache using set_price function
+#[update]
+pub async fn update_reserves_price(amount: u128) {
+    let keys: Vec<String> = read_state(|state| {
+        let reserve_list = &state.reserve_list;
 
+        reserve_list
+            .iter()
+            .map(|(key, _value)| key.clone())
+            .collect()
+    });
+    ic_cdk::println!("keys = {:?}",keys);
+    for asset_name in keys {
+        ic_cdk::println!("asset name = {}",asset_name);
+        let _ = get_exchange_rates(asset_name, None, amount).await;
+    }
+}
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
@@ -134,9 +139,6 @@ pub fn cal_average_ltv(
     result
 }
 
-
-
-
 // ------------ Real time asset data using XRC ------------
 //TODO resolve the error
 #[ic_cdk_macros::update]
@@ -153,16 +155,6 @@ pub async fn get_exchange_rates(
         "ckUSDT" => "usdt".to_string(),
         _ => base_asset_symbol.clone(),
     };
-
-    // let cached_price = with_price_cache(|cache| cache.get_cached_price_simple(&base_asset));
-    // if let Some((cached_price, timestamp)) = cached_price {
-    //     return Ok((cached_price * amount, timestamp));
-    // }
-
-    // ic_cdk::println!("cached price = {:?}",cached_price);
-    // if let Some(cached_price) = cached_price {
-    //     return Ok((cached_price * amount, 0));
-    // }
 
     let quote_asset = match quote_asset_symbol {
         Some(symbol) => match symbol.as_str() {
@@ -206,11 +198,46 @@ pub async fn get_exchange_rates(
 
                 let time = ic_cdk::api::time();
 
-                with_price_cache(|cache| {
-                    cache.set_price(base_asset.clone(), exchange_rate as u128, time)
+                // Fetching price-cache data
+                let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
+                    let price_cache_data = &mut state.price_cache_list;
+                    ic_cdk::println!("inside the price cache function");
+                    if let Some(price_cache) = price_cache_data.get(&base_asset) {
+                        ic_cdk::println!("calculate existing price cache = {:?}",price_cache.0);
+                        Ok(price_cache.0.clone())
+                    } else {
+                        ic_cdk::println!("creating new price cache : not found");
+                        // If the asset is not found, create a new entry for it
+                        let new_price_cache = PriceCache {
+                            cache: HashMap::new(),
+                        };
+                        price_cache_data
+                            .insert(base_asset.clone(), Candid(new_price_cache.clone()));
+                        Ok(new_price_cache)
+                    }
                 });
 
-                ic_cdk::println!("total value = {}", total_value);
+                // Handling price-cache data result
+                let mut price_cache_data = match price_cache_result {
+                    Ok(data) => {
+                        ic_cdk::println!("calculate price cache found: {:?}", data);
+                        data
+                    }
+                    Err(e) => {
+                        panic!("{:?}", e);
+                    }
+                };
+                price_cache_data.set_price(base_asset_symbol.clone(), exchange_rate as u128);
+                ic_cdk::println!("price cache after setting =  {:?}",price_cache_data);
+
+                // Save the updated price_cache_data back into the state
+                mutate_state(|state| {
+                    state
+                        .price_cache_list
+                        .insert(base_asset.clone(), Candid(price_cache_data.clone()));
+                });
+
+                // ic_cdk::println!("total value = {}", total_value);
                 Ok((total_value, time))
             }
             GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),

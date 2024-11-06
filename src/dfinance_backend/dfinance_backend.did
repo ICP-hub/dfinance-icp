@@ -1,3 +1,5 @@
+type CachedPrice = record { price : nat };
+type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
   ltv : nat;
   liquidation_protocol_fee : nat;
@@ -32,9 +34,10 @@ type Result = variant { Ok; Err : text };
 type Result_1 = variant { Ok : text; Err : text };
 type Result_2 = variant { Ok : nat; Err : text };
 type Result_3 = variant { Ok : principal; Err : text };
-type Result_4 = variant { Ok : record { nat; nat64 }; Err : text };
-type Result_5 = variant { Ok : ReserveData; Err : text };
-type Result_6 = variant { Ok : UserData; Err : text };
+type Result_4 = variant { Ok : PriceCache; Err : text };
+type Result_5 = variant { Ok : record { nat; nat64 }; Err : text };
+type Result_6 = variant { Ok : ReserveData; Err : text };
+type Result_7 = variant { Ok : UserData; Err : text };
 type UserData = record {
   ltv : opt nat;
   available_borrow : opt nat;
@@ -73,10 +76,10 @@ service : () -> {
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_3) query;
   get_balance : (principal, principal) -> (nat) query;
-  get_cached_exchange_rate : (text, nat) -> (Result_4) query;
-  get_exchange_rates : (text, opt text, nat) -> (Result_4);
-  get_reserve_data : (text) -> (Result_5) query;
-  get_user_data : (text) -> (Result_6) query;
+  get_cached_exchange_rate : (text) -> (Result_4) query;
+  get_exchange_rates : (text, opt text, nat) -> (Result_5);
+  get_reserve_data : (text) -> (Result_6) query;
+  get_user_data : (text) -> (Result_7) query;
   initialize_reserve : () -> ();
   login : () -> (Result);
   repay : (text, nat, opt text) -> (Result);
@@ -84,5 +87,6 @@ service : () -> {
   toggle_collateral : (text, nat, nat) -> ();
   transfer : (nat, text) -> (Result_2);
   update_balance : (principal, principal) -> (nat);
+  update_reserves_price : (nat) -> ();
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

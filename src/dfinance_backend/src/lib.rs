@@ -16,7 +16,6 @@ use implementations::reserve;
 use protocol::libraries::math::calculate::calculate_health_factor;
 use protocol::libraries::math::calculate::calculate_ltv;
 use protocol::libraries::math::calculate::get_exchange_rates;
-use protocol::libraries::math::calculate::with_price_cache;
 // use protocol::libraries::math::calculate::get_price;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::calculate::UserPosition;
@@ -493,9 +492,8 @@ pub async fn login() -> Result<(), String> {
 #[query]
 pub fn get_cached_exchange_rate(
     base_asset_symbol: String,
-    amount: u128,
-    // price_cache: &PriceCache,
-) -> Result<(u128, u64), String> {
+    // amount: u128,
+) -> Result<PriceCache, String> {
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc",
         "ckETH" => "eth",
@@ -504,21 +502,36 @@ pub fn get_cached_exchange_rate(
         _ => base_asset_symbol.as_str(),
     };
 
-    // we can edit duration of the price cashe as per our need.
-    // let price_cache = PriceCache::new(Duration::new(10, 3));
-    // if let Some((cached_price, timestamp)) = price_cache.get_cached_price(&base_asset) {
-    // if let Some((cached_price, timestamp)) = get_price(&base_asset) {
-    //     return Ok((cached_price * amount, timestamp));
+    ic_cdk::println!("base asset = {}", base_asset);
+
+    ic_cdk::println!("base asset symbol =  {}", base_asset_symbol);
+    // Fetching price-cache data
+    let price_cache_result = read_state(|state| {
+        let price_cache_data = &state.price_cache_list;
+        price_cache_data
+            .get(&base_asset.to_string())
+            .map(|price_cache| price_cache.0)
+            .ok_or_else(|| format!("price cache not found: {}", base_asset.to_string()))
+    });
+
+    // Handling price-cache data result
+    match price_cache_result {
+        Ok(data) => {
+            ic_cdk::println!("price cache found: {:?}", data);
+            Ok(data)
+        }
+        Err(e) => {
+            ic_cdk::println!("price cache not found = {:?}", e);
+            Err("No cached exchange rate available; please perform an update call.".to_string())
+        }
+    }
+
+    // let cached_price = price_cache_data.get_cached_price_simple(&base_asset);
+    // if let Some(cached_price) = cached_price {
+    //     return Ok((cached_price * amount, 0));
     // } else {
     //     Err("No cached exchange rate available; please perform an update call.".to_string())
     // }
-
-    let cached_price = with_price_cache(|cache| cache.get_cached_price_simple(&base_asset));
-    if let Some((cached_price)) = cached_price {
-        return Ok((cached_price * amount, 0));
-    } else {
-        Err("No cached exchange rate available; please perform an update call.".to_string())
-    }
 }
 
 fn calculate_dynamic_balance(

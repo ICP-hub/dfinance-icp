@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TRANSACTION_DATA } from '../../utils/constants';
 import Pagination from "../Common/pagination";
+import { Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react";
 
-const ITEMS_PER_PAGE = 10; // Number of items per page
+const ITEMS_PER_PAGE = 10;
+const BREAKPOINT = 1335;
 
 const Breakdown = () => {
-    // State to manage current page for each section
+    const [isTableView, setIsTableView] = useState(window.innerWidth > BREAKPOINT);
     const [currentPages, setCurrentPages] = useState({});
-    // State to manage visibility of each section
-    const [visibleSections, setVisibleSections] = useState({});
+    const [visibleSections, setVisibleSections] = useState(
+        Object.keys(TRANSACTION_DATA).reduce((acc, section) => {
+            acc[section] = false;
+            return acc;
+        }, {})
+    );
+    const [openDropdown, setOpenDropdown] = useState({});
 
-    // Function to handle page change for a specific section
+    useEffect(() => {
+        const handleResize = () => {
+            setIsTableView(window.innerWidth > BREAKPOINT);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const handlePageChange = (section, pageNumber) => {
         setCurrentPages((prev) => ({
             ...prev,
@@ -18,161 +33,174 @@ const Breakdown = () => {
         }));
     };
 
-    // Function to toggle visibility of a section
     const toggleSectionVisibility = (section) => {
         setVisibleSections((prev) => ({
             ...prev,
-            [section]: !(prev[section] ?? true), // Toggle current state directly
+            [section]: !prev[section],
         }));
     };
 
+    const toggleDropdown = (index) => {
+        setOpenDropdown((prev) => ({
+            ...prev,
+            [index]: !prev[index],
+        }));
+    };
+
+    const formatNumber = (num) => num.toLocaleString();
+
     return (
         <div className="p-6">
-            {/* Render each section (Supply, Borrow, Withdraw, Repay) */}
             {Object.entries(TRANSACTION_DATA).map(([section, transactions]) => {
-                // Get current page for the section, default to 1
                 const currentPage = currentPages[section] || 1;
-                // Calculate total pages for the section
                 const totalPages = Math.ceil(transactions.length / ITEMS_PER_PAGE);
-                // Calculate the current page's transactions
                 const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-                const currentTransactions = transactions.slice(
-                    startIndex,
-                    startIndex + ITEMS_PER_PAGE
-                );
+                const currentTransactions = transactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+                const isVisible = visibleSections[section];
 
-                // Check if the section is visible
-                const isVisible = visibleSections[section] ?? true;
+                // Calculate total amount for this section
+                const totalUsdValueSupply = transactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+
 
                 return (
                     <div key={section} className="mb-8">
-                        {/* Section Box with Toggle Button */}
-                        <div className="p-4 mb-8 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient text-[#2A1F9D] dark:text-darkText rounded-md text-center flex justify-between items-center">
-                            <h3 className="text-xl font-semibold">{section}</h3>
+                        <div className="p-4 mb-8  bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient  text-[#2A1F9D] dark:text-darkText rounded-lg  flex justify-between items-center">
+                            <div className="flex items-center space-x-4">
+                                <h3 className="text-xl font-semibold">{section}</h3>
+                                <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                                    <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
+                                        Total
+                                    </span>{" "}
+                                    ${formatNumber(totalUsdValueSupply)}
+                                </div>
+                            </div>
                             <button
                                 onClick={() => toggleSectionVisibility(section)}
-                                className="text-sm text-[#2A1F9D] dark:text-darkText bg-transparent border-none cursor-pointer"
+                                className="text-sm text-[#2A1F9D] dark:text-darkText flex items-center"
                             >
                                 {isVisible ? "Hide" : "Show"}
+                                {isVisible ? (
+                                    <EyeOff size={16} className="ml-2" />
+                                ) : (
+                                    <Eye size={16} className="ml-2" />
+                                )}
                             </button>
                         </div>
 
-                        {/* Conditionally render content if section is visible */}
                         {isVisible && (
                             <>
-                                {/* Table for Larger Screens */}
-                                <div className="overflow-x-auto hidden md:block">
-                                    <table className="w-full text-left rounded-lg">
-                                        <thead className="text-[#2A1F9D] dark:text-darkTextSecondary1 mt-2 w-full font-[500] text-sm">
-                                            <tr>
-                                                <th className="py-2 px-12 mt-4">Asset</th>
-                                                <th className="py-2 px-12 mt-4">Amount</th>
-                                                <th className="py-2 px-12 mt-4">Asset Points</th>
-                                                <th className="py-2 px-12 mt-4">Points Accrued</th>
-                                                <th className="py-2 px-12 mt-4">Timestamp</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                                {isTableView ? (
+                                    <div>
+                                        {/* Table View */}
+                                        <div className="grid grid-cols-5 gap-4 font-semibold text-sm text-[#2A1F9D] dark:text-darkTextSecondary1">
+                                            <div className="py-2">Asset</div>
+                                            <div className="text-center py-2">Amount</div>
+                                            <div className="text-center py-2">Asset Points</div>
+                                            <div className="text-center py-2">Points Accrued</div>
+                                            <div className="py-2 px-20">Timestamp</div>
+                                        </div>
+                                        <div className="divide-y divide-gray-300">
                                             {currentTransactions.length > 0 ? (
                                                 currentTransactions.map((tx, index) => (
-                                                    <React.Fragment key={index}>
-                                                        <tr className="text-[#2A1F9D] dark:text-darkText font-bold text-sm ">
-                                                            <td className="py-2 px-12 flex items-center space-x-2">
-                                                                <img
-                                                                    src={tx.imageUrl}
-                                                                    alt={tx.assetName}
-                                                                    className="w-6 h-6 rounded-full"
-                                                                />
-                                                                <span>{tx.assetName}</span>
-                                                            </td>
-                                                            <td className="py-4 px-12">{tx.amount}</td>
-                                                            <td className="py-4 px-12">{tx.assetPoints}</td>
-                                                            <td className="py-4 px-12">{tx.points}</td>
-                                                            <td className="py-4 px-12 text-nowrap">
-                                                                {new Date(tx.timestamp).toLocaleString('en-GB', {
-                                                                    year: 'numeric',
-                                                                    month: '2-digit',
-                                                                    day: '2-digit',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit',
-                                                                    second: '2-digit',
-                                                                    hour12: false,
-                                                                })}
-                                                            </td>
-                                                        </tr>
-                                                        {/* Render a line if there are more transactions and this is not the last transaction */}
-                                                        {index < currentTransactions.length - 1 && (
-                                                            <tr>
-                                                                <td colSpan="5" className="border-b border-gray-500" />
-                                                            </tr>
-                                                        )}
-                                                    </React.Fragment>
+                                                    <div
+                                                        key={index}
+                                                        className="grid grid-cols-5 gap-4 py-4 text-[#2A1F9D] text-sm font-bold dark:text-darkText"
+                                                    >
+                                                        <div className="flex items-center space-x-2">
+                                                            <img
+                                                                src={tx.imageUrl}
+                                                                alt={tx.assetName}
+                                                                className="w-6 h-6 rounded-full"
+                                                            />
+                                                            <span>{tx.assetName}</span>
+                                                        </div>
+                                                        <div className="text-center">{tx.amount}</div>
+                                                        <div className="text-center">{tx.assetPoints}</div>
+                                                        <div className="text-center">{tx.points}</div>
+                                                        <div className="flex flex-col items-center text-center text-nowrap">
+    <span className="text-gray-500">
+        {new Date(tx.timestamp).toLocaleDateString('en-GB')}{" "}
+        <strong className="ml-1 text-black dark:text-white">
+            {new Date(tx.timestamp).toLocaleTimeString('en-GB')}
+        </strong>
+    </span>
+</div>
+
+                                                    </div>
                                                 ))
                                             ) : (
-                                                <tr>
-                                                    <td colSpan="5" className="py-2 px-4 text-center">
-                                                        No transactions available.
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Card Layout for Small Screens */}
-                                <div className="md:hidden space-y-4">
-                                    {currentTransactions.length > 0 ? (
-                                        currentTransactions.map((tx, index) => (
-                                            <div
-                                                key={index}
-                                                className={`p-4 border rounded-lg shadow-md text-[#2A1F9D] dark:text-darkText`}
-                                            >
-                                                <div className="flex items-center mb-2">
-                                                    <img
-                                                        src={tx.imageUrl}
-                                                        alt={tx.assetName}
-                                                        className="w-6 h-6 rounded-full mr-2"
-                                                    />
-                                                    <h4 className="font-semibold">{tx.assetName}</h4>
+                                                <div className="py-4 text-center col-span-5">
+                                                    No transactions available.
                                                 </div>
-                                                <p>
-                                                    <span className="font-semibold">Amount:</span> {tx.amount}
-                                                </p>
-                                                <p>
-                                                    <span className="font-semibold">Asset Points:</span> {tx.assetPoints}
-                                                </p>
-                                                <p>
-                                                    <span className="font-semibold">Points Accrued:</span> {tx.points}
-                                                </p>
-                                                <p>
-                                                    <span className="font-semibold">Timestamp:</span>{' '}
-                                                    {new Date(tx.timestamp).toLocaleString('en-GB', {
-                                                        year: 'numeric',
-                                                        month: '2-digit',
-                                                        day: '2-digit',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                        second: '2-digit',
-                                                        hour12: false,
-                                                    })}
-                                                </p>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p>No transactions available.</p>
-                                    )}
-                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        {/* Small Screen View */}
+                                        <div className="grid grid-cols-4 gap-4 font-semibold text-sm text-[#2A1F9D] dark:text-darkTextSecondary1 mb-2">
+                                            <div>Asset</div>
+                                            <div className="text-center">Amount</div>
+                                            <div className="text-center">Asset Points</div>
+                                            <div className="text-center">More</div>
+                                        </div>
+                                        {currentTransactions.length > 0 ? (
+                                            currentTransactions.map((tx, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="grid grid-cols-4 gap-4 py-4 border-b text-[#2A1F9D] text-sm font-bold dark:text-darkText"
+                                                >
+                                                    <div className="flex items-center space-x-2">
+                                                        <img
+                                                            src={tx.imageUrl}
+                                                            alt={tx.assetName}
+                                                            className="w-6 h-6 rounded-full"
+                                                        />
+                                                        <span>{tx.assetName}</span>
+                                                    </div>
+                                                    <div className="text-center">{tx.amount}</div>
+                                                    <div className="text-center">{tx.assetPoints}</div>
+                                                    <div className="text-center">
+                                                        <button onClick={() => toggleDropdown(index)}>
+                                                            {openDropdown[index] ? <ChevronUp /> : <ChevronDown />}
+                                                        </button>
+                                                    </div>
 
-                                {/* Pagination Controls (appear only when totalPages > 1) */}
+                                                    {/* Additional Info Dropdown */}
+                                                    {openDropdown[index] && (
+                                                        <div className="col-span-4 mt-2 p-2 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient  text-[#2A1F9D]   dark:text-darkText rounded-lg">
+                                                            <p>
+                                                                <span className="font-semibold">Points Accrued:</span> {tx.points}
+                                                            </p>
+                                                            <p className="mt-1">
+                                                                <span className="font-semibold">Timestamp:</span>{" "}
+                                                                <span className="text-gray-500 ml-1">
+                                                                    {new Date(tx.timestamp).toLocaleDateString('en-GB')}
+                                                                </span>{" "}
+                                                                <strong className="ml-1">
+                                                                    {new Date(tx.timestamp).toLocaleTimeString('en-GB')}
+                                                                </strong>
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="py-4 text-center col-span-4">
+                                                No transactions available.
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Pagination Controls */}
                                 {totalPages > 1 && (
                                     <div className="w-full flex justify-center mt-10">
-                                        <div id="pagination" className="flex gap-2">
-                                            <Pagination
-                                                currentPage={currentPage}
-                                                totalPages={totalPages}
-                                                onPageChange={(pageNumber) => handlePageChange(section, pageNumber)}
-                                            />
-                                        </div>
+                                        <Pagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onPageChange={(pageNumber) => handlePageChange(section, pageNumber)}
+                                        />
                                     </div>
                                 )}
                             </>

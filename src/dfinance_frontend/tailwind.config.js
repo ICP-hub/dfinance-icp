@@ -120,6 +120,7 @@ export default {
         fadeInLeft: 'fadeInLeft 2s ease-out',
       },
       screens: {
+        'small-screen': { max: '1335px' },
         sxxs: "255px",
         sxs: "265px",
         sxs1: "275px",

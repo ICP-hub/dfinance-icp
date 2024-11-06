@@ -80,11 +80,12 @@ const DashboardNav = () => {
         case 1:
           return {
             ...item,
-            count: `${
-              (netApy / 100).toFixed(2) < 0.01
-                ? "<0.01"
-                : (netApy / 100).toFixed(2)
-            }%`,
+            // count: `${
+            //   (netApy).toFixed(2) < 0.01
+            //     ? "<0.01"
+            //     : (netApy).toFixed(2)
+            // }%`,
+            count: `${(netApy).toFixed(2)}%`,
           };
         case 2:
           const healthValue =
@@ -143,6 +144,9 @@ const DashboardNav = () => {
     fetchConversionRate();
   }, [fetchConversionRate]);
 
+
+
+  //1> ckbtc >  numerator += (assetSupply(usd) * supply_rate) - (assetBorrow(usd) * borrowrate)
   const calculateNetSupplyApy = (reserves) => {
     let totalSuppliedInUSD = 0;
     let weightedApySum = 0;
@@ -158,29 +162,34 @@ const DashboardNav = () => {
 
       const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
       const debtApy = Number(reserve[1]?.borrow_rate || 0n) / 100000000;
-      const assetPriceWhenBorrowed =
-        Number(reserve[1]?.asset_price_when_borrowed || 0n) / 100000000 || 1;
+   
 
       console.log("reserves", reserves);
       console.log(
         `Reserve: ${reserve[0]}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
       );
       console.log(
-        `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}, Price When Borrowed: ${assetPriceWhenBorrowed}`
+        `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}`
       );
 
       // const assetBorrowedInUSD = assetBorrowed * assetPriceWhenBorrowed;
-      const assetBorrowedInUSD = assetBorrowed * conversionRate;
-      totalBorrowedInUSD += assetBorrowedInUSD;
-      weightedDebtApySum += assetBorrowedInUSD * debtApy;
-      const assetSupplyInUSD = assetSupply * conversionRate;
-      totalSuppliedInUSD += assetSupplyInUSD;
-      weightedApySum += (assetSupplyInUSD * supplyApy);
+      const assetBorrowedInUSD = (assetBorrowed * conversionRate);
+      totalBorrowedInUSD = assetBorrowedInUSD;
+      weightedDebtApySum = (assetBorrowedInUSD * debtApy);
+      const assetSupplyInUSD = (assetSupply * conversionRate);
+      totalSuppliedInUSD = assetSupplyInUSD;
+      weightedApySum = (assetSupplyInUSD * supplyApy);
       
-      numerator = weightedApySum+weightedDebtApySum;
-      denominator = totalBorrowedInUSD+totalSuppliedInUSD;
+      numerator += (weightedApySum-weightedDebtApySum);
+      denominator += (totalSuppliedInUSD-totalBorrowedInUSD);
       console.log(
         `Asset Supply in USD: ${assetSupplyInUSD}, Weighted APY Sum: ${weightedApySum}`
+      );
+      console.log(
+        `Asset borrow in USD: ${assetBorrowedInUSD}, Weighted APY Sum: ${weightedDebtApySum}`
+      );
+      console.log(
+        `numerator: ${numerator},denominator: ${denominator}`
       );
     });
 
@@ -188,11 +197,11 @@ const DashboardNav = () => {
       denominator > 0 ? numerator / denominator : 0;
 
     console.log(
-      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${
-        netApy * 100
+      `Calculated Net Supply APY: ${
+        netApy 
       }`
     );
-    return netApy * 100;
+    return netApy ;
   };
 
   // const calculateNetDebtApy = (reserves) => {

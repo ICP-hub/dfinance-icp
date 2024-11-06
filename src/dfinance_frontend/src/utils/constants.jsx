@@ -1,4 +1,4 @@
-import ckBTC from '../../public/assests-icon/ckBTC.png';
+
 import cekTH from '../../public/assests-icon/cekTH.png';
 import Dragginz from "../../public/assests-icon/Dragginz.png"
 import icp from '../../public/assests-icon/ICP.svg';
@@ -18,8 +18,11 @@ import openZeppelinsvg from '../../public/assests-icon/open-Zeppelin-svg.png'
 import sigmaprime from '../../public/assests-icon/sigma-Prime-svg-fill.png'
 import Peckshield from '../../public/assests-icon/peckshield-logo-svg.png'
 import abdk from '../../public/assests-icon/abdk-svg.png'
-
-
+import ckBTC from "../../public/assests-icon/ckBTC.png";
+import ckETH from "../../public/assests-icon/CKETH.svg";
+import ckUSDC from "../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../public/assests-icon/ckUSDT.svg";
+import ICP from "../../public/assests-icon/ICPMARKET.png";
 const TabPanel = ({ items }) => {
   return (
     <div className="flex flex-wrap justify-center gap-4">
@@ -1758,3 +1761,138 @@ export const leaderboardData = [
     totalPoints: 23850050000,
   },
 ];
+// constants.js
+// constants.js
+export const TRANSACTION_DATA = {
+  Supply: [
+    {
+      timestamp: new Date('2021-09-30T10:00:00Z').getTime(),
+      assetName: 'ICP',
+      amount: '100',
+      points: '10',
+      assetPoints: '2',
+      imageUrl: ICP,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+    {
+      timestamp: new Date('2021-09-30T15:30:00Z').getTime(),
+      assetName: 'ckBTC',
+      amount: '50',
+      points: '5',
+      assetPoints: '3',
+      imageUrl: ckBTC,
+    },
+  ],
+  Borrow: [
+    {
+      timestamp: new Date('2021-10-01T08:15:00Z').getTime(),
+      assetName: 'ckUSDC',
+      amount: '200',
+      points: '20',
+      assetPoints: '3',
+      imageUrl: ckUSDC,
+    },
+  ],
+  Withdraw: [
+    {
+      timestamp: new Date('2021-10-01T12:45:00Z').getTime(),
+      assetName: 'ckETH',
+      amount: '75',
+      points: '7.5',
+      assetPoints: '3',
+      imageUrl: ckETH,
+    },
+  ],
+  Repay: [
+    {
+      timestamp: new Date('2021-10-02T14:20:00Z').getTime(),
+      assetName: 'ckUSDT',
+      amount: '150',
+      points: '15',
+      assetPoints: '1.5',
+      imageUrl: ckUSDT,
+    },
+  ],
+  Liquidity: [
+    {
+      timestamp: new Date('2021-10-02T14:50:00Z').getTime(),
+      assetName: 'ckUSDT',
+      amount: '150',
+      points: '15',
+      assetPoints: '0.5',
+      imageUrl: ckUSDT,
+    },
+  ],
+};
+

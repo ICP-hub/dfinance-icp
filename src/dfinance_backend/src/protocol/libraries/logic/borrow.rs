@@ -123,8 +123,9 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     // .await;
     // ic_cdk::println!("Borrow validated successfully");
 
-    let liquidity_added=0;
-    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , liquidity_added, usd_amount).await;
+    let total_borrow=reserve_data.total_borrowed+ usd_amount;
+    
+    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, 0).await;
     ic_cdk::println!("Interest rates updated successfully");
     // *&mut reserve_data.total_borrowed+=usd_amount;  
     mutate_state(|state| {
@@ -278,7 +279,8 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
  
-    *&mut reserve_data.total_borrowed = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
+    let total_borrow = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
+    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, 0).await;
     // Validates supply using the reserve_data
     // ValidationLogic::validate_repay(
     //     &reserve_data,

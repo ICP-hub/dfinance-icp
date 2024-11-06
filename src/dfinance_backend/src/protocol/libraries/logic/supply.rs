@@ -98,8 +98,8 @@ impl SupplyLogic {
         // .await;
         // ic_cdk::println!("Supply validated successfully");
 
-        let liquidity_taken=0;
-        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,usd_amount , liquidity_taken).await;
+        let total_supplies= (reserve_data.total_borrowed.clone() + usd_amount);
+        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,0 ,total_supplies).await;
                
        
         ic_cdk::println!("Interest rates updated successfully");
@@ -278,9 +278,12 @@ impl SupplyLogic {
         // .await;
         // ic_cdk::println!("Withdraw validated successfully");
         
+       
+        // reserve_data.total_supply = (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
+        let total_supplies= (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
+        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,0 ,total_supplies).await;
 
-        reserve_data.total_supply = (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
-
+        
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));

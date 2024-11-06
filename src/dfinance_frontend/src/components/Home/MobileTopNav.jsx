@@ -214,7 +214,7 @@ const MobileTopNav = ({
         },
       }}
     >
-      <div className="flex flex-col pt-6 p-4 bg-white dark:bg-darkOverlayBackground font-poppins w-full h-[85%]">
+      <div className="flex flex-col pt-6 p-4 bg-white dark:bg-darkOverlayBackground font-poppins w-full h-full">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-semibold text-[#AEADCB] dark:text-darkTextPrimary">
             Menu
@@ -479,6 +479,7 @@ const MobileTopNav = ({
           </div>
         </div>
       </div>
+      { isAuthenticated &&
       <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
         <Button
           title="Switch Wallet"
@@ -492,6 +493,7 @@ const MobileTopNav = ({
         />
 
       </div>
+}
     </Drawer>
   );
 };

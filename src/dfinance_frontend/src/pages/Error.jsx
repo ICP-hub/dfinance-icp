@@ -112,7 +112,7 @@ const Error = () => {
     
 
     return (
-        <div className="relative w-full md:w-9/12 mx-auto my-6 min-h-[380px] md:min-h-[530px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+        <div className="relative w-full md:w-9/12 mx-auto my-6 min-h-[380px] md:min-h-[530px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd select-none">
             <div className="absolute right-0 top-0 h-full w-full ss1:w-full lg:w-1/2 md:w-full pointer-events-none">
                 <img
                     src={Element}
@@ -121,7 +121,7 @@ const Error = () => {
                 // Ensure image scales properly
                 />
             </div>
-            <div className="text-center flex flex-col items-center relative z-10 mt-20 md:-mt-20">
+            <div className="text-center flex flex-col items-center relative mt-20 md:-mt-20">
                 <div className="flex items-center justify-center space-x-2 sm:space-x-4 mb-2">
                     <div className="text-[140px] sm:text-[100px] md:text-[250px] font-light text-white dark:text-darkText -rotate-12" style={{ fontFamily: 'Vampiro One' }}>4</div>
                     <div className="flex flex-col items-center relative">

@@ -98,7 +98,7 @@ export const HOME_TOP_NAV_LINK = [
   {
     id: 1,
     title: "Docs",
-    route: "/docs",
+    route: "https://dfinance.notion.site/bbe01eaf7d414148bc4b9843675a532f?v=8b792ba254da44ecab1c0c016331c8af&pvs=4",
     icon: "",
   },
   {

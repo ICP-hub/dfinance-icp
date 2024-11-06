@@ -589,9 +589,7 @@ const MySupply = () => {
                 <div className="flex">
                   <h1>Your supplies</h1>
                   <div className="ml-5">
-                    {userData?.Ok?.reserves[0]
-                      ?.slice(0, showAll ? userData?.Ok?.reserves[0].length : 4)
-                      .map((reserveGroup, index) => {
+                  {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
                         const asset = reserveGroup[1]?.reserve;
                         const assetSupply = Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
                         let usdValue = 0;
@@ -1870,9 +1868,7 @@ const MySupply = () => {
                 <div className="flex">
                   <h1>Your borrow</h1>
                   <div className="ml-5">
-                    {userData?.Ok?.reserves[0]
-                      ?.slice(0, showAllYourBorrow ? userData?.Ok?.reserves[0].length : 4)
-                      .map((reserveGroup, index) => {
+                  {userData?.Ok?.reserves[0]?.map((reserveGroup, index) =>  {
                         const asset = reserveGroup[1]?.reserve;
                         const assetBorrow = Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
                         let usdValue = 0;

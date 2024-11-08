@@ -86,17 +86,17 @@ const DashboardNav = () => {
     {
       id: 0,
       title: "Net Worth",
-      count: null, // Initial state is null
+      count: "-", // Initial state is null
     },
     {
       id: 1,
       title: "Net APY",
-      count: null, // Initial state is null
+      count: "-", // Initial state is null
     },
     {
       id: 2,
       title: "Health Factor",
-      count: null, // Initial state is null
+      count: "-", // Initial state is null
     },
   ]);
 
@@ -110,52 +110,69 @@ const DashboardNav = () => {
   const formatNumber = useFormatNumber();
 
 
-  const updateWalletDetailTab = (data) => {
-    if (!data || !data.Ok) return;
-    const { net_worth, net_apy, health_factor } = data.Ok;
-    // console.log("health factor", health_factor[0])
-    const updatedTab = walletDetailTab.map((item) => {
-      console.log("item", item);
-      switch (item.id) {
-        case 0:
-          return {
-            ...item,
-            count: `$${formatNumber(calculatedNetWorth)}`,
-          };
-        case 1:
-          return {
-            ...item,
-            // count: `${
-            //   (netApy).toFixed(2) < 0.01
-            //     ? "<0.01"
-            //     : (netApy).toFixed(2)
-            // }%`,
-            count: `${(netApy).toFixed(4)}%`,
-          };
-        case 2:
-          const healthValue =
-            Number(health_factor[0]) / 10000000000 > 100
-              ? "♾️"
-              : parseFloat((Number(health_factor[0]) / 10000000000).toFixed(2));
+// Function to update net_worth and health_factor only
+// Function to update net_worth and health_factor only
+const updateNetWorthAndHealthFactor = (data) => {
+  if (!data || !data.Ok) return;
+  const { net_worth, health_factor } = data.Ok;
 
-          return {
-            ...item,
-            count: healthValue,
-          };
-
-        default:
-          return item;
-      }
-    });
-
-    setWalletDetailTab(updatedTab);
-  };
-
-  useEffect(() => {
-    if (userData,reserveData ,netApy) {
-      updateWalletDetailTab(userData);
+  const updatedTab = walletDetailTab.map((item) => {
+    if (item.id === 0) {
+      return {
+        ...item,
+        count: `$${formatNumber(calculatedNetWorth)}`,
+        style: { visibility: net_worth[0] > 0 ? "visible" : "hidden" },
+      };
+    } else if (item.id === 2) {
+      const healthValue =
+        Number(health_factor[0]) / 10000000000 > 100
+          ? "♾️"
+          : parseFloat((Number(health_factor[0]) / 10000000000).toFixed(2));
+      return {
+        ...item,
+        count: healthValue,
+      };
     }
-  }, [userData, totalUsdValueSupply, totalUsdValueBorrow ,reserveData , netApy]);
+    return item;
+  });
+
+  setWalletDetailTab(updatedTab);
+};
+
+// Function to update net_apy with conditional visibility
+const updateNetApy = () => {
+  const updatedTab = walletDetailTab.map((item) => {
+    if (item.id === 1) {
+      return {
+        ...item,
+        count: netApy > 0 ? `${netApy.toFixed(4)}%` : "-",
+        style: { visibility: netApy > 0 ? "visible" : "hidden" }, // Apply visibility
+      };
+    }
+    return item;
+  });
+
+  setWalletDetailTab(updatedTab);
+};
+
+// Update net_worth and health_factor based on `userData` and `reserveData`
+useEffect(() => {
+  if (userData && reserveData) {
+    updateNetWorthAndHealthFactor(userData);
+  }
+}, [userData, reserveData, totalUsdValueSupply, totalUsdValueBorrow]);
+
+// Update net_apy only when `netApy` changes
+useEffect(() => {
+  if (netApy !== undefined) {
+    updateNetApy();
+  }
+}, [netApy]);
+
+
+// Effect to update net_apy only when `netApy` changes
+
+
 
   const [error, setError] = useState(null);
 

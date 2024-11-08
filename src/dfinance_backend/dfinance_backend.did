@@ -63,10 +63,12 @@ type UserReserveData = record {
   variable_borrow_index : nat;
   reserve : text;
   asset_supply : nat;
+  state : UserState;
   borrow_rate : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
+type UserState = record { adjusted_balance : nat; last_liquidity_index : nat };
 service : () -> {
   borrow : (text, nat64) -> (Result);
   check_user : (text) -> (Result_1);
@@ -82,11 +84,12 @@ service : () -> {
   get_user_data : (text) -> (Result_7) query;
   initialize_reserve : () -> ();
   login : () -> (Result);
+  queary_reserve_price : () -> (vec PriceCache) query;
   repay : (text, nat, opt text) -> (Result);
   supply : (text, nat64, bool) -> (Result);
   toggle_collateral : (text, nat, nat) -> ();
   transfer : (nat, text) -> (Result_2);
   update_balance : (principal, principal) -> (nat);
-  update_reserves_price : (nat) -> ();
+  update_reserves_price : () -> ();
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

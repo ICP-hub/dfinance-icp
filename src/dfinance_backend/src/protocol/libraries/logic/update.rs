@@ -1,6 +1,8 @@
+use std::ops::Mul;
+
 use crate::declarations::assets::{ReserveCache, ReserveData};
-use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled, UserState};
-use crate::protocol::libraries::types::datatypes::UserData;
+use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
+use crate::protocol::libraries::types::datatypes::{UserData, UserState};
 use crate::{
     api::state_handler::{mutate_state, read_state},
     declarations::{
@@ -22,8 +24,8 @@ use crate::{
     },
 };
 use candid::Principal;
-use ic_cdk::update;
 use ic_cdk::api::time;
+use ic_cdk::update;
 use ic_xrc_types::Asset;
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds
@@ -108,68 +110,17 @@ impl UpdateLogic {
                     + (usd_amount.scaled_mul(reserve.configuration.ltv)) / 100,
             );
         }
-        
-        // Check if the user has a reserve for the asset
-        let user_reserve = user_reserve(&mut user_data,&params.asset);
 
-        let mut user_reserve_data = UserReserveData {
-            ..Default::default()
+        // Function to check if the user has a reserve for the asset
+        let user_reserve = user_reserve(&mut user_data, &params.asset);
+
+        let asset_supply = match user_reserve {
+            Some((_, reserve_data)) => reserve_data.asset_supply,
+            None => 0,
         };
-        if let Some((_, reserve_data)) = user_reserve {
-            reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
-            reserve_data.borrow_rate = reserve.borrow_rate.clone();
-            reserve_data.asset_supply += params.amount;
-            reserve_data.asset_price_when_supplied = usd_rate;
-            reserve_data.is_collateral = params.is_collateral;
-            reserve_data.last_update_timestamp = current_timestamp();
-            if reserve_data.liquidity_index == 0 {
-                reserve_data.liquidity_index=100000000;
-            }
-            if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
-                if reserve_data.is_borrowed {
-                    reserve_data.is_using_as_collateral_or_borrow = true;
-                } else {
-                    reserve_data.is_using_as_collateral_or_borrow = false;
-                }
-            } else {
-                reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
-            }
-
-            ic_cdk::println!(
-                "Updated asset supply for existing reserve: {:?}",
-                reserve_data
-            );
-        } else {
-
-            user_reserve_data = UserReserveData {
-                reserve: params.asset.clone(),
-                ..Default::default()
-            };
-
-            // Create a new reserve if it does not exist
-            let new_reserve = UserReserveData {
-                reserve: params.asset.clone(),
-                asset_supply: params.amount,
-                supply_rate: reserve.current_liquidity_rate,
-                asset_price_when_supplied: usd_rate,
-                is_using_as_collateral_or_borrow: true,
-                is_collateral: true,
-                liquidity_index: 100000000,
-                last_update_timestamp: current_timestamp(),
-                ..Default::default()
-            };
-
-            if let Some(ref mut reserves) = user_data.reserves {
-                reserves.push((params.asset.clone(), new_reserve));
-            } else {
-                user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
-            }
-
-            ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
-        }
 
         let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index * user_reserve_data.asset_supply,
+            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
             last_liquidity_index: reserve_cache.curr_liquidity_index,
         };
 
@@ -192,6 +143,55 @@ impl UpdateLogic {
             Err(e) => {
                 panic!("Get error in minting the dtokens {:?}", e);
             }
+        }
+
+        if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
+            reserve_data.borrow_rate = reserve.borrow_rate.clone();
+            reserve_data.asset_supply += params.amount;
+            reserve_data.asset_price_when_supplied = usd_rate;
+            reserve_data.is_collateral = params.is_collateral;
+            reserve_data.last_update_timestamp = current_timestamp();
+            reserve_data.state = update_user_state.clone();
+            if reserve_data.liquidity_index == 0 {
+                reserve_data.liquidity_index = 100000000;
+            }
+            if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
+                if reserve_data.is_borrowed {
+                    reserve_data.is_using_as_collateral_or_borrow = true;
+                } else {
+                    reserve_data.is_using_as_collateral_or_borrow = false;
+                }
+            } else {
+                reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
+            }
+
+            ic_cdk::println!(
+                "Updated asset supply for existing reserve: {:?}",
+                reserve_data
+            );
+        } else {
+            // Create a new reserve if it does not exist
+            let new_reserve = UserReserveData {
+                reserve: params.asset.clone(),
+                asset_supply: params.amount,
+                supply_rate: reserve.current_liquidity_rate,
+                asset_price_when_supplied: usd_rate,
+                is_using_as_collateral_or_borrow: true,
+                is_collateral: true,
+                liquidity_index: 100000000,
+                last_update_timestamp: current_timestamp(),
+                state: update_user_state.clone(),
+                ..Default::default()
+            };
+
+            if let Some(ref mut reserves) = user_data.reserves {
+                reserves.push((params.asset.clone(), new_reserve));
+            } else {
+                user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
+            }
+
+            ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
         }
 
         // Save the updated user data back to state
@@ -251,18 +251,17 @@ impl UpdateLogic {
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
 
-        // let user
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == params.asset),
-            None => None,
+        user_data.available_borrow =
+            Some((user_data.available_borrow.unwrap() as i128 - usd_amount as i128).max(0) as u128);
+
+        // Function to check if the user has a reserve for the asset
+        let user_reserve = user_reserve(&mut user_data, &params.asset);
+
+        let asset_supply = match user_reserve {
+            Some((_, reserve)) => reserve.asset_supply,
+            None => 0,
         };
 
-        let mut user_reserve_data = UserReserveData {
-            ..Default::default()
-        };
-        
         let asset_reserve_data = match asset_reserve {
             Ok(data) => {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
@@ -277,58 +276,10 @@ impl UpdateLogic {
             }
         };
 
-        user_data.available_borrow =
-            Some((user_data.available_borrow.unwrap() as i128 - usd_amount as i128).max(0) as u128);
-
-        let usd_rate = usd_amount.scaled_div(params.amount);
-        if let Some((_, reserve_data)) = user_reserve {
-            // update supply rate.
-            reserve_data.supply_rate = asset_reserve_data.current_liquidity_rate;
-            reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
-            reserve_data.asset_price_when_borrowed = usd_rate;
-            reserve_data.is_borrowed = true;
-            reserve_data.is_using_as_collateral_or_borrow = true;
-            reserve_data.asset_borrow += params.amount;
-            reserve_data.last_update_timestamp = current_timestamp();
-            if reserve_data.variable_borrow_index == 0 {
-                reserve_data.variable_borrow_index=100000000;
-            }
-            ic_cdk::println!(
-                "Updated asset borrow for existing reserve: {:?}",
-                reserve_data
-            );
-        } else {
-
-            user_reserve_data = UserReserveData {
-                reserve: params.asset.clone(),
-                ..Default::default()
-            };
-            let new_reserve = UserReserveData {
-                reserve: params.asset.clone(),
-                borrow_rate: asset_reserve_data.current_liquidity_rate,
-
-                asset_price_when_borrowed: usd_rate,
-                asset_borrow: params.amount,
-                is_borrowed: true,
-                is_using_as_collateral_or_borrow: true,
-                variable_borrow_index: 100000000,
-                last_update_timestamp: current_timestamp(),
-                ..Default::default()
-            };
-
-            if let Some(ref mut reserves) = user_data.reserves {
-                reserves.push((params.asset.clone(), new_reserve));
-            } else {
-                user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
-            }
-
-            ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
-        }
-
         let platform_principal = ic_cdk::api::id();
 
         let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index * user_reserve_data.asset_supply,
+            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
             last_liquidity_index: reserve_cache.curr_liquidity_index,
         };
 
@@ -351,6 +302,48 @@ impl UpdateLogic {
             }
         }
 
+        let usd_rate = usd_amount.scaled_div(params.amount);
+        if let Some((_, reserve_data)) = user_reserve {
+            // update supply rate.
+            reserve_data.supply_rate = asset_reserve_data.current_liquidity_rate;
+            reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
+            reserve_data.asset_price_when_borrowed = usd_rate;
+            reserve_data.is_borrowed = true;
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.asset_borrow += params.amount;
+            reserve_data.last_update_timestamp = current_timestamp();
+            reserve_data.state = update_user_state.clone();
+            if reserve_data.variable_borrow_index == 0 {
+                reserve_data.variable_borrow_index = 100000000;
+            }
+            ic_cdk::println!(
+                "Updated asset borrow for existing reserve: {:?}",
+                reserve_data
+            );
+        } else {
+            // Create a new reserve if it does not exist
+            let new_reserve = UserReserveData {
+                reserve: params.asset.clone(),
+                borrow_rate: asset_reserve_data.current_liquidity_rate,
+
+                asset_price_when_borrowed: usd_rate,
+                asset_borrow: params.amount,
+                is_borrowed: true,
+                is_using_as_collateral_or_borrow: true,
+                variable_borrow_index: 100000000,
+                last_update_timestamp: current_timestamp(),
+                ..Default::default()
+            };
+
+            if let Some(ref mut reserves) = user_data.reserves {
+                reserves.push((params.asset.clone(), new_reserve));
+            } else {
+                user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
+            }
+
+            ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
+        }
+
         mutate_state(|state| {
             state
                 .user_profile
@@ -362,7 +355,7 @@ impl UpdateLogic {
     }
 
     // ------------- Update user data function for withdraw -------------
-  pub async fn update_user_data_withdraw(
+    pub async fn update_user_data_withdraw(
         user_principal: Principal,
         reserve_cache: &ReserveCache,
         params: ExecuteWithdrawParams,
@@ -444,69 +437,16 @@ impl UpdateLogic {
 
         // user_data.available_borrow = Some(available_borrow);
 
-        // Checks if the reserve data for the asset already exists in the user's reserves
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == params.asset),
-            None => None,
+        // Function to check if the user has a reserve for the asset
+        let user_reserve = user_reserve(&mut user_data, &params.asset);
+
+        let asset_supply = match user_reserve {
+            Some((_, reserve)) => reserve.asset_supply,
+            None => 0,
         };
-
-        let mut user_reserve_data = UserReserveData {
-            ..Default::default()
-        };
-
-        // If the reserve exists, it will subtract the withdrawal amount from the asset supply
-        if let Some((_, reserve_data)) = user_reserve {
-            // if reserve_data.is_collateral {
-
-            //     user_data.liquidation_threshold = Some(user_thrs);
-            //     // user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount.clone() + added_usd_amount.clone());
-            // user_data.available_borrow = Some(
-            //     ((user_data.available_borrow.unwrap() as i128 - (usd_amount.clone().scaled_mul(reserve.configuration.ltv))/100)).max(0) as u128)
-            // ;
-            // }
-            // Ensures the user has enough supply to withdraw
-            reserve_data.is_collateral = params.is_collateral;
-
-            if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
-                if reserve_data.is_borrowed {
-                    reserve_data.is_using_as_collateral_or_borrow = true;
-                } else {
-                    reserve_data.is_using_as_collateral_or_borrow = false;
-                }
-            } else {
-                reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
-            }
-
-            if reserve_data.asset_supply >= params.amount {
-                reserve_data.asset_supply -= params.amount;
-
-                ic_cdk::println!(
-                    "Reduced asset supply for existing reserve: {:?}",
-                    reserve_data
-                );
-            } else {
-                ic_cdk::println!("Insufficient asset supply for withdrawal.");
-                return Err(format!(
-                    "Insufficient supply for withdrawal: requested {}, available {}",
-                    params.amount, reserve_data.asset_supply
-                ));
-            }
-            if reserve_data.asset_supply == 0 {
-                reserve_data.is_collateral = true;
-            }
-        } else {
-            // If Reserve data does not exist,it returns an error since we cannot withdraw what is not supplied
-            ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
-            return Err(format!(
-                "Cannot withdraw from a non-existing reserve for asset: {}",
-                params.asset
-            ));
-        }
 
         let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index * user_reserve_data.asset_supply,
+            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
             last_liquidity_index: reserve_cache.curr_liquidity_index,
         };
 
@@ -529,6 +469,52 @@ impl UpdateLogic {
                 panic!("Get error in burning the dtoken {:?}", e);
             }
         };
+
+        ic_cdk::println!(
+            "withdraw before update user state = {:?}",
+            update_user_state
+        );
+
+        // If the reserve exists, it will subtract the withdrawal amount from the asset supply
+        if let Some((_, reserve_data)) = user_reserve {
+            // Ensures the user has enough supply to withdraw
+            reserve_data.is_collateral = params.is_collateral;
+
+            if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
+                if reserve_data.is_borrowed {
+                    reserve_data.is_using_as_collateral_or_borrow = true;
+                } else {
+                    reserve_data.is_using_as_collateral_or_borrow = false;
+                }
+            } else {
+                reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
+            }
+
+            if reserve_data.asset_supply >= params.amount {
+                reserve_data.asset_supply -= params.amount;
+                reserve_data.state = update_user_state.clone();
+                ic_cdk::println!(
+                    "Reduced asset supply for existing reserve: {:?}",
+                    reserve_data
+                );
+            } else {
+                ic_cdk::println!("Insufficient asset supply for withdrawal.");
+                return Err(format!(
+                    "Insufficient supply for withdrawal: requested {}, available {}",
+                    params.amount, reserve_data.asset_supply
+                ));
+            }
+            if reserve_data.asset_supply == 0 {
+                reserve_data.is_collateral = true;
+            }
+        } else {
+            // If Reserve data does not exist,it returns an error since we cannot withdraw what is not supplied
+            ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
+            return Err(format!(
+                "Cannot withdraw from a non-existing reserve for asset: {}",
+                params.asset
+            ));
+        }
 
         // Saves the updated user data back to state
         mutate_state(|state| {
@@ -561,6 +547,8 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
+
+        ic_cdk::println!("repay user update = {:?}", user_data);
         // let ckbtc_to_usd_rate = 60554.70f64;
         // ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
 
@@ -591,49 +579,20 @@ impl UpdateLogic {
         // user_data.available_borrow = Some(available_borrow);
         user_data.available_borrow = Some(user_data.available_borrow.unwrap() + usd_amount);
 
-        // Checks if the reserve data for the asset already exists in the user's reserves
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == params.asset),
-            None => None,
-        };
+        // Function to check if the user has a reserve for the asset
+        let user_reserve = user_reserve(&mut user_data, &params.asset);
 
-        let mut user_reserve_data = UserReserveData {
-            ..Default::default()
+        let asset_supply = match user_reserve {
+            Some((_, reserve)) => reserve.asset_supply,
+            None => 0,
         };
-
-        // If the reserve exists, it will subtract the repaid amount from the asset borrow
-        if let Some((_, reserve_data)) = user_reserve {
-            // Ensures the user has enough borrow to repay
-            if reserve_data.asset_borrow >= params.amount {
-                reserve_data.asset_borrow -= params.amount;
-                ic_cdk::println!(
-                    "Reduced asset borrow for existing reserve: {:?}",
-                    reserve_data
-                );
-            } else {
-                ic_cdk::println!("Insufficient asset borrow for repay.");
-                return Err(format!(
-                    "Insufficient borrow for repay: requested {}, available {}",
-                    params.amount, reserve_data.asset_borrow
-                ));
-            }
-        } else {
-            // If Reserve data does not exist, it returns an error since we cannot repay what is not borrowed
-            ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
-            return Err(format!(
-                "Cannot repay from a non-existing reserve for asset: {}",
-                params.asset
-            ));
-        }
 
         let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index * user_reserve_data.asset_supply,
+            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
             last_liquidity_index: reserve_cache.curr_liquidity_index,
         };
 
-        let platform_principal = ic_cdk::api::id();
+        let platform_principal: Principal = ic_cdk::api::id();
 
         let burn_scaled_result = burn_scaled(
             &mut update_user_state,
@@ -652,6 +611,31 @@ impl UpdateLogic {
                 panic!("Get error in minting the debttoken {:?}", e);
             }
         };
+
+        // If the reserve exists, it will subtract the repaid amount from the asset borrow
+        if let Some((_, reserve_data)) = user_reserve {
+            // Ensures the user has enough borrow to repay
+            if reserve_data.asset_borrow >= params.amount {
+                reserve_data.asset_borrow -= params.amount;
+                reserve_data.state = update_user_state.clone();
+                ic_cdk::println!(
+                    "Reduced asset borrow for existing reserve: {:?}",
+                    reserve_data
+                );
+            } else {
+                return Err(format!(
+                    "Insufficient borrow for repay: requested {}, available {}",
+                    params.amount, reserve_data.asset_borrow
+                ));
+            }
+        } else {
+            // If Reserve data does not exist, it returns an error since we cannot repay what is not borrowed
+
+            return Err(format!(
+                "Cannot repay from a non-existing reserve for asset: {}",
+                params.asset
+            ));
+        }
 
         // Saves the updated user data back to state
         mutate_state(|state| {
@@ -705,14 +689,8 @@ impl UpdateLogic {
 pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
     let user_principal = ic_cdk::caller();
 
-    // to retrieve user data.
-    let user_data_result = mutate_state(|state| {
-        let user_profile_data = &mut state.user_profile;
-        user_profile_data
-            .get(&user_principal)
-            .map(|user| user.0.clone())
-            .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-    });
+    //Retrieve user data.
+    let user_data_result = user_data(user_principal);
 
     let mut user_data = match user_data_result {
         Ok(data) => {
@@ -811,12 +789,8 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
     let user_health = calculate_health_factor(&user_position);
     user_data.health_factor = Some(user_health);
 
-    let user_reserve = match user_data.reserves {
-        Some(ref mut reserves) => reserves
-            .iter_mut()
-            .find(|(asset_name, _)| *asset_name == asset.clone()),
-        None => None,
-    };
+    // Function to check if the user has a reserve for the asset
+    let user_reserve = user_reserve(&mut user_data, &asset);
 
     if let Some((_, user_reserve_data)) = user_reserve {
         // Toggle the `is_collateral` value
@@ -848,12 +822,7 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
     ic_cdk::println!("User data updated successfully: {:?}", user_data);
 }
 
-
-//TODO try to make a common update_user function for all logic
-//dry run it for all logics and check if its adding all functionality differ in all logic 
-//then comment out the above code, and use this update_user function in each logic and compare it with previous result, if there any change or missing functionality
-
-pub fn user_data(user_principal: Principal) -> Result<UserData, String>{
+pub fn user_data(user_principal: Principal) -> Result<UserData, String> {
     let user_data_result = mutate_state(|state| {
         let user_profile_data = &mut state.user_profile;
         user_profile_data
@@ -864,14 +833,12 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, String>{
     user_data_result
 }
 
-// need to understand life-times more.
-// need to use this in three other places.
-pub fn user_reserve<'a>(user_data: &'a mut UserData, asset_name: &'a String)-> std::option::Option<&'a mut (std::string::String, UserReserveData)> {
-
+pub fn user_reserve<'a>(
+    user_data: &'a mut UserData,
+    asset_name: &'a String,
+) -> std::option::Option<&'a mut (std::string::String, UserReserveData)> {
     let user_reserve = match user_data.reserves {
-        Some(ref mut reserves) => reserves
-            .iter_mut()
-            .find(|(name, _)| name == asset_name),
+        Some(ref mut reserves) => reserves.iter_mut().find(|(name, _)| name == asset_name),
         None => None,
     };
     user_reserve

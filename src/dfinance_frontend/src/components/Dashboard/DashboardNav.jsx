@@ -86,17 +86,17 @@ const DashboardNav = () => {
     {
       id: 0,
       title: "Net Worth",
-      count: null, // Initial state is null
+      count: "-", // Initial state is null
     },
     {
       id: 1,
       title: "Net APY",
-      count: null, // Initial state is null
+      count: "-", // Initial state is null
     },
     {
       id: 2,
       title: "Health Factor",
-      count: null, // Initial state is null
+      count: "-", // Initial state is null
     },
   ]);
 
@@ -120,7 +120,7 @@ const DashboardNav = () => {
       if (item.id === 0) {
         return {
           ...item,
-          count: calculatedNetWorth ? `$${formatNumber(calculatedNetWorth)}` : null,
+          count: calculatedNetWorth ? `$${formatNumber(calculatedNetWorth)}` : "-",
           style: { visibility: net_worth[0] > 0 ? "visible" : "hidden" },
         };
       } else if (item.id === 2) {
@@ -145,7 +145,7 @@ const DashboardNav = () => {
       if (item.id === 1) {
         return {
           ...item,
-          count: netApy !== 0 ? `${netApy.toFixed(4)}%` : null,
+          count: netApy !== 0 ? `${netApy.toFixed(4)}%` : "-",
           // Apply visibility
         };
       }

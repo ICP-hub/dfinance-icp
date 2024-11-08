@@ -5,9 +5,9 @@ export function usePageLoading() {
 
   useEffect(() => {
     const handleLoad = () => {
-      setTimeout(() => {
+     
         setIsLoading(false);
-      }, 0);
+      
     };
 
     const handleBeforeUnload = () => {
@@ -18,9 +18,9 @@ export function usePageLoading() {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     if (document.readyState === 'complete') {
-      setTimeout(() => {
+      
         setIsLoading(false);
-      }, 0); 
+     
     }
 
     return () => {

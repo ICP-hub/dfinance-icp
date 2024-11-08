@@ -41,7 +41,9 @@ impl SupplyLogic {
         let platform_principal = ic_cdk::api::id();
 
         let amount_nat = Nat::from(params.amount);
+        // Converting asset to usdt value
         let mut usd_amount = params.amount;
+        // let unscaled_amount = params.amount/100000000;
         let supply_amount_to_usd =
             get_exchange_rates(params.asset.clone(),None, params.amount.clone()).await;
         match supply_amount_to_usd {
@@ -97,8 +99,7 @@ impl SupplyLogic {
         // ic_cdk::println!("Supply validated successfully");
 
         let total_supplies= (reserve_data.total_borrowed.clone() + usd_amount);
-        let total_borrow = reserve_data.total_borrowed;
-        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
+        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,0 ,total_supplies).await;
                
        
         ic_cdk::println!("Interest rates updated successfully");
@@ -149,7 +150,12 @@ impl SupplyLogic {
         .await
         {
             Ok(new_balance) => {
-                println!("Asset transfer from user to backend canister executed successfully");        
+                println!("Asset transfer from user to backend canister executed successfully");
+                // ----------- Update logic here -------------
+                
+               
+                
+        
                 Ok(new_balance)
             }
             Err(e) => {
@@ -257,7 +263,7 @@ impl SupplyLogic {
         // Fetches the reserve logic cache having the current values
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
-        
+
         // Updates the liquidity index
         reserve::update_state(&mut reserve_data, &mut reserve_cache);
         ic_cdk::println!("Reserve state updated successfully");
@@ -273,11 +279,12 @@ impl SupplyLogic {
         // ic_cdk::println!("Withdraw validated successfully");
         
        
+        // reserve_data.total_supply = (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
         let total_supplies= (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
         let total_borrow = reserve_data.total_borrowed;
         let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
 
-
+        
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::format;
 use std::string;
 use std::time::Duration;
 
@@ -9,10 +10,14 @@ use candid::Principal;
 use declarations::assets::{
     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
 };
+use declarations::transfer::ApproveResult;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
+use icrc_ledger_types::icrc1::account::Account;
 use implementations::reserve;
+use protocol::libraries::logic::update::user_reserve;
+use protocol::libraries::math;
 use protocol::libraries::math::calculate::calculate_health_factor;
 use protocol::libraries::math::calculate::calculate_ltv;
 use protocol::libraries::math::calculate::get_exchange_rates;
@@ -92,6 +97,7 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
 //         }
 //     }
 // }
+
 // Function to fetch the reserve-data based on the asset
 #[query]
 fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
@@ -310,14 +316,6 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
     Ok(())
 }
 
-//ignore this Todo this is not for you
-//TODO make a common update_user_state function that can be called from every logic and even every login to platform
-// make a common query_user_state function
-//avoid update call make it a query call if possible
-// avoid storing and updating unnecessary variables
-// just calculate it right there where needed
-//modify user struct
-
 #[update]
 pub async fn login() -> Result<(), String> {
     let user_principal = ic_cdk::caller();
@@ -355,6 +353,10 @@ pub async fn login() -> Result<(), String> {
 
     for (reserve_name, user_reserve_data) in reserves.iter_mut() {
         ic_cdk::println!("Processing reserve: {}", reserve_name);
+        ic_cdk::println!(
+            "last timestamp of asset = {}",
+            user_reserve_data.last_update_timestamp
+        );
         let prev_liq_index = user_reserve_data.liquidity_index.clone();
         let prev_borrow_index = user_reserve_data.variable_borrow_index.clone();
         update_user_reserve_state(user_reserve_data)?;
@@ -365,10 +367,20 @@ pub async fn login() -> Result<(), String> {
             user_reserve_data.liquidity_index,
         );
 
+        ic_cdk::println!("login updated balance = {}", updated_balance);
+
         // need to update balance for dtoken canister.
-        let encoded_args = encode_args((updated_balance,)).unwrap();
-        let _ =
-            ic_cdk::api::call::call_raw(canister_id, "icrc1_update_balance_of", &encoded_args, 0);
+
+        let user_argument = Account {
+            owner: user_principal,
+            subaccount: None,
+        };
+
+        let nat_updated_balance = Nat::from(updated_balance);
+        let encoded_args = encode_args((user_argument, nat_updated_balance)).unwrap();
+
+        //  let _ =
+        //   ic_cdk::api::call::call_raw(canister_id, "icrc1_update_balance_of", &encoded_args, 0);
 
         ic_cdk::println!("asset supply = {}", user_reserve_data.asset_supply);
         ic_cdk::println!(
@@ -377,7 +389,7 @@ pub async fn login() -> Result<(), String> {
             updated_balance
         );
 
-        user_reserve_data.asset_supply = updated_balance;
+        // user_reserve_data.asset_supply = updated_balance;
         ic_cdk::println!(
             "Updated asset supply for reserve {}: {}",
             reserve_name,
@@ -386,12 +398,16 @@ pub async fn login() -> Result<(), String> {
 
         if user_reserve_data.asset_supply > 0 && user_reserve_data.is_collateral {
             let added_collateral = updated_balance - user_reserve_data.asset_supply;
+            ic_cdk::println!("added collateral =  {}", added_collateral);
 
             let mut usd_amount: Option<u128> = None;
             let added_collateral_amount_to_usd =
                 get_exchange_rates(user_reserve_data.reserve.clone(), None, added_collateral).await;
 
-            ic_cdk::println!("added collateral = {:?}", added_collateral_amount_to_usd);
+            ic_cdk::println!(
+                "added collateral amount usd = {:?}",
+                added_collateral_amount_to_usd
+            );
 
             match added_collateral_amount_to_usd {
                 Ok((amount, _timestamp)) => {
@@ -404,7 +420,6 @@ pub async fn login() -> Result<(), String> {
             }
 
             ic_cdk::println!("usd amount = {:?}", usd_amount);
-            //TODO: add the usd converted value here
             total_collateral += usd_amount.unwrap();
             ic_cdk::println!(
                 "Added to total collateral from reserve {}: {} (New total: {})",
@@ -414,42 +429,66 @@ pub async fn login() -> Result<(), String> {
             );
         }
 
-        let borrow_updated_balance = calculate_dynamic_balance(
-            user_reserve_data.asset_borrow,
-            prev_borrow_index,
-            user_reserve_data.variable_borrow_index,
-        );
-        ic_cdk::println!("asset borrow = {}", user_reserve_data.asset_borrow);
+        user_reserve_data.asset_supply = updated_balance;
+        // TODO: take reference from function.rs line number 166. --> need to pass argument and handle it more gracefully.
+        let (approval_result,): (ApproveResult,) = ic_cdk::api::call::call(
+            canister_id,
+            "icrc1_update_balance_of",
+            (&encoded_args, false),
+        )
+        .await
+        .map_err(|e| e.1)?;
+
         ic_cdk::println!(
-            "Updated borrow balance calculated using liquidity index {}: {}",
-            user_reserve_data.liquidity_index,
-            borrow_updated_balance
+            "approve transfer executed successfully and the call result = {:?}",
+            approval_result
         );
 
-        user_reserve_data.asset_borrow = borrow_updated_balance;
+        let _ = match approval_result {
+            ApproveResult::Ok(balance) => Ok(balance),
+            ApproveResult::Err(err) => Err(format!(":{:?}",err)),
+        };
 
-        //TODO optimize it
-        if user_reserve_data.asset_borrow > 0 && user_reserve_data.is_borrowed {
-            let added_borrowed = borrow_updated_balance - user_reserve_data.asset_borrow;
+        if user_reserve_data.asset_borrow != 0 {
+            let borrow_updated_balance = calculate_dynamic_balance(
+                user_reserve_data.asset_borrow,
+                prev_borrow_index,
+                user_reserve_data.variable_borrow_index,
+            );
+            ic_cdk::println!("asset borrow = {}", user_reserve_data.asset_borrow);
+            ic_cdk::println!(
+                "Updated borrow balance calculated using liquidity index {}: {}",
+                user_reserve_data.variable_borrow_index,
+                borrow_updated_balance
+            );
 
-            let mut usd_amount: Option<u128> = None;
-            match get_exchange_rates(user_reserve_data.reserve.clone(), None, added_borrowed).await
-            {
-                Ok((amount, _timestamp)) => {
-                    usd_amount = Some(amount);
+            //  user_reserve_data.asset_borrow = borrow_updated_balance;
+
+            if user_reserve_data.asset_borrow > 0 && user_reserve_data.is_borrowed {
+                let added_borrowed = borrow_updated_balance - user_reserve_data.asset_borrow;
+
+                let mut usd_amount: Option<u128> = None;
+                match get_exchange_rates(user_reserve_data.reserve.clone(), None, added_borrowed)
+                    .await
+                {
+                    Ok((amount, _timestamp)) => {
+                        usd_amount = Some(amount);
+                    }
+                    Err(err) => {
+                        println!("getting error in the conversion {}", err);
+                    }
                 }
-                Err(err) => {
-                    println!("getting error in the conversion {}", err);
-                }
+
+                total_debt += usd_amount.unwrap();
+                ic_cdk::println!(
+                    "Added to total debt from reserve {}: {} (New total: {})",
+                    reserve_name,
+                    usd_amount.unwrap(),
+                    total_debt
+                );
             }
 
-            total_debt += usd_amount.unwrap();
-            ic_cdk::println!(
-                "Added to total collateral from reserve {}: {} (New total: {})",
-                reserve_name,
-                total_debt,
-                total_collateral
-            );
+            user_reserve_data.asset_borrow = borrow_updated_balance;
         }
 
         let user_position = UserPosition {
@@ -457,6 +496,8 @@ pub async fn login() -> Result<(), String> {
             total_borrowed_value: user_data.total_debt.unwrap(),
             liquidation_threshold: user_data.liquidation_threshold.unwrap(),
         };
+
+        ic_cdk::println!("login user position = {:?}", user_position);
 
         if user_reserve_data.asset_supply > 0 || user_reserve_data.asset_borrow > 0 {
             user_data.health_factor = Some(calculate_health_factor(&user_position));
@@ -487,13 +528,8 @@ pub async fn login() -> Result<(), String> {
     Ok(())
 }
 
-//TODO remove priceCache from input use it directly inside the function
-// jyotirmay ---> not able to figure it out for now.
 #[query]
-pub fn get_cached_exchange_rate(
-    base_asset_symbol: String,
-    // amount: u128,
-) -> Result<PriceCache, String> {
+pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache, String> {
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc",
         "ckETH" => "eth",
@@ -525,29 +561,15 @@ pub fn get_cached_exchange_rate(
             Err("No cached exchange rate available; please perform an update call.".to_string())
         }
     }
-
-    // let cached_price = price_cache_data.get_cached_price_simple(&base_asset);
-    // if let Some(cached_price) = cached_price {
-    //     return Ok((cached_price * amount, 0));
-    // } else {
-    //     Err("No cached exchange rate available; please perform an update call.".to_string())
-    // }
 }
 
 fn calculate_dynamic_balance(
-    initial_deposit: u128,      // The initial deposit amount (asset_supply)
-    prev_liquidity_index: u128, // The updated liquidity index
-    new_liquidity_index: u128,  // The liquidity index at the time of deposit
+    initial_deposit: u128,
+    prev_liquidity_index: u128,
+    new_liquidity_index: u128,
 ) -> u128 {
     // Calculate the dynamically updated balance using the liquidity index
     initial_deposit * new_liquidity_index / prev_liquidity_index
 }
-
-// //approve function that take input  - amount and asset name -> e.g "ckBTC " -> retrive its principal from reserve
-//call approve transfer function -- function.rs
-// backend canister as spender
-//caller as from
-//asset principal as ledger
-//amount as amount
 
 export_candid!();

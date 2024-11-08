@@ -24,11 +24,13 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
+
 const DashboardNav = () => {
 
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
     useAuth();
-
+    const { reserveData} = useAssetData();
+    console.log("reserveDta",reserveData)
     const [netWorth, setNetWorth] = useState()
 
     const totalUsdValueBorrow = useSelector(
@@ -123,11 +125,12 @@ const DashboardNav = () => {
         case 1:
           return {
             ...item,
-            count: `${
-              (netApy / 100).toFixed(2) < 0.01
-                ? "<0.01"
-                : (netApy / 100).toFixed(2)
-            }%`,
+            // count: `${
+            //   (netApy).toFixed(2) < 0.01
+            //     ? "<0.01"
+            //     : (netApy).toFixed(2)
+            // }%`,
+            count: `${(netApy).toFixed(4)}%`,
           };
         case 2:
           const healthValue =
@@ -149,10 +152,10 @@ const DashboardNav = () => {
   };
 
   useEffect(() => {
-    if (userData) {
+    if (userData,reserveData ,netApy) {
       updateWalletDetailTab(userData);
     }
-  }, [userData, totalUsdValueSupply, totalUsdValueBorrow]);
+  }, [userData, totalUsdValueSupply, totalUsdValueBorrow ,reserveData , netApy]);
 
   const [error, setError] = useState(null);
 
@@ -185,110 +188,90 @@ const DashboardNav = () => {
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate]);
-
-  const calculateNetSupplyApy = (reserves) => {
+  console.log("reservedata in reserve1 ",reserveData)
+ 
+  const calculateNetSupplyApy = useCallback((reserves, reserveData) => {
     let totalSuppliedInUSD = 0;
     let weightedApySum = 0;
-
-    reserves.forEach((reserve) => {
-      const conversionRate = getConversionRate(reserve[0]);
-      const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
-
-      const supplyApy = Number(reserve[1]?.supply_rate || 0n) / 100000000;
-      console.log("reserves", reserves);
-      console.log(
-        `Reserve: ${reserve[0]}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
-      );
-
-      const assetSupplyInUSD = assetSupply * conversionRate;
-      totalSuppliedInUSD += assetSupplyInUSD;
-      weightedApySum += assetSupplyInUSD * supplyApy;
-
-      console.log(
-        `Asset Supply in USD: ${assetSupplyInUSD}, Weighted APY Sum: ${weightedApySum}`
-      );
-    });
-
-    const netApy =
-      totalSuppliedInUSD > 0 ? weightedApySum / totalSuppliedInUSD : 0;
-
-    console.log(
-      `Total Supplied in USD: ${totalSuppliedInUSD}, Calculated Net Supply APY: ${
-        netApy * 100
-      }`
-    );
-    return netApy * 100;
-  };
-
-  const calculateNetDebtApy = (reserves) => {
     let totalBorrowedInUSD = 0;
     let weightedDebtApySum = 0;
+    let numerator = 0;
+    let denominator = 0;
 
     reserves.forEach((reserve) => {
-      const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
-      const debtApy = Number(reserve[1]?.borrow_rate || 0n) / 100000000;
-      const assetPriceWhenBorrowed =
-        Number(reserve[1]?.asset_price_when_borrowed || 0n) / 100000000 || 1;
+        const assetKey = reserve[0];
+        console.log(`Processing assetKey: ${assetKey}`);
+       
+        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok) return;
 
-      console.log(
-        `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}, Price When Borrowed: ${assetPriceWhenBorrowed}`
+        const conversionRate = getConversionRate(assetKey);
+        const supplyApy = Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) / 100000000;
+        const debtApy = Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
+
+        const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
+        const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
+        console.log(
+          `Reserve: ${assetKey}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
       );
-
-      const assetBorrowedInUSD = assetBorrowed * assetPriceWhenBorrowed;
-      totalBorrowedInUSD += assetBorrowedInUSD;
-      weightedDebtApySum += assetBorrowedInUSD * debtApy;
-
       console.log(
-        `Asset Borrowed in USD: ${assetBorrowedInUSD}, Weighted Debt APY Sum: ${weightedDebtApySum}`
+          `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}`
+      );
+        const assetBorrowedInUSD = assetBorrowed * conversionRate;
+        totalBorrowedInUSD = assetBorrowedInUSD;
+        weightedDebtApySum = assetBorrowedInUSD * debtApy;
+
+        const assetSupplyInUSD = assetSupply * conversionRate;
+        totalSuppliedInUSD = assetSupplyInUSD;
+        weightedApySum = assetSupplyInUSD * supplyApy;
+        console.log(`supply : ${weightedApySum}, borrow: ${weightedDebtApySum}`);
+        numerator = numerator + weightedApySum - weightedDebtApySum;
+        denominator = denominator + totalSuppliedInUSD;
+        console.log(
+          `Numerator: ${numerator}, denominator ${denominator}`
       );
     });
 
-    const netDebtApy =
-      totalBorrowedInUSD > 0 ? weightedDebtApySum / totalBorrowedInUSD : 0;
+    return denominator > 0 ? numerator / denominator : 0;
+}, [reserveData]);
+useEffect(() => {
+  if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
+      const updateState = async () => {
+          const reservesData = userData.Ok.reserves[0];
+          const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
 
-    console.log(
-      `Total Borrowed in USD: ${totalBorrowedInUSD}, Calculated Net Debt APY: ${
-        netDebtApy * 100
-      }`
-    );
-    return netDebtApy * 100;
-  };
+          // Set netApy immediately
+          setNetApy(calculatedNetApy);
 
-  const calculateNetApy = (reserves) => {
-    const supplyApy = calculateNetSupplyApy(reserves);
-    console.log(`Calculated Supply APY: ${supplyApy}`);
+          // Update asset supply and borrow values
+          const reserve = reservesData[0];
+          const supply = reserve[1] ? Number(reserve[1].asset_supply || 0n) / 100000000 : 0;
+          setAssetSupply(supply);
 
-    const debtApy = calculateNetDebtApy(reserves);
-    console.log(`Calculated Debt APY: ${debtApy}`);
+          const borrow = Number(userData.Ok.total_debt || 0n) / 100000000;
+          setAssetBorrow(borrow);
 
-    const netApy = supplyApy - debtApy;
-    console.log(`Net APY (Supply APY - Debt APY): ${netApy}`);
+          console.log("Net APY:", calculatedNetApy);
+          console.log("Asset Supply:", supply);
+          console.log("Borrow:", borrow);
+      };
 
-    return netApy;
-  };
-
-  useEffect(() => {
-    if (userData && userData?.Ok?.reserves[0]) {
-      const reservesData = userData?.Ok?.reserves[0];
-      console.log("reserveData in dashboard nav", reservesData);
-      console.log("UserData Reserves in Dashboard:", reservesData);
-
-      const calculatedNetApy = calculateNetApy(reservesData);
-      console.log("Calculated Net APY:", calculatedNetApy);
-
-      setNetApy(calculatedNetApy);
-      const reserve = reservesData[0]; // Adjust this index as needed based on your data structure
-      let Borrows = 0;
-      // Accessing asset_supply from the second element of the reserve
-      console.log("reservein dashboard", reserve[1]);
-      const supply = Number(reserve[1]?.asset_supply || 0n) / 100000000; // Make sure reserve[1] exists
-      setAssetSupply(supply);
-      console.log("userData", userData);
-      const borrow = Number(userData?.Ok?.total_debt || 0n) / 100000000;
-      console.log("Borrow:", borrow);
+      updateState(); // Call the async function
+  }
+}, [userData, reserveData, calculateNetSupplyApy]); // Ensure calculateNetSupplyApy is included in dependencies
+useEffect(() => {
+  if (userData && userData.Ok && userData.Ok.total_debt) {
+      const borrow = Number(userData.Ok.total_debt) / 100000000;
       setAssetBorrow(borrow);
-    }
-  }, [userData]);
+      console.log("Updated Borrow:", borrow);
+  }
+}, [userData]); 
+// Log updates to netApy
+useEffect(() => {
+  console.log("Updated netApy:", netApy);
+}, [netApy]);
+// Optional useEffect to monitor changes to netApy
+
+
 
   const updateWalletDetailTabs = () => {
     const updatedTabs = walletDetailTabs.map((item) => {

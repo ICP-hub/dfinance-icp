@@ -92,7 +92,6 @@ impl ValidationLogic {
             panic!("{:?}", Error::InvalidAmount);
         }
 
-        //user principal == caller
         if user != ic_cdk::caller() {
             panic!("{:?}", Error::InvalidUser);
         }
@@ -156,7 +155,7 @@ impl ValidationLogic {
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
         let user_total_collateral = user_data.total_collateral.unwrap_or(0) - amount;
-        // if is_collateral
+        
         let next_collateral = user_total_collateral - amount;
 
         // Calculating user liquidation threshold
@@ -337,7 +336,6 @@ impl ValidationLogic {
             panic!("{:?}", Error::InvalidAmount);
         }
 
-        //user principal == caller
         if user != ic_cdk::caller() {
             panic!("{:?}", Error::InvalidUser);
         }
@@ -420,7 +418,6 @@ impl ValidationLogic {
         })
         .unwrap();
 
-        //liquidator principal == caller
         if liquidator != ic_cdk::caller() {
             panic!("{:?}", Error::InvalidUser);
         }

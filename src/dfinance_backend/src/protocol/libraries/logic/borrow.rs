@@ -30,12 +30,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     let platform_principal = ic_cdk::api::id();
 
-    //read_state
     let debttoken_canister = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
             .get(&params.asset.to_string().clone())
-            .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
+            .and_then(|reserve_data| reserve_data.debt_token_canister.clone())
             .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
     })?;
 
@@ -56,7 +55,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
             ic_cdk::println!("Borrow amount in USD: {:?}", amount_in_usd);
         }
         Err(e) => {
-            // Handling the error
             ic_cdk::println!("Error getting exchange rate: {:?}", e);
         }
     }
@@ -65,7 +63,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     ic_cdk::println!("Canister ids, principal and amount successfully");
 
-    // Reads the reserve_data from the ASSET_INDEX using the asset key
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
@@ -100,17 +97,18 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     // Converting asset to usdt value
     if let Some(userlist) = &mut reserve_data.userlist {
-            
-        if !userlist.iter().any(|(principal, _)| principal == &user_principal.to_string()) {
+        if !userlist
+            .iter()
+            .any(|(principal, _)| principal == &user_principal.to_string())
+        {
             userlist.push((user_principal.to_string(), true));
         }
     } else {
-    
         reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
     }
-    
+
     ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
-    
+
     // Validates supply using the reserve_data
     // ValidationLogic::validate_borrow(
     //     &reserve_data,
@@ -202,13 +200,12 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
             .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
     })?;
     let platform_principal = ic_cdk::api::id();
-    // .map_err(|_| "Invalid platform canister ID".to_string())?;
 
     let debttoken_canister = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
             .get(&params.asset.to_string().clone())
-            .and_then(|reserve_data| reserve_data.debt_token_canister.clone()) // Retrieve d_token_canister
+            .and_then(|reserve_data| reserve_data.debt_token_canister.clone())
             .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
     })?;
     let debttoken_canister_id = Principal::from_text(debttoken_canister)
@@ -226,7 +223,6 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
             ic_cdk::println!("Repay amount in USD: {:?}", amount_in_usd);
         }
         Err(e) => {
-            // Handling the error
             ic_cdk::println!("Error getting exchange rate: {:?}", e);
         }
     }
@@ -268,7 +264,8 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-    *&mut reserve_data.total_borrowed = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
+    *&mut reserve_data.total_borrowed =
+        (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
 
     // Validates repay using the reserve_data
     ValidationLogic::validate_repay(

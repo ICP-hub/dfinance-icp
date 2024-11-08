@@ -1,15 +1,14 @@
+use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::transfer::*;
 use crate::get_asset_principal;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::{call, query};
-use crate::api::state_handler::{mutate_state, read_state};
 use ic_cdk_macros::update;
 use serde::Serialize;
 // use icrc_ledger_types::icrc2::approve::ApproveArgs;
 
-
-// Icrc2_transfer_from inter canister call
+// Icrc2_transfer_from inter canister call.
 pub async fn asset_transfer_from(
     ledger_canister_id: Principal,
     from: Principal,
@@ -47,13 +46,12 @@ struct Account {
     subaccount: Option<Vec<u8>>,
 }
 
-// Icrc1_balance inter canister call
+// Icrc1_balance inter canister call.
 #[query]
 pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
     let account = Account {
         owner: principal,
         subaccount: None,
-
     };
 
     let encoded_args = encode_args((account,)).unwrap();
@@ -63,32 +61,30 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
         .unwrap();
 
     let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
-    
+
     balance
 }
 
-// TODO : update balance function similar to the get balance function
 #[update]
 pub async fn update_balance(canister: Principal, principal: Principal) -> Nat {
     let account = Account {
         owner: principal,
         subaccount: None,
-        
     };
 
     let encoded_args = encode_args((account,)).unwrap();
 
-    let raw_response = ic_cdk::api::call::call_raw(canister, "icrc1_update_balance_of", &encoded_args, 0)
-        .await
-        .unwrap();
+    let raw_response =
+        ic_cdk::api::call::call_raw(canister, "icrc1_update_balance_of", &encoded_args, 0)
+            .await
+            .unwrap();
 
     let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
-    
+
     balance
 }
 
-
-// Icrc1_fee inter canister call
+// Icrc1_fee inter canister call.
 pub async fn get_fees(canister: Principal) -> Nat {
     // Serialize the input arguments (empty in this case)
     let empty_arg = candid::encode_one(()).unwrap();
@@ -98,13 +94,12 @@ pub async fn get_fees(canister: Principal) -> Nat {
         .await
         .unwrap();
 
-    // Decode the response
     let fees: Nat = decode_one(&raw_response).expect("Failed to decode fees");
 
     fees
 }
 
-// Icrc1_transfer inter canister call
+// Icrc1_transfer inter canister call.
 pub async fn asset_transfer(
     to: Principal,
     ledger: Principal,
@@ -148,16 +143,15 @@ pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
     let asset_principal_id = match asset_principal {
         Ok(principal) => principal,
         Err(err_message) => {
-            // Handle the error case where the Principal could not be retrieved
             ic_cdk::println!("Error retrieving asset Principal: {}", err_message);
-            // Return the error message
+
             return Err(format!("Error retrieving asset Principal: {}", err_message));
         }
     };
 
     let approve_args = ApproveArgs {
         from_subaccount: None,
-        spender:  TransferAccount {
+        spender: TransferAccount {
             owner: backend_canister_principal,
             subaccount: None,
         },
@@ -206,8 +200,6 @@ pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
     //         Err(format!("Error approving transfer: {}", err_message))
     //     }
     // }
-
-
 }
 
 // pub async fn approve_transfer(
@@ -246,11 +238,9 @@ pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
 //     }
 // }
 
-
 #[update]
 pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
-   
-    ic_cdk::println!("Starting fraucet with params: {:?} {:?}", asset, amount );
+    ic_cdk::println!("Starting fraucet with params: {:?} {:?}", asset, amount);
 
     // Fetched canister ids, user principal and amount
     let ledger_canister_id = mutate_state(|state| {
@@ -280,7 +270,6 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
             Ok(new_balance)
         }
         Err(e) => {
-            
             return Err(format!(
                 "Asset transfer failed, burned debttoken. Error: {:?}",
                 e

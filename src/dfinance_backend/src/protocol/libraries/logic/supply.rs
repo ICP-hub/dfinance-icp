@@ -5,7 +5,7 @@ use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
 
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
-use crate::protocol::libraries::logic::reserve::{self, mint_scaled, UserState};
+use crate::protocol::libraries::logic::reserve::{self, mint_scaled};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 // use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
@@ -44,7 +44,7 @@ impl SupplyLogic {
         let amount_nat = Nat::from(params.amount);
         // Converting asset to usdt value
         let mut usd_amount = params.amount;
-        // let unscaled_amount = params.amount/100000000;
+
         let supply_amount_to_usd =
             get_exchange_rates(params.asset.clone(), None, params.amount.clone()).await;
         match supply_amount_to_usd {
@@ -107,17 +107,18 @@ impl SupplyLogic {
         .await;
 
         ic_cdk::println!("Interest rates updated successfully");
-        
+
         if let Some(userlist) = &mut reserve_data.userlist {
-            
-            if !userlist.iter().any(|(principal, _)| principal == &user_principal.to_string()) {
+            if !userlist
+                .iter()
+                .any(|(principal, _)| principal == &user_principal.to_string())
+            {
                 userlist.push((user_principal.to_string(), true));
             }
         } else {
-        
             reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
         }
-        
+
         ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
 
         mutate_state(|state| {
@@ -208,7 +209,6 @@ impl SupplyLogic {
                 ic_cdk::println!("Withdraw amount in USD: {:?}", amount_in_usd);
             }
             Err(e) => {
-                // Handling the error
                 ic_cdk::println!("Error getting exchange rate: {:?}", e);
             }
         }
@@ -260,7 +260,8 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Withdraw validated successfully");
 
-        reserve_data.total_supply = (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
+        reserve_data.total_supply =
+            (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;

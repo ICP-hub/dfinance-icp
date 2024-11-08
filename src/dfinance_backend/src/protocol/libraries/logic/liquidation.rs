@@ -3,7 +3,7 @@ use crate::{
     declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
     protocol::libraries::{
         logic::{
-            reserve::{self, mint_scaled, UserState},
+            reserve::{self, mint_scaled},
             update::UpdateLogic,
             validation::ValidationLogic,
         },
@@ -23,9 +23,12 @@ impl LiquidationLogic {
         amount: u128,
         on_behalf_of: String,
     ) -> Result<Nat, String> {
-        // Reads the reserve data from the asset
-        ic_cdk::println!("params asset_name and collateral_asset {:?} {:?}",asset_name,collateral_asset);
-        let mut usd_amount = amount ;
+        ic_cdk::println!(
+            "params asset_name and collateral_asset {:?} {:?}",
+            asset_name,
+            collateral_asset
+        );
+        let mut usd_amount = amount;
 
         let supply_amount_to_usd = get_exchange_rates(asset_name.clone(), None, amount).await;
         match supply_amount_to_usd {
@@ -35,7 +38,6 @@ impl LiquidationLogic {
                 ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
             }
             Err(e) => {
-                // Handling the error
                 ic_cdk::println!("Error getting exchange rate: {:?}", e);
             }
         }
@@ -97,14 +99,10 @@ impl LiquidationLogic {
         )
         .await
         {
-            Ok((total_value, _time)) => {
-                // Store the total_value returned from the get_exchange_rates function
-                total_value
-            }
+            Ok((total_value, _time)) => total_value,
             Err(e) => {
-                // Handle the error case
                 ic_cdk::println!("Error fetching exchange rate: {}", e);
-                0 // Or handle the error as appropriate for your logic
+                0
             }
         };
         ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
@@ -158,22 +156,22 @@ impl LiquidationLogic {
         //     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
         // };
 
-    //     fn nat_to_f64(value: Nat) -> f64 {
-    //         value
-    //             .to_string()
-    //             .parse::<f64>()
-    //             .expect("Failed to convert Nat to f64")
-    //     }
+        //     fn nat_to_f64(value: Nat) -> f64 {
+        //         value
+        //             .to_string()
+        //             .parse::<f64>()
+        //             .expect("Failed to convert Nat to f64")
+        //     }
 
-    //     match burn_scaled(
-    //     &mut update_user_state,
-    //     nat_to_f64(reward_amount.clone()),
-    //     reserve_cache.next_liquidity_index as f64,
-    //     user_principal,
-    //     dtoken_canister_principal,
-    //     platform_principal,
-    // )
-    // .await
+        //     match burn_scaled(
+        //     &mut update_user_state,
+        //     nat_to_f64(reward_amount.clone()),
+        //     reserve_cache.next_liquidity_index as f64,
+        //     user_principal,
+        //     dtoken_canister_principal,
+        //     platform_principal,
+        // )
+        // .await
         // match asset_transfer(
         //     platform_principal,
         //     dtoken_canister_principal,
@@ -193,26 +191,25 @@ impl LiquidationLogic {
         //     }
         // };
         let usd_amount = 60812; //change it
-                                
 
-    // Minting dtoken                           
-    // stuct replica of the userstate.
-    // let mut update_user_state = UserState {
-    //     adjusted_balance: reserve_cache.curr_liquidity_index as f64
-    //         * reserve_data.total_supply as f64,
-    //     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
-    // };
+        // Minting dtoken
+        // stuct replica of the userstate.
+        // let mut update_user_state = UserState {
+        //     adjusted_balance: reserve_cache.curr_liquidity_index as f64
+        //         * reserve_data.total_supply as f64,
+        //     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
+        // };
 
-    // function to update or mint tokens to keep track of exact numbers of tokens.
-//    match mint_scaled(
-//         &mut update_user_state,
-//         nat_to_f64(reward_amount.clone()),
-//         reserve_cache.next_liquidity_index as f64,
-//         user_principal,
-//         dtoken_canister_principal,
-//         platform_principal,
-//     )
-//     .await
+        // function to update or mint tokens to keep track of exact numbers of tokens.
+        //    match mint_scaled(
+        //         &mut update_user_state,
+        //         nat_to_f64(reward_amount.clone()),
+        //         reserve_cache.next_liquidity_index as f64,
+        //         user_principal,
+        //         dtoken_canister_principal,
+        //         platform_principal,
+        //     )
+        //     .await
         match asset_transfer(
             liquidator_principal,
             dtoken_canister_principal,
@@ -241,43 +238,42 @@ impl LiquidationLogic {
                     usd_amount,
                 )
                 .await;
-            // need to ask what to return to the user.
                 Ok(balance)
             }
             Err(err) => {
                 // stuct replica of the userstate.
-            // let mut update_user_state = UserState {
-            //     adjusted_balance: reserve_cache.curr_liquidity_index as f64
-            //         * reserve_data.total_supply as f64,
-            //     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
-            // };
+                // let mut update_user_state = UserState {
+                //     adjusted_balance: reserve_cache.curr_liquidity_index as f64
+                //         * reserve_data.total_supply as f64,
+                //     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
+                // };
 
-            // fn nat_to_f64(value: Nat) -> f64 {
-            //     value
-            //         .to_string()
-            //         .parse::<f64>()
-            //         .expect("Failed to convert Nat to f64")
-            // }
+                // fn nat_to_f64(value: Nat) -> f64 {
+                //     value
+                //         .to_string()
+                //         .parse::<f64>()
+                //         .expect("Failed to convert Nat to f64")
+                // }
 
-            // // function to update or mint tokens to keep track of exact numbers of tokens.
-            // let mint_scaled_result = mint_scaled(
-            //     &mut update_user_state,
-            //     nat_to_f64(reward_amount.clone()),
-            //     reserve_cache.next_liquidity_index as f64,
-            //     user_principal,
-            //     dtoken_canister_principal,
-            //     platform_principal,
-            // )
-            // .await;
+                // // function to update or mint tokens to keep track of exact numbers of tokens.
+                // let mint_scaled_result = mint_scaled(
+                //     &mut update_user_state,
+                //     nat_to_f64(reward_amount.clone()),
+                //     reserve_cache.next_liquidity_index as f64,
+                //     user_principal,
+                //     dtoken_canister_principal,
+                //     platform_principal,
+                // )
+                // .await;
 
-            // match mint_scaled_result {
-            //     Ok(()) => {
-            //         println!("minting debttoken successfully");
-            //     }
-            //     Err(e) => {
-            //         panic!("Get error in minting the debttoken {:?}", e);
-            //     }
-            // };
+                // match mint_scaled_result {
+                //     Ok(()) => {
+                //         println!("minting debttoken successfully");
+                //     }
+                //     Err(e) => {
+                //         panic!("Get error in minting the debttoken {:?}", e);
+                //     }
+                // };
                 asset_transfer(
                     user_principal,
                     dtoken_canister_principal,

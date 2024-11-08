@@ -43,7 +43,7 @@ const PointSystemPage = () => {
     switch (activeSection) {
       case "leaderboard":
         return (
-          <div className="p-6 ">
+          <div className="p-0 md:p-6 ">
           
           <Leaderboard/>
           </div>
@@ -58,7 +58,7 @@ const PointSystemPage = () => {
         );
       case "rates":
         return (
-          <div className="p-6 min-h-screen">
+          <div className="p-0 md:p-6">
             <div className="max-w-7xl mx-auto space-y-10">
               {/* Rates Section */}
               <div>
@@ -66,7 +66,13 @@ const PointSystemPage = () => {
                 <div className="grid grid-cols-1 lgx:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40  flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl ">
                     <h3 className="text-xl font-semibold flex items-center gap-2 mb-4 text-[#2A1F9D] dark:text-darkTextSecondary1">
-                      <img src={CheckCircleIcon} alt="Check Circle" className="w-5 h-5" /> Lending Positions
+                    <div className="flex items-center">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-[#2A1F9D] dark:text-darkTextSecondary1">
+    <path d="M8 9.5C8 11.2239 8.68482 12.8772 9.90381 14.0962C11.1228 15.3152 12.7761 16 14.5 16C16.2239 16 17.8772 15.3152 19.0962 14.0962C20.3152 12.8772 21 11.2239 21 9.5C21 7.77609 20.3152 6.12279 19.0962 4.90381C17.8772 3.68482 16.2239 3 14.5 3C12.7761 3 11.1228 3.68482 9.90381 4.90381C8.68482 6.12279 8 7.77609 8 9.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M3 14.5C3 16.2239 3.68482 17.8772 4.90381 19.0962C6.12279 20.3152 7.77609 21 9.5 21C11.2239 21 12.8772 20.3152 14.0962 19.0962C15.3152 17.8772 16 16.2239 16 14.5C16 12.7761 15.3152 11.1228 14.0962 9.90381C12.8772 8.68482 11.2239 8 9.5 8C7.77609 8 6.12279 8.68482 4.90381 9.90381C3.68482 11.1228 3 12.7761 3 14.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+  <span className="ml-2">Lending Positions</span>
+</div>
                     </h3>
                     <ul className="text-sm space-y-2 text-[#2A1F9D] dark:text-darkTextSecondary">
                       <li>✔️ <b>3</b> points per dollar per day in Stables</li>
@@ -77,7 +83,13 @@ const PointSystemPage = () => {
         
                   <div className="bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
                     <h3 className="text-xl font-semibold flex items-center gap-2 mb-4 text-[#2A1F9D] dark:text-darkTextSecondary1">
-                      <img src={borrowIcon} alt="Borrow Icon" className="w-5 h-5" /> Borrow Positions
+                    <div className="flex items-center">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-[#2A1F9D] dark:text-darkTextSecondary1">
+    <path d="M8 9.5C8 11.2239 8.68482 12.8772 9.90381 14.0962C11.1228 15.3152 12.7761 16 14.5 16C16.2239 16 17.8772 15.3152 19.0962 14.0962C20.3152 12.8772 21 11.2239 21 9.5C21 7.77609 20.3152 6.12279 19.0962 4.90381C17.8772 3.68482 16.2239 3 14.5 3C12.7761 3 11.1228 3.68482 9.90381 4.90381C8.68482 6.12279 8 7.77609 8 9.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M3 14.5C3 16.2239 3.68482 17.8772 4.90381 19.0962C6.12279 20.3152 7.77609 21 9.5 21C11.2239 21 12.8772 20.3152 14.0962 19.0962C15.3152 17.8772 16 16.2239 16 14.5C16 12.7761 15.3152 11.1228 14.0962 9.90381C12.8772 8.68482 11.2239 8 9.5 8C7.77609 8 6.12279 8.68482 4.90381 9.90381C3.68482 11.1228 3 12.7761 3 14.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+  <span className="ml-2">Borrow Positions</span>
+</div>
                     </h3>
                     <ul className="text-sm space-y-2 text-[#2A1F9D] dark:text-darkTextSecondary">
                       <li>✔️ <b>3</b> points per dollar per day in anything else (e.g., Liquid Staked tokens)</li>
@@ -125,7 +137,7 @@ const PointSystemPage = () => {
         
       case "howItWorks":
         return (
-          <div className="p-6 text-[#2A1F9D] dark:text-darkText">
+          <div className="p-0 md:p-6 text-[#2A1F9D] dark:text-darkText">
             {/* Replace with informational cards or an FAQ */}
             <section className="" id="faq">
           <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">

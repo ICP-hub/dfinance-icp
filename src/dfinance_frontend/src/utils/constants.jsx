@@ -1884,7 +1884,7 @@ export const TRANSACTION_DATA = {
       imageUrl: ckUSDT,
     },
   ],
-  Liquidity: [
+  Liquidation: [
     {
       timestamp: new Date('2021-10-02T14:50:00Z').getTime(),
       assetName: 'ckUSDT',

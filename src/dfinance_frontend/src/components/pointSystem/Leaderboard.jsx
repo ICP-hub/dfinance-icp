@@ -7,28 +7,55 @@ const ITEMS_PER_PAGE = 10;
 const BREAKPOINT = 1280;
 
 const Leaderboard = () => {
-  const { principal, isAuthenticated } = useAuth();
+  const { principal, getAllUsers } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortedLeaderboardData, setSortedLeaderboardData] = useState([]);
   const [userRank, setUserRank] = useState(null);
   const [isTableView, setIsTableView] = useState(window.innerWidth > BREAKPOINT);
+  const [userPrincipals, setUserPrincipals] = useState([]);
 
   const truncatePrincipal = (principal) => {
     return principal.length > 14 ? `${principal.slice(0, 14)}...` : principal;
   };
 
+  // Fetch principals from `getAllUsers` when the component mounts
   useEffect(() => {
-    let sortedData = [...originalLeaderboardData];
-    sortedData.sort((a, b) => parseInt(a.rank.replace("#", "")) - parseInt(b.rank.replace("#", "")));
+    const fetchUserPrincipals = async () => {
+      try {
+        const usersData = await getAllUsers();
+        // Assuming getAllUsers returns an array of entries like: [[principal, data], ...]
+        const principals = usersData.map((user) => user[0].toText());
+        setUserPrincipals(principals);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
 
-    const userEntryIndex = sortedData.findIndex(entry => entry.principal === principal);
+    fetchUserPrincipals();
+  }, [getAllUsers]);
+
+  // Combine `originalLeaderboardData` with fetched principals
+  useEffect(() => {
+    // Map `originalLeaderboardData` and assign principals from fetched data
+    const updatedData = originalLeaderboardData.map((entry, index) => ({
+      ...entry,
+      principal: userPrincipals[index] || entry.principal, // Update principal if available
+    }));
+
+    // Sort leaderboard data based on rank or another attribute if needed
+    const sortedData = updatedData.sort(
+      (a, b) => parseInt(a.rank.replace("#", "")) - parseInt(b.rank.replace("#", ""))
+    );
+
+    setSortedLeaderboardData(sortedData);
+
+    // Find current user's rank
+    const userEntryIndex = sortedData.findIndex((entry) => entry.principal === principal);
     if (userEntryIndex !== -1) {
       const userEntry = { ...sortedData[userEntryIndex], rank: `#${userEntryIndex + 1}` };
       setUserRank(userEntry);
     }
-
-    setSortedLeaderboardData(sortedData);
-  }, [principal]);
+  }, [userPrincipals, principal]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -46,7 +73,6 @@ const Leaderboard = () => {
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentItems = sortedLeaderboardData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
   const getRankStyle = (rank) => {
     switch (rank) {
       case "#1":
@@ -61,9 +87,7 @@ const Leaderboard = () => {
   };
 
   const getCardBorderColorClass = (rank, entryPrincipal) => {
-    if (entryPrincipal === principal) {
-      return "border-blue-500 ring-blue-500"; // Permanent color for authenticated user's principal
-    }
+   
   
     switch (rank) {
       case "#1":
@@ -76,50 +100,50 @@ const Leaderboard = () => {
         return "border-gray-300 ring-gray-300"; // Default for others
     }
   };
-
   return (
-    <div className="w-full max-w-8xl mx-auto lg:px-0.5 p-10 -mt-8 ">
+    <div className="w-full max-w-8xl mx-auto lg:px-0.5 p-10 -mt-12 ">
       <div className="w-full max-w-8xl mx-auto lg:px-0.5">
-        
         {isTableView ? (
           <div className="w-full max-w-10xl overflow-x-auto">
-            <table className="w-full text-[#2A1F9D] font-medium text-xs md:text-sm lg:text-base dark:text-darkText mt-1  ">
+            <table className="w-full text-[#2A1F9D] font-medium text-xs md:text-sm lg:text-base dark:text-darkText mt-1">
               <thead>
                 <tr className="text-left text-[#233D63] dark:text-darkTextSecondary1">
-                  <th className="py-2 px-6 ">Rank</th>
-                  <th className="py-2 px-6 ">Principal</th>
-                  <th className="py-2 px-6 text-nowrap ">Supply Points</th>
-                  <th className="py-2 px-6 text-nowrap  ">Borrow Points</th>
-                  <th className="py-2 px-6 text-nowrap ">Liquidity Points</th>
-                  <th className="py-2 px-6 text-nowrap ">Boosts</th>
-                  <th className="py-2 px-6 text-nowrap ">Total Points</th>
+                  <th className="py-2 px-6">Rank</th>
+                  <th className="py-2 px-6">Principal</th>
+                  <th className="py-2 px-6 text-nowrap">Supply Points</th>
+                  <th className="py-2 px-6 text-nowrap">Borrow Points</th>
+                  <th className="py-2 px-6 text-nowrap">Liquidity Points</th>
+                  <th className="py-2 px-6 text-nowrap">Boosts</th>
+                  <th className="py-2 px-6 text-nowrap">Total Points</th>
                 </tr>
               </thead>
               <tbody className="mt-2">
                 {userRank && (
                   <>
-                    <tr className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
-                      <td className="py-6 px-6" style={getRankStyle(userRank.rank)}>{userRank.rank}</td>
-                      <td className="py-6 px-6">{truncatePrincipal(userRank.principal)}</td>
-                      <td className="py-6 px-10 ">{userRank.supplyPoints}</td>
-                      <td className="py-6 px-6">{userRank.borrowPoints}</td>
-                      <td className="py-6 px-10">{userRank.liquidityPoints}</td>
-                      <td className="py-6 px-6">{userRank.boosts}</td>
-                      <td className="py-6 px-6">{userRank.totalPoints}</td>
-                    </tr>
-                    <tr>
+                  <tr className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer ${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
+                    <td className="py-6 px-6" style={getRankStyle(userRank.rank)}>
+                      {userRank.rank}
+                    </td>
+                    <td className="py-6 px-6">{truncatePrincipal(userRank.principal)}</td>
+                    <td className="py-6 px-10 ">{userRank.supplyPoints}</td>
+                    <td className="py-6 px-6">{userRank.borrowPoints}</td>
+                    <td className="py-6 px-10">{userRank.liquidityPoints}</td>
+                    <td className="py-6 px-6">{userRank.boosts}</td>
+                    <td className="py-6 px-6">{userRank.totalPoints}</td>
+                  </tr>
+                  <tr>
                       <td colSpan="7" className="text-center">
                       <hr className="my-4 border-gray-600 dark:border-gray-600 w-20 mx-auto " />
 
                       </td>
                     </tr>
-                  </>
-                )}
+                </>
+              )}
 
                 {currentItems.map((entry) => (
                   <tr
                     key={entry.id}
-                    className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer mt-8 ${getCardBorderColorClass(entry.rank, entry.principal)}`}
+                    className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer${getCardBorderColorClass(entry.rank, entry.principal)}`}
                   >
                     <td className="py-2 px-6" style={getRankStyle(entry.rank)}>{entry.rank}</td>
                     <td className="py-2 px-6">{truncatePrincipal(entry.principal)}</td>
@@ -134,33 +158,32 @@ const Leaderboard = () => {
             </table>
           </div>
         ) : (
-          <div className="block">
+          <div className="block w-[140%] sm2:w-full -ml-12 sm2:mx-auto">
             {userRank && (
               <>
-                <div className={`p-4 mb-4 mt-6 text-[#2A1F9D] font-medium text-xs md:text-sm lg:text-base dark:text-darkText rounded-md shadow-md ring-1 ${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
-                  <div className="flex justify-between items-center">
-                    <span style={getRankStyle(userRank.rank)}>{userRank.rank}</span>
-                    <span className="font-semibold">{truncatePrincipal(userRank.principal)}</span>
-                  </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                    <div>Supply Points: {userRank.supplyPoints}</div>
-                    <div>Borrow Points: {userRank.borrowPoints}</div>
-                    <div>Liquidity Points: {userRank.liquidityPoints}</div>
-                    <div>Boosts: {userRank.boosts}</div>
-                  </div>
-                  <div className="mt-2 font-semibold text-lg">
-                    Total Points: {userRank.totalPoints}
-                  </div>
+              <div className={`p-4 mb-4 mt-6 text-[#2A1F9D] font-medium text-xs md:text-sm lg:text-base dark:text-darkText rounded-md shadow-md ring-1 ${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
+                <div className="flex justify-between items-center">
+                  <span style={getRankStyle(userRank.rank)}>{userRank.rank}</span>
+                  <span className="font-semibold">{truncatePrincipal(userRank.principal)}</span>
                 </div>
-                <hr className="my-4 border-gray-600 dark:border-white w-20 mx-auto px-5" />
-
-              </>
-            )}
+                <div className="mt-2 grid grid-cols-2 gap-2 ">
+                  <div>Supply Points: {userRank.supplyPoints}</div>
+                  <div>Borrow Points: {userRank.borrowPoints}</div>
+                  <div>Liquidity Points: {userRank.liquidityPoints}</div>
+                  <div>Boosts: {userRank.boosts}</div>
+                </div>
+                <div className="mt-2 font-medium text-xs">
+                  Total Points: {userRank.totalPoints}
+                </div>
+              </div>
+              <hr className="my-4 border-gray-600 dark:border-white w-20 mx-auto px-5" />
+           </>
+           )}
 
             {currentItems.map((entry) => (
               <div
                 key={entry.id}
-                className={`p-4 mb-4 rounded-md text-sm text-[#2A1F9D] font-medium md:text-sm lg:text-base dark:text-darkText shadow-md border-1 ring-1 ${getCardBorderColorClass(entry.rank, entry.principal)}`}
+                className={`p-2 w-full mb-4 rounded-md text-xs text-[#2A1F9D] font-medium md:text-sm lg:text-base dark:text-darkText shadow-md border-1 ring-1 ${getCardBorderColorClass(entry.rank, entry.principal)}`}
               >
                 <div className="flex justify-between items-center">
                   <span style={getRankStyle(entry.rank)}>{entry.rank}</span>
@@ -172,7 +195,7 @@ const Leaderboard = () => {
                   <div>Liquidity Points: {entry.liquidityPoints}</div>
                   <div>Boosts: {entry.boosts}</div>
                 </div>
-                <div className="mt-2 font-semibold text-lg">
+                <div className="mt-2 font-medium text-xs">
                   Total Points: {entry.totalPoints}
                 </div>
               </div>
@@ -180,15 +203,15 @@ const Leaderboard = () => {
           </div>
         )}
 
-{sortedLeaderboardData.length > 0 && (
-        <div className="flex justify-center mt-10 gap-2">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+        {sortedLeaderboardData.length > 0 && (
+          <div className="flex justify-center mt-10 gap-2">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

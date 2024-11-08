@@ -18,6 +18,7 @@ export default {
       },  backgroundImage: {
         'bottom-left-to-top-right-gradient': 'radial-gradient(circle at bottom left, #27234F, #0D123C)',
       },
+      
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -120,7 +121,7 @@ export default {
         fadeInLeft: 'fadeInLeft 2s ease-out',
       },
       screens: {
-        'small-screen': { max: '1335px' },
+        
         sxxs: "255px",
         sxs: "265px",
         sxs1: "275px",

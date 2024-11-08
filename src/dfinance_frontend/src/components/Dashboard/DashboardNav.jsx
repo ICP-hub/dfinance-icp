@@ -145,10 +145,11 @@ const updateNetApy = () => {
     if (item.id === 1) {
       return {
         ...item,
-        count: netApy > 0 ? `${netApy.toFixed(4)}%` : "-",
-        style: { visibility: netApy > 0 ? "visible" : "hidden" }, // Apply visibility
+        count: netApy !== 0 ? `${netApy.toFixed(4)}%` : "-",
+        // Apply visibility
       };
     }
+
     return item;
   });
 

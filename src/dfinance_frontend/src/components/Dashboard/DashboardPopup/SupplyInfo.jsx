@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { X } from "lucide-react";
 import CircularProgress from "../../Common/CircularProgressbar";
+import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
+import { useParams } from "react-router-dom";
 
 const SupplyInfo = ({
   formatNumber,
@@ -22,6 +24,39 @@ const SupplyInfo = ({
       ? (totalSupplied / supplyCapNumber) * 100
       : 0;
 
+  const { id } = useParams();
+
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
+
+
+  const getAssetRate = (assetName) => {
+    switch (assetName) {
+      case "ckBTC":
+        return ckBTCUsdRate;
+      case "ckETH":
+        return ckETHUsdRate;
+      case "ckUSDC":
+        return ckUSDCUsdRate;
+      case "ICP":
+        return ckICPUsdRate;
+      case "ckUSDT":
+        return ckUSDTUsdRate;
+      default:
+        return 0; 
+    }
+  };
+
+  const assetRate = getAssetRate(id);
+  const totalSuppliedAsset = assetRate && totalSupplied ? (Number(totalSupplied)) / assetRate : 0;
+  const totalSuppliedCap = assetRate && supplyCap ? (Number(supplyCap)) / assetRate : 0;
+
+
   return (
     <div className="w-full lg:w-10/12 ">
       <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7 lg:gap-0 md:gap-3">
@@ -38,7 +73,14 @@ const SupplyInfo = ({
             />
             <p>
               {" "}
-              <span>${ formatNumber(Number(totalSupplied))}</span> of{" "}
+              <span>{formatNumber(Number(totalSuppliedAsset))}</span> of{" "}
+              <span>
+                {supplyCap ? formatNumber(Number(totalSuppliedCap)) : "N/A"}
+              </span>
+            </p>
+            <p className="text-[12px] -mt-3">
+              {" "}
+              <span>${formatNumber(Number(totalSupplied))}</span> of{" "}
               <span>
                 ${supplyCap ? formatNumber(Number(supplyCap.toString())) : "N/A"}
               </span>
@@ -57,9 +99,9 @@ const SupplyInfo = ({
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
             <p>
-              {supplyRateAPR  < 0.1
+              {supplyRateAPR < 0.1
                 ? "<0.1%"
-                : `${(supplyRateAPR ).toFixed(2)}%`}
+                : `${(supplyRateAPR).toFixed(2)}%`}
             </p>
           </div>
         </div>

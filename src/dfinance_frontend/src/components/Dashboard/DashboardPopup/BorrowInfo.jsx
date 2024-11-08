@@ -1,6 +1,8 @@
 import React from "react"
 import LineGraph from "../../Common/LineGraph"
 import CircularProgress from "../../Common/CircularProgressbar"
+import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
+import { useParams } from "react-router-dom";
 
 const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) => {
 
@@ -8,6 +10,37 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
   const totalBorrowPercentage = borrowCapNumber && totalBorrowed 
     ? (totalBorrowed / borrowCapNumber)  
     : 0; 
+    const { id } = useParams();
+
+    const {
+      ckBTCUsdRate,
+      ckETHUsdRate,
+      ckUSDCUsdRate,
+      ckICPUsdRate,
+      ckUSDTUsdRate,
+    } = useFetchConversionRate();
+  
+  
+    const getAssetRate = (assetName) => {
+      switch (assetName) {
+        case "ckBTC":
+          return ckBTCUsdRate;
+        case "ckETH":
+          return ckETHUsdRate;
+        case "ckUSDC":
+          return ckUSDCUsdRate;
+        case "ICP":
+          return ckICPUsdRate;
+        case "ckUSDT":
+          return ckUSDTUsdRate;
+        default:
+          return 0; 
+      }
+    };
+  
+    const assetRate = getAssetRate(id);
+    const totalBorrowedAsset = assetRate && totalBorrowed ? (Number(totalBorrowed)) / assetRate : 0;
+    const totalBorrowedCap = assetRate && borrowCap ? (Number(borrowCap)) / assetRate : 0;
 
   return (
     <div className="w-full lg:w-10/12 ">
@@ -22,7 +55,14 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-             <p> <span >${formatNumber(Number(totalBorrowed))}</span> of <span>${borrowCap ? formatNumber(Number(borrowCap.toString())) : 'N/A'}</span></p>
+            <p>
+              {" "}
+              <span>{formatNumber(Number(totalBorrowedAsset))}</span> of{" "}
+              <span>
+                {borrowCap ? formatNumber(Number(totalBorrowedCap)) : "N/A"}
+              </span>
+            </p>
+             <p className="text-[12px] -mt-3"> <span >${formatNumber(Number(totalBorrowed))}</span> of <span>${borrowCap ? formatNumber(Number(borrowCap.toString())) : 'N/A'}</span></p>
           </div>
 
           <hr

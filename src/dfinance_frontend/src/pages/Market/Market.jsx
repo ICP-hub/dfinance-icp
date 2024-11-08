@@ -399,7 +399,7 @@ const WalletDetails = () => {
                     </td>
 
                     <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
-                      {((Number(item?.[1]?.Ok?.current_liquidity_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.current_liquidity_rate) / 100000000)).toFixed(2)}%`}</div></td>
+                      {((Number(item?.[1]?.Ok?.current_liquidity_rate) / 100000000)) < 0.01 ? '<0.01%' : `${((Number(item?.[1]?.Ok?.current_liquidity_rate) / 100000000)).toFixed(2)}%`}</div></td>
                     <td className="p-2 align-center hidden md:table-cell">
                       <div className="flex justify-center flex-row">
                         <div>
@@ -446,7 +446,7 @@ const WalletDetails = () => {
 
                     </td>
                     <td className="p-3 align-center hidden md:table-cell">
-                      <div className="flex justify-center"> {((Number(item?.[1]?.Ok?.borrow_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.borrow_rate) / 100000000)).toFixed(2)}%`}</div>
+                      <div className="flex justify-center"> {((Number(item?.[1]?.Ok?.borrow_rate) / 100000000)) < 0.01 ? '<0.01%' : `${((Number(item?.[1]?.Ok?.borrow_rate) / 100000000)).toFixed(2)}%`}</div>
                     </td>
                     <td className="p-3 align-center">
                       <div className="w-full flex justify-end align-center">
@@ -509,7 +509,7 @@ const WalletDetails = () => {
                     </div>
                     <div className="flex justify-between">
                       <p className="text-sm dark:text-darkTextSecondary">Supply APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText"> {((Number(selectedAssetData[1].Ok.current_liquidity_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(selectedAssetData[1].Ok.current_liquidity_rate) / 100000000)).toFixed(2)}%`}</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText"> {((Number(selectedAssetData[1].Ok.current_liquidity_rate) / 100000000)) < 0.01 ? '<0.01%' : `${((Number(selectedAssetData[1].Ok.current_liquidity_rate) / 100000000)).toFixed(2)}%`}</p>
                     </div>
 
 
@@ -524,7 +524,7 @@ const WalletDetails = () => {
                     </div>
                     <div className="flex justify-between mb-4">
                       <p className="text-sm dark:text-darkTextSecondary">Borrow APY:</p>
-                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{((Number(selectedAssetData[1].Ok.borrow_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(selectedAssetData[1].Ok.borrow_rate) / 100000000)).toFixed(2)}%`}</p>
+                      <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">{((Number(selectedAssetData[1].Ok.borrow_rate) / 100000000)) < 0.01 ? '<0.01%' : `${((Number(selectedAssetData[1].Ok.borrow_rate) / 100000000)).toFixed(2)}%`}</p>
                     </div>
                   </div>
 

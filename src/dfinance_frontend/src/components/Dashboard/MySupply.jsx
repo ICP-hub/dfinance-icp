@@ -793,8 +793,8 @@ const MySupply = () => {
                                     APY:
                                   </p>
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                    {supplyRateApr < 0.1
-                                      ? "<0.1%"
+                                    {supplyRateApr < 0.01
+                                      ? "<0.01%"
                                       : `${supplyRateApr.toFixed(2)}%`}
                                   </p>
                                 </div>
@@ -1165,8 +1165,8 @@ const MySupply = () => {
                                     </p>
                                   </div>
                                   <div className=" p-3  align-top flex items-center ">
-                                    {supplyRateApr < 0.1
-                                      ? "<0.1%"
+                                    {supplyRateApr < 0.01
+                                      ? "<0.01%"
                                       : `${supplyRateApr.toFixed(2)}%`}
                                   </div>
 
@@ -1496,8 +1496,8 @@ const MySupply = () => {
                                 <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
                                   {Number(item[1].Ok.current_liquidity_rate) /
                                     100000000 <
-                                    0.1
-                                    ? "<0.1%"
+                                    0.01
+                                    ? "<0.01%"
                                     : `${(
                                       Number(
                                         item[1].Ok.current_liquidity_rate
@@ -1734,11 +1734,11 @@ const MySupply = () => {
                                   )}
                                 </div>
 
-                                <div className="ml-2 align-top">
+                                <div className=" align-top">
                                   {Number(item[1].Ok.current_liquidity_rate) /
                                     100000000 <
-                                    0.1
-                                    ? "<0.1%"
+                                    0.01
+                                    ? "<0.01%"
                                     : `${(
                                       Number(
                                         item[1].Ok.current_liquidity_rate
@@ -2057,8 +2057,8 @@ const MySupply = () => {
                                       APY:
                                     </p>
                                     <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
-                                      {borrowRateApr < 0.1
-                                        ? "<0.1%"
+                                      {borrowRateApr < 0.01
+                                        ? "<0.01%"
                                         : `${borrowRateApr.toFixed(2)}%`}
                                     </p>
                                   </div>
@@ -2381,7 +2381,7 @@ const MySupply = () => {
                                   </div>
                                   <div className="p-3 ml-1">
                                     {borrowRateApr < 0.1
-                                      ? "<0.1%"
+                                      ? "<0.01%"
                                       : `${borrowRateApr.toFixed(2)}%`}
                                   </div>
 
@@ -2697,8 +2697,8 @@ const MySupply = () => {
                                 </p>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
                                   {Number(item[1].Ok.borrow_rate) / 100000000 <
-                                    0.1
-                                    ? "<0.1%"
+                                    0.01
+                                    ? "<0.01%"
                                     : `${(
                                       Number(item[1].Ok.borrow_rate) / 100000000
                                     ).toFixed(2)}%`}
@@ -2983,8 +2983,8 @@ const MySupply = () => {
                                 <div className="p-3 lgx:pl-6 align-center flex items-center">
                                   <p className="mt-1.5">
                                     {Number(item[1].Ok.borrow_rate) / 100000000 <
-                                      0.1
-                                      ? "<0.1%"
+                                      0.01
+                                      ? "<0.01%"
                                       : `${(
                                         Number(item[1].Ok.borrow_rate) /
                                         100000000

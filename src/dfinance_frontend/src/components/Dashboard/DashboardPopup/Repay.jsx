@@ -635,7 +635,7 @@ const Repay = ({
                         : scaledAmount / 100000000
                     : "0"}</strong>{" "}
                 <strong>debt{asset}</strong> after{" "}
-                {supplyRateAPR < 0.1 ? "<0.1%" : `${supplyRateAPR.toFixed(2)}%`}{" "}
+                {supplyRateAPR < 0.1 ? "<0.01%" : `${supplyRateAPR.toFixed(2)}%`}{" "}
                 borrow rate
               </p>
             </center>

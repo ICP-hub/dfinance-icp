@@ -436,7 +436,7 @@ const WithdrawPopup = ({
                 <p>Supply APY</p>
                 <p>
                   {supplyRateAPR < 0.1
-                    ? "<0.1%"
+                    ? "<0.01%"
                     : `${supplyRateAPR.toFixed(2)}%`}
                 </p>
               </div>
@@ -565,7 +565,7 @@ const WithdrawPopup = ({
                     : scaledAmount / 100000000
                 : "0"}</strong>{" "} <strong>d{asset}</strong>after {" "}
               {supplyRateAPR < 0.1
-                ? "<0.1%"
+                ? "<0.01%"
                 : `${supplyRateAPR.toFixed(2)}%`}
               {" "} apy
             </p></center>

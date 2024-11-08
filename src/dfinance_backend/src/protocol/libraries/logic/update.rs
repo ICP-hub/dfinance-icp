@@ -729,3 +729,7 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
 
     ic_cdk::println!("User data updated successfully: {:?}", user_data);
 }
+
+
+
+

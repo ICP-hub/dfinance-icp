@@ -26,13 +26,36 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
 
 const DashboardNav = () => {
+
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
     useAuth();
-    const { reserveData} = useAssetData();
-    console.log("reserveDta",reserveData)
+  const { reserveData } = useAssetData();
+  console.log("reserveDta", reserveData)
+  const [netWorth, setNetWorth] = useState()
+
+  const totalUsdValueBorrow = useSelector(
+    (state) => state.borrowSupply.totalUsdValueBorrow
+  );
+  const totalUsdValueSupply = useSelector(
+    (state) => state.borrowSupply.totalUsdValueSupply
+  );
+
+  const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
+
+
+  useEffect(() => {
+    const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
+    setNetWorth(calculatedNetWorth);
+    console.log(`Updated Net Worth: $${calculatedNetWorth}`);
+  }, [totalUsdValueBorrow, totalUsdValueSupply]);
+
+  console.log("totalUsdValueBorrow", totalUsdValueBorrow, totalUsdValueSupply);
+
+
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
   const [netSupplyApy, setNetSupplyApy] = useState(0);
   const [netDebtApy, setNetDebtApy] = useState(0);
+
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
@@ -86,52 +109,71 @@ const DashboardNav = () => {
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const formatNumber = useFormatNumber();
 
-  const updateWalletDetailTab = (data) => {
+
+  // Function to update net_worth and health_factor only
+  // Function to update net_worth and health_factor only
+  const updateNetWorthAndHealthFactor = (data) => {
     if (!data || !data.Ok) return;
-    const { net_worth, net_apy, health_factor } = data.Ok;
-    // console.log("health factor", health_factor[0])
+    const { net_worth, health_factor } = data.Ok;
+
     const updatedTab = walletDetailTab.map((item) => {
-      console.log("item", item);
-      switch (item.id) {
-        case 0:
-          return {
-            ...item,
-            count: `$${formatNumber(Number(net_worth[0]) / 100000000)}`,
-          };
-        case 1:
-          return {
-            ...item,
-            // count: `${
-            //   (netApy).toFixed(2) < 0.01
-            //     ? "<0.01"
-            //     : (netApy).toFixed(2)
-            // }%`,
-            count: `${(netApy).toFixed(4)}%`,
-          };
-        case 2:
-          const healthValue =
-            Number(health_factor[0]) / 10000000000 > 100
-              ? "♾️"
-              : parseFloat((Number(health_factor[0]) / 10000000000).toFixed(2));
-
-          return {
-            ...item,
-            count: healthValue,
-          };
-
-        default:
-          return item;
+      if (item.id === 0) {
+        return {
+          ...item,
+          count: calculatedNetWorth ? `$${formatNumber(calculatedNetWorth)}` : null,
+          style: { visibility: net_worth[0] > 0 ? "visible" : "hidden" },
+        };
+      } else if (item.id === 2) {
+        const healthValue =
+          Number(health_factor[0]) / 10000000000 > 100
+            ? "♾️"
+            : parseFloat((Number(health_factor[0]) / 10000000000).toFixed(2));
+        return {
+          ...item,
+          count: healthValue,
+        };
       }
+      return item;
     });
 
     setWalletDetailTab(updatedTab);
   };
 
+  // Function to update net_apy with conditional visibility
+  const updateNetApy = () => {
+    const updatedTab = walletDetailTab.map((item) => {
+      if (item.id === 1) {
+        return {
+          ...item,
+          count: netApy !== 0 ? `${netApy.toFixed(4)}%` : null,
+          // Apply visibility
+        };
+      }
+
+      return item;
+    });
+
+    setWalletDetailTab(updatedTab);
+  };
+
+  // Update net_worth and health_factor based on `userData` and `reserveData`
   useEffect(() => {
-    if (userData,reserveData ,netApy) {
-      updateWalletDetailTab(userData);
+    if (userData && reserveData) {
+      updateNetWorthAndHealthFactor(userData);
     }
-  }, [userData ,reserveData , netApy]);
+  }, [userData, reserveData, totalUsdValueSupply, totalUsdValueBorrow]);
+
+  // Update net_apy only when `netApy` changes
+  useEffect(() => {
+    if (netApy !== undefined) {
+      updateNetApy();
+    }
+  }, [netApy]);
+
+
+  // Effect to update net_apy only when `netApy` changes
+
+
 
   const [error, setError] = useState(null);
 
@@ -164,8 +206,8 @@ const DashboardNav = () => {
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate]);
-  console.log("reservedata in reserve1 ",reserveData)
- 
+  console.log("reservedata in reserve1 ", reserveData)
+
   const calculateNetSupplyApy = useCallback((reserves, reserveData) => {
     let totalSuppliedInUSD = 0;
     let weightedApySum = 0;
@@ -175,77 +217,77 @@ const DashboardNav = () => {
     let denominator = 0;
 
     reserves.forEach((reserve) => {
-        const assetKey = reserve[0];
-        console.log(`Processing assetKey: ${assetKey}`);
-       
-        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok) return;
+      const assetKey = reserve[0];
+      console.log(`Processing assetKey: ${assetKey}`);
 
-        const conversionRate = getConversionRate(assetKey);
-        const supplyApy = Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) / 100000000;
-        const debtApy = Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
+      if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok) return;
 
-        const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
-        const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
-        console.log(
-          `Reserve: ${assetKey}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
+      const conversionRate = getConversionRate(assetKey);
+      const supplyApy = Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) / 100000000;
+      const debtApy = Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
+
+      const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
+      const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
+      console.log(
+        `Reserve: ${assetKey}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
       );
       console.log(
-          `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}`
+        `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}`
       );
-        const assetBorrowedInUSD = assetBorrowed * conversionRate;
-        totalBorrowedInUSD = assetBorrowedInUSD;
-        weightedDebtApySum = assetBorrowedInUSD * debtApy;
+      const assetBorrowedInUSD = assetBorrowed * conversionRate;
+      totalBorrowedInUSD = assetBorrowedInUSD;
+      weightedDebtApySum = assetBorrowedInUSD * debtApy;
 
-        const assetSupplyInUSD = assetSupply * conversionRate;
-        totalSuppliedInUSD = assetSupplyInUSD;
-        weightedApySum = assetSupplyInUSD * supplyApy;
-        console.log(`supply : ${weightedApySum}, borrow: ${weightedDebtApySum}`);
-        numerator = numerator + weightedApySum - weightedDebtApySum;
-        denominator = denominator + totalSuppliedInUSD;
-        console.log(
-          `Numerator: ${numerator}, denominator ${denominator}`
+      const assetSupplyInUSD = assetSupply * conversionRate;
+      totalSuppliedInUSD = assetSupplyInUSD;
+      weightedApySum = assetSupplyInUSD * supplyApy;
+      console.log(`supply : ${weightedApySum}, borrow: ${weightedDebtApySum}`);
+      numerator = numerator + weightedApySum - weightedDebtApySum;
+      denominator = denominator + totalSuppliedInUSD;
+      console.log(
+        `Numerator: ${numerator}, denominator ${denominator}`
       );
     });
 
     return denominator > 0 ? numerator / denominator : 0;
-}, [reserveData]);
-useEffect(() => {
-  if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
+  }, [reserveData]);
+  useEffect(() => {
+    if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
-          const reservesData = userData.Ok.reserves[0];
-          const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
+        const reservesData = userData.Ok.reserves[0];
+        const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
 
-          // Set netApy immediately
-          setNetApy(calculatedNetApy);
+        // Set netApy immediately
+        setNetApy(calculatedNetApy);
 
-          // Update asset supply and borrow values
-          const reserve = reservesData[0];
-          const supply = reserve[1] ? Number(reserve[1].asset_supply || 0n) / 100000000 : 0;
-          setAssetSupply(supply);
+        // Update asset supply and borrow values
+        const reserve = reservesData[0];
+        const supply = reserve[1] ? Number(reserve[1].asset_supply || 0n) / 100000000 : 0;
+        setAssetSupply(supply);
 
-          const borrow = Number(userData.Ok.total_debt || 0n) / 100000000;
-          setAssetBorrow(borrow);
+        const borrow = Number(userData.Ok.total_debt || 0n) / 100000000;
+        setAssetBorrow(borrow);
 
-          console.log("Net APY:", calculatedNetApy);
-          console.log("Asset Supply:", supply);
-          console.log("Borrow:", borrow);
+        console.log("Net APY:", calculatedNetApy);
+        console.log("Asset Supply:", supply);
+        console.log("Borrow:", borrow);
       };
 
       updateState(); // Call the async function
-  }
-}, [userData, reserveData, calculateNetSupplyApy]); // Ensure calculateNetSupplyApy is included in dependencies
-useEffect(() => {
-  if (userData && userData.Ok && userData.Ok.total_debt) {
+    }
+  }, [userData, reserveData, calculateNetSupplyApy]); // Ensure calculateNetSupplyApy is included in dependencies
+  useEffect(() => {
+    if (userData && userData.Ok && userData.Ok.total_debt) {
       const borrow = Number(userData.Ok.total_debt) / 100000000;
       setAssetBorrow(borrow);
       console.log("Updated Borrow:", borrow);
-  }
-}, [userData]); 
-// Log updates to netApy
-useEffect(() => {
-  console.log("Updated netApy:", netApy);
-}, [netApy]);
-// Optional useEffect to monitor changes to netApy
+    }
+  }, [userData]);
+  // Log updates to netApy
+  useEffect(() => {
+    console.log("Updated netApy:", netApy);
+  }, [netApy]);
+  // Optional useEffect to monitor changes to netApy
 
 
 
@@ -414,9 +456,8 @@ useEffect(() => {
         )}
 
         <div
-          className={`md:hidden flex ml-auto ${
-            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
-          }`}
+          className={`md:hidden flex ml-auto ${isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+            }`}
         >
           <button onClick={toggleMenu} className="rounded-md button1 z-10">
             <EllipsisVertical color={checkColor} size={30} />
@@ -429,9 +470,8 @@ useEffect(() => {
           {/* Menu button for small screens */}
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -466,13 +506,13 @@ useEffect(() => {
                             <div className="flex items-center">
                               {data.title}
                               {data.title === "Net APY" && (
-                                 <span className="relative inline-block ml-1">
-                                 {/* Info icon aligned with title */}
-                                 <Info
-                                   size={15}
-                                   className="ml-1 align-middle "
-                                   onClick={toggleTooltip}
-                                 />
+                                <span className="relative inline-block ml-1">
+                                  {/* Info icon aligned with title */}
+                                  <Info
+                                    size={15}
+                                    className="ml-1 align-middle "
+                                    onClick={toggleTooltip}
+                                  />
                                   {/* Tooltip with full-screen blur */}
                                   {isTooltipVisible && (
                                     <>
@@ -513,32 +553,31 @@ useEffect(() => {
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
                             <span
-                              className={`font-bold text-[20px] ${
-                                data.title === "Health Factor"
+                              className={`font-bold text-[20px] ${data.title === "Health Factor"
                                   ? data.count === 0 && assetSupply === 0
                                     ? "text-[#2A1F9D] dark:text-darkBlue"
                                     : data.count > 3
-                                    ? "text-green-500"
-                                    : data.count <= 1
-                                    ? "text-red-500"
-                                    : data.count <= 1.5
-                                    ? "text-orange-500"
-                                    : data.count <= 2
-                                    ? "text-orange-300"
-                                    : "text-orange-600"
+                                      ? "text-green-500"
+                                      : data.count <= 1
+                                        ? "text-red-500"
+                                        : data.count <= 1.5
+                                          ? "text-orange-500"
+                                          : data.count <= 2
+                                            ? "text-orange-300"
+                                            : "text-orange-600"
                                   : data.title === "Total Borrows"
-                                  ? "text-[#2A1F9D] dark:text-darkBlue"
-                                  : "text-[#2A1F9D] dark:text-darkBlue"
-                              }`}
+                                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                                    : "text-[#2A1F9D] dark:text-darkBlue"
+                                }`}
                             >
-                              {data.count !== null ? data.count : ""}
+                             {data.count !== null ? data.count : "\u00A0"}
                             </span>
                           </button>
                         </div>
                       );
                     })}
                   </div>
-                 
+
                   {assetBorrow !== 0 && (
                     <div className="flex justify-end mt-10 md:mt-0">
                       <button
@@ -577,14 +616,14 @@ useEffect(() => {
                         <div className="flex items-center">
                           {data.title}
                           {data.title === "Net APY" && (
-                           <span
-                           className="relative inline-block ml-1"
-                           onMouseEnter={() => setIsTooltipVisible(true)}
-                           onMouseLeave={() => setIsTooltipVisible(false)}
-                         >
-                           {/* Info icon with hover-triggered tooltip */}
-                           <Info size={15} className="ml-1 align-middle cursor-pointer"  onClick={toggleTooltip}/>
-             
+                            <span
+                              className="relative inline-block ml-1"
+                              onMouseEnter={() => setIsTooltipVisible(true)}
+                              onMouseLeave={() => setIsTooltipVisible(false)}
+                            >
+                              {/* Info icon with hover-triggered tooltip */}
+                              <Info size={15} className="ml-1 align-middle cursor-pointer" onClick={toggleTooltip} />
+
 
                               {/* Tooltip with full-screen blur */}
                               {isTooltipVisible && (
@@ -608,11 +647,10 @@ useEffect(() => {
 
                                     {/* Tooltip arrow */}
                                     <span
-                                      className={`tooltip-arrow ${
-                                        theme === "dark"
+                                      className={`tooltip-arrow ${theme === "dark"
                                           ? "tooltip-arrow-dark"
                                           : ""
-                                      }`}
+                                        }`}
                                     ></span>
                                   </div>
                                 </>
@@ -624,25 +662,24 @@ useEffect(() => {
                         <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
                         <span
-                          className={`font-bold text-[20px] ${
-                            data.title === "Health Factor"
+                          className={`font-bold text-[20px] ${data.title === "Health Factor"
                               ? data.count === 0 && assetSupply === 0
                                 ? "text-[#2A1F9D] dark:text-darkBlue"
                                 : data.count > 3
-                                ? "text-green-500"
-                                : data.count <= 1
-                                ? "text-red-500"
-                                : data.count <= 1.5
-                                ? "text-orange-500"
-                                : data.count <= 2
-                                ? "text-orange-300"
-                                : "text-orange-600"
+                                  ? "text-green-500"
+                                  : data.count <= 1
+                                    ? "text-red-500"
+                                    : data.count <= 1.5
+                                      ? "text-orange-500"
+                                      : data.count <= 2
+                                        ? "text-orange-300"
+                                        : "text-orange-600"
                               : data.title === "Total Borrows"
-                              ? "text-[#2A1F9D] dark:text-darkBlue"
-                              : "text-[#2A1F9D] dark:text-darkBlue"
-                          }`}
+                                ? "text-[#2A1F9D] dark:text-darkBlue"
+                                : "text-[#2A1F9D] dark:text-darkBlue"
+                            }`}
                         >
-                          {data.count !== null ? data.count : ""}
+                          {data.count !== null ? data.count : "\u00A0"}
                         </span>
                       </button>
                     </div>

@@ -30,7 +30,7 @@ body{
   -webkit-background-clip: text; /* For Safari/older browsers */
   -webkit-text-fill-color: transparent; /* Hide the actual text color */
   transition: none; /* Disable transition for the gradient effect */
-  font-weight: 800;
+  font-weight: 700;
 }
 
 @keyframes subtle-bounce {
@@ -59,7 +59,7 @@ body{
     padding: 0.5rem 1rem;
     text-decoration: none;
     transition: color 0.3s ease;
-    font-weight: 800;
+    font-weight: 600;
   }
   .nav-link:active,
 .nav-link.active {
@@ -69,7 +69,7 @@ body{
     -webkit-background-clip: text; /* For Safari/older browsers */
     -webkit-text-fill-color: transparent; /* Hide the actual text color */
     transition: none; /* Disable transition for the gradient effect */
-    font-weight: 800;
+    font-weight: 700;
 }
   .nav-link:hover {
     color: transparent; /* Hide the actual text color on hover */
@@ -78,7 +78,7 @@ body{
     -webkit-background-clip: text; /* For Safari/older browsers */
     -webkit-text-fill-color: transparent; /* Hide the actual text color */
     transition: none; /* Disable transition for the gradient effect */
-    font-weight: 800;
+    font-weight: 700;
   }
   
   /* Add this in your CSS file */

@@ -14,6 +14,9 @@ import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
+import { trackEvent } from "../../../utils/googleAnalytics";
+import { Principal } from "@dfinity/principal";
+
 const Borrow = ({
   asset,
   image,
@@ -53,6 +56,12 @@ const Borrow = ({
     setIsModalOpen,
     onLoadingChange
   );
+  const { createLedgerActor, backendActor, principal } = useAuth();
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
+
   console.log(
     " avaialbele borrow ,borowable asset",
     availableBorrow,
@@ -66,13 +75,14 @@ const Borrow = ({
   const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =
     useState(false);
-  const { createLedgerActor, backendActor, principal } = useAuth();
+
   const [error, setError] = useState("");
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null);
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
 
@@ -120,10 +130,16 @@ const Borrow = ({
       const borrowResult = await backendActor.borrow(asset, scaledAmount);
       console.log("Borrow result", borrowResult);
 
-      // Check if the result is "Ok" or "Err"
       if ("Ok" in borrowResult) {
-        const sound = new Audio(coinSound);
-        sound.play();
+        trackEvent(
+          "Borrow," + asset + "," + (scaledAmount / 100000000) + ", " +  principalObj.toString(),
+          "Assets",
+          "Borrow," + asset + "," + (scaledAmount / 100000000) + ", " +  principalObj.toString()
+        );
+        if (isSoundOn) {
+          const sound = new Audio(coinSound);
+          sound.play();
+        }
         toast.success(`Borrow successful!`, {
           className: "custom-toast",
           position: "top-center",

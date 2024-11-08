@@ -10,6 +10,8 @@ import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
+import { trackEvent } from "../../../utils/googleAnalytics";
+import { useMemo } from "react";
 
 const SupplyPopup = ({
   asset,
@@ -34,7 +36,7 @@ const SupplyPopup = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
-
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const transactionFee = 0.01;
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
@@ -60,6 +62,11 @@ const SupplyPopup = ({
 
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
+
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -142,9 +149,9 @@ const SupplyPopup = ({
   }, [amount, conversionRate]);
   useEffect(() => {
     if (balance && conversionRate) {
-      console.log("balance in supplypopup",balance, conversionRate);
+      console.log("balance in supplypopup", balance, conversionRate);
       const convertedMaxValue = parseFloat(balance) * conversionRate;
-      console.log("converted in supplypopup",convertedMaxValue);
+      console.log("converted in supplypopup", convertedMaxValue);
       setMaxUsdValue(convertedMaxValue);
     } else {
       setMaxUsdValue(0);
@@ -226,6 +233,7 @@ const SupplyPopup = ({
 
 
   const handleSupplyETH = async () => {
+
     try {
       console.log("Supply function called for", asset, amount);
 
@@ -248,11 +256,21 @@ const SupplyPopup = ({
       const sup = await backendActor.supply(asset, scaledAmount, currentCollateralStatus);
       console.log("Supply", sup);
 
+      trackEvent(
+        "Supply," + asset + "," + (scaledAmount / 100000000)+"," + currentCollateralStatus + "," + principalObj.toString(),
+        "Assets",
+        "Supply," + asset + "," + (scaledAmount / 100000000)+"," + currentCollateralStatus + "," + principalObj.toString(),
+        "Assets",
+      );
+
       setIsPaymentDone(true);
       setIsVisible(false);
 
-      const sound = new Audio(coinSound);
-      sound.play();
+      if (isSoundOn) {
+        const sound = new Audio(coinSound);
+        sound.play();
+      }
+
       toast.success(`Supply successful!`, {
         className: 'custom-toast',
         position: "top-center",

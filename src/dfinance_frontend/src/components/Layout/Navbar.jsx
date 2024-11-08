@@ -51,8 +51,14 @@ import { IoIosRocket } from "react-icons/io";
 import { ArrowUpDown } from "lucide-react";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
 import DFinanceLight from "../../../public/logo/DFinance-Light.svg";
+import { toggleSound } from "../../redux/reducers/soundReducer";
 
 export default function Navbar({ isHomeNav }) {
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+
+  const handleSoundToggle = () => {
+    dispatch(toggleSound());
+  };
   const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
@@ -990,6 +996,28 @@ export default function Navbar({ isHomeNav }) {
                               />
                             </div>
                           </div>
+
+                          {/* Sounnd Mode Setting */}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex flex-row items-center justify-around">
+                              <label
+                                htmlFor="darkMode"
+                                className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                              >
+                                Sound
+                              </label>
+                            </div>
+                            <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                              <span className="text-[13px] mr-2">
+                                {isSoundOn ? "ON" : "OFF"}
+                              </span>
+                              <CustomizedSwitches
+                               checked={isSoundOn} 
+                               onChange={handleSoundToggle}
+                              />
+                            </div>
+                          </div>
+
                         </div>
                       </>
                     )}

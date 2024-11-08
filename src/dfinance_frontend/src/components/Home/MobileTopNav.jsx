@@ -9,7 +9,7 @@ import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { toggleSound } from "../../redux/reducers/soundReducer";
 
 
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
@@ -45,6 +45,12 @@ const MobileTopNav = ({
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
+
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+
+  const handleSoundToggle = () => {
+    dispatch(toggleSound());
+  };
 
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
@@ -208,7 +214,7 @@ const MobileTopNav = ({
         },
       }}
     >
-      <div className="flex flex-col pt-6 p-4 bg-white dark:bg-darkOverlayBackground font-poppins w-full h-[85%]">
+      <div className="flex flex-col pt-6 p-4 bg-white dark:bg-darkOverlayBackground font-poppins w-full h-full">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-semibold text-[#AEADCB] dark:text-darkTextPrimary">
             Menu
@@ -449,9 +455,31 @@ const MobileTopNav = ({
                 </div>
               </div>
             )}
+
+<div className="flex items-center justify-between">
+              <label
+                htmlFor="darkMode"
+                className="ml-1 text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
+              >
+                Sound
+              </label>
+              <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
+                {isSoundOn ? "On" : "Off"}
+
+                <div className="-mr-4">
+                  <CustomizedSwitches
+                    checked={isSoundOn}
+                    onChange={handleSoundToggle}
+                  />
+                </div>
+
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
+      { isAuthenticated &&
       <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
         <Button
           title="Switch Wallet"
@@ -465,6 +493,7 @@ const MobileTopNav = ({
         />
 
       </div>
+}
     </Drawer>
   );
 };

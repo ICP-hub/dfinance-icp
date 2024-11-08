@@ -14,6 +14,8 @@ import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
+import { trackEvent } from "../../../utils/googleAnalytics";
+
 const Repay = ({
   asset,
   image,
@@ -31,9 +33,14 @@ const Repay = ({
   onLoadingChange,
 }) => {
 
+  const { createLedgerActor, backendActor, principal } = useAuth();
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
+
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null); // Reference to the modal container
-  const { createLedgerActor, backendActor, principal } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [error, setError] = useState("");
@@ -42,6 +49,7 @@ const Repay = ({
   const [usdValue, setUsdValue] = useState(0);
   const [maxUsdValue, setMaxUsdValue] = useState(0);
   const ledgerActors = useSelector((state) => state.ledger);
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   console.log("ledgerActors", ledgerActors);
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -240,8 +248,15 @@ const Repay = ({
       console.log("Repay result", repayResult);
 
       if ("Ok" in repayResult) {
-        const sound = new Audio(coinSound);
-        sound.play();
+        trackEvent(
+          "Repay," + asset + "," + (scaledAmount / 100000000) + "," +  principalObj.toString(),
+          "Assets",
+          "Repay," + asset + "," + (scaledAmount / 100000000) + ", " +  principalObj.toString()
+        );
+        if (isSoundOn) {
+          const sound = new Audio(coinSound);
+          sound.play();
+        }
         toast.success("Repay successful!", {
           className: 'custom-toast',
           position: "top-center",

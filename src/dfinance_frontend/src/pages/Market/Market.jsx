@@ -31,6 +31,7 @@ import { Principal } from "@dfinity/principal";
 import { useMemo } from "react"
 import AssetDetails from "../../components/Dashboard/AssetDetails"
 import useFormatNumber from "../../components/customHooks/useFormatNumber"
+import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate"
 
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
@@ -48,6 +49,23 @@ const WalletDetails = () => {
     principal,
     createLedgerActor,
   } = useAuth()
+
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance,
+    fetchBalance,
+  } = useFetchConversionRate();
+
+
 
   const handleWalletConnect = () => {
     // console.log("connrcterd");
@@ -335,7 +353,44 @@ const WalletDetails = () => {
                     <td className="p-2 align-center py-6">
                       <div className="flex justify-center items-center flex-row">
                         <div className="flex-grow text-center">
-                          <p>${formatNumber(Number(item[1].Ok.total_supply) / 100000000)}</p>
+                          <p>
+                            {item[0] === "ckBTC" && (
+                              <p>
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckBTCUsdRate)
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckBTCUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                            {item[0] === "ckETH" && (
+                              <p>
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckETHUsdRate)
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckETHUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                            {item[0] === "ckUSDC" && (
+                              <p>
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckUSDCUsdRate)
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckUSDCUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                            {item[0] === "ICP" && (
+                              <p>
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckICPUsdRate)
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckICPUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                            {item[0] === "ckUSDT" && (
+                              <p>
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckUSDTUsdRate)
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckUSDTUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                          </p>
+                          <p className="font-light text-[12px]">$ {formatNumber(Number(item[1].Ok.total_supply) / 100000000)}</p>
                         </div>
                         <div className="md:hidden justify-center ml-6" onClick={() => handleChevronClick(item[0])}>
                           <ChevronRight size={22} color={chevronColor} />
@@ -345,11 +400,47 @@ const WalletDetails = () => {
 
                     <td className="p-3 align-center hidden md:table-cell"><div className="flex justify-center">
                       {((Number(item?.[1]?.Ok?.current_liquidity_rate) / 100000000)) < 0.1 ? '<0.1%' : `${((Number(item?.[1]?.Ok?.current_liquidity_rate) / 100000000)).toFixed(2)}%`}</div></td>
-                    <td className="p-3 align-center hidden md:table-cell">
+                    <td className="p-2 align-center hidden md:table-cell">
                       <div className="flex justify-center flex-row">
                         <div>
-                          {/* <p>{item.total_borrow_count}</p> */}
-                          <p >${formatNumber(Number(item[1].Ok.total_borrowed) / 100000000)}</p>
+                          <p>
+                            {item[0] === "ckBTC" && (
+                              <p>
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckBTCUsdRate)
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckBTCUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                            {item[0] === "ckETH" && (
+                              <p>
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckETHUsdRate)
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckETHUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                            {item[0] === "ckUSDC" && (
+                              <p>
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckUSDCUsdRate)
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckUSDCUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                            {item[0] === "ICP" && (
+                              <p>
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckICPUsdRate)
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckICPUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                            {item[0] === "ckUSDT" && (
+                              <p>
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckUSDTUsdRate)
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckUSDTUsdRate)
+                                  : "0.00"}
+                              </p>
+                            )}
+                          </p>
+                          <p className="font-light text-[12px]">$ {formatNumber(Number(item[1]?.Ok?.total_borrowed) / 100000000)}</p>
                         </div>
                       </div>
 

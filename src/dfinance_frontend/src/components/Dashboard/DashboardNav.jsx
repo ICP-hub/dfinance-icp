@@ -25,12 +25,35 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
 const DashboardNav = () => {
+
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
     useAuth();
+
+    const [netWorth, setNetWorth] = useState()
+
+    const totalUsdValueBorrow = useSelector(
+      (state) => state.borrowSupply.totalUsdValueBorrow
+    );
+    const totalUsdValueSupply = useSelector(
+      (state) => state.borrowSupply.totalUsdValueSupply
+    );
+
+    const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
+
+
+    useEffect(() => {
+      const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
+      setNetWorth(calculatedNetWorth);
+      console.log(`Updated Net Worth: $${calculatedNetWorth}`);
+    }, [totalUsdValueBorrow, totalUsdValueSupply]); 
+
+    console.log("totalUsdValueBorrow", totalUsdValueBorrow, totalUsdValueSupply);
+    
 
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
   const [netSupplyApy, setNetSupplyApy] = useState(0);
   const [netDebtApy, setNetDebtApy] = useState(0);
+
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
@@ -84,6 +107,7 @@ const DashboardNav = () => {
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const formatNumber = useFormatNumber();
 
+
   const updateWalletDetailTab = (data) => {
     if (!data || !data.Ok) return;
     const { net_worth, net_apy, health_factor } = data.Ok;
@@ -94,7 +118,7 @@ const DashboardNav = () => {
         case 0:
           return {
             ...item,
-            count: `$${formatNumber(Number(net_worth[0]) / 100000000)}`,
+            count: `$${formatNumber(calculatedNetWorth)}`,
           };
         case 1:
           return {
@@ -128,7 +152,7 @@ const DashboardNav = () => {
     if (userData) {
       updateWalletDetailTab(userData);
     }
-  }, [userData]);
+  }, [userData, totalUsdValueSupply, totalUsdValueBorrow]);
 
   const [error, setError] = useState(null);
 

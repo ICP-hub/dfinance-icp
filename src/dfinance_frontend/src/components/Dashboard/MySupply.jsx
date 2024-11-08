@@ -31,6 +31,8 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
 // import {setToggle} from "../../redux/reducers/toggleReducer"
+import { setTotalUsdValueBorrow, setTotalUsdValueSupply } from '../../redux/reducers/borrowSupplyReducer';
+
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 const MySupply = () => {
   const navigate = useNavigate();
@@ -606,6 +608,7 @@ const MySupply = () => {
                           usdValue = assetSupply * ckUSDTUsdRate;
                         }
                         totalUsdValueSupply += usdValue;
+                        dispatch(setTotalUsdValueSupply(totalUsdValueSupply));
                         if (assetSupply <= 0) return null;
                       })}
                     <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
@@ -1885,6 +1888,7 @@ const MySupply = () => {
                           usdValue = assetBorrow * ckUSDTUsdRate;
                         }
                         totalUsdValueBorrow += usdValue;
+                        dispatch(setTotalUsdValueBorrow(totalUsdValueBorrow));
                         if (assetBorrow <= 0) return null;
                       })}
                     <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">

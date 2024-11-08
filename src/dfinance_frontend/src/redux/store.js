@@ -8,6 +8,8 @@ import ledgerReducer from "./reducers/ledgerRedcuer";
 import assetReducer from "./reducers/assetReducer";
 import toggleReducer from "./reducers/toggleReducer";
 import soundReducer from "./reducers/soundReducer";
+import borrowSupplyReducer from './reducers/borrowSupplyReducer';
+
 export const store = configureStore({
     reducer: {
         user: userReducer,
@@ -19,6 +21,7 @@ export const store = configureStore({
         assets: assetReducer,  
         toggle: toggleReducer,
         sound: soundReducer,
+        borrowSupply: borrowSupplyReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

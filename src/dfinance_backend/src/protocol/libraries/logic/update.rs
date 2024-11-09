@@ -1,5 +1,3 @@
-use std::ops::Mul;
-
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::types::datatypes::{UserData, UserState};
@@ -11,7 +9,6 @@ use crate::{
         },
         storable::Candid,
     },
-    implementations::reserve,
     protocol::libraries::{
         math::{
             calculate::{
@@ -26,9 +23,8 @@ use crate::{
 use candid::Principal;
 use ic_cdk::api::time;
 use ic_cdk::update;
-use ic_xrc_types::Asset;
 fn current_timestamp() -> u64 {
-    time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds
+    time() / 1_000_000_000 // time() returns nanoseconds.
 }
 pub struct UpdateLogic;
 
@@ -56,7 +52,7 @@ impl UpdateLogic {
             }
         };
 
-        let mut usd_rate = usd_amount.scaled_div(params.amount);
+        let usd_rate = usd_amount.scaled_div(params.amount);
         ic_cdk::println!(
             "Converted amount: {} to USD amount: {} with rate: {}",
             params.amount.clone(),
@@ -64,7 +60,6 @@ impl UpdateLogic {
             usd_rate
         );
 
-        // Update user's net worth and collateral
         user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
 
         if params.is_collateral {
@@ -95,12 +90,10 @@ impl UpdateLogic {
                 liquidation_threshold: user_thrs,
             };
 
-            // Calculate and update health factor
             let health_factor = calculate_health_factor(&user_position);
             user_data.health_factor = Some(health_factor);
             ic_cdk::println!("Updated user health factor: {}", health_factor);
 
-            // Calculate and update loan-to-value (LTV)
             let ltv = calculate_ltv(&user_position);
 
             user_data.ltv = Some(ltv);
@@ -125,7 +118,6 @@ impl UpdateLogic {
         };
 
         let platform_principal = ic_cdk::api::id();
-        // function to update or mint tokens to keep track of exact numbers of tokens.
         let minted_result = mint_scaled(
             &mut update_user_state,
             params.amount,
@@ -304,7 +296,6 @@ impl UpdateLogic {
 
         let usd_rate = usd_amount.scaled_div(params.amount);
         if let Some((_, reserve_data)) = user_reserve {
-            // update supply rate.
             reserve_data.supply_rate = asset_reserve_data.current_liquidity_rate;
             reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
             reserve_data.asset_price_when_borrowed = usd_rate;
@@ -376,12 +367,6 @@ impl UpdateLogic {
             }
         };
 
-        // let ckbtc_to_usd_rate = 60554.70f64;
-        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
-        // let user_thrs = cal_average_threshold(amount_in_usd, reserve.configuration.liquidation_threshold, user_prof.total_collateral.unwrap_or(0), user_prof.liquidation_threshold.unwrap_or(0));
-        // ic_cdk::println!("user_thr {:?}", user_thrs);
-
-        // user_data.liquidation_threshold = Some(user_thrs);
         user_data.net_worth =
             Some((user_data.net_worth.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
         if params.is_collateral {
@@ -429,13 +414,6 @@ impl UpdateLogic {
             let ltv = calculate_ltv(&user_position);
             user_data.ltv = Some(ltv);
         }
-        // let available_borrow = calculate_available_borrows(
-        //     user_data.total_collateral.unwrap_or(0).clone() - usd_amount,
-        //     user_data.total_debt.unwrap_or(0).clone(),
-        //     ltv.clone(),
-        // );
-
-        // user_data.available_borrow = Some(available_borrow);
 
         // Function to check if the user has a reserve for the asset
         let user_reserve = user_reserve(&mut user_data, &params.asset);
@@ -475,9 +453,7 @@ impl UpdateLogic {
             update_user_state
         );
 
-        // If the reserve exists, it will subtract the withdrawal amount from the asset supply
         if let Some((_, reserve_data)) = user_reserve {
-            // Ensures the user has enough supply to withdraw
             reserve_data.is_collateral = params.is_collateral;
 
             if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
@@ -508,7 +484,6 @@ impl UpdateLogic {
                 reserve_data.is_collateral = true;
             }
         } else {
-            // If Reserve data does not exist,it returns an error since we cannot withdraw what is not supplied
             ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
             return Err(format!(
                 "Cannot withdraw from a non-existing reserve for asset: {}",
@@ -549,11 +524,6 @@ impl UpdateLogic {
         };
 
         ic_cdk::println!("repay user update = {:?}", user_data);
-        // let ckbtc_to_usd_rate = 60554.70f64;
-        // ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
-
-        // // Convert the supplied amount (in ckBTC) to ICP
-        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
 
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0),
@@ -570,13 +540,7 @@ impl UpdateLogic {
 
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
-        // let available_borrow = calculate_available_borrows(
-        //     user_data.total_collateral.unwrap_or(0).clone() ,
-        //     user_data.total_debt.unwrap_or(0).clone() - usd_amount,
-        //     ltv.clone(),
-        // );
 
-        // user_data.available_borrow = Some(available_borrow);
         user_data.available_borrow = Some(user_data.available_borrow.unwrap() + usd_amount);
 
         // Function to check if the user has a reserve for the asset
@@ -612,9 +576,7 @@ impl UpdateLogic {
             }
         };
 
-        // If the reserve exists, it will subtract the repaid amount from the asset borrow
         if let Some((_, reserve_data)) = user_reserve {
-            // Ensures the user has enough borrow to repay
             if reserve_data.asset_borrow >= params.amount {
                 reserve_data.asset_borrow -= params.amount;
                 reserve_data.state = update_user_state.clone();
@@ -629,8 +591,6 @@ impl UpdateLogic {
                 ));
             }
         } else {
-            // If Reserve data does not exist, it returns an error since we cannot repay what is not borrowed
-
             return Err(format!(
                 "Cannot repay from a non-existing reserve for asset: {}",
                 params.asset
@@ -648,42 +608,6 @@ impl UpdateLogic {
         Ok(())
     }
 }
-
-// fn calculate_available_borrows(
-//     total_collateral_in_usd: u128,
-//     total_debt_in_usd: u128,
-//     ltv: u128,
-// ) -> u128 {
-
-//     let available_borrows_in_usd = (total_collateral_in_usd * ltv/100) /100000000;
-//     ic_cdk::println!("total_collateral_in_usd: {:?}", total_collateral_in_usd);
-//     if available_borrows_in_usd < total_debt_in_usd {
-//         return 0;
-//     }
-
-//     available_borrows_in_usd - total_debt_in_usd
-// }
-// fn calculate_available_borrows(
-//     total_collateral_in_base_currency: u128,
-//     total_debt_in_base_currency: u128,
-//     ltv: u128,
-// ) -> u128 {
-//     // Define a function for multiplying by percentage
-//     let user=ic_cdk::caller();
-
-//     fn percent_mul(amount: u128, percentage: u128) -> u128 {
-//         (amount * percentage) / 10000 // Assuming LTV is expressed in basis points (10000 = 100%)
-//     }
-
-//     let mut available_borrows_in_base_currency = percent_mul(total_collateral_in_base_currency, ltv);
-
-//     if available_borrows_in_base_currency < total_debt_in_base_currency {
-//         return 0;
-//     }
-
-//     available_borrows_in_base_currency -= total_debt_in_base_currency;
-//     available_borrows_in_base_currency
-// }
 
 #[update]
 pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
@@ -732,7 +656,6 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
             amount_in_usd
         }
         Err(e) => {
-            // Handling the error
             ic_cdk::println!("Error getting exchange rate: {:?}", e);
             return;
         }
@@ -746,7 +669,6 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
             amount_in_usd
         }
         Err(e) => {
-            // Handling the error
             ic_cdk::println!("Error getting exchange rate: {:?}", e);
             return;
         }
@@ -756,20 +678,16 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
         added_usd_amount.clone(),
         usd_amount.clone(),
         reserve_data.configuration.liquidation_threshold,
-        // what collateral value am  i need to send new or old.
         user_data.total_collateral.unwrap(),
-        // updated_collateral,
         user_data.liquidation_threshold.unwrap(),
     );
 
-    // user_data.total_collateral = Some(user_data.total_collateral.unwrap() - usd_amount.clone() + added_usd_amount.clone());
     user_data.total_collateral = Some(
         ((user_data.total_collateral.unwrap() as i128 - usd_amount.clone() as i128
             + added_usd_amount.clone() as i128)
             .max(0)) as u128,
     );
     user_data.liquidation_threshold = Some(user_thrs);
-    // user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount.clone() + added_usd_amount.clone());
     user_data.available_borrow = Some(
         ((user_data.available_borrow.unwrap() as i128 - usd_amount.clone() as i128
             + added_usd_amount.clone() as i128)
@@ -793,7 +711,6 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
     let user_reserve = user_reserve(&mut user_data, &asset);
 
     if let Some((_, user_reserve_data)) = user_reserve {
-        // Toggle the `is_collateral` value
         user_reserve_data.is_collateral = !user_reserve_data.is_collateral;
 
         if user_reserve_data.is_using_as_collateral_or_borrow {

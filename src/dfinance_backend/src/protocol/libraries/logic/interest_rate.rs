@@ -9,12 +9,6 @@ pub struct InterestRateParams {
     pub base_variable_borrow_rate: u128,
     pub variable_rate_slope1: u128,
     pub variable_rate_slope2: u128,
-    // pub stable_rate_slope1: f64,
-    // pub stable_rate_slope2: f64,
-    // pub base_stable_rate_offset: f64,
-    // pub stable_rate_excess_offset: f64,
-    // pub optimal_stable_to_total_debt_ratio: f64,
-    // pub max_excess_stable_to_total_debt_ratio: f64,
 }
 
 pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {

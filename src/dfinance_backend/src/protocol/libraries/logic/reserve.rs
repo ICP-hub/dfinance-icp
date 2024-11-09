@@ -16,7 +16,7 @@ use candid::{Nat, Principal};
 
 
 fn current_timestamp() -> u64 {
-    time() / 1_000_000_000 // time() returns nanoseconds since the UNIX epoch, we convert it to seconds
+    time() / 1_000_000_000 // time() returns nanoseconds.
 }
     
 
@@ -52,7 +52,6 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
     }
 
     update_indexes(reserve_data, reserve_cache);
-    // accrue_to_treasury(reserve_data, reserve_cache);
 
     reserve_data.last_update_timestamp = current_time;
 }
@@ -85,14 +84,11 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
 pub async fn update_interest_rates(
         reserve_data: &mut ReserveData,
         reserve_cache: &mut ReserveCache,
-        //liquidity_added: u128,//remove
-        //liquidity_taken: u128, //remoove
         total_borrowed: u128,
         total_supplies: u128,
     ){
         let total_debt = total_borrowed.scaled_mul(reserve_cache.curr_debt_index);
         let total_supply= total_supplies.scaled_mul(reserve_cache.curr_liquidity_index);
-        // let total_borrowed= reserve_data.total_borrowed + liquidity_taken;
         let asset=reserve_data.asset_name.clone().unwrap_or("no token".to_string());
         let interest_rate_params = initialize_interest_rate_params(&asset);
         ic_cdk::println!("interest rate params {:?}", interest_rate_params);
@@ -138,7 +134,6 @@ pub async fn burn_scaled(
     );
     ic_cdk::println!("burn platform_principal value = {}", platform_principal);
 
-    // Calculate the amount to burn adjusted by the liquidity index
     let adjusted_amount = amount.scaled_div(current_liquidity_index);
 
     if adjusted_amount == 0 {
@@ -153,15 +148,12 @@ pub async fn burn_scaled(
             .adjusted_balance
             .scaled_mul(user_state.last_liquidity_index));
 
-    // Ensure user has enough balance to burn
     if adjusted_amount > user_state.adjusted_balance + balance_increase {
         return Err("Insufficient balance to burn".to_string());
     }
 
-    // Update user's adjusted balance by subtracting the burn amount
     user_state.adjusted_balance -= adjusted_amount;
 
-    // Update the user's last liquidity index
     user_state.last_liquidity_index = current_liquidity_index;
 
     ic_cdk::println!("burn updated user state = {:?}", user_state);
@@ -173,7 +165,7 @@ pub async fn burn_scaled(
         user_principal,
         token_canister_principal,
         platform_principal,
-        Nat::from(burn_amount), // Transfer the total burnt amount
+        Nat::from(burn_amount),
     )
     .await
     {
@@ -206,7 +198,6 @@ pub async fn mint_scaled(
     );
     ic_cdk::println!("platform_principal value = {}", platform_principal);
 
-    // Calculate the amount to mint adjusted by the liquidity index
     let adjusted_amount: u128 = amount.scaled_div(current_liquidity_index);
     if adjusted_amount == 0 {
         return Err("Invalid mint amount".to_string());
@@ -220,10 +211,8 @@ pub async fn mint_scaled(
             .adjusted_balance
             .scaled_mul(user_state.last_liquidity_index));
 
-    // Update user's adjusted balance with the new deposit and interest
     user_state.adjusted_balance += adjusted_amount + balance_increase;
 
-    // Update the user's last liquidity index
     user_state.last_liquidity_index = current_liquidity_index;
 
     ic_cdk::println!("updated user state value = {:?}", user_state);
@@ -235,7 +224,7 @@ pub async fn mint_scaled(
         user_principal,
         token_canister_principal,
         platform_principal,
-        Nat::from(newmint), // Transfer the total minted amount including the interest
+        Nat::from(newmint),
     )
     .await
     {

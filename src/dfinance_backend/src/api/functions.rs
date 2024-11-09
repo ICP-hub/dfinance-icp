@@ -1,4 +1,4 @@
-use crate::api::state_handler::{mutate_state, read_state};
+use crate::api::state_handler::mutate_state;
 use crate::declarations::transfer::*;
 use crate::get_asset_principal;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
@@ -6,7 +6,6 @@ use candid::{Nat, Principal};
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
-// use icrc_ledger_types::icrc2::approve::ApproveArgs;
 
 // Icrc2_transfer_from inter canister call.
 pub async fn asset_transfer_from(
@@ -135,7 +134,7 @@ pub async fn asset_transfer(
 #[update]
 pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
     let backend_canister_principal = ic_cdk::api::id();
-    let user_principal = ic_cdk::caller();
+    //let user_principal = ic_cdk::caller();
     let nat_convert_amount = Nat::from(amount);
 
     let asset_principal: Result<Principal, String> = get_asset_principal(asset_name);

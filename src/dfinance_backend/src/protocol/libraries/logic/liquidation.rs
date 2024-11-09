@@ -3,7 +3,7 @@ use crate::{
     declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
     protocol::libraries::{
         logic::{
-            reserve::{self, mint_scaled},
+            reserve::{self},
             update::UpdateLogic,
             validation::ValidationLogic,
         },

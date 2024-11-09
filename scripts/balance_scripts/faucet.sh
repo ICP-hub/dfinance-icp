@@ -7,7 +7,7 @@ set -e
 source ../../.env
 
 CANISTER_ID=$CANISTER_ID_DFINANCE_BACKEND
-ASSET="ckETH"                         
+ASSET="ckBTC"                         
 AMOUNT=300000000                       
 
 # Validate the input parameters
@@ -17,4 +17,5 @@ if [ -z "$ASSET" ] || [ -z "$AMOUNT" ]; then
 fi
 
 dfx identity use default
+# dfx identity use liquidator
 dfx canister call "$CANISTER_ID" faucet "(\"$ASSET\", $AMOUNT)"

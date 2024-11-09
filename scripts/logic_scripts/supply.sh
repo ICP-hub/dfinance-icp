@@ -7,9 +7,9 @@ source ../../.env
 
 # Set variables
 # ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
-ckbtc_canister="aovwi-4maaa-aaaaa-qaagq-cai"
+ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-dtoken_canister="ahw5u-keaaa-aaaaa-qaaha-cai"
+dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 reserve_data_method="get_reserve_data"
@@ -36,7 +36,7 @@ echo "--------------------------------------"
 
 # Echo the reserve data
 echo "Fetching reserve data..."
-asset="ckETH"
+asset="ckBTC"
 reserve_data=$(dfx canister call $backend_canister $reserve_data_method "(\"$asset\")")
 echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
@@ -65,8 +65,8 @@ echo "--------------------------------------"
 dfx identity use default
 
 # Get the principal of the default identity
-deposit_amount=300000000
-currency="ckETH"  
+deposit_amount=200000000
+currency="ckBTC"  
 is_collateral=true
 
 # call the execute supply function

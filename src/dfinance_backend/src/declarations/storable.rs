@@ -44,7 +44,7 @@ use ic_stable_structures::storable::{Blob, Bound, Storable};
 //     pub value: f64,
 // }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone,Debug)]
 pub struct Candid<T>(pub T)
 where
     T: CandidType + for<'de> Deserialize<'de>;

@@ -15,24 +15,22 @@ pub struct Transaction {
     pub transaction_fee: f64,
 }
 
+#[derive(Debug)]
+pub struct Candid<T>(pub T);
+
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,
-    pub net_worth: Option<u128>,
+    pub net_worth: Option<u128>, //FIXME i think we can remove this
     pub total_collateral: Option<u128>,
     pub total_debt: Option<u128>,
     pub available_borrow: Option<u128>,
-    pub net_apy: Option<u128>,
-    pub health_factor: Option<u128>,
-    pub ltv: Option<u128>,
+    pub net_apy: Option<u128>,       //FIXME i think we can remove this
+    pub health_factor: Option<u128>, //FIXME can we remove this or just keep this
+    pub ltv: Option<u128>,       
     pub liquidation_threshold: Option<u128>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
-    pub max_ltv: Option<u128>
-
-    //index
-    //total_supply
-    
-
+    pub max_ltv: Option<u128>,
 }
 
 impl Default for UserData {
@@ -42,13 +40,13 @@ impl Default for UserData {
             net_worth: Some(0),
             total_collateral: Some(0),
             total_debt: Some(0),
-            available_borrow: Some(0), 
+            available_borrow: Some(0),
             net_apy: Some(0),
             health_factor: Some(0),
             ltv: Some(0),
             liquidation_threshold: Some(0),
             reserves: Default::default(),
-            max_ltv: Some(0)
+            max_ltv: Some(0),
         }
     }
 }
@@ -70,6 +68,7 @@ pub struct UserReserveData {
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
+    pub state: UserState,
 }
 impl Default for UserReserveData {
     fn default() -> Self {
@@ -88,6 +87,22 @@ impl Default for UserReserveData {
             is_using_as_collateral_or_borrow: Default::default(),
             is_collateral: true,
             is_borrowed: Default::default(),
+            state: Default::default(),
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
+pub struct UserState {
+    pub adjusted_balance: u128, 
+    pub last_liquidity_index: u128, 
+}
+
+impl Default for UserState {
+    fn default() -> Self {
+        Self {
+            adjusted_balance: Default::default(),
+            last_liquidity_index: Default::default(),
         }
     }
 }

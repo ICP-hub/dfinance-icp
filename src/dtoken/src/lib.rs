@@ -317,6 +317,19 @@ fn icrc1_balance_of(account: Account) -> Nat {
     Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into())
 }
 
+//TODO add a update balance function that directly update balance of user in ledger.balances
+#[update(name = "icrc1_update_balance_of")]
+#[candid_method(update, rename = "icrc1_update_balance_of")]
+fn icrc1_update_balance_of(account: Account, amount: u128) -> Result<Nat, String> {
+
+    // Use the credit method to update the balance
+    Access::with_ledger_mut(|ledger| ledger.balances_mut().credit(&account, (amount.clone() as u64).into()));
+
+    // Return the updated balance
+    let new_balance = Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into());
+    Ok(new_balance)
+}
+
 #[query(name = "icrc1_total_supply")]
 #[candid_method(query, rename = "icrc1_total_supply")]
 fn icrc1_total_supply() -> Nat {

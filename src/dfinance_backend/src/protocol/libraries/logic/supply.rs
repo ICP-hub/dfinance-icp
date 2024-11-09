@@ -34,8 +34,7 @@ impl SupplyLogic {
                 .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
         })?;
 
-        let dtoken_canister_principal = Principal::from_text(dtoken_canister)
-            .map_err(|_| "Invalid dtoken canister ID".to_string())?;
+        
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
@@ -97,14 +96,10 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Supply validated successfully");
 
-        let liquidity_taken = 0;
-        let _ = reserve::update_interest_rates(
-            &mut reserve_data,
-            &mut reserve_cache,
-            usd_amount,
-            liquidity_taken,
-        )
-        .await;
+        let total_supplies= (reserve_data.total_borrowed.clone() + usd_amount);
+        let total_borrow = reserve_data.total_borrowed;
+        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
+
 
         ic_cdk::println!("Interest rates updated successfully");
 
@@ -260,8 +255,9 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Withdraw validated successfully");
 
-        reserve_data.total_supply =
-            (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
+        let total_supplies= (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
+        let total_borrow = reserve_data.total_borrowed;
+        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;

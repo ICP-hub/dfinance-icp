@@ -1,14 +1,13 @@
-use crate::api::functions::{asset_transfer, asset_transfer_from};
+use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-// use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use candid::{Nat, Principal};
-use dotenv::dotenv;
+
 
 // -------------------------------------
 // ----------- BORROW LOGIC ------------
@@ -40,8 +39,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     ic_cdk::println!("Debt caniser id {:?}", debttoken_canister);
 
-    let debttoken_canister_id = Principal::from_text(debttoken_canister)
-        .map_err(|_| "Invalid debttoken canister ID".to_string())?;
 
     let amount_nat = Nat::from(params.amount);
 
@@ -110,29 +107,19 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
 
     // Validates supply using the reserve_data
-    // ValidationLogic::validate_borrow(
-    //     &reserve_data,
-    //     borrow_amount_to_usd,
-    //     user_principal,
-    // )
-    // .await;
-    // ic_cdk::println!("Borrow validated successfully");
-
-    let liquidity_added = 0;
-    let _ = reserve::update_interest_rates(
-        &mut reserve_data,
-        &mut reserve_cache,
-        liquidity_added,
-        usd_amount.clone(),
-    );
-    let liquidity_added = 0;
-    let _ = reserve::update_interest_rates(
-        &mut reserve_data,
-        &mut reserve_cache,
-        liquidity_added,
+    ValidationLogic::validate_borrow(
+        &reserve_data,
         usd_amount,
+        user_principal,
     )
     .await;
+    ic_cdk::println!("Borrow validated successfully");
+
+    
+    let total_borrow=reserve_data.total_borrowed+ usd_amount;
+    let total_supplies = reserve_data.total_supply;
+    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, total_supplies).await;
+
     ic_cdk::println!("Interest rates updated successfully");
     // *&mut reserve_data.total_borrowed+=usd_amount;
     mutate_state(|state| {
@@ -208,9 +195,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
             .and_then(|reserve_data| reserve_data.debt_token_canister.clone())
             .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
     })?;
-    let debttoken_canister_id = Principal::from_text(debttoken_canister)
-        .map_err(|_| "Invalid debttoken canister ID".to_string())?;
-
+   
     let repay_amount = Nat::from(params.amount);
 
     // Converting asset value to usdt
@@ -264,8 +249,6 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-    *&mut reserve_data.total_borrowed =
-        (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
 
     // Validates repay using the reserve_data
     ValidationLogic::validate_repay(
@@ -276,6 +259,10 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     )
     .await;
     ic_cdk::println!("Repay validated successfully");
+
+    let total_borrow = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
+    let total_supplies = reserve_data.total_supply;
+    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, total_supplies).await;
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;

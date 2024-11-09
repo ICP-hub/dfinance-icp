@@ -93,6 +93,43 @@ const MySupply = () => {
     fetchBalance,
   } = useFetchConversionRate();
 
+  const [showZeroBalance, setShowZeroBalance] = useState(
+    () => JSON.parse(localStorage.getItem("showZeroBalance")) || false
+  );
+
+  const handleCheckboxChange = () => {
+    setShowZeroBalance((prev) => {
+      const newValue = !prev;
+      localStorage.setItem("showZeroBalance", JSON.stringify(newValue));
+      return newValue;
+    });
+  };
+
+  useEffect(() => {
+    const savedShowZeroBalance = JSON.parse(localStorage.getItem("showZeroBalance"));
+    if (savedShowZeroBalance !== null) {
+      setShowZeroBalance(savedShowZeroBalance);
+    }
+  }, []);
+
+  const { assets, reserveData, filteredItems } = useAssetData();
+
+  const visibleItems = filteredItems.filter((item) => {
+    const balance =
+      item[0] === "ckBTC"
+        ? ckBTCBalance
+        : item[0] === "ckETH"
+          ? ckETHBalance
+          : item[0] === "ckUSDC"
+            ? ckUSDCBalance
+            : item[0] === "ICP"
+              ? ckICPBalance
+              : item[0] === "ckUSDT"
+                ? ckUSDTBalance
+                : 0;
+    return showZeroBalance || Number(balance) > 0;
+  });
+
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
@@ -180,7 +217,7 @@ const MySupply = () => {
     fetchAllData();
   }, [fetchBalance, fetchConversionRate]);
 
-  const { assets, reserveData, filteredItems } = useAssetData();
+
 
   const filteredReserveData = Object.fromEntries(filteredItems);
 
@@ -1348,17 +1385,30 @@ const MySupply = () => {
                 )}
               </button>
             </div>
+{isVisible &&
+            <div className="flex items-center mx-4 mt-6 select-none">
+              <input
+                type="checkbox"
+                id="showZeroBalance"
+                checked={showZeroBalance}
+                onChange={handleCheckboxChange}
+                className="mr-2 cursor-pointer"
+              />
+              <label htmlFor="showZeroBalance" className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer">
+              Show 0 balance assets
+              </label>
+            </div>}
             {/* mobile screen  */}
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
-                  {filteredItems.length === 0 ? (
+                  {visibleItems.length === 0 ? (
                     noAssetsToSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {filteredItems.map((item, index) => (
+                        {visibleItems.map((item, index) => (
                           <div
                             key={index}
                             className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
@@ -1573,7 +1623,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isVisible && (
                 <>
-                  {filteredItems.length === 0 ? (
+                  {visibleItems.length === 0 ? (
                     noAssetsToSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4">
@@ -1592,7 +1642,7 @@ const MySupply = () => {
                       {/* Scrollable Content Area */}
                       <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                          {filteredItems.map((item, index) => (
+                          {visibleItems.map((item, index) => (
                             <div
                               key={index}
                               className="grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"

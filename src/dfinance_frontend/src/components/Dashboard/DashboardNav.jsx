@@ -102,7 +102,7 @@ const DashboardNav = () => {
 
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: 0 }, // Initial count set to null
-    { id: 1, title: "Total Supplies", count: 0 }, // Initial count set to null
+    { id: 1, title: "Total Available", count: 0 }, // Initial count set to null
     { id: 2, title: "Total Borrows", count: 0 }, // Initial count set to null
   ]);
 
@@ -300,19 +300,48 @@ const DashboardNav = () => {
     const updatedTabs = walletDetailTabs.map((item) => {
       switch (item.id) {
         case 0:
-          return { ...item, count: `${totalMarketSize}` };
+          return { ...item, count: `$${totalSupplySize}` };  // Add $ sign for totalSupplySize
         case 1:
-          return { ...item, count: `${totalSupplySize}` };
+          // Function to convert a string with suffixes like K, M, etc.
+          const convertToNumber = (value) => {
+            if (typeof value === 'string') {
+              // Remove non-numeric characters and convert the rest to number
+              const numberValue = parseFloat(value.replace(/[^0-9.]/g, ''));
+              if (value.includes('K')) {
+                return numberValue * 1e3;  // Multiply by 1000 if the value has 'K'
+              }
+              if (value.includes('M')) {
+                return numberValue * 1e6;  // Multiply by 1,000,000 if the value has 'M'
+              }
+              // Handle other suffixes or return the number
+              return numberValue;
+            }
+            return 0; // Return 0 if not a valid number or string
+          };
+  
+          const supply = convertToNumber(totalSupplySize);
+          const borrow = convertToNumber(totalBorrowSize);
+  
+          // Debugging the values and types
+          console.log("Total Supply Size:", totalSupplySize, "Converted:", supply);
+          console.log("Total Borrow Size:", totalBorrowSize, "Converted:", borrow);
+  
+          // Perform subtraction if both are valid numbers
+          const result = !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
+  
+          // Log the result to check the calculation
+          console.log("Calculated Result:", result);
+          const formattedResult = formatNumber(result);
+          return { ...item, count: `$${formattedResult}` };  // Add $ sign to the result
         case 2:
-          return { ...item, count: `${totalBorrowSize}` };
+          return { ...item, count: `$${totalBorrowSize}` };  // Add $ sign for totalBorrowSize
         default:
           return item;
       }
     });
-
+  
     setWalletDetailTabs(updatedTabs);
-  };
-
+};
   useEffect(() => {
     updateWalletDetailTabs();
   }, [totalMarketSize]);

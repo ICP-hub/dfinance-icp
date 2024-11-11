@@ -356,36 +356,36 @@ const WalletDetails = () => {
                           <p>
                             {item[0] === "ckBTC" && (
                               <p>
-                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckBTCUsdRate)
-                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckBTCUsdRate)
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) /  (ckBTCUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) /  (ckBTCUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
                             {item[0] === "ckETH" && (
                               <p>
-                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckETHUsdRate)
-                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckETHUsdRate)
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) /  (ckETHUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) /  (ckETHUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
                             {item[0] === "ckUSDC" && (
                               <p>
-                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckUSDCUsdRate)
-                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckUSDCUsdRate)
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / (ckUSDCUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / (ckUSDCUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
                             {item[0] === "ICP" && (
                               <p>
-                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckICPUsdRate)
-                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckICPUsdRate)
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / (ckICPUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / (ckICPUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
                             {item[0] === "ckUSDT" && (
                               <p>
-                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / ckUSDTUsdRate)
-                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / ckUSDTUsdRate)
+                                {isFinite((Number(item[1].Ok.total_supply) / 100000000) / (ckUSDTUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1].Ok.total_supply) / 100000000) / (ckUSDTUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
@@ -406,36 +406,36 @@ const WalletDetails = () => {
                           <p>
                             {item[0] === "ckBTC" && (
                               <p>
-                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckBTCUsdRate)
-                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckBTCUsdRate)
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) /  (ckBTCUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) /  (ckBTCUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
                             {item[0] === "ckETH" && (
                               <p>
-                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckETHUsdRate)
-                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckETHUsdRate)
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) /  (ckETHUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) /  (ckETHUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
                             {item[0] === "ckUSDC" && (
                               <p>
-                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckUSDCUsdRate)
-                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckUSDCUsdRate)
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / (ckUSDCUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / (ckUSDCUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
                             {item[0] === "ICP" && (
                               <p>
-                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckICPUsdRate)
-                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckICPUsdRate)
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / (ckICPUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / (ckICPUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}
                             {item[0] === "ckUSDT" && (
                               <p>
-                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckUSDTUsdRate)
-                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / ckUSDTUsdRate)
+                                {isFinite((Number(item[1]?.Ok?.total_borrowed) / 100000000) / (ckUSDTUsdRate / 1e8))
+                                  ? formatNumber((Number(item[1]?.Ok?.total_borrowed) / 100000000) / (ckUSDTUsdRate / 1e8))
                                   : "0.00"}
                               </p>
                             )}

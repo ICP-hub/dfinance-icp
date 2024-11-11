@@ -139,7 +139,51 @@ const PointSystemPage = () => {
         return (
           <div className="p-0 md:p-6 text-[#2A1F9D] dark:text-darkText">
             {/* Replace with informational cards or an FAQ */}
-            <section className="" id="faq">
+            <div className="">
+  <h2 className="text-2xl font-bold mb-4 text-[#2A1F9D] dark:text-darkTextSecondary">How the Points System Works</h2>
+
+  {/* Overview */}
+  <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg mb-4 text-[#2A1F9D] dark:text-darkText ">
+    <h3 className="font-semibold text-lg">Overview</h3>
+    <p>The points system rewards users for engaging in lending, borrowing, and providing liquidity. Points can be redeemed for exclusive rewards and increase based on boosts and multipliers applied to certain activities.</p>
+  </div>
+
+  {/* How Points Are Earned */}
+  <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg mb-4 text-[#2A1F9D] dark:text-darkText">
+    <h3 className="font-semibold text-lg">How Points Are Earned</h3>
+    <ul className="list-disc ml-6 mt-2">
+      <li><b>Lending Points:</b> Earn 3 points per dollar per day in stablecoins, 2 points in BTC/ETH/ICP, and 1 point in other assets.</li>
+      <li><b>Borrowing Points:</b> Accumulate points at 3 points per dollar in other assets, 2 points in BTC/ETH/ICP, and 1 point in stablecoins.</li>
+      <li><b>Liquidity Points:</b> Earned by providing liquidity in the platform’s pools, with rates based on asset type.</li>
+    </ul>
+  </div>
+
+  {/* Boosts and Multipliers */}
+  <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg mb-4 text-[#2A1F9D] dark:text-darkText">
+    <h3 className="font-semibold text-lg">Boosts and Multipliers</h3>
+    <ul className="list-disc ml-6 mt-2">
+      <li><b>First 7 Days Boost:</b> Lending within the first 7 days gives a permanent 2x boost.</li>
+      <li><b>Same Asset Boost:</b> Providing the same asset in both lending and borrowing positions reduces points by 0.5x.</li>
+      <li><b>Liquidity Boost:</b> Boosts points by 1.5x for the liquidator and reduces by 0.5x for the debt user in specific transactions.</li>
+    </ul>
+  </div>
+
+  {/* Point Redemption */}
+  <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg mb-4 text-[#2A1F9D] dark:text-darkText">
+    <h3 className="font-semibold text-lg">Point Redemption</h3>
+    <p>Redeem points for rewards, access to exclusive content, or other benefits. Redemptions may have minimum point requirements and are subject to availability.</p>
+  </div>
+
+  {/* Examples */}
+  <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg text-[#2A1F9D] dark:text-darkText">
+    <h3 className="font-semibold text-lg">Example</h3>
+    <p>For example,  3 x $100 in stable coin lent = 300 points. With the bonus = 600 points
+    </p>
+  </div>
+</div>
+
+            
+            <section className="mt-10" id="faq">
           <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
             <div className="w-full">
               <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">

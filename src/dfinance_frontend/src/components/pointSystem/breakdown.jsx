@@ -118,9 +118,10 @@ const Breakdown = () => {
                               />
                               <span>{tx.assetName}</span>
                             </div>
-                            <div className=" flex items-centertext-center py-2">${tx.amount}</div>
-                            <div className="flex items-center text-center py-2">{tx.assetPoints}</div>
-                            <div className="flex items-center text-center py-2"> {tx.assetPoints * tx.amount}</div>
+                            <div className="flex items-center text-center py-2 px-2">${tx.amount.toLocaleString()}</div>
+<div className="flex items-center text-center py-2 px-4">{tx.assetPoints.toLocaleString()}</div>
+<div className="flex items-center text-center py-2 px-4">{(tx.assetPoints * tx.amount).toLocaleString()}</div>
+
                             <div className="flex flex-col items-center text-end text-nowrap ml-8 py-2">
                               <span className="text-gray-500">
                                 {new Date(tx.timestamp).toLocaleDateString(
@@ -165,7 +166,7 @@ const Breakdown = () => {
                             />
                             <span>{tx.assetName}</span>
                           </div>
-                          <div className=" flex items-center text-center px-4  "> {tx.assetPoints * tx.amount}</div>
+                          <div className=" flex items-center text-center px-4  "> {(tx.assetPoints * tx.amount).toLocaleString()}</div>
                          
                           <div className="flex items-center text-center px-4 ">
                             <button onClick={() => toggleDropdown(index)}>
@@ -184,13 +185,13 @@ const Breakdown = () => {
                                 <span className="font-[500] text-[#233D63] dark:text-darkTextSecondary">
                                   Assets Points:
                                 </span>{" "}
-                                {tx.assetPoints}
+                                {tx.assetPoints.toLocaleString()}
                               </p>
                               <p>
                                 <span className="font-[500] text-[#233D63] dark:text-darkTextSecondary">
                                  Amount:
                                 </span>{" "}
-                                {tx.amount}
+                                ${tx.amount.toLocaleString()}
                               </p>
 
                               <p className="mt-1">

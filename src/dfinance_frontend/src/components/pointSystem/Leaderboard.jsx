@@ -120,17 +120,18 @@ const Leaderboard = () => {
               <tbody className="mt-2">
                 {userRank && (
                   <>
-                  <tr className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer ${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
-                    <td className="py-6 px-6" style={getRankStyle(userRank.rank)}>
-                      {userRank.rank}
-                    </td>
-                    <td className="py-6 px-6">{truncatePrincipal(userRank.principal)}</td>
-                    <td className="py-6 px-10 ">{userRank.supplyPoints}</td>
-                    <td className="py-6 px-6">{userRank.borrowPoints}</td>
-                    <td className="py-6 px-10">{userRank.liquidityPoints}</td>
-                    <td className="py-6 px-6">{userRank.boosts}</td>
-                    <td className="py-6 px-6">{userRank.totalPoints}</td>
-                  </tr>
+                 <tr className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer ${getCardBorderColorClass(userRank.rank, userRank.principal)}`}>
+  <td className="py-6 px-10" style={getRankStyle(userRank.rank)}>
+    {userRank.rank}
+  </td>
+  <td className="py-6 px-10">{truncatePrincipal(userRank.principal)}</td>
+  <td className="py-6 px-10">{userRank.supplyPoints.toLocaleString()}</td>
+  <td className="py-6 px-10">{userRank.borrowPoints.toLocaleString()}</td>
+  <td className="py-6 px-10">{userRank.liquidityPoints.toLocaleString()}</td>
+  <td className="py-6 px-6">{userRank.boosts.toLocaleString()}</td>
+  <td className="py-6 px-10">{userRank.totalPoints.toLocaleString()}</td>
+</tr>
+
                   <tr>
                       <td colSpan="7" className="text-center">
                       <hr className="my-4 border-gray-600 dark:border-gray-600 w-20 mx-auto " />
@@ -141,18 +142,19 @@ const Leaderboard = () => {
               )}
 
                 {currentItems.map((entry) => (
-                  <tr
-                    key={entry.id}
-                    className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer${getCardBorderColorClass(entry.rank, entry.principal)}`}
-                  >
-                    <td className="py-2 px-6" style={getRankStyle(entry.rank)}>{entry.rank}</td>
-                    <td className="py-2 px-6">{truncatePrincipal(entry.principal)}</td>
-                    <td className="py-2 px-10">{entry.supplyPoints}</td>
-                    <td className="py-2 px-6">{entry.borrowPoints}</td>
-                    <td className="py-2 px-10">{entry.liquidityPoints}</td>
-                    <td className="py-2 px-6">{entry.boosts}</td>
-                    <td className="py-2 px-6">{entry.totalPoints}</td>
-                  </tr>
+                 <tr
+                 key={entry.id}
+                 className={`hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg cursor-pointer${getCardBorderColorClass(entry.rank, entry.principal)}`}
+               >
+                 <td className="py-2 px-10" style={getRankStyle(entry.rank)}>{entry.rank}</td>
+                 <td className="py-2 px-10">{truncatePrincipal(entry.principal)}</td>
+                 <td className="py-2 px-10">{entry.supplyPoints.toLocaleString()}</td>
+                 <td className="py-2 px-10">{entry.borrowPoints.toLocaleString()}</td>
+                 <td className="py-2 px-10">{entry.liquidityPoints.toLocaleString()}</td>
+                 <td className="py-2 px-6">{entry.boosts.toLocaleString()}</td>
+                 <td className="py-2 px-10">{entry.totalPoints.toLocaleString()}</td>
+               </tr>
+               
                 ))}
               </tbody>
             </table>

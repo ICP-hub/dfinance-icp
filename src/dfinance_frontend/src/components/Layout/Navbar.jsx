@@ -221,8 +221,8 @@ export default function Navbar({ isHomeNav }) {
       navigator.clipboard
         .writeText(principal)
         .then(() => {
-          toast.success(`Principal copied to clipboard`,  {
-            className: 'custom-toast',
+          toast.success(`Principal copied to clipboard`, {
+            className: "custom-toast",
             position: "top-center",
             autoClose: 3000,
             hideProgressBar: false,
@@ -234,7 +234,7 @@ export default function Navbar({ isHomeNav }) {
         })
         .catch((err) => {
           toast.error(`Failed to copy: ` + err, {
-            className: 'custom-toast',
+            className: "custom-toast",
             position: "top-center",
             autoClose: 3000,
             hideProgressBar: false,
@@ -999,25 +999,36 @@ export default function Navbar({ isHomeNav }) {
 
                           {/* Sounnd Mode Setting */}
                           <div className="flex items-center justify-between mb-1">
-                            <div className="flex flex-row items-center justify-around">
+                            <div className="flex flex-row items-center justify-around relative group">
                               <label
-                                htmlFor="darkMode"
-                                className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                                htmlFor="soundMode"
+                                className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText flex items-center"
                               >
                                 Sound
+                                <Info
+                                  size={16}
+                                  className="ml-2 cursor-pointer"
+                                />
                               </label>
+
+                              {/* Tooltip */}
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[40vw] ">
+                                Enabling this will allow the user to hear sound
+                                when supply, borrow, repay, or withdraw
+                                functions are executed.
+                              </div>
                             </div>
+
                             <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
                               <span className="text-[13px] mr-2">
                                 {isSoundOn ? "ON" : "OFF"}
                               </span>
                               <CustomizedSwitches
-                               checked={isSoundOn} 
-                               onChange={handleSoundToggle}
+                                checked={isSoundOn}
+                                onChange={handleSoundToggle}
                               />
                             </div>
                           </div>
-
                         </div>
                       </>
                     )}

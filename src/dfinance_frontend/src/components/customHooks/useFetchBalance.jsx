@@ -14,6 +14,7 @@ const useFetchBalance = (ledgerActors, principal) => {
 
   const fetchBalance = useCallback(
     async (assetType) => {
+      console.log(`Calling fetchBalance for ${assetType}`);  // Ensure function is being called
       if (principalObj) {
         try {
           const account = { owner: principalObj, subaccount: [] };
@@ -23,9 +24,15 @@ const useFetchBalance = (ledgerActors, principal) => {
             return;
           }
 
+          console.log(`Fetching balance for ${assetType} with account:`, account);
+
           const balance = await ledgerActor.icrc1_balance_of(account);
+
+          console.log(`Received balance for ${assetType}:`, balance);
+
           const formattedBalance = Number(balance) / 100000000;
 
+          console.log(`Formatted balance for ${assetType}:`, formattedBalance);
 
           switch (assetType) {
             case "ckBTC":
@@ -40,9 +47,9 @@ const useFetchBalance = (ledgerActors, principal) => {
             case "ICP":
               setCkICPBalance(formattedBalance);
               break;
-              case "ckUSDT":
-                setCkUSDTBalance(formattedBalance);
-                break;
+            case "ckUSDT":
+              setCkUSDTBalance(formattedBalance);
+              break;
             default:
               throw new Error("Unsupported asset type");
           }
@@ -50,6 +57,8 @@ const useFetchBalance = (ledgerActors, principal) => {
           console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
         }
+      } else {
+        console.warn("Principal not available");
       }
     },
     [ledgerActors, principalObj]

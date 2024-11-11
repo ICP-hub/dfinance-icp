@@ -206,6 +206,11 @@ const DashboardNav = () => {
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate]);
+  console.log("rate in dashbaord nav", ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,)
   console.log("reservedata in reserve1 ", reserveData)
 
   const calculateNetSupplyApy = useCallback((reserves, reserveData) => {

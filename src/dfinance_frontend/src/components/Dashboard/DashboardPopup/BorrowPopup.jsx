@@ -362,11 +362,12 @@ const Borrow = ({
     }
 
     // Update USD value only if the input is a valid positive number
-    if (!isNaN(numericAmount) && numericAmount >= 0) {
-      const convertedValue = numericAmount * conversionRate;
-      setUsdValue(parseFloat(convertedValue.toFixed(2))); // Round USD to 2 decimal places
+    if (numericAmount <= supplyBalance) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue = numericAmount * adjustedConversionRate;
+      setUsdValue(convertedValue.toFixed(2));
       setError("");
-    } else {
+    }else {
       setError("Amount must be a positive number");
       setUsdValue(0); // Reset USD value if invalid
     }
@@ -375,10 +376,10 @@ const Borrow = ({
   // Sync conversion when either amount or conversionRate changes
   useEffect(() => {
     if (amount && conversionRate) {
-      const convertedValue =
-        parseFloat(amount.replace(/,/g, "")) * conversionRate;
-      setUsdValue(parseFloat(convertedValue.toFixed(2)));
-    } else {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue = Number(amount.replace(/,/g, '')) * adjustedConversionRate;
+      setUsdValue(convertedValue);
+    }else {
       setUsdValue(0);
     }
   }, [amount, conversionRate]);

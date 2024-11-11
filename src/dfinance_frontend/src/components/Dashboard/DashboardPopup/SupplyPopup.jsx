@@ -62,7 +62,7 @@ const SupplyPopup = ({
 
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
-
+console.log("conversion rate ",conversionRate)
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -127,8 +127,9 @@ const SupplyPopup = ({
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
-        const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2)));
+        const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+        const convertedValue = numericAmount * adjustedConversionRate;
+        setUsdValue(convertedValue.toFixed(2));
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
@@ -141,7 +142,8 @@ const SupplyPopup = ({
 
   useEffect(() => {
     if (amount && conversionRate) {
-      const convertedValue = parseFloat(amount.replace(/,/g, '')) * conversionRate;
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue = Number(amount.replace(/,/g, '')) * adjustedConversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
@@ -149,8 +151,12 @@ const SupplyPopup = ({
   }, [amount, conversionRate]);
   useEffect(() => {
     if (balance && conversionRate) {
+      console.log("type of ",typeof(conversionRate))
       console.log("balance in supplypopup", balance, conversionRate);
-      const convertedMaxValue = parseFloat(balance) * conversionRate;
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);  // Convert conversionRate to number and scale it
+const convertedMaxValue = balance * adjustedConversionRate;  // Perform the multiplication with numbers
+
+      
       console.log("converted in supplypopup", convertedMaxValue);
       setMaxUsdValue(convertedMaxValue);
     } else {

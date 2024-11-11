@@ -118,7 +118,8 @@ const WithdrawPopup = ({
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
-        const convertedValue = numericAmount * conversionRate;
+        const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue = numericAmount * adjustedConversionRate;
 
         // Format the integer part with commas
 
@@ -140,8 +141,8 @@ const WithdrawPopup = ({
 
   useEffect(() => {
     if (amount && conversionRate) {
-      const convertedValue =
-        parseFloat(amount.replace(/,/g, "")) * conversionRate;
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue = Number(amount.replace(/,/g, '')) * adjustedConversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
@@ -149,7 +150,8 @@ const WithdrawPopup = ({
   }, [amount, conversionRate]);
   useEffect(() => {
     if (assetSupply && conversionRate) {
-      const convertedMaxValue = parseFloat(assetSupply) * conversionRate;
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);  // Convert conversionRate to number and scale it
+      const convertedMaxValue = assetSupply * adjustedConversionRate;  // Perform the multiplication with numbers
       setMaxUsdValue(convertedMaxValue);
     } else {
       setMaxUsdValue(0);

@@ -7,11 +7,10 @@ import { useAuth } from "../../utils/useAuthClient";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { toggleSound } from "../../redux/reducers/soundReducer";
-
-
+import { Info } from "lucide-react";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 import loader from "../../../public/Helpers/loader.svg";
 import { setUserData } from "../../redux/reducers/userReducer";
@@ -131,14 +130,13 @@ const MobileTopNav = ({
     setIsMobileNav(false);
   };
 
-
   const copyToClipboard = () => {
     if (principal) {
       navigator.clipboard
         .writeText(principal)
         .then(() => {
-          toast.success(`Principal copied to clipboard`,  {
-            className: 'custom-toast',
+          toast.success(`Principal copied to clipboard`, {
+            className: "custom-toast",
             position: "top-center",
             autoClose: 3000,
             hideProgressBar: false,
@@ -149,8 +147,8 @@ const MobileTopNav = ({
           });
         })
         .catch((err) => {
-          toast.error(`Failed to copy: ` + err,  {
-            className: 'custom-toast',
+          toast.error(`Failed to copy: ` + err, {
+            className: "custom-toast",
             position: "top-center",
             autoClose: 3000,
             hideProgressBar: false,
@@ -162,7 +160,6 @@ const MobileTopNav = ({
         });
     }
   };
-
 
   const truncateString = (str, maxLength) => {
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
@@ -191,8 +188,8 @@ const MobileTopNav = ({
   }
 
   const switchWallet = () => {
-    dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }))
-  }
+    dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
+  };
 
   return (
     <Drawer
@@ -355,22 +352,10 @@ const MobileTopNav = ({
 
         {!isHomeNav
           ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-            if (link.alwaysPresent) {
-              return (
-                <NavLink
-                  key={index}
-                  to={link.route}
-                  className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-                  onClick={handleClose}
-                >
-                  {link.title}
-                </NavLink>
-              );
-            } else if (isTestnetMode && link.testnet) {
-              return (
-                <React.Fragment key={index}>
+              if (link.alwaysPresent) {
+                return (
                   <NavLink
+                    key={index}
                     to={link.route}
                     className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
                     style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
@@ -378,37 +363,49 @@ const MobileTopNav = ({
                   >
                     {link.title}
                   </NavLink>
-                  {link.title === "Faucet" && (
-                    <>{/* Additional content for Faucet */}</>
-                  )}
-                </React.Fragment>
-              );
-            } else if (!isTestnetMode && !link.testnet) {
-              return (
-                <NavLink
-                  key={index}
-                  to={link.route}
-                  className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-                  onClick={handleClose}
-                >
-                  {link.title}
-                </NavLink>
-              );
-            }
-            return null;
-          })
+                );
+              } else if (isTestnetMode && link.testnet) {
+                return (
+                  <React.Fragment key={index}>
+                    <NavLink
+                      to={link.route}
+                      className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                      onClick={handleClose}
+                    >
+                      {link.title}
+                    </NavLink>
+                    {link.title === "Faucet" && (
+                      <>{/* Additional content for Faucet */}</>
+                    )}
+                  </React.Fragment>
+                );
+              } else if (!isTestnetMode && !link.testnet) {
+                return (
+                  <NavLink
+                    key={index}
+                    to={link.route}
+                    className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                    onClick={handleClose}
+                  >
+                    {link.title}
+                  </NavLink>
+                );
+              }
+              return null;
+            })
           : HOME_TOP_NAV_LINK.map((link, index) => (
-            <NavLink
-              key={index}
-              to={link.route}
-              className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-              style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
-              onClick={handleClose}
-            >
-              {link.title}
-            </NavLink>
-          ))}
+              <NavLink
+                key={index}
+                to={link.route}
+                className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                onClick={handleClose}
+              >
+                {link.title}
+              </NavLink>
+            ))}
 
         <h2 className="text-sm my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2 mt-8">
           Settings
@@ -431,9 +428,7 @@ const MobileTopNav = ({
                     onChange={handleDarkModeToggle}
                   />
                 </div>
-
               </div>
-
             </div>
 
             {isAuthenticated && (
@@ -445,55 +440,63 @@ const MobileTopNav = ({
                   Testnet Mode
                 </label>
                 <div className="flex items-center gap-3 dark:text-darkTextSecondar">
-                {isTestnetMode ? "On" : "Off"}
-                <div className="-mr-4">
-                  <CustomizedSwitches
-                    checked={isTestnetMode}
-                    onChange={handleTestnetModeToggle}
-                  />
+                  {isTestnetMode ? "On" : "Off"}
+                  <div className="-mr-4">
+                    <CustomizedSwitches
+                      checked={isTestnetMode}
+                      onChange={handleTestnetModeToggle}
+                    />
                   </div>
                 </div>
               </div>
             )}
 
 <div className="flex items-center justify-between">
-              <label
-                htmlFor="darkMode"
-                className="ml-1 text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
-              >
-                Sound
-              </label>
-              <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
-                {isSoundOn ? "On" : "Off"}
+      <div className="flex items-center relative group">
+        <label
+          htmlFor="darkMode"
+          className="ml-1 text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
+        >
+          Sound
+        </label>
+        
+        {/* Info Icon */}
+        <Info size={16} className="ml-2 cursor-pointer" />
 
-                <div className="-mr-4">
-                  <CustomizedSwitches
-                    checked={isSoundOn}
-                    onChange={handleSoundToggle}
-                  />
-                </div>
+        {/* Tooltip */}
+        <div className="absolute left-36 transform -translate-x-[40%] bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[30vw]">
+          Enabling this will allow the user to hear sound when supply, borrow, repay, or withdraw functions are executed.
+        </div>
+      </div>
 
-              </div>
+      <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
+        {isSoundOn ? "On" : "Off"}
 
-            </div>
+        <div className="-mr-4">
+          <CustomizedSwitches
+            checked={isSoundOn}
+            onChange={handleSoundToggle}
+          />
+        </div>
+      </div>
+    </div>
           </div>
         </div>
       </div>
-      { isAuthenticated &&
-      <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
-        <Button
-          title="Switch Wallet"
-          className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
-          onClickHandler={switchWallet}
-        />
-        <Button
-          title="Disconnect"
-          className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-3 px-9 shadow-lg text-sm font-poppins"
-          onClickHandler={handleLogout}
-        />
-
-      </div>
-}
+      {isAuthenticated && (
+        <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
+          <Button
+            title="Switch Wallet"
+            className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
+            onClickHandler={switchWallet}
+          />
+          <Button
+            title="Disconnect"
+            className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% border-b-3 dark:border-darkBackground text-white dark:text-darkText rounded-lg py-3 px-9 shadow-lg text-sm font-poppins"
+            onClickHandler={handleLogout}
+          />
+        </div>
+      )}
     </Drawer>
   );
 };

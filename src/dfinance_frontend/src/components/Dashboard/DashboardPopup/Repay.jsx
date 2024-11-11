@@ -82,10 +82,10 @@ const Repay = ({
       if (numericAmount <= assetBorrow) {
         // Format the amount with commas before setting it
         const formattedAmount = formatAmountWithCommas(inputAmount);
-
+        const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         // Calculate and format the USD value
-        const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Ensure proper formatting
+        const convertedValue = Number(numericAmount) * adjustedConversionRate;
+        setUsdValue((convertedValue.toFixed(2))); // Ensure proper formatting
         setAmount(formattedAmount); // Set formatted amount with commas
         setError("");
       } else {
@@ -115,8 +115,9 @@ const Repay = ({
     useRealTimeConversionRate(asset);
   useEffect(() => {
     if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue =
-        parseFloat(amount.replace(/,/g, "")) * conversionRate;
+       Number(amount.replace(/,/g, "")) * adjustedConversionRate;
       setUsdValue(convertedValue); // Update USD value
     } else {
       setUsdValue(0); // Reset USD value if conditions are not met
@@ -124,7 +125,8 @@ const Repay = ({
   }, [amount, conversionRate]);
   useEffect(() => {
     if (assetBorrow && conversionRate) {
-      const convertedMaxValue = parseFloat(assetBorrow) * conversionRate;
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedMaxValue = Number(assetBorrow) * adjustedConversionRate;
       setMaxUsdValue(convertedMaxValue);
     } else {
       setMaxUsdValue(0);
@@ -497,13 +499,15 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center ">
                     <p className="text-nowrap">Remaining debt</p>
                     <div className="w-4/12 flex flex-col items-end">
-                      <p className="text-xs mt-2">
-                        {(assetBorrow - amount).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        Max
-                      </p>
+                    <p className="text-xs mt-2">
+  {(assetBorrow - (amount?.replace(/,/g, "") || "")).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}{" "}
+  Max
+</p>
+
+
                     </div>
                   </div>
 

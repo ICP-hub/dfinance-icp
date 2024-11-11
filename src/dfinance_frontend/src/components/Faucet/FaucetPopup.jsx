@@ -30,6 +30,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
+  console.log('ckBTCUsdRate:', ckBTCUsdRate);  // Should not be null or 0
+console.log('ckETHUsdRate:', ckETHUsdRate);
+console.log('ckUSDCUsdRate:', ckUSDCUsdRate);
+console.log('ckICPUsdRate:', ckICPUsdRate);
+console.log('ckUSDTUsdRate:', ckUSDTUsdRate);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -51,41 +56,51 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   }, [fetchBalance, fetchConversionRate]);
 
   useEffect(() => {
-    if (ckBTCUsdRate) {
-      const btcAmount = (10000 / ckBTCUsdRate).toFixed(4);
+    // Ensure rates are valid before calculation
+    if (ckBTCUsdRate && ckBTCUsdRate > 0) {
+      const btcAmount = ((10000 / (ckBTCUsdRate / 1e8))).toFixed(8);  // Divide by 10^8 first
       setFaucetBTC(btcAmount);
+    } else {
+      console.error('Invalid ckBTCUsdRate:', ckBTCUsdRate);
     }
 
-    if (ckETHUsdRate) {
-      const ethAmount = (10000 / ckETHUsdRate).toFixed(4);
+    if (ckETHUsdRate && ckETHUsdRate > 0) {
+      const ethAmount = ((10000 / (ckETHUsdRate / 1e8))).toFixed(8);  // Same here for ETH
       setFaucetETH(ethAmount);
+    } else {
+      console.error('Invalid ckETHUsdRate:', ckETHUsdRate);
     }
 
-    if (ckUSDCUsdRate) {
-      const usdcAmount = (10000 / ckUSDCUsdRate).toFixed(4);
+    if (ckUSDCUsdRate && ckUSDCUsdRate > 0) {
+      const usdcAmount = ((10000 / (ckUSDCUsdRate / 1e8))).toFixed(8);  // Same for USDC
       setFaucetUSDC(usdcAmount);
+    } else {
+      console.error('Invalid ckUSDCUsdRate:', ckUSDCUsdRate);
     }
 
-    if (ckICPUsdRate) {
-      const icpAmount = (10000 / ckICPUsdRate).toFixed(4);
+    if (ckICPUsdRate && ckICPUsdRate > 0) {
+      const icpAmount = ((10000 / (ckICPUsdRate / 1e8))).toFixed(8);  // Same for ICP
       setFaucetICP(icpAmount);
+    } else {
+      console.error('Invalid ckICPUsdRate:', ckICPUsdRate);
     }
-    if (ckUSDTUsdRate) {
-      const usdTAmount = (10000 / ckUSDTUsdRate).toFixed(4);
+
+    if (ckUSDTUsdRate && ckUSDTUsdRate > 0) {
+      const usdTAmount = ((10000 / (ckUSDTUsdRate / 1e8))).toFixed(8);  // Same for USDT
       setFaucetUSDT(usdTAmount);
+    } else {
+      console.error('Invalid ckUSDTUsdRate:', ckUSDTUsdRate);
     }
-  }, [
-    ckBTCBalance,
+}, [
     ckBTCUsdRate,
-    ckETHBalance,
     ckETHUsdRate,
-    ckUSDCBalance,
     ckUSDCUsdRate,
-    ckICPBalance,
     ckICPUsdRate,
     ckUSDTUsdRate,
-    ckUSDTBalance
-  ]);
+]);
+
+
+  
 
   const getFaucetAmount = () => {
     switch (asset) {
@@ -97,18 +112,19 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         return faucetUSDC;
       case "ICP":
         return faucetICP;
-        case "ckUSDT": // Added case for ckUSDT
-      return faucetUSDT; 
+      case "ckUSDT": // Added case for ckUSDT
+        return faucetUSDT;
       default:
         return null; // Return null if the asset is not recognized
     }
   };
+  
 
   useEffect(() => {
     const faucetAmount = getFaucetAmount();
     setExchangeRate(faucetAmount);
   }, [asset, faucetBTC, faucetETH, faucetUSDC, faucetICP ,faucetUSDT]);
-
+  console.log("faucetasset",faucetBTC, faucetETH, faucetUSDC, faucetICP ,faucetUSDT)
   const [amount, setAmount] = useState("");
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
 
@@ -153,6 +169,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
   const handleMaxAmountClick = () => {
     if (exchangeRate) {
+      console.log("exchangeRate",exchangeRate)
       // Convert exchangeRate to a number, format it to 8 decimal places, and ensure it's a valid number
       const formattedAmount = parseFloat(exchangeRate).toFixed(8);
       // Format it for display

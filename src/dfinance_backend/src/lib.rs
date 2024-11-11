@@ -1,10 +1,4 @@
-use std::collections::HashMap;
-use std::fmt::format;
-use std::string;
-use std::time::Duration;
-
 use candid::encode_args;
-use candid::types::principal;
 use candid::Nat;
 use candid::Principal;
 use declarations::assets::{
@@ -15,13 +9,9 @@ use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc1::account::Account;
-use implementations::reserve;
-use protocol::libraries::logic::update::user_reserve;
-use protocol::libraries::math;
 use protocol::libraries::math::calculate::calculate_health_factor;
 use protocol::libraries::math::calculate::calculate_ltv;
 use protocol::libraries::math::calculate::get_exchange_rates;
-// use protocol::libraries::math::calculate::get_price;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::calculate::UserPosition;
 use protocol::libraries::math::math_utils;
@@ -40,7 +30,6 @@ use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow;
-// use crate::protocol::libraries::logic::liquidation::LiquidationLogic;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
 
@@ -369,8 +358,6 @@ pub async fn login() -> Result<(), String> {
 
         ic_cdk::println!("login updated balance = {}", updated_balance);
 
-        // need to update balance for dtoken canister.
-
         let user_argument = Account {
             owner: user_principal,
             subaccount: None,
@@ -379,9 +366,6 @@ pub async fn login() -> Result<(), String> {
         let nat_updated_balance = Nat::from(updated_balance);
         let encoded_args = encode_args((user_argument, nat_updated_balance)).unwrap();
 
-        //  let _ =
-        //   ic_cdk::api::call::call_raw(canister_id, "icrc1_update_balance_of", &encoded_args, 0);
-
         ic_cdk::println!("asset supply = {}", user_reserve_data.asset_supply);
         ic_cdk::println!(
             "Updated balance calculated using liquidity index {}: {}",
@@ -389,7 +373,6 @@ pub async fn login() -> Result<(), String> {
             updated_balance
         );
 
-        // user_reserve_data.asset_supply = updated_balance;
         ic_cdk::println!(
             "Updated asset supply for reserve {}: {}",
             reserve_name,
@@ -430,7 +413,6 @@ pub async fn login() -> Result<(), String> {
         }
 
         user_reserve_data.asset_supply = updated_balance;
-        // TODO: take reference from function.rs line number 166. --> need to pass argument and handle it more gracefully.
         let (approval_result,): (ApproveResult,) = ic_cdk::api::call::call(
             canister_id,
             "icrc1_update_balance_of",
@@ -461,8 +443,6 @@ pub async fn login() -> Result<(), String> {
                 user_reserve_data.variable_borrow_index,
                 borrow_updated_balance
             );
-
-            //  user_reserve_data.asset_borrow = borrow_updated_balance;
 
             if user_reserve_data.asset_borrow > 0 && user_reserve_data.is_borrowed {
                 let added_borrowed = borrow_updated_balance - user_reserve_data.asset_borrow;
@@ -568,7 +548,6 @@ fn calculate_dynamic_balance(
     prev_liquidity_index: u128,
     new_liquidity_index: u128,
 ) -> u128 {
-    // Calculate the dynamically updated balance using the liquidity index
     initial_deposit * new_liquidity_index / prev_liquidity_index
 }
 

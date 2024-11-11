@@ -1,8 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 
-use crate::constants::asset_address::DEFAULT;
-
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
     pub transaction_hash: String,
@@ -57,7 +55,6 @@ pub struct UserReserveData {
     pub principal_stable_debt: u64,
     pub borrow_rate: u128,
     pub supply_rate: u128,
-    // pub avg_stable_borrow_rate: u128,
     pub last_update_timestamp: u64,
     pub liquidity_index: u128,
     pub asset_supply: u128,
@@ -133,7 +130,6 @@ pub struct CalculateInterestRatesParams {
     pub total_stable_debt: u128,
     pub total_variable_debt: u128,
     pub average_stable_borrow_rate: u128,
-    // pub reserve_factor: u128,
     pub reserve: String,
     pub d_token: Option<String>,
 }

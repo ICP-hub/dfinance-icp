@@ -1,13 +1,12 @@
 use candid::{Nat, Principal};
 pub struct SupplyLogic;
-use crate::api::functions::{asset_transfer, asset_transfer_from};
+use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
 
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
-use crate::protocol::libraries::logic::reserve::{self, mint_scaled};
+use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
-// use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 
@@ -26,14 +25,6 @@ impl SupplyLogic {
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
-        let dtoken_canister = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&params.asset.to_string().clone())
-                .and_then(|reserve_data| reserve_data.d_token_canister.clone())
-                .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
-        })?;
-
         
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
@@ -96,7 +87,7 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Supply validated successfully");
 
-        let total_supplies= (reserve_data.total_borrowed.clone() + usd_amount);
+        let total_supplies= reserve_data.total_borrowed.clone() + usd_amount;
         let total_borrow = reserve_data.total_borrowed;
         let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
 
@@ -178,19 +169,8 @@ impl SupplyLogic {
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
-        let dtoken_canister = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&params.asset.to_string().clone())
-                .and_then(|reserve_data| reserve_data.d_token_canister.clone()) // Retrieve d_token_canister
-                .ok_or_else(|| format!("No d_token_canister found for asset: {}", params.asset))
-        })?;
 
         let platform_principal = ic_cdk::api::id();
-
-        let dtoken_canister_principal = Principal::from_text(dtoken_canister)
-            .map_err(|_| "Invalid dtoken canister ID".to_string())?;
-
         let withdraw_amount = Nat::from(params.amount);
 
         // Converting asset value to usdt

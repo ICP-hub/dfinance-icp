@@ -1,12 +1,10 @@
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::{query, update};
-use ic_stable_structures::vec;
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use serde::Serialize;
 use std::collections::HashMap;
 
 use crate::api::state_handler::{mutate_state, read_state};
-use crate::declarations::state;
 use crate::declarations::storable::Candid;
 
 use super::math_utils::ScalingMath;
@@ -16,21 +14,13 @@ struct CachedPrice {
     price: u128,
 }
 
-// Define the price cache structure
 #[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
 pub struct PriceCache {
     cache: HashMap<String, CachedPrice>,
 }
 
 impl PriceCache {
-    // pub fn new(cache_duration: Duration) -> Self {
-    //     Self {
-    //         cache: HashMap::new(),
-    //         // cache_duration,
-    //     }
-    // }
 
-    // Simple cache implementation without duration check
     pub fn get_cached_price_simple(&self, asset: &str) -> Option<u128> {
         self.cache.get(asset).map(|cached_price| cached_price.price)
     }
@@ -90,7 +80,7 @@ pub struct UserPosition {
 }
 pub fn calculate_health_factor(position: &UserPosition) -> u128 {
     if position.total_borrowed_value == 0 {
-        return u128::MAX; //
+        return u128::MAX; 
     }
 
     (position.total_collateral_value * position.liquidation_threshold)
@@ -214,7 +204,6 @@ pub async fn get_exchange_rates(
                         Ok(price_cache.0.clone())
                     } else {
                         ic_cdk::println!("creating new price cache : not found");
-                        // If the asset is not found, create a new entry for it
                         let new_price_cache = PriceCache {
                             cache: HashMap::new(),
                         };
@@ -224,7 +213,6 @@ pub async fn get_exchange_rates(
                     }
                 });
 
-                // Handling price-cache data result
                 let mut price_cache_data: PriceCache = match price_cache_result {
                     Ok(data) => {
                         ic_cdk::println!("calculate price cache found: {:?}", data);
@@ -244,8 +232,7 @@ pub async fn get_exchange_rates(
                         .price_cache_list
                         .insert(base_asset.clone(), Candid(price_cache_data.clone()));
                 });
-
-                // ic_cdk::println!("total value = {}", total_value);
+                
                 Ok((total_value, time))
             }
             GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),

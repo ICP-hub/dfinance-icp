@@ -5,11 +5,11 @@ set -e
 # Load environment variables from .env
 source ../../.env 
 
-# Set variables
+# Set variables  
 # ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
-ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
+ckbtc_canister="cbopz-duaaa-aaaaa-qaaka-cai"
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
+dtoken_canister="cgpjn-omaaa-aaaaa-qaakq-cai"
 approve_method="icrc2_approve"
 deposit_method="supply"
 reserve_data_method="get_reserve_data"

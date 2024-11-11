@@ -105,7 +105,6 @@ impl ValidationLogic {
                 .ok_or_else(|| panic!("User not found: {}", user.to_string()))
         });
 
-        // Handling user data result
         let mut user_data = match user_data_result {
             Ok(data) => {
                 ic_cdk::println!("User found: {:?}", data);
@@ -126,7 +125,6 @@ impl ValidationLogic {
         let mut user_current_supply = 0;
 
         if let Some((_, reserve_data)) = user_reserve {
-            // If Reserve data exists
             user_current_supply = reserve_data.asset_supply;
         }
 
@@ -199,7 +197,6 @@ impl ValidationLogic {
     //     // --------------------------------------
 
     pub async fn validate_borrow(reserve: &ReserveData, amount: u128, user_principal: Principal) {
-        // Ensure the amount is valid
         if amount == 0 {
             panic!("{:?}", Error::InvalidAmount);
         }
@@ -224,7 +221,6 @@ impl ValidationLogic {
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
-        //user principal == caller
         if user_principal != ic_cdk::caller() {
             panic!("{:?}", Error::InvalidUser);
         }
@@ -238,7 +234,6 @@ impl ValidationLogic {
                 .ok_or_else(|| panic!("User not found: {}", user_principal.to_string()))
         });
 
-        // Handle user data result
         let user_data = match user_data_result {
             Ok(data) => {
                 ic_cdk::println!("User found: {:?}", data);
@@ -251,11 +246,9 @@ impl ValidationLogic {
 
         let user_total_debt = user_data.total_debt.unwrap_or(0);
 
-        // Calculating next total debt
         let next_total_debt = amount + user_total_debt;
         ic_cdk::println!("Next total debt: {}", next_total_debt);
 
-        // Calculating user liquidation threshold
         let user_thrs = cal_average_threshold(
             amount,
             0,
@@ -271,7 +264,6 @@ impl ValidationLogic {
             liquidation_threshold: user_thrs,
         };
 
-        // Calculating LTV
         let ltv = calculate_ltv(&user_position);
         ic_cdk::println!("LTV {:?}", ltv);
         ic_cdk::println!(
@@ -296,7 +288,6 @@ impl ValidationLogic {
             user_position.liquidation_threshold
         );
 
-        // Calculating health factor
         let health_factor = calculate_health_factor(&user_position);
 
         if health_factor < 1 {
@@ -325,7 +316,6 @@ impl ValidationLogic {
         user: Principal,
         ledger_canister: Principal,
     ) {
-        // validating amount
         let transfer_fees = get_fees(ledger_canister).await;
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
@@ -349,7 +339,6 @@ impl ValidationLogic {
                 .ok_or_else(|| panic!("User not found: {}", user.to_string()))
         });
 
-        // Handle user data result
         let mut user_data = match user_data_result {
             Ok(data) => {
                 ic_cdk::println!("User found: {:?}", data);
@@ -370,7 +359,6 @@ impl ValidationLogic {
         let mut user_current_debt = 0;
 
         if let Some((_, reserve_data)) = user_reserve {
-            // If Reserve data exists
             user_current_debt = reserve_data.asset_borrow;
         }
 
@@ -457,7 +445,6 @@ impl ValidationLogic {
                 .ok_or_else(|| panic!("User not found: {}", user.to_string()))
         });
 
-        // Handle user data result
         let user_data = match user_data_result {
             Ok(data) => {
                 ic_cdk::println!("User found: {:?}", data);

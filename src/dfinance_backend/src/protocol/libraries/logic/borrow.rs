@@ -84,7 +84,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         *&mut reserve_data.debt_index = 100000000;
     }
 
-    // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
     ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
@@ -121,7 +120,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, total_supplies).await;
 
     ic_cdk::println!("Interest rates updated successfully");
-    // *&mut reserve_data.total_borrowed+=usd_amount;
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
@@ -187,14 +185,6 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
             .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
     })?;
     let platform_principal = ic_cdk::api::id();
-
-    let debttoken_canister = mutate_state(|state| {
-        let asset_index = &mut state.asset_index;
-        asset_index
-            .get(&params.asset.to_string().clone())
-            .and_then(|reserve_data| reserve_data.debt_token_canister.clone())
-            .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
-    })?;
    
     let repay_amount = Nat::from(params.amount);
 

@@ -1,3 +1,4 @@
+use api::functions::update_balance;
 use candid::encode_args;
 use candid::Nat;
 use candid::Principal;
@@ -309,6 +310,7 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
 pub async fn login() -> Result<(), String> {
     let user_principal = ic_cdk::caller();
     let canister_id: Principal = ic_cdk::api::id();
+
     ic_cdk::println!("User principal: {}", user_principal);
 
     // Fetch user data
@@ -325,6 +327,7 @@ pub async fn login() -> Result<(), String> {
         Err(err) => return Err(err),
     };
 
+    
     // Ensure reserves exist for the user
     let reserves = user_data
         .reserves
@@ -348,6 +351,28 @@ pub async fn login() -> Result<(), String> {
         );
         let prev_liq_index = user_reserve_data.liquidity_index.clone();
         let prev_borrow_index = user_reserve_data.variable_borrow_index.clone();
+        // get dtoken and debttoken canister from reserve data using asset name
+
+        let reserve_data_result = get_reserve_data(reserve_name.to_string());
+
+    // Handle the result
+    let reserve_data = match reserve_data_result {
+        Ok(data) => data,
+        Err(err) => {
+            ic_cdk::println!("Error fetching reserve data: {}", err);
+            continue;
+        }
+    };
+
+    // Retrieve the dtoken and debttoken canisters from the reserve data
+    let dtoken_canister = Principal::from_text(reserve_data.d_token_canister.unwrap()).unwrap();
+    let debttoken_canister = Principal::from_text(reserve_data.debt_token_canister.unwrap()).unwrap();
+    
+
+    ic_cdk::println!("dToken Canister: {}", dtoken_canister);
+    ic_cdk::println!("DebtToken Canister: {}", debttoken_canister);
+
+
         update_user_reserve_state(user_reserve_data)?;
 
         let updated_balance = calculate_dynamic_balance(
@@ -356,15 +381,15 @@ pub async fn login() -> Result<(), String> {
             user_reserve_data.liquidity_index,
         );
 
-        ic_cdk::println!("login updated balance = {}", updated_balance);
+        ic_cdk::println!("login updated supply balance = {}", updated_balance);
 
-        let user_argument = Account {
-            owner: user_principal,
-            subaccount: None,
-        };
+        // let user_argument = Account {
+        //     owner: user_principal,
+        //     subaccount: None,
+        // };
 
-        let nat_updated_balance = Nat::from(updated_balance);
-        let encoded_args = encode_args((user_argument, nat_updated_balance)).unwrap();
+        // let nat_updated_balance = Nat::from(updated_balance);
+        // let encoded_args = encode_args((user_argument, nat_updated_balance)).unwrap();
 
         ic_cdk::println!("asset supply = {}", user_reserve_data.asset_supply);
         ic_cdk::println!(
@@ -373,11 +398,7 @@ pub async fn login() -> Result<(), String> {
             updated_balance
         );
 
-        ic_cdk::println!(
-            "Updated asset supply for reserve {}: {}",
-            reserve_name,
-            user_reserve_data.asset_supply
-        );
+        
 
         if user_reserve_data.asset_supply > 0 && user_reserve_data.is_collateral {
             let added_collateral = updated_balance - user_reserve_data.asset_supply;
@@ -413,23 +434,41 @@ pub async fn login() -> Result<(), String> {
         }
 
         user_reserve_data.asset_supply = updated_balance;
-        let (approval_result,): (ApproveResult,) = ic_cdk::api::call::call(
-            canister_id,
-            "icrc1_update_balance_of",
-            (&encoded_args, false),
-        )
-        .await
-        .map_err(|e| e.1)?;
-
         ic_cdk::println!(
-            "approve transfer executed successfully and the call result = {:?}",
-            approval_result
+            "Updated asset supply for reserve {}: {}",
+            reserve_name,
+            user_reserve_data.asset_supply
         );
+        //  let nat_updated_balance = Nat::from(updated_balance);
+        let d_token_result = update_balance(dtoken_canister, user_principal, updated_balance);
+        match d_token_result.await {
+            Ok(balance) => {
+                ic_cdk::println!("Updated dToken balance successfully: {}", balance);
+            }
+            Err(err) => {
+                ic_cdk::println!("Failed to update dToken balance: {}", err);
+            }
+        }
+        
+        //FIXME approveresult i told you this is not the result you get from this function 
+        // let (approval_result,): (ApproveResult,) = ic_cdk::api::call::call(
+        //     canister_id,
+        //     "icrc1_update_balance_of",
+        //     (&encoded_args, false),
+        // )
+        // .await
+        // .map_err(|e| e.1)?;
 
-        let _ = match approval_result {
-            ApproveResult::Ok(balance) => Ok(balance),
-            ApproveResult::Err(err) => Err(format!(":{:?}",err)),
-        };
+        // ic_cdk::println!(
+        //     "approve transfer executed successfully and the call result = {:?}",
+        //     approval_result
+        // );
+
+        // let _ = match approval_result {
+        //     ApproveResult::Ok(balance) => Ok(balance),
+        //     ApproveResult::Err(err) => Err(format!(":{:?}",err)),
+        // };
+
 
         if user_reserve_data.asset_borrow != 0 {
             let borrow_updated_balance = calculate_dynamic_balance(
@@ -469,6 +508,20 @@ pub async fn login() -> Result<(), String> {
             }
 
             user_reserve_data.asset_borrow = borrow_updated_balance;
+            ic_cdk::println!(
+                "Updated asset borrow for reserve {}: {}",
+                reserve_name,
+                user_reserve_data.asset_borrow
+            );
+            let debt_token_result = update_balance(debttoken_canister, user_principal, borrow_updated_balance);
+        match debt_token_result.await {
+            Ok(balance) => {
+                ic_cdk::println!("Updated debtToken balance successfully: {}", balance);
+            }
+            Err(err) => {
+                ic_cdk::println!("Failed to update debtToken balance: {}", err);
+            }
+        }
         }
 
         let user_position = UserPosition {
@@ -507,6 +560,69 @@ pub async fn login() -> Result<(), String> {
 
     Ok(())
 }
+
+
+
+#[query]
+pub async fn user_position(asset_name: String) -> Result<(u128, u128), String> {
+    let user_principal = ic_cdk::caller();
+    ic_cdk::println!("User principal: {}", user_principal);
+
+    let user_data_result = read_state(|state| {
+        state
+            .user_profile
+            .get(&user_principal)
+            .map(|user| user.0.clone())
+            .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
+    });
+
+    let user_data = match user_data_result {
+        Ok(data) => data,
+        Err(err) => return Err(err),
+    };
+
+    let user_reserve_data = user_data
+        .reserves
+        .as_ref()
+        .and_then(|reserves| {
+            reserves.iter().find(|(name, _)| name == &asset_name)
+        })
+        .map(|(_, reserve_data)| reserve_data)
+        .ok_or_else(|| format!("Reserve not found for asset: {}", asset_name))?;
+
+    let prev_liq_index = user_reserve_data.liquidity_index.clone();
+    let prev_borrow_index = user_reserve_data.variable_borrow_index.clone();
+
+   
+    let updated_asset_supply = if user_reserve_data.asset_supply > 0 {
+        calculate_dynamic_balance(
+        user_reserve_data.asset_supply,
+        prev_liq_index,
+        user_reserve_data.liquidity_index,
+        )
+}else {
+    0
+};
+
+  
+    let updated_asset_borrow = if user_reserve_data.asset_borrow > 0 {
+        calculate_dynamic_balance(
+            user_reserve_data.asset_borrow,
+            prev_borrow_index,
+            user_reserve_data.variable_borrow_index,
+        )
+    } else {
+        0
+    };
+
+    ic_cdk::println!(
+        "For asset {}: Updated asset supply = {}, Updated asset borrow = {}",
+        asset_name, updated_asset_supply, updated_asset_borrow
+    );
+
+    Ok((updated_asset_supply, updated_asset_borrow))
+}
+
 
 #[query]
 pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache, String> {

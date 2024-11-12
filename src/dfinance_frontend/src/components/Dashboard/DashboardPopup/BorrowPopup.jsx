@@ -436,13 +436,13 @@ const Borrow = ({
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
-                      if (parseFloat(availableBorrow) > 0) {
+                      if (parseFloat(borrowableAsset) > 0) {
                         handleMaxClick();
                       }
                     }}
                   >
-                    $
-                    {parseFloat(availableBorrow)?.toLocaleString(undefined, {
+                    
+                    {parseFloat(borrowableAsset)?.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     }) || "0.00"}{" "}

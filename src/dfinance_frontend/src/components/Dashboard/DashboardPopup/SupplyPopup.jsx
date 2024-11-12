@@ -478,7 +478,7 @@ const convertedMaxValue = balance * adjustedConversionRate;  // Perform the mult
                       }
                     }}
                   >
-                    ${maxUsdValue.toLocaleString(undefined, {
+                    {balance.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}{" "}

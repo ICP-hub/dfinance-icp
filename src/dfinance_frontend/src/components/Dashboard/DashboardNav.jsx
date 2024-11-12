@@ -300,7 +300,7 @@ const DashboardNav = () => {
     const updatedTabs = walletDetailTabs.map((item) => {
       switch (item.id) {
         case 0:
-          return { ...item, count: `$${totalSupplySize}` };  // Add $ sign for totalSupplySize
+          return { ...item, count: <><span className="font-light">$</span>{totalSupplySize}</> };  // Add $ sign for totalSupplySize
         case 1:
           // Function to convert a string with suffixes like K, M, etc.
           const convertToNumber = (value) => {
@@ -331,10 +331,10 @@ const DashboardNav = () => {
   
           // Log the result to check the calculation
           console.log("Calculated Result:", result);
-          const formattedResult = formatNumber(result);
-          return { ...item, count: `$${formattedResult}` };  // Add $ sign to the result
+          const formattedResult = formatNumber(result === "0.00" ? "0" : result);
+          return { ...item, count: <><span className="font-light">$</span>{formattedResult}</> };  // Add $ sign to the result
         case 2:
-          return { ...item, count: `$${totalBorrowSize}` };  // Add $ sign for totalBorrowSize
+          return { ...item, count:  <><span className="font-light">$</span>{totalBorrowSize}</>};  // Add $ sign for totalBorrowSize
         default:
           return item;
       }

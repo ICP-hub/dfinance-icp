@@ -108,15 +108,11 @@ const Faucet = () => {
       {isTestnetMode && (
         <>
           
-          <div className="w-[85%] mb-10 ml-2">
-            <p className="text-[#707086] text-[14px] text-justify  dark:text-darkTextSecondary leading-relaxed mt-3">
-              With testnet Faucet you can get free assets to test the Dfinance
-              Protocol. Make sure to switch your wallet provider to the
-              appropriate testnet network, select desired asset, and click
-              ‘Faucet’ to get tokens transferred to your wallet. The assets on a
-              testnet are not “real,” meaning they have no monetary value.
-            </p>
-          </div>
+          <div className="mb-10 ml-2">
+        <p className="text-[#707086] text-[14px] text-justify  dark:text-darkTextSecondary leading-relaxed mt-3">
+        With our testnet Faucet you can receive free assets to test the Dfinance Protocol. Make sure to switch your wallet provider to the appropriate testnet network, select desired asset, and click ‘Faucet’ to get tokens transferred to your wallet. The assets on our testnet are not “real,” meaning they have no monetary value.
+        </p>
+      </div>
           {isAuthenticated ? (
             <FaucetDetails />
           ) : (

@@ -64,23 +64,56 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
     balance
 }
 
+// #[update]
+// pub async fn update_balance(canister: Principal, principal: Principal) -> Nat {
+//     let account = Account {
+//         owner: principal,
+//         subaccount: None,
+//     };
+
+//     let encoded_args = encode_args((account,)).unwrap();
+
+//     let raw_response =
+//         ic_cdk::api::call::call_raw(canister, "icrc1_update_balance_of", &encoded_args, 0)
+//             .await
+//             .unwrap();
+
+//     let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
+
+//     balance
+// }
 #[update]
-pub async fn update_balance(canister: Principal, principal: Principal) -> Nat {
+pub async fn update_balance(
+    canister: Principal,
+    principal: Principal,
+    amount: u128,
+) -> Result<Nat, String> {
+    // Create the account structure
     let account = Account {
         owner: principal,
         subaccount: None,
     };
 
-    let encoded_args = encode_args((account,)).unwrap();
+    // Call `icrc1_update_balance_of` on the target canister directly with tuple arguments
+    let (result,): (Result<Nat, String>,) = ic_cdk::api::call::call(
+        canister,
+        "icrc1_update_balance_of",
+        (account, amount),
+    )
+    .await
+    .map_err(|e| format!("Failed to call update_balance: {:?}", e.1))?;
 
-    let raw_response =
-        ic_cdk::api::call::call_raw(canister, "icrc1_update_balance_of", &encoded_args, 0)
-            .await
-            .unwrap();
-
-    let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
-
-    balance
+    // Match on the result to handle both success and failure cases
+    match result {
+        Ok(balance) => {
+            ic_cdk::println!("Updated balance successfully: {}", balance);
+            Ok(balance)
+        }
+        Err(err) => {
+            ic_cdk::println!("Failed to update balance: {}", err);
+            Err(err)
+        }
+    }
 }
 
 // Icrc1_fee inter canister call.

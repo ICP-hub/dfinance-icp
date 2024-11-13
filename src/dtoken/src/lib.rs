@@ -318,17 +318,62 @@ fn icrc1_balance_of(account: Account) -> Nat {
 }
 
 //TODO add a update balance function that directly update balance of user in ledger.balances
+// #[update(name = "icrc1_update_balance_of")]
+// #[candid_method(update, rename = "icrc1_update_balance_of")]
+// fn icrc1_update_balance_of(account: Account, amount: u128) -> Result<Nat, String> {
+
+//     // Use the credit method to update the balance
+//     Access::with_ledger_mut(|ledger| ledger.balances_mut().credit(&account, (amount.clone() as u64).into()));
+
+//     // Return the updated balance
+//     let new_balance = Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into());
+//     Ok(new_balance)
+// }
+// #[update(name = "icrc1_update_balance_of")]
+// #[candid_method(update, rename = "icrc1_update_balance_of")]
+// fn icrc1_update_balance_of(account: Account, target_balance: u128) -> Result<Nat, String> {
+//     // Access the ledger to get the current balance and adjust to the target balance
+//     Access::with_ledger_mut(|ledger| {
+//         let current_balance: u128 = ledger.balances().account_balance(&account).into();
+
+//         if current_balance < target_balance {
+//             // Calculate the amount to credit (increase balance)
+//             let credit_amount = target_balance - current_balance;
+//             ledger.balances_mut().credit(&account, credit_amount.into());
+//         } else if current_balance > target_balance {
+//             // Calculate the amount to debit (decrease balance)
+//             let debit_amount = current_balance - target_balance;
+//             ledger.balances_mut()
+//                 .debit(&account, debit_amount.into())
+//                 .map_err(|err| format!("Failed to debit balance: {:?}", err))?;
+//         }
+//         Ok(ledger.balances().account_balance(&account).into())
+//     })
+// }
 #[update(name = "icrc1_update_balance_of")]
 #[candid_method(update, rename = "icrc1_update_balance_of")]
-fn icrc1_update_balance_of(account: Account, amount: u128) -> Result<Nat, String> {
+fn icrc1_update_balance_of(account: Account, target_balance: u128) -> Result<Nat, String> {
+    Access::with_ledger_mut(|ledger| {
+        // Get the current balance and convert it to u128
+        let current_balance: u128 = ledger.balances().account_balance(&account).to_u64() as u128;
 
-    // Use the credit method to update the balance
-    Access::with_ledger_mut(|ledger| ledger.balances_mut().credit(&account, (amount.clone() as u64).into()));
-
-    // Return the updated balance
-    let new_balance = Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into());
-    Ok(new_balance)
+        if current_balance < target_balance {
+            // Calculate the amount to credit (increase balance)
+            let credit_amount = (target_balance - current_balance) as u64; // Convert to u64
+            ledger.balances_mut().credit(&account, credit_amount.into());
+        } else if current_balance > target_balance {
+            // Calculate the amount to debit (decrease balance)
+            let debit_amount = (current_balance - target_balance) as u64; // Convert to u64
+            ledger.balances_mut()
+                .debit(&account, debit_amount.into())
+                .map_err(|err| format!("Failed to debit balance: {:?}", err))?;
+        }
+        
+        // Return the new balance as Nat
+        Ok(ledger.balances().account_balance(&account).into())
+    })
 }
+
 
 #[query(name = "icrc1_total_supply")]
 #[candid_method(query, rename = "icrc1_total_supply")]

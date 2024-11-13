@@ -67,7 +67,7 @@ const MySupply = () => {
   const [borrowableUSDC, setBorrowableUSDC] = useState(0);
   const [borrowableICP, setBorrowableICP] = useState(0);
   const [borrowableUSDT, setBorrowableUSDT] = useState(0);
-
+  const [showAllAssets, setShowAllAssets] = useState(false);
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   useEffect(() => {
@@ -110,7 +110,9 @@ const MySupply = () => {
   };
 
   useEffect(() => {
-    const savedShowZeroBalance = JSON.parse(localStorage.getItem("showZeroBalance"));
+    const savedShowZeroBalance = JSON.parse(
+      localStorage.getItem("showZeroBalance")
+    );
     if (savedShowZeroBalance !== null) {
       setShowZeroBalance(savedShowZeroBalance);
     }
@@ -123,14 +125,14 @@ const MySupply = () => {
       item[0] === "ckBTC"
         ? ckBTCBalance
         : item[0] === "ckETH"
-          ? ckETHBalance
-          : item[0] === "ckUSDC"
-            ? ckUSDCBalance
-            : item[0] === "ICP"
-              ? ckICPBalance
-              : item[0] === "ckUSDT"
-                ? ckUSDTBalance
-                : 0;
+        ? ckETHBalance
+        : item[0] === "ckUSDC"
+        ? ckUSDCBalance
+        : item[0] === "ICP"
+        ? ckICPBalance
+        : item[0] === "ckUSDT"
+        ? ckUSDTBalance
+        : 0;
     return showZeroBalance || Number(balance) > 0;
   });
 
@@ -234,8 +236,6 @@ const MySupply = () => {
 
     fetchAllData();
   }, [fetchBalance, fetchConversionRate]);
-
-
 
   const filteredReserveData = Object.fromEntries(filteredItems);
 
@@ -559,7 +559,22 @@ const MySupply = () => {
   let borrow_rate_apr = "0";
 
   if (filteredItems && filteredItems.length > 0) {
+    // Log filteredItems to check the data
+    console.log("filtered items", filteredItems);
+
+    // Access the first item in filteredItems and retrieve the necessary data
     const item = filteredItems[0][1].Ok;
+
+    // Log the item to check its content
+    console.log("items in filtered items", item);
+
+    // Retrieve the total_supply and total_borrow for the asset
+    const total_supply = item.total_supply;
+    const total_borrow = item.total_borrow;
+
+    // Log the total supply and total borrow values
+    console.log("Total supply for the asset:", total_supply);
+    console.log("Total borrow for the asset:", total_borrow);
     current_liquidity_rate = item.current_liquidity_rate
       ? item.current_liquidity_rate[0]
       : "0";
@@ -705,8 +720,8 @@ const MySupply = () => {
                     <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {userData?.Ok?.reserves[0]
-                          ?.map((reserveGroup, index) => {
+                        {userData?.Ok?.reserves[0]?.map(
+                          (reserveGroup, index) => {
                             console.log("userData", userData?.Ok?.reserves);
                             const asset = reserveGroup[1]?.reserve;
                             const assetSupply =
@@ -855,9 +870,19 @@ const MySupply = () => {
                                 </div>
 
                                 <div className="flex justify-between text-xs text-[#233D63] font-semibold mt-4 mb-1">
-                                  <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                    APY:
-                                  </p>
+                                  <div className="flex items-center relative group">
+                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                      APY:
+                                    </p>
+                                    {/* Info Icon with Tooltip */}
+                                    <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
+                                      <Info size={16} />
+                                      {/* Tooltip */}
+                                      <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[25vw]">
+                                        These values can fluctuate
+                                      </div>
+                                    </span>
+                                  </div>
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
                                     {supplyRateApr < 0.01
                                       ? "<0.01%"
@@ -1057,9 +1082,9 @@ const MySupply = () => {
                                 )}
                               </div>
                             );
-                          })}
+                          }
+                        )}
                       </div>
-
                     </div>
                   )}
                 </>
@@ -1078,15 +1103,32 @@ const MySupply = () => {
                     noSupplyMessage
                   ) : (
                     // className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden"
-                    <div className="w-full h-auto mt-4 relative  overflow-hidden">
-                      <div className="w-full z-10">
-                        <div className="grid grid-cols-[2fr_1.14fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          <div className="p-5 pl-4">Asset</div>
-                          <div className="p-5">Asset Supply</div>
-                          <div className="p-5">Apy</div>
-                          <div className="p-5"> Is Collateral</div>
-                          <div className="p-5"></div>
+                    <div className="w-full h-auto mt-4 relative ">
+                      <div className="grid grid-cols-[2fr_1.14fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+                        <div className="p-5 pl-4 inline-flex items-center">
+                          Asset
                         </div>
+                        <div className="p-5 inline-flex items-center ">
+                          Asset Supply
+                        </div>
+
+                        {/* APY with Info Icon and Tooltip */}
+                        <div className="p-5 inline-flex items-center relative group">
+                          <span>APY</span>
+                          {/* Info Icon */}
+                          <span className="ml-2 cursor-pointer relative group">
+                            <Info size={16} />
+                            {/* Tooltip */}
+                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
+                              These values can fluctuate
+                            </div>
+                          </span>
+                        </div>
+
+                        <div className="p-5 inline-flex items-center">
+                          Is Collateral
+                        </div>
+                        <div className="p-5 inline-flex items-center"></div>
                       </div>
 
                       {/* Scrollable Content Area */}
@@ -1100,8 +1142,8 @@ const MySupply = () => {
                         }`}
                       >
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                          {userData?.Ok?.reserves[0]
-                            ?.map((reserveGroup, index) => {
+                          {userData?.Ok?.reserves[0]?.map(
+                            (reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               const assetSupply =
                                 Number(reserveGroup[1]?.asset_supply || 0n) /
@@ -1412,10 +1454,10 @@ const MySupply = () => {
                                   </div>
                                 </div>
                               );
-                            })}
+                            }
+                          )}
                         </div>
                       </div>
-
                     </div>
                   )}
                 </>
@@ -1444,19 +1486,23 @@ const MySupply = () => {
                 )}
               </button>
             </div>
-{isVisible &&
-            <div className="flex items-center mx-4 mt-6 select-none">
-              <input
-                type="checkbox"
-                id="showZeroBalance"
-                checked={showZeroBalance}
-                onChange={handleCheckboxChange}
-                className="mr-2 cursor-pointer"
-              />
-              <label htmlFor="showZeroBalance" className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer">
-              Show 0 balance assets
-              </label>
-            </div>}
+            {isVisible && (
+              <div className="flex items-center mx-4 mt-6 select-none">
+                <input
+                  type="checkbox"
+                  id="showZeroBalance"
+                  checked={showZeroBalance}
+                  onChange={handleCheckboxChange}
+                  className="mr-2 cursor-pointer"
+                />
+                <label
+                  htmlFor="showZeroBalance"
+                  className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer"
+                >
+                  Show zero balance assets
+                </label>
+              </div>
+            )}
             {/* mobile screen  */}
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
@@ -1464,248 +1510,37 @@ const MySupply = () => {
                   {visibleItems.length === 0 ? (
                     noAssetsToSupplyMessage
                   ) : (
-                    <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
+                    <div className="relative mt-4 max-h-[2250px] scrollbar-none">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {visibleItems.map((item, index) => (
-                          <div
-                            key={index}
-                            className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
-                          >
-                            <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                              {item[0] === "ckBTC" && (
-                                <img
-                                  src={ckBTC}
-                                  alt="ckbtc logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckETH" && (
-                                <img
-                                  src={ckETH}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckUSDC" && (
-                                <img
-                                  src={ckUSDC}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ICP" && (
-                                <img
-                                  src={icp}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckUSDT" && (
-                                <img
-                                  src={ckUSDT}
-                                  alt="ckUSDT logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
-                                {item[0]}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                Wallet Balance:
-                              </p>
-                              <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                {item[0] === "ckBTC" && (
-                                  <>
-                                    <p>
-                                      {Number(ckBTCBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckBTCUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <>
-                                    <p>
-                                      {Number(ckETHBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckETHUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <>
-                                    <p>
-                                      {Number(ckUSDCBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckUSDCUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ICP" && (
-                                  <>
-                                    <p>
-                                      {Number(ckICPBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckICPUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDT" && (
-                                  <>
-                                    <p>{Number(ckUSDTBalance).toLocaleString()}</p>
-                                    <p className="font-light">${formatNumber(ckUSDTUsdBalance)}</p>
-                                  </>
-                                )}
-                              </p>
-                            </div>
+                        {visibleItems.map((item, index) => {
+                          // Get the balance for the current item
+                          const balance =
+                            item[0] === "ckBTC"
+                              ? ckBTCBalance
+                              : item[0] === "ckETH"
+                              ? ckETHBalance
+                              : item[0] === "ckUSDC"
+                              ? ckUSDCBalance
+                              : item[0] === "ICP"
+                              ? ckICPBalance
+                              : item[0] === "ckUSDT"
+                              ? ckUSDTBalance
+                              : 0;
 
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-2">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                APY:
-                              </p>
-                              <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
-                                {Number(item[1].Ok.current_liquidity_rate) /
-                                  100000000 <
-                                  0.01
-                                  ? "<0.01%"
-                                  : `${(
-                                    Number(
-                                      item[1].Ok.current_liquidity_rate
-                                    ) / 100000000
-                                  ).toFixed(2)}%`}
-                              </p>
-                            </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
-                              <p className="text-nowrap text-[#233D63] dark:text-darkText dark:opacity-50">
-                                Can Be Collateral
-                              </p>
-                              <div className="w-full flex items-center justify-end dark:text-darkText mb-2">
-                                <Check color={checkColor} size={16} />
-                              </div>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <Button
-                                title={"Supply"}
-                                onClickHandler={() => {
-                                  const reserveData =
-                                    userData?.Ok?.reserves[0]?.find(
-                                      (reserveGroup) =>
-                                        reserveGroup[0] === item[0]
-                                    );
-                                  const assetSupply =
-                                    Number(
-                                      reserveData?.[1]?.asset_supply || 0n
-                                    ) / 100000000;
-                                  const assetBorrow =
-                                    Number(
-                                      reserveData?.[1]?.asset_borrow || 0n
-                                    ) / 100000000;
-                                  const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                          // Determine if the item has zero balance and apply disabled styles if the checkbox is checked
+                          const isZeroBalance = Number(balance) === 0;
+                          const itemClass =
+                            showZeroBalance && isZeroBalance
+                              ? "opacity-50 pointer-events-none"
+                              : "";
 
-                                  console.log("currentCollateralStatus in on change", currentCollateralStatus);
-
-                                  const totalCollateral =
-                                    Number(
-                                      userData?.Ok?.total_collateral || 0n
-                                    ) / 100000000;
-                                  const totalDebt =
-                                    Number(userData?.Ok?.total_debt || 0n) /
-                                    100000000;
-
-                                  handleModalOpen(
-                                    "supply",
-                                    item[0],
-                                    (item[0] === "ckBTC" && ckBTC) ||
-                                    (item[0] === "ckETH" && ckETH) ||
-                                    (item[0] === "ckUSDC" && ckUSDC) ||
-                                    (item[0] === "ICP" && icp) ||
-                                    (item[0] === "ckUSDT" && ckUSDT),
-                                    Number(item[1]?.Ok.current_liquidity_rate) /
-                                    100000000,
-                                    item[0] === "ckBTC"
-                                      ? ckBTCBalance
-                                      : item[0] === "ckETH"
-                                        ? ckETHBalance
-                                        : item[0] === "ckUSDC"
-                                          ? ckUSDCBalance
-                                          : item[0] === "ICP"
-                                            ? ckICPBalance
-                                            : item[0] === "ckUSDT"
-                                              ? ckUSDTBalance
-                                              : null,
-                                    Number(
-                                      userData?.Ok?.liquidation_threshold
-                                    ) / 100000000,
-                                    Number(
-                                      item[1].Ok.configuration
-                                        .liquidation_threshold
-                                    ) / 100000000,
-
-                                    assetSupply,
-                                    assetBorrow,
-                                    totalCollateral,
-                                    totalDebt,
-                                    currentCollateralStatus
-                                  );
-                                }}
-                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
-                              />
-
-                              <Button
-                                title={"Details"}
-                                onClickHandler={() =>
-                                  handleDetailsClick(item[0], item[1])
-                                }
-                                className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
-                              />
-                            </div>
-                            {index !== filteredItems.length - 1 && (
-                              <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* for desktop screen */}
-            <div className="hidden xl:block">
-              {isVisible && (
-                <>
-                  {visibleItems.length === 0 ? (
-                    noAssetsToSupplyMessage
-                  ) : (
-                    <div className="w-full h-auto mt-4">
-                      {/* Fixed Header */}
-                      <div className="w-full z-10">
-                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          <div className="p-5 pl-4">Asset</div>
-                          <div className="p-5">Wallet Balance</div>
-                          <div className="p-5">Apy</div>
-                          <div className="p-5">Can be Collateral</div>
-                          <div className="p-5"></div>
-                        </div>
-                      </div>
-
-                      {/* Scrollable Content Area */}
-                      <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
-                        <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                          {visibleItems.map((item, index) => (
+                          return (
                             <div
                               key={index}
-                              className="grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${itemClass}`}
                             >
-                              <div className="p-3 pl-4 align-top flex items-center gap-2">
+                              <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                                 {item[0] === "ckBTC" && (
                                   <img
                                     src={ckBTC}
@@ -1741,73 +1576,105 @@ const MySupply = () => {
                                     className="w-8 h-8 rounded-full"
                                   />
                                 )}
-                                {item[0]}
+                                <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
+                                  {item[0]}
+                                </span>
                               </div>
-                              <div className="p-3 align-top flex flex-col">
-                                {item[0] === "ckBTC" && (
-                                  <>
-                                    <p>
-                                      {Number(ckBTCBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckBTCUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <>
-                                    <p>
-                                      {Number(ckETHBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckETHUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <>
-                                    <p>
-                                      {Number(ckUSDCBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckUSDCUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ICP" && (
-                                  <>
-                                    <p>
-                                      {Number(ckICPBalance).toLocaleString()}
-                                    </p>
-                                    <p className="font-light">
-                                      ${formatNumber(ckICPUsdBalance)}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDT" && (
-                                  <>
-                                    <p>{Number(ckUSDTBalance).toLocaleString()}</p>
-                                    <p className="font-light">${formatNumber(ckUSDTUsdBalance)}</p>
-                                  </>
-                                )}
+                              <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
+                                <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                  Wallet Balance:
+                                </p>
+                                <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                                  {item[0] === "ckBTC" && (
+                                    <>
+                                      <p>
+                                        {Number(ckBTCBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckBTCUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <>
+                                      <p>
+                                        {Number(ckETHBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckETHUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <>
+                                      <p>
+                                        {Number(ckUSDCBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckUSDCUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <>
+                                      <p>
+                                        {Number(ckICPBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckICPUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDT" && (
+                                    <>
+                                      <p>
+                                        {Number(ckUSDTBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckUSDTUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                </p>
                               </div>
 
-                              <div className=" align-top">
-                                {Number(item[1].Ok.current_liquidity_rate) /
-                                  100000000 <
+                              <div className="flex justify-between text-[#233D63]  text-xs font-semibold mt-4 mb-2">
+                                <div className="flex items-center relative group">
+                                  <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                    APY:
+                                  </p>
+                                  {/* Info Icon with Tooltip */}
+                                  <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
+                                    <Info size={16} />
+                                    {/* Tooltip */}
+                                    <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                      These values can fluctuate
+                                    </div>
+                                  </span>
+                                </div>
+                                <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
+                                  {Number(item[1].Ok.current_liquidity_rate) /
+                                    100000000 <
                                   0.01
-                                  ? "<0.01%"
-                                  : `${(
-                                    Number(
-                                      item[1].Ok.current_liquidity_rate
-                                    ) / 100000000
-                                  ).toFixed(2)}%`}
+                                    ? "<0.01%"
+                                    : `${(
+                                        Number(
+                                          item[1].Ok.current_liquidity_rate
+                                        ) / 100000000
+                                      ).toFixed(2)}%`}
+                                </p>
                               </div>
 
-                              <div className="p-3 -ml-3 align-top flex items-center justify-center dark:text-darkText">
-                                <Check color={checkColor} size={16} />
+                              <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
+                                <p className="text-nowrap text-[#233D63] dark:text-darkText dark:opacity-50">
+                                  Can Be Collateral
+                                </p>
+                                <div className="w-full flex items-center justify-end dark:text-darkText mb-2">
+                                  <Check color={checkColor} size={16} />
+                                </div>
                               </div>
-                              <div className="p-3 align-top flex gap-2 pt-2">
+
+                              <div className="flex justify-between gap-4">
                                 <Button
                                   title={"Supply"}
                                   onClickHandler={() => {
@@ -1822,48 +1689,49 @@ const MySupply = () => {
                                       ) / 100000000;
                                     const assetBorrow =
                                       Number(
-                                        reserveData?.[1]?.asset_supply || 0n
+                                        reserveData?.[1]?.asset_borrow || 0n
                                       ) / 100000000;
-                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+                                    const currentCollateralStatus =
+                                      reserveData?.[1]?.is_collateral ?? true;
 
-                                    console.log("currentCollateralStatus in on change", currentCollateralStatus);
+                                    console.log(
+                                      "currentCollateralStatus in on change",
+                                      currentCollateralStatus
+                                    );
 
                                     const totalCollateral =
-                                      parseFloat(
-                                        Number(userData?.Ok?.total_collateral) /
-                                        100000000
-                                      ) || 0;
+                                      Number(
+                                        userData?.Ok?.total_collateral || 0n
+                                      ) / 100000000;
                                     const totalDebt =
-                                      parseFloat(
-                                        Number(userData?.Ok?.total_debt) /
-                                        100000000
-                                      ) || 0;
+                                      Number(userData?.Ok?.total_debt || 0n) /
+                                      100000000;
 
                                     handleModalOpen(
                                       "supply",
                                       item[0],
                                       (item[0] === "ckBTC" && ckBTC) ||
-                                      (item[0] === "ckETH" && ckETH) ||
-                                      (item[0] === "ckUSDC" && ckUSDC) ||
-                                      (item[0] === "ICP" && icp) ||
-                                      (item[0] === "ckUSDT" && ckUSDT),
+                                        (item[0] === "ckETH" && ckETH) ||
+                                        (item[0] === "ckUSDC" && ckUSDC) ||
+                                        (item[0] === "ICP" && icp) ||
+                                        (item[0] === "ckUSDT" && ckUSDT),
                                       Number(
                                         item[1]?.Ok.current_liquidity_rate
                                       ) / 100000000,
                                       item[0] === "ckBTC"
                                         ? ckBTCBalance
                                         : item[0] === "ckETH"
-                                          ? ckETHBalance
-                                          : item[0] === "ckUSDC"
-                                            ? ckUSDCBalance
-                                            : item[0] === "ICP"
-                                              ? ckICPBalance
-                                              : item[0] === "ckUSDT"
-                                                ? ckUSDTBalance
-                                                : null,
+                                        ? ckETHBalance
+                                        : item[0] === "ckUSDC"
+                                        ? ckUSDCBalance
+                                        : item[0] === "ICP"
+                                        ? ckICPBalance
+                                        : item[0] === "ckUSDT"
+                                        ? ckUSDTBalance
+                                        : null,
 
                                       Number(
-                                        userData.Ok?.liquidation_threshold
+                                        userData?.Ok?.liquidation_threshold
                                       ) / 100000000,
                                       Number(
                                         item[1]?.Ok.configuration
@@ -1873,24 +1741,306 @@ const MySupply = () => {
                                       assetBorrow,
                                       totalCollateral,
                                       totalDebt,
-                                      currentCollateralStatus,
+                                      currentCollateralStatus
                                     );
                                   }}
-                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                  disabled={isZeroBalance} // Disable button if the balance is 0
+                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
                                 />
                                 <Button
                                   title={"Details"}
                                   onClickHandler={() =>
                                     handleDetailsClick(item[0], item[1])
                                   }
-                                  className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                  className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
                                 />
                               </div>
+
+                              {index !== visibleItems.length - 1 && (
+                                <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                              )}
                             </div>
-                          ))}
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* for desktop screen */}
+            <div className="hidden xl:block">
+              {isVisible && (
+                <>
+                  {visibleItems.length === 0 ? (
+                    noAssetsToSupplyMessage
+                  ) : (
+                    <div className="w-full h-auto mt-4">
+                      {/* Fixed Header */}
+                      <div className="w-full z-10">
+                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+                          {/* Asset Column */}
+                          <div className="p-5 pl-4 inline-flex items-center">
+                            Asset
+                          </div>
+
+                          {/* Wallet Balance Column */}
+                          <div className="p-5 inline-flex items-center">
+                            Wallet Balance
+                          </div>
+
+                          {/* APY Column with Info Icon and Tooltip */}
+                          <div className="p-5 inline-flex items-center relative group">
+                            <span>APY</span>
+                            {/* Info Icon */}
+                            <span className="ml-2 cursor-pointer">
+                              <Info size={16} />
+                              {/* Tooltip */}
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
+                                These values can fluctuate
+                              </div>
+                            </span>
+                          </div>
+
+                          {/* Can be Collateral Column */}
+                          <div className="p-5 inline-flex items-center">
+                            Can be Collateral
+                          </div>
+
+                          {/* Empty Column */}
+                          <div className="p-5 inline-flex items-center"></div>
                         </div>
                       </div>
 
+                      {/* Scrollable Content Area */}
+                      <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
+                        <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
+                          {visibleItems.map((item, index) => {
+                            // Get the balance for the current item
+                            const balance =
+                              item[0] === "ckBTC"
+                                ? ckBTCBalance
+                                : item[0] === "ckETH"
+                                ? ckETHBalance
+                                : item[0] === "ckUSDC"
+                                ? ckUSDCBalance
+                                : item[0] === "ICP"
+                                ? ckICPBalance
+                                : item[0] === "ckUSDT"
+                                ? ckUSDTBalance
+                                : 0;
+
+                            // Determine if item has zero balance and apply disabled styles if the checkbox is checked
+                            const isZeroBalance = Number(balance) === 0;
+                            const itemClass =
+                              showZeroBalance && isZeroBalance
+                                ? "opacity-50 pointer-events-none"
+                                : "";
+
+                            return (
+                              <div
+                                key={index}
+                                className={`grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs ${itemClass}`}
+                              >
+                                <div className="p-3 pl-4 align-top flex items-center gap-2">
+                                  {item[0] === "ckBTC" && (
+                                    <img
+                                      src={ckBTC}
+                                      alt="ckbtc logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <img
+                                      src={ckETH}
+                                      alt="cketh logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <img
+                                      src={ckUSDC}
+                                      alt="ckusdc logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <img
+                                      src={icp}
+                                      alt="icp logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckUSDT" && (
+                                    <img
+                                      src={ckUSDT}
+                                      alt="ckUSDT logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0]}
+                                </div>
+
+                                <div className="p-3 align-top flex flex-col">
+                                  {item[0] === "ckBTC" && (
+                                    <>
+                                      <p>
+                                        {Number(ckBTCBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckBTCUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <>
+                                      <p>
+                                        {Number(ckETHBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckETHUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <>
+                                      <p>
+                                        {Number(ckUSDCBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckUSDCUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <>
+                                      <p>
+                                        {Number(ckICPBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckICPUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                  {item[0] === "ckUSDT" && (
+                                    <>
+                                      <p>
+                                        {Number(ckUSDTBalance).toLocaleString()}
+                                      </p>
+                                      <p className="font-light">
+                                        ${formatNumber(ckUSDTUsdBalance)}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+
+                                <div className="align-top">
+                                  {Number(item[1].Ok.current_liquidity_rate) /
+                                    100000000 <
+                                  0.01
+                                    ? "<0.01%"
+                                    : `${(
+                                        Number(
+                                          item[1].Ok.current_liquidity_rate
+                                        ) / 100000000
+                                      ).toFixed(2)}%`}
+                                </div>
+
+                                <div className="p-3 -ml-3 align-top flex items-center justify-center dark:text-darkText">
+                                  <Check color={checkColor} size={16} />
+                                </div>
+
+                                <div className="p-3 align-top flex gap-2 pt-2">
+                                  <Button
+                                    title={"Supply"}
+                                    onClickHandler={() => {
+                                      const reserveData =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0]
+                                        );
+                                      const assetSupply =
+                                        Number(
+                                          reserveData?.[1]?.asset_supply || 0n
+                                        ) / 100000000;
+                                      const assetBorrow =
+                                        Number(
+                                          reserveData?.[1]?.asset_supply || 0n
+                                        ) / 100000000;
+                                      const currentCollateralStatus =
+                                        reserveData?.[1]?.is_collateral ?? true;
+
+                                      console.log(
+                                        "currentCollateralStatus in on change",
+                                        currentCollateralStatus
+                                      );
+
+                                      const totalCollateral =
+                                        parseFloat(
+                                          Number(
+                                            userData?.Ok?.total_collateral
+                                          ) / 100000000
+                                        ) || 0;
+                                      const totalDebt =
+                                        parseFloat(
+                                          Number(userData?.Ok?.total_debt) /
+                                            100000000
+                                        ) || 0;
+
+                                      handleModalOpen(
+                                        "supply",
+                                        item[0],
+                                        (item[0] === "ckBTC" && ckBTC) ||
+                                          (item[0] === "ckETH" && ckETH) ||
+                                          (item[0] === "ckUSDC" && ckUSDC) ||
+                                          (item[0] === "ICP" && icp) ||
+                                          (item[0] === "ckUSDT" && ckUSDT),
+                                        Number(
+                                          item[1]?.Ok.current_liquidity_rate
+                                        ) / 100000000,
+                                        item[0] === "ckBTC"
+                                          ? ckBTCBalance
+                                          : item[0] === "ckETH"
+                                          ? ckETHBalance
+                                          : item[0] === "ckUSDC"
+                                          ? ckUSDCBalance
+                                          : item[0] === "ICP"
+                                          ? ckICPBalance
+                                          : item[0] === "ckUSDT"
+                                          ? ckUSDTBalance
+                                          : null,
+
+                                        Number(
+                                          userData.Ok?.liquidation_threshold
+                                        ) / 100000000,
+                                        Number(
+                                          item[1]?.Ok.configuration
+                                            .liquidation_threshold
+                                        ) / 100000000,
+                                        assetSupply,
+                                        assetBorrow,
+                                        totalCollateral,
+                                        totalDebt,
+                                        currentCollateralStatus
+                                      );
+                                    }}
+                                    disabled={isZeroBalance} // Disable button if the balance is 0
+                                    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                  />
+                                  <Button
+                                    title={"Details"}
+                                    onClickHandler={() =>
+                                      handleDetailsClick(item[0], item[1])
+                                    }
+                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
@@ -1978,8 +2128,8 @@ const MySupply = () => {
                             "user data in my borrow",
                             userData?.Ok?.reserves[0]
                           )}
-                          {userData?.Ok?.reserves[0]
-                            ?.map((reserveGroup, index) => {
+                          {userData?.Ok?.reserves[0]?.map(
+                            (reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               console.log("Reserve group", reserveGroup[1]);
                               if (reserveGroup[1]?.asset_borrow <= 0)
@@ -2102,9 +2252,19 @@ const MySupply = () => {
                                   </div>
 
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
-                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50 mt-2">
-                                      APY:
-                                    </p>
+                                    <div className="flex items-center relative group">
+                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                        APY:
+                                      </p>
+                                      {/* Info Icon with Tooltip */}
+                                      <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
+                                        <Info size={16} />
+                                        {/* Tooltip */}
+                                        <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                          These values can fluctuate
+                                        </div>
+                                      </span>
+                                    </div>
                                     <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
                                       {borrowRateApr < 0.01
                                         ? "<0.01%"
@@ -2250,11 +2410,10 @@ const MySupply = () => {
                                   )}
                                 </div>
                               );
-                            })}
+                            }
+                          )}
                         </div>
                       </div>
-
-
                     </div>
                   )}
                 </>
@@ -2277,13 +2436,33 @@ const MySupply = () => {
                       {/* Container for the fixed header */}
                       <div className="w-full z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          <div className="p-3  pl-4">Asset</div>
+                          {/* Asset Column */}
+                          <div className="p-3 pl-4">Asset</div>
+
+                          {/* Debt Column */}
                           <div className="p-3 -ml-[4px]">Debt</div>
-                          <div className="p-3">Apy</div>
+
+                          {/* APY Column with Info Icon and Tooltip */}
+                          <div className="p-3 inline-flex items-center relative group">
+                            <span>APY</span>
+                            {/* Info Icon */}
+                            <span className="ml-2 cursor-pointer relative group">
+                              <Info size={16} />
+                              {/* Tooltip */}
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
+                                These values can fluctuate
+                              </div>
+                            </span>
+                          </div>
+
+                          {/* APY Type Column */}
                           <div className="p-3">Apy type</div>
-                          <div className="p-3"></div>{" "}
+
+                          {/* Empty Column */}
+                          <div className="p-3"></div>
                         </div>
                       </div>
+
                       {/* Scrollable table body */}
                       <div
                         className={`w-full h-auto  max-h-auto overflow-y-auto scrollbar-none ${
@@ -2295,8 +2474,8 @@ const MySupply = () => {
                         }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
-                          {userData?.Ok?.reserves[0]
-                            ?.map((reserveGroup, index) => {
+                          {userData?.Ok?.reserves[0]?.map(
+                            (reserveGroup, index) => {
                               const asset = reserveGroup[1]?.reserve;
                               if (
                                 Number(reserveGroup[1]?.asset_borrow || 0n) /
@@ -2554,10 +2733,10 @@ const MySupply = () => {
                                   </div>
                                 </div>
                               );
-                            })}
+                            }
+                          )}
                         </div>
                       </div>
-
                     </div>
                   )}
                 </>
@@ -2570,20 +2749,10 @@ const MySupply = () => {
               isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
-            <div className="flex justify-between items-center mt-2 mx-4">
+            <div className="flex justify-between items-center mt-3 mx-4">
               <div className="relative group">
                 <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText inline-flex items-center">
                   Assets to borrow
-                  <Info size={16} className="ml-2 cursor-pointer" />
-                  {/* Tooltip */}
-                  <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText  rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20  hidden group-hover:block items-center justify-center  text-gray-800 text-xs  border border-gray-300 whitespace-nowrap">
-                    Assets to borrow are available assets for the current user
-                    <span
-                      className={`tooltip-arrow ${
-                        theme === "dark" ? "tooltip-arrow-dark" : ""
-                      }`}
-                    ></span>
-                  </div>
                 </h1>
               </div>
               <button
@@ -2598,245 +2767,369 @@ const MySupply = () => {
                 )}
               </button>
             </div>
+            {isBorrowVisible && (
+              <div className="flex items-center mx-4 mt-6 select-none">
+                <input
+                  type="checkbox"
+                  id="showZeroBalance"
+                  checked={showAllAssets}
+                  onChange={() => setShowAllAssets(!showAllAssets)}
+                  className="mr-2 cursor-pointer"
+                />
+                <label
+                  htmlFor="showAllAssets"
+                  className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer"
+                >
+                  Show assets with no available borrow
+                </label>
+              </div>
+            )}
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isBorrowVisible && (
                 <>
+                  {/* Checkbox to toggle between showing all assets and only eligible ones */}
+
                   {filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
-                    <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none ">
+                    <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {filteredItems.map((item, index) => (
-                          <div
-                            key={index}
-                            className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${isTableDisabled
-                              ? "opacity-50 pointer-events-none"
-                              : ""
-                              }`}
-                          >
-                            <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                              {item[0] === "ckBTC" && (
-                                <img
-                                  src={ckBTC}
-                                  alt="ckbtc logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckETH" && (
-                                <img
-                                  src={ckETH}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckUSDC" && (
-                                <img
-                                  src={ckUSDC}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ICP" && (
-                                <img
-                                  src={icp}
-                                  alt="cketh logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              {item[0] === "ckUSDT" && ( // New condition for ckUSDT
-                                <img
-                                  src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
-                                  alt="ckUSDT logo"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              )}
-                              <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
-                                {item[0]}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                Available:
-                              </p>
-                              <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                {item[0] === "ckBTC" && (
-                                  <>
-                                    <p>{borrowableBTC.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                          Number(availableBorrow).toFixed(4)
-                                        )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <>
-                                    <p>{borrowableETH.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                          Number(availableBorrow).toFixed(4)
-                                        )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <>
-                                    <p>{borrowableUSDC.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                          Number(availableBorrow).toFixed(4)
-                                        )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ICP" && (
-                                  <>
-                                    <p>{borrowableICP.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                          Number(availableBorrow).toFixed(4)
-                                        )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
-                                  <>
-                                    <p>{borrowableUSDT.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                              </p>
-                            </div>
+                        {filteredItems
+                          .filter((item) => {
+                            // Filter to show only eligible assets if showAllAssets is false
+                            const reserveData = userData?.Ok?.reserves[0]?.find(
+                              (reserveGroup) => reserveGroup[0] === item[0]
+                            );
+                            const assetSupply =
+                              Number(reserveData?.[1]?.asset_supply || 0n) /
+                              100000000;
+                            const assetBorrow =
+                              Number(reserveData?.[1]?.asset_borrow || 0n) /
+                              100000000;
+                            const borrowableAsset =
+                              item[0] === "ckBTC"
+                                ? borrowableBTC
+                                : item[0] === "ckETH"
+                                ? borrowableETH
+                                : item[0] === "ckUSDC"
+                                ? borrowableUSDC
+                                : item[0] === "ICP"
+                                ? borrowableICP
+                                : item[0] === "ckUSDT"
+                                ? borrowableUSDT
+                                : 0;
+                                const assetData = item[1].Ok; // Access the data for each asset
 
-                            <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-1">
-                              <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                APY:
-                              </p>
-                              <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                {Number(item[1].Ok.borrow_rate) / 100000000 <
-                                  0.01
-                                  ? "<0.01%"
-                                  : `${(
-                                    Number(item[1].Ok.borrow_rate) / 100000000
-                                  ).toFixed(2)}%`}
-                              </p>
-                            </div>
+                                // Extract the total_supply and total_borrow for each asset
+                                const total_supply = Number(assetData.total_supply || 0);
+                                const total_borrow = Number(assetData.total_borrow || 0);
+                                
+                                // Convert availableBorrow to a number (if it's already a number, this will have no effect)
+                                const availableBorrowNumber = Number(availableBorrow);
+                                
+                                // Now you can perform the comparison as regular numbers
+                                const isEligible = total_supply - total_borrow >= availableBorrowNumber;
+                                
+                          
+                               
 
-                            <div className="flex justify-between gap-4">
-                              <Button
-                                title={"Borrow"}
-                                onClickHandler={() => {
-                                  const reserveData =
-                                    userData?.Ok?.reserves[0]?.find(
-                                      (reserveGroup) =>
-                                        reserveGroup[0] === item[0]
-                                    );
-                                  const assetSupply =
-                                    Number(
-                                      reserveData?.[1]?.asset_supply || 0n
-                                    ) / 100000000;
+                           
 
-                                  const currentCollateralStatus = reserveData?.[1]?.is_collateral;
+                            // If the checkbox is not checked, only show eligible assets
+                            if (!showAllAssets) {
+                              return isEligible; // Filter out ineligible items
+                            }
 
-                                  console.log("currentCollateralStatus in on change", currentCollateralStatus);
-                                  const assetBorrow =
-                                    Number(
-                                      reserveData?.[1]?.asset_borrow || 0n
-                                    ) / 100000000;
-                                  const totalCollateral =
-                                    parseFloat(
-                                      Number(userData?.Ok?.total_collateral) /
-                                      100000000
-                                    ) || 0;
-                                  const totalDebt = parseFloat(
-                                    Number(userData?.Ok?.total_debt) / 100000000
-                                  );
-                                  const Ltv =
-                                    Number(userData?.Ok?.ltv) / 100000000 || 0;
-                                  console.log("LTV1", Ltv);
-                                  const borrowableAsset =
-                                    item[0] === "ckBTC"
-                                      ? borrowableBTC
-                                      : item[0] === "ckETH"
-                                        ? borrowableETH
-                                        : item[0] === "ckUSDC"
-                                          ? borrowableUSDC
-                                          : item[0] === "ICP"
-                                            ? borrowableICP
-                                            : item[0] === "ckUSDT"
-                                              ? borrowableUSDT
-                                              : 0;
-                                  handleModalOpen(
-                                    "borrow",
-                                    item[0],
-                                    (item[0] === "ckBTC" && ckBTC) ||
-                                    (item[0] === "ckETH" && ckETH) ||
-                                    (item[0] === "ckUSDC" && ckUSDC) ||
-                                    (item[0] === "ICP" && icp) ||
-                                    (item[0] === "ckUSDT" && ckUSDT),
-                                    Number(item[1].Ok.borrow_rate) / 100000000,
-                                    item[0] === "ckBTC"
-                                      ? ckBTCBalance
-                                      : item[0] === "ckETH"
-                                        ? ckETHBalance
-                                        : item[0] === "ckUSDC"
+                            return true; // Show all items when checkbox is checked
+                          })
+                          .map((item, index) => {
+                            // Get reserve data for the current item
+                            const reserveData = userData?.Ok?.reserves[0]?.find(
+                              (reserveGroup) => reserveGroup[0] === item[0]
+                            );
+                            const assetSupply =
+                              Number(reserveData?.[1]?.asset_supply || 0n) /
+                              100000000;
+                            const assetBorrow =
+                              Number(reserveData?.[1]?.asset_borrow || 0n) /
+                              100000000;
+                            const borrowableAsset =
+                              item[0] === "ckBTC"
+                                ? borrowableBTC
+                                : item[0] === "ckETH"
+                                ? borrowableETH
+                                : item[0] === "ckUSDC"
+                                ? borrowableUSDC
+                                : item[0] === "ICP"
+                                ? borrowableICP
+                                : item[0] === "ckUSDT"
+                                ? borrowableUSDT
+                                : 0;
+                                const assetData = item[1].Ok; // Access the data for each asset
+
+                                // Extract the total_supply and total_borrow for each asset
+                                const total_supply = Number(assetData.total_supply || 0);
+                                const total_borrow = Number(assetData.total_borrow || 0);
+                                
+                                // Convert availableBorrow to a number (if it's already a number, this will have no effect)
+                                const availableBorrowNumber = Number(availableBorrow);
+                                
+                                // Now you can perform the comparison as regular numbers
+                                const isEligible = total_supply - total_borrow >= availableBorrowNumber;
+
+                           
+
+                            // Apply "disabled" styles (opacity and pointer-events) if the asset is ineligible and showAllAssets is true
+                            const itemClass =
+                              showAllAssets && !isEligible
+                                ? "opacity-50 pointer-events-none"
+                                : "";
+
+                            return (
+                              <div
+                                key={index}
+                                className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${itemClass} ${
+                                  isTableDisabled
+                                    ? "opacity-50 pointer-events-none"
+                                    : ""
+                                }`}
+                              >
+                                <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
+                                  {item[0] === "ckBTC" && (
+                                    <img
+                                      src={ckBTC}
+                                      alt="ckbtc logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckETH" && (
+                                    <img
+                                      src={ckETH}
+                                      alt="cketh logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckUSDC" && (
+                                    <img
+                                      src={ckUSDC}
+                                      alt="ckusdc logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ICP" && (
+                                    <img
+                                      src={icp}
+                                      alt="icp logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {item[0] === "ckUSDT" && (
+                                    <img
+                                      src={ckUSDT}
+                                      alt="ckUSDT logo"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  <span className="text-sm font-semibold text-[#2A1F9D] dark:text-darkText">
+                                    {item[0]}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6 relative group">
+                                  <p className="text-[#233D63] dark:text-darkText dark:opacity-50 flex items-center">
+                                    Available:
+                                    {/* Info Icon with Tooltip */}
+                                    <span className="ml-2 cursor-pointer relative group">
+                                      <Info size={16} />
+                                      {/* Tooltip */}
+                                      <div className="absolute left-28 transform -translate-x-[20%] bottom-full mb-4 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
+                                        Available assets to borrow for the
+                                        current user
+                                      </div>
+                                    </span>
+                                  </p>
+
+                                  <p className="text-right text-[#2A1F9D] dark:text-darkText">
+                                    {item[0] === "ckBTC" && (
+                                      <>
+                                        <p>{borrowableBTC.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                    {item[0] === "ckETH" && (
+                                      <>
+                                        <p>{borrowableETH.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                    {item[0] === "ckUSDC" && (
+                                      <>
+                                        <p>{borrowableUSDC.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                    {item[0] === "ICP" && (
+                                      <>
+                                        <p>{borrowableICP.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                    {item[0] === "ckUSDT" && (
+                                      <>
+                                        <p>{borrowableUSDT.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                  </p>
+                                </div>
+
+                                <div className="flex justify-between text-[#233D63] dark:text-darkText dark:opacity-50 text-xs font-semibold mt-4 mb-1">
+                                  <div className="flex items-center relative group">
+                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                      APY:
+                                    </p>
+                                    {/* Info Icon with Tooltip */}
+                                    <span className="ml-2 cursor-pointer relative group">
+                                      <Info size={16} />
+                                      {/* Tooltip */}
+                                      <div className="absolute left-24 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
+                                        These values can fluctuate
+                                      </div>
+                                    </span>
+                                  </div>
+                                  <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
+                                    {Number(item[1].Ok.borrow_rate) /
+                                      100000000 <
+                                    0.01
+                                      ? "<0.01%"
+                                      : `${(
+                                          Number(item[1].Ok.borrow_rate) /
+                                          100000000
+                                        ).toFixed(2)}%`}
+                                  </p>
+                                </div>
+
+                                <div className="flex justify-between gap-4">
+                                  <Button
+                                    title={"Borrow"}
+                                    onClickHandler={() => {
+                                      const currentCollateralStatus =
+                                        reserveData?.[1]?.is_collateral;
+                                      const totalCollateral =
+                                        parseFloat(
+                                          Number(
+                                            userData?.Ok?.total_collateral
+                                          ) / 100000000
+                                        ) || 0;
+                                      const totalDebt = parseFloat(
+                                        Number(userData?.Ok?.total_debt) /
+                                          100000000
+                                      );
+                                      const Ltv =
+                                        Number(userData?.Ok?.ltv) / 100000000 ||
+                                        0;
+                                      handleModalOpen(
+                                        "borrow",
+                                        item[0],
+                                        (item[0] === "ckBTC" && ckBTC) ||
+                                          (item[0] === "ckETH" && ckETH) ||
+                                          (item[0] === "ckUSDC" && ckUSDC) ||
+                                          (item[0] === "ICP" && icp) ||
+                                          (item[0] === "ckUSDT" && ckUSDT),
+                                        Number(item[1].Ok.borrow_rate) /
+                                          100000000,
+                                        item[0] === "ckBTC"
+                                          ? ckBTCBalance
+                                          : item[0] === "ckETH"
+                                          ? ckETHBalance
+                                          : item[0] === "ckUSDC"
                                           ? ckUSDCBalance
                                           : item[0] === "ICP"
-                                            ? ckICPBalance
-                                            : item[0] === "ckUSDT"
-                                              ? ckUSDTBalance
-                                              : null,
-
-                                    Number(userData.Ok?.liquidation_threshold) /
-                                    100000000,
-                                    Number(
-                                      item?.[1]?.Ok?.configuration
-                                        .liquidation_threshold
-                                    ) / 100000000,
-                                    assetSupply,
-                                    assetBorrow,
-                                    totalCollateral,
-                                    totalDebt,
-                                    Ltv,
-                                    currentCollateralStatus,
-                                    availableBorrow,
-                                    borrowableAsset
-                                  );
-                                }}
-                                disabled={isTableDisabled}
-                                className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
-                              />
-                              <Button
-                                title={"Details"}
-                                onClickHandler={() =>
-                                  handleDetailsClick(item[0], item[1])
-                                }
-                                disabled={isTableDisabled}
-                                className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
-                              />
-                            </div>
-                            {index !== filteredItems.length - 1 && (
-                              <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
-                            )}
-                          </div>
-                        ))}
+                                          ? ckICPBalance
+                                          : item[0] === "ckUSDT"
+                                          ? ckUSDTBalance
+                                          : null,
+                                        Number(
+                                          userData.Ok?.liquidation_threshold
+                                        ) / 100000000,
+                                        Number(
+                                          item?.[1]?.Ok?.configuration
+                                            .liquidation_threshold
+                                        ) / 100000000,
+                                        assetSupply,
+                                        assetBorrow,
+                                        totalCollateral,
+                                        totalDebt,
+                                        Ltv,
+                                        currentCollateralStatus,
+                                        availableBorrow,
+                                        borrowableAsset
+                                      );
+                                    }}
+                                    disabled={!isEligible} // Disable button if ineligible
+                                    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                  />
+                                  <Button
+                                    title={"Details"}
+                                    onClickHandler={() =>
+                                      handleDetailsClick(item[0], item[1])
+                                    }
+                                    disabled={!isEligible} // Disable button if ineligible
+                                    className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                  />
+                                </div>
+                                {index !== filteredItems.length - 1 && (
+                                  <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                                )}
+                              </div>
+                            );
+                          })}
                       </div>
-
                     </div>
                   )}
                 </>
@@ -2844,7 +3137,7 @@ const MySupply = () => {
             </div>
 
             {/* DESKTOP */}
-            <div className="hidden xl:block">
+            <div className="hidden xl:block mt-2">
               {isBorrowVisible && (
                 <>
                   {(!userData?.Ok?.reserves ||
@@ -2852,7 +3145,7 @@ const MySupply = () => {
                     userData?.Ok?.reserves[0].every(
                       (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
                     )) && (
-                    <div className="bg-[#6d6c89] opacity-80 mt-2 px-2 py-2 mb-2 rounded-lg flex items-center">
+                    <div className="bg-[#6d6c89] opacity-80 mt-4 px-2 py-2 mb-2 rounded-lg flex items-center">
                       <span className="text-white dark:text-darkText ms-4 text-sm">
                         To borrow, you need to supply any asset to be used as
                         collateral.
@@ -2861,7 +3154,7 @@ const MySupply = () => {
                     </div>
                   )}
 
-                  <div className="w-full h-auto mt-4">
+                  <div className="w-full h-auto mt-6">
                     {/* Supply Section */}
                     {filteredItems.length === 0 ? (
                       noAssetsToBorrowMessage
@@ -2874,245 +3167,364 @@ const MySupply = () => {
                         }`}
                       >
                         {/* Header */}
-                        <div className="grid grid-cols-[3fr_2fr_3fr_1fr_2fr] text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 z-10">
+                        <div className="grid grid-cols-[3fr_2fr_3fr_1fr_2fr] text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 z-10 mt-4">
                           {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
                             <div
                               key={index}
-                              className="p-2 lgx:pl-4  font-[500] whitespace-nowrap"
+                              className="p-2 lgx:pl-4 font-[500] "
                             >
-                              <p>{index === 2 ? item.header1 : item.header}</p>
+                              <div className="inline-flex items-center relative group">
+                                {/* Display header text */}
+                                <p>
+                                  {index === 2 ? item.header1 : item.header}
+                                </p>
+
+                                {/* Tooltip for the second column */}
+                                {index === 1 && (
+                                  <>
+                                    <span className="ml-2 cursor-pointer">
+                                      <Info size={16} />
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
+                                        Available assets to borrow for the
+                                        current user
+                                      </div>
+                                    </span>
+                                  </>
+                                )}
+
+                                {/* Tooltip for the third column */}
+                                {index === 2 && (
+                                  <>
+                                    <span className="ml-2 cursor-pointer">
+                                      <Info size={16} />
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
+                                        These values can fluctuate
+                                      </div>
+                                    </span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
+
                         {/* className="w-full max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-custom" */}
                         <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
-                          {/* Body */}
-                          {filteredItems.map((item, index) => (
-                            <div
-                              key={index}
-                              className="grid grid-cols-[3fr_2fr_2fr_1fr_2fr] items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
-                            >
-                              {/* Asset Column */}
-                              <div className="p-3 lgx:pl-4  align-top flex items-center min-w-[80px] gap-2 whitespace-nowrap mt-2">
-                                {item[0] === "ckBTC" && (
-                                  <img
-                                    src={ckBTC}
-                                    alt="ckbtc logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <img
-                                    src={ckETH}
-                                    alt="cketh logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <img
-                                    src={ckUSDC}
-                                    alt="ckusdc logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                {item[0] === "ICP" && (
-                                  <img
-                                    src={icp}
-                                    alt="icp logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
-                                  <img
-                                    src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
-                                    alt="ckUSDT logo"
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                )}
-                                <span>{item[0]}</span>
-                              </div>
+                          {/* Toggle Checkbox */}
 
-                              {/* Balance Column */}
-                              <div className="p-3 lgx:pl-6  align-top flex flex-col">
-                                {item[0] === "ckBTC" && (
-                                  <>
-                                    <p>{borrowableBTC.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                          Number(availableBorrow).toFixed(4)
-                                        )
-                                        : "0.0000"}
+                          {/* Asset List */}
+                          {filteredItems
+                            .filter((item) => {
+                              // Filter to show only eligible assets if showAllAssets is false
+                              if (!showAllAssets) {
+                                const reserveData =
+                                  userData?.Ok?.reserves[0]?.find(
+                                    (reserveGroup) =>
+                                      reserveGroup[0] === item[0]
+                                  );
+                                const assetSupply =
+                                  Number(reserveData?.[1]?.asset_supply || 0n) /
+                                  100000000;
+                                const assetBorrow =
+                                  Number(reserveData?.[1]?.asset_borrow || 0n) /
+                                  100000000;
+
+                                // Determine the borrowable asset based on item type
+                                const borrowableAsset =
+                                  item[0] === "ckBTC"
+                                    ? borrowableBTC
+                                    : item[0] === "ckETH"
+                                    ? borrowableETH
+                                    : item[0] === "ckUSDC"
+                                    ? borrowableUSDC
+                                    : item[0] === "ICP"
+                                    ? borrowableICP
+                                    : item[0] === "ckUSDT"
+                                    ? borrowableUSDT
+                                    : 0;
+                                    const assetData = item[1].Ok;
+                                    const total_supply = Number(assetData.total_supply || 0);
+                                    const total_borrow = Number(assetData.total_borrow || 0);
+                                    
+                                    // Convert availableBorrow to a number (if it's already a number, this will have no effect)
+                                    const availableBorrowNumber = Number(availableBorrow);
+                                    
+                                    // Now you can perform the comparison as regular numbers
+                                    
+                                // Show only eligible assets when showAllAssets is false
+                                return (
+                                  total_supply - total_borrow >= availableBorrowNumber
+                                );
+                              }
+                              return true; // Show all assets if showAllAssets is true
+                            })
+                            .map((item, index) => {
+                              // Get reserve data for the current item
+                              const reserveData =
+                                userData?.Ok?.reserves[0]?.find(
+                                  (reserveGroup) => reserveGroup[0] === item[0]
+                                );
+                              const assetSupply =
+                                Number(reserveData?.[1]?.asset_supply || 0n) /
+                                100000000;
+                              const assetBorrow =
+                                Number(reserveData?.[1]?.asset_borrow || 0n) /
+                                100000000;
+
+                              // Determine the borrowable asset based on item type
+                              const borrowableAsset =
+                                item[0] === "ckBTC"
+                                  ? borrowableBTC
+                                  : item[0] === "ckETH"
+                                  ? borrowableETH
+                                  : item[0] === "ckUSDC"
+                                  ? borrowableUSDC
+                                  : item[0] === "ICP"
+                                  ? borrowableICP
+                                  : item[0] === "ckUSDT"
+                                  ? borrowableUSDT
+                                  : 0;
+                                  const assetData = item[1].Ok;
+                              // Check eligibility condition
+                              const total_supply = Number(assetData.total_supply || 0);
+                              const total_borrow = Number(assetData.total_borrow || 0);
+                              console.log("total supply and total borrow ",total_supply ,total_borrow)
+                              // Convert availableBorrow to a number (if it's already a number, this will have no effect)
+                              const availableBorrowNumber = Number(availableBorrow);
+                              console.log("avaialable borrow ",availableBorrowNumber)
+                              // Now you can perform the comparison as regular numbers
+                              const isEligible = total_supply - total_borrow >= availableBorrowNumber;
+
+                              // Apply disabled styling if showAllAssets is true and item is ineligible
+                              const itemClass =
+                                showAllAssets && !isEligible
+                                  ? "opacity-50 pointer-events-none"
+                                  : "";
+
+                              return (
+                                <div
+                                  key={index}
+                                  className={`grid grid-cols-[3fr_2fr_2fr_1fr_2fr] items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs ${itemClass}`}
+                                >
+                                  {/* Asset Column */}
+                                  <div className="p-3 lgx:pl-4 align-top flex items-center min-w-[80px] gap-2 whitespace-nowrap mt-2">
+                                    {item[0] === "ckBTC" && (
+                                      <img
+                                        src={ckBTC}
+                                        alt="ckbtc logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    {item[0] === "ckETH" && (
+                                      <img
+                                        src={ckETH}
+                                        alt="cketh logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    {item[0] === "ckUSDC" && (
+                                      <img
+                                        src={ckUSDC}
+                                        alt="ckusdc logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    {item[0] === "ICP" && (
+                                      <img
+                                        src={icp}
+                                        alt="icp logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    {item[0] === "ckUSDT" && (
+                                      <img
+                                        src={ckUSDT}
+                                        alt="ckUSDT logo"
+                                        className="w-8 h-8 rounded-full"
+                                      />
+                                    )}
+                                    <span>{item[0]}</span>
+                                  </div>
+
+                                  {/* Balance Column */}
+                                  <div className="p-3 lgx:pl-4 align-top flex flex-col">
+                                    {item[0] === "ckBTC" && (
+                                      <>
+                                        <p>{borrowableBTC.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                    {item[0] === "ckETH" && (
+                                      <>
+                                        <p>{borrowableETH.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                    {item[0] === "ckUSDC" && (
+                                      <>
+                                        <p>{borrowableUSDC.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                    {item[0] === "ICP" && (
+                                      <>
+                                        <p>{borrowableICP.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                    {item[0] === "ckUSDT" && (
+                                      <>
+                                        <p>{borrowableUSDT.toFixed(4)}</p>
+                                        <p className="font-light">
+                                          $
+                                          {Number(availableBorrow)
+                                            ? formatNumber(
+                                                Number(availableBorrow).toFixed(
+                                                  4
+                                                )
+                                              )
+                                            : "0.0000"}
+                                        </p>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Borrow Rate Column */}
+                                  <div className="p-3 lgx:pl-4 align-center flex items-center">
+                                    <p className="mt-1.5">
+                                      {Number(item[1].Ok.borrow_rate) /
+                                        100000000 <
+                                      0.01
+                                        ? "<0.01%"
+                                        : `${(
+                                            Number(item[1].Ok.borrow_rate) /
+                                            100000000
+                                          ).toFixed(2)}%`}
                                     </p>
-                                  </>
-                                )}
-                                {item[0] === "ckETH" && (
-                                  <>
-                                    <p>{borrowableETH.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                          Number(availableBorrow).toFixed(4)
-                                        )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDC" && (
-                                  <>
-                                    <p>{borrowableUSDC.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                          Number(availableBorrow).toFixed(4)
-                                        )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ICP" && (
-                                  <>
-                                    <p>{borrowableICP.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      $
-                                      {Number(availableBorrow)
-                                        ? formatNumber(
-                                          Number(availableBorrow).toFixed(4)
-                                        )
-                                        : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                                {item[0] === "ckUSDT" && ( // New condition for ckUSDT
-                                  <>
-                                    <p>{borrowableUSDT.toFixed(4)}</p>
-                                    <p className="font-light">
-                                      ${Number(availableBorrow) ? formatNumber(Number(availableBorrow).toFixed(4)) : "0.0000"}
-                                    </p>
-                                  </>
-                                )}
-                              </div>
+                                  </div>
 
-                              {/* Borrow Rate Column */}
-                              <div className="p-3 lgx:pl-6 align-center flex items-center">
-                                <p className="mt-1.5">
-                                  {Number(item[1].Ok.borrow_rate) / 100000000 <
-                                    0.01
-                                    ? "<0.01%"
-                                    : `${(
-                                      Number(item[1].Ok.borrow_rate) /
-                                      100000000
-                                    ).toFixed(2)}%`}
-                                </p>
-                              </div>
+                                  {/* Empty Spacer Column */}
+                                  <div className="p-3 text-center"></div>
 
-                              {/* Empty Spacer Column */}
-                              <div className="p-3 text-center"></div>
+                                  {/* Actions Column */}
+                                  <div className="p-3 flex gap-3 justify-end">
+                                    <Button
+                                      title={"Borrow"}
+                                      onClickHandler={() => {
+                                        const currentCollateralStatus =
+                                          reserveData?.[1]?.is_collateral;
+                                        const assetSupply =
+                                          Number(
+                                            reserveData?.[1]?.asset_supply || 0n
+                                          ) / 100000000;
+                                        const assetBorrow =
+                                          Number(
+                                            reserveData?.[1]?.asset_borrow || 0n
+                                          ) / 100000000;
+                                        const totalCollateral =
+                                          parseFloat(
+                                            Number(
+                                              userData?.Ok?.total_collateral
+                                            ) / 100000000
+                                          ) || 0;
+                                        const totalDebt = parseFloat(
+                                          Number(userData?.Ok?.total_debt) /
+                                            100000000
+                                        );
+                                        const Ltv =
+                                          Number(userData?.Ok?.ltv) /
+                                            100000000 || 0;
 
-                              {/* Actions Column */}
-                              <div className="p-3 flex gap-3 justify-end">
-                                <Button
-                                  title={"Borrow"}
-                                  onClickHandler={() => {
-                                    const reserveData =
-                                      userData?.Ok?.reserves[0]?.find(
-                                        (reserveGroup) =>
-                                          reserveGroup[0] === item[0]
-                                      );
-                                    const currentCollateralStatus = reserveData?.[1]?.is_collateral;
-
-                                    console.log("currentCollateralStatus in on change", currentCollateralStatus);
-                                    const assetSupply =
-                                      Number(
-                                        reserveData?.[1]?.asset_supply || 0n
-                                      ) / 100000000;
-                                    const assetBorrow =
-                                      Number(
-                                        reserveData?.[1]?.asset_borrow || 0n
-                                      ) / 100000000;
-                                    const totalCollateral =
-                                      parseFloat(
-                                        Number(userData?.Ok?.total_collateral) /
-                                        100000000
-                                      ) || 0;
-                                    const totalDebt = parseFloat(
-                                      Number(userData?.Ok?.total_debt) /
-                                      100000000
-                                    );
-                                    const Ltv =
-                                      Number(userData?.Ok?.ltv) / 100000000 ||
-                                      0;
-
-                                    const borrowableAsset =
-                                      item[0] === "ckBTC"
-                                        ? borrowableBTC
-                                        : item[0] === "ckETH"
-                                          ? borrowableETH
-                                          : item[0] === "ckUSDC"
-                                            ? borrowableUSDC
-                                            : item[0] === "ICP"
-                                              ? borrowableICP
-                                              : item[0] === "ckUSDT"
-                                                ? borrowableUSDT
-                                                : 0;
-
-                                    handleModalOpen(
-                                      "borrow",
-                                      item[0],
-                                      (item[0] === "ckBTC" && ckBTC) ||
-                                      (item[0] === "ckETH" && ckETH) ||
-                                      (item[0] === "ckUSDC" && ckUSDC) ||
-                                      (item[0] === "ICP" && icp) ||
-                                      (item[0] === "ckUSDT" && ckUSDT),
-                                      Number(item[1].Ok.borrow_rate) /
-                                      100000000,
-                                      item[0] === "ckBTC"
-                                        ? ckBTCBalance
-                                        : item[0] === "ckETH"
-                                          ? ckETHBalance
-                                          : item[0] === "ckUSDC"
+                                        handleModalOpen(
+                                          "borrow",
+                                          item[0],
+                                          (item[0] === "ckBTC" && ckBTC) ||
+                                            (item[0] === "ckETH" && ckETH) ||
+                                            (item[0] === "ckUSDC" && ckUSDC) ||
+                                            (item[0] === "ICP" && icp) ||
+                                            (item[0] === "ckUSDT" && ckUSDT),
+                                          Number(item[1].Ok.borrow_rate) /
+                                            100000000,
+                                          item[0] === "ckBTC"
+                                            ? ckBTCBalance
+                                            : item[0] === "ckETH"
+                                            ? ckETHBalance
+                                            : item[0] === "ckUSDC"
                                             ? ckUSDCBalance
                                             : item[0] === "ICP"
-                                              ? ckICPBalance
-                                              : item[0] === "ckUSDT"
-                                                ? ckUSDTBalance
-                                                : null,
-                                      Number(
-                                        userData.Ok?.liquidation_threshold
-                                      ) / 100000000,
-                                      Number(
-                                        item?.[1]?.Ok?.configuration
-                                          .liquidation_threshold
-                                      ) / 100000000 || 0,
-                                      assetSupply,
-                                      assetBorrow,
-                                      totalCollateral,
-                                      totalDebt,
-                                      Ltv,
-                                      currentCollateralStatus,
-                                      availableBorrow,
-                                      borrowableAsset
-                                    );
-                                  }}
-                                  disabled={isTableDisabled}
-                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
-                                />
-                                <Button
-                                  title={"Details"}
-                                  onClickHandler={() =>
-                                    handleDetailsClick(item[0], item[1])
-                                  }
-                                  disabled={isTableDisabled}
-                                  className="bg-gradient-to-r from-[#4659CF] to-[#2A1F9D] text-white rounded-md px-3 py-1.5 shadow-md font-semibold text-xs"
-                                />
-                              </div>
-                            </div>
-                          ))}
+                                            ? ckICPBalance
+                                            : item[0] === "ckUSDT"
+                                            ? ckUSDTBalance
+                                            : null,
+                                          Number(
+                                            userData.Ok?.liquidation_threshold
+                                          ) / 100000000,
+                                          Number(
+                                            item?.[1]?.Ok?.configuration
+                                              .liquidation_threshold
+                                          ) / 100000000 || 0,
+                                          assetSupply,
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt,
+                                          Ltv,
+                                          currentCollateralStatus,
+                                          availableBorrow,
+                                          borrowableAsset
+                                        );
+                                      }}
+                                      disabled={!isEligible} // Disable button if item is ineligible
+                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
+                                    />
+                                    <Button
+                                      title={"Details"}
+                                      onClickHandler={() =>
+                                        handleDetailsClick(item[0], item[1])
+                                      }
+                                      disabled={!isEligible} // Disable button if item is ineligible
+                                      className="bg-gradient-to-r from-[#4659CF] to-[#2A1F9D] text-white rounded-md px-3 py-1.5 shadow-md font-semibold text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
                         </div>
-
                       </div>
                     )}
                   </div>

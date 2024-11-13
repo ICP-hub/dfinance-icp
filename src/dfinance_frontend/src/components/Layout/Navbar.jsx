@@ -1015,7 +1015,7 @@ export default function Navbar({ isHomeNav }) {
                               <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                 Enabling this will allow the user to hear sound
                                 when supply, borrow, repay, or withdraw
-                                functions are executed.
+                                actions are performed.
                               </div>
                             </div>
 

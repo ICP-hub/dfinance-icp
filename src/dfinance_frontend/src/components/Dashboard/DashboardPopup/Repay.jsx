@@ -85,7 +85,7 @@ const Repay = ({
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         // Calculate and format the USD value
         const convertedValue = Number(numericAmount) * adjustedConversionRate;
-        setUsdValue((convertedValue.toFixed(2))); // Ensure proper formatting
+        setUsdValue(convertedValue.toFixed(2)); // Ensure proper formatting
         setAmount(formattedAmount); // Set formatted amount with commas
         setError("");
       } else {
@@ -117,7 +117,7 @@ const Repay = ({
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue =
-       Number(amount.replace(/,/g, "")) * adjustedConversionRate;
+        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
       setUsdValue(convertedValue); // Update USD value
     } else {
       setUsdValue(0); // Reset USD value if conditions are not met
@@ -499,15 +499,15 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center ">
                     <p className="text-nowrap">Remaining debt</p>
                     <div className="w-4/12 flex flex-col items-end">
-                    <p className="text-xs mt-2">
-  {(assetBorrow - (amount?.replace(/,/g, "") || "")).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}{" "}
-  Max
-</p>
-
-
+                      <p className="text-xs mt-2">
+                        {(
+                          assetBorrow - (amount?.replace(/,/g, "") || "")
+                        ).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        Max
+                      </p>
                     </div>
                   </div>
 

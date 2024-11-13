@@ -734,7 +734,7 @@ export const MY_SUPPLY_ASSET_TABLE_ROWS = [
 export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
   {
     col_id: 0,
-    header: "Assest",
+    header: "Asset",
   },
   {
     col_id: 1,
@@ -742,7 +742,7 @@ export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
   },
   {
     col_id: 2,
-    header1: "APY (variable)",
+    header1: "APY",
   }
 ]
 export const MY_ASSET_TO_BORROW_TABLE_COL = [
@@ -756,7 +756,7 @@ export const MY_ASSET_TO_BORROW_TABLE_COL = [
   },
   {
     col_id: 2,
-    header1: "APY, variable",
+    header1: "APY",
     header2: "APY, borrow rate",
   }
 ]

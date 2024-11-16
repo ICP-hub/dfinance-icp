@@ -400,10 +400,7 @@ const WithdrawPopup = ({
                   />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
-                      ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                      ? `$${usdValue.toLocaleString()} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -424,7 +421,10 @@ const WithdrawPopup = ({
                       }
                     }}
                   >
-                    ${maxUsdValue.toLocaleString(4)}
+                    ${maxUsdValue.toLocaleString(undefined, {
+                      minimumFractionDigits: 7,
+                      maximumFractionDigits: 7,
+                    })}{" "}
                     Max {/* Adjust maximumFractionDigits as needed */}
                   </p>
                 </div>
@@ -524,20 +524,20 @@ const WithdrawPopup = ({
 
           <div className="w-full flex  mt-3">
             <div className="flex items-center">
-              <Fuel className="w-4 h-4 mr-1" />
+              {/* <Fuel className="w-4 h-4 mr-1" />
               <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
               <img
                 src={image}
                 alt="asset icon"
-                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
-              />
+                className="object-cover w-5 h-5 rounded-full" 
+              /> */}
               <div className="relative group">
-                <Info size={16} className="ml-2 cursor-pointer" />
+                {/* <Info size={16} className="ml-2 cursor-pointer" /> */}
 
                 {/* Tooltip */}
-                <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
+                {/* <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
                   Fees deducted on every transaction
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

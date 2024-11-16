@@ -24,15 +24,15 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
     const getAssetRate = (assetName) => {
       switch (assetName) {
         case "ckBTC":
-          return ckBTCUsdRate;
+          return (ckBTCUsdRate/1e8);
         case "ckETH":
-          return ckETHUsdRate;
+          return (ckETHUsdRate/1e8);
         case "ckUSDC":
-          return ckUSDCUsdRate;
+          return (ckUSDCUsdRate/1e8);
         case "ICP":
-          return ckICPUsdRate;
+          return (ckICPUsdRate/1e8);
         case "ckUSDT":
-          return ckUSDTUsdRate;
+          return (ckUSDTUsdRate/1e8);
         default:
           return 0; 
       }
@@ -41,7 +41,22 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
     const assetRate = getAssetRate(id);
     const totalBorrowedAsset = assetRate && totalBorrowed ? (Number(totalBorrowed)) / assetRate : 0;
     const totalBorrowedCap = assetRate && borrowCap ? (Number(borrowCap)) / assetRate : 0;
-
+    const formatValue = (value) => {
+      const numericValue = parseFloat(value); // Ensure the value is a number
+    
+      if (isNaN(numericValue)) {
+        return "0"; // If it's not a number, return "0"
+      }
+    
+      if (numericValue === 0) {
+        return "0"; // If the value is 0, show "0"
+      } else if (numericValue >= 1) {
+        return numericValue.toFixed(2); // If the value is 1 or greater, show 2 decimal places
+      } else {
+        return numericValue.toFixed(7); // If the value is less than 1 but greater than 0, show 7 decimal places
+      }
+    };
+    
   return (
     <div className="w-full lg:w-10/12 ">
       <div className="w-full flex flex-col lg:flex-row items-start sxs3:flex-row sxs3:mb-7 lg:gap-0 md:gap-3">
@@ -57,7 +72,7 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
             />
             <p>
               {" "}
-              <span>{formatNumber(Number(totalBorrowedAsset))}</span> of{" "}
+              <span>{formatValue(totalBorrowedAsset)}</span> of{" "}
               <span>
                 {borrowCap ? formatNumber(Number(totalBorrowedCap)) : "N/A"}
               </span>

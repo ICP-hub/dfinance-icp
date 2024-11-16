@@ -250,29 +250,29 @@ const AssetDetails = () => {
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
+      const balanceInUsd = (parseFloat(ckBTCBalance) * (ckBTCUsdRate)/1e8).toFixed(7);
       setCkBTCUsdBalance(balanceInUsd);
     }
 
     if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
+      const balanceInUsd = (parseFloat(ckETHBalance) * (ckETHUsdRate/1e8)).toFixed(7);
       setCkETHUsdBalance(balanceInUsd);
     }
 
     if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(
-        2
+      const balanceInUsd = (parseFloat(ckUSDCBalance) * (ckUSDCUsdRate)/1e8).toFixed(
+        7
       );
       setCkUSDCUsdBalance(balanceInUsd);
     }
 
     if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+      const balanceInUsd = (parseFloat(ckICPBalance) * (ckICPUsdRate)/1e8).toFixed(7);
       setCkICPUsdBalance(balanceInUsd);
     }
 
     if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(2);
+      const balanceInUsd = (parseFloat(ckUSDTBalance) * (ckUSDTUsdRate/1e8)).toFixed(7);
       setCkUSDTUsdBalance(balanceInUsd);
     }
 

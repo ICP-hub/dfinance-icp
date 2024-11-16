@@ -482,8 +482,8 @@ const Repay = ({
                     }}
                   >
                     {maxUsdValue.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
+                      minimumFractionDigits: 7,
+                      maximumFractionDigits: 7,
                     })}{" "}
                     Max
                   </p>
@@ -561,7 +561,7 @@ const Repay = ({
 
             <div className="w-full mt-3">
               <div className="w-full">
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <Fuel className="w-4 h-4 mr-1" />
                   <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
                   <img
@@ -576,7 +576,7 @@ const Repay = ({
                       Fees deducted on every transaction
                     </div>
                   </div>
-                </div>
+                </div> */}
                 {balance <= 0 && (
                   <div className="w-full flex flex-col my-3 space-y-2">
                     <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">

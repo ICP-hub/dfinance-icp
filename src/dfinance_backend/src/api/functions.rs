@@ -290,7 +290,7 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
         }
     }
 
-    ic_cdk::println!("usd amount of the facut = {}",usd_amount.unwrap());
+    ic_cdk::println!("usd amount of the facut = {}", usd_amount.unwrap());
 
     // Function to check if the user has a reserve for the asset
     let user_reserve = user_reserve(&mut user_data, &asset);
@@ -380,8 +380,8 @@ pub fn reset_faucet_usage(asset: String) -> Result<(), String> {
         user_reserve_data.faucet_usage = 0;
     };
 
-     // Save the updated user data back to state
-     mutate_state(|state| {
+    // Save the updated user data back to state
+    mutate_state(|state| {
         state
             .user_profile
             .insert(user_principal, Candid(user_data.clone()));

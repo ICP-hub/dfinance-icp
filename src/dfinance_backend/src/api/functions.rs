@@ -88,13 +88,13 @@ pub async fn update_balance(
     principal: Principal,
     amount: u128,
 ) -> Result<Nat, String> {
-    // Create the account structure
+   
     let account = Account {
         owner: principal,
         subaccount: None,
     };
 
-    // Call `icrc1_update_balance_of` on the target canister directly with tuple arguments
+    
     let (result,): (Result<Nat, String>,) = ic_cdk::api::call::call(
         canister,
         "icrc1_update_balance_of",
@@ -103,7 +103,7 @@ pub async fn update_balance(
     .await
     .map_err(|e| format!("Failed to call update_balance: {:?}", e.1))?;
 
-    // Match on the result to handle both success and failure cases
+    
     match result {
         Ok(balance) => {
             ic_cdk::println!("Updated balance successfully: {}", balance);
@@ -116,12 +116,12 @@ pub async fn update_balance(
     }
 }
 
-// Icrc1_fee inter canister call.
+
 pub async fn get_fees(canister: Principal) -> Nat {
-    // Serialize the input arguments (empty in this case)
+ 
     let empty_arg = candid::encode_one(()).unwrap();
 
-    // Make the inter-canister call
+   
     let raw_response = ic_cdk::api::call::call_raw(canister, "icrc1_fee", &empty_arg, 0)
         .await
         .unwrap();
@@ -131,7 +131,7 @@ pub async fn get_fees(canister: Principal) -> Nat {
     fees
 }
 
-// Icrc1_transfer inter canister call.
+
 pub async fn asset_transfer(
     to: Principal,
     ledger: Principal,
@@ -164,7 +164,7 @@ pub async fn asset_transfer(
     }
 }
 
-#[update]
+#[update] //TODO need to a update func or not (i think it was implemented for pocketic, if not then what is the need of this function)
 pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
     let backend_canister_principal = ic_cdk::api::id();
     //let user_principal = ic_cdk::caller();
@@ -210,28 +210,6 @@ pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
         ApproveResult::Err(err) => Err(format!("{:?}", err)),
     }
 
-    // let approve_response: Result<Nat, String> = approve_transfer(
-    //     backend_canister_principal,
-    //     user_principal,
-    //     asset_principal_id,
-    //     nat_convert_amount,
-    // )
-    // .await;
-
-    // match approve_response {
-    //     Ok(amount) => {
-    //         // Handle the successful case where the approval transfer is successful
-    //         ic_cdk::println!("Transfer approved successfully with amount: {:?}", amount);
-    //         // Return the amount
-    //         Ok(amount)
-    //     }
-    //     Err(err_message) => {
-    //         // Handle the error case where the approval transfer failed
-    //         ic_cdk::println!("Error approving transfer: {}", err_message);
-    //         // Return the error message
-    //         Err(format!("Error approving transfer: {}", err_message))
-    //     }
-    // }
 }
 
 // pub async fn approve_transfer(

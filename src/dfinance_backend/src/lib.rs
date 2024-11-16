@@ -245,7 +245,7 @@ pub async fn withdraw(
         }
     }
 }
-
+ //TODO seperate this function in two functions one for liq_index called as user_normalized_supply and another for debt_index called as user_normalized_debt
 fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<(), String> {
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
@@ -254,7 +254,7 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
         ic_cdk::println!("No update needed as timestamps match.");
         return Ok(());
     }
-
+   
     // Calculate liquidity index update based on supply rate
     if user_reserve_data.supply_rate != 0 {
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
@@ -277,15 +277,17 @@ fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<
 
     // Calculate debt index update based on borrow rate
     if user_reserve_data.variable_borrow_index != 0 {
+         ic_cdk::println!(
+            "prev borrow index & rate {:?} {:?}", user_reserve_data.variable_borrow_index, user_reserve_data.borrow_rate );
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
-            user_reserve_data.borrow_rate,
+            (user_reserve_data.borrow_rate / 100) as u128,
             user_reserve_data.last_update_timestamp,
             current_time,
         );
         ic_cdk::println!(
             "Calculated cumulated borrow interest: {} based on borrow rate: {}",
             cumulated_borrow_interest,
-            user_reserve_data.borrow_rate
+            user_reserve_data.borrow_rate //take it from reserve of asset 
         );
 
         user_reserve_data.variable_borrow_index =
@@ -327,7 +329,6 @@ pub async fn login() -> Result<(), String> {
         Err(err) => return Err(err),
     };
 
-    
     // Ensure reserves exist for the user
     let reserves = user_data
         .reserves
@@ -355,23 +356,22 @@ pub async fn login() -> Result<(), String> {
 
         let reserve_data_result = get_reserve_data(reserve_name.to_string());
 
-    // Handle the result
-    let reserve_data = match reserve_data_result {
-        Ok(data) => data,
-        Err(err) => {
-            ic_cdk::println!("Error fetching reserve data: {}", err);
-            continue;
-        }
-    };
+        // Handle the result
+        let reserve_data = match reserve_data_result {
+            Ok(data) => data,
+            Err(err) => {
+                ic_cdk::println!("Error fetching reserve data: {}", err);
+                continue;
+            }
+        };
 
-    // Retrieve the dtoken and debttoken canisters from the reserve data
-    let dtoken_canister = Principal::from_text(reserve_data.d_token_canister.unwrap()).unwrap();
-    let debttoken_canister = Principal::from_text(reserve_data.debt_token_canister.unwrap()).unwrap();
-    
+        // Retrieve the dtoken and debttoken canisters from the reserve data
+        let dtoken_canister = Principal::from_text(reserve_data.d_token_canister.unwrap()).unwrap();
+        let debttoken_canister =
+            Principal::from_text(reserve_data.debt_token_canister.unwrap()).unwrap();
 
-    ic_cdk::println!("dToken Canister: {}", dtoken_canister);
-    ic_cdk::println!("DebtToken Canister: {}", debttoken_canister);
-
+        ic_cdk::println!("dToken Canister: {}", dtoken_canister);
+        ic_cdk::println!("DebtToken Canister: {}", debttoken_canister);
 
         update_user_reserve_state(user_reserve_data)?;
 
@@ -397,8 +397,6 @@ pub async fn login() -> Result<(), String> {
             user_reserve_data.liquidity_index,
             updated_balance
         );
-
-        
 
         if user_reserve_data.asset_supply > 0 && user_reserve_data.is_collateral {
             let added_collateral = updated_balance - user_reserve_data.asset_supply;
@@ -449,25 +447,7 @@ pub async fn login() -> Result<(), String> {
                 ic_cdk::println!("Failed to update dToken balance: {}", err);
             }
         }
-        
-        //FIXME approveresult i told you this is not the result you get from this function 
-        // let (approval_result,): (ApproveResult,) = ic_cdk::api::call::call(
-        //     canister_id,
-        //     "icrc1_update_balance_of",
-        //     (&encoded_args, false),
-        // )
-        // .await
-        // .map_err(|e| e.1)?;
 
-        // ic_cdk::println!(
-        //     "approve transfer executed successfully and the call result = {:?}",
-        //     approval_result
-        // );
-
-        // let _ = match approval_result {
-        //     ApproveResult::Ok(balance) => Ok(balance),
-        //     ApproveResult::Err(err) => Err(format!(":{:?}",err)),
-        // };
 
 
         if user_reserve_data.asset_borrow != 0 {
@@ -513,15 +493,16 @@ pub async fn login() -> Result<(), String> {
                 reserve_name,
                 user_reserve_data.asset_borrow
             );
-            let debt_token_result = update_balance(debttoken_canister, user_principal, borrow_updated_balance);
-        match debt_token_result.await {
-            Ok(balance) => {
-                ic_cdk::println!("Updated debtToken balance successfully: {}", balance);
+            let debt_token_result =
+                update_balance(debttoken_canister, user_principal, borrow_updated_balance);
+            match debt_token_result.await {
+                Ok(balance) => {
+                    ic_cdk::println!("Updated debtToken balance successfully: {}", balance);
+                }
+                Err(err) => {
+                    ic_cdk::println!("Failed to update debtToken balance: {}", err);
+                }
             }
-            Err(err) => {
-                ic_cdk::println!("Failed to update debtToken balance: {}", err);
-            }
-        }
         }
 
         let user_position = UserPosition {
@@ -542,6 +523,7 @@ pub async fn login() -> Result<(), String> {
             );
         }
     }
+    //before cal health factor
 
     user_data.total_collateral = Some(total_collateral);
     ic_cdk::println!("Final total collateral: {}", total_collateral);
@@ -560,8 +542,6 @@ pub async fn login() -> Result<(), String> {
 
     Ok(())
 }
-
-
 
 #[query]
 pub async fn user_position(asset_name: String) -> Result<(u128, u128), String> {
@@ -584,27 +564,23 @@ pub async fn user_position(asset_name: String) -> Result<(u128, u128), String> {
     let user_reserve_data = user_data
         .reserves
         .as_ref()
-        .and_then(|reserves| {
-            reserves.iter().find(|(name, _)| name == &asset_name)
-        })
+        .and_then(|reserves| reserves.iter().find(|(name, _)| name == &asset_name))
         .map(|(_, reserve_data)| reserve_data)
         .ok_or_else(|| format!("Reserve not found for asset: {}", asset_name))?;
 
     let prev_liq_index = user_reserve_data.liquidity_index.clone();
     let prev_borrow_index = user_reserve_data.variable_borrow_index.clone();
 
-   
     let updated_asset_supply = if user_reserve_data.asset_supply > 0 {
         calculate_dynamic_balance(
-        user_reserve_data.asset_supply,
-        prev_liq_index,
-        user_reserve_data.liquidity_index,
+            user_reserve_data.asset_supply,
+            prev_liq_index,
+            user_reserve_data.liquidity_index,
         )
-}else {
-    0
-};
+    } else {
+        0
+    };
 
-  
     let updated_asset_borrow = if user_reserve_data.asset_borrow > 0 {
         calculate_dynamic_balance(
             user_reserve_data.asset_borrow,
@@ -617,12 +593,13 @@ pub async fn user_position(asset_name: String) -> Result<(u128, u128), String> {
 
     ic_cdk::println!(
         "For asset {}: Updated asset supply = {}, Updated asset borrow = {}",
-        asset_name, updated_asset_supply, updated_asset_borrow
+        asset_name,
+        updated_asset_supply,
+        updated_asset_borrow
     );
 
     Ok((updated_asset_supply, updated_asset_borrow))
 }
-
 
 #[query]
 pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache, String> {
@@ -668,3 +645,16 @@ fn calculate_dynamic_balance(
 }
 
 export_candid!();
+
+
+//TODO validation on toggle collateral and faucet
+
+//BUG 1. Total collateral and total debt -> updated according to  price of asset
+//2. Available borrow in real time
+//3. Burn function repay
+// 4. cal of liq_index and borrow index of user
+//5. Optimization
+//6. accuare_to_treasury for fees
+//7. liq_bot -> discuss about node or timer
+//8. frontend -> cal h.f , dont show negative apy, remove tofix 
+

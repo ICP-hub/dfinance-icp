@@ -8,35 +8,34 @@ pub struct ReserveData {
     pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,
     pub borrow_rate: u128, 
-    pub supply_rate_apr: Option<u128>, 
+    pub current_liquidity_rate: u128,
     pub total_supply: u128,
     pub total_borrowed: u128,
     pub liquidity_index: u128,
-    pub current_liquidity_rate: u128,
     pub debt_index: u128,
     pub configuration: ReserveConfiguration,
     pub can_be_collateral: Option<bool>,
     pub last_update_timestamp: u64,
-    pub userlist: Option<Vec<(String, bool)>>
+    pub userlist: Option<Vec<(String, bool)>> //TODO remove this if not needed for liq bot
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ReserveCache {
     pub reserve_configuration: ReserveConfiguration,
-    //Liquidity Index(t)=Liquidity Index(t−1) ×(1+ Borrow Interest Rate×Δt/365×100)
+    //Liquidity Index(t)=Liquidity Index(t−1) ×(1+ Borrow Interest Rate×Δt/365×100) 
     pub curr_liquidity_index: u128,
     pub next_liquidity_index: u128,
     pub curr_liquidity_rate: u128,
-    pub d_token_canister: Option<String>,
-    pub debt_token_canister: Option<String>,
+    //next_rate if needed
+    pub d_token_canister: Option<String>, //TODO remove 
+    pub debt_token_canister: Option<String>, //remove
     pub reserve_last_update_timestamp: u64,
     pub curr_debt_index: u128,
+    pub next_debt_index: u128,
     pub curr_debt_rate: u128,
     pub next_debt_rate: u128,
-    pub next_debt_index: u128,
-    pub debt_last_update_timestamp: u64,
+    pub debt_last_update_timestamp: u64, //for variable debt it is needed or not 
     pub reserve_factor: u128,
-
 }
 
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
@@ -45,8 +44,8 @@ pub struct ReserveConfiguration {
     pub liquidation_threshold: u128,
     pub liquidation_bonus: u128,  
     pub borrowing_enabled: bool, 
-    pub borrow_cap: u128,
-    pub supply_cap: u128,               
+    pub borrow_cap: u128,   //TODO set it according to borrow
+    pub supply_cap: u128,   //set it according to supply     
     pub liquidation_protocol_fee: u128, 
     pub active: bool,
     pub frozen: bool,

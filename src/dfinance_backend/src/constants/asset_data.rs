@@ -1,3 +1,5 @@
+
+
 use crate::declarations::assets::{ReserveConfiguration, ReserveData};
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use crate::protocol::libraries::math::math_utils::ScalingMath;
@@ -21,7 +23,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 last_update_timestamp: time(),
                 current_liquidity_rate: 0,
                 borrow_rate: 0,
-                supply_rate_apr: Some(0), //remove
+                 //remove
                 d_token_canister: Some(dckbtc.to_string()),
                 debt_token_canister: Some(debtckbtc.to_string()),
                 total_supply: 0,
@@ -61,7 +63,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 last_update_timestamp: time(),
                 current_liquidity_rate: 0,
                 borrow_rate: 0,
-                supply_rate_apr: Some(0),
+                
                 d_token_canister: Some(dcketh.to_string()),
                 debt_token_canister: Some(debtcketh.to_string()),
                 total_supply: 0,
@@ -100,7 +102,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 last_update_timestamp: time(),
                 current_liquidity_rate: 0,
                 borrow_rate: 0,
-                supply_rate_apr: Some(0),
+                
                 d_token_canister: Some(dckusdc.to_string()),
                 debt_token_canister: Some(debtckusdc.to_string()),
                 total_supply: 0,
@@ -139,7 +141,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 last_update_timestamp: time(),
                 current_liquidity_rate: 0,
                 borrow_rate: 0,
-                supply_rate_apr: Some(0),
+                
                 d_token_canister: Some(dicp.to_string()),
                 debt_token_canister: Some(debticp.to_string()),
                 total_supply: 0,
@@ -179,7 +181,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 last_update_timestamp: time(),
                 current_liquidity_rate: 0,
                 borrow_rate: 0,
-                supply_rate_apr: Some(0),
+                
                 d_token_canister: Some(dusdt.to_string()),
                 debt_token_canister: Some(debtusdt.to_string()),
                 total_supply: 0,

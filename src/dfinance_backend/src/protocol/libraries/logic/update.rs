@@ -278,7 +278,7 @@ impl UpdateLogic {
         let minted_result = mint_scaled(
             &mut update_user_state,
             params.amount,
-            reserve_cache.next_liquidity_index,
+            reserve_cache.next_debt_index,
             user_principal,
             Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
@@ -377,6 +377,7 @@ impl UpdateLogic {
                 user_data.total_collateral.unwrap_or(0),
                 user_data.liquidation_threshold.unwrap_or(0),
             );
+          
             ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
             user_data.liquidation_threshold = Some(user_thrs);
 
@@ -522,7 +523,7 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-
+      
         ic_cdk::println!("repay user update = {:?}", user_data);
 
         let user_position = UserPosition {
@@ -561,7 +562,7 @@ impl UpdateLogic {
         let burn_scaled_result = burn_scaled(
             &mut update_user_state,
             params.amount,
-            reserve_cache.next_liquidity_index,
+            reserve_cache.next_debt_index,
             user_principal,
             Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
@@ -579,7 +580,17 @@ impl UpdateLogic {
         if let Some((_, reserve_data)) = user_reserve {
             if reserve_data.asset_borrow >= params.amount {
                 reserve_data.asset_borrow -= params.amount;
+                reserve_data.supply_rate = reserve.current_liquidity_rate;
+                reserve_data.borrow_rate = reserve.borrow_rate;
                 reserve_data.state = update_user_state.clone();
+                reserve_data.last_update_timestamp = current_timestamp();
+                if reserve_data.asset_borrow == params.amount {
+                    reserve_data.is_borrowed = false;
+                    reserve_data.variable_borrow_index = 0;
+                    if !reserve_data.is_collateral {
+                        reserve_data.is_using_as_collateral_or_borrow = false;
+                    }
+                }
                 ic_cdk::println!(
                     "Reduced asset borrow for existing reserve: {:?}",
                     reserve_data
@@ -612,7 +623,7 @@ impl UpdateLogic {
 #[update]
 pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
     let user_principal = ic_cdk::caller();
-
+    //TODO add validations
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
 

@@ -28,12 +28,12 @@ pub fn calculate_compounded_interest(
     let exp_minus_one = exp - 1;
     let exp_minus_two = if exp > 2 { exp - 2 } else { 0 };
 
-    let base_power_two = scaled_rate * scaled_rate / SCALING_FACTOR;
-    let base_power_three = base_power_two * scaled_rate / SCALING_FACTOR;
+    let base_power_two = (rate * rate) / SCALING_FACTOR;
+    let base_power_three = (base_power_two * rate) / SCALING_FACTOR;
 
-    let second_term = exp as u128 * exp_minus_one as u128 * base_power_two / 2;
+    let second_term = (exp as u128 * exp_minus_one as u128 * base_power_two) / (2 * SECONDS_PER_YEAR as u128);
     let third_term =
-        exp as u128 * exp_minus_one as u128 * exp_minus_two as u128 * base_power_three / 6;
+        (exp as u128 * exp_minus_one as u128 * exp_minus_two as u128 * base_power_three) / (6 * SECONDS_PER_YEAR as u128 * SECONDS_PER_YEAR as u128);
 
     SCALING_FACTOR + scaled_rate + second_term + third_term
 }

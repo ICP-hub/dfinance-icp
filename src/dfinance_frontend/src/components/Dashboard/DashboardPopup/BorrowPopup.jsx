@@ -28,9 +28,10 @@ const Borrow = ({
   assetBorrow,
   totalCollateral,
   totalDebt,
+  currentCollateralStatus,
   Ltv,
-  availableBorrow,
-  borrowableAsset,
+  borrowableValue,
+   borrowableAssetValue,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
@@ -48,9 +49,10 @@ const Borrow = ({
     assetBorrow,
     totalCollateral,
     totalDebt,
-    Ltv,
-    availableBorrow,
-    borrowableAsset,
+    currentCollateralStatus,
+    "LTV",Ltv,
+    "availableBorrow",borrowableValue,
+   "borrowableasset",  borrowableAssetValue,
     isModalOpen,
     handleModalOpen,
     setIsModalOpen,
@@ -64,8 +66,8 @@ const Borrow = ({
 
   console.log(
     " avaialbele borrow ,borowable asset",
-    availableBorrow,
-    borrowableAsset
+    borrowableValue,
+    borrowableAssetValue
   );
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -311,7 +313,7 @@ const Borrow = ({
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
-  const [availableBorrows, setAvailableBorrows] = useState(0);
+  const [borrowableValues, setAvailableBorrows] = useState(0);
 
   const handleAmountChange = (e) => {
     // Get the input value and remove commas for processing
@@ -326,7 +328,7 @@ const Borrow = ({
     const numericAmount = parseFloat(inputAmount);
 
     // Limit input value to borrowableAsset
-    if (numericAmount > parseFloat(borrowableAsset)) {
+    if (numericAmount > parseFloat(borrowableAssetValue)) {
       return; // If input exceeds borrowableAsset, do nothing
     }
 
@@ -383,16 +385,21 @@ const Borrow = ({
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
-  console.log("borowableasset", borrowableAsset);
+  console.log("borowableasset",  borrowableAssetValue);
   // Handle max button click to set max amount
   // Function to handle max button click
   const handleMaxClick = () => {
-    const maxAmount = borrowableAsset.toFixed(8);
+    // Ensure borrowableAssetValue is a number before using toFixed
+    const maxAmount = parseFloat(borrowableAssetValue).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split('.');
+    
+    // Format the integer part with commas
     const formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart}`;
+    
     setAmount(formattedAmount);
     updateAmountAndUsdValue(maxAmount);
   };
+  
   return (
     <>
       {isVisible && (
@@ -431,22 +438,21 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(availableBorrow) === 0
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
-                      if (parseFloat(borrowableAsset) > 0) {
+                      if (parseFloat( borrowableAssetValue) > 0) {
                         handleMaxClick();
                       }
                     }}
                   >
                     
-                    {parseFloat(borrowableAsset)?.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }) || "0.00"}{" "}
-                    Max
+                    {parseFloat(borrowableAssetValue)?.toLocaleString(undefined, {
+                      minimumFractionDigits: 7,
+                      maximumFractionDigits: 7,
+                    }) || "0.00"}{" "} Max
                   </p>
                 </div>
               </div>
@@ -514,23 +520,7 @@ const Borrow = ({
 
             <div className="w-full mt-3">
               <div className="w-full">
-                <div className="flex items-center">
-                  <Fuel className="w-4 h-4 mr-1" />
-                  <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
-                  <img
-                    src={image}
-                    alt="asset icon"
-                    className="object-cover w-5 h-5 rounded-full"
-                  />
-                  <div className="relative group">
-                    <Info size={16} className="ml-2 cursor-pointer" />
-
-                    {/* Tooltip */}
-                    <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-                      Fees deducted on every transaction
-                    </div>
-                  </div>
-                </div>
+                
                 <div>
                   {value < 2 && value > 1 && (
                     <div>
@@ -564,6 +554,22 @@ const Borrow = ({
                       </div>
                     </div>
                   )}
+                  {value <= 1 && (
+  <div>
+    <div className="w-full flex flex-col my-3 space-y-2">
+      <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+        <div className="w-1/12 flex items-center justify-center">
+          <div className="warning-icon-container">
+            <TriangleAlert />
+          </div>
+        </div>
+        <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+          You can't borrow as your health factor is below 1, which risks liquidation.
+        </div>
+      </div>
+    </div>
+  </div>
+)}
                 </div>
               </div>
 

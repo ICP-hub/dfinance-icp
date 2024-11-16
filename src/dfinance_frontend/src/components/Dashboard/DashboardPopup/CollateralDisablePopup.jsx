@@ -111,7 +111,8 @@ const ColateralPopup = ({
   }
   useEffect(() => {
     if (assetSupply && conversionRate) {
-      const convertedValue = parseFloat(assetSupply) * conversionRate;
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);

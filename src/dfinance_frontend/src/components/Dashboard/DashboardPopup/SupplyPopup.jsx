@@ -37,7 +37,7 @@ const SupplyPopup = ({
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-  const transactionFee = 0.01;
+  const transactionFee = 0;
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
@@ -479,8 +479,8 @@ const convertedMaxValue = balance * adjustedConversionRate;  // Perform the mult
                     }}
                   >
                     {balance.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
+                      minimumFractionDigits: 7,
+                      maximumFractionDigits: 7,
                     })}{" "}
                     Max
                   </p>
@@ -566,20 +566,20 @@ const convertedMaxValue = balance * adjustedConversionRate;  // Perform the mult
 
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
-              <Fuel className="w-4 h-4 mr-1" />
+              {/* <Fuel className="w-4 h-4 mr-1" />
               <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
               <img
                 src={image}
                 alt="asset icon"
                 className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
-              />
+              /> */}
               <div className="relative group">
-                <Info size={16} className="ml-2 cursor-pointer" />
+                {/* <Info size={16} className="ml-2 cursor-pointer" /> */}
 
                 {/* Tooltip */}
-                <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
+                {/* <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
                   Fees deducted on every transaction
-                </div>
+                </div> */}
               </div>
             </div>
 

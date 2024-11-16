@@ -65,6 +65,8 @@ pub struct UserReserveData {
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
+    pub faucet_usage: u128,
+    pub faucet_limit: u128, 
     pub state: UserState,
 }
 impl Default for UserReserveData {
@@ -84,6 +86,8 @@ impl Default for UserReserveData {
             is_using_as_collateral_or_borrow: Default::default(),
             is_collateral: true,
             is_borrowed: Default::default(),
+            faucet_usage: Default::default(),
+            faucet_limit: 500,
             state: Default::default(),
         }
     }

@@ -1440,7 +1440,7 @@ const MySupply = () => {
                                           currentCollateralStatus
                                         );
                                       }}
-                                      
+                                      disabled={ckBalance === 0}
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
                                     />
                                     <Button

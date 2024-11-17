@@ -25,6 +25,7 @@ type ReserveData = record {
   current_liquidity_rate : nat;
   borrow_rate : nat;
   configuration : ReserveConfiguration;
+  accure_to_platform : nat;
   debt_index : nat;
   total_borrowed : nat;
   total_supply : nat;
@@ -91,6 +92,7 @@ service : () -> {
   reset_faucet_usage : (text) -> (Result);
   supply : (text, nat64, bool) -> (Result);
   toggle_collateral : (text, nat, nat) -> ();
+  transfer : (nat, text) -> (Result_2);
   update_balance : (principal, principal, nat) -> (Result_2);
   update_reserves_price : () -> ();
   user_position : (text) -> (Result_8) query;

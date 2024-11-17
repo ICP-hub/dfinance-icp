@@ -80,7 +80,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         }
     };
 
-    if reserve_data.total_borrowed == 0 {
+    if reserve_data.asset_borrow == 0 {
         *&mut reserve_data.debt_index = 100000000;
     }
 
@@ -115,10 +115,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     ic_cdk::println!("Borrow validated successfully");
 
     
-    let total_borrow=reserve_data.total_borrowed+ usd_amount;
-    let total_supplies = reserve_data.total_supply;
+    let total_borrow=reserve_data.asset_borrow+ params.amount;
+    let total_supplies = reserve_data.asset_supply;
     let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, total_supplies).await;
-
+    reserve_data.total_borrowed+= usd_amount;
     ic_cdk::println!("Interest rates updated successfully");
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -250,10 +250,10 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     .await;
     ic_cdk::println!("Repay validated successfully");
 
-    let total_borrow = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
-    let total_supplies = reserve_data.total_supply;
+    let total_borrow = reserve_data.asset_borrow - params.amount;
+    let total_supplies = reserve_data.asset_supply;
     let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, total_supplies).await;
-
+    reserve_data.total_borrowed = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));

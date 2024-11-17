@@ -87,7 +87,7 @@ impl Default for UserReserveData {
             is_collateral: true,
             is_borrowed: Default::default(),
             faucet_usage: Default::default(),
-            faucet_limit: 500,
+            faucet_limit: 50000000000,
             state: Default::default(),
         }
     }

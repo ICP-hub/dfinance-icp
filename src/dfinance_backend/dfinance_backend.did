@@ -24,7 +24,6 @@ type ReserveData = record {
   d_token_canister : opt text;
   current_liquidity_rate : nat;
   borrow_rate : nat;
-  supply_rate_apr : opt nat;
   configuration : ReserveConfiguration;
   debt_index : nat;
   total_borrowed : nat;
@@ -38,6 +37,7 @@ type Result_4 = variant { Ok : PriceCache; Err : text };
 type Result_5 = variant { Ok : record { nat; nat64 }; Err : text };
 type Result_6 = variant { Ok : ReserveData; Err : text };
 type Result_7 = variant { Ok : UserData; Err : text };
+type Result_8 = variant { Ok : record { nat; nat }; Err : text };
 type UserData = record {
   ltv : opt nat;
   available_borrow : opt nat;
@@ -60,10 +60,12 @@ type UserReserveData = record {
   is_collateral : bool;
   asset_price_when_borrowed : nat;
   liquidity_index : nat;
+  faucet_limit : nat;
   variable_borrow_index : nat;
   reserve : text;
   asset_supply : nat;
   state : UserState;
+  faucet_usage : nat;
   borrow_rate : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
@@ -86,10 +88,11 @@ service : () -> {
   login : () -> (Result);
   queary_reserve_price : () -> (vec PriceCache) query;
   repay : (text, nat, opt text) -> (Result);
+  reset_faucet_usage : (text) -> (Result);
   supply : (text, nat64, bool) -> (Result);
   toggle_collateral : (text, nat, nat) -> ();
-  transfer : (nat, text) -> (Result_2);
-  update_balance : (principal, principal) -> (nat);
+  update_balance : (principal, principal, nat) -> (Result_2);
   update_reserves_price : () -> ();
+  user_position : (text) -> (Result_8) query;
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

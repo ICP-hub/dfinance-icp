@@ -683,7 +683,7 @@ const MySupply = () => {
                   <h1>Your supplies</h1>
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
-                      const asset = reserveGroup[1]?.reserve;
+                      const asset = reserveGroup[0];
                       const assetSupply =
                         Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
                       let usdValue = 0;
@@ -739,10 +739,11 @@ const MySupply = () => {
                     <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
                       {/* Container for the content */}
                       <div className="w-full">
-                        {userData?.Ok?.reserves[0]?.map(
+                      {userData?.Ok?.reserves[0]?.map(
                           (reserveGroup, index) => {
                             console.log("userData", userData?.Ok?.reserves);
-                            const asset = reserveGroup[1]?.reserve;
+                            const asset = reserveGroup[0];
+                            console.log("aset in your supplies",reserveGroup[0])
                             const assetSupply =
                               Number(reserveGroup[1]?.asset_supply || 0n) /
                               100000000;
@@ -1009,9 +1010,10 @@ const MySupply = () => {
 
       // Proceed with the modal logic if balance is not 0
       const reserveData =
-        userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === item[0]
-        );
+      userData?.Ok?.reserves[0]?.find(
+        (reserveGroup) =>
+          reserveGroup[0] === item[0]
+      );
       const assetSupply =
         Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
       const assetBorrow =
@@ -1160,7 +1162,7 @@ const MySupply = () => {
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
-                              const asset = reserveGroup[1]?.reserve;
+                              const asset = reserveGroup[0];
                               const assetSupply =
                                 Number(reserveGroup[1]?.asset_supply || 0n) /
                                 100000000;

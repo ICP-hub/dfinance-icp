@@ -387,7 +387,7 @@ console.log("result",result)
                     : "opacity-50 cursor-not-allowed"
                 }`}
               >
-                {loading ? "Processing..." : `Request Faucet ${asset}`}
+                {loading ? "Processing..." : `Faucet ${asset}`}
               </button>
               {/* <button
         onClick={handleResetFaucetUsage}

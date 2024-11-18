@@ -17,11 +17,13 @@ type ReserveData = record {
   id : nat16;
   asset_name : opt text;
   userlist : opt vec record { text; bool };
+  asset_borrow : nat;
   can_be_collateral : opt bool;
   debt_token_canister : opt text;
   last_update_timestamp : nat64;
   liquidity_index : nat;
   d_token_canister : opt text;
+  asset_supply : nat;
   current_liquidity_rate : nat;
   borrow_rate : nat;
   configuration : ReserveConfiguration;
@@ -92,7 +94,6 @@ service : () -> {
   reset_faucet_usage : (text) -> (Result);
   supply : (text, nat64, bool) -> (Result);
   toggle_collateral : (text, nat, nat) -> ();
-  transfer : (nat, text) -> (Result_2);
   update_balance : (principal, principal, nat) -> (Result_2);
   update_reserves_price : () -> ();
   user_position : (text) -> (Result_8) query;

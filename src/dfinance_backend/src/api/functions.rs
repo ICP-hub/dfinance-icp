@@ -1,13 +1,10 @@
-use std::string;
-
 use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
-use crate::protocol::libraries::logic::user;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
-use crate::{get_all_assets, get_asset_principal};
+use crate::get_all_assets;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::{call, query};
@@ -161,96 +158,10 @@ pub async fn asset_transfer(
     }
 }
 
-//#[update] //TODO need to a update func or not (i think it was implemented for pocketic, if not then what is the need of this function) -- done
-// if dont use then comment it out. --- need to look it again.
-// pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
-//     let backend_canister_principal = ic_cdk::api::id();
-//     //let user_principal = ic_cdk::caller();
-//     let nat_convert_amount = Nat::from(amount);
-
-//     let asset_principal: Result<Principal, String> = get_asset_principal(asset_name);
-
-//     let asset_principal_id = match asset_principal {
-//         Ok(principal) => principal,
-//         Err(err_message) => {
-//             ic_cdk::println!("Error retrieving asset Principal: {}", err_message);
-
-//             return Err(format!("Error retrieving asset Principal: {}", err_message));
-//         }
-//     };
-
-//     let approve_args = ApproveArgs {
-//         from_subaccount: None,
-//         spender: TransferAccount {
-//             owner: backend_canister_principal,
-//             subaccount: None,
-//         },
-//         amount: nat_convert_amount.clone(),
-//         expected_allowance: None,
-//         expires_at: None,
-//         fee: None,
-//         memo: None,
-//         created_at_time: None,
-//     };
-
-//     let (approval_result,): (ApproveResult,) =
-//         call(asset_principal_id, "icrc2_approve", (approve_args, false))
-//             .await
-//             .map_err(|e| e.1)?;
-
-//     ic_cdk::println!(
-//         "approve_transfer executed successfully and the call result: {:?}",
-//         approval_result
-//     );
-
-//     match approval_result {
-//         ApproveResult::Ok(balance) => Ok(balance),
-//         ApproveResult::Err(err) => Err(format!("{:?}", err)),
-//     }
-// }
-
-// pub async fn approve_transfer(
-//     spender: Principal,
-//     from: Principal,
-//     ledger: Principal,
-//     amount: Nat,
-// ) -> Result<Nat, String> {
-//     let approve_args = ApproveArgs {
-//         from_subaccount: None,
-//         spender:  TransferAccount {
-//             owner: spender,
-//             subaccount: None,
-//         },
-//         amount: amount.clone(),
-//         expected_allowance: None,
-//         expires_at: None,
-//         fee: None,
-//         memo: None,
-//         created_at_time: None,
-//     };
-
-//     let (approval_result,): (ApproveResult,) =
-//         call(ledger, "icrc2_approve", (approve_args, false, Some(from)))
-//             .await
-//             .map_err(|e| e.1)?;
-
-//     ic_cdk::println!(
-//         "approve_transfer executed successfully and the call result: {:?}",
-//         approval_result
-//     );
-
-//     match approval_result {
-//         ApproveResult::Ok(balance) => Ok(balance),
-//         ApproveResult::Err(err) => Err(format!("{:?}", err)),
-//     }
-// }
-
 #[update]
 pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
     ic_cdk::println!("Starting fraucet with params: {:?} {:?}", asset, amount);
 
-    ic_cdk::println!("it is going forward");
-    // validate asset
     if asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err("Asset cannot be an empty string.".to_string());
@@ -266,13 +177,10 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
         return Err(format!("Error: Asset '{}' not found!", asset));
     }
 
-    // Validate user principal (avoid anonymous principal)
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("user faucet principal = {}", user_principal.to_string());
 
-    // Validate user principal (avoid anonymous principal)
     if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
         return Err("Anonymous principals are not allowed.".to_string());
     }
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
@@ -290,7 +198,6 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
         }
     };
 
-    ic_cdk::println!("amount again = {}", amount);
     // Ask : is it right way to convert it to the usd amount.
     let mut usd_amount: Option<u128> = None;
     match get_exchange_rates(asset.clone(), None, amount as u128).await {

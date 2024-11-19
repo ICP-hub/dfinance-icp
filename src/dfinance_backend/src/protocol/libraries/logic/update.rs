@@ -650,9 +650,10 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
         ic_cdk::println!("Error: Asset '{}' not found!", asset);
     }
 
-    // Validate user principal (avoid anonymous principal)
     let user_principal = ic_cdk::caller();
-    //TODO add validations
+    if user_principal == Principal::anonymous() {
+         println!("Anonymous principals are not allowed.");
+    }
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
 

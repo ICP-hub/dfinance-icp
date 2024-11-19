@@ -306,7 +306,6 @@ pub fn user_normalized_supply(user_reserve_data: UserReserveData) -> Result<u128
             "Updated liquidity index: {} for reserve",
             user_reserve_data.liquidity_index
         );
-        //  user_reserve_data.liquidity_index =
         return Ok(cumulated_liquidity_interest.scaled_mul(user_reserve_data.liquidity_index));
     }
     Ok(user_reserve_data.liquidity_index)

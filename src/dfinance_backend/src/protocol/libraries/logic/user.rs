@@ -143,16 +143,11 @@
 // }
 
 use candid::{CandidType, Deserialize, Principal};
-use ic_cdk::update;
-use std::collections::HashMap;
 
-use crate::{
-    declarations::assets::ReserveData,
-    protocol::libraries::{
+use crate::protocol::libraries::{
         math::{calculate::get_exchange_rates, math_utils::ScalingMath},
         types::datatypes::UserReserveData,
-    },
-};
+    };
 
 use super::{
     reserve::{user_normalized_debt, user_normalized_supply},
@@ -210,11 +205,6 @@ impl GenericLogic {
             }
         };
 
-        // // Collecting UserReserveData references into a vector
-        // let user_data_reserves = match user_data.reserves {
-        //     Some(reserves) => reserves.iter().map(|(_, data)| data).collect(),
-        //     None => Vec::new(),
-        // };
         // Ensure reserves exist for the user
         let user_data_reserves = user_data
             .reserves
@@ -237,8 +227,6 @@ impl GenericLogic {
             };
             ic_cdk::println!("asset price {} user.rs = {}",user_reserve_data.reserve, asset_price);
             if params.user_config.is_using_as_collateral() {
-                // Ask : am i need to extract price in this or some thing else.
-                // Ask : normalized debt and income.
 
                 let user_balance = Self::get_user_balance_in_base_currency(
                     &params.user,
@@ -254,7 +242,6 @@ impl GenericLogic {
                 } else {
                     has_zero_ltv_collateral = true;
                 }
-                // TODO: need to use lib.rs function here which i separted into two.
                 avg_liquidation_threshold +=
                     user_balance * user_normalized_debt(user_reserve_data.clone()).unwrap();
             }
@@ -268,7 +255,6 @@ impl GenericLogic {
                 total_debt += user_debt;
             }
             ic_cdk::println!("total debt user.rs = {}",total_debt);
-            // }
         }
 
         avg_ltv = if total_collateral != 0 {

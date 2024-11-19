@@ -266,7 +266,7 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
 
     if vars.amount_to_mint != 0 {
         reserve_data.accure_to_platform +=
-            ScalingMath::scaled_mul(vars.amount_to_mint, reserve_cache.next_liquidity_index) as u128;
+           ( ScalingMath::scaled_mul(vars.amount_to_mint, reserve_cache.next_liquidity_index)) / 100 as u128;
     }
 }
 

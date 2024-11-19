@@ -32,7 +32,7 @@ import { useMemo } from "react";
 import AssetDetails from "../../components/Dashboard/AssetDetails";
 import useFormatNumber from "../../components/customHooks/useFormatNumber";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
-
+import { trackEvent } from "../../utils/googleAnalytics"
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
   const navigate = useNavigate();
@@ -49,6 +49,78 @@ const WalletDetails = () => {
   const { isAuthenticated, login, logout, principal, createLedgerActor } =
     useAuth();
 
+
+
+
+
+  const { totalMarketSize, totalSupplySize, totalBorrowSize, totalReserveFactor, interestAccure } = useAssetData();
+
+  const convertToNumber = (value) => {
+    if (typeof value === 'string') {
+      const numberValue = parseFloat(value.replace(/[^0-9.]/g, ''));
+      if (value.includes('K')) {
+        return numberValue * 1e3;
+      }
+      if (value.includes('M')) {
+        return numberValue * 1e6;
+      }
+      return numberValue;
+    }
+    return 0;
+  };
+
+  useEffect(() => {
+    const supply = convertToNumber(totalSupplySize);
+    const borrow = convertToNumber(totalBorrowSize);
+    const totalAvailable = !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
+    const totalMarket = totalSupplySize;
+
+    trackEvent(
+      "Total Market," + totalMarket + "," + principal?.toString(),
+      "Assets",
+      "Total Market," + totalMarket + "," + principal?.toString(),
+      "Assets"
+    );
+
+    trackEvent(
+      "Total Available," + totalAvailable + "," + principal?.toString(),
+      "Assets",
+      "Total Available," + totalAvailable + "," + principal?.toString(),
+      "Assets"
+    );
+
+    trackEvent(
+      "Total Borrow Size," + borrow + "," + principal?.toString(),
+      "Assets",
+      "Total Borrow Size," + borrow + "," + principal?.toString(),
+      "Assets"
+    );
+
+    trackEvent(
+      " Reserve Factor," + totalReserveFactor + "," + principal?.toString(),
+      "Assets",
+      " Reserve Factor," + totalReserveFactor + "," + principal?.toString(),
+      "Assets"
+    );
+
+
+
+
+
+    trackEvent(
+      "interestAccures," + interestAccure + "," + principal?.toString(),
+      "Assets",
+      "interestAccures," + interestAccure + "," + principal?.toString(),
+      "Assets"
+    );
+    console.log("values", {
+      totalMarket,
+      totalAvailable,
+      totalBorrowSize,
+      totalReserveFactor,
+      interestAccure
+    });
+  }, [totalMarketSize, totalSupplySize, totalBorrowSize, totalReserveFactor, interestAccure, principal]);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -251,11 +323,10 @@ const WalletDetails = () => {
               id="search"
               placeholder="Search assets"
               style={{ fontSize: "0.75rem" }}
-              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${
-                Showsearch
+              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                   ? "animate-fade-left flex"
                   : "animate-fade-right hidden"
-              }`}
+                }`}
               value={searchQuery}
               onChange={handleSearchInputChange}
             />
@@ -315,9 +386,8 @@ const WalletDetails = () => {
           name="search"
           id="search"
           placeholder="Search assets"
-          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${
-            Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
-          }`}
+          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
+            }`}
           value={searchQuery}
           onChange={handleSearchInputChange}
         />
@@ -347,11 +417,10 @@ const WalletDetails = () => {
                     {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td key={index} className=" whitespace-nowrap">
                         <div
-                          className={`flex ${
-                            index === 0
+                          className={`flex ${index === 0
                               ? "justify-start sxs3:pl-2 md:pl-0"
                               : "justify-center"
-                          }`}
+                            }`}
                         >
                           {item.header}
                         </div>
@@ -383,11 +452,10 @@ const WalletDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg  ${
-                        index !== currentItems.length - 1
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg  ${index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""
-                      }`}
+                        }`}
                     >
                       <td className=" align-center py-6 sxs3:pl-2 md:pl-0">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
@@ -437,14 +505,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckBTCUsdRate / 1e8)
+                                    100000000 /
+                                    (ckBTCUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckBTCUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_supply) /
+                                      100000000 /
+                                      (ckBTCUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -452,14 +520,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckETHUsdRate / 1e8)
+                                    100000000 /
+                                    (ckETHUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckETHUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_supply) /
+                                      100000000 /
+                                      (ckETHUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -467,14 +535,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckUSDCUsdRate / 1e8)
+                                    100000000 /
+                                    (ckUSDCUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckUSDCUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_supply) /
+                                      100000000 /
+                                      (ckUSDCUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -482,14 +550,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckICPUsdRate / 1e8)
+                                    100000000 /
+                                    (ckICPUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckICPUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_supply) /
+                                      100000000 /
+                                      (ckICPUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -497,14 +565,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckUSDTUsdRate / 1e8)
+                                    100000000 /
+                                    (ckUSDTUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckUSDTUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_supply) /
+                                      100000000 /
+                                      (ckUSDTUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -530,12 +598,12 @@ const WalletDetails = () => {
                         <div className="flex justify-center">
                           {Number(item?.[1]?.Ok?.current_liquidity_rate) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                Number(item?.[1]?.Ok?.current_liquidity_rate) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              Number(item?.[1]?.Ok?.current_liquidity_rate) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </div>
                       </td>
                       <td className="p-2 align-center hidden md:table-cell">
@@ -546,14 +614,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckBTCUsdRate / 1e8)
+                                    100000000 /
+                                    (ckBTCUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckBTCUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_borrowed) /
+                                      100000000 /
+                                      (ckBTCUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -561,14 +629,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckETHUsdRate / 1e8)
+                                    100000000 /
+                                    (ckETHUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckETHUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_borrowed) /
+                                      100000000 /
+                                      (ckETHUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -576,14 +644,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckUSDCUsdRate / 1e8)
+                                    100000000 /
+                                    (ckUSDCUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckUSDCUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_borrowed) /
+                                      100000000 /
+                                      (ckUSDCUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -591,14 +659,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckICPUsdRate / 1e8)
+                                    100000000 /
+                                    (ckICPUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckICPUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_borrowed) /
+                                      100000000 /
+                                      (ckICPUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -606,14 +674,14 @@ const WalletDetails = () => {
                                 <p>
                                   {isFinite(
                                     Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckUSDTUsdRate / 1e8)
+                                    100000000 /
+                                    (ckUSDTUsdRate / 1e8)
                                   )
                                     ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckUSDTUsdRate / 1e8)
-                                      )
+                                      Number(item[1].Ok.total_borrowed) /
+                                      100000000 /
+                                      (ckUSDTUsdRate / 1e8)
+                                    )
                                     : "0.00"}
                                 </p>
                               )}
@@ -634,8 +702,8 @@ const WalletDetails = () => {
                           {Number(item?.[1]?.Ok?.borrow_rate) / 100000000 < 0.01
                             ? "<0.01%"
                             : `${(
-                                Number(item?.[1]?.Ok?.borrow_rate) / 100000000
-                              ).toFixed(2)}%`}
+                              Number(item?.[1]?.Ok?.borrow_rate) / 100000000
+                            ).toFixed(2)}%`}
                         </div>
                       </td>
                       <td className="p-3 align-center">
@@ -723,7 +791,7 @@ const WalletDetails = () => {
                             $
                             {formatNumber(
                               Number(selectedAssetData[1].Ok.total_supply) /
-                                100000000
+                              100000000
                             )}
                           </p>
                         </div>
@@ -738,13 +806,13 @@ const WalletDetails = () => {
                             selectedAssetData[1].Ok.current_liquidity_rate
                           ) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                Number(
-                                  selectedAssetData[1].Ok.current_liquidity_rate
-                                ) / 100000000
-                              ).toFixed(2)}%`}
+                              Number(
+                                selectedAssetData[1].Ok.current_liquidity_rate
+                              ) / 100000000
+                            ).toFixed(2)}%`}
                         </p>
                       </div>
 
@@ -758,7 +826,7 @@ const WalletDetails = () => {
                             $
                             {formatNumber(
                               Number(selectedAssetData[1].Ok.total_borrowed) /
-                                100000000
+                              100000000
                             )}
                           </p>
                         </div>
@@ -770,12 +838,12 @@ const WalletDetails = () => {
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {Number(selectedAssetData[1].Ok.borrow_rate) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                Number(selectedAssetData[1].Ok.borrow_rate) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              Number(selectedAssetData[1].Ok.borrow_rate) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </p>
                       </div>
                     </div>

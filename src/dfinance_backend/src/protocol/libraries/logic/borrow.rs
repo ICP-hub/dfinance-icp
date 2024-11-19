@@ -249,7 +249,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     )
     .await;
     ic_cdk::println!("Repay validated successfully");
-
+    ic_cdk::println!("asset borrow {:?}",reserve_data.asset_borrow);
     let total_borrow = reserve_data.asset_borrow - params.amount;
     let total_supplies = reserve_data.asset_supply;
     let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, total_supplies).await;

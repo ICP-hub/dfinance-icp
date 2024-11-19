@@ -644,6 +644,84 @@ fn calculate_dynamic_balance(
     initial_deposit * new_liquidity_index / prev_liquidity_index
 }
 
+
+	
+
+
+
+
+
+
+
+
+#[query]
+pub fn user_normalized_supply(user_reserve_data:UserReserveData) -> Result<u128, String> {
+    let current_time = ic_cdk::api::time() / 1_000_000_000;
+    ic_cdk::println!("Current timestamp: {}", current_time);
+
+if user_reserve_data.last_update_timestamp == current_time {
+    ic_cdk::println!("No update needed as timestamps match.");
+    return Err("No update needed as timestamps match.".to_string());
+}
+
+if user_reserve_data.supply_rate != 0 {
+    let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
+        user_reserve_data.supply_rate,
+        user_reserve_data.last_update_timestamp,
+    );
+    ic_cdk::println!(
+        "Calculated cumulated liquidity interest: {} based on supply rate: {}",
+        cumulated_liquidity_interest,
+        user_reserve_data.supply_rate
+    );
+
+    ic_cdk::println!(
+        "Updated liquidity index: {} for reserve",
+        user_reserve_data.liquidity_index
+    );
+    //  user_reserve_data.liquidity_index =
+    return Ok(cumulated_liquidity_interest.scaled_mul(user_reserve_data.liquidity_index));
+}
+Ok(user_reserve_data.liquidity_index)
+}
+
+#[query]
+pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, String> {
+    let current_time = ic_cdk::api::time() / 1_000_000_000;
+    ic_cdk::println!("Current timestamp: {}", current_time);
+
+if user_reserve_data.last_update_timestamp == current_time {
+    ic_cdk::println!("No update needed as timestamps match.");
+    return Err("No update needed as timestamps match.".to_string());
+}
+
+if user_reserve_data.variable_borrow_index != 0 {
+    ic_cdk::println!(
+        "Previous borrow index & rate: {:?} {:?}",
+        user_reserve_data.variable_borrow_index,
+        user_reserve_data.borrow_rate
+    );
+    let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
+        (user_reserve_data.borrow_rate / 100) as u128,
+        user_reserve_data.last_update_timestamp,
+        current_time,
+    );
+    ic_cdk::println!(
+        "Calculated cumulated borrow interest: {} based on borrow rate: {}",
+        cumulated_borrow_interest,
+        user_reserve_data.borrow_rate //take it from reserve of asset
+    );
+
+    ic_cdk::println!(
+        "Updated variable borrow index: {} for reserve",
+        user_reserve_data.variable_borrow_index
+    );
+    return Ok(cumulated_borrow_interest.scaled_mul(user_reserve_data.variable_borrow_index));
+}
+
+Ok(user_reserve_data.variable_borrow_index)
+}
+
 export_candid!();
 
 

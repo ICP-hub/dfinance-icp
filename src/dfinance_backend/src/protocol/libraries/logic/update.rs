@@ -138,6 +138,7 @@ impl UpdateLogic {
         }
 
         if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.reserve = params.asset.clone();
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.borrow_rate = reserve.borrow_rate.clone();
             reserve_data.asset_supply += params.amount;

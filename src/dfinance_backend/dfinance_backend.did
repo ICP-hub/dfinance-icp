@@ -17,11 +17,13 @@ type ReserveData = record {
   id : nat16;
   asset_name : opt text;
   userlist : opt vec record { text; bool };
+  asset_borrow : nat;
   can_be_collateral : opt bool;
   debt_token_canister : opt text;
   last_update_timestamp : nat64;
   liquidity_index : nat;
   d_token_canister : opt text;
+  asset_supply : nat;
   current_liquidity_rate : nat;
   borrow_rate : nat;
   configuration : ReserveConfiguration;
@@ -38,7 +40,8 @@ type Result_4 = variant { Ok : PriceCache; Err : text };
 type Result_5 = variant { Ok : record { nat; nat64 }; Err : text };
 type Result_6 = variant { Ok : ReserveData; Err : text };
 type Result_7 = variant { Ok : UserData; Err : text };
-type Result_8 = variant { Ok : record { nat; nat }; Err : text };
+type Result_8 = variant { Ok : nat; Err : text };
+type Result_9 = variant { Ok : record { nat; nat }; Err : text };
 type UserData = record {
   ltv : opt nat;
   available_borrow : opt nat;
@@ -76,7 +79,7 @@ service : () -> {
   borrow : (text, nat64) -> (Result);
   check_user : (text) -> (Result_1);
   create_multiple_canisters : () -> (vec principal);
-  faucet : (text, nat64) -> (Result_2);
+  faucet : (text, nat) -> (Result_2);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_3) query;
@@ -92,9 +95,10 @@ service : () -> {
   reset_faucet_usage : (text) -> (Result);
   supply : (text, nat64, bool) -> (Result);
   toggle_collateral : (text, nat, nat) -> ();
-  transfer : (nat, text) -> (Result_2);
   update_balance : (principal, principal, nat) -> (Result_2);
   update_reserves_price : () -> ();
-  user_position : (text) -> (Result_8) query;
+  user_normalized_debt : (UserReserveData) -> (Result_8) query;
+  user_normalized_supply : (UserReserveData) -> (Result_8) query;
+  user_position : (text) -> (Result_9) query;
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

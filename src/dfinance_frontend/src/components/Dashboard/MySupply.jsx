@@ -683,7 +683,7 @@ const MySupply = () => {
                   <h1>Your supplies</h1>
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
-                      const asset = reserveGroup[1]?.reserve;
+                      const asset = reserveGroup[0];
                       const assetSupply =
                         Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
                       let usdValue = 0;
@@ -742,7 +742,11 @@ const MySupply = () => {
                         {userData?.Ok?.reserves[0]?.map(
                           (reserveGroup, index) => {
                             console.log("userData", userData?.Ok?.reserves);
-                            const asset = reserveGroup[1]?.reserve;
+                            const asset = reserveGroup[0];
+                            console.log(
+                              "aset in your supplies",
+                              reserveGroup[0]
+                            );
                             const assetSupply =
                               Number(reserveGroup[1]?.asset_supply || 0n) /
                               100000000;
@@ -917,7 +921,7 @@ const MySupply = () => {
                                     </p>
                                     {/* Info Icon with Tooltip */}
                                     <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                      <Info size={16} />
+                                      <Info size={14} />
                                       {/* Tooltip */}
                                       <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[25vw]">
                                         These values can fluctuate
@@ -996,101 +1000,126 @@ const MySupply = () => {
                                 </div>
 
                                 <div className="flex justify-between gap-4">
-  {/* Supply Button */}
-  <Button
-    title={"Supply"}
-    onClickHandler={() => {
-      // Only proceed if the button is not disabled
-      if (ckBalance === 0) {
-        // If balance is 0, do not trigger the modal logic
-        toast.info("You cannot supply because your balance is 0.");
-        return;
-      }
+                                  {/* Supply Button */}
+                                  <Button
+                                    title={"Supply"}
+                                    onClickHandler={() => {
+                                      // Only proceed if the button is not disabled
+                                      if (ckBalance === 0) {
+                                        // If balance is 0, do not trigger the modal logic
+                                        toast.info(
+                                          "You cannot supply because your balance is 0."
+                                        );
+                                        return;
+                                      }
 
-      // Proceed with the modal logic if balance is not 0
-      const reserveData =
-        userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === item[0]
-        );
-      const assetSupply =
-        Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
-      const assetBorrow =
-        Number(reserveData?.[1]?.asset_borrow || 0n) / 100000000;
-      const currentCollateralStatus =
-        reserveData?.[1]?.is_collateral ?? true;
+                                      // Proceed with the modal logic if balance is not 0
+                                      const reserveData =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0]
+                                        );
+                                      const assetSupply =
+                                        Number(
+                                          reserveData?.[1]?.asset_supply || 0n
+                                        ) / 100000000;
+                                      const assetBorrow =
+                                        Number(
+                                          reserveData?.[1]?.asset_borrow || 0n
+                                        ) / 100000000;
+                                      const currentCollateralStatus =
+                                        reserveData?.[1]?.is_collateral ?? true;
 
-      const totalCollateral =
-        parseFloat(Number(userData?.Ok?.total_collateral) / 100000000) || 0;
+                                      const totalCollateral =
+                                        parseFloat(
+                                          Number(
+                                            userData?.Ok?.total_collateral
+                                          ) / 100000000
+                                        ) || 0;
 
-      const totalDebt =
-        parseFloat(Number(userData?.Ok?.total_debt) / 100000000) || 0;
+                                      const totalDebt =
+                                        parseFloat(
+                                          Number(userData?.Ok?.total_debt) /
+                                            100000000
+                                        ) || 0;
 
-      handleModalOpen(
-        "supply",
-        asset,
-        (asset === "ckBTC" && ckBTC) ||
-          (asset === "ckETH" && ckETH) ||
-          (asset === "ckUSDC" && ckUSDC) ||
-          (asset === "ICP" && icp) ||
-          (asset === "ckUSDT" && ckUSDT),
-        supplyRateApr,
-        ckBalance,
-        liquidationThreshold,
-        reserveliquidationThreshold,
-        assetSupply,
-        assetBorrow,
-        totalCollateral,
-        totalDebt,
-        currentCollateralStatus
-      );
-    }}
-    disabled={ckBalance === 0} // Disable if ckBalance is 0
-    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
-  />
+                                      handleModalOpen(
+                                        "supply",
+                                        asset,
+                                        (asset === "ckBTC" && ckBTC) ||
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
+                                        supplyRateApr,
+                                        ckBalance,
+                                        liquidationThreshold,
+                                        reserveliquidationThreshold,
+                                        assetSupply,
+                                        assetBorrow,
+                                        totalCollateral,
+                                        totalDebt,
+                                        currentCollateralStatus
+                                      );
+                                    }}
+                                    disabled={ckBalance === 0} // Disable if ckBalance is 0
+                                    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                  />
 
-  {/* Withdraw Button */}
-  <Button
-    title={"Withdraw"}
-    onClickHandler={() => {
-      const reserveData =
-        userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === item[0]
-        );
-      const totalCollateral =
-        parseFloat(Number(userData?.Ok?.total_collateral) / 100000000) || 0;
-      const totalDebt =
-        parseFloat(Number(userData?.Ok?.total_debt) / 100000000) || 0;
+                                  {/* Withdraw Button */}
+                                  <Button
+                                    title={"Withdraw"}
+                                    onClickHandler={() => {
+                                      const reserveData =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0]
+                                        );
+                                      const totalCollateral =
+                                        parseFloat(
+                                          Number(
+                                            userData?.Ok?.total_collateral
+                                          ) / 100000000
+                                        ) || 0;
+                                      const totalDebt =
+                                        parseFloat(
+                                          Number(userData?.Ok?.total_debt) /
+                                            100000000
+                                        ) || 0;
 
-      const assetSupply =
-        Number(reserveData?.[1]?.asset_supply || 0n) / 100000000;
-      const assetBorrow =
-        Number(reserveData?.[1]?.asset_borrow || 0n) / 100000000;
-      const currentCollateralStatus =
-        reserveData?.[1]?.is_collateral ?? true;
+                                      const assetSupply =
+                                        Number(
+                                          reserveData?.[1]?.asset_supply || 0n
+                                        ) / 100000000;
+                                      const assetBorrow =
+                                        Number(
+                                          reserveData?.[1]?.asset_borrow || 0n
+                                        ) / 100000000;
+                                      const currentCollateralStatus =
+                                        reserveData?.[1]?.is_collateral ?? true;
 
-      handleModalOpen(
-        "withdraw",
-        asset,
-        (asset === "ckBTC" && ckBTC) ||
-          (asset === "ckETH" && ckETH) ||
-          (asset === "ckUSDC" && ckUSDC) ||
-          (asset === "ICP" && icp) ||
-          (asset === "ckUSDT" && ckUSDT),
-        supplyRateApr,
-        ckBalance,
-        liquidationThreshold,
-        reserveliquidationThreshold,
-        assetSupply,
-        assetBorrow,
-        totalCollateral,
-        totalDebt,
-        currentCollateralStatus
-      );
-    }}
-    className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
-  />
-</div>
-
+                                      handleModalOpen(
+                                        "withdraw",
+                                        asset,
+                                        (asset === "ckBTC" && ckBTC) ||
+                                          (asset === "ckETH" && ckETH) ||
+                                          (asset === "ckUSDC" && ckUSDC) ||
+                                          (asset === "ICP" && icp) ||
+                                          (asset === "ckUSDT" && ckUSDT),
+                                        supplyRateApr,
+                                        ckBalance,
+                                        liquidationThreshold,
+                                        reserveliquidationThreshold,
+                                        assetSupply,
+                                        assetBorrow,
+                                        totalCollateral,
+                                        totalDebt,
+                                        currentCollateralStatus
+                                      );
+                                    }}
+                                    className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                  />
+                                </div>
 
                                 {index !==
                                   userData.Ok.reserves[0].length - 1 && (
@@ -1133,7 +1162,7 @@ const MySupply = () => {
                           <span>APY</span>
                           {/* Info Icon */}
                           <span className="ml-2 cursor-pointer relative group">
-                            <Info size={16} />
+                            <Info size={14} />
                             {/* Tooltip */}
                             <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
                               These values can fluctuate
@@ -1160,7 +1189,7 @@ const MySupply = () => {
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
-                              const asset = reserveGroup[1]?.reserve;
+                              const asset = reserveGroup[0];
                               const assetSupply =
                                 Number(reserveGroup[1]?.asset_supply || 0n) /
                                 100000000;
@@ -1384,10 +1413,12 @@ const MySupply = () => {
                                       onClickHandler={() => {
                                         if (ckBalance === 0) {
                                           // If balance is 0, do not trigger the modal logic
-                                          toast.info("You cannot supply because your balance is 0.");
+                                          toast.info(
+                                            "You cannot supply because your balance is 0."
+                                          );
                                           return;
                                         }
-                                  
+
                                         const reserveData =
                                           userData?.Ok?.reserves[0]?.find(
                                             (reserveGroup) =>
@@ -1766,7 +1797,7 @@ const MySupply = () => {
                                   </p>
                                   {/* Info Icon with Tooltip */}
                                   <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                    <Info size={16} />
+                                    <Info size={14} />
                                     {/* Tooltip */}
                                     <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
                                       These values can fluctuate
@@ -1916,7 +1947,7 @@ const MySupply = () => {
                             <span>APY</span>
                             {/* Info Icon */}
                             <span className="ml-2 cursor-pointer">
-                              <Info size={16} />
+                              <Info size={14} />
                               {/* Tooltip */}
                               <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
                                 These values can fluctuate
@@ -2263,7 +2294,7 @@ const MySupply = () => {
                   <h1>Your borrow</h1>
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
-                      const asset = reserveGroup[1]?.reserve;
+                      const asset = reserveGroup[0];
                       const assetBorrow =
                         Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
                       let usdValue = 0;
@@ -2327,7 +2358,7 @@ const MySupply = () => {
                           )}
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
-                              const asset = reserveGroup[1]?.reserve;
+                              const asset = reserveGroup[0];
                               console.log("Reserve group", reserveGroup[1]);
                               if (reserveGroup[1]?.asset_borrow <= 0)
                                 return null;
@@ -2481,7 +2512,7 @@ const MySupply = () => {
                                       </p>
                                       {/* Info Icon with Tooltip */}
                                       <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                        <Info size={16} />
+                                        <Info size={14} />
                                         {/* Tooltip */}
                                         <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
                                           These values can fluctuate
@@ -2670,7 +2701,7 @@ const MySupply = () => {
                             <span>APY</span>
                             {/* Info Icon */}
                             <span className="ml-2 cursor-pointer relative group">
-                              <Info size={16} />
+                              <Info size={14} />
                               {/* Tooltip */}
                               <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
                                 These values can fluctuate
@@ -2699,7 +2730,8 @@ const MySupply = () => {
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
-                              const asset = reserveGroup[1]?.reserve;
+                              const asset = reserveGroup[0];
+                              console.log("asset", asset);
                               if (
                                 Number(reserveGroup[1]?.asset_borrow || 0n) /
                                   100000000 <=
@@ -3193,7 +3225,7 @@ const MySupply = () => {
                                     Available:
                                     {/* Info Icon with Tooltip */}
                                     <span className="ml-2 cursor-pointer relative group">
-                                      <Info size={16} />
+                                      <Info size={14} />
                                       {/* Tooltip */}
                                       <div className="absolute left-28 transform -translate-x-[20%] bottom-full mb-4 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
                                         Available assets to borrow for the
@@ -3412,7 +3444,7 @@ const MySupply = () => {
                                     </p>
                                     {/* Info Icon with Tooltip */}
                                     <span className="ml-2 cursor-pointer relative group">
-                                      <Info size={16} />
+                                      <Info size={14} />
                                       {/* Tooltip */}
                                       <div className="absolute left-24 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
                                         These values can fluctuate
@@ -3597,7 +3629,7 @@ const MySupply = () => {
                                 {index === 1 && (
                                   <>
                                     <span className="ml-2 cursor-pointer">
-                                      <Info size={16} />
+                                      <Info size={14} />
                                       <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
                                         Available assets to borrow for the
                                         current user
@@ -3610,7 +3642,7 @@ const MySupply = () => {
                                 {index === 2 && (
                                   <>
                                     <span className="ml-2 cursor-pointer">
-                                      <Info size={16} />
+                                      <Info size={14} />
                                       <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
                                         These values can fluctuate
                                       </div>
@@ -4009,37 +4041,51 @@ const MySupply = () => {
                                         let borrowableAssetValue = "0.0000"; // Default value for borrowableAsset
 
                                         if (Number(availableBorrow)) {
-                                          const remainingBorrowable = Number(total_supply) - Number(total_borrow);
-                                          const borrowable = remainingBorrowable < Number(availableBorrow)
-                                            ? remainingBorrowable
-                                            : Number(availableBorrow);
-                                        
+                                          const remainingBorrowable =
+                                            Number(total_supply) -
+                                            Number(total_borrow);
+                                          const borrowable =
+                                            remainingBorrowable <
+                                            Number(availableBorrow)
+                                              ? remainingBorrowable
+                                              : Number(availableBorrow);
+
                                           // Calculate borrowable value for each asset type and apply formatConditional
                                           if (item[0] === "ckBTC") {
-                                            borrowableValue = (borrowable.toFixed(8)); // In asset units (e.g., BTC)
+                                            borrowableValue =
+                                              borrowable.toFixed(8); // In asset units (e.g., BTC)
                                             borrowableAssetValue = (
-                                              (borrowable / (ckBTCUsdRate / 1e8)).toFixed(8)
-                                            ); // In USD equivalent
+                                              borrowable /
+                                              (ckBTCUsdRate / 1e8)
+                                            ).toFixed(8); // In USD equivalent
                                           } else if (item[0] === "ckETH") {
-                                            borrowableValue = (borrowable.toFixed(8)); // In asset units (e.g., ETH)
+                                            borrowableValue =
+                                              borrowable.toFixed(8); // In asset units (e.g., ETH)
                                             borrowableAssetValue = (
-                                              (borrowable / (ckETHUsdRate / 1e8)).toFixed(8)
-                                            ); // In USD equivalent
+                                              borrowable /
+                                              (ckETHUsdRate / 1e8)
+                                            ).toFixed(8); // In USD equivalent
                                           } else if (item[0] === "ckUSDC") {
-                                            borrowableValue = (borrowable.toFixed(8)); // In asset units (e.g., USDC)
+                                            borrowableValue =
+                                              borrowable.toFixed(8); // In asset units (e.g., USDC)
                                             borrowableAssetValue = (
-                                              (borrowable / (ckUSDCUsdRate / 1e8)).toFixed(8)
-                                            ); // In USD equivalent
+                                              borrowable /
+                                              (ckUSDCUsdRate / 1e8)
+                                            ).toFixed(8); // In USD equivalent
                                           } else if (item[0] === "ICP") {
-                                            borrowableValue = (borrowable.toFixed(8)); // In asset units (e.g., ICP)
+                                            borrowableValue =
+                                              borrowable.toFixed(8); // In asset units (e.g., ICP)
                                             borrowableAssetValue = (
-                                              (borrowable / (ckICPUsdRate / 1e8)).toFixed(8)
-                                            ); // In USD equivalent
+                                              borrowable /
+                                              (ckICPUsdRate / 1e8)
+                                            ).toFixed(8); // In USD equivalent
                                           } else if (item[0] === "ckUSDT") {
-                                            borrowableValue = (borrowable.toFixed(8)); // In asset units (e.g., USDT)
+                                            borrowableValue =
+                                              borrowable.toFixed(8); // In asset units (e.g., USDT)
                                             borrowableAssetValue = (
-                                              (borrowable / (ckUSDTUsdRate / 1e8)).toFixed(8)
-                                            ); // In USD equivalent
+                                              borrowable /
+                                              (ckUSDTUsdRate / 1e8)
+                                            ).toFixed(8); // In USD equivalent
                                           }
                                         }
                                         console.log(

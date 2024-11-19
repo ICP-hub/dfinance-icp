@@ -527,6 +527,7 @@ impl UpdateLogic {
       
         ic_cdk::println!("repay user update = {:?}", user_data);
 
+
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0),
             total_borrowed_value: user_data.total_debt.unwrap_or(0) - usd_amount.clone(),
@@ -772,3 +773,7 @@ pub fn user_reserve<'a>(
     };
     user_reserve
 }
+
+
+
+

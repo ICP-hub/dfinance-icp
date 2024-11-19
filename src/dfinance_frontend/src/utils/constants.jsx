@@ -380,31 +380,19 @@ export const FAQ_QUESTIONS_POINTSYSTEM = [
     id: 1,
     question: "Do I get rewarded for being an early user?",
     answer:
-      "Absolutely! With each new season, users from the previous season will receive a permanent loyalty boost.",
+      "Early users will be rewarded for their support. If you have provided liquidity or used the platform within the first 7 days, there is a permanent boost added to the points that are generated. See our Rates & Boosts Tab for more information.",
   },
   {
     id: 2,
-    question: "How does staking work?",
-    answer:
-      "[Redacted]",
-  },
-  {
-    id: 3,
     question: "I’m not a whale. Do I have any shot at being competitive points?",
     answer:
       " Yes, you do. Even though position size and duration are key factors in determining points accrual, there will be various boosts throughout phase 1 where you can boost your points per dollar. Other opportunities to earn points by being active in our community channels and providing feedback will also be rewarded. Just use the product, stay engaged, and we will reward our earliest members.",
   },
   {
-    id: 4,
-    question: "How is my boost calculated?",
-    answer:
-      "Your overall position boost shows a weighted average boost across all your positions. If only 10% of your position is in a boosted product, your entire position does net get that boost.",
-  },
-  {
-    id: 5,
+    id: 3,
     question: "How long will points continue?",
     answer:
-      "Points will continue throughout 2024, with multiple rounds of airdrops to reward long-term users.",
+      "Points will continue to accrue until our phase 2 launch, where we introduce the $DFIN token.",
   },
 ];
 export const WALLET_DETAILS_TABS = [

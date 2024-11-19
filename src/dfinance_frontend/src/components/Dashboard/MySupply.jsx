@@ -32,13 +32,12 @@ import useUserData from "../customHooks/useUserData";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
-// import {setToggle} from "../../redux/reducers/toggleReducer"
+
 import {
   setTotalUsdValueBorrow,
   setTotalUsdValueSupply,
 } from "../../redux/reducers/borrowSupplyReducer";
 
-import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 const MySupply = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -49,7 +48,6 @@ const MySupply = () => {
   const [showAllYourBorrow, setShowAllYourBorrow] = useState(false);
   const [showAllAssetoBorrow, setshowAllAssetoBorrow] = useState(false);
   const [showAllSupplies, setShowAllSupplies] = useState(false);
-  // Toggle between showing 4 items and all items
   const toggleShowAll = () => setShowAll((prev) => !prev);
   const toggleShowAllBorrow = () => setShowAllYourBorrow((prev) => !prev);
   const toggleshowAllAssetoBorrow = () =>
@@ -74,7 +72,6 @@ const MySupply = () => {
 
   useEffect(() => {
     if (userData?.Ok?.available_borrow) {
-      // dispatch(setToggled(user))
       setAvailableBorrow(Number(userData.Ok.available_borrow) / 100000000);
     }
   }, [userData]);
@@ -246,7 +243,7 @@ const MySupply = () => {
   const formatNumber = useFormatNumber();
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
-  const toggles = useSelector((state) => state.toggle.toggles); // Generic state for toggle
+  const toggles = useSelector((state) => state.toggle.toggles);
 
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
@@ -273,7 +270,6 @@ const MySupply = () => {
     borrowableValue,
     borrowableAssetValue
   ) => {
-    console.log("handle toggle : ", Collateral);
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -321,21 +317,21 @@ const MySupply = () => {
   };
 
   const handleToggleChange = (newStatus) => {
-    dispatch(set(newStatus)); // Update the state based on the modal success
+    dispatch(set(newStatus));
   };
   const formatConditional = (value) => {
-    const numericValue = parseFloat(value); // Ensure the value is a number
+    const numericValue = parseFloat(value);
 
     if (isNaN(numericValue)) {
-      return "0"; // If it's not a number, return "0"
+      return "0";
     }
 
     if (numericValue === 0) {
-      return "0"; // If the value is 0, show 0
+      return "0";
     } else if (numericValue >= 1) {
-      return numericValue.toFixed(2); // If the value is 1 or greater, show 2 decimal places
+      return numericValue.toFixed(2);
     } else {
-      return numericValue.toFixed(7); // If the value is less than 1 but greater than 0, show 7 decimal places
+      return numericValue.toFixed(7);
     }
   };
 
@@ -515,7 +511,7 @@ const MySupply = () => {
         return null;
     }
   };
-  // console.log("toggle in popup",)
+
   const hasNoBorrows = MY_BORROW_ASSET_TABLE_ROWS.length === 0;
   const noBorrowMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
@@ -578,14 +574,9 @@ const MySupply = () => {
   let borrow_rate_apr = "0";
 
   if (filteredItems && filteredItems.length > 0) {
-    // Log filteredItems to check the data
     console.log("filtered items", filteredItems);
 
-    // Access the first item in filteredItems and retrieve the necessary data
     const item = filteredItems[0][1].Ok;
-
-    // Log the item to check its content
-    console.log("items in filtered items", item);
 
     // Retrieve the total_supply and total_borrow for the asset
     const total_supply = item.total_supply;
@@ -1948,13 +1939,13 @@ const MySupply = () => {
                           </div>
 
                           {/* APY Column with Info Icon and Tooltip */}
-                          <div className="p-5 inline-flex items-center relative group">
+                          <div className="p-5 inline-flex items-center">
                             <span>APY</span>
                             {/* Info Icon */}
-                            <span className="ml-2 cursor-pointer">
+                            <span className="ml-2 cursor-pointer relative group">
                               <Info size={14} />
                               {/* Tooltip */}
-                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[25vw]">
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[15vw]">
                                 The supply rate APY may vary based on
                                 utilization levels and incentive structures.
                               </div>
@@ -2711,7 +2702,7 @@ const MySupply = () => {
                             <span className="ml-2 cursor-pointer relative group">
                               <Info size={14} />
                               {/* Tooltip */}
-                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
                                 The variable borrow interest rate may change
                                 over time, influenced by market trends and
                                 conditions.
@@ -3230,20 +3221,21 @@ const MySupply = () => {
                                     {item[0]}
                                   </span>
                                 </div>
-                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6 relative group">
+                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6 relative ">
                                   <p className="text-[#233D63] dark:text-darkText dark:opacity-50 flex items-center">
                                     Available:
                                     {/* Info Icon with Tooltip */}
-                                    <span className="ml-2 cursor-pointer relative group">
-                                      <Info size={14} />
+                                    <span className="ml-2 cursor-pointer relative">
+                                      <Info size={14} className="group" />
                                       {/* Tooltip */}
-                                      <div className="absolute left-20 transform -translate-x-[20%] bottom-full mt-2  bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[30vw]">
+                                      <div className="absolute left-20 transform -translate-x-[20%] bottom-full mt-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[30vw]">
                                         This is the total amount you can borrow,
                                         determined by your collateral and
                                         limited by the borrow cap.
                                       </div>
                                     </span>
                                   </p>
+
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText">
                                     {item[0] === "ckBTC" && (
                                       <>
@@ -3630,9 +3622,9 @@ const MySupply = () => {
                           {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
                             <div
                               key={index}
-                              className="p-2 lgx:pl-4 font-[500] "
+                              className="p-2 lgx:pl-4 font-[500]"
                             >
-                              <div className="inline-flex items-center relative group">
+                              <div className="inline-flex items-center relative">
                                 {/* Display header text */}
                                 <p>
                                   {index === 2 ? item.header1 : item.header}
@@ -3640,30 +3632,26 @@ const MySupply = () => {
 
                                 {/* Tooltip for the second column */}
                                 {index === 1 && (
-                                  <>
-                                    <span className="ml-2 cursor-pointer">
-                                      <Info size={14} />
-                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                        This is the total amount you can borrow,
-                                        determined by your collateral and
-                                        limited by the borrow cap.
-                                      </div>
-                                    </span>
-                                  </>
+                                  <span className="ml-2 cursor-pointer relative group">
+                                    <Info size={14} />
+                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                      This is the total amount you can borrow,
+                                      determined by your collateral and limited
+                                      by the borrow cap.
+                                    </div>
+                                  </span>
                                 )}
 
                                 {/* Tooltip for the third column */}
                                 {index === 2 && (
-                                  <>
-                                    <span className="ml-2 cursor-pointer">
-                                      <Info size={14} />
-                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                        The variable borrow interest rate may
-                                        change over time, influenced by market
-                                        trends and conditions.
-                                      </div>
-                                    </span>
-                                  </>
+                                  <span className="ml-2 cursor-pointer relative group">
+                                    <Info size={14} />
+                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                      The variable borrow interest rate may
+                                      change over time, influenced by market
+                                      trends and conditions.
+                                    </div>
+                                  </span>
                                 )}
                               </div>
                             </div>

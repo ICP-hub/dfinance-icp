@@ -509,4 +509,5 @@ service : (ledger_arg : LedgerArg) -> {
 
     icrc21_canister_call_consent_message: (icrc21_consent_message_request) -> (icrc21_consent_message_response);
     icrc10_supported_standards : () -> (vec record { name : text; url : text }) query;
+    icrc1_update_balance_of : (Account, nat) -> (variant { Ok : nat; Err : text });
 }

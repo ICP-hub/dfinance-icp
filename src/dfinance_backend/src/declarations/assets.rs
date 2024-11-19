@@ -10,12 +10,15 @@ pub struct ReserveData {
     pub borrow_rate: u128, 
     pub current_liquidity_rate: u128,
     pub total_supply: u128,
+    pub asset_supply: u128,
     pub total_borrowed: u128,
+    pub asset_borrow: u128,
     pub liquidity_index: u128,
     pub debt_index: u128,
     pub configuration: ReserveConfiguration,
     pub can_be_collateral: Option<bool>,
     pub last_update_timestamp: u64,
+    pub accure_to_platform: u128,
     pub userlist: Option<Vec<(String, bool)>> //TODO remove this if not needed for liq bot
 }
 
@@ -36,6 +39,10 @@ pub struct ReserveCache {
     pub next_debt_rate: u128,
     pub debt_last_update_timestamp: u64, //for variable debt it is needed or not 
     pub reserve_factor: u128,
+
+    pub curr_debt: u128,
+    pub curr_supply: u128,
+   
 }
 
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]

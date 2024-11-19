@@ -21,10 +21,8 @@ pub fn calculate_compounded_interest(
         return SCALING_FACTOR;
     }
 
-    // Scale rate for the shorter time period (fractional year)
     let scaled_rate = rate * exp as u128 / SECONDS_PER_YEAR as u128;
 
-    // Calculate interest with the adjusted rate over a small period
     let exp_minus_one = exp - 1;
     let exp_minus_two = if exp > 2 { exp - 2 } else { 0 };
 

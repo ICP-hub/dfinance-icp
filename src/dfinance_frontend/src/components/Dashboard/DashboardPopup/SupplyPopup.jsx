@@ -444,8 +444,8 @@ const convertedMaxValue = balance * adjustedConversionRate;  // Perform the mult
                     value={amount}
                     onChange={handleAmountChange}
                     disabled={supplyBalance === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
+                    className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder={`Enter ${asset} Amount`}
                   />
 
 

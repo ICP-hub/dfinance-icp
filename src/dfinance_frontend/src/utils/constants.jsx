@@ -41,12 +41,12 @@ export const FOOTER_LINK_1 = [
   //   route: "/#",
   //   icon: "",
   // },
-  {
-    id: 1,
-    title: "Liquidation",
-    route: "/Liquidate",
-    icon: "",
-  },
+  // {
+  //   id: 1,
+  //   title: "Liquidation",
+  //   route: "/Liquidate",
+  //   icon: "",
+  // },
   // {
   //   id: 2,
   //   title: "Security",

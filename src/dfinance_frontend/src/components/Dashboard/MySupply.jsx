@@ -924,7 +924,9 @@ const MySupply = () => {
                                       <Info size={14} />
                                       {/* Tooltip */}
                                       <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[25vw]">
-                                        These values can fluctuate
+                                        The supply rate APY may vary based on
+                                        utilization levels and incentive
+                                        structures.
                                       </div>
                                     </span>
                                   </div>
@@ -1164,8 +1166,9 @@ const MySupply = () => {
                           <span className="ml-2 cursor-pointer relative group">
                             <Info size={14} />
                             {/* Tooltip */}
-                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                              These values can fluctuate
+                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                              The supply rate APY may vary based on utilization
+                              levels and incentive structures.
                             </div>
                           </span>
                         </div>
@@ -1800,7 +1803,9 @@ const MySupply = () => {
                                     <Info size={14} />
                                     {/* Tooltip */}
                                     <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                      These values can fluctuate
+                                      The supply rate APY may vary based on
+                                      utilization levels and incentive
+                                      structures.
                                     </div>
                                   </span>
                                 </div>
@@ -1949,8 +1954,9 @@ const MySupply = () => {
                             <span className="ml-2 cursor-pointer">
                               <Info size={14} />
                               {/* Tooltip */}
-                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                These values can fluctuate
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[25vw]">
+                                The supply rate APY may vary based on
+                                utilization levels and incentive structures.
                               </div>
                             </span>
                           </div>
@@ -2515,7 +2521,9 @@ const MySupply = () => {
                                         <Info size={14} />
                                         {/* Tooltip */}
                                         <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                          These values can fluctuate
+                                          The variable borrow interest rate may
+                                          change over time, influenced by market
+                                          trends and conditions.
                                         </div>
                                       </span>
                                     </div>
@@ -2704,7 +2712,9 @@ const MySupply = () => {
                               <Info size={14} />
                               {/* Tooltip */}
                               <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                These values can fluctuate
+                                The variable borrow interest rate may change
+                                over time, influenced by market trends and
+                                conditions.
                               </div>
                             </span>
                           </div>
@@ -3227,9 +3237,10 @@ const MySupply = () => {
                                     <span className="ml-2 cursor-pointer relative group">
                                       <Info size={14} />
                                       {/* Tooltip */}
-                                      <div className="absolute left-28 transform -translate-x-[20%] bottom-full mb-4 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                        Available assets to borrow for the
-                                        current user
+                                      <div className="absolute left-20 transform -translate-x-[20%] bottom-full mt-2  bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[30vw]">
+                                        This is the total amount you can borrow,
+                                        determined by your collateral and
+                                        limited by the borrow cap.
                                       </div>
                                     </span>
                                   </p>
@@ -3446,8 +3457,10 @@ const MySupply = () => {
                                     <span className="ml-2 cursor-pointer relative group">
                                       <Info size={14} />
                                       {/* Tooltip */}
-                                      <div className="absolute left-24 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                        These values can fluctuate
+                                      <div className="absolute left-28 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                        The variable borrow interest rate may
+                                        change over time, influenced by market
+                                        trends and conditions.
                                       </div>
                                     </span>
                                   </div>
@@ -3630,9 +3643,10 @@ const MySupply = () => {
                                   <>
                                     <span className="ml-2 cursor-pointer">
                                       <Info size={14} />
-                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                        Available assets to borrow for the
-                                        current user
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                        This is the total amount you can borrow,
+                                        determined by your collateral and
+                                        limited by the borrow cap.
                                       </div>
                                     </span>
                                   </>
@@ -3643,8 +3657,10 @@ const MySupply = () => {
                                   <>
                                     <span className="ml-2 cursor-pointer">
                                       <Info size={14} />
-                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                        These values can fluctuate
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                        The variable borrow interest rate may
+                                        change over time, influenced by market
+                                        trends and conditions.
                                       </div>
                                     </span>
                                   </>

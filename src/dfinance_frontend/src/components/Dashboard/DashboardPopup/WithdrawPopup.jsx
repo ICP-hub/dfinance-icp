@@ -395,8 +395,8 @@ const WithdrawPopup = ({
                     value={amount}
                     onChange={handleAmountChange}
                     // disabled={supplyBalance === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
+                    className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder={`Enter Amount ${asset}`}
                   />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
@@ -421,10 +421,11 @@ const WithdrawPopup = ({
                       }
                     }}
                   >
-                    ${maxUsdValue.toLocaleString(undefined, {
+                    {/* ${maxUsdValue.toLocaleString(undefined, {
                       minimumFractionDigits: 7,
                       maximumFractionDigits: 7,
-                    })}{" "}
+                    })}{" "} */}
+                    {assetSupply}{" "}
                     Max {/* Adjust maximumFractionDigits as needed */}
                   </p>
                 </div>

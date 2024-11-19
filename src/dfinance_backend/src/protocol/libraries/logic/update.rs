@@ -1,4 +1,5 @@
 use crate::declarations::assets::{ReserveCache, ReserveData};
+use crate::get_all_assets;
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::types::datatypes::{UserData, UserState};
 use crate::{
@@ -622,6 +623,34 @@ impl UpdateLogic {
 
 #[update]
 pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
+    // Need to ask from anshika -- > should i return the errors or just printing will be good enough.
+    // Validate amounts
+    if amount < 0 {
+        ic_cdk::println!("Amount must be non-negative.");
+        return;
+    }
+    if added_amount < 0 {
+        ic_cdk::println!("Added amount must be non-negative.");
+        return;
+    }
+
+    // Validate asset
+    if asset.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string.");
+        return;
+    }
+
+    let all_assets: Vec<String> = get_all_assets();
+
+    let check_asset = all_assets
+        .iter()
+        .any(|token_name| token_name.clone() == asset);
+
+    if !check_asset {
+        ic_cdk::println!("Error: Asset '{}' not found!", asset);
+    }
+
+    // Validate user principal (avoid anonymous principal)
     let user_principal = ic_cdk::caller();
     //TODO add validations
     //Retrieve user data.
@@ -637,6 +666,15 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
             return;
         }
     };
+
+    // Ensure necessary fields in user data
+    // if user_data.total_collateral.is_none()
+    //     || user_data.liquidation_threshold.is_none()
+    //     || user_data.available_borrow.is_none()
+    // {
+    //     ic_cdk::println!("User data is incomplete.");
+    //     return;
+    // }
 
     // Reads the reserve data from the asset
     let reserve_data_result = mutate_state(|state| {
@@ -718,6 +756,12 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
     let user_health = calculate_health_factor(&user_position);
     user_data.health_factor = Some(user_health);
 
+    // function need to stop here -- check.
+    if user_health <= 1 {
+        ic_cdk::println!("Health Factor Less than 1");
+        return;
+    }
+
     // Function to check if the user has a reserve for the asset
     let user_reserve = user_reserve(&mut user_data, &asset);
 
@@ -771,3 +815,4 @@ pub fn user_reserve<'a>(
     };
     user_reserve
 }
+

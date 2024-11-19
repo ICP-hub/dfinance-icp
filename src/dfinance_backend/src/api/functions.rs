@@ -3,10 +3,11 @@ use std::string;
 use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
-use crate::get_asset_principal;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
+use crate::protocol::libraries::logic::user;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
+use crate::{get_all_assets, get_asset_principal};
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::{call, query};
@@ -255,8 +256,19 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
         return Err("Asset cannot be an empty string.".to_string());
     }
 
+    let all_assets: Vec<String> = get_all_assets();
+
+    let check_asset = all_assets
+        .iter()
+        .any(|token_name| token_name.clone() == asset);
+
+    if !check_asset {
+        return Err(format!("Error: Asset '{}' not found!", asset));
+    }
+
     // Validate user principal (avoid anonymous principal)
     let user_principal = ic_cdk::caller();
+    ic_cdk::println!("user faucet principal = {}", user_principal.to_string());
 
     // Validate user principal (avoid anonymous principal)
     if user_principal == Principal::anonymous() {
@@ -293,7 +305,7 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
 
     ic_cdk::println!("usd amount of the facut = {}", usd_amount.unwrap());
 
-    // Function to check if the user has a reserve for the asset
+    // Function to check if the user has a reserve for the asset.
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
 
@@ -314,12 +326,13 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
             return Err("amount is too much".to_string());
         }
         user_reserve_data.faucet_usage += usd_amount.unwrap();
-        ic_cdk::println!("if faucet usage = {}",user_reserve_data.faucet_usage);
+        ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
     } else {
         let mut new_reserve = UserReserveData {
+            reserve: asset.clone(),
             ..Default::default()
         };
-    
+
         if usd_amount.unwrap() > new_reserve.faucet_limit {
             ic_cdk::println!("amount is too much");
             return Err("amount is too much".to_string());
@@ -329,23 +342,23 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
             ic_cdk::println!("amount is too much second");
             return Err("amount is too much".to_string());
         }
-    
+
         new_reserve.faucet_usage += usd_amount.unwrap();
-        ic_cdk::println!("else faucet usage = {}",new_reserve.faucet_usage);
-    
+        ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
+
         if let Some(ref mut reserves) = user_data.reserves {
             reserves.push((asset.clone(), new_reserve.clone()));
         } else {
             user_data.reserves = Some(vec![(asset.clone(), new_reserve.clone())]);
         }
-    
+
         ic_cdk::println!(
             "faucet new_reserve.faucet_usage = {}",
             new_reserve.faucet_usage
         );
     }
 
-    ic_cdk::println!("user data before submit = {:?}",user_data);
+    ic_cdk::println!("user data before submit = {:?}", user_data);
 
     // Fetched canister ids, user principal and amount
     let ledger_canister_id = mutate_state(|state| {
@@ -364,10 +377,6 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
 
     let platform_principal = ic_cdk::api::id();
     let amount_nat = Nat::from(amount as u128);
-
-    // Need to ask from anshika -- > should i implement these two comments for the validation purpose.
-    // Check if the user has already claimed within a certain period --- need to use.
-    // Check if the platform has sufficient balance -- need to use.
 
     // Save the updated user data back to state
     mutate_state(|state| {
@@ -400,8 +409,14 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
 }
 
 #[update]
-pub fn reset_faucet_usage(asset: String) -> Result<(), String> {
+pub fn reset_faucet_usage() -> Result<(), String> {
+
     let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err("Anonymous principals are not allowed.".to_string());
+    }
 
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
@@ -416,12 +431,16 @@ pub fn reset_faucet_usage(asset: String) -> Result<(), String> {
         }
     };
 
-    // Function to check if the user has a reserve for the asset
-    let user_reserve = user_reserve(&mut user_data, &asset);
+    // Access and mutate reserves
+    if let Some(user_data_reserves) = user_data.reserves.as_mut() {
+        for (_reserve_name, user_reserve_data) in user_data_reserves.iter_mut() {
+            user_reserve_data.faucet_usage = 0;
+        }
+    } else {
+        return Err("Reserves not found for user".to_string());
+    }
 
-    if let Some((_, user_reserve_data)) = user_reserve {
-        user_reserve_data.faucet_usage = 0;
-    };
+    ic_cdk::println!("User data after faucet reset = {:?}", user_data);
 
     // Save the updated user data back to state
     mutate_state(|state| {
@@ -429,5 +448,7 @@ pub fn reset_faucet_usage(asset: String) -> Result<(), String> {
             .user_profile
             .insert(user_principal, Candid(user_data.clone()));
     });
+
+    ic_cdk::println!("updated user data after facuet reset = {:?}", user_data);
     Ok(())
 }

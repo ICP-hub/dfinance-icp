@@ -10,6 +10,11 @@ use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc1::account::Account;
+use protocol::libraries::logic::reserve::user_normalized_debt;
+use protocol::libraries::logic::reserve::user_normalized_supply;
+use protocol::libraries::logic::user::GenericLogic;
+use protocol::libraries::logic::user::UserAccountDataParams;
+use protocol::libraries::logic::user::UserConfig;
 use protocol::libraries::math::calculate::calculate_health_factor;
 use protocol::libraries::math::calculate::calculate_ltv;
 use protocol::libraries::math::calculate::get_exchange_rates;
@@ -245,68 +250,68 @@ pub async fn withdraw(
         }
     }
 }
- //TODO seperate this function in two functions one for liq_index called as user_normalized_supply and another for debt_index called as user_normalized_debt
-fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<(), String> {
-    let current_time = ic_cdk::api::time() / 1_000_000_000;
-    ic_cdk::println!("Current timestamp: {}", current_time);
+//TODO seperate this function in two functions one for liq_index called as user_normalized_supply and another for debt_index called as user_normalized_debt -- done
+// fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<(), String> {
+//     let current_time = ic_cdk::api::time() / 1_000_000_000;
+//     ic_cdk::println!("Current timestamp: {}", current_time);
 
-    if user_reserve_data.last_update_timestamp == current_time {
-        ic_cdk::println!("No update needed as timestamps match.");
-        return Ok(());
-    }
-   
-    // Calculate liquidity index update based on supply rate
-    if user_reserve_data.supply_rate != 0 {
-        let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
-            user_reserve_data.supply_rate,
-            user_reserve_data.last_update_timestamp,
-        );
-        ic_cdk::println!(
-            "Calculated cumulated liquidity interest: {} based on supply rate: {}",
-            cumulated_liquidity_interest,
-            user_reserve_data.supply_rate
-        );
+//     if user_reserve_data.last_update_timestamp == current_time {
+//         ic_cdk::println!("No update needed as timestamps match.");
+//         return Ok(());
+//     }
 
-        user_reserve_data.liquidity_index =
-            cumulated_liquidity_interest.scaled_mul(user_reserve_data.liquidity_index);
-        ic_cdk::println!(
-            "Updated liquidity index: {} for reserve",
-            user_reserve_data.liquidity_index
-        );
-    }
+//     // Calculate liquidity index update based on supply rate
+//     if user_reserve_data.supply_rate != 0 {
+//         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
+//             user_reserve_data.supply_rate,
+//             user_reserve_data.last_update_timestamp,
+//         );
+//         ic_cdk::println!(
+//             "Calculated cumulated liquidity interest: {} based on supply rate: {}",
+//             cumulated_liquidity_interest,
+//             user_reserve_data.supply_rate
+//         );
 
-    // Calculate debt index update based on borrow rate
-    if user_reserve_data.variable_borrow_index != 0 {
-         ic_cdk::println!(
-            "prev borrow index & rate {:?} {:?}", user_reserve_data.variable_borrow_index, user_reserve_data.borrow_rate );
-        let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
-            (user_reserve_data.borrow_rate / 100) as u128,
-            user_reserve_data.last_update_timestamp,
-            current_time,
-        );
-        ic_cdk::println!(
-            "Calculated cumulated borrow interest: {} based on borrow rate: {}",
-            cumulated_borrow_interest,
-            user_reserve_data.borrow_rate //take it from reserve of asset 
-        );
+//         user_reserve_data.liquidity_index =
+//             cumulated_liquidity_interest.scaled_mul(user_reserve_data.liquidity_index);
+//         ic_cdk::println!(
+//             "Updated liquidity index: {} for reserve",
+//             user_reserve_data.liquidity_index
+//         );
+//     }
 
-        user_reserve_data.variable_borrow_index =
-            cumulated_borrow_interest.scaled_mul(user_reserve_data.variable_borrow_index);
-        ic_cdk::println!(
-            "Updated variable borrow index: {} for reserve",
-            user_reserve_data.variable_borrow_index
-        );
-    }
+//     // Calculate debt index update based on borrow rate
+//     if user_reserve_data.variable_borrow_index != 0 {
+//          ic_cdk::println!(
+//             "prev borrow index & rate {:?} {:?}", user_reserve_data.variable_borrow_index, user_reserve_data.borrow_rate );
+//         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
+//             (user_reserve_data.borrow_rate / 100) as u128,
+//             user_reserve_data.last_update_timestamp,
+//             current_time,
+//         );
+//         ic_cdk::println!(
+//             "Calculated cumulated borrow interest: {} based on borrow rate: {}",
+//             cumulated_borrow_interest,
+//             user_reserve_data.borrow_rate //take it from reserve of asset
+//         );
 
-    // Update last update timestamp
-    user_reserve_data.last_update_timestamp = current_time;
-    ic_cdk::println!(
-        "Updated last update timestamp for reserve: {}",
-        user_reserve_data.last_update_timestamp
-    );
+//         user_reserve_data.variable_borrow_index =
+//             cumulated_borrow_interest.scaled_mul(user_reserve_data.variable_borrow_index);
+//         ic_cdk::println!(
+//             "Updated variable borrow index: {} for reserve",
+//             user_reserve_data.variable_borrow_index
+//         );
+//     }
 
-    Ok(())
-}
+//     // Update last update timestamp
+//     user_reserve_data.last_update_timestamp = current_time;
+//     ic_cdk::println!(
+//         "Updated last update timestamp for reserve: {}",
+//         user_reserve_data.last_update_timestamp
+//     );
+
+//     Ok(())
+// }
 
 #[update]
 pub async fn login() -> Result<(), String> {
@@ -373,7 +378,16 @@ pub async fn login() -> Result<(), String> {
         ic_cdk::println!("dToken Canister: {}", dtoken_canister);
         ic_cdk::println!("DebtToken Canister: {}", debttoken_canister);
 
-        update_user_reserve_state(user_reserve_data)?;
+       user_reserve_data.liquidity_index = user_normalized_supply(user_reserve_data.clone()).unwrap();
+       user_reserve_data.variable_borrow_index = user_normalized_debt(user_reserve_data.clone()).unwrap();
+
+        // Update last update timestamp
+        user_reserve_data.last_update_timestamp = current_timestamp;
+        ic_cdk::println!(
+            "Updated last update timestamp for reserve: {}",
+            user_reserve_data.last_update_timestamp
+        );
+        //update_user_reserve_state(user_reserve_data)?;
 
         let updated_balance = calculate_dynamic_balance(
             user_reserve_data.asset_supply,
@@ -447,8 +461,6 @@ pub async fn login() -> Result<(), String> {
                 ic_cdk::println!("Failed to update dToken balance: {}", err);
             }
         }
-
-
 
         if user_reserve_data.asset_borrow != 0 {
             let borrow_updated_balance = calculate_dynamic_balance(
@@ -644,8 +656,26 @@ fn calculate_dynamic_balance(
     initial_deposit * new_liquidity_index / prev_liquidity_index
 }
 
-export_candid!();
+#[update]
+async fn test_calculate_user_account_data() -> Result<(u128, u128, u128, u128, u128, bool), String> {
+    // Prepare the test parameters
+    //let user_principal = ic_cdk::caller();
+    let test_params = UserAccountDataParams {
+        user: "xeon3-xcmfn-umsal-cr5tj-7jveu-23z2f-embri-k222i-jrw3c-6mz2s-zqe".to_string(), // Replace with a valid principal ID
+        user_config: UserConfig {
+            collateral: true,
+            borrowing: true,
+        },
+        reserves_count: 2,
+    };
 
+    // Call the function with the test parameters
+    let result = GenericLogic::calculate_user_account_data(test_params).await;
+
+    // Return the result
+    result
+}
+export_candid!();
 
 //TODO validation on toggle collateral and faucet
 
@@ -656,5 +686,4 @@ export_candid!();
 //5. Optimization
 //6. accuare_to_treasury for fees
 //7. liq_bot -> discuss about node or timer
-//8. frontend -> cal h.f , dont show negative apy, remove tofix 
-
+//8. frontend -> cal h.f , dont show negative apy, remove tofix

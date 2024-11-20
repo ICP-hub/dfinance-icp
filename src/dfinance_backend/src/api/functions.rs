@@ -429,8 +429,14 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
 }
 
 #[update]
-pub fn reset_faucet_usage(asset: String) -> Result<(), String> {
+pub fn reset_faucet_usage() -> Result<(), String> {
+
     let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err("Anonymous principals are not allowed.".to_string());
+    }
 
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
@@ -445,12 +451,16 @@ pub fn reset_faucet_usage(asset: String) -> Result<(), String> {
         }
     };
 
-    // Function to check if the user has a reserve for the asset
-    let user_reserve = user_reserve(&mut user_data, &asset);
+    // Access and mutate reserves
+    if let Some(user_data_reserves) = user_data.reserves.as_mut() {
+        for (_reserve_name, user_reserve_data) in user_data_reserves.iter_mut() {
+            user_reserve_data.faucet_usage = 0;
+        }
+    } else {
+        return Err("Reserves not found for user".to_string());
+    }
 
-    if let Some((_, user_reserve_data)) = user_reserve {
-        user_reserve_data.faucet_usage = 0;
-    };
+    ic_cdk::println!("User data after faucet reset = {:?}", user_data);
 
     // Save the updated user data back to state
     mutate_state(|state| {
@@ -458,5 +468,7 @@ pub fn reset_faucet_usage(asset: String) -> Result<(), String> {
             .user_profile
             .insert(user_principal, Candid(user_data.clone()));
     });
+
+    ic_cdk::println!("updated user data after facuet reset = {:?}", user_data);
     Ok(())
 }

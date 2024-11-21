@@ -41,11 +41,11 @@ type Result_4 = variant { Ok : PriceCache; Err : text };
 type Result_5 = variant { Ok : record { nat; nat64 }; Err : text };
 type Result_6 = variant { Ok : ReserveData; Err : text };
 type Result_7 = variant { Ok : UserData; Err : text };
-type Result_8 = variant {
+type Result_8 = variant { Ok : nat; Err : text };
+type Result_9 = variant {
   Ok : record { nat; nat; nat; nat; nat; bool };
   Err : text;
 };
-type Result_9 = variant { Ok : nat; Err : text };
 type UserData = record {
   ltv : opt nat;
   available_borrow : opt nat;
@@ -61,24 +61,24 @@ type UserData = record {
 };
 type UserReserveData = record {
   supply_rate : nat;
-  asset_price_when_supplied : nat;
   principal_stable_debt : nat64;
   asset_borrow : nat;
+  debt_token_canister : text;
   last_update_timestamp : nat64;
   is_collateral : bool;
-  asset_price_when_borrowed : nat;
-  liquidity_index : nat;
   faucet_limit : nat;
-  variable_borrow_index : nat;
   reserve : text;
+  d_token_canister : text;
   asset_supply : nat;
   state : UserState;
   faucet_usage : nat;
   borrow_rate : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
+  last_liquidity_index : nat;
+  last_variable_borrow_index : nat;
 };
-type UserState = record { adjusted_balance : nat; last_liquidity_index : nat };
+type UserState = record { adjusted_balance : nat; index : nat };
 service : () -> {
   borrow : (text, nat64) -> (Result);
   check_user : (text) -> (Result_1);
@@ -94,16 +94,18 @@ service : () -> {
   get_user_data : (text) -> (Result_7) query;
   initialize_reserve : () -> ();
   login : () -> (Result);
+  queary_get_user_debt_in_base_currency : (text) -> (Result_8) query;
   queary_reserve_price : () -> (vec PriceCache) query;
+  queary_test_calculate_user_account_data : (text) -> (Result_8) query;
   repay : (text, nat, opt text) -> (Result);
   reset_faucet_usage : () -> (Result);
   supply : (text, nat64, bool) -> (Result);
-  test_calculate_user_account_data : () -> (Result_8);
+  test_calculate_user_account_data : () -> (Result_9);
   toggle_collateral : (text, nat, nat) -> ();
-  update_balance : (principal, principal, nat) -> (Result_2);
+  update_balance : (principal, principal, nat) -> (Result_8);
   update_reserves_price : () -> ();
-  user_normalized_debt : (UserReserveData) -> (Result_9) query;
-  user_normalized_supply : (UserReserveData) -> (Result_9) query;
+  user_normalized_debt : (UserReserveData) -> (Result_8) query;
+  user_normalized_supply : (UserReserveData) -> (Result_8) query;
   user_position : (text) -> (Result_10) query;
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

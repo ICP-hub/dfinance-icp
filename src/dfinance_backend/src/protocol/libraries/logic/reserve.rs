@@ -148,7 +148,7 @@ pub async fn burn_scaled(
         .scaled_mul(current_liquidity_index))
         - (user_state
             .adjusted_balance
-            .scaled_mul(user_state.last_liquidity_index));
+            .scaled_mul(user_state.index));
 
     if adjusted_amount > user_state.adjusted_balance + balance_increase {
         return Err("Insufficient balance to burn".to_string());
@@ -156,7 +156,7 @@ pub async fn burn_scaled(
 
     user_state.adjusted_balance -= adjusted_amount;
 
-    user_state.last_liquidity_index = current_liquidity_index;
+    user_state.index = current_liquidity_index;
 
     ic_cdk::println!("burn updated user state = {:?}", user_state);
 
@@ -211,11 +211,11 @@ pub async fn mint_scaled(
         .scaled_mul(current_liquidity_index))
         - (user_state
             .adjusted_balance
-            .scaled_mul(user_state.last_liquidity_index));
+            .scaled_mul(user_state.index));
 
     user_state.adjusted_balance += adjusted_amount + balance_increase;
 
-    user_state.last_liquidity_index = current_liquidity_index;
+    user_state.index = current_liquidity_index;
 
     ic_cdk::println!("updated user state value = {:?}", user_state);
 
@@ -304,11 +304,11 @@ pub fn user_normalized_supply(user_reserve_data: UserReserveData) -> Result<u128
 
         ic_cdk::println!(
             "Updated liquidity index: {} for reserve",
-            user_reserve_data.liquidity_index
+            user_reserve_data.last_liquidity_index
         );
-        return Ok(cumulated_liquidity_interest.scaled_mul(user_reserve_data.liquidity_index));
+        return Ok(cumulated_liquidity_interest.scaled_mul(user_reserve_data.last_liquidity_index));
     }
-    Ok(user_reserve_data.liquidity_index)
+    Ok(user_reserve_data.last_liquidity_index)
 }
 
 #[query]
@@ -321,10 +321,10 @@ pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, 
         return Err("No update needed as timestamps match.".to_string());
     }
 
-    if user_reserve_data.variable_borrow_index != 0 {
+    if user_reserve_data.last_variable_borrow_index != 0 {
         ic_cdk::println!(
             "Previous borrow index & rate: {:?} {:?}",
-            user_reserve_data.variable_borrow_index,
+            user_reserve_data.last_variable_borrow_index,
             user_reserve_data.borrow_rate
         );
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
@@ -340,12 +340,12 @@ pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, 
 
         ic_cdk::println!(
             "Updated variable borrow index: {} for reserve",
-            user_reserve_data.variable_borrow_index
+            user_reserve_data.last_variable_borrow_index
         );
-        return Ok(cumulated_borrow_interest.scaled_mul(user_reserve_data.variable_borrow_index));
+        return Ok(cumulated_borrow_interest.scaled_mul(user_reserve_data.last_variable_borrow_index));
     }
 
-    Ok(user_reserve_data.variable_borrow_index)
+    Ok(user_reserve_data.last_variable_borrow_index)
 }
 
 // #[derive(Default, Debug, CandidType, Deserialize, Serialize)]

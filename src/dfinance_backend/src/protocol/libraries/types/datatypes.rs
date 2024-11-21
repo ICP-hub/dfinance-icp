@@ -56,17 +56,19 @@ pub struct UserReserveData {
     pub borrow_rate: u128,
     pub supply_rate: u128,
     pub last_update_timestamp: u64,
-    pub liquidity_index: u128,
+    pub last_liquidity_index: u128,
     pub asset_supply: u128,
     pub asset_borrow: u128,
-    pub variable_borrow_index: u128,
-    pub asset_price_when_supplied: u128,
-    pub asset_price_when_borrowed: u128,
+    pub last_variable_borrow_index: u128,
+   // pub asset_price_when_supplied: u128,
+   // pub asset_price_when_borrowed: u128,
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
     pub faucet_usage: u128,
-    pub faucet_limit: u128, 
+    pub faucet_limit: u128,
+    pub d_token_canister: String,
+    pub debt_token_canister: String, 
     pub state: UserState,
 }
 impl Default for UserReserveData {
@@ -77,17 +79,19 @@ impl Default for UserReserveData {
             borrow_rate: Default::default(),
             supply_rate: Default::default(),
             last_update_timestamp: Default::default(),
-            liquidity_index: Default::default(),
+            last_liquidity_index: Default::default(),
             asset_supply: Default::default(),
             asset_borrow: Default::default(),
-            variable_borrow_index: Default::default(),
-            asset_price_when_supplied: Default::default(),
-            asset_price_when_borrowed: Default::default(),
+            last_variable_borrow_index: Default::default(),
+            //asset_price_when_supplied: Default::default(),
+            //asset_price_when_borrowed: Default::default(),
             is_using_as_collateral_or_borrow: Default::default(),
             is_collateral: true,
             is_borrowed: Default::default(),
             faucet_usage: Default::default(),
             faucet_limit: 50000000000,
+            d_token_canister: Default::default(),
+            debt_token_canister: Default::default(), 
             state: Default::default(),
         }
     }
@@ -96,14 +100,14 @@ impl Default for UserReserveData {
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserState {
     pub adjusted_balance: u128, 
-    pub last_liquidity_index: u128, 
+    pub index: u128, 
 }
 
 impl Default for UserState {
     fn default() -> Self {
         Self {
             adjusted_balance: Default::default(),
-            last_liquidity_index: Default::default(),
+            index: Default::default(),
         }
     }
 }

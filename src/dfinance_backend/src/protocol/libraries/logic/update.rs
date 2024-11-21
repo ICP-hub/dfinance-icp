@@ -115,7 +115,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            index: reserve_cache.curr_liquidity_index,
         };
 
         let platform_principal = ic_cdk::api::id();
@@ -142,12 +142,12 @@ impl UpdateLogic {
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.borrow_rate = reserve.borrow_rate.clone();
             reserve_data.asset_supply += params.amount;
-            reserve_data.asset_price_when_supplied = usd_rate;
+           // reserve_data.asset_price_when_supplied = usd_rate;
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
             reserve_data.state = update_user_state.clone();
-            if reserve_data.liquidity_index == 0 {
-                reserve_data.liquidity_index = 100000000;
+            if reserve_data.last_liquidity_index == 0 {
+                reserve_data.last_liquidity_index = 100000000;
             }
             if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
                 if reserve_data.is_borrowed {
@@ -169,12 +169,14 @@ impl UpdateLogic {
                 reserve: params.asset.clone(),
                 asset_supply: params.amount,
                 supply_rate: reserve.current_liquidity_rate,
-                asset_price_when_supplied: usd_rate,
+                //asset_price_when_supplied: usd_rate,
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
-                liquidity_index: 100000000,
+                last_liquidity_index: 100000000,
                 last_update_timestamp: current_timestamp(),
                 state: update_user_state.clone(),
+                d_token_canister: reserve.d_token_canister.clone().unwrap(),
+                debt_token_canister: reserve.debt_token_canister.clone().unwrap(),
                 ..Default::default()
             };
 
@@ -273,7 +275,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            index: reserve_cache.curr_liquidity_index,
         };
 
         let minted_result = mint_scaled(
@@ -299,14 +301,14 @@ impl UpdateLogic {
         if let Some((_, reserve_data)) = user_reserve {
             reserve_data.supply_rate = asset_reserve_data.current_liquidity_rate;
             reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
-            reserve_data.asset_price_when_borrowed = usd_rate;
+            //reserve_data.asset_price_when_borrowed = usd_rate;
             reserve_data.is_borrowed = true;
             reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.asset_borrow += params.amount;
             reserve_data.last_update_timestamp = current_timestamp();
             reserve_data.state = update_user_state.clone();
-            if reserve_data.variable_borrow_index == 0 {
-                reserve_data.variable_borrow_index = 100000000;
+            if reserve_data.last_variable_borrow_index == 0 {
+                reserve_data.last_variable_borrow_index = 100000000;
             }
             ic_cdk::println!(
                 "Updated asset borrow for existing reserve: {:?}",
@@ -318,11 +320,11 @@ impl UpdateLogic {
                 reserve: params.asset.clone(),
                 borrow_rate: asset_reserve_data.current_liquidity_rate,
 
-                asset_price_when_borrowed: usd_rate,
+                //asset_price_when_borrowed: usd_rate,
                 asset_borrow: params.amount,
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
-                variable_borrow_index: 100000000,
+                last_variable_borrow_index: 100000000,
                 last_update_timestamp: current_timestamp(),
                 ..Default::default()
             };
@@ -378,7 +380,7 @@ impl UpdateLogic {
                 user_data.total_collateral.unwrap_or(0),
                 user_data.liquidation_threshold.unwrap_or(0),
             );
-          
+
             ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
             user_data.liquidation_threshold = Some(user_thrs);
 
@@ -427,7 +429,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            index: reserve_cache.curr_liquidity_index,
         };
 
         let platform_principal = ic_cdk::api::id();
@@ -524,7 +526,7 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-      
+
         ic_cdk::println!("repay user update = {:?}", user_data);
 
         let user_position = UserPosition {
@@ -555,7 +557,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            index: reserve_cache.curr_liquidity_index,
         };
 
         let platform_principal: Principal = ic_cdk::api::id();
@@ -587,7 +589,7 @@ impl UpdateLogic {
                 reserve_data.last_update_timestamp = current_timestamp();
                 if reserve_data.asset_borrow == params.amount {
                     reserve_data.is_borrowed = false;
-                    reserve_data.variable_borrow_index = 0;
+                    reserve_data.last_variable_borrow_index = 0;
                     if !reserve_data.is_collateral {
                         reserve_data.is_using_as_collateral_or_borrow = false;
                     }
@@ -652,7 +654,7 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
 
     let user_principal = ic_cdk::caller();
     if user_principal == Principal::anonymous() {
-         println!("Anonymous principals are not allowed.");
+        println!("Anonymous principals are not allowed.");
     }
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
@@ -816,4 +818,3 @@ pub fn user_reserve<'a>(
     };
     user_reserve
 }
-

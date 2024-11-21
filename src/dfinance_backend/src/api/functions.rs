@@ -1,10 +1,10 @@
-use crate::api::state_handler::mutate_state;
+use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
+use crate::get_all_assets;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
-use crate::get_all_assets;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::{call, query};
@@ -216,6 +216,26 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
 
+    let reserve_data_result = read_state(|state| {
+        let asset_index = &state.asset_index;
+        asset_index
+            .get(&asset)
+            .map(|reserve| reserve.0.clone())
+            .ok_or_else(|| format!("Reserve not found for asset: {}", asset.clone()))
+    });
+
+    // Unwrap the Result to get ReserveData
+    let reserve_data = match reserve_data_result {
+        Ok(data) => {
+            ic_cdk::println!("Reserve data found for asset: {:?}", data);
+            data
+        }
+        Err(e) => {
+            ic_cdk::println!("Error: {}", e);
+            return Err(e);
+        }
+    };
+
     ic_cdk::println!("outside the if statment");
     if let Some((_, user_reserve_data)) = user_reserve {
         ic_cdk::println!("inside if statement");
@@ -237,6 +257,8 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
     } else {
         let mut new_reserve = UserReserveData {
             reserve: asset.clone(),
+            d_token_canister: reserve_data.d_token_canister.unwrap(),
+            debt_token_canister: reserve_data.debt_token_canister.unwrap(),
             ..Default::default()
         };
 
@@ -317,7 +339,6 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
 
 #[update]
 pub fn reset_faucet_usage() -> Result<(), String> {
-
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {

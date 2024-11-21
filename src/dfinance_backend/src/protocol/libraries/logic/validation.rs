@@ -411,13 +411,13 @@ impl ValidationLogic {
         }
 
         // Checking liquidator is present in user list
-        let _ = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&liquidator)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| panic!("Liquidator not found: {}", user.to_string()))
-        });
+        // let _ = mutate_state(|state| {
+        //     let user_profile_data = &mut state.user_profile;
+        //     user_profile_data
+        //         .get(&liquidator)
+        //         .map(|user| user.0.clone())
+        //         .ok_or_else(|| panic!("Liquidator not found: {}", user.to_string()))
+        // });
 
         let liquidator_balance = get_balance(repay_ledger_canister_id, liquidator).await;
         ic_cdk::println!("User balance: {:?}", liquidator_balance);

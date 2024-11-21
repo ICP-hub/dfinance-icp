@@ -3,11 +3,12 @@ use crate::{
     declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
     protocol::libraries::{
         logic::{
-            reserve::{self},
-            update::UpdateLogic,
+            reserve::{self, burn_scaled},
+            update::{user_data, user_reserve, UpdateLogic},
             validation::ValidationLogic,
         },
-        math::calculate::get_exchange_rates,
+        math::{calculate::get_exchange_rates, math_utils::ScalingMath},
+        types::datatypes::UserState,
     },
     repay,
 };
@@ -22,7 +23,7 @@ impl LiquidationLogic {
         collateral_asset: String,
         amount: u128,
         on_behalf_of: String,
-    ) -> Result<Nat, String> {
+    ) -> Result<(), String> {
         ic_cdk::println!(
             "params asset_name and collateral_asset {:?} {:?}",
             asset_name,
@@ -108,7 +109,7 @@ impl LiquidationLogic {
         ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
         let bonus =
             collateral_amount * (reserve_data.configuration.liquidation_bonus / 100) / 100000000;
-        let reward_amount = Nat::from(collateral_amount as u128) + Nat::from(bonus);
+        let reward_amount = (collateral_amount as u128) + (bonus);
         ic_cdk::println!("bonus: {}", bonus);
         let reward_amount_param = collateral_amount as u128 + bonus as u128;
         ic_cdk::println!("reward_amount_param: {}", reward_amount_param);
@@ -127,7 +128,7 @@ impl LiquidationLogic {
 
         // Validates liquidation using the reserve_data
         ValidationLogic::validate_liquidation(
-            asset_name,
+            asset_name.clone(),
             amount,
             reward_amount_param,
             liquidator_principal,
@@ -137,155 +138,231 @@ impl LiquidationLogic {
         ic_cdk::println!("Liquidation validated successfully");
 
         // Repaying debt
-        let repay_response = repay(asset.clone(), amount, Some(user_principal.to_string())).await;
+        //let repay_response = repay(asset.clone(), amount, Some(user_principal.to_string())).await;
 
-        match repay_response {
-            Ok(_) => ic_cdk::println!("Repayment successful"),
-            Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
-        }
+        // match repay_response {
+        //     Ok(_) => ic_cdk::println!("Repayment successful"),
+        //     Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
+        // }
+
+        let user_data_result = user_data(user_principal);
+
+        let mut user_data = match user_data_result {
+            Ok(data) => {
+                ic_cdk::println!("User found: {:?}", data);
+                data
+            }
+            Err(e) => {
+                ic_cdk::println!("Error: {}", e);
+                return Err(e);
+            }
+        };
+
+        // Function to check if the user has a reserve for the asset
+        let user_reserve = user_reserve(&mut user_data, &asset_name);
+
+        // burning debt tokens.
+        let asset_borrow = match user_reserve {
+            Some((_, reserve_data)) => reserve_data.asset_borrow,
+            None => 0,
+        };
 
         // Fetches the reserve logic cache having the current values
         let reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
-        // Burning debttoken
-        // stuct replica of the userstate.
-        // let mut update_user_state = UserState {
-        //     adjusted_balance: reserve_cache.curr_liquidity_index as f64
-        //         * reserve_data.total_supply as f64,
-        //     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
-        // };
+        let mut update_user_state = UserState {
+            adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
+            index: reserve_cache.curr_debt_index,
+        };
 
-        //     fn nat_to_f64(value: Nat) -> f64 {
-        //         value
-        //             .to_string()
-        //             .parse::<f64>()
-        //             .expect("Failed to convert Nat to f64")
-        //     }
-
-        //     match burn_scaled(
-        //     &mut update_user_state,
-        //     nat_to_f64(reward_amount.clone()),
-        //     reserve_cache.next_liquidity_index as f64,
-        //     user_principal,
-        //     dtoken_canister_principal,
-        //     platform_principal,
-        // )
-        // .await
-        // match asset_transfer(
-        //     platform_principal,
-        //     dtoken_canister_principal,
-        //     user_principal,
-        //     reward_amount.clone(),
-        // )
-        // .await
-        // {
-        //     Ok(balance) => {
-        //         ic_cdk::println!(
-        //             "Dtoken Asset transfer from user to backend canister executed successfully"
-        //         );
-        //         balance
-        //     }
-        //     Err(err) => {
-        //         return Err(format!("Burn failed. Error: {:?}", err));
-        //     }
-        // };
-        let usd_amount = 60812; //change it
-
-        // Minting dtoken
-        // stuct replica of the userstate.
-        // let mut update_user_state = UserState {
-        //     adjusted_balance: reserve_cache.curr_liquidity_index as f64
-        //         * reserve_data.total_supply as f64,
-        //     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
-        // };
-
-        // function to update or mint tokens to keep track of exact numbers of tokens.
-        //    match mint_scaled(
-        //         &mut update_user_state,
-        //         nat_to_f64(reward_amount.clone()),
-        //         reserve_cache.next_liquidity_index as f64,
-        //         user_principal,
-        //         dtoken_canister_principal,
-        //         platform_principal,
-        //     )
-        //     .await
-        match asset_transfer(
-            liquidator_principal,
-            dtoken_canister_principal,
+        let burn_scaled_result = burn_scaled(
+            &mut update_user_state,
+            amount,
+            reserve_cache.next_debt_index,
+            user_principal,
+            Principal::from_text(reserve_data.debt_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
-            reward_amount.clone(),
         )
-        .await
-        {
-            Ok(balance) => {
-                ic_cdk::println!(
-                    "Dtoken Asset transfer from backend to liquidator executed successfully"
-                );
-                let _ = UpdateLogic::update_user_data_withdraw(
-                    user_principal,
-                    &reserve_cache,
-                    withdraw_param,
-                    &reserve_data,
-                    0,
-                )
-                .await;
-                let _ = UpdateLogic::update_user_data_supply(
-                    liquidator_principal,
-                    &reserve_cache,
-                    supply_param,
-                    &reserve_data,
-                    usd_amount,
-                )
-                .await;
-                Ok(balance)
+        .await;
+        match burn_scaled_result {
+            Ok(()) => {
+                println!("minting debttoken successfully");
             }
-            Err(err) => {
-                // stuct replica of the userstate.
-                // let mut update_user_state = UserState {
-                //     adjusted_balance: reserve_cache.curr_liquidity_index as f64
-                //         * reserve_data.total_supply as f64,
-                //     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
-                // };
-
-                // fn nat_to_f64(value: Nat) -> f64 {
-                //     value
-                //         .to_string()
-                //         .parse::<f64>()
-                //         .expect("Failed to convert Nat to f64")
-                // }
-
-                // // function to update or mint tokens to keep track of exact numbers of tokens.
-                // let mint_scaled_result = mint_scaled(
-                //     &mut update_user_state,
-                //     nat_to_f64(reward_amount.clone()),
-                //     reserve_cache.next_liquidity_index as f64,
-                //     user_principal,
-                //     dtoken_canister_principal,
-                //     platform_principal,
-                // )
-                // .await;
-
-                // match mint_scaled_result {
-                //     Ok(()) => {
-                //         println!("minting debttoken successfully");
-                //     }
-                //     Err(e) => {
-                //         panic!("Get error in minting the debttoken {:?}", e);
-                //     }
-                // };
-                asset_transfer(
-                    user_principal,
-                    dtoken_canister_principal,
-                    platform_principal,
-                    reward_amount.clone(),
-                )
-                .await?;
-                return Err(format!(
-                    "Mint to liquidator failed, minted dtoken to user. Error: {:?}",
-                    err
-                ));
+            Err(e) => {
+                panic!("Get error in burning the dtoken {:?}", e);
             }
-        }
+        };
+
+        // burning dtoken.
+        let asset_supply = match user_reserve {
+            Some((_, reserve_data)) => reserve_data.asset_supply,
+            None => 0,
+        };
+
+        let mut dtoken_state = UserState {
+            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
+            index: reserve_cache.curr_liquidity_index,
+        };
+
+        let burn_scaled_result = burn_scaled(
+            &mut dtoken_state,
+            reward_amount,
+            reserve_cache.curr_liquidity_index,
+            user_principal,
+            Principal::from_text(reserve_data.d_token_canister.clone().unwrap()).unwrap(),
+            platform_principal,
+        )
+        .await;
+        match burn_scaled_result {
+            Ok(()) => {
+                println!("minting debttoken successfully");
+            }
+            Err(e) => {
+                panic!("Get error in burning the dtoken {:?}", e);
+            }
+        };
+        // let usd_amount = 60812; //change it
+        Ok(())
     }
 }
+
+
+
+// Minting dtoken
+// stuct replica of the userstate.
+// let mut update_user_state = UserState {
+//     adjusted_balance: reserve_cache.curr_liquidity_index as f64
+//         * reserve_data.total_supply as f64,
+//     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
+// };
+
+// function to update or mint tokens to keep track of exact numbers of tokens.
+//    match mint_scaled(
+//         &mut update_user_state,
+//         nat_to_f64(reward_amount.clone()),
+//         reserve_cache.next_liquidity_index as f64,
+//         user_principal,
+//         dtoken_canister_principal,
+//         platform_principal,
+//     )
+//     .await
+// match asset_transfer(
+//     liquidator_principal,
+//     dtoken_canister_principal,
+//     platform_principal,
+//     reward_amount.clone(),
+// )
+// .await
+// {
+//     Ok(balance) => {
+//         ic_cdk::println!(
+//             "Dtoken Asset transfer from backend to liquidator executed successfully"
+//         );
+//         let _ = UpdateLogic::update_user_data_withdraw(
+//             user_principal,
+//             &reserve_cache,
+//             withdraw_param,
+//             &reserve_data,
+//             0,
+//         )
+//         .await;
+//         let _ = UpdateLogic::update_user_data_supply(
+//             liquidator_principal,
+//             &reserve_cache,
+//             supply_param,
+//             &reserve_data,
+//             usd_amount,
+//         )
+//         .await;
+//         Ok(balance)
+//     }
+// Err(err) => {
+// stuct replica of the userstate.
+// let mut update_user_state = UserState {
+//     adjusted_balance: reserve_cache.curr_liquidity_index as f64
+//         * reserve_data.total_supply as f64,
+//     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
+// };
+
+// fn nat_to_f64(value: Nat) -> f64 {
+//     value
+//         .to_string()
+//         .parse::<f64>()
+//         .expect("Failed to convert Nat to f64")
+// }
+
+// // function to update or mint tokens to keep track of exact numbers of tokens.
+// let mint_scaled_result = mint_scaled(
+//     &mut update_user_state,
+//     nat_to_f64(reward_amount.clone()),
+//     reserve_cache.next_liquidity_index as f64,
+//     user_principal,
+//     dtoken_canister_principal,
+//     platform_principal,
+// )
+// .await;
+
+// match mint_scaled_result {
+//     Ok(()) => {
+//         println!("minting debttoken successfully");
+//     }
+//     Err(e) => {
+//         panic!("Get error in minting the debttoken {:?}", e);
+//     }
+// };
+//     asset_transfer(
+//         user_principal,
+//         dtoken_canister_principal,
+//         platform_principal,
+//         reward_amount.clone(),
+//     )
+//     .await?;
+//     return Err(format!(
+//         "Mint to liquidator failed, minted dtoken to user. Error: {:?}",
+//         err
+//     ));
+// }
+
+// Burning debttoken
+// stuct replica of the userstate.
+// let mut update_user_state = UserState {
+//     adjusted_balance: reserve_cache.curr_liquidity_index as f64
+//         * reserve_data.total_supply as f64,
+//     last_liquidity_index: reserve_cache.curr_liquidity_index as f64,
+// };
+
+//     fn nat_to_f64(value: Nat) -> f64 {
+//         value
+//             .to_string()
+//             .parse::<f64>()
+//             .expect("Failed to convert Nat to f64")
+//     }
+
+//     match burn_scaled(
+//     &mut update_user_state,
+//     nat_to_f64(reward_amount.clone()),
+//     reserve_cache.next_liquidity_index as f64,
+//     user_principal,
+//     dtoken_canister_principal,
+//     platform_principal,
+// )
+// .await
+// match asset_transfer(
+//     platform_principal,
+//     dtoken_canister_principal,
+//     user_principal,
+//     reward_amount.clone(),
+// )
+// .await
+// {
+//     Ok(balance) => {
+//         ic_cdk::println!(
+//             "Dtoken Asset transfer from user to backend canister executed successfully"
+//         );
+//         balance
+//     }
+//     Err(err) => {
+//         return Err(format!("Burn failed. Error: {:?}", err));
+//     }
+// };

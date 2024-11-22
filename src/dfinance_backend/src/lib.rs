@@ -128,7 +128,7 @@ async fn borrow(asset: String, amount: u64) -> Result<(), String> {
 // Function to get the user data based on the principal
 #[query]
 fn get_user_data(user: String) -> Result<UserData, String> {
-    let user_principal = Principal::from_text(user.to_string())
+    let user_principal: Principal = Principal::from_text(user.to_string())
         .map_err(|_| "Invalid user canister ID".to_string())?;
 
     read_state(|state| {
@@ -596,18 +596,18 @@ fn calculate_dynamic_balance(
 
 // this function is for check which i will remove later.
 #[update]
-async fn test_calculate_user_account_data() -> Result<(u128, u128, u128, u128, u128, bool), String>
+async fn get_user_account_data() -> Result<(u128, u128, u128, u128, u128, bool), String>
 {
-    let test_params = UserAccountDataParams {
-        user: "4mgu5-maax3-snkev-o47j5-j7cls-ambfh-gbax3-mdo33-twdrp-q47xa-5ae".to_string(), // Replace with a valid principal ID
-        user_config: UserConfig {
-            collateral: true,
-            borrowing: true,
-        },
-        reserves_count: 2,
-    };
+    // let test_params = UserAccountDataParams {
+    //     user: "4mgu5-maax3-snkev-o47j5-j7cls-ambfh-gbax3-mdo33-twdrp-q47xa-5ae".to_string(), // Replace with a valid principal ID
+    //     // user_config: UserConfig {
+    //     //     collateral: true,
+    //     //     borrowing: true,
+    //     // },
+    //     // reserves_count: 2,
+    // };
 
-    let result = GenericLogic::calculate_user_account_data(test_params).await;
+    let result = GenericLogic::calculate_user_account_data().await;
 
     result
 }

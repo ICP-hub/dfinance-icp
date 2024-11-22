@@ -169,39 +169,38 @@ pub struct UserConfig {
     pub borrowing: bool,
 }
 
-impl UserConfig {
-    pub fn is_empty(&self) -> bool {
-        !self.collateral && !self.borrowing
-    }
-    pub fn is_using_as_collateral(&self) -> bool {
-        self.collateral
-    }
-    pub fn is_borrowing(&self) -> bool {
-        self.borrowing
-    }
-}
+// impl UserConfig {
+//     pub fn is_empty(&self) -> bool {
+//         !self.collateral && !self.borrowing
+//     }
+//     pub fn is_using_as_collateral(&self) -> bool {
+//         self.collateral
+//     }
+//     pub fn is_borrowing(&self) -> bool {
+//         self.borrowing
+//     }
+// }
 
 #[derive(CandidType, Deserialize, Clone, Default)]
 pub struct UserAccountDataParams {
     pub user: String,
-    pub user_config: UserConfig,
-    pub reserves_count: usize,
+    // pub user_config: UserConfig,
+    // pub reserves_count: usize,
 }
 
 pub struct GenericLogic;
 
 impl GenericLogic {
     pub async fn calculate_user_account_data(
-        params: UserAccountDataParams,
+        //params: UserAccountDataParams,
     ) -> Result<(u128, u128, u128, u128, u128, bool), String> {
-        ic_cdk::println!("Starting calculation for user: {}", params.user);
-    
-        let user_principal = Principal::from_text(&params.user).unwrap();
+        
+        let user_principal = ic_cdk::caller();
         ic_cdk::println!("Principal of the user: {:?}", user_principal);
-    
+
         let user_data_result = user_data(user_principal);
         ic_cdk::println!("Fetching user data...");
-    
+
         let user_data = match user_data_result {
             Ok(data) => {
                 ic_cdk::println!("User found: {:?}", data);
@@ -212,35 +211,39 @@ impl GenericLogic {
                 return Err(e);
             }
         };
-    
+
         if user_data.reserves.is_none() {
             ic_cdk::println!("No reserves found for the user.");
             return Ok((0, 0, 0, 0, u128::MAX, false));
         }
-    
+
         // Ensure reserves exist for the user
         let user_data_reserves = user_data
             .reserves
             .as_ref()
             .ok_or_else(|| format!("Reserves not found for user"))?;
         ic_cdk::println!("User reserves found: {:?}", user_data_reserves);
-    
+
         let mut total_collateral = 0u128;
         let mut total_debt = 0u128;
         let mut avg_ltv = 0u128;
         let mut avg_liquidation_threshold = 0u128;
         let mut has_zero_ltv_collateral = false;
-    
+
         for (_reserve_name, user_reserve_data) in user_data_reserves.iter() {
             ic_cdk::println!("Processing reserve: {:?}", user_reserve_data);
-    
+
             let asset_price_result =
                 get_exchange_rates(user_reserve_data.reserve.clone(), None, 100000000).await;
-    
+
             let asset_price = match asset_price_result {
                 Ok((amount, _)) => amount,
                 Err(err) => {
-                    ic_cdk::println!("Error fetching asset price for {}: {}", user_reserve_data.reserve, err);
+                    ic_cdk::println!(
+                        "Error fetching asset price for {}: {}",
+                        user_reserve_data.reserve,
+                        err
+                    );
                     return Err(err);
                 }
             };
@@ -249,38 +252,48 @@ impl GenericLogic {
                 user_reserve_data.reserve,
                 asset_price
             );
-    
+
             if user_reserve_data.is_collateral {
                 ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
-                
+
                 let user_balance = Self::get_user_balance_in_base_currency(
                     user_principal,
                     &user_reserve_data,
                     asset_price,
                 )
                 .await;
-    
-                ic_cdk::println!("User balance for collateral reserve '{}': {}", user_reserve_data.reserve, user_balance);
-    
+
+                ic_cdk::println!(
+                    "User balance for collateral reserve '{}': {}",
+                    user_reserve_data.reserve,
+                    user_balance
+                );
+
                 total_collateral += user_balance;
                 ic_cdk::println!("Total collateral so far: {}", total_collateral);
-    
+
                 if user_data.ltv.unwrap() != 0 {
                     avg_ltv += user_balance.scaled_mul(user_data.ltv.unwrap() as u128);
                     ic_cdk::println!("Average LTV updated to: {}", avg_ltv);
                 } else {
                     has_zero_ltv_collateral = true;
-                    ic_cdk::println!("Reserve '{}' has zero LTV collateral.", user_reserve_data.reserve);
+                    ic_cdk::println!(
+                        "Reserve '{}' has zero LTV collateral.",
+                        user_reserve_data.reserve
+                    );
                 }
-    
-                avg_liquidation_threshold +=
-                    user_balance.scaled_mul(user_normalized_debt(user_reserve_data.clone()).unwrap());
-                ic_cdk::println!("Average liquidation threshold updated to: {}", avg_liquidation_threshold);
+
+                avg_liquidation_threshold += user_balance
+                    .scaled_mul(user_normalized_debt(user_reserve_data.clone()).unwrap());
+                ic_cdk::println!(
+                    "Average liquidation threshold updated to: {}",
+                    avg_liquidation_threshold
+                );
             }
-    
+
             if user_reserve_data.is_borrowed {
                 ic_cdk::println!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
-                
+
                 let user_debt = Self::get_user_debt_in_base_currency(
                     user_principal,
                     &user_reserve_data,
@@ -288,10 +301,14 @@ impl GenericLogic {
                 )
                 .await;
                 total_debt += user_debt;
-                ic_cdk::println!("Total debt for borrowed reserve '{}': {}", user_reserve_data.reserve, total_debt);
+                ic_cdk::println!(
+                    "Total debt for borrowed reserve '{}': {}",
+                    user_reserve_data.reserve,
+                    total_debt
+                );
             }
         }
-    
+
         ic_cdk::println!(
             "Total collateral: {}, Total debt: {}, Avg LTV: {}, Avg Liquidation Threshold: {}",
             total_collateral,
@@ -299,21 +316,24 @@ impl GenericLogic {
             avg_ltv,
             avg_liquidation_threshold
         );
-    
+
         avg_ltv = if total_collateral != 0 {
             avg_ltv / total_collateral
         } else {
             0
         };
         ic_cdk::println!("Final Avg LTV: {}", avg_ltv);
-    
+
         avg_liquidation_threshold = if total_collateral != 0 {
             avg_liquidation_threshold / total_collateral
         } else {
             0
         };
-        ic_cdk::println!("Final Avg Liquidation Threshold: {}", avg_liquidation_threshold);
-    
+        ic_cdk::println!(
+            "Final Avg Liquidation Threshold: {}",
+            avg_liquidation_threshold
+        );
+
         let health_factor = if total_debt == 0 {
             ic_cdk::println!("Health factor: No debt, setting to MAX.");
             u128::MAX
@@ -321,7 +341,7 @@ impl GenericLogic {
             (total_collateral * avg_liquidation_threshold) / total_debt
         };
         ic_cdk::println!("Calculated Health Factor: {}", health_factor);
-    
+
         ic_cdk::println!(
             "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}",
             total_collateral,
@@ -331,7 +351,7 @@ impl GenericLogic {
             health_factor,
             has_zero_ltv_collateral
         );
-    
+
         Ok((
             total_collateral,
             total_debt,
@@ -341,7 +361,6 @@ impl GenericLogic {
             has_zero_ltv_collateral,
         ))
     }
-    
 
     pub async fn get_user_balance_in_base_currency(
         user_principal: Principal,
@@ -349,7 +368,7 @@ impl GenericLogic {
         asset_price: u128,
     ) -> u128 {
         // Simulate fetching user bto_i128(scaled balance multiplied by normalized income)
-        let d_token_canister_principal =
+        let d_token_canister_principal: Principal =
             Principal::from_text(reserve.d_token_canister.clone()).unwrap();
         let get_balance_value: Nat = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
 
@@ -367,7 +386,7 @@ impl GenericLogic {
             .scaled_mul(asset_price)
     }
 
-   pub async fn get_user_debt_in_base_currency(
+    pub async fn get_user_debt_in_base_currency(
         user_principal: Principal,
         reserve: &UserReserveData,
         asset_price: u128,

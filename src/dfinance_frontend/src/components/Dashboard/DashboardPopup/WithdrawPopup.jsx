@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Button from "../../Common/Button";
-import { Info } from "lucide-react";
-import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
-import { Check, Wallet, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,24 +12,9 @@ import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 
-const WithdrawPopup = ({
-  asset,
-  image,
-  supplyRateAPR,
-  balance,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  totalCollateral,
-  totalDebt,
-  currentCollateralStatus,
-  isModalOpen,
-  handleModalOpen,
-  setIsModalOpen,
-  onLoadingChange,
+const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange 
 }) => {
-  const { createLedgerActor, backendActor, principal } = useAuth();
+  const {  backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -42,14 +25,8 @@ const WithdrawPopup = ({
     [principal]
   );
   const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset);
-  console.log("Fees:", fees);
-  console.log("assetSupply:", assetSupply);
-
-  console.log("Current Collateral Status", collateral);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const [amount, setAmount] = useState("");
-  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -58,16 +35,8 @@ const WithdrawPopup = ({
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
-
-  const isCollateral = true;
-
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
-
-  const numericBalance = parseFloat(balance);
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-  const supplyBalance = numericBalance - transferfee;
+  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
+  
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -77,38 +46,33 @@ const WithdrawPopup = ({
   }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value.replace(/,/g, ""); // Remove commas for processing
+    let inputAmount = e.target.value.replace(/,/g, ""); 
 
-    // Limit decimal places to 8 digits
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
       if (decimalPart.length > 8) {
-        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`; // Limit decimal places to 8
+        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`; 
       }
     }
 
-    // Convert input amount to number for comparison
     const numericAmount = parseFloat(inputAmount);
 
-    // Check if the amount exceeds assetSupply
     if (numericAmount > assetSupply) {
-      inputAmount = assetSupply.toString(); // Limit input amount to assetSupply
+      inputAmount = assetSupply.toString(); 
     }
 
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
-      // Format the integer part with commas and limit decimal places to 8 digits
       formattedAmount = `${parseInt(integerPart).toLocaleString(
         "en-US"
       )}.${decimalPart.slice(0, 8)}`;
     } else {
-      // If no decimal, format the integer part with commas
+
       formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
     }
 
-    // Update the input field value with the formatted number (with commas)
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
@@ -121,23 +85,19 @@ const WithdrawPopup = ({
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
 
-        // Format the integer part with commas
-
-        setUsdValue(parseFloat(convertedValue.toFixed(2))); // Round USD to 2 decimal places
-        setAmount(formattedAmount); // Update the amount with commas
+        setUsdValue(parseFloat(convertedValue.toFixed(2))); 
+        setAmount(formattedAmount); 
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
       }
     } else if (inputAmount === "") {
-      setAmount(""); // Clear the amount in state
+      setAmount(""); 
       setError("");
     } else {
       setError("Amount must be a positive number");
     }
   };
-
-  // Utility function to format the amount with commas
 
   useEffect(() => {
     if (amount && conversionRate) {
@@ -148,27 +108,16 @@ const WithdrawPopup = ({
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
-  useEffect(() => {
-    if (assetSupply && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);  // Convert conversionRate to number and scale it
-      const convertedMaxValue = assetSupply * adjustedConversionRate;  // Perform the multiplication with numbers
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
+  
 
   const ledgerActors = useSelector((state) => state.ledger);
-  console.log("ledgerActors", ledgerActors);
 
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
-  console.log("Amount as nat64:", amountAsNat64);
 
-  const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
+  const scaledAmount = amountAsNat64; 
 
   const handleWithdraw = async () => {
-    console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -180,28 +129,25 @@ const WithdrawPopup = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     } else if (asset === "ckUSDT") {
-      // Added condition for ckUSDT
+
       ledgerActor = ledgerActors.ckUSDT;
     }
 
     try {
       const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
-      console.log("Amount as nat64:", amountAsNat64);
+     
       const scaledAmount = amountAsNat64;
 
-      console.log(
-        " current colletral status while withdraw ",
-        currentCollateralStatus
-      );
-      // Use scaled amount for further calculations
+      
+
       const withdrawResult = await backendActor.withdraw(
         asset,
         scaledAmount,
         [],
         currentCollateralStatus
       );
-      console.log("Withdraw result", withdrawResult);
+     
 
       if ("Ok" in withdrawResult) {
         trackEvent(
@@ -251,13 +197,11 @@ const WithdrawPopup = ({
           draggable: true,
           progress: undefined,
         });
-        console.error("Withdraw error:", errorMsg);
       }
     } catch (error) {
-      console.error("Error withdrawing:", error);
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
     } finally {
-      setIsLoading(false); // Stop loading once the function is done
+      setIsLoading(false); 
     }
   };
 
@@ -290,9 +234,7 @@ const WithdrawPopup = ({
       totalCollateral,
       totalDebt,
       liquidationThreshold
-    );
-    console.log("Health Factor:", healthFactor);
-
+    )
     const amountTaken = collateral ? usdValue || 0 : 0;
     const amountAdded = 0;
     const totalCollateralValue =
@@ -300,16 +242,15 @@ const WithdrawPopup = ({
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    console.log("LTV:", ltv);
-    setPrevHealthFactor(currentHealthFactor);
+    setPrevHethFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
 
     if (ltv * 100 >= liquidationThreshold && currentCollateralStatus) {
-      // Dismiss any existing toasts before showing a new one
-      toast.dismiss(); // This will remove all active toasts
-      toast.info("LTV Exceeded!"); // Show the new toast
+
+      toast.dismiss(); 
+      toast.info("LTV Exceeded!"); 
     }
 
     if (
@@ -340,13 +281,6 @@ const WithdrawPopup = ({
     const totalCollateralValue =
       parseFloat(totalCollateral) - parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
-
-    console.log("totalCollateralValue", totalCollateralValue);
-    console.log("totalDeptValue", totalDeptValue);
-    console.log("amountAdded", amountAdded);
-    console.log("liquidationThreshold", liquidationThreshold);
-    console.log("totalDebt", totalDebt);
-
     if (totalDeptValue === 0) {
       return Infinity;
     }
@@ -391,12 +325,12 @@ const WithdrawPopup = ({
               <div className="w-full flex items-center justify-between bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-3 rounded-md">
                 <div className="w-[50%]">
                   <input
-                    type="text" // Use text input to allow formatting
+                    type="text" 
                     value={amount}
                     onChange={handleAmountChange}
-                    // disabled={supplyBalance === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
+
+                    className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder={`Enter Amount ${asset}`}
                   />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
@@ -421,11 +355,9 @@ const WithdrawPopup = ({
                       }
                     }}
                   >
-                    ${maxUsdValue.toLocaleString(undefined, {
-                      minimumFractionDigits: 7,
-                      maximumFractionDigits: 7,
-                    })}{" "}
-                    Max {/* Adjust maximumFractionDigits as needed */}
+                    {}
+                    {assetSupply}{" "}
+                    Max {}
                   </p>
                 </div>
               </div>
@@ -524,20 +456,12 @@ const WithdrawPopup = ({
 
           <div className="w-full flex  mt-3">
             <div className="flex items-center">
-              {/* <Fuel className="w-4 h-4 mr-1" />
-              <h1 className="text-lg font-semibold mr-1">{transferfee}</h1>
-              <img
-                src={image}
-                alt="asset icon"
-                className="object-cover w-5 h-5 rounded-full" 
-              /> */}
+              {}
               <div className="relative group">
-                {/* <Info size={16} className="ml-2 cursor-pointer" /> */}
+                {}
 
-                {/* Tooltip */}
-                {/* <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-                  Fees deducted on every transaction
-                </div> */}
+                {}
+                {}
               </div>
             </div>
           </div>
@@ -560,8 +484,8 @@ const WithdrawPopup = ({
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
               style={{
-                background: "rgba(0, 0, 0, 0.4)", // Dim background
-                backdropFilter: "blur(1px)", // Blur effect
+                background: "rgba(0, 0, 0, 0.4)", 
+                backdropFilter: "blur(1px)", 
               }}
             >
               <div className="loader"></div>

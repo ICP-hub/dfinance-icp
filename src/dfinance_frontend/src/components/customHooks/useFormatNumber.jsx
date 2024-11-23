@@ -1,4 +1,4 @@
-// Custom hook to format numbers without useCallback
+
 const useFormatNumber = () => {
     const formatNumber = (num) => {
         const parsedNum = parseFloat(num);

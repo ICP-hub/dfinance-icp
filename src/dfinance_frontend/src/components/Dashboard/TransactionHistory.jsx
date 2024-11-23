@@ -179,7 +179,7 @@ const TransactionHistory = () => {
             </div>
           ) : (
             <div className="w-full overflow-auto  ">
-              <div className="hidden md:block"> {/* Display table on medium screens and above */}
+              <div className="hidden md:block"> 
                 <table className="w-full text-[#2A1F9D] font-[500] text-xs md:text-[12px] lg:text-sm dark:text-darkText mt-2">
                   <thead>
                     <tr className="text-left text-[#2A1F9D] dark:text-darkText">
@@ -248,7 +248,7 @@ const TransactionHistory = () => {
                 </table>
               </div>
 
-              <div className="md:hidden"> {/* Display mobile-friendly layout on small screens */}
+              <div className="md:hidden"> 
                 {currentItems.map((tx, index) => (
                   <>
                     <p className="text-[#5B62FE] text-[14px] mb-3 dark:text-darkTextSecondary">{tx.age}</p>

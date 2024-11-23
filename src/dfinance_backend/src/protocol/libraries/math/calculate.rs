@@ -10,13 +10,13 @@ use crate::declarations::storable::Candid;
 use super::math_utils::ScalingMath;
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-struct CachedPrice {
-    price: u128,
+pub struct CachedPrice {
+    pub price: u128,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
 pub struct PriceCache {
-    cache: HashMap<String, CachedPrice>,
+    pub cache: HashMap<String, CachedPrice>,
 }
 
 impl PriceCache {
@@ -43,22 +43,56 @@ impl PriceCache {
     }
 }
 
+// #[update]
+// pub async fn update_reserves_price() {
+//     let keys: Vec<String> = read_state(|state| {
+//         let reserve_list = &state.reserve_list;
+
+//         reserve_list
+//             .iter()
+//             .map(|(key, _value)| key.clone())
+//             .collect()
+//     });
+//     ic_cdk::println!("keys = {:?}", keys);
+//     for asset_name in keys {
+//         ic_cdk::println!("asset name = {}", asset_name);
+//         let _ = get_exchange_rates(asset_name, None, 0).await;
+//     }
+// }
+
 #[update]
 pub async fn update_reserves_price() {
+    // Fetch all the keys (asset names) from the reserve list
     let keys: Vec<String> = read_state(|state| {
         let reserve_list = &state.reserve_list;
-
         reserve_list
             .iter()
             .map(|(key, _value)| key.clone())
             .collect()
     });
-    ic_cdk::println!("keys = {:?}", keys);
+
+    ic_cdk::println!("Keys (assets) = {:?}", keys);
+
+    // Iterate over all asset names and call `get_exchange_rates` for each
     for asset_name in keys {
-        ic_cdk::println!("asset name = {}", asset_name);
-        let _ = get_exchange_rates(asset_name, None, 0).await;
+        ic_cdk::println!("Updating price for asset: {}", asset_name);
+
+        match get_exchange_rates(asset_name.clone(), None, 0).await {
+            Ok((exchange_rate, timestamp)) => {
+                ic_cdk::println!(
+                    "Successfully updated exchange rate for {}: {} at {}",
+                    asset_name,
+                    exchange_rate,
+                    timestamp
+                );
+            }
+            Err(err) => {
+                ic_cdk::println!("Failed to update exchange rate for {}: {}", asset_name, err);
+            }
+        }
     }
 }
+
 
 #[query]
 pub fn queary_reserve_price() -> Vec<PriceCache>{
@@ -197,6 +231,7 @@ pub async fn get_exchange_rates(
                 let time = ic_cdk::api::time();
 
                 // Fetching price-cache data
+                ic_cdk::println!("exchange rate");
                 let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
                     let price_cache_data = &mut state.price_cache_list;
                     if let Some(price_cache) = price_cache_data.get(&base_asset) {

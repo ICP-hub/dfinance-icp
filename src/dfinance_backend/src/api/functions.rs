@@ -3,9 +3,10 @@ use std::string;
 use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
-use crate::get_asset_principal;
+use crate::{get_asset_principal, get_cached_exchange_rate};
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
@@ -245,7 +246,7 @@ pub async fn asset_transfer(
 // }
 
 #[update]
-pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
+pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     ic_cdk::println!("Starting fraucet with params: {:?} {:?}", asset, amount);
 
     ic_cdk::println!("it is going forward");
@@ -280,18 +281,45 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
 
     ic_cdk::println!("amount again = {}", amount);
     // Ask : is it right way to convert it to the usd amount.
-    let mut usd_amount: Option<u128> = None;
-    match get_exchange_rates(asset.clone(), None, amount as u128).await {
-        Ok((amount, _timestamp)) => {
-            usd_amount = Some(amount);
-            ic_cdk::println!("facet usd amount = {:?}", usd_amount);
+    let mut rate: Option<u128> = None;
+
+    // match get_cached_exchange_rate(asset.clone()).await {
+    //     Ok((amount, _timestamp)) => {
+    //         rate = Some(amount);
+    //         ic_cdk::println!("facet usd amount = {:?}", rate);
+    //     }
+    //     Err(err) => {
+    //         println!("getting error in the conversion {}", err);
+    //     }
+    // }
+
+    
+    match get_cached_exchange_rate(asset.clone()) {
+        Ok(price_cache) => {
+            // Fetch the specific CachedPrice for the asset from the PriceCache
+            if let Some(cached_price) = price_cache.cache.get(&asset) {
+                let amount = cached_price.price; // Access the `price` field
+                rate = Some(amount);
+                ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
+            } else {
+                ic_cdk::println!("No cached price found for {}", asset);
+                rate = None; // Explicitly set rate to None if the asset is not in the cache
+            }
         }
         Err(err) => {
-            println!("getting error in the conversion {}", err);
+            ic_cdk::println!(
+                "Error fetching exchange rate for {}: {}",
+                asset,
+                err
+            );
+            rate = None; // Explicitly set rate to None in case of an error
         }
     }
+    
 
-    ic_cdk::println!("usd amount of the facut = {}", usd_amount.unwrap());
+    let usd_amount = ScalingMath::scaled_mul(amount ,rate.unwrap());
+
+    ic_cdk::println!("usd amount of the facut = {}", usd_amount);
 
     // Function to check if the user has a reserve for the asset
     let user_reserve = user_reserve(&mut user_data, &asset);
@@ -304,33 +332,34 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
             "faucet user_reserve_data.faucet_limit = {}",
             user_reserve_data.faucet_limit
         );
-        if usd_amount.unwrap() > user_reserve_data.faucet_limit {
+        if usd_amount > user_reserve_data.faucet_limit {
             ic_cdk::println!("amount is too much");
             return Err("amount is too much".to_string());
         }
 
-        if (user_reserve_data.faucet_usage + usd_amount.unwrap()) > user_reserve_data.faucet_limit {
+        if (user_reserve_data.faucet_usage + usd_amount) > user_reserve_data.faucet_limit {
             ic_cdk::println!("amount is too much second");
             return Err("amount is too much".to_string());
         }
-        user_reserve_data.faucet_usage += usd_amount.unwrap();
+        user_reserve_data.faucet_usage += usd_amount;
         ic_cdk::println!("if faucet usage = {}",user_reserve_data.faucet_usage);
     } else {
         let mut new_reserve = UserReserveData {
+            reserve: asset.clone(),
             ..Default::default()
         };
     
-        if usd_amount.unwrap() > new_reserve.faucet_limit {
+        if usd_amount > new_reserve.faucet_limit {
             ic_cdk::println!("amount is too much");
             return Err("amount is too much".to_string());
         }
 
-        if (new_reserve.faucet_usage + usd_amount.unwrap()) > new_reserve.faucet_limit {
+        if (new_reserve.faucet_usage + usd_amount) > new_reserve.faucet_limit {
             ic_cdk::println!("amount is too much second");
             return Err("amount is too much".to_string());
         }
     
-        new_reserve.faucet_usage += usd_amount.unwrap();
+        new_reserve.faucet_usage += usd_amount;
         ic_cdk::println!("else faucet usage = {}",new_reserve.faucet_usage);
     
         if let Some(ref mut reserves) = user_data.reserves {

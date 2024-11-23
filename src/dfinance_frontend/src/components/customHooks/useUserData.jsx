@@ -12,7 +12,6 @@ const useUserData = () => {
         }
         try {
             const result = await backendActor.get_user_data(user);
-            console.log("get_user_data in supplypopup:", result);
 
             if (result && result.Ok && Number(result.Ok.health_factor)/100000000) {
                 setHealthFactorBackend(Number(result.Ok.health_factor)/10000000000);
@@ -21,7 +20,6 @@ const useUserData = () => {
             }
             return result;
         } catch (error) {
-            console.error("Error fetching user data:", error);
             setError(error.message);
         }
     };
@@ -30,13 +28,10 @@ const useUserData = () => {
         if (backendActor) {
             try {
                 const result = await getUserData(principal.toString());
-                console.log("get_user_data:", result);
                 setUserData(result);
             } catch (error) {
-                console.error("Error fetching user data:", error);
             }
         } else {
-            console.error("Backend actor initialization failed.");
         }
     };
 
@@ -48,7 +43,7 @@ const useUserData = () => {
         userData,
         healthFactorBackend,
         error,
-        refetchUserData: fetchUserData, // In case you need to refetch user data
+        refetchUserData: fetchUserData, 
     };
 };
 

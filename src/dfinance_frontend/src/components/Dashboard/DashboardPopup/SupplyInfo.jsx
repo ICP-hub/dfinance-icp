@@ -1,23 +1,11 @@
 import React from "react";
-import LineGraph from "../../Common/LineGraph";
 import { Check } from "lucide-react";
-import { useState } from "react";
-import { useEffect } from "react";
 import { X } from "lucide-react";
 import CircularProgress from "../../Common/CircularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 
-const SupplyInfo = ({
-  formatNumber,
-  supplyCap,
-  totalSupplied,
-  supplyRateAPR,
-  ltv,
-  canBeCollateral,
-  liquidationBonus,
-  liquidationThreshold,
-}) => {
+const SupplyInfo = ({formatNumber,supplyCap,totalSupplied,supplyRateAPR,ltv,canBeCollateral,liquidationBonus,liquidationThreshold,}) => {
   const supplyCapNumber = supplyCap ? Number(supplyCap) : 0;
   const totalSupplyPercentage =
     supplyCapNumber && totalSupplied
@@ -26,14 +14,7 @@ const SupplyInfo = ({
 
   const { id } = useParams();
 
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-  } = useFetchConversionRate();
-
+  const { ckBTCUsdRate,ckETHUsdRate,ckUSDCUsdRate,ckICPUsdRate,ckUSDTUsdRate,} = useFetchConversionRate();
 
   const getAssetRate = (assetName) => {
     switch (assetName) {
@@ -56,21 +37,20 @@ const SupplyInfo = ({
   const totalSuppliedAsset = assetRate && totalSupplied ? (Number(totalSupplied)) / assetRate : 0;
   const totalSuppliedCap = assetRate && supplyCap ? (Number(supplyCap)) / assetRate : 0;
   const formatValue = (value) => {
-    const numericValue = parseFloat(value); // Ensure the value is a number
-  
+    const numericValue = parseFloat(value); 
+
     if (isNaN(numericValue)) {
-      return "0"; // If it's not a number, return "0"
+      return "0"; 
     }
-  
+
     if (numericValue === 0) {
-      return "0"; // If the value is 0, show "0"
+      return "0"; 
     } else if (numericValue >= 1) {
-      return numericValue.toFixed(2); // If the value is 1 or greater, show 2 decimal places
+      return numericValue.toFixed(2); 
     } else {
-      return numericValue.toFixed(7); // If the value is less than 1 but greater than 0, show 7 decimal places
+      return numericValue.toFixed(7); 
     }
   };
-  
 
   return (
     <div className="w-full lg:w-10/12 ">

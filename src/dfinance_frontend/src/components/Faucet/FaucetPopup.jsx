@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, TriangleAlert } from "lucide-react";
 import FaucetPayment from "./FaucetPayment";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
-import { toast } from "react-toastify"; // Import toastify
+import { toast } from "react-toastify"; 
 import useUserData from "../customHooks/useUserData";
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const { backendActor } = useAuth();
@@ -19,11 +19,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [amount, setAmount] = useState("");
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const initialLimits = {
-    ckBTC: 500,
-    ckETH: 500,
-    ckUSDC: 500,
-    ICP: 500,
-    ckUSDT: 500,
+    ckBTC: 50000000000,
+    ckETH: 50000000000,
+    ckUSDC: 50000000000,
+    ICP: 50000000000,
+    ckUSDT: 50000000000,
   };
 
   const initialUsages = {
@@ -34,8 +34,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     ckUSDT: 0,
   };
 
-  const [FaucetUsage, setFaucetUsage] = useState(initialUsages); // To track faucet usage
-  const [FaucetLimit, setFaucetLimit] = useState(initialLimits); // Max faucet limit (USD value)
+  const [FaucetUsage, setFaucetUsage] = useState(initialUsages); 
+  const [FaucetLimit, setFaucetLimit] = useState(initialLimits); 
   const [remainingFaucet, setRemainingFaucet] = useState(0);
   useEffect(() => {
     if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
@@ -44,14 +44,14 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
       userData.Ok.reserves[0].forEach((reserveGroup) => {
         const asset = reserveGroup[0];
-        if (!asset) return; // Skip invalid assets
+        if (!asset) return; 
 
         const faucetLimit = reserveGroup[1]?.faucet_limit
-          ? Number(reserveGroup[1].faucet_limit) / 100000000
+          ? Number(reserveGroup[1].faucet_limit)
           : initialLimits[asset];
 
         const faucetUsage = reserveGroup[1]?.faucet_usage
-          ? Number(reserveGroup[1].faucet_usage) / 100000000
+          ? Number(reserveGroup[1].faucet_usage)
           : initialUsages[asset];
 
         updatedLimits[asset] = faucetLimit;
@@ -78,7 +78,14 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     fetchConversionRate,
     fetchBalance,
   } = useFetchConversionRate();
-
+  console.log(
+    "rates in faucet ",
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate
+  );
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -99,43 +106,39 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
   useEffect(() => {
     if (ckBTCUsdRate && ckBTCUsdRate > 0) {
-      const btcAmount = (
-        (FaucetLimit[asset] - FaucetUsage[asset]) /
-        (ckBTCUsdRate / 1e8)
-      ).toFixed(8);
-      setFaucetBTC(btcAmount);
+      const btcAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
+      const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
+      setFaucetBTC(truncatedBtcAmount);
     }
 
     if (ckETHUsdRate && ckETHUsdRate > 0) {
-      const ethAmount = (
-        (FaucetLimit[asset] - FaucetUsage[asset]) /
-        (ckETHUsdRate / 1e8)
-      ).toFixed(8);
-      setFaucetETH(ethAmount);
+      const ethAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckETHUsdRate;
+      const truncatedBtcAmount = Math.trunc(ethAmount * 1e8) / 1e8;
+      setFaucetETH(truncatedBtcAmount);
     }
 
     if (ckUSDCUsdRate && ckUSDCUsdRate > 0) {
-      const usdcAmount = (
-        (FaucetLimit[asset] - FaucetUsage[asset]) /
-        (ckUSDCUsdRate / 1e8)
-      ).toFixed(8);
-      setFaucetUSDC(usdcAmount);
+      const usdcAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDCUsdRate;
+      const truncatedBtcAmount = Math.trunc(usdcAmount * 1e8) / 1e8;
+      setFaucetUSDC(truncatedBtcAmount);
     }
 
     if (ckICPUsdRate && ckICPUsdRate > 0) {
-      const icpAmount = (
-        (FaucetLimit[asset] - FaucetUsage[asset]) /
-        (ckICPUsdRate / 1e8)
-      ).toFixed(8);
-      setFaucetICP(icpAmount);
+      const icpAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckICPUsdRate;
+      const truncatedBtcAmount = Math.trunc(icpAmount * 1e8) / 1e8;
+      setFaucetICP(truncatedBtcAmount);
     }
 
     if (ckUSDTUsdRate && ckUSDTUsdRate > 0) {
-      const usdTAmount = (
-        (FaucetLimit[asset] - FaucetUsage[asset]) /
-        (ckUSDTUsdRate / 1e8)
-      ).toFixed(8);
-      setFaucetUSDT(usdTAmount);
+      const usdTAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDTUsdRate;
+      const truncatedBtcAmount = Math.trunc(usdTAmount * 1e8) / 1e8;
+      console.log("usdtAmount", usdTAmount);
+      setFaucetUSDT(truncatedBtcAmount);
     }
   }, [ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]);
 
@@ -155,7 +158,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         return null;
     }
   };
-
   useEffect(() => {
     const faucetAmount = getFaucetAmount();
     setExchangeRate(faucetAmount);
@@ -165,19 +167,19 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     let inputAmount = e.target.value.replace(/,/g, "");
 
     if (inputAmount === "") {
-      setAmount(""); // Clear the amount if input is empty
+      setAmount(""); 
       return;
     }
 
     if (!/^\d*\.?\d*$/.test(inputAmount)) {
-      return; // If invalid input, do nothing
+      return; 
     }
 
     const numericAmount = parseFloat(inputAmount);
 
-    // Prevent the user from typing an amount greater than the exchangeRate
+    
     if (exchangeRate && numericAmount > exchangeRate) {
-      return; // Do not update if amount exceeds exchangeRate
+      return; 
     }
 
     let formattedAmount;
@@ -194,6 +196,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   };
 
   const handleMaxAmountClick = () => {
+    console.log(
+      "Available amount for",
+      asset,
+      FaucetLimit[asset],
+      FaucetUsage[asset]
+    );
     if (exchangeRate) {
       const formattedAmount = parseFloat(exchangeRate).toFixed(8);
       const displayAmount = formatWithCommas(formattedAmount);
@@ -210,10 +218,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   };
 
   const handleFaucet = async (asset) => {
-    setLoading(true);
+    setLoading(true); 
     try {
       if (backendActor) {
-        const numericAmount = parseFloat(amount.replace(/,/g, ""));
+        console.log("Amount in faucet:", amount);
+        const numericAmount = parseFloat(amount.replace(/,/g, "")); 
+        console.log("Numeric amount in faucet:", numericAmount);
 
         if (isNaN(numericAmount)) {
           toast.error("Invalid amount entered.");
@@ -221,37 +231,35 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           return;
         }
 
-        const natAmount = Math.round(numericAmount * Math.pow(10, 8));
+        const natAmount = Math.round(numericAmount * Math.pow(10, 8)); 
+        console.log(
+          "Rate in faucet popup",
+          ckBTCUsdRate,
+          ckETHUsdRate,
+          ckUSDCUsdRate,
+          ckICPUsdRate,
+          ckUSDTUsdRate
+        );
+        console.log("natAmount", natAmount);
+        const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
+        console.log(
+          "Available amount for",
+          asset,
+          FaucetLimit[asset],
+          FaucetUsage[asset],
+          availableAmount
+        );
 
-        let usdAmount = 0;
-        switch (asset) {
-          case "ckBTC":
-            usdAmount = parseFloat(numericAmount) * (ckBTCUsdRate / 1e8);
-            break;
-          case "ckETH":
-            usdAmount = parseFloat(numericAmount) * (ckETHUsdRate / 1e8);
-            break;
-          case "ckUSDC":
-            usdAmount = parseFloat(numericAmount) * (ckUSDCUsdRate / 1e8);
-            break;
-          case "ICP":
-            usdAmount = parseFloat(numericAmount) * (ckICPUsdRate / 1e8);
-            break;
-          case "ckUSDT":
-            usdAmount = parseFloat(numericAmount) * (ckUSDTUsdRate / 1e8);
-            break;
-          default:
-            throw new Error("Unknown asset type.");
-        }
-        console.log("usdAmount", usdAmount);
-
-        if (usdAmount > FaucetLimit[asset]) {
-          toast.error("Faucet limit exceeded!");
+        
+        if (numericAmount > availableAmount) {
+          toast.error(
+            `Faucet limit exceeded! You can claim only up to $${availableAmount.toLocaleString()}`
+          );
           setLoading(false);
-          return;
+          return; 
         }
-
         const result = await backendActor.faucet(asset, natAmount);
+        console.log("Result in faucet:", result);
 
         if (result.Err) {
           toast.error(`Error from backend: ${result.Err}`);
@@ -260,7 +268,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         }
 
         setShowFaucetPayment(true);
-
         console.log("Faucet result:", result);
         toast.success(`Successfully claimed ${amount} ${asset}`);
       }
@@ -268,7 +275,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       console.error("Error:", error);
       toast.error(`Error: ${error.message}`);
     } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   };
 
@@ -295,24 +302,48 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const transferFee = fees[normalizedAsset] || fees.default;
 
   const handleResetFaucetUsage = async () => {
-    setLoading(true); // Start loading when the function is called
+    setLoading(true);
 
     try {
-      // Call the backend actor to reset faucet usage
-      const result = await backendActor.reset_faucet_usage(asset);
-console.log("result",result)
-      if (result.Ok) {
-        toast.success(`Successfully reset faucet usage for ${asset}`);
+      const result = await backendActor.reset_faucet_usage();
+      console.log("Result in reset function", result);
+
+      if (result.Ok === null || result.Ok === undefined) {
+        const updatedLimits = { ...FaucetLimit };
+        updatedLimits[asset] = 50000000000;
+        setFaucetLimit(updatedLimits);
+        toast.success(`Reset faucet succesfull for ${asset}`);
       } else {
-        toast.error(`Error resetting faucet usage: ${result.Err}`);
+        toast.error(`Unexpected response from backend: ${result.Ok}`);
       }
     } catch (error) {
       console.error("Error resetting faucet usage:", error);
       toast.error("Failed to reset faucet usage");
     } finally {
-      setLoading(false); // Stop loading when done
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const resetFaucetLimitsAtMidnight = () => {
+      const now = new Date();
+      const midnightUTC = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
+      );
+      const timeUntilMidnight = midnightUTC.getTime();
+      console.log("timeUntilMidnight", timeUntilMidnight);
+      const humanReadableTime = new Date(timeUntilMidnight).toUTCString();
+      console.log("timeUntilMidnight in UTC:", humanReadableTime);
+      setTimeout(() => {
+        handleResetFaucetUsage();
+        setInterval(() => {
+          handleResetFaucetUsage();
+        }, 24 * 60 * 60 * 1000);
+      }, timeUntilMidnight);
+    };
+
+    resetFaucetLimitsAtMidnight();
+  }, []);
 
   return (
     <>
@@ -363,7 +394,8 @@ console.log("result",result)
                       </span>
                       {"   "} $
                       {(
-                        FaucetLimit[asset] - FaucetUsage[asset]
+                        FaucetLimit[asset] / 1e8 -
+                        FaucetUsage[asset] / 1e8
                       ).toLocaleString()}{" "}
                       Max
                     </p>
@@ -372,6 +404,36 @@ console.log("result",result)
               </div>
             </div>
             <div>
+              {(() => {
+                const remainingAmount =
+                  FaucetLimit[asset] / 1e8 - Number(FaucetUsage[asset]) / 1e8;
+                const formattedAmount = remainingAmount.toLocaleString(
+                  undefined,
+                  {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }
+                );
+
+                console.log("Remaining Amount:", formattedAmount); 
+                console.log("FaucetLimit:", FaucetLimit[asset]);
+                console.log("FaucetUsage:", FaucetUsage[asset]); 
+                return parseFloat(formattedAmount) <= 0;
+              })() && (
+                <div className="w-full flex flex-col my-3 space-y-2">
+                  <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                    <div className="w-1/12 flex items-center justify-center">
+                      <div className="warning-icon-container">
+                        <TriangleAlert />
+                      </div>
+                    </div>
+                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                      Faucet limit has been exceeded. It will reset at midnight.
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {console.log("faucet usuage", FaucetUsage)}
               <button
                 onClick={() => handleFaucet(asset)}
@@ -389,13 +451,6 @@ console.log("result",result)
               >
                 {loading ? "Processing..." : `Faucet ${asset}`}
               </button>
-              {/* <button
-        onClick={handleResetFaucetUsage}
-        disabled={loading}
-        className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${loading ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'}`}
-      >
-        {loading ? 'Resetting...' : `Reset Faucet Usage for ${asset}`}
-      </button> */}
             </div>
           </div>
         </div>

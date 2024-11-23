@@ -180,10 +180,11 @@ pub struct GenericLogic;
 
 impl GenericLogic {
     pub fn calculate_user_account_data(
-        reserves_data: &HashMap<String, ReserveData>,
-        reserves_list: &HashMap<usize, String>,
+        reserves_data: &HashMap<String, ReserveData>,//remove
+        reserves_list: &HashMap<usize, String>,//remove
         params: UserAccountDataParams,
     ) -> (u128, u128, u128, u128, u128, bool) {
+        let user_principal = Principal::from_text(params.user);
         if params.user_config.is_empty() {
             return (0, 0, 0, 0, u128::MAX, false);
         }
@@ -193,19 +194,20 @@ impl GenericLogic {
         let mut avg_ltv = 0u128;
         let mut avg_liquidation_threshold = 0u128;
         let mut has_zero_ltv_collateral = false;
-
+        //caller -> fetch userdata
+        //while reserves
         for i in 0..params.reserves_count {
             let reserve_principal = reserves_list.get(&i).unwrap_or(&String::new());
             if reserve_principal.is_empty() {
                 continue;
             }
-
+            //reserve ->name 
             if let Some(reserve) = reserves_data.get(reserve_principal) {
                 if params.user_config.is_using_as_collateral() {
                     let asset_price = Self::get_exchange_rates(
-                        reserve_name, amount
+                        reserve_name, amount //1*10^8
                     );
-
+     
                     let user_balance = Self::get_user_balance_in_base_currency(
                         &params.user,
                         reserve,

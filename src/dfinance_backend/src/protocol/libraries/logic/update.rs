@@ -138,6 +138,7 @@ impl UpdateLogic {
         }
 
         if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.reserve = params.asset.clone();
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.borrow_rate = reserve.borrow_rate.clone();
             reserve_data.asset_supply += params.amount;
@@ -249,8 +250,8 @@ impl UpdateLogic {
         // Function to check if the user has a reserve for the asset
         let user_reserve = user_reserve(&mut user_data, &params.asset);
 
-        let asset_supply = match user_reserve {
-            Some((_, reserve)) => reserve.asset_supply,
+        let asset_borrow = match user_reserve {
+            Some((_, reserve)) => reserve.asset_borrow,
             None => 0,
         };
 
@@ -271,8 +272,8 @@ impl UpdateLogic {
         let platform_principal = ic_cdk::api::id();
 
         let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
+            last_liquidity_index: reserve_cache.curr_debt_index,
         };
 
         let minted_result = mint_scaled(
@@ -526,6 +527,7 @@ impl UpdateLogic {
       
         ic_cdk::println!("repay user update = {:?}", user_data);
 
+
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0),
             total_borrowed_value: user_data.total_debt.unwrap_or(0) - usd_amount.clone(),
@@ -536,6 +538,7 @@ impl UpdateLogic {
         user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
         let health_factor = calculate_health_factor(&user_position);
         user_data.health_factor = Some(health_factor);
+        
 
         ic_cdk::println!("Updated user health factor: {}", health_factor);
 
@@ -547,14 +550,14 @@ impl UpdateLogic {
         // Function to check if the user has a reserve for the asset
         let user_reserve = user_reserve(&mut user_data, &params.asset);
 
-        let asset_supply = match user_reserve {
-            Some((_, reserve)) => reserve.asset_supply,
+        let asset_borrow = match user_reserve {
+            Some((_, reserve)) => reserve.asset_borrow,
             None => 0,
         };
 
         let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
+            last_liquidity_index: reserve_cache.curr_debt_index,
         };
 
         let platform_principal: Principal = ic_cdk::api::id();
@@ -771,3 +774,7 @@ pub fn user_reserve<'a>(
     };
     user_reserve
 }
+
+
+
+

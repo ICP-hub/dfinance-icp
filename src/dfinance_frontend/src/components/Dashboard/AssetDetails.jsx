@@ -11,32 +11,24 @@ import { useParams } from "react-router-dom";
 import { Modal } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-  setConnectedWallet,
-} from "../../redux/reducers/utilityReducer";
+import {setIsWalletConnected,setWalletModalOpen,setConnectedWallet,} from "../../redux/reducers/utilityReducer";
 import { WalletMinimal } from "lucide-react";
 import { Info } from "lucide-react";
 
 import icplogo from "../../../public/wallet/icp.png";
-import plug from "../../../public/wallet/plug.png";
 import bifinity from "../../../public/wallet/bifinity.png";
 import nfid from "../../../public/wallet/nfid.png";
 import useAssetData from "../Common/useAssets";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
-import { useCallback } from "react";
 import MySupplyModal from "./MySupplyModal";
 import SupplyPopup from "./DashboardPopup/SupplyPopup";
 import ckbtc from "../../../public/assests-icon/ckBTC.png";
 import cketh from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 import useFormatNumber from "../customHooks/useFormatNumber";
-import useFetchBalance from "../customHooks/useFetchBalance";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 
@@ -59,7 +51,6 @@ const AssetDetails = () => {
 
   useEffect(() => {
     if (assetData?.Ok) {
-      console.log("assetData:", assetData?.Ok);
       setBorrowRateAPR(Number(assetData.Ok.borrow_rate) / 100000000);
       setSupplyRateAPR(Number(assetData.Ok.current_liquidity_rate) / 100000000);
       setTotalBorrowed(Number(assetData.Ok.total_borrowed) / 100000000);
@@ -86,25 +77,10 @@ const AssetDetails = () => {
     isSwitchingWallet,
     connectedWallet,
   } = useSelector((state) => state.utility);
-  console.log("isWalletswitching", isSwitchingWallet, connectedWallet);
 
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance,
-    fetchBalance,
-  } = useFetchConversionRate();
+  const {ckBTCUsdRate,ckETHUsdRate,ckUSDCUsdRate,ckICPUsdRate,ckUSDTUsdRate,fetchConversionRate,ckBTCBalance,ckETHBalance,ckUSDCBalance,ckICPBalance,ckUSDTBalance,fetchBalance,} = useFetchConversionRate();
 
   const handleWalletConnect = () => {
-    console.log("connrcterd");
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
@@ -205,10 +181,8 @@ const AssetDetails = () => {
             }));
           }
         } catch (error) {
-          console.error("Error fetching asset principal:", error);
         }
       } else {
-        console.error("Backend actor initialization failed.");
       }
     };
 
@@ -243,77 +217,73 @@ const AssetDetails = () => {
       }
       return result.Ok.toText();
     } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
       throw error;
     }
   };
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * (ckBTCUsdRate)/1e8).toFixed(7);
+      const balanceInUsd = (
+        (parseFloat(ckBTCBalance) * ckBTCUsdRate) /
+        1e8
+      ).toFixed(7);
       setCkBTCUsdBalance(balanceInUsd);
     }
 
     if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * (ckETHUsdRate/1e8)).toFixed(7);
+      const balanceInUsd = (
+        parseFloat(ckETHBalance) *
+        (ckETHUsdRate / 1e8)
+      ).toFixed(7);
       setCkETHUsdBalance(balanceInUsd);
     }
 
     if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * (ckUSDCUsdRate)/1e8).toFixed(
-        7
-      );
+      const balanceInUsd = (
+        (parseFloat(ckUSDCBalance) * ckUSDCUsdRate) /
+        1e8
+      ).toFixed(7);
       setCkUSDCUsdBalance(balanceInUsd);
     }
 
     if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (parseFloat(ckICPBalance) * (ckICPUsdRate)/1e8).toFixed(7);
+      const balanceInUsd = (
+        (parseFloat(ckICPBalance) * ckICPUsdRate) /
+        1e8
+      ).toFixed(7);
       setCkICPUsdBalance(balanceInUsd);
     }
 
     if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDTBalance) * (ckUSDTUsdRate/1e8)).toFixed(7);
+      const balanceInUsd = (
+        parseFloat(ckUSDTBalance) *
+        (ckUSDTUsdRate / 1e8)
+      ).toFixed(7);
       setCkUSDTUsdBalance(balanceInUsd);
     }
-
   }, [
-    ckBTCBalance,
-    ckBTCUsdRate,
-    ckETHBalance,
-    ckETHUsdRate,
-    ckUSDCBalance,
-    ckUSDCUsdRate,
-    ckICPBalance,
-    ckICPUsdRate,
-    ckUSDTBalance,
-    ckUSDTUsdRate,
-  ]);
+    ckBTCBalance,ckBTCUsdRate,ckETHBalance,ckETHUsdRate,ckUSDCBalance,ckUSDCUsdRate,ckICPBalance,ckICPUsdRate,ckUSDTBalance,ckUSDTUsdRate, ]);
 
   useEffect(() => {
-    console.log("Asset ID from URL parameters:", id);
   }, [id]);
 
   useEffect(() => {
     if (ckBTCBalance !== null) {
-      console.log("Updated ckBTC Balance:", ckBTCBalance);
     }
   }, [ckBTCBalance]);
 
   useEffect(() => {
     if (ckETHBalance !== null) {
-      console.log("Updated ckETH Balance:", ckETHBalance);
     }
   }, [ckETHBalance]);
 
   useEffect(() => {
     if (ckUSDCBalance !== null) {
-      console.log("Updated ckUSDC Balance:", ckUSDCBalance);
     }
   }, [ckUSDCBalance]);
 
   useEffect(() => {
     if (error) {
-      console.error("Error detected:", error);
     }
   }, [error]);
 
@@ -321,7 +291,6 @@ const AssetDetails = () => {
     if (id) {
       fetchBalance(id);
     } else {
-      console.error("No valid asset ID found in URL parameters.");
     }
   }, [id, fetchBalance]);
 
@@ -346,13 +315,7 @@ const AssetDetails = () => {
 
     fetchAllData();
   }, [
-    fetchBalance,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckUSDTBalance
-  ]);
+    fetchBalance,fetchConversionRate,ckBTCBalanceckETHBalance,ckUSDCBalance,ckUSDTBalance,]);
 
   const formatNumber = useFormatNumber();
 
@@ -383,7 +346,7 @@ const AssetDetails = () => {
     totalDebt,
     currentCollateralStatus
   ) => {
-    console.log("Handle modal opened");
+    
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -402,7 +365,7 @@ const AssetDetails = () => {
   };
 
   const renderModalOpen = (type) => {
-    console.log(type);
+   
     switch (type) {
       case "supply":
         return (
@@ -471,14 +434,14 @@ const AssetDetails = () => {
     id === "ckBTC"
       ? ckBTCBalance
       : id === "ckETH"
-        ? ckETHBalance
-        : id === "ckUSDC"
-          ? ckUSDCBalance
-          : id === "ICP"
-            ? ckICPBalance
-            : id === "ckUSDT" // Add check for ckUSDT after ICP
-              ? ckUSDTBalance
-              : null;
+      ? ckETHBalance
+      : id === "ckUSDC"
+      ? ckUSDCBalance
+      : id === "ICP"
+      ? ckICPBalance
+      : id === "ckUSDT"
+      ? ckUSDTBalance
+      : null;
 
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-7 md:-mt-7 lg:mt-10 my-6 gap-6 mb-[5rem]">
@@ -672,13 +635,13 @@ const AssetDetails = () => {
                           </p>
                         </>
                       )}
-                      {id === "ckUSDT" && ( // Added conditional rendering for ckUSDT here
+                      {id === "ckUSDT" && (
                         <>
                           <p>
                             {ckUSDTBalance} {id}
                           </p>
                           <p className="text-[11px] font-light">
-                            ${formatNumber(ckUSDTUsdBalance)} {/* Assuming you have ckUSDTUsdBalance */}
+                            ${formatNumber(ckUSDTUsdBalance)} {}
                           </p>
                         </>
                       )}
@@ -691,7 +654,7 @@ const AssetDetails = () => {
                         const reserveData = userData?.Ok?.reserves[0]?.find(
                           (reserveGroup) => reserveGroup[0] === id
                         );
-                        console.log("userData", userData);
+                        
                         const assetSupply =
                           Number(reserveData?.[1]?.asset_supply || 0n) /
                           100000000;
@@ -701,11 +664,7 @@ const AssetDetails = () => {
                         const currentCollateralStatus =
                           reserveData?.[1]?.is_collateral;
 
-                        console.log(
-                          "currentCollateralStatus in on change",
-                          currentCollateralStatus
-                        );
-                        console.log("Asset Borrow:", assetBorrow);
+                        
 
                         const totalCollateral =
                           Number(userData?.Ok?.total_collateral) / 100000000;
@@ -713,17 +672,17 @@ const AssetDetails = () => {
                           Number(userData?.Ok?.total_debt) / 100000000;
 
                         const filteredData = filteredItems?.find((item) => {
-                          console.log("itemsitems", item[1]?.Ok?.asset_name);
+                         
                           return item[1]?.Ok;
                         });
 
                         const supplyRateAPR =
                           Number(filteredData[1]?.Ok.current_liquidity_rate) /
-                          100000000 || 0;
+                            100000000 || 0;
 
                         const liquidationThreshold =
                           Number(userData.Ok?.liquidation_threshold) /
-                          100000000 || 0;
+                            100000000 || 0;
                         const reserveliquidationThreshold =
                           Number(
                             filteredData[1]?.Ok.configuration
@@ -734,42 +693,23 @@ const AssetDetails = () => {
                           id === "ckBTC"
                             ? ckBTCBalance
                             : id === "ckETH"
-                              ? ckETHBalance
-                              : id === "ckUSDC"
-                                ? ckUSDCBalance
-                                : id === "ICP"
-                                  ? ckICPBalance
-                                  : id === "ckUSDT" // Added condition for ckUSDT after ICP
-                                    ? ckUSDTBalance
-                                    : null;
-
-                        console.log(
-                          "ckBalance",
-                          ckBalance,
-                          "assetSupply",
-                          assetSupply,
-                          "assetBorrow",
-                          assetBorrow,
-                          "totalCollateral",
-                          totalCollateral,
-                          "totalDebt",
-                          totalDebt,
-                          "supplyRateAPR",
-                          supplyRateAPR,
-                          "liquidationThreshold",
-                          liquidationThreshold,
-                          "currentCollateralStatus",
-                          currentCollateralStatus,
-                        );
+                            ? ckETHBalance
+                            : id === "ckUSDC"
+                            ? ckUSDCBalance
+                            : id === "ICP"
+                            ? ckICPBalance
+                            : id === "ckUSDT"
+                            ? ckUSDTBalance
+                            : null;
 
                         handleModalOpen(
                           "supply",
                           id,
                           (id === "ckBTC" && ckbtc) ||
-                          (id === "ckETH" && cketh) ||
-                          (id === "ckUSDC" && ckUSDC) ||
-                          (id === "ICP" && icp) ||
-                          (id === "ckUSDT" && ckUSDT),
+                            (id === "ckETH" && cketh) ||
+                            (id === "ckUSDC" && ckUSDC) ||
+                            (id === "ICP" && icp) ||
+                            (id === "ckUSDT" && ckUSDT),
                           supplyRateAPR,
                           ckBalance,
                           liquidationThreshold,
@@ -778,7 +718,7 @@ const AssetDetails = () => {
                           assetBorrow,
                           totalCollateral,
                           totalDebt,
-                          currentCollateralStatus,
+                          currentCollateralStatus
                         );
                       }}
                       className={

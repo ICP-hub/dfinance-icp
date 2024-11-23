@@ -491,7 +491,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckUSDTBalance.toLocaleString()}{" "}
+                    {ckUSDTBalance?.toLocaleString() || "0.00"}{" "}
                     {/* Ensure ckUSDTBalance is defined */}
                   </p>
                 </div>

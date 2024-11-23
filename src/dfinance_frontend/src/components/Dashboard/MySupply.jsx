@@ -1,60 +1,48 @@
-import { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
-import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import { useAuth } from "../../utils/useAuthClient";
+import { Principal } from "@dfinity/principal";
 import {
   MY_ASSET_TO_SUPPLY_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
 } from "../../utils/constants";
+
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import Button from "../Common/Button";
-import { Check, Eye, EyeOff, Info } from "lucide-react";
-import MySupplyModal from "./MySupplyModal";
-import WithdrawPopup from "./DashboardPopup/WithdrawPopup";
-import SupplyPopup from "./DashboardPopup/SupplyPopup";
-import PaymentDone from "./DashboardPopup/PaymentDone";
-import { useNavigate } from "react-router-dom";
-import Borrow from "./DashboardPopup/BorrowPopup";
-import Repay from "./DashboardPopup/Repay";
-import { useAuth } from "../../utils/useAuthClient";
-import { Principal } from "@dfinity/principal";
-import { useEffect } from "react";
-import { useMemo } from "react";
 import useAssetData from "../Common/useAssets";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/CKETH.svg";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
-// import {setToggle} from "../../redux/reducers/toggleReducer"
 import {
   setTotalUsdValueBorrow,
   setTotalUsdValueSupply,
 } from "../../redux/reducers/borrowSupplyReducer";
 
-import { FaArrowDown, FaArrowUp } from "react-icons/fa";
+import MySupplyModal from "./MySupplyModal";
+import WithdrawPopup from "./DashboardPopup/WithdrawPopup";
+import SupplyPopup from "./DashboardPopup/SupplyPopup";
+import PaymentDone from "./DashboardPopup/PaymentDone";
+import Borrow from "./DashboardPopup/BorrowPopup";
+import Repay from "./DashboardPopup/Repay";
+import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
+
+import { Check, Eye, EyeOff, Info } from "lucide-react";
+import ckBTC from "../../../public/assests-icon/ckBTC.png";
+import ckETH from "../../../public/assests-icon/CKETH.svg";
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
+
 const MySupply = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state, pathname } = useLocation();
 
-  const { principal, backendActor } = useAuth();
-  const [showAll, setShowAll] = useState(false);
-  const [showAllYourBorrow, setShowAllYourBorrow] = useState(false);
-  const [showAllAssetoBorrow, setshowAllAssetoBorrow] = useState(false);
-  const [showAllSupplies, setShowAllSupplies] = useState(false);
-  // Toggle between showing 4 items and all items
-  const toggleShowAll = () => setShowAll((prev) => !prev);
-  const toggleShowAllBorrow = () => setShowAllYourBorrow((prev) => !prev);
-  const toggleshowAllAssetoBorrow = () =>
-    setshowAllAssetoBorrow((prev) => !prev);
-  const toggleshowAllSupplies = () => setShowAllSupplies((prev) => !prev);
+  const { principal } = useAuth();
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
@@ -70,20 +58,13 @@ const MySupply = () => {
   const [borrowableICP, setBorrowableICP] = useState(0);
   const [borrowableUSDT, setBorrowableUSDT] = useState(0);
   const [showAllAssets, setShowAllAssets] = useState(false);
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { userData } = useUserData();
 
   useEffect(() => {
     if (userData?.Ok?.available_borrow) {
-      // dispatch(setToggled(user))
       setAvailableBorrow(Number(userData.Ok.available_borrow) / 100000000);
     }
   }, [userData]);
-
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -195,7 +176,7 @@ const MySupply = () => {
     }
 
     if (ckUSDTUsdRate) {
-      // New available borrow for ckUSDT
+
       const usdtAmount = availableBorrow / (ckUSDTUsdRate / 1e8);
       setBorrowableUSDT(usdtAmount);
     }
@@ -246,7 +227,7 @@ const MySupply = () => {
   const formatNumber = useFormatNumber();
 
   const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
-  const toggles = useSelector((state) => state.toggle.toggles); // Generic state for toggle
+  const toggles = useSelector((state) => state.toggle.toggles);
 
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
@@ -273,7 +254,6 @@ const MySupply = () => {
     borrowableValue,
     borrowableAssetValue
   ) => {
-    console.log("handle toggle : ", Collateral);
     setIsModalOpen({
       isOpen: true,
       type: type,
@@ -321,21 +301,21 @@ const MySupply = () => {
   };
 
   const handleToggleChange = (newStatus) => {
-    dispatch(set(newStatus)); // Update the state based on the modal success
+    dispatch(set(newStatus));
   };
   const formatConditional = (value) => {
-    const numericValue = parseFloat(value); // Ensure the value is a number
+    const numericValue = parseFloat(value);
 
     if (isNaN(numericValue)) {
-      return "0"; // If it's not a number, return "0"
+      return "0";
     }
 
     if (numericValue === 0) {
-      return "0"; // If the value is 0, show 0
+      return "0";
     } else if (numericValue >= 1) {
-      return numericValue.toFixed(2); // If the value is 1 or greater, show 2 decimal places
+      return numericValue.toFixed(2);
     } else {
-      return numericValue.toFixed(7); // If the value is less than 1 but greater than 0, show 7 decimal places
+      return numericValue.toFixed(7);
     }
   };
 
@@ -515,7 +495,7 @@ const MySupply = () => {
         return null;
     }
   };
-  // console.log("toggle in popup",)
+
   const hasNoBorrows = MY_BORROW_ASSET_TABLE_ROWS.length === 0;
   const noBorrowMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
@@ -578,20 +558,13 @@ const MySupply = () => {
   let borrow_rate_apr = "0";
 
   if (filteredItems && filteredItems.length > 0) {
-    // Log filteredItems to check the data
     console.log("filtered items", filteredItems);
 
-    // Access the first item in filteredItems and retrieve the necessary data
     const item = filteredItems[0][1].Ok;
 
-    // Log the item to check its content
-    console.log("items in filtered items", item);
-
-    // Retrieve the total_supply and total_borrow for the asset
     const total_supply = item.total_supply;
     const total_borrow = item.total_borrow;
 
-    // Log the total supply and total borrow values
     console.log("Total supply for the asset:", total_supply);
     console.log("Total borrow for the asset:", total_borrow);
     current_liquidity_rate = item.current_liquidity_rate
@@ -676,7 +649,7 @@ const MySupply = () => {
               isSupplyVisible ? "min-h-auto" : "min-h-[100px]"
             } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
-            {/* Header */}
+            {}
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
                 <div className="flex">
@@ -726,7 +699,7 @@ const MySupply = () => {
               </button>
             </div>
 
-            {/* Content for Mobile Screens */}
+            {}
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
@@ -737,7 +710,7 @@ const MySupply = () => {
                     noSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
-                      {/* Container for the content */}
+                      {}
                       <div className="w-full">
                         {userData?.Ok?.reserves[0]?.map(
                           (reserveGroup, index) => {
@@ -760,11 +733,10 @@ const MySupply = () => {
                                 "clt"
                               );
                             }
-                            // dispatch(set(reserveGroup[1]?.is_collateral))
+
                             const collateralStatus =
                               reserveGroup[1]?.is_collateral;
 
-                            // You can now store or use the isCollateral value as needed
                             console.log(
                               collateralStatus,
                               "is_collateral for asset:",
@@ -919,12 +891,14 @@ const MySupply = () => {
                                     <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                       APY:
                                     </p>
-                                    {/* Info Icon with Tooltip */}
+                                    {}
                                     <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                      <Info size={16} />
-                                      {/* Tooltip */}
+                                      <Info size={14} />
+                                      {}
                                       <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[25vw]">
-                                        These values can fluctuate
+                                        The supply rate APY may vary based on
+                                        utilization levels and incentive
+                                        structures.
                                       </div>
                                     </span>
                                   </div>
@@ -941,7 +915,7 @@ const MySupply = () => {
                                   </p>
                                   <div className="-mr-6 -mt-3">
                                     <CustomizedSwitches
-                                      checked={collateralStatus} // This checks whether the switch is toggled on or off
+                                      checked={collateralStatus} 
                                       onChange={() => {
                                         const reserveData =
                                           userData?.Ok?.reserves[0]?.find(
@@ -975,7 +949,6 @@ const MySupply = () => {
                                               100000000
                                           ) || 0;
 
-                                        // Open the modal and pass the necessary data
                                         handleModalOpen(
                                           "collateral",
                                           asset,
@@ -1000,20 +973,19 @@ const MySupply = () => {
                                 </div>
 
                                 <div className="flex justify-between gap-4">
-                                  {/* Supply Button */}
+                                  {}
                                   <Button
                                     title={"Supply"}
                                     onClickHandler={() => {
-                                      // Only proceed if the button is not disabled
+
                                       if (ckBalance === 0) {
-                                        // If balance is 0, do not trigger the modal logic
+
                                         toast.info(
                                           "You cannot supply because your balance is 0."
                                         );
                                         return;
                                       }
 
-                                      // Proceed with the modal logic if balance is not 0
                                       const reserveData =
                                         userData?.Ok?.reserves[0]?.find(
                                           (reserveGroup) =>
@@ -1062,11 +1034,11 @@ const MySupply = () => {
                                         currentCollateralStatus
                                       );
                                     }}
-                                    disabled={ckBalance === 0} // Disable if ckBalance is 0
+                                    disabled={ckBalance === 0} 
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
                                   />
 
-                                  {/* Withdraw Button */}
+                                  {}
                                   <Button
                                     title={"Withdraw"}
                                     onClickHandler={() => {
@@ -1136,7 +1108,7 @@ const MySupply = () => {
               )}
             </div>
 
-            {/* Content for Desktop Screens */}
+            {}
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
@@ -1147,7 +1119,7 @@ const MySupply = () => {
                   ) ? (
                     noSupplyMessage
                   ) : (
-                    // className="w-full h-auto mt-4 relative max-h-[300px] overflow-hidden"
+
                     <div className="w-full h-auto mt-4 relative ">
                       <div className="grid grid-cols-[2fr_1.14fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                         <div className="p-5 pl-4 inline-flex items-center">
@@ -1157,15 +1129,16 @@ const MySupply = () => {
                           Asset Supply
                         </div>
 
-                        {/* APY with Info Icon and Tooltip */}
+                        {}
                         <div className="p-5 inline-flex items-center relative group">
                           <span>APY</span>
-                          {/* Info Icon */}
+                          {}
                           <span className="ml-2 cursor-pointer relative group">
-                            <Info size={16} />
-                            {/* Tooltip */}
-                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                              These values can fluctuate
+                            <Info size={14} />
+                            {}
+                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                              The supply rate APY may vary based on utilization
+                              levels and incentive structures.
                             </div>
                           </span>
                         </div>
@@ -1176,7 +1149,7 @@ const MySupply = () => {
                         <div className="p-5 inline-flex items-center"></div>
                       </div>
 
-                      {/* Scrollable Content Area */}
+                      {}
                       <div
                         className={`w-full h-auto max-h-auto overflow-y-auto scrollbar-none ${
                           userData?.Ok?.reserves[0]?.filter(
@@ -1200,7 +1173,6 @@ const MySupply = () => {
                               const collateralStatus =
                                 reserveGroup[1]?.is_collateral;
 
-                              // You can now store or use the Collateral value as needed
                               console.log(
                                 collateralStatus,
                                 "is_collateral for asset:",
@@ -1384,7 +1356,6 @@ const MySupply = () => {
                                               100000000
                                           ) || 0;
 
-                                        // Open the modal and pass the necessary data
                                         handleModalOpen(
                                           "collateral",
                                           asset,
@@ -1412,7 +1383,7 @@ const MySupply = () => {
                                       title={"Supply"}
                                       onClickHandler={() => {
                                         if (ckBalance === 0) {
-                                          // If balance is 0, do not trigger the modal logic
+
                                           toast.info(
                                             "You cannot supply because your balance is 0."
                                           );
@@ -1579,7 +1550,7 @@ const MySupply = () => {
                 </label>
               </div>
             )}
-            {/* mobile screen  */}
+            {}
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
@@ -1587,10 +1558,10 @@ const MySupply = () => {
                     noAssetsToSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px] scrollbar-none">
-                      {/* Container for the content */}
+                      {}
                       <div className="w-full">
                         {visibleItems.map((item, index) => {
-                          // Get the balance for the current item
+
                           const balance =
                             item[0] === "ckBTC"
                               ? ckBTCBalance
@@ -1604,7 +1575,6 @@ const MySupply = () => {
                               ? ckUSDTBalance
                               : 0;
 
-                          // Determine if the item has zero balance and apply disabled styles if the checkbox is checked
                           const isZeroBalance = Number(balance) === 0;
                           const itemClass =
                             showZeroBalance && isZeroBalance
@@ -1795,12 +1765,14 @@ const MySupply = () => {
                                   <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                     APY:
                                   </p>
-                                  {/* Info Icon with Tooltip */}
+                                  {}
                                   <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                    <Info size={16} />
-                                    {/* Tooltip */}
+                                    <Info size={14} />
+                                    {}
                                     <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                      These values can fluctuate
+                                      The supply rate APY may vary based on
+                                      utilization levels and incentive
+                                      structures.
                                     </div>
                                   </span>
                                 </div>
@@ -1896,7 +1868,7 @@ const MySupply = () => {
                                       currentCollateralStatus
                                     );
                                   }}
-                                  disabled={isZeroBalance} // Disable button if the balance is 0
+                                  disabled={isZeroBalance} 
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
                                 />
                                 <Button
@@ -1921,7 +1893,7 @@ const MySupply = () => {
               )}
             </div>
 
-            {/* for desktop screen */}
+            {}
             <div className="hidden xl:block">
               {isVisible && (
                 <>
@@ -1929,47 +1901,48 @@ const MySupply = () => {
                     noAssetsToSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4">
-                      {/* Fixed Header */}
+                      {}
                       <div className="w-full z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          {/* Asset Column */}
+                          {}
                           <div className="p-5 pl-4 inline-flex items-center">
                             Asset
                           </div>
 
-                          {/* Wallet Balance Column */}
+                          {}
                           <div className="p-5 inline-flex items-center">
                             Wallet Balance
                           </div>
 
-                          {/* APY Column with Info Icon and Tooltip */}
-                          <div className="p-5 inline-flex items-center relative group">
+                          {}
+                          <div className="p-5 inline-flex items-center">
                             <span>APY</span>
-                            {/* Info Icon */}
-                            <span className="ml-2 cursor-pointer">
-                              <Info size={16} />
-                              {/* Tooltip */}
-                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                These values can fluctuate
+                            {}
+                            <span className="ml-2 cursor-pointer relative group">
+                              <Info size={14} />
+                              {}
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[15vw]">
+                                The supply rate APY may vary based on
+                                utilization levels and incentive structures.
                               </div>
                             </span>
                           </div>
 
-                          {/* Can be Collateral Column */}
+                          {}
                           <div className="p-5 inline-flex items-center">
                             Can be Collateral
                           </div>
 
-                          {/* Empty Column */}
+                          {}
                           <div className="p-5 inline-flex items-center"></div>
                         </div>
                       </div>
 
-                      {/* Scrollable Content Area */}
+                      {}
                       <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {visibleItems.map((item, index) => {
-                            // Get the balance for the current item
+
                             const balance =
                               item[0] === "ckBTC"
                                 ? ckBTCBalance
@@ -1983,7 +1956,6 @@ const MySupply = () => {
                                 ? ckUSDTBalance
                                 : 0;
 
-                            // Determine if item has zero balance and apply disabled styles if the checkbox is checked
                             const isZeroBalance = Number(balance) === 0;
                             const itemClass =
                               showZeroBalance && isZeroBalance
@@ -2253,7 +2225,7 @@ const MySupply = () => {
                                         currentCollateralStatus
                                       );
                                     }}
-                                    disabled={isZeroBalance} // Disable button if the balance is 0
+                                    disabled={isZeroBalance} 
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
                                   />
                                   <Button
@@ -2337,7 +2309,7 @@ const MySupply = () => {
               </button>
             </div>
 
-            {/* mobile screen for borrow */}
+            {}
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
@@ -2350,7 +2322,7 @@ const MySupply = () => {
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                       <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none ">
-                        {/* Container for the content */}
+                        {}
                         <div className="w-full">
                           {console.log(
                             "user data in my borrow",
@@ -2510,12 +2482,14 @@ const MySupply = () => {
                                       <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                         APY:
                                       </p>
-                                      {/* Info Icon with Tooltip */}
+                                      {}
                                       <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                        <Info size={16} />
-                                        {/* Tooltip */}
+                                        <Info size={14} />
+                                        {}
                                         <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                          These values can fluctuate
+                                          The variable borrow interest rate may
+                                          change over time, influenced by market
+                                          trends and conditions.
                                         </div>
                                       </span>
                                     </div>
@@ -2674,7 +2648,7 @@ const MySupply = () => {
               )}
             </div>
 
-            {/* desktop screen */}
+            {}
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
@@ -2685,39 +2659,41 @@ const MySupply = () => {
                   ) ? (
                     noBorrowMessage
                   ) : (
-                    // className="w-full h-auto mt-6 relative max-h-[300px] overflow-hidden"
+
                     <div className="w-full h-auto mt-6">
-                      {/* Container for the fixed header */}
+                      {}
                       <div className="w-full z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          {/* Asset Column */}
+                          {}
                           <div className="p-3 pl-4">Asset</div>
 
-                          {/* Debt Column */}
+                          {}
                           <div className="p-3 -ml-[4px]">Debt</div>
 
-                          {/* APY Column with Info Icon and Tooltip */}
+                          {}
                           <div className="p-3 inline-flex items-center relative group">
                             <span>APY</span>
-                            {/* Info Icon */}
+                            {}
                             <span className="ml-2 cursor-pointer relative group">
-                              <Info size={16} />
-                              {/* Tooltip */}
-                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                These values can fluctuate
+                              <Info size={14} />
+                              {}
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                The variable borrow interest rate may change
+                                over time, influenced by market trends and
+                                conditions.
                               </div>
                             </span>
                           </div>
 
-                          {/* APY Type Column */}
+                          {}
                           <div className="p-3">Apy type</div>
 
-                          {/* Empty Column */}
+                          {}
                           <div className="p-3"></div>
                         </div>
                       </div>
 
-                      {/* Scrollable table body */}
+                      {}
                       <div
                         className={`w-full h-auto  max-h-auto overflow-y-auto scrollbar-none ${
                           userData?.Ok?.reserves[0]?.filter(
@@ -2756,7 +2732,7 @@ const MySupply = () => {
                                   ? ckUSDCBalance
                                   : asset === "ICP"
                                   ? ckICPBalance
-                                  : asset === "ckUSDT" // New condition for ckUSDT
+                                  : asset === "ckUSDT" 
                                   ? ckUSDTBalance
                                   : null;
                               const borrowRateApr =
@@ -2804,9 +2780,9 @@ const MySupply = () => {
                                         className="w-8 h-8 rounded-full"
                                       />
                                     )}
-                                    {asset === "ckUSDT" && ( // New condition for ckUSDT
+                                    {asset === "ckUSDT" && ( 
                                       <img
-                                        src={ckUSDT} // Ensure you have the ckUSDT variable defined for the image source
+                                        src={ckUSDT} 
                                         alt="ckUSDT logo"
                                         className="w-8 h-8 rounded-full"
                                       />
@@ -3068,62 +3044,36 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isBorrowVisible && (
                 <>
-                  {/* Checkbox to toggle between showing all assets and only eligible ones */}
+                  {}
 
                   {filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
                     <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none">
-                      {/* Container for the content */}
+                      {}
                       <div className="w-full">
                         {filteredItems
                           .filter((item) => {
-                            // Filter to show only eligible assets if showAllAssets is false
+
                             const reserveData = userData?.Ok?.reserves[0]?.find(
                               (reserveGroup) => reserveGroup[0] === item[0]
                             );
-                            const assetSupply =
-                              Number(reserveData?.[1]?.asset_supply || 0n) /
-                              100000000;
-                            const assetBorrow =
-                              Number(reserveData?.[1]?.asset_borrow || 0n) /
-                              100000000;
-                            const borrowableAsset =
-                              item[0] === "ckBTC"
-                                ? borrowableBTC
-                                : item[0] === "ckETH"
-                                ? borrowableETH
-                                : item[0] === "ckUSDC"
-                                ? borrowableUSDC
-                                : item[0] === "ICP"
-                                ? borrowableICP
-                                : item[0] === "ckUSDT"
-                                ? borrowableUSDT
-                                : 0;
-                            const assetData = item[1].Ok; // Access the data for each asset
+                            const assetData = item[1].Ok; 
 
-                            // Extract the total_supply and total_borrow for each asset
                             const total_supply =
-                              Number(assetData.total_supply || 0) / 100000000; // Divide by 10^8
+                              Number(assetData.total_supply || 0) / 100000000; 
                             const total_borrow =
-                              Number(assetData.total_borrow || 0) / 100000000; // Divide by 10^8
+                              Number(assetData.total_borrow || 0) / 100000000; 
 
-                            // Convert availableBorrow to a number (if it's already a number, this will have no effect)
-                            const availableBorrowNumber =
-                              Number(availableBorrow);
-
-                            // Now you can perform the comparison as regular numbers
                             const isEligible = total_supply - total_borrow != 0;
-
-                            // If the checkbox is not checked, only show eligible assets
                             if (!showAllAssets) {
-                              return isEligible; // Filter out ineligible items
+                              return isEligible; 
                             }
 
-                            return true; // Show all items when checkbox is checked
+                            return true;
                           })
                           .map((item, index) => {
-                            // Get reserve data for the current item
+
                             const reserveData = userData?.Ok?.reserves[0]?.find(
                               (reserveGroup) => reserveGroup[0] === item[0]
                             );
@@ -3133,39 +3083,22 @@ const MySupply = () => {
                             const assetBorrow =
                               Number(reserveData?.[1]?.asset_borrow || 0n) /
                               100000000;
-                            const borrowableAsset =
-                              item[0] === "ckBTC"
-                                ? borrowableBTC
-                                : item[0] === "ckETH"
-                                ? borrowableETH
-                                : item[0] === "ckUSDC"
-                                ? borrowableUSDC
-                                : item[0] === "ICP"
-                                ? borrowableICP
-                                : item[0] === "ckUSDT"
-                                ? borrowableUSDT
-                                : 0;
-                            const assetData = item[1].Ok; // Access the data for each asset
 
-                            // Extract the total_supply and total_borrow for each asset
+                            const assetData = item[1].Ok; 
+
                             const total_supply =
-                              Number(assetData.total_supply || 0) / 100000000; // Divide by 10^8
+                              Number(assetData.total_supply || 0) / 100000000; 
                             const total_borrow =
-                              Number(assetData.total_borrow || 0) / 100000000; // Divide by 10^8
+                              Number(assetData.total_borrow || 0) / 100000000; 
 
                             console.log(
                               "total supply in assets to borrow",
                               total_supply,
                               total_borrow
                             );
-                            // Convert availableBorrow to a number (if it's already a number, this will have no effect)
-                            const availableBorrowNumber =
-                              Number(availableBorrow);
 
-                            // Now you can perform the comparison as regular numbers
                             const isEligible = total_supply - total_borrow != 0;
 
-                            // Apply "disabled" styles (opacity and pointer-events) if the asset is ineligible and showAllAssets is true
                             const itemClass =
                               showAllAssets && !isEligible
                                 ? "opacity-50 pointer-events-none"
@@ -3220,19 +3153,21 @@ const MySupply = () => {
                                     {item[0]}
                                   </span>
                                 </div>
-                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6 relative group">
+                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6 relative ">
                                   <p className="text-[#233D63] dark:text-darkText dark:opacity-50 flex items-center">
                                     Available:
-                                    {/* Info Icon with Tooltip */}
-                                    <span className="ml-2 cursor-pointer relative group">
-                                      <Info size={16} />
-                                      {/* Tooltip */}
-                                      <div className="absolute left-28 transform -translate-x-[20%] bottom-full mb-4 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                        Available assets to borrow for the
-                                        current user
+
+                                    <span className="ml-2 cursor-pointer relative">
+                                      <Info size={14} className="group" />
+
+                                      <div className="absolute left-20 transform -translate-x-[20%] bottom-full mt-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[30vw]">
+                                        This is the total amount you can borrow,
+                                        determined by your collateral and
+                                        limited by the borrow cap.
                                       </div>
                                     </span>
                                   </p>
+
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText">
                                     {item[0] === "ckBTC" && (
                                       <>
@@ -3251,7 +3186,7 @@ const MySupply = () => {
                                                   Number(availableBorrow) /
                                                     (ckBTCUsdRate / 1e8)
                                                 )
-                                            : "0.0000"}{" "}
+                                            : 0.0000}{" "}
                                         </p>
                                         <p className="font-light">
                                           $
@@ -3270,7 +3205,7 @@ const MySupply = () => {
                                                     availableBorrow
                                                   ).toFixed(4)
                                                 )
-                                            : "0.0000"}
+                                            : 0.0000}
                                         </p>
                                       </>
                                     )}
@@ -3291,7 +3226,7 @@ const MySupply = () => {
                                                   Number(availableBorrow) /
                                                     (ckETHUsdRate / 1e8)
                                                 )
-                                            : "0.0000"}{" "}
+                                            : 0.0000}{" "}
                                         </p>
                                         <p className="font-light">
                                           $
@@ -3310,7 +3245,7 @@ const MySupply = () => {
                                                     availableBorrow
                                                   ).toFixed(4)
                                                 )
-                                            : "0.0000"}
+                                            : 0.0000}
                                         </p>
                                       </>
                                     )}
@@ -3331,7 +3266,7 @@ const MySupply = () => {
                                                   Number(availableBorrow) /
                                                     (ckUSDCUsdRate / 1e8)
                                                 )
-                                            : "0.0000"}{" "}
+                                            : 0.0000}{" "}
                                         </p>
                                         <p className="font-light">
                                           $
@@ -3350,7 +3285,7 @@ const MySupply = () => {
                                                     availableBorrow
                                                   ).toFixed(4)
                                                 )
-                                            : "0.0000"}
+                                            : 0.0000}
                                         </p>
                                       </>
                                     )}
@@ -3371,7 +3306,7 @@ const MySupply = () => {
                                                   Number(availableBorrow) /
                                                     (ckICPUsdRate / 1e8)
                                                 )
-                                            : "0.0000"}{" "}
+                                            : 0.0000}{" "}
                                         </p>
                                         <p className="font-light">
                                           $
@@ -3390,7 +3325,7 @@ const MySupply = () => {
                                                     availableBorrow
                                                   ).toFixed(4)
                                                 )
-                                            : "0.0000"}
+                                            : 0.0000}
                                         </p>
                                       </>
                                     )}
@@ -3411,7 +3346,7 @@ const MySupply = () => {
                                                   Number(availableBorrow) /
                                                     (ckUSDTUsdRate / 1e8)
                                                 )
-                                            : "0.0000"}{" "}
+                                            : 0.0000}{" "}
                                         </p>
                                         <p className="font-light">
                                           $
@@ -3430,7 +3365,7 @@ const MySupply = () => {
                                                     availableBorrow
                                                   ).toFixed(4)
                                                 )
-                                            : "0.0000"}
+                                            : 0.0000}
                                         </p>
                                       </>
                                     )}
@@ -3442,12 +3377,14 @@ const MySupply = () => {
                                     <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                       APY:
                                     </p>
-                                    {/* Info Icon with Tooltip */}
+
                                     <span className="ml-2 cursor-pointer relative group">
-                                      <Info size={16} />
-                                      {/* Tooltip */}
-                                      <div className="absolute left-24 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                        These values can fluctuate
+                                      <Info size={14} />
+
+                                      <div className="absolute left-28 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                        The variable borrow interest rate may
+                                        change over time, influenced by market
+                                        trends and conditions.
                                       </div>
                                     </span>
                                   </div>
@@ -3482,8 +3419,8 @@ const MySupply = () => {
                                       const Ltv =
                                         Number(userData?.Ok?.ltv) / 100000000 ||
                                         0;
-                                      let borrowableValue = "0.0000"; // Default value in case availableBorrow is invalid
-                                      let borrowableAssetValue = "0.0000"; // Default value for borrowableAsset
+                                      let borrowableValue = "0.0000"; 
+                                      let borrowableAssetValue = "0.0000"; 
 
                                       if (Number(availableBorrow)) {
                                         const remainingBorrowable =
@@ -3495,27 +3432,26 @@ const MySupply = () => {
                                             ? remainingBorrowable
                                             : Number(availableBorrow);
 
-                                        // Calculate borrowable value for each asset type
                                         if (item[0] === "ckBTC") {
-                                          borrowableValue = borrowable; // Format using the helper function
+                                          borrowableValue = borrowable; 
                                           borrowableAssetValue =
-                                            borrowable / (ckBTCUsdRate / 1e8); // USD equivalent
+                                            borrowable / (ckBTCUsdRate / 1e8); 
                                         } else if (item[0] === "ckETH") {
-                                          borrowableValue = borrowable; // Format using the helper function
+                                          borrowableValue = borrowable; 
                                           borrowableAssetValue =
-                                            borrowable / (ckETHUsdRate / 1e8); // USD equivalent
+                                            borrowable / (ckETHUsdRate / 1e8);
                                         } else if (item[0] === "ckUSDC") {
-                                          borrowableValue = borrowable; // Format using the helper function
+                                          borrowableValue = borrowable; 
                                           borrowableAssetValue =
-                                            borrowable / (ckUSDCUsdRate / 1e8); // USD equivalent
+                                            borrowable / (ckUSDCUsdRate / 1e8); 
                                         } else if (item[0] === "ICP") {
-                                          borrowableValue = borrowable; // Format using the helper function
+                                          borrowableValue = borrowable; 
                                           borrowableAssetValue =
-                                            borrowable / (ckICPUsdRate / 1e8); // USD equivalent
+                                            borrowable / (ckICPUsdRate / 1e8); 
                                         } else if (item[0] === "ckUSDT") {
-                                          borrowableValue = borrowable; // Format using the helper function
+                                          borrowableValue = borrowable; 
                                           borrowableAssetValue =
-                                            borrowable / (ckUSDTUsdRate / 1e8); // USD equivalent
+                                            borrowable / (ckUSDTUsdRate / 1e8);
                                         }
                                       }
 
@@ -3557,7 +3493,7 @@ const MySupply = () => {
                                         borrowableAssetValue
                                       );
                                     }}
-                                    disabled={!isEligible} // Disable button if ineligible
+                                    disabled={!isEligible} 
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
                                   />
                                   <Button
@@ -3565,7 +3501,7 @@ const MySupply = () => {
                                     onClickHandler={() =>
                                       handleDetailsClick(item[0], item[1])
                                     }
-                                    disabled={!isEligible} // Disable button if ineligible
+                                    disabled={!isEligible} 
                                     className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
                                   />
                                 </div>
@@ -3582,7 +3518,7 @@ const MySupply = () => {
               )}
             </div>
 
-            {/* DESKTOP */}
+            {}
             <div className="hidden xl:block mt-2">
               {isBorrowVisible && (
                 <>
@@ -3601,7 +3537,7 @@ const MySupply = () => {
                   )}
 
                   <div className="w-full h-auto mt-6">
-                    {/* Supply Section */}
+                    {}
                     {filteredItems.length === 0 ? (
                       noAssetsToBorrowMessage
                     ) : (
@@ -3612,56 +3548,55 @@ const MySupply = () => {
                             : ""
                         }`}
                       >
-                        {/* Header */}
+                        {}
                         <div className="grid grid-cols-[3fr_2fr_3fr_1fr_2fr] text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 z-10 mt-4">
                           {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
                             <div
                               key={index}
-                              className="p-2 lgx:pl-4 font-[500] "
+                              className="p-2 lgx:pl-4 font-[500]"
                             >
-                              <div className="inline-flex items-center relative group">
-                                {/* Display header text */}
+                              <div className="inline-flex items-center relative">
+                                {}
                                 <p>
                                   {index === 2 ? item.header1 : item.header}
                                 </p>
 
-                                {/* Tooltip for the second column */}
+                                {}
                                 {index === 1 && (
-                                  <>
-                                    <span className="ml-2 cursor-pointer">
-                                      <Info size={16} />
-                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                        Available assets to borrow for the
-                                        current user
-                                      </div>
-                                    </span>
-                                  </>
+                                  <span className="ml-2 cursor-pointer relative group">
+                                    <Info size={14} />
+                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                      This is the total amount you can borrow,
+                                      determined by your collateral and limited
+                                      by the borrow cap.
+                                    </div>
+                                  </span>
                                 )}
 
-                                {/* Tooltip for the third column */}
+                                {}
                                 {index === 2 && (
-                                  <>
-                                    <span className="ml-2 cursor-pointer">
-                                      <Info size={16} />
-                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 whitespace-nowrap">
-                                        These values can fluctuate
-                                      </div>
-                                    </span>
-                                  </>
+                                  <span className="ml-2 cursor-pointer relative group">
+                                    <Info size={14} />
+                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
+                                      The variable borrow interest rate may
+                                      change over time, influenced by market
+                                      trends and conditions.
+                                    </div>
+                                  </span>
                                 )}
                               </div>
                             </div>
                           ))}
                         </div>
 
-                        {/* className="w-full max-h-[200px] overflow-y-auto overflow-x-hidden scrollbar-custom" */}
+                        {}
                         <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
-                          {/* Toggle Checkbox */}
+                          {}
 
-                          {/* Asset List */}
+                          {}
                           {filteredItems
                             .filter((item) => {
-                              // Filter to show only eligible assets if showAllAssets is false
+
                               if (!showAllAssets) {
                                 const reserveData =
                                   userData?.Ok?.reserves[0]?.find(
@@ -3674,41 +3609,22 @@ const MySupply = () => {
                                 const assetBorrow =
                                   Number(reserveData?.[1]?.asset_borrow || 0n) /
                                   100000000;
-
-                                // Determine the borrowable asset based on item type
-                                const borrowableAsset =
-                                  item[0] === "ckBTC"
-                                    ? borrowableBTC
-                                    : item[0] === "ckETH"
-                                    ? borrowableETH
-                                    : item[0] === "ckUSDC"
-                                    ? borrowableUSDC
-                                    : item[0] === "ICP"
-                                    ? borrowableICP
-                                    : item[0] === "ckUSDT"
-                                    ? borrowableUSDT
-                                    : 0;
                                 const assetData = item[1].Ok;
                                 const total_supply =
                                   Number(assetData.total_supply || 0) /
-                                  100000000; // Divide by 10^8
+                                  100000000; 
                                 const total_borrow =
                                   Number(assetData.total_borrow || 0) /
-                                  100000000; // Divide by 10^8
-
-                                // Convert availableBorrow to a number (if it's already a number, this will have no effect)
+                                  100000000; 
                                 const availableBorrowNumber =
                                   Number(availableBorrow);
 
-                                // Now you can perform the comparison as regular numbers
-
-                                // Show only eligible assets when showAllAssets is false
                                 return total_supply - total_borrow != 0;
                               }
-                              return true; // Show all assets if showAllAssets is true
+                              return true; 
                             })
                             .map((item, index) => {
-                              // Get reserve data for the current item
+
                               const reserveData =
                                 userData?.Ok?.reserves[0]?.find(
                                   (reserveGroup) => reserveGroup[0] === item[0]
@@ -3720,7 +3636,6 @@ const MySupply = () => {
                                 Number(reserveData?.[1]?.asset_borrow || 0n) /
                                 100000000;
 
-                              // Determine the borrowable asset based on item type
                               const borrowableAsset =
                                 item[0] === "ckBTC"
                                   ? borrowableBTC
@@ -3734,29 +3649,28 @@ const MySupply = () => {
                                   ? borrowableUSDT
                                   : 0;
                               const assetData = item[1].Ok;
-                              // Check eligibility condition
+
                               const total_supply =
-                                Number(assetData.total_supply || 0) / 100000000; // Divide by 10^8
+                                Number(assetData.total_supply || 0) / 100000000; 
                               const total_borrow =
-                                Number(assetData.total_borrow || 0) / 100000000; // Divide by 10^8
+                                Number(assetData.total_borrow || 0) / 100000000; 
 
                               console.log(
                                 "total supply and total borrow ",
                                 total_supply,
                                 total_borrow
                               );
-                              // Convert availableBorrow to a number (if it's already a number, this will have no effect)
+
                               const availableBorrowNumber =
                                 Number(availableBorrow);
                               console.log(
                                 "avaialable borrow ",
                                 availableBorrowNumber
                               );
-                              // Now you can perform the comparison as regular numbers
+
                               const isEligible =
                                 total_supply - total_borrow != 0;
 
-                              // Apply disabled styling if showAllAssets is true and item is ineligible
                               const itemClass =
                                 showAllAssets && !isEligible
                                   ? "opacity-50 pointer-events-none"
@@ -3767,7 +3681,7 @@ const MySupply = () => {
                                   key={index}
                                   className={`grid grid-cols-[3fr_2fr_2fr_1fr_2fr] items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs ${itemClass}`}
                                 >
-                                  {/* Asset Column */}
+                                  {}
                                   <div className="p-3 lgx:pl-4 align-top flex items-center min-w-[80px] gap-2 whitespace-nowrap mt-2">
                                     {item[0] === "ckBTC" && (
                                       <img
@@ -3807,7 +3721,7 @@ const MySupply = () => {
                                     <span>{item[0]}</span>
                                   </div>
 
-                                  {/* Balance Column */}
+                                  {}
                                   <div className="p-3 lgx:pl-4 align-top flex flex-col">
                                     {item[0] === "ckBTC" && (
                                       <>
@@ -3820,11 +3734,11 @@ const MySupply = () => {
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) /
                                                     (ckBTCUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow) /
                                                     (ckBTCUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                             : "0.00000000"}
                                         </p>
                                         <p className="font-light">
@@ -3836,10 +3750,10 @@ const MySupply = () => {
                                               ? formatConditional(
                                                   Number(total_supply) -
                                                     Number(total_borrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                       </>
@@ -3856,11 +3770,11 @@ const MySupply = () => {
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) /
                                                     (ckETHUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow) /
                                                     (ckETHUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                         <p className="font-light">
@@ -3872,10 +3786,10 @@ const MySupply = () => {
                                               ? formatConditional(
                                                   Number(total_supply) -
                                                     Number(total_borrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                       </>
@@ -3892,11 +3806,11 @@ const MySupply = () => {
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) /
                                                     (ckUSDCUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow) /
                                                     (ckUSDCUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                         <p className="font-light">
@@ -3908,10 +3822,10 @@ const MySupply = () => {
                                               ? formatConditional(
                                                   Number(total_supply) -
                                                     Number(total_borrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                       </>
@@ -3928,11 +3842,11 @@ const MySupply = () => {
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) /
                                                     (ckICPUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow) /
                                                     (ckICPUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                         <p className="font-light">
@@ -3944,10 +3858,10 @@ const MySupply = () => {
                                               ? formatConditional(
                                                   Number(total_supply) -
                                                     Number(total_borrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                       </>
@@ -3964,11 +3878,11 @@ const MySupply = () => {
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) /
                                                     (ckUSDTUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow) /
                                                     (ckUSDTUsdRate / 1e8)
-                                                ) // Use formatConditional for asset value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                         <p className="font-light">
@@ -3980,17 +3894,17 @@ const MySupply = () => {
                                               ? formatConditional(
                                                   Number(total_supply) -
                                                     Number(total_borrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                               : formatConditional(
                                                   Number(availableBorrow)
-                                                ) // Use formatConditional for USD value
+                                                ) 
                                             : "0.0000"}
                                         </p>
                                       </>
                                     )}
                                   </div>
 
-                                  {/* Borrow Rate Column */}
+                                  {}
                                   <div className="p-3 lgx:pl-4 align-center flex items-center">
                                     <p className="mt-1.5">
                                       {Number(item[1].Ok.borrow_rate) /
@@ -4004,10 +3918,10 @@ const MySupply = () => {
                                     </p>
                                   </div>
 
-                                  {/* Empty Spacer Column */}
+                                  {}
                                   <div className="p-3 text-center"></div>
 
-                                  {/* Actions Column */}
+                                  {}
                                   <div className="p-3 flex gap-3 justify-end">
                                     <Button
                                       title={"Borrow"}
@@ -4036,9 +3950,9 @@ const MySupply = () => {
                                           Number(userData?.Ok?.ltv) /
                                             100000000 || 0;
                                         console.log("LTV IN borrow ", Ltv);
-                                        // Calculate borrowable asset based on asset type
-                                        let borrowableValue = "0.0000"; // Default value in case availableBorrow is invalid
-                                        let borrowableAssetValue = "0.0000"; // Default value for borrowableAsset
+
+                                        let borrowableValue = "0.0000"; 
+                                        let borrowableAssetValue = "0.0000"; 
 
                                         if (Number(availableBorrow)) {
                                           const remainingBorrowable =
@@ -4050,42 +3964,41 @@ const MySupply = () => {
                                               ? remainingBorrowable
                                               : Number(availableBorrow);
 
-                                          // Calculate borrowable value for each asset type and apply formatConditional
                                           if (item[0] === "ckBTC") {
                                             borrowableValue =
-                                              borrowable.toFixed(8); // In asset units (e.g., BTC)
+                                              borrowable.toFixed(8); 
                                             borrowableAssetValue = (
                                               borrowable /
                                               (ckBTCUsdRate / 1e8)
-                                            ).toFixed(8); // In USD equivalent
+                                            ).toFixed(8); 
                                           } else if (item[0] === "ckETH") {
                                             borrowableValue =
-                                              borrowable.toFixed(8); // In asset units (e.g., ETH)
+                                              borrowable.toFixed(8); 
                                             borrowableAssetValue = (
                                               borrowable /
                                               (ckETHUsdRate / 1e8)
-                                            ).toFixed(8); // In USD equivalent
+                                            ).toFixed(8); 
                                           } else if (item[0] === "ckUSDC") {
                                             borrowableValue =
-                                              borrowable.toFixed(8); // In asset units (e.g., USDC)
+                                              borrowable.toFixed(8); 
                                             borrowableAssetValue = (
                                               borrowable /
                                               (ckUSDCUsdRate / 1e8)
-                                            ).toFixed(8); // In USD equivalent
+                                            ).toFixed(8); 
                                           } else if (item[0] === "ICP") {
                                             borrowableValue =
-                                              borrowable.toFixed(8); // In asset units (e.g., ICP)
+                                              borrowable.toFixed(8); 
                                             borrowableAssetValue = (
                                               borrowable /
                                               (ckICPUsdRate / 1e8)
-                                            ).toFixed(8); // In USD equivalent
+                                            ).toFixed(8); 
                                           } else if (item[0] === "ckUSDT") {
                                             borrowableValue =
-                                              borrowable.toFixed(8); // In asset units (e.g., USDT)
+                                              borrowable.toFixed(8); 
                                             borrowableAssetValue = (
                                               borrowable /
                                               (ckUSDTUsdRate / 1e8)
-                                            ).toFixed(8); // In USD equivalent
+                                            ).toFixed(8); 
                                           }
                                         }
                                         console.log(
@@ -4127,11 +4040,11 @@ const MySupply = () => {
                                           totalDebt,
                                           currentCollateralStatus,
                                           Ltv,
-                                          borrowableValue, // Use the calculated borrowable value
-                                          borrowableAssetValue // Use the calculated borrowable asset value
+                                          borrowableValue, 
+                                          borrowableAssetValue 
                                         );
                                       }}
-                                      disabled={!isEligible} // Disable button if item is ineligible
+                                      disabled={!isEligible} 
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs"
                                     />
                                     <Button
@@ -4139,7 +4052,7 @@ const MySupply = () => {
                                       onClickHandler={() =>
                                         handleDetailsClick(item[0], item[1])
                                       }
-                                      disabled={!isEligible} // Disable button if item is ineligible
+                                      disabled={!isEligible} 
                                       className="bg-gradient-to-r from-[#4659CF] to-[#2A1F9D] text-white rounded-md px-3 py-1.5 shadow-md font-semibold text-xs"
                                     />
                                   </div>

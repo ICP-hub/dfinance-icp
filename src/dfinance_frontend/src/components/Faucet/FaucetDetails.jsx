@@ -12,7 +12,7 @@ import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
@@ -26,7 +26,6 @@ import Loading from "../Common/Loading";
 const ITEMS_PER_PAGE = 8;
 
 const FaucetDetails = () => {
-
   const { isAuthenticated, principal, backendActor, createLedgerActor } =
     useAuth();
 
@@ -67,36 +66,59 @@ const FaucetDetails = () => {
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * (ckBTCUsdRate / 1e8)).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckBTCBalance) *
+        (ckBTCUsdRate / 1e8)
+      ).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
     }
 
     if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * (ckETHUsdRate/ 1e8)).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckETHBalance) *
+        (ckETHUsdRate / 1e8)
+      ).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
     }
 
     if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * (ckUSDCUsdRate / 1e8)).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckUSDCBalance) *
+        (ckUSDCUsdRate / 1e8)
+      ).toFixed(2);
       setCkUSDCUsdBalance(balanceInUsd);
     }
 
     if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (parseFloat(ckICPBalance) * (ckICPUsdRate / 1e8)).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckICPBalance) *
+        (ckICPUsdRate / 1e8)
+      ).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
 
     if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDTBalance) *(ckUSDTUsdRate/ 1e8)).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckUSDTBalance) *
+        (ckUSDTUsdRate / 1e8)
+      ).toFixed(2);
       setCkUSDTUsdBalance(balanceInUsd);
     }
-
-  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate, ckUSDTBalance,
-    ckUSDTUsdRate]);
+  }, [
+    ckBTCBalance,
+    ckBTCUsdRate,
+    ckETHBalance,
+    ckETHUsdRate,
+    ckUSDCBalance,
+    ckUSDCUsdRate,
+    ckICPBalance,
+    ckICPUsdRate,
+    ckUSDTBalance,
+    ckUSDTUsdRate,
+  ]);
 
   useEffect(() => {
     const fetchAllData = async () => {
-      setLoading(true);
       try {
         await Promise.all([
           fetchBalance("ckBTC"),
@@ -110,11 +132,7 @@ const FaucetDetails = () => {
         setAssets(allAssets);
       } catch (error) {
         setError(error);
-      } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1500);
-      }
+      } 
     };
 
     fetchAllData();
@@ -125,9 +143,16 @@ const FaucetDetails = () => {
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
-    ckUSDTBalance
+    ckUSDTBalance,
   ]);
-
+  console.log(
+    "balance in faucet detail",
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance
+  );
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -172,6 +197,17 @@ const FaucetDetails = () => {
   };
 
   const { filteredItems } = useAssetData();
+  useEffect(() => {
+    if (filteredItems.length === 0) {
+      setLoading(true);
+    } else {
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
+    }
+  }, [filteredItems]);
+  
+  console.log("filteredItems in faucet detail", filteredItems);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
@@ -179,7 +215,6 @@ const FaucetDetails = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
   const filteredReserveData = Object.fromEntries(filteredItems);
   const formatNumber = useFormatNumber();
-
 
   return (
     <div className="w-full">
@@ -230,13 +265,15 @@ const FaucetDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${index !== currentItems.length - 1
-                        ? "gradient-line-bottom"
-                        : ""
-                        }`}
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${
+                        index !== currentItems.length - 1
+                          ? "gradient-line-bottom"
+                          : ""
+                      }`}
                     >
                       <td className="p-3 align-center py-7 px-2">
                         <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
+                          {console.log("Item in filtered items", item[0])}
                           {item[0] === "ckBTC" && (
                             <img
                               src={ckBTC}
@@ -265,7 +302,7 @@ const FaucetDetails = () => {
                               className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
-                          {item[0] === "ckUSDT" && (  // Added for ckUSDT
+                          {item[0] === "ckUSDT" && ( // Added for ckUSDT
                             <img
                               src={ckUSDT} // Ensure ckUSDT is defined or imported
                               alt="ckusdt logo"
@@ -281,7 +318,25 @@ const FaucetDetails = () => {
                             <center>
                               {item[0] === "ckBTC" && (
                                 <>
-                                  <p className="text-left">{Number(ckBTCBalance).toLocaleString()}</p>
+                                  <p className="text-left">
+                                    {ckBTCBalance === 0
+                                      ? "0"
+                                      : ckBTCBalance >= 1
+                                      ? Number(ckBTCBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckBTCBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckBTCUsdBalance)}
                                   </p>
@@ -289,7 +344,25 @@ const FaucetDetails = () => {
                               )}
                               {item[0] === "ckETH" && (
                                 <>
-                                  <p className="text-left">{Number(ckETHBalance).toLocaleString()}</p>
+                                  <p className="text-left">
+                                    {ckETHBalance === 0
+                                      ? "0"
+                                      : ckETHBalance >= 1
+                                      ? Number(ckETHBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckETHBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckETHUsdBalance)}
                                   </p>
@@ -297,7 +370,25 @@ const FaucetDetails = () => {
                               )}
                               {item[0] === "ckUSDC" && (
                                 <>
-                                  <p className="text-left">{Number(ckUSDCBalance).toLocaleString()}</p>
+                                  <p className="text-left">
+                                    {ckUSDCBalance === 0
+                                      ? "0"
+                                      : ckUSDCBalance >= 1
+                                      ? Number(ckUSDCBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckUSDCBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckUSDCUsdBalance)}
                                   </p>
@@ -305,15 +396,51 @@ const FaucetDetails = () => {
                               )}
                               {item[0] === "ICP" && (
                                 <>
-                                  <p className="text-left">{Number(ckICPBalance).toLocaleString()}</p>
+                                  <p className="text-left">
+                                    {ckICPBalance === 0
+                                      ? "0"
+                                      : ckICPBalance >= 1
+                                      ? Number(ckICPBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckICPBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckICPUsdBalance)}
                                   </p>
                                 </>
                               )}
-                              {item[0] === "ckUSDT" && (  // Added for ckUSDT
+                              {item[0] === "ckUSDT" && (
                                 <>
-                                  <p className="text-left">{Number(ckUSDTBalance).toLocaleString()}</p>
+                                  <p className="text-left">
+                                    {ckUSDTBalance === 0
+                                      ? "0"
+                                      : ckUSDTBalance >= 1
+                                      ? Number(ckUSDTBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckUSDTBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
                                   <p className="font-light text-left text-[11px]">
                                     ${formatNumber(ckUSDTUsdBalance)}
                                   </p>
@@ -388,3 +515,4 @@ const FaucetDetails = () => {
   );
 };
 export default FaucetDetails;
+

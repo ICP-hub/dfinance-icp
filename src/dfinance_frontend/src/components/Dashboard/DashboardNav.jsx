@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  TAB_CARD_DATA,
-  WALLET_DETAILS_TABS,
-  WALLET_DETAIL_TAB,
-} from "../../utils/constants";
+import { TAB_CARD_DATA,WALLET_DETAILS_TABS,
+  WALLET_DETAIL_TAB,} from "../../utils/constants";
 import { useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
-import icplogo from "../../../public/wallet/icp.png";
 import { EllipsisVertical } from "lucide-react";
 import useAssetData from "../Common/useAssets";
 import { useCallback } from "react";
@@ -30,7 +26,6 @@ const DashboardNav = () => {
   const { isAuthenticated, backendActor, principal, fetchReserveData } =
     useAuth();
   const { reserveData } = useAssetData();
-  console.log("reserveDta", reserveData)
   const [netWorth, setNetWorth] = useState()
 
   const totalUsdValueBorrow = useSelector(
@@ -42,15 +37,10 @@ const DashboardNav = () => {
 
   const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
 
-
   useEffect(() => {
     const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
     setNetWorth(calculatedNetWorth);
-    console.log(`Updated Net Worth: $${calculatedNetWorth}`);
   }, [totalUsdValueBorrow, totalUsdValueSupply]);
-
-  console.log("totalUsdValueBorrow", totalUsdValueBorrow, totalUsdValueSupply);
-
 
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
   const [netSupplyApy, setNetSupplyApy] = useState(0);
@@ -67,7 +57,6 @@ const DashboardNav = () => {
     setIsTooltipVisible((prev) => !prev);
   };
 
-  // Effect to handle clicks outside the tooltip
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
@@ -75,7 +64,6 @@ const DashboardNav = () => {
       }
     };
 
-    // Attach event listener
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
@@ -86,32 +74,29 @@ const DashboardNav = () => {
     {
       id: 0,
       title: "Net Worth",
-      count: "-", // Initial state is null
+      count: "-", 
     },
     {
       id: 1,
       title: "Net APY",
-      count: "-", // Initial state is null
+      count: "-", 
     },
     {
       id: 2,
       title: "Health Factor",
-      count: "-", // Initial state is null
+      count: "-", 
     },
   ]);
 
   const [walletDetailTabs, setWalletDetailTabs] = useState([
-    { id: 0, title: "Total Market Size", count: 0 }, // Initial count set to null
-    { id: 1, title: "Total Available", count: 0 }, // Initial count set to null
-    { id: 2, title: "Total Borrows", count: 0 }, // Initial count set to null
+    { id: 0, title: "Total Market Size", count: 0 }, 
+    { id: 1, title: "Total Available", count: 0 }, 
+    { id: 2, title: "Total Borrows", count: 0 }, 
   ]);
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const formatNumber = useFormatNumber();
 
-
-  // Function to update net_worth and health_factor only
-  // Function to update net_worth and health_factor only
   const updateNetWorthAndHealthFactor = (data) => {
     if (!data || !data.Ok) return;
     const { net_worth, health_factor } = data.Ok;
@@ -139,14 +124,13 @@ const DashboardNav = () => {
     setWalletDetailTab(updatedTab);
   };
 
-  // Function to update net_apy with conditional visibility
   const updateNetApy = () => {
     const updatedTab = walletDetailTab.map((item) => {
       if (item.id === 1) {
         return {
           ...item,
           count: netApy !== 0 ? `${netApy.toFixed(4)}%` : "-",
-          // Apply visibility
+
         };
       }
 
@@ -156,24 +140,17 @@ const DashboardNav = () => {
     setWalletDetailTab(updatedTab);
   };
 
-  // Update net_worth and health_factor based on `userData` and `reserveData`
   useEffect(() => {
     if (userData && reserveData) {
       updateNetWorthAndHealthFactor(userData);
     }
   }, [userData, reserveData, totalUsdValueSupply, totalUsdValueBorrow]);
 
-  // Update net_apy only when `netApy` changes
   useEffect(() => {
     if (netApy !== undefined) {
       updateNetApy();
     }
   }, [netApy]);
-
-
-  // Effect to update net_apy only when `netApy` changes
-
-
 
   const [error, setError] = useState(null);
 
@@ -197,7 +174,7 @@ const DashboardNav = () => {
       case "ICP":
         return ckICPUsdRate;
       case "ckUSDT":
-        return ckUSDTUsdRate; // Added ckUSDT case
+        return ckUSDTUsdRate; 
       default:
         return null;
     }
@@ -206,12 +183,6 @@ const DashboardNav = () => {
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate]);
-  console.log("rate in dashbaord nav", ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,)
-  console.log("reservedata in reserve1 ", reserveData)
 
   const calculateNetSupplyApy = useCallback((reserves, reserveData) => {
     let totalSuppliedInUSD = 0;
@@ -223,7 +194,6 @@ const DashboardNav = () => {
 
     reserves.forEach((reserve) => {
       const assetKey = reserve[0];
-      console.log(`Processing assetKey: ${assetKey}`);
 
       if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok) return;
 
@@ -233,12 +203,6 @@ const DashboardNav = () => {
 
       const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
       const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
-      console.log(
-        `Reserve: ${assetKey}, Asset Supply: ${assetSupply}, Conversion Rate: ${conversionRate}, Supply APY: ${supplyApy}`
-      );
-      console.log(
-        `Asset Borrowed: ${assetBorrowed}, Borrow Rate (APY): ${debtApy}`
-      );
       const assetBorrowedInUSD = assetBorrowed * conversionRate;
       totalBorrowedInUSD = assetBorrowedInUSD;
       weightedDebtApySum = assetBorrowedInUSD * debtApy;
@@ -246,12 +210,8 @@ const DashboardNav = () => {
       const assetSupplyInUSD = assetSupply * conversionRate;
       totalSuppliedInUSD = assetSupplyInUSD;
       weightedApySum = assetSupplyInUSD * supplyApy;
-      console.log(`supply : ${weightedApySum}, borrow: ${weightedDebtApySum}`);
       numerator = numerator + weightedApySum - weightedDebtApySum;
       denominator = denominator + totalSuppliedInUSD;
-      console.log(
-        `Numerator: ${numerator}, denominator ${denominator}`
-      );
     });
 
     return denominator > 0 ? numerator / denominator : 0;
@@ -262,10 +222,8 @@ const DashboardNav = () => {
         const reservesData = userData.Ok.reserves[0];
         const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
 
-        // Set netApy immediately
         setNetApy(calculatedNetApy);
 
-        // Update asset supply and borrow values
         const reserve = reservesData[0];
         const supply = reserve[1] ? Number(reserve[1].asset_supply || 0n) / 100000000 : 0;
         setAssetSupply(supply);
@@ -273,73 +231,58 @@ const DashboardNav = () => {
         const borrow = Number(userData.Ok.total_debt || 0n) / 100000000;
         setAssetBorrow(borrow);
 
-        console.log("Net APY:", calculatedNetApy);
-        console.log("Asset Supply:", supply);
-        console.log("Borrow:", borrow);
       };
 
-      updateState(); // Call the async function
+      updateState(); 
     }
-  }, [userData, reserveData, calculateNetSupplyApy]); // Ensure calculateNetSupplyApy is included in dependencies
+  }, [userData, reserveData, calculateNetSupplyApy]); 
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
       const borrow = Number(userData.Ok.total_debt) / 100000000;
       setAssetBorrow(borrow);
-      console.log("Updated Borrow:", borrow);
     }
   }, [userData]);
-  // Log updates to netApy
+
   useEffect(() => {
-    console.log("Updated netApy:", netApy);
   }, [netApy]);
-  // Optional useEffect to monitor changes to netApy
-
-
 
   const updateWalletDetailTabs = () => {
     const updatedTabs = walletDetailTabs.map((item) => {
       switch (item.id) {
         case 0:
-          return { ...item, count: <><span className="font-light">$</span>{totalSupplySize}</> };  // Add $ sign for totalSupplySize
+          return { ...item, count: <><span className="font-light">$</span>{totalSupplySize}</> };  
         case 1:
-          // Function to convert a string with suffixes like K, M, etc.
+
           const convertToNumber = (value) => {
             if (typeof value === 'string') {
-              // Remove non-numeric characters and convert the rest to number
+
               const numberValue = parseFloat(value.replace(/[^0-9.]/g, ''));
               if (value.includes('K')) {
-                return numberValue * 1e3;  // Multiply by 1000 if the value has 'K'
+                return numberValue * 1e3;  
               }
               if (value.includes('M')) {
-                return numberValue * 1e6;  // Multiply by 1,000,000 if the value has 'M'
+                return numberValue * 1e6;  
               }
-              // Handle other suffixes or return the number
+
               return numberValue;
             }
-            return 0; // Return 0 if not a valid number or string
+            return 0; 
           };
-  
+
           const supply = convertToNumber(totalSupplySize);
           const borrow = convertToNumber(totalBorrowSize);
-  
-          // Debugging the values and types
-          console.log("Total Supply Size:", totalSupplySize, "Converted:", supply);
-          console.log("Total Borrow Size:", totalBorrowSize, "Converted:", borrow);
-  
-          // Perform subtraction if both are valid numbers
+
           const result = !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
-  
-          // Log the result to check the calculation
-          console.log("Calculated Result:", result);
+
           const formattedResult = formatNumber(result === "0.00" ? "0" : result);
-          return { ...item, count: <><span className="font-light">$</span>{formattedResult}</> };  // Add $ sign to the result
+          return { ...item, count: <><span className="font-light">$</span>{formattedResult}</> };  
         case 2:
-          return { ...item, count:  <><span className="font-light">$</span>{totalBorrowSize}</>};  // Add $ sign for totalBorrowSize
+          return { ...item, count:  <><span className="font-light">$</span>{totalBorrowSize}</>};  
         default:
           return item;
       }
     });
-  
+
     setWalletDetailTabs(updatedTabs);
 };
   useEffect(() => {
@@ -451,7 +394,7 @@ const DashboardNav = () => {
     ckETH: ckETH,
     ckUSDC: ckUSDC,
     ICP: icp,
-    ckUSDT: ckUSDT, // Added ckUSDT
+    ckUSDT: ckUSDT, 
   };
 
   const assetImage = assetImages[id] || null;
@@ -501,7 +444,7 @@ const DashboardNav = () => {
 
       <div className="w-full flex flex-wrap justify-start items-center gap-2 sxs3:mb-2 md:mb-9 lg:mb-2">
         <div className="flex">
-          {/* Menu button for small screens */}
+          {}
           <div className="relative">
             <div
               className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
@@ -524,9 +467,9 @@ const DashboardNav = () => {
                       ? walletDetailTab
                       : walletDetailTabs
                     ).map((data, index) => {
-                      // Skip rendering the "Health Factor" block if assetBorrow is 0
+
                       if (data.title === "Health Factor" && assetBorrow === 0) {
-                        return null; // Do not render the Health Factor block
+                        return null; 
                       }
 
                       return (
@@ -536,24 +479,24 @@ const DashboardNav = () => {
                           style={{ minWidth: "220px", flex: "1 0 220px" }}
                         >
                           <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                            {/* Title and Info Icon */}
+                            {}
                             <div className="flex items-center">
                               {data.title}
                               {data.title === "Net APY" && (
                                 <span className="relative inline-block ml-1">
-                                  {/* Info icon aligned with title */}
+                                  {}
                                   <Info
                                     size={15}
                                     className="ml-1 align-middle "
                                     onClick={toggleTooltip}
                                   />
-                                  {/* Tooltip with full-screen blur */}
+                                  {}
                                   {isTooltipVisible && (
                                     <>
-                                      {/* Fullscreen backdrop with blur effect */}
-                                      {/* <div className="fixed inset-0 backdrop-blur-md bg-black bg-opacity-40 z-40"></div> */}
+                                      {}
+                                      {}
 
-                                      {/* Tooltip content */}
+                                      {}
                                       <div
                                         ref={tooltipRef}
                                         className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
@@ -569,14 +512,8 @@ const DashboardNav = () => {
                                           supplied.
                                         </span>
 
-                                        {/* Tooltip arrow */}
-                                        {/* <span
-                                          className={`tooltip-arrow ${
-                                            theme === "dark"
-                                              ? "tooltip-arrow-dark"
-                                              : ""
-                                          }`}
-                                        ></span> */}
+                                        {}
+                                        {}
                                       </div>
                                     </>
                                   )}
@@ -638,15 +575,15 @@ const DashboardNav = () => {
                   ? walletDetailTab
                   : walletDetailTabs
                 ).map((data, index) => {
-                  // Skip rendering the "Health Factor" block if assetBorrow is 0
+
                   if (data.title === "Health Factor" && assetBorrow === 0) {
-                    return null; // Do not render the Health Factor block
+                    return null; 
                   }
 
                   return (
                     <div key={index} className="relative group">
                       <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                        {/* Title and Info Icon */}
+                        {}
                         <div className="flex items-center">
                           {data.title}
                           {data.title === "Net APY" && (
@@ -655,17 +592,16 @@ const DashboardNav = () => {
                               onMouseEnter={() => setIsTooltipVisible(true)}
                               onMouseLeave={() => setIsTooltipVisible(false)}
                             >
-                              {/* Info icon with hover-triggered tooltip */}
+                              {}
                               <Info size={15} className="ml-1 align-middle cursor-pointer" onClick={toggleTooltip} />
 
-
-                              {/* Tooltip with full-screen blur */}
+                              {}
                               {isTooltipVisible && (
                                 <>
-                                  {/* Fullscreen backdrop */}
-                                  {/* <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-40 z-40" /> */}
+                                  {}
+                                  {}
 
-                                  {/* Tooltip content */}
+                                  {}
                                   <div
                                     ref={tooltipRef}
                                     className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
@@ -679,7 +615,7 @@ const DashboardNav = () => {
                                       is borrowed than supplied.
                                     </span>
 
-                                    {/* Tooltip arrow */}
+                                    {}
                                     <span
                                       className={`tooltip-arrow ${theme === "dark"
                                           ? "tooltip-arrow-dark"
@@ -736,15 +672,7 @@ const DashboardNav = () => {
             <RiskPopup onClose={handleClosePopup} userData={userData} />
           )}
         </div>
-        {/* <div className="ml-auto hidden lg:flex">
-          {isAuthenticated && shouldRenderTransactionHistoryButton && (
-            <a href="/dashboard/transaction-history" className="block">
-              <button className=" text-nowrap px-2 py-2 md:px-4 md:py-2 border border-[#2A1F9D] text-[#2A1F9D] bg-[#ffff] rounded-md shadow-md hover:shadow-[#00000040] font-medium text-sm cursor-pointer relative dark:bg-darkOverlayBackground dark:text-darkText dark:border-none sxs3:mt-4 sxs3:ml-0 md:ml-4 md:mt-0">
-                Transaction History
-              </button>
-            </a>
-          )}
-        </div> */}
+        {}
       </div>
     </div>
   );

@@ -326,9 +326,9 @@ impl ValidationLogic {
             panic!("{:?}", Error::InvalidAmount);
         }
 
-        if user != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
-        }
+        // if user != ic_cdk::caller() {
+        //     panic!("{:?}", Error::InvalidUser);
+        // }
 
         // Fetch user data
         let user_data_result = mutate_state(|state| {
@@ -390,111 +390,111 @@ impl ValidationLogic {
     //     // ---------------LIQUIDATION---------------
     //     // --------------------------------------
 
-    pub async fn validate_liquidation(
-        repay_asset: String,
-        repay_amount: u128,
-        reward_amount: u128,
-        liquidator: Principal,
-        user: Principal,
-    ) {
-        let repay_ledger_canister_id = mutate_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&repay_asset.to_string().clone())
-                .map(|principal| principal.clone())
-                .ok_or_else(|| panic!("No canister ID found for asset: {}", repay_asset))
-        })
-        .unwrap();
+    // pub async fn validate_liquidation(
+    //     repay_asset: String,
+    //     repay_amount: u128,
+    //     reward_amount: u128,
+    //     liquidator: Principal,
+    //     user: Principal,
+    // ) {
+    //     let repay_ledger_canister_id = mutate_state(|state| {
+    //         let reserve_list = &state.reserve_list;
+    //         reserve_list
+    //             .get(&repay_asset.to_string().clone())
+    //             .map(|principal| principal.clone())
+    //             .ok_or_else(|| panic!("No canister ID found for asset: {}", repay_asset))
+    //     })
+    //     .unwrap();
 
-        if liquidator != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
-        }
+    //     if liquidator != ic_cdk::caller() {
+    //         panic!("{:?}", Error::InvalidUser);
+    //     }
 
-        // Checking liquidator is present in user list
-        let _ = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&liquidator)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| panic!("Liquidator not found: {}", user.to_string()))
-        });
+    //     // Checking liquidator is present in user list
+    //     // let _ = mutate_state(|state| {
+    //     //     let user_profile_data = &mut state.user_profile;
+    //     //     user_profile_data
+    //     //         .get(&liquidator)
+    //     //         .map(|user| user.0.clone())
+    //     //         .ok_or_else(|| panic!("Liquidator not found: {}", user.to_string()))
+    //     // });
 
-        let liquidator_balance = get_balance(repay_ledger_canister_id, liquidator).await;
-        ic_cdk::println!("User balance: {:?}", liquidator_balance);
+    //     // let liquidator_balance = get_balance(repay_ledger_canister_id, liquidator).await;
+    //     ic_cdk::println!("User balance: {:?}", liquidator_balance);
 
-        let transfer_fees = get_fees(repay_ledger_canister_id).await;
-        ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
+    //     let transfer_fees = get_fees(repay_ledger_canister_id).await;
+    //     ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
-        let final_amount = repay_amount + transfer_fees;
-        ic_cdk::println!("final_amount : {:?}", final_amount);
+    //     let final_amount = repay_amount + transfer_fees;
+    //     ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        if repay_amount == 0 {
-            panic!("{:?}", Error::InvalidAmount);
-        }
+    //     if repay_amount == 0 {
+    //         panic!("{:?}", Error::InvalidAmount);
+    //     }
 
-        if final_amount > liquidator_balance {
-            panic!("{:?}", Error::MaxAmount);
-        }
+    //     // if final_amount > liquidator_balance {
+    //     //     panic!("{:?}", Error::MaxAmount);
+    //     // }
 
-        // Fetch user data
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| panic!("User not found: {}", user.to_string()))
-        });
+    //     // Fetch user data
+    //     let user_data_result = mutate_state(|state| {
+    //         let user_profile_data = &mut state.user_profile;
+    //         user_profile_data
+    //             .get(&user)
+    //             .map(|user| user.0.clone())
+    //             .ok_or_else(|| panic!("User not found: {}", user.to_string()))
+    //     });
 
-        let user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
-                data
-            }
-            Err(e) => {
-                panic!("{:?}", e);
-            }
-        };
+    //     let user_data = match user_data_result {
+    //         Ok(data) => {
+    //             ic_cdk::println!("User found: {:?}", data);
+    //             data
+    //         }
+    //         Err(e) => {
+    //             panic!("{:?}", e);
+    //         }
+    //     };
 
-        if user_data.total_collateral.unwrap_or(0) < reward_amount {
-            panic!("{:?}", Error::LessRewardAmount);
-        }
+    //     if user_data.total_collateral.unwrap_or(0) < reward_amount {
+    //         panic!("{:?}", Error::LessRewardAmount);
+    //     }
 
-        let reserve_data_result = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&repay_asset.to_string().clone())
-                .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| panic!("Reserve not found for asset: {}", repay_asset.to_string()))
-        });
+    //     let reserve_data_result = mutate_state(|state| {
+    //         let asset_index = &mut state.asset_index;
+    //         asset_index
+    //             .get(&repay_asset.to_string().clone())
+    //             .map(|reserve| reserve.0.clone())
+    //             .ok_or_else(|| panic!("Reserve not found for asset: {}", repay_asset.to_string()))
+    //     });
 
-        let reserve_data = match reserve_data_result {
-            Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset: {:?}", data);
-                data
-            }
-            Err(e) => {
-                panic!("{:?}", e);
-            }
-        };
+    //     let reserve_data = match reserve_data_result {
+    //         Ok(data) => {
+    //             ic_cdk::println!("Reserve data found for asset: {:?}", data);
+    //             data
+    //         }
+    //         Err(e) => {
+    //             panic!("{:?}", e);
+    //         }
+    //     };
 
-        // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            reserve_data.configuration.active,
-            reserve_data.configuration.frozen,
-            reserve_data.configuration.paused,
-        );
+    //     // validating reserve states
+    //     let (is_active, is_frozen, is_paused) = (
+    //         reserve_data.configuration.active,
+    //         reserve_data.configuration.frozen,
+    //         reserve_data.configuration.paused,
+    //     );
 
-        if !is_active {
-            panic!("{:?}", Error::ReserveInactive);
-        }
-        if is_paused {
-            panic!("{:?}", Error::ReservePaused);
-        }
-        if is_frozen {
-            panic!("{:?}", Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
-    }
+    //     if !is_active {
+    //         panic!("{:?}", Error::ReserveInactive);
+    //     }
+    //     if is_paused {
+    //         panic!("{:?}", Error::ReservePaused);
+    //     }
+    //     if is_frozen {
+    //         panic!("{:?}", Error::ReserveFrozen);
+    //     }
+    //     ic_cdk::println!("is_active : {:?}", is_active);
+    //     ic_cdk::println!("is_paused : {:?}", is_paused);
+    //     ic_cdk::println!("is_frozen : {:?}", is_frozen);
+    // }
 }

@@ -42,7 +42,6 @@ const DebtStatus = () => {
 
   const navigate = useNavigate();
 
-
   const {
     isAuthenticated,
     login,
@@ -53,7 +52,7 @@ const DebtStatus = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    // Fetch all users when the component mounts
+
     const fetchUsers = async () => {
       try {
         const usersData = await getAllUsers();
@@ -63,8 +62,6 @@ const DebtStatus = () => {
         console.error('Error fetching users:', error);
       }
     };
-
-
 
     fetchUsers();
   }, [getAllUsers]);
@@ -77,16 +74,15 @@ const DebtStatus = () => {
   }, [users])
 
   const handleDetailsClick = (item) => {
-    setSelectedAsset(item); // Update selectedAsset with the clicked asset
-    setShowUserInfoPopup(true); // Open the user info popup
+    setSelectedAsset(item); 
+    setShowUserInfoPopup(true); 
   };
-
 
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === 'dark' ? '#ffffff' : '#3739b4';
 
   const handleChevronClick = () => {
-    // setSelectedAsset(asset);
+
     setShowPopup(true);
   };
 
@@ -127,8 +123,6 @@ const DebtStatus = () => {
   const ITEMS_PER_PAGE = 8;
   const [currentPage, setCurrentPage] = useState(1);
 
-
-  // Filter users based on search query
   const filteredUsers = users
     .map((item) => {
       const mappedItem = {
@@ -149,28 +143,22 @@ const DebtStatus = () => {
       return isValid;
     });
 
-  // Calculate total pages based on the filtered users
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
-  // Determine the items for the current page
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Function to handle page changes
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  // Update search input and reset to page 1
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
 
-  const popupRef = useRef(null); // Ref for the popup content
-
-
+  const popupRef = useRef(null); 
 
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -188,7 +176,6 @@ const DebtStatus = () => {
       };
     }
   }, [showPopup]);
-
 
   const formatNumber = useFormatNumber();
 
@@ -258,7 +245,7 @@ const DebtStatus = () => {
                                     : assetName === "ckETH" ? ckETH
                                       : assetName === "ckUSDC" ? ckUSDC
                                         : assetName === "ICP" ? icp
-                                          : assetName === "ckUSDT" ? ckUSDT // Added case for ckUSDT
+                                          : assetName === "ckUSDT" ? ckUSDT 
                                             : undefined
                                 }
                                 alt={assetName}
@@ -274,13 +261,12 @@ const DebtStatus = () => {
                     <td className="p-5 align-top hidden md:table-cell py-8">
                       <div className="flex gap-2 items-center">
                         {mappedItem.reserves[0].map((item, index) => {
-                          const assetName = item[1]?.reserve // Asset name (e.g., 'ckBTC', 'ckETH')
-                          const assetSupply = item[1]?.asset_supply  // Asset borrow amount
+                          const assetName = item[1]?.reserve 
+                          const assetSupply = item[1]?.asset_supply  
 
                           console.log("itemss:", assetName);
                           console.log("Asset Supply:", assetSupply);
 
-                          // Show the image if asset_borrow > 0
                           if (assetSupply > 0) {
                             return (
                               <img
@@ -290,7 +276,7 @@ const DebtStatus = () => {
                                     : assetName === "ckETH" ? ckETH
                                       : assetName === "ckUSDC" ? ckUSDC
                                         : assetName === "ICP" ? icp
-                                          : assetName === "ckUSDT" ? ckUSDT // Added case for ckUSDT
+                                          : assetName === "ckUSDT" ? ckUSDT 
                                             : undefined
                                 }
                                 alt={assetName}
@@ -337,8 +323,6 @@ const DebtStatus = () => {
                 ))}
               </tbody>
 
-
-
             </table>
 
           </div>
@@ -353,16 +337,14 @@ const DebtStatus = () => {
           </div>
         </div>}
 
-
       </div>
       {showUserInfoPopup && selectedAsset && (
         <UserInformationPopup
           onClose={() => setShowUserInfoPopup(false)}
-          mappedItem={selectedAsset} // Pass the asset or other properties from the selected item
-          principal={selectedAsset.principal} // Pass the user_principle from the selected item
+          mappedItem={selectedAsset} 
+          principal={selectedAsset.principal} 
         />
       )}
-
 
     </div >
   )

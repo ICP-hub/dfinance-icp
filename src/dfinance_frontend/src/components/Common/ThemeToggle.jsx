@@ -26,12 +26,6 @@ const ThemeToggle = () => {
     }
   }, [theme]);
 
-  const gradientStyle = {
-    background: 'linear-gradient(90deg, #EC4899, #F43F5E, #F59E0B)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-  };
-
   return (
     <button
       onClick={handleToggle}

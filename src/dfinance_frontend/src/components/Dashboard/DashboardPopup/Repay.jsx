@@ -1,47 +1,29 @@
-import { Info, Check, Wallet, X } from "lucide-react";
+import { Info, Check, X } from "lucide-react";
 import React, { useState, useRef } from "react";
-import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
-import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useEffect } from "react";
-import { toast } from "react-toastify"; // Import Toastify if not already done
+import { toast } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 
-const Repay = ({
-  asset,
-  image,
-  supplyRateAPR,
-  balance,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  totalCollateral,
-  totalDebt,
-  isModalOpen,
-  handleModalOpen,
-  setIsModalOpen,
-  onLoadingChange,
+const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange 
 }) => {
-  const { createLedgerActor, backendActor, principal } = useAuth();
+  const {  backendActor, principal } = useAuth();
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
   );
 
   const [amount, setAmount] = useState(null);
-  const modalRef = useRef(null); // Reference to the modal container
+  const modalRef = useRef(null); 
   const [isApproved, setIsApproved] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [isLoading, setIsLoading] = useState(false); 
   const [error, setError] = useState("");
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -58,16 +40,14 @@ const Repay = ({
   const value = 5.23;
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value.replace(/,/g, ""); // Remove commas for processing
+    let inputAmount = e.target.value.replace(/,/g, ""); 
 
-    // Check if there's a decimal point and enforce 8 decimal places
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
-      // Limit decimal places to 8
       if (decimalPart.length > 8) {
         inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount; // Directly update the value in the field
+        e.target.value = inputAmount; 
       }
     }
 
@@ -75,24 +55,24 @@ const Repay = ({
   };
 
   const updateAmountAndUsdValue = (inputAmount) => {
-    // Convert input to a number
+
     const numericAmount = parseFloat(inputAmount);
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetBorrow) {
-        // Format the amount with commas before setting it
+
         const formattedAmount = formatAmountWithCommas(inputAmount);
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-        // Calculate and format the USD value
+
         const convertedValue = Number(numericAmount) * adjustedConversionRate;
-        setUsdValue(convertedValue.toFixed(2)); // Ensure proper formatting
-        setAmount(formattedAmount); // Set formatted amount with commas
+        setUsdValue(convertedValue.toFixed(2)); 
+        setAmount(formattedAmount); 
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
       }
     } else if (inputAmount === "") {
-      // Allow empty input and reset error
+
       setAmount("");
       setUsdValue(0);
       setError("");
@@ -101,14 +81,11 @@ const Repay = ({
     }
   };
 
-  // Utility function to format the amount with commas
   const formatAmountWithCommas = (amount) => {
     const parts = amount.split(".");
 
-    // Format the integer part with commas
     parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
 
-    // Join back the integer and decimal parts (if any)
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
   const { conversionRate, error: conversionError } =
@@ -118,9 +95,9 @@ const Repay = ({
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue =
         Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue); // Update USD value
+      setUsdValue(convertedValue); 
     } else {
-      setUsdValue(0); // Reset USD value if conditions are not met
+      setUsdValue(0); 
     }
   }, [amount, conversionRate]);
   useEffect(() => {
@@ -134,8 +111,8 @@ const Repay = ({
   }, [amount, conversionRate]);
 
   const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset); // Check what asset value is being passed
-  console.log("Fees:", fees); // Check the fees object
+  console.log("Asset:", asset); 
+  console.log("Fees:", fees); 
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
   if (!fees) {
@@ -158,18 +135,18 @@ const Repay = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     } else if (asset === "ckUSDT") {
-      // Added condition for ckUSDT
+
       ledgerActor = ledgerActors.ckUSDT;
     }
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-    console.log("Amount as nat64:", amountAsNat64);
+    
     const scaledAmount = amountAsNat64;
 
     const totalAmount = scaledAmount + transferfee;
 
     try {
-      // Call the approval function
+
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
         memo: [],
@@ -183,12 +160,9 @@ const Repay = ({
           subaccount: [],
         },
       });
-
-      console.log("Approve", approval);
       setIsApproved(true);
-      console.log("isApproved state after approval:", isApproved);
+     
 
-      // Show success notification
       toast.success(`Approval successful!`, {
         className: "custom-toast",
         position: "top-center",
@@ -200,10 +174,7 @@ const Repay = ({
         progress: undefined,
       });
     } catch (error) {
-      // Log the error
-      console.error("Approval failed:", error);
 
-      // Show error notification using Toastify
       toast.error(`Error: ${error.message || "Approval failed!"}`, {
         className: "custom-toast",
         position: "top-center",
@@ -236,22 +207,19 @@ const Repay = ({
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     } else if (asset === "ckUSDT") {
-      // Added condition for ckUSDT
+
       ledgerActor = ledgerActors.ckUSDT;
     }
-
-    console.log("Backend actor", ledgerActor);
 
     try {
       const safeAmount = Number(amount.replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
       );
-      console.log("Amount as nat64:", amountAsNat64);
+     
       const scaledAmount = amountAsNat64;
 
-      const repayResult = await backendActor.repay(asset, scaledAmount, []);
-      console.log("Repay result", repayResult);
+      const repayResult = await backendActor.repay(asset, scaledAmount, [])
 
       if ("Ok" in repayResult) {
         trackEvent(
@@ -297,10 +265,10 @@ const Repay = ({
           draggable: true,
           progress: undefined,
         });
-        console.error("Repay error:", errorMsg);
+       
       }
     } catch (error) {
-      console.error("Error repaying:", error);
+      
       toast.error(`Error: ${error.message || "Repay action failed!"}`, {
         className: "custom-toast",
         position: "top-center",
@@ -356,50 +324,25 @@ const Repay = ({
       totalDebt,
       liquidationThreshold
     );
-    console.log("Health Factor:", healthFactor);
     const amountTaken = 0;
     const amountAdded = usdValue || 0;
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
   }, [
-    asset,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-  ]);
+    asset,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,amount,usdValue,]);
 
-  const calculateHealthFactor = (
-    totalCollateral,
-    totalDebt,
-    liquidationThreshold
-  ) => {
+  const calculateHealthFactor = (totalCollateral,totalDebt,liquidationThreshold) => {
     const amountTaken = 0;
     const amountAdded = usdValue || 0;
-    console.log("THreshold", liquidationThreshold);
-    console.log(
-      "totalDebt before minus",
-      totalDebt,
-      "collateral",
-      totalCollateral,
-      "amount added",
-      amountAdded
-    );
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
-
-    console.log("totalDeptValue", totalDeptValue);
-    console.log("amountAdded", amountAdded);
     if (totalDeptValue === 0) {
       return Infinity;
     }
@@ -444,12 +387,12 @@ const Repay = ({
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-[50%]">
                   <input
-                    type="text" // Use text input to allow formatting
+                    type="text" 
                     value={amount}
                     onChange={handleAmountChange}
                     disabled={supplyBalance === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
+                    className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder={`Enter Amount ${asset}`}
                   />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
@@ -481,10 +424,8 @@ const Repay = ({
                       }
                     }}
                   >
-                    {maxUsdValue.toLocaleString(undefined, {
-                      minimumFractionDigits: 7,
-                      maximumFractionDigits: 7,
-                    })}{" "}
+                    {}
+                    {assetBorrow}{" "}
                     Max
                   </p>
                 </div>
@@ -561,22 +502,7 @@ const Repay = ({
 
             <div className="w-full mt-3">
               <div className="w-full">
-                {/* <div className="flex items-center">
-                  <Fuel className="w-4 h-4 mr-1" />
-                  <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
-                  <img
-                    src={image}
-                    alt="asset icon"
-                    className="object-cover w-5 h-5 rounded-full"
-                  />
-                  <div className="relative group">
-                    <Info size={16} className="ml-2 cursor-pointer" />
-
-                    <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-                      Fees deducted on every transaction
-                    </div>
-                  </div>
-                </div> */}
+                {}
                 {balance <= 0 && (
                   <div className="w-full flex flex-col my-3 space-y-2">
                     <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">

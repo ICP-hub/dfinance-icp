@@ -1,13 +1,8 @@
-import { Info, Check, Wallet, X, TriangleAlert } from "lucide-react";
+import { Check, X, TriangleAlert } from "lucide-react";
 import React, { useState, useRef } from "react";
-import Vector from "../../../../public/Helpers/Vector.png";
-import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../../declarations/ckbtc_ledger";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
-import { idlFactory as ledgerIdlFactory } from "../../../../../declarations/token_ledger";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,66 +12,17 @@ import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { Principal } from "@dfinity/principal";
 
-const Borrow = ({
-  asset,
-  image,
-  supplyRateAPR,
-  balance,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  totalCollateral,
-  totalDebt,
-  currentCollateralStatus,
-  Ltv,
-  borrowableValue,
-   borrowableAssetValue,
-  isModalOpen,
-  handleModalOpen,
-  setIsModalOpen,
-  onLoadingChange,
-}) => {
-  console.log(
-    "props in borrow ",
-    asset,
-    image,
-    supplyRateAPR,
-    balance,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    totalCollateral,
-    totalDebt,
-    currentCollateralStatus,
-    "LTV",Ltv,
-    "availableBorrow",borrowableValue,
-   "borrowableasset",  borrowableAssetValue,
-    isModalOpen,
-    handleModalOpen,
-    setIsModalOpen,
-    onLoadingChange
-  );
-  const { createLedgerActor, backendActor, principal } = useAuth();
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-
-  console.log(
-    " avaialbele borrow ,borowable asset",
-    borrowableValue,
-    borrowableAssetValue
-  );
+const Borrow = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange }) => {
+ 
+  const { backendActor, principal } = useAuth();
+  const principalObj = useMemo(() => Principal.fromText(principal),[principal]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
 
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =
-    useState(false);
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
 
   const [error, setError] = useState("");
   const [usdValue, setUsdValue] = useState(0);
@@ -86,16 +32,11 @@ const Borrow = ({
   const modalRef = useRef(null);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
 
-  const [assetPrincipal, setAssetPrincipal] = useState({});
-
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
 
   const ledgerActors = useSelector((state) => state.ledger);
-  console.log("ledgerActors", ledgerActors);
-
   useEffect(() => {
-    if (onLoadingChange) {
+if (onLoadingChange) {
       onLoadingChange(isLoading);
     }
   }, [isLoading, onLoadingChange]);
@@ -104,16 +45,10 @@ const Borrow = ({
     setIsAcknowledged(e.target.checked);
   };
   const value = currentHealthFactor;
-  const safeAmount = Number((amount || "").replace(/,/g, "")) || 0; // Ensure amount is not null
-  let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
-
-  console.log("Amount as nat64:", amountAsNat64);
-
-  const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
-  console.log("Scaled Amount:", scaledAmount);
-
+  const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+  let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+  const scaledAmount = amountAsNat64;
   const handleBorrowETH = async () => {
-    console.log("Borrow function called for", asset, scaledAmount);
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -124,19 +59,29 @@ const Borrow = ({
       ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
-    } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+    } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
 
     try {
       const borrowResult = await backendActor.borrow(asset, scaledAmount);
-      console.log("Borrow result", borrowResult);
+      
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          "Borrow," + asset + "," + (scaledAmount / 100000000) + ", " +  principalObj.toString(),
+          "Borrow," +
+            asset +
+            "," +
+            scaledAmount / 100000000 +
+            ", " +
+            principalObj.toString(),
           "Assets",
-          "Borrow," + asset + "," + (scaledAmount / 100000000) + ", " +  principalObj.toString()
+          "Borrow," +
+            asset +
+            "," +
+            scaledAmount / 100000000 +
+            ", " +
+            principalObj.toString()
         );
         if (isSoundOn) {
           const sound = new Audio(coinSound);
@@ -166,13 +111,10 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
-        console.error("Borrow error:", errorMsg);
         setIsPaymentDone(false);
         setIsVisible(true);
       }
-
     } catch (error) {
-      console.error("Error borrowing:", error);
       toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
         className: "custom-toast",
         position: "top-center",
@@ -186,10 +128,9 @@ const Borrow = ({
       setIsPaymentDone(false);
       setIsVisible(true);
     } finally {
-      setIsLoading(false); // Ensure loading is stopped after the process is done
+      setIsLoading(false);
     }
   };
-
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -209,7 +150,6 @@ const Borrow = ({
   const transferFee = Number(fees[normalizedAsset] || fees.default);
   const supplyBalance = numericBalance - transferFee;
 
-  console.log("Supply Balance:", supplyBalance);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -237,11 +177,11 @@ const Borrow = ({
     );
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
-    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
 
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
-    console.log("LTV:", ltv * 100);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
@@ -251,12 +191,11 @@ const Borrow = ({
       setIsAcknowledgmentRequired(true);
     } else {
       setIsAcknowledgmentRequired(false);
-      setIsAcknowledged(false); 
+      setIsAcknowledged(false);
     }
     if (ltv * 100 >= liquidationThreshold) {
-      // Dismiss any existing toasts before showing a new one
-      toast.dismiss(); // This will remove all active toasts
-      toast.info("LTV Exceeded!"); // Show the new toast
+      toast.dismiss();
+      toast.info("LTV Exceeded!");
     }
     if (
       healthFactor <= 1 ||
@@ -267,21 +206,8 @@ const Borrow = ({
     } else {
       setIsButtonDisabled(false);
     }
-    // if (isAcknowledged) {
-    //   setIsButtonDisabled(false);
-    // }
   }, [
-    asset,
-    reserveliquidationThreshold,
-    liquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-    isAcknowledged,
-    value,
-    isAcknowledgmentRequired,
-    setIsAcknowledged,
+    asset, reserveliquidationThreshold, liquidationThreshold, assetSupply,assetBorrow,amount,usdValue,isAcknowledged,value,isAcknowledgmentRequired,setIsAcknowledged,
   ]);
 
   const amountTaken = usdValue || 0;
@@ -311,95 +237,82 @@ const Borrow = ({
     return nextTotalDebt / totalCollateral;
   };
 
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { healthFactorBackend } = useUserData();
 
-  const [borrowableValues, setAvailableBorrows] = useState(0);
+  
 
   const handleAmountChange = (e) => {
-    // Get the input value and remove commas for processing
     let inputAmount = e.target.value.replace(/,/g, "");
 
-    // Allow only numbers and decimals
     if (!/^\d*\.?\d*$/.test(inputAmount)) {
-      return; // If invalid input, do nothing
+      return;
     }
 
-    // Convert to number for comparison with borrowableAsset
     const numericAmount = parseFloat(inputAmount);
 
-    // Limit input value to borrowableAsset
     if (numericAmount > parseFloat(borrowableAssetValue)) {
-      return; // If input exceeds borrowableAsset, do nothing
+      return;
     }
 
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
-      // Format the integer part with commas and limit decimal places to 8 digits
       formattedAmount = `${parseInt(integerPart).toLocaleString(
         "en-US"
       )}.${decimalPart.slice(0, 8)}`;
     } else {
-      // If no decimal, format the integer part with commas
       formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
     }
 
-    // Update the input field value with the formatted number (with commas)
     setAmount(formattedAmount);
 
-    // Pass the numeric value (without commas) for internal calculations
-    updateAmountAndUsdValue(inputAmount); // Pass raw numeric value for calculations
+    updateAmountAndUsdValue(inputAmount);
   };
 
   const updateAmountAndUsdValue = (inputAmount) => {
-    // Ensure that the numeric value is used for calculations (no commas)
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
 
-    // Handle the case when the input is cleared (empty value)
     if (inputAmount === "") {
-      setAmount(""); // Clear the amount in state
-      setUsdValue(0); // Reset USD value
+      setAmount("");
+      setUsdValue(0);
       return;
     }
 
-    // Update USD value only if the input is a valid positive number
     if (numericAmount <= supplyBalance) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
       setUsdValue(convertedValue.toFixed(2));
       setError("");
-    }else {
+    } else {
       setError("Amount must be a positive number");
-      setUsdValue(0); // Reset USD value if invalid
+      setUsdValue(0);
     }
   };
 
-  // Sync conversion when either amount or conversionRate changes
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = Number(amount.replace(/,/g, '')) * adjustedConversionRate;
+      const convertedValue =
+        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
       setUsdValue(convertedValue);
-    }else {
+    } else {
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
-  console.log("borowableasset",  borrowableAssetValue);
-  // Handle max button click to set max amount
-  // Function to handle max button click
+
   const handleMaxClick = () => {
-    // Ensure borrowableAssetValue is a number before using toFixed
     const maxAmount = parseFloat(borrowableAssetValue).toFixed(8);
-    const [integerPart, decimalPart] = maxAmount.split('.');
-    
-    // Format the integer part with commas
-    const formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart}`;
-    
+    const [integerPart, decimalPart] = maxAmount.split(".");
+
+    const formattedAmount = `${parseInt(integerPart).toLocaleString(
+      "en-US"
+    )}.${decimalPart}`;
+
     setAmount(formattedAmount);
     updateAmountAndUsdValue(maxAmount);
   };
-  
+
   return (
     <>
       {isVisible && (
@@ -413,18 +326,18 @@ const Borrow = ({
               <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-[50%]">
                   <input
-                    type="text" // Use text input to allow formatting
+                    type="text"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
+                    className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder={`Enter Amount ${asset}`}
                   />
                   <p className="text-xs text-gray-500 px-2">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} USD`
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -438,21 +351,25 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
+                      parseFloat(borrowableValue) === 0
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                      }`}
+                    }`}
                     onClick={() => {
-                      if (parseFloat( borrowableAssetValue) > 0) {
+                      if (parseFloat(borrowableAssetValue) > 0) {
                         handleMaxClick();
                       }
                     }}
                   >
-                    
-                    {parseFloat(borrowableAssetValue)?.toLocaleString(undefined, {
-                      minimumFractionDigits: 7,
-                      maximumFractionDigits: 7,
-                    }) || "0.00"}{" "} Max
+                    {parseFloat(borrowableAssetValue)?.toLocaleString(
+                      undefined,
+                      {
+                        minimumFractionDigits: 7,
+                        maximumFractionDigits: 7,
+                      }
+                    ) || "0.00"}{" "}
+                    Max
                   </p>
                 </div>
               </div>
@@ -476,16 +393,17 @@ const Borrow = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${healthFactorBackend > 3
+                        className={`${
+                          healthFactorBackend > 3
                             ? "text-green-500"
                             : healthFactorBackend <= 1
-                              ? "text-red-500"
-                              : healthFactorBackend <= 1.5
-                                ? "text-orange-600"
-                                : healthFactorBackend <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
-                          }`}
+                            ? "text-red-500"
+                            : healthFactorBackend <= 1.5
+                            ? "text-orange-600"
+                            : healthFactorBackend <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {parseFloat(
                           healthFactorBackend > 100
@@ -495,16 +413,17 @@ const Borrow = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${currentHealthFactor > 3
+                        className={`${
+                          currentHealthFactor > 3
                             ? "text-green-500"
                             : currentHealthFactor <= 1
-                              ? "text-red-500"
-                              : currentHealthFactor <= 1.5
-                                ? "text-orange-600"
-                                : currentHealthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
-                          }`}
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -520,7 +439,6 @@ const Borrow = ({
 
             <div className="w-full mt-3">
               <div className="w-full">
-                
                 <div>
                   {value < 2 && value > 1 && (
                     <div>
@@ -555,30 +473,32 @@ const Borrow = ({
                     </div>
                   )}
                   {value <= 1 && (
-  <div>
-    <div className="w-full flex flex-col my-3 space-y-2">
-      <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
-        <div className="w-1/12 flex items-center justify-center">
-          <div className="warning-icon-container">
-            <TriangleAlert />
-          </div>
-        </div>
-        <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-          You can't borrow as your health factor is below 1, which risks liquidation.
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+                    <div>
+                      <div className="w-full flex flex-col my-3 space-y-2">
+                        <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                          <div className="w-1/12 flex items-center justify-center">
+                            <div className="warning-icon-container">
+                              <TriangleAlert />
+                            </div>
+                          </div>
+                          <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                            You can't borrow as your health factor is below 1,
+                            which risks liquidation.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <button
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
+                  isLoading || amount <= 0 || isButtonDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""
-                  }`}
+                }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}
@@ -619,8 +539,8 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+                  ? Number(scaledAmount / 100000000).toFixed(7)
+                  : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
@@ -632,8 +552,8 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+                  ? Number(scaledAmount / 100000000).toFixed(7)
+                  : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

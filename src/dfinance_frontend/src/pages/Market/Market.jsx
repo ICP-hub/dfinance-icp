@@ -10,7 +10,7 @@ import { Modal } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
-
+import { trackEvent } from "../../utils/googleAnalytics";
 import icplogo from "../../../public/wallet/icp.png";
 import nfid from "../../../public/wallet/nfid.png";
 import Pagination from "../../components/Common/pagination";
@@ -19,17 +19,10 @@ import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-import useAssets from "../../components/Common/useAssets";
 import useAssetData from "../../components/Common/useAssets";
 import { setUserData } from "../../redux/reducers/userReducer";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-  setConnectedWallet,
-} from "../../redux/reducers/utilityReducer";
+import {setIsWalletConnected,setWalletModalOpen,setConnectedWallet,} from "../../redux/reducers/utilityReducer";
 import { Principal } from "@dfinity/principal";
-import { useMemo } from "react";
-import AssetDetails from "../../components/Dashboard/AssetDetails";
 import useFormatNumber from "../../components/customHooks/useFormatNumber";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 
@@ -37,35 +30,78 @@ const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {
-    isWalletCreated,
-    isWalletModalOpen,
-    isSwitchingWallet,
-    connectedWallet,
-  } = useSelector((state) => state.utility);
-
-  // console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
-
+  const {isWalletCreated,isWalletModalOpen,isSwitchingWallet,connectedWallet,} = useSelector((state) => state.utility);
   const { isAuthenticated, login, logout, principal, createLedgerActor } =
     useAuth();
+  const {totalMarketSize,totalSupplySize,totalBorrowSize,totalReserveFactor,interestAccure,} = useAssetData();
 
+  const convertToNumber = (value) => {
+    if (typeof value === "string") {
+      const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
+      if (value.includes("K")) {
+        return numberValue * 1e3;
+      }
+      if (value.includes("M")) {
+        return numberValue * 1e6;
+      }
+      return numberValue;
+    }
+    return 0;
+  };
+
+  useEffect(() => {
+    const supply = convertToNumber(totalSupplySize);
+    const borrow = convertToNumber(totalBorrowSize);
+    const totalAvailable =
+      !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
+    const totalMarket = totalSupplySize;
+
+    trackEvent(
+      "Total Market," + totalMarket + "," + principal?.toString(),
+      "Assets",
+      "Total Market," + totalMarket + "," + principal?.toString(),
+      "Assets"
+    );
+
+    trackEvent(
+      "Total Available," + totalAvailable + "," + principal?.toString(),
+      "Assets",
+      "Total Available," + totalAvailable + "," + principal?.toString(),
+      "Assets"
+    );
+
+    trackEvent(
+      "Total Borrow Size," + borrow + "," + principal?.toString(),
+      "Assets",
+      "Total Borrow Size," + borrow + "," + principal?.toString(),
+      "Assets"
+    );
+
+    trackEvent(
+      " Reserve Factor," + totalReserveFactor + "," + principal?.toString(),
+      "Assets",
+      " Reserve Factor," + totalReserveFactor + "," + principal?.toString(),
+      "Assets"
+    );
+
+    trackEvent(
+      "interestAccures," + interestAccure + "," + principal?.toString(),
+      "Assets",
+      "interestAccures," + interestAccure + "," + principal?.toString(),
+      "Assets"
+    );
+  }, [
+    totalMarketSize,
+    totalSupplySize,
+    totalBorrowSize,
+    totalReserveFactor,
+    interestAccure,
+    principal,
+  ]);
   const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance,
-    fetchBalance,
-  } = useFetchConversionRate();
+    ckBTCUsdRate,ckETHUsdRate,ckUSDCUsdRate,ckICPUsdRate,ckUSDTUsdRate,fetchConversionRate,ckBTCBalance,ckETHBalance,ckUSDCBalance,ckICPBalance,ckUSDTBalance,fetchBalance,} = useFetchConversionRate();
 
   const handleWalletConnect = () => {
-    // console.log("connrcterd");
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
@@ -123,26 +159,19 @@ const WalletDetails = () => {
         return "Unknown Wallet";
     }
   };
-
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const showSearchBar = () => {
-    setShowSearch(!Showsearch);
-  };
+  const showSearchBar = () => {setShowSearch(!Showsearch);};
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeChevron, setActiveChevron] = useState(null);
-  const itemsPerPage = 8; // Number of items per page
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+  const itemsPerPage = 8; 
+  const handlePageChange = (pageNumber) => {setCurrentPage(pageNumber);};
 
   const principalObj = Principal.fromText(principal);
 
   const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);
-    console.log("assetdetailsinMarket", assetData);
     navigate(`/market/asset-details/${asset}`, { state: { assetData } });
   };
 
@@ -170,7 +199,6 @@ const WalletDetails = () => {
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
 
   const filteredReserveData = Object.fromEntries(filteredItems);
-  // console.log("filtered data", filteredReserveData);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -182,12 +210,9 @@ const WalletDetails = () => {
     const selectedAssetData = currentItems.find(
       (item) => item[0] === assetName
     );
-
     if (selectedAssetData) {
       setSelectedAssetData(selectedAssetData);
     }
-
-    // console.log("Selected Asset Data:", selectedAssetData); // Debugging
     setShowPopup(true);
   };
 
@@ -198,7 +223,6 @@ const WalletDetails = () => {
       closePopup();
     }
   };
-
   useEffect(() => {
     if (showPopup) {
       document.addEventListener("mousedown", handleOutsideClick);
@@ -207,7 +231,6 @@ const WalletDetails = () => {
       };
     }
   }, [showPopup]);
-
   useEffect(() => {
     if (showPopup) {
       document.body.style.overflow = "hidden";
@@ -222,21 +245,18 @@ const WalletDetails = () => {
 
   const formatNumber = useFormatNumber();
   const formatValue = (value) => {
-    const numericValue = parseFloat(value); // Ensure the value is a number
-
+    const numericValue = parseFloat(value); 
     if (isNaN(numericValue)) {
-      return "0.00"; // If it's not a number, return "0"
+      return "0.00"; 
     }
-
     if (numericValue === 0) {
-      return "0.00"; // If the value is 0, show "0"
+      return "0.00"; 
     } else if (numericValue >= 1) {
-      return numericValue.toFixed(2); // If the value is 1 or greater, show 2 decimal places
+      return numericValue.toFixed(2); 
     } else {
-      return numericValue.toFixed(7); // If the value is less than 1 but greater than 0, show 7 decimal places
+      return numericValue.toFixed(7); 
     }
   };
-
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8">
@@ -419,7 +439,7 @@ const WalletDetails = () => {
                               className="w-8 h-8 rounded-full"
                             />
                           )}
-                          {item[0] === "ckUSDT" && ( // Added condition for ckUSDT
+                          {item[0] === "ckUSDT" && ( 
                             <img
                               src={ckUSDT}
                               alt="ckusdt logo"
@@ -432,85 +452,72 @@ const WalletDetails = () => {
                       <td className="p-2 align-center py-6">
                         <div className="flex justify-center items-center flex-row">
                           <div className="flex-grow text-center">
-                            <p>
-                              {item[0] === "ckBTC" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckBTCUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckBTCUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
-                              {item[0] === "ckETH" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckETHUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckETHUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
-                              {item[0] === "ckUSDC" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckUSDCUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckUSDCUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
-                              {item[0] === "ICP" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckICPUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckICPUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
-                              {item[0] === "ckUSDT" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_supply) /
-                                      100000000 /
-                                      (ckUSDTUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_supply) /
-                                          100000000 /
-                                          (ckUSDTUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
+                            {}
+                            <p className="min-w-[70px] text-center">
+                              {item[0] === "ckBTC" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_supply) /
+                                    100000000 /
+                                    (ckBTCUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_supply) /
+                                        100000000 /
+                                        (ckBTCUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckETH" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_supply) /
+                                    100000000 /
+                                    (ckETHUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_supply) /
+                                        100000000 /
+                                        (ckETHUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckUSDC" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_supply) /
+                                    100000000 /
+                                    (ckUSDCUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_supply) /
+                                        100000000 /
+                                        (ckUSDCUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ICP" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_supply) /
+                                    100000000 /
+                                    (ckICPUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_supply) /
+                                        100000000 /
+                                        (ckICPUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckUSDT" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_supply) /
+                                    100000000 /
+                                    (ckUSDTUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_supply) /
+                                        100000000 /
+                                        (ckUSDTUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
                             </p>
 
-                            <p className="font-light text-[12px]">
+                            {}
+                            <p className="font-light text-[12px] text-center">
                               ${" "}
                               {formatNumber(
                                 Number(item[1].Ok.total_supply) / 100000000
@@ -541,85 +548,72 @@ const WalletDetails = () => {
                       <td className="p-2 align-center hidden md:table-cell">
                         <div className="flex justify-center flex-row">
                           <div>
-                            <p>
-                              {item[0] === "ckBTC" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckBTCUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckBTCUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
-                              {item[0] === "ckETH" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckETHUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckETHUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
-                              {item[0] === "ckUSDC" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckUSDCUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckUSDCUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
-                              {item[0] === "ICP" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckICPUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckICPUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
-                              {item[0] === "ckUSDT" && (
-                                <p>
-                                  {isFinite(
-                                    Number(item[1].Ok.total_borrowed) /
-                                      100000000 /
-                                      (ckUSDTUsdRate / 1e8)
-                                  )
-                                    ? formatValue(
-                                        Number(item[1].Ok.total_borrowed) /
-                                          100000000 /
-                                          (ckUSDTUsdRate / 1e8)
-                                      )
-                                    : "0.00"}
-                                </p>
-                              )}
+                            <p className="min-w-[150px] text-center">
+                              {}
+                              {item[0] === "ckBTC" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_borrowed) /
+                                    100000000 /
+                                    (ckBTCUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_borrowed) /
+                                        100000000 /
+                                        (ckBTCUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckETH" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_borrowed) /
+                                    100000000 /
+                                    (ckETHUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_borrowed) /
+                                        100000000 /
+                                        (ckETHUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckUSDC" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_borrowed) /
+                                    100000000 /
+                                    (ckUSDCUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_borrowed) /
+                                        100000000 /
+                                        (ckUSDCUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ICP" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_borrowed) /
+                                    100000000 /
+                                    (ckICPUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_borrowed) /
+                                        100000000 /
+                                        (ckICPUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckUSDT" &&
+                                (isFinite(
+                                  Number(item[1].Ok.total_borrowed) /
+                                    100000000 /
+                                    (ckUSDTUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.total_borrowed) /
+                                        100000000 /
+                                        (ckUSDTUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
                             </p>
 
-                            <p className="font-light text-[12px]">
+                            {}
+                            <p className="font-light text-[12px] text-center">
                               ${" "}
                               {formatNumber(
                                 Number(item[1]?.Ok?.total_borrowed) / 100000000
@@ -628,6 +622,7 @@ const WalletDetails = () => {
                           </div>
                         </div>
                       </td>
+
                       <td className="p-3 align-center hidden md:table-cell">
                         <div className="flex justify-center">
                           {" "}
@@ -655,15 +650,7 @@ const WalletDetails = () => {
                 </tbody>
               </table>
             </div>
-            {/* <div className="w-full flex justify-center mt-10">
-            <div id="pagination" className="flex gap-2">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          </div> */}
+            {}
 
             {showPopup && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -700,7 +687,7 @@ const WalletDetails = () => {
                           className="w-8 h-8 rounded-full"
                         />
                       )}
-                      {selectedAssetData[0] === "ckUSDT" && ( // Added condition for ckUSDT
+                      {selectedAssetData[0] === "ckUSDT" && ( 
                         <img
                           src={ckUSDT}
                           alt="ckUSDT logo"
@@ -718,7 +705,7 @@ const WalletDetails = () => {
                           Total Supply:
                         </p>
                         <div className="flex flex-col">
-                          {/* <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAssetData[1].Ok.total_supply }M</p> */}
+                          {}
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
                             $
                             {formatNumber(
@@ -753,7 +740,7 @@ const WalletDetails = () => {
                           Total Borrow:
                         </p>
                         <div className="flex flex-col">
-                          {/* <p className="text-sm font-bold text-[#2A1F9D] dark:text-darkText ml-auto">{selectedAssetData[1].Ok.supply_apy}M</p> */}
+                          {}
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             $
                             {formatNumber(

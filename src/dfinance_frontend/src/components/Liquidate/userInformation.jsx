@@ -11,7 +11,7 @@ import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import { useCallback } from "react";
-import { toast } from "react-toastify"; // Import Toastify if not already done
+import { toast } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css";
 import useAssetData from "../Common/useAssets";
 import { Fuel } from "lucide-react";
@@ -25,20 +25,16 @@ import { trackEvent } from "../../utils/googleAnalytics";
 const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const { backendActor, principal: currentUserPrincipal } = useAuth();
 
-  console.log(
-    "mappeditems",
-    Number(mappedItem?.item[1]?.health_factor) / 10000000000
-  );
   const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
   const [isApproved, setIsApproved] = useState(false);
   const popupRef = useRef(null);
-  const [isDebtInfo, setIsDebtInfo] = useState(false); // State to manage content view
-  const [isCollateralOverlay, setIsCollateralOverlay] = useState(false); // New state for Collateral Overlay
-  const [selectedAsset, setSelectedAsset] = useState(); // Default selected asset
-  const [selectedDebtAsset, setSelectedDebtAsset] = useState(); // Default selected asset
+  const [isDebtInfo, setIsDebtInfo] = useState(false); 
+  const [isCollateralOverlay, setIsCollateralOverlay] = useState(false); 
+  const [selectedAsset, setSelectedAsset] = useState(); 
+  const [selectedDebtAsset, setSelectedDebtAsset] = useState(); 
   const [showWarningPopup, setShowWarningPopup] = useState(false);
-  const [transactionResult, setTransactionResult] = useState(null); // State to handle transaction
+  const [transactionResult, setTransactionResult] = useState(null); 
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
 
@@ -99,9 +95,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
   const handleNextClick = () => {
     if (isDebtInfo) {
-      setIsCollateralOverlay(true); // Show Collateral Overlay on next click in Debt Info
+      setIsCollateralOverlay(true); 
     } else {
-      setIsDebtInfo(true); // Switch to Debt Information view
+      setIsDebtInfo(true); 
     }
   };
   const [amountBorrowUSD, setAmountBorrowUSD] = useState(null);
@@ -120,12 +116,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     setIsCollateralAssetSelected(true);
     setSelectedAsset(asset);
     setCollateralRate(collateralRate ? collateralRate : 0);
-    // Set the selected asset (only one at a time)
+
     setSelectedAssetSupply(assetSupply);
     setCollateralRateAmount(collateralAmount ? collateralAmount : 0);
   };
-  console.log("selectedAsstSUplly", selectedAssetSupply);
-  console.log("Collateral in usd", collateral);
   const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
   const [amountToRepayUSD, setAmountToRepayUSD] = useState(null);
 
@@ -135,12 +129,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     assetBorrowAmountInUSD
   ) => {
     setIsDebtAssetSelected(true);
-    setSelectedDebtAsset(asset); // Set the selected asset (only one at a time)
+    setSelectedDebtAsset(asset); 
     setAmountToRepay(assetBorrowAmount ? assetBorrowAmount : 0);
     setAmountToRepayUSD(assetBorrowAmountInUSD ? assetBorrowAmountInUSD : 0);
 
-    console.log("Asset Borrow Amount to Repay:", assetBorrowAmount);
-    console.log("Amount to Repay (after check):", amountToRepay);
   };
 
   const handleCheckboxClick = (e) => {
@@ -148,7 +140,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   };
 
   const ledgerActors = useSelector((state) => state.ledger);
-  console.log("ledgerActors", ledgerActors);
 
   const {
     ckBTCUsdRate,
@@ -183,19 +174,18 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     } else if (selectedDebtAsset === "ICP") {
       ledgerActor = ledgerActors.ICP;
     } else if (selectedDebtAsset === "ckUSDT") {
-      // Added case for ckUSDT
-      ledgerActor = ledgerActors.ckUSDT; // Ensure this exists in ledgerActors
+
+      ledgerActor = ledgerActors.ckUSDT; 
     }
 
     const transferfee = BigInt(100);
-    // Convert amount and transferFee to numbers and add them
+
     const supplyAmount = BigInt(amountToRepay.toFixed(8) * 100000000);
     const totalAmount = supplyAmount + transferfee;
 
     try {
       setIsLoading(true);
 
-      // Call the approval function
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
         memo: [],
@@ -210,11 +200,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
         },
       });
 
-      console.log("Approve", approval);
       setIsApproved(true);
-      console.log("isApproved state after approval:", isApproved);
 
-      // Show success notification
       toast.success(`Approval successful!`, {
         className: "custom-toast",
         position: "top-center",
@@ -226,10 +213,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
         progress: undefined,
       });
     } catch (error) {
-      // Log the error
-      console.error("Approval failed:", error);
 
-      // Show error notification using Toastify
+
       toast.error(`Error: ${error.message || "Approval failed!"}`, {
         className: "custom-toast",
         position: "top-center",
@@ -241,7 +226,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
         progress: undefined,
       });
     } finally {
-      setIsLoading(false); // Stop loading once the function is done
+      setIsLoading(false); 
     }
   };
 
@@ -249,7 +234,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     setIsLoading(true);
     try {
       const supplyAmount = BigInt(amountToRepay.toFixed(8) * 100000000);
-      console.log("backend actor", backendActor);
 
       if (!backendActor) {
         throw new Error("Backend actor is not initialized");
@@ -278,10 +262,9 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
           draggable: true,
           progress: undefined,
         });
-        console.log("Liquidation call result:", result);
         setTransactionResult("success");
       } else if ("Err" in result) {
-        // Handle the error returned in the result
+
         const errorMsg = result.Err;
         toast.error(`Liquidation failed: ${errorMsg}`, {
           className: "custom-toast",
@@ -293,17 +276,15 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
           draggable: true,
           progress: undefined,
         });
-        console.error("Liquidation call error:", errorMsg);
         setTransactionResult("failure");
       }
 
       setShowWarningPopup(false);
     } catch (error) {
       toast.error(`Error: ${error.message}`);
-      console.error("Error during liquidation:", error);
       setTransactionResult("failure");
     } finally {
-      setIsLoading(false); // Stop loading once the function is done
+      setIsLoading(false); 
     }
   };
 
@@ -317,14 +298,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
   const handleClosePopup = () => {
     setTransactionResult(null);
-    onClose(); // Close the transaction result popup
+    onClose(); 
   };
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
-      console.log(`ckBTC Balance in USD: ${balanceInUsd}`);
     }
   }, [ckBTCBalance, ckBTCUsdRate]);
 
@@ -332,7 +312,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     if (ckETHBalance && ckETHUsdRate) {
       const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
-      console.log(`ckETH Balance in USD: ${balanceInUsd}`);
     }
   }, [ckETHBalance, ckETHUsdRate]);
 
@@ -342,7 +321,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
         2
       );
       setCkUSDCUsdBalance(balanceInUsd);
-      console.log(`ckUSDC Balance in USD: ${balanceInUsd}`);
     }
   }, [ckUSDCBalance, ckUSDCUsdRate]);
 
@@ -359,7 +337,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
         2
       );
       setCkUSDTUsdBalance(balanceInUsd);
-      console.log(`ckUSDT Balance in USD: ${balanceInUsd}`);
     }
   }, [ckUSDTBalance, ckUSDTUsdRate]);
 
@@ -373,7 +350,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
           fetchBalance("ckUSDC"),
           fetchBalance("ICP"),
           fetchBalance("ckUSDT"),
-          fetchConversionRate(), // Fetch ckBTC and ckETH rates
+          fetchConversionRate(), 
         ]);
       } catch (error) {
         setError(error);
@@ -477,7 +454,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
             </div>
           </>
         );
-      case "ckUSDT": // New case for ckUSDT
+      case "ckUSDT": 
         return (
           <>
             <div className="w-full h-[0.8px] bg-gradient-to-r from-[#EB8863] to-[#81198E] my-4 "></div>
@@ -492,7 +469,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
                     {ckUSDTBalance?.toLocaleString() || "0.00"}{" "}
-                    {/* Ensure ckUSDTBalance is defined */}
+                    {}
                   </p>
                 </div>
               </div>
@@ -505,7 +482,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   };
 
   const renderAssetDetails = (asset) => {
-    console.log("asset", asset);
     switch (asset) {
       case "ckETH":
         return (
@@ -731,7 +707,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       {transactionResult ? (
-        // Transaction result popup
+
         <div
           ref={popupRef}
           className="bg-white dark:bg-[#1D1B40] dark:text-darkText p-6 rounded-md w-full max-w-md mx-4 text-center"
@@ -801,21 +777,21 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
           <div className="flex justify-center mt-6 ">
             {isCheckboxChecked ? (
-              // Button for "Call Liquidation"
+
               <button
                 className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 onClick={handleConfirmLiquidation}
-                disabled={isLoading} // Disable the button while loading
+                disabled={isLoading} 
               >
                 {"Call Liquidation"}
               </button>
             ) : (
-              // Button for "Cancel"
+
               <button
                 className="bg-gray-400 dark:bg-gray-500 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2"
                 onClick={handleCloseWarningPopup}
-                disabled={isLoading} // Disable the button while loading
+                disabled={isLoading} 
               >
                 Cancel
               </button>
@@ -825,8 +801,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               <div
                 className="fixed inset-0 flex items-center justify-center z-50"
                 style={{
-                  background: "rgba(0, 0, 0, 0.4)", // Dim background
-                  backdropFilter: "blur(1px)", // Blur effect
+                  background: "rgba(0, 0, 0, 0.4)", 
+                  backdropFilter: "blur(1px)", 
                 }}
               >
                 <div className="loader"></div>
@@ -856,19 +832,17 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
           </div>
 
           {isCollateralOverlay ? (
-            // Collateral Overlay Content with checkboxes for asset selection
+
             <div>
               <div className="mb-6">
                 <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
                   Collateral Asset
                 </h3>
-                {/* Collateral Asset selection with checkboxes */}
+                {}
 
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
-                    console.log("mappedItesm", mappedItem.reserves[0]);
                     const assetName = item[1]?.reserve;
-                    console.log("assetName", assetName);
                     const assetSupply =
                       Number(item?.[1]?.asset_supply || 0n) / 100000000;
                     const assetBorrow =
@@ -887,9 +861,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     } else if (assetName === "ckUSDT" && ckUSDTUsdRate) {
                       collateralRate = ckUSDTUsdRate;
                     }
-
-                    console.log("collateralRate", collateralRate);
-
                     const collateralAmount = amountToRepayUSD / collateralRate;
 
                     const assetBalance =
@@ -947,7 +918,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   })}
                 </div>
 
-                {/* Render asset details based on selected checkboxes */}
+                {}
                 {renderAssetDetails(selectedAsset)}
 
                 <div className="flex items-center mt-2">
@@ -957,7 +928,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     <img
                       src={ckBTC}
                       alt="ckBTC icon"
-                      className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                      className="object-cover w-5 h-5 rounded-full" 
                     />
                   )}
 
@@ -965,7 +936,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     <img
                       src={ckETH}
                       alt="ckETH icon"
-                      className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                      className="object-cover w-5 h-5 rounded-full" 
                     />
                   )}
 
@@ -973,14 +944,14 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     <img
                       src={ckUSDC}
                       alt="ckUSDC icon"
-                      className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                      className="object-cover w-5 h-5 rounded-full" 
                     />
                   )}
                   {selectedAsset === "ICP" && (
                     <img
                       src={icp}
                       alt="ICP icon"
-                      className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
+                      className="object-cover w-5 h-5 rounded-full" 
                     />
                   )}
                   {selectedAsset === "ckUSDT" && (
@@ -1008,7 +979,6 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     : "opacity-50 cursor-not-allowed"
                     }`}
                   onClick={() => {
-                    console.log("Button clicked");
                     isApproved ? handleCallLiquidation() : handleApprove();
                   }}
                   disabled={
@@ -1028,8 +998,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   <div
                     className="fixed inset-0 flex items-center justify-center z-50"
                     style={{
-                      background: "rgba(0, 0, 0, 0.4)", // Dim background
-                      backdropFilter: "blur(1px)", // Blur effect
+                      background: "rgba(0, 0, 0, 0.4)", 
+                      backdropFilter: "blur(1px)", 
                     }}
                   >
                     <div className="loader"></div>
@@ -1038,7 +1008,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               </div>
             </div>
           ) : isDebtInfo ? (
-            // Debt Information Content
+
             <div>
               <div className="mb-6">
                 <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
@@ -1049,9 +1019,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                     const assetName = item[1]?.reserve;
 
                     const assetBorrow =
-                      Number(item?.[1]?.asset_borrow || 0n) / 100000000; // or Math.pow(10, 8)
+                      Number(item?.[1]?.asset_borrow || 0n) / 100000000; 
                     const assetBorrowAmount = Number(assetBorrow / 2);
-                    console.log("assetBorrow", assetBorrow);
                     let assetBorrowAmountInUSD = 0;
                     if (assetName === "ckBTC" && ckBTCUsdRate) {
                       assetBorrowAmountInUSD = assetBorrowAmount * ckBTCUsdRate;
@@ -1143,7 +1112,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 <button
                   title="Back"
                   className="py-2 px-6 focus:outline-none box bg-transparent shadow-lg  sxs3:text-[12px] md:text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2"
-                  onClick={() => setIsDebtInfo(false)} // Go back to User Info view
+                  onClick={() => setIsDebtInfo(false)} 
                 >
                   Back
                 </button>
@@ -1163,7 +1132,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
               </div>
             </div>
           ) : (
-            // User Information Content
+
             <div>
               <div className="mb-6">
                 <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D]  dark:text-darkText mb-2">

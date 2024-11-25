@@ -10,28 +10,27 @@ const useFetchBalance = (ledgerActors, principal) => {
   const [ckICPBalance, setCkICPBalance] = useState(null);
   const [error, setError] = useState(null);
 
-  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
 
   const fetchBalance = useCallback(
     async (assetType) => {
-        
       if (principalObj) {
         try {
           const account = { owner: principalObj, subaccount: [] };
           const ledgerActor = ledgerActors[assetType];
-          if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
+          if (
+            !ledgerActor ||
+            typeof ledgerActor.icrc1_balance_of !== "function"
+          ) {
             return;
           }
 
-         
-
           const balance = await ledgerActor.icrc1_balance_of(account);
 
-          
-
           const formattedBalance = Number(balance) / 100000000;
-
-          
 
           switch (assetType) {
             case "ckBTC":

@@ -2,24 +2,14 @@ import React, { useEffect, useState } from "react";
 import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-} from "../../redux/reducers/utilityReducer";
+import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import { STACK_DETAILS_TABS } from "../../utils/constants";
 
-import { Modal } from "@mui/material";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
-import MySupply from "../../components/Dashboard/MySupply";
-import Error from "../Error";
 import StakesConnected from "../../components/Stake/StakesConnected";
-import Loading from "../../components/Common/Loading";
 
 import icplogo from "../../../public/wallet/icp.png";
-import plug from "../../../public/wallet/plug.png";
-import bifinity from "../../../public/wallet/bifinity.png";
-import nfid from "../../../public/wallet/nfid.png";
 import WalletModal from "../../components/Dashboard/WalletModal";
 
 const StakeDetails = () => {
@@ -28,17 +18,10 @@ const StakeDetails = () => {
   const { isWalletCreated, isWalletModalOpen } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const handleWalletConnect = () => {
     dispatch(setWalletModalOpen(!isWalletModalOpen));
-    // dispatch(setIsWalletCreated(true))
-  };
-
-  const handleWallet = () => {
-    dispatch(setWalletModalOpen(!isWalletModalOpen));
-    dispatch(setIsWalletConnected(true));
-    navigate("/dashboard/my-supply");
   };
 
   useEffect(() => {
@@ -46,16 +29,6 @@ const StakeDetails = () => {
       navigate("/dashboard/wallet-details");
     }
   }, [isWalletCreated]);
-
-  const loginHandler = async (val) => {
-    await login(val);
-  };
-
-  const [inputValue, setInputValue] = useState("");
-
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
 
   return (
     <>
@@ -107,7 +80,6 @@ const StakeDetails = () => {
               src={Element}
               alt="Elements"
               className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
-              // Ensure image scales properly
             />
           </div>
           <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg dark:text-darkText">

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { TAB_CARD_DATA,WALLET_DETAILS_TABS,
-  WALLET_DETAIL_TAB,} from "../../utils/constants";
+import { TAB_CARD_DATA,} from "../../utils/constants";
 import { useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
@@ -23,7 +22,7 @@ import { Info } from "lucide-react";
 
 const DashboardNav = () => {
 
-  const { isAuthenticated, backendActor, principal, fetchReserveData } =
+  const { isAuthenticated } =
     useAuth();
   const { reserveData } = useAssetData();
   const [netWorth, setNetWorth] = useState()
@@ -43,8 +42,6 @@ const DashboardNav = () => {
   }, [totalUsdValueBorrow, totalUsdValueSupply]);
 
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
-  const [netSupplyApy, setNetSupplyApy] = useState(0);
-  const [netDebtApy, setNetDebtApy] = useState(0);
 
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
@@ -291,7 +288,6 @@ const DashboardNav = () => {
 
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
-  const { isWalletConnected } = useSelector((state) => state.utility);
   const [isDrop, setIsDrop] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentValueIndex, setCurrentValueIndex] = useState(state?.id || 0);

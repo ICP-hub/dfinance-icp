@@ -89,7 +89,7 @@ const AssetDetails = () => {
 
   const { id } = useParams();
 
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { userData } = useUserData();
 
   const [isFilter, setIsFilter] = React.useState(false);
   const { filteredItems } = useAssetData();
@@ -110,10 +110,7 @@ const AssetDetails = () => {
     dispatch(setAssetDetailFilter(value));
   };
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  
   const [assetPrincipal, setAssetPrincipal] = useState({});
 
   useEffect(() => {

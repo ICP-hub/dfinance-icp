@@ -9,7 +9,6 @@ export const setUserId = (userId) => {
   try {
     if (userId && typeof userId === "string") {
       ReactGA.set({ userId });
-      // toast.success(`User ID set to: ${userId}`); // Show success toast
     } else {
       throw new Error("Invalid user ID provided");
     }

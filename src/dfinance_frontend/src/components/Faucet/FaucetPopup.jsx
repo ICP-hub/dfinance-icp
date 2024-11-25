@@ -17,7 +17,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [faucetUSDT, setFaucetUSDT] = useState(0);
   const [exchangeRate, setExchangeRate] = useState(null);
   const [amount, setAmount] = useState("");
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { userData} = useUserData();
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -61,9 +61,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       setFaucetLimit(updatedLimits);
       setFaucetUsage(updatedUsages);
     } else {
-      console.log(
-        "Reserves data is missing or undefined. Using initial defaults."
-      );
     }
   }, [userData]);
 
@@ -78,14 +75,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     fetchConversionRate,
     fetchBalance,
   } = useFetchConversionRate();
-  console.log(
-    "rates in faucet ",
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate
-  );
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -98,7 +87,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           fetchConversionRate(),
         ]);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        
       }
     };
     fetchAllData();
@@ -137,7 +126,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       const usdTAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDTUsdRate;
       const truncatedBtcAmount = Math.trunc(usdTAmount * 1e8) / 1e8;
-      console.log("usdtAmount", usdTAmount);
+      
       setFaucetUSDT(truncatedBtcAmount);
     }
   }, [ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]);
@@ -196,12 +185,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   };
 
   const handleMaxAmountClick = () => {
-    console.log(
-      "Available amount for",
-      asset,
-      FaucetLimit[asset],
-      FaucetUsage[asset]
-    );
+    
     if (exchangeRate) {
       const formattedAmount = parseFloat(exchangeRate).toFixed(8);
       const displayAmount = formatWithCommas(formattedAmount);
@@ -221,9 +205,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     setLoading(true); 
     try {
       if (backendActor) {
-        console.log("Amount in faucet:", amount);
         const numericAmount = parseFloat(amount.replace(/,/g, "")); 
-        console.log("Numeric amount in faucet:", numericAmount);
 
         if (isNaN(numericAmount)) {
           toast.error("Invalid amount entered.");
@@ -232,24 +214,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         }
 
         const natAmount = Math.round(numericAmount * Math.pow(10, 8)); 
-        console.log(
-          "Rate in faucet popup",
-          ckBTCUsdRate,
-          ckETHUsdRate,
-          ckUSDCUsdRate,
-          ckICPUsdRate,
-          ckUSDTUsdRate
-        );
-        console.log("natAmount", natAmount);
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
-        console.log(
-          "Available amount for",
-          asset,
-          FaucetLimit[asset],
-          FaucetUsage[asset],
-          availableAmount
-        );
-
         
         if (numericAmount > availableAmount) {
           toast.error(
@@ -259,7 +224,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           return; 
         }
         const result = await backendActor.faucet(asset, natAmount);
-        console.log("Result in faucet:", result);
 
         if (result.Err) {
           toast.error(`Error from backend: ${result.Err}`);
@@ -268,11 +232,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         }
 
         setShowFaucetPayment(true);
-        console.log("Faucet result:", result);
         toast.success(`Successfully claimed ${amount} ${asset}`);
       }
     } catch (error) {
-      console.error("Error:", error);
       toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false); 
@@ -306,7 +268,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     try {
       const result = await backendActor.reset_faucet_usage();
-      console.log("Result in reset function", result);
 
       if (result.Ok === null || result.Ok === undefined) {
         const updatedLimits = { ...FaucetLimit };
@@ -317,7 +278,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         toast.error(`Unexpected response from backend: ${result.Ok}`);
       }
     } catch (error) {
-      console.error("Error resetting faucet usage:", error);
       toast.error("Failed to reset faucet usage");
     } finally {
       setLoading(false);
@@ -331,9 +291,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
       );
       const timeUntilMidnight = midnightUTC.getTime();
-      console.log("timeUntilMidnight", timeUntilMidnight);
       const humanReadableTime = new Date(timeUntilMidnight).toUTCString();
-      console.log("timeUntilMidnight in UTC:", humanReadableTime);
       setTimeout(() => {
         handleResetFaucetUsage();
         setInterval(() => {
@@ -415,9 +373,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                   }
                 );
 
-                console.log("Remaining Amount:", formattedAmount); 
-                console.log("FaucetLimit:", FaucetLimit[asset]);
-                console.log("FaucetUsage:", FaucetUsage[asset]); 
                 return parseFloat(formattedAmount) <= 0;
               })() && (
                 <div className="w-full flex flex-col my-3 space-y-2">
@@ -434,7 +389,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                 </div>
               )}
 
-              {console.log("faucet usuage", FaucetUsage)}
               <button
                 onClick={() => handleFaucet(asset)}
                 disabled={

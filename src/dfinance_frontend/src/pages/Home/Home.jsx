@@ -12,12 +12,7 @@ import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
 import Loading from "../../components/Common/Loading";
-import {
-  MAIN_NAV_LINK,
-  FAQ_QUESTION,
-  TAB_CARD_DATA,
-  SECURITY_CONTRIBUTORS_DATA,
-} from "../../utils/constants"; // Assuming TAB_CARD_DATA is imported from the same place as other constants
+import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA,} from "../../utils/constants"; 
 import { usePageLoading } from "../../components/Common/useLoading";
 
 const Home = () => {
@@ -43,7 +38,7 @@ const Home = () => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset;
       if (scrollTop > 600) {
-        // Adjust this value to control when the button appears
+
         setIsVisible(true);
       } else {
         setIsVisible(false);
@@ -60,39 +55,36 @@ const Home = () => {
       behavior: "smooth",
     });
   };
-  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id); // Start with the first item
+  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id); 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
 
-  // Ref to store the interval ID
   const intervalRef = useRef();
 
   useEffect(() => {
-    // Function to start the interval
+
     const startInterval = () => {
       const id = setInterval(() => {
         const nextIndex = (currentIndex + 1) % MAIN_NAV_LINK.length;
         setCurrentIndex(nextIndex);
         setCurrentTab(MAIN_NAV_LINK[nextIndex].id);
-      }, 3000); // Switch tabs every 3 seconds
+      }, 3000); 
       intervalRef.current = id;
     };
 
-    startInterval(); // Start the interval when the component mounts
+    startInterval(); 
 
     return () => {
-      clearInterval(intervalRef.current); // Cleanup function to clear interval on component unmount
+      clearInterval(intervalRef.current); 
     };
   }, [currentIndex]);
 
-  // Handle mouse enter event
   const handleMouseEnter = () => {
-    clearInterval(intervalRef.current); // Stop the interval on mouse enter
+    clearInterval(intervalRef.current); 
   };
 
-  // Handle mouse leave event
   const handleMouseLeave = () => {
-    // Restart the interval on mouse leave
+
     const id = setInterval(() => {
       const nextIndex = (currentIndex + 1) % MAIN_NAV_LINK.length;
       setCurrentIndex(nextIndex);
@@ -115,9 +107,9 @@ const Home = () => {
 
   return (
     <>
-      {/* Main Home Page */}
+      {}
       <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden font-poppins">
-        {/* Background Overlay Ellipse */}
+        {}
         <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"top-right"}
@@ -125,13 +117,13 @@ const Home = () => {
           />
         </div>
 
-        {/* Navbar */}
+        {}
         <Navbar isHomeNav={true} />
 
-        {/* Application heading & Counter Animation */}
+        {}
         <HeroSection />
 
-        {/* Tab based section */}
+        {}
         <section className="mt-16">
           <div className="w-full" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
             <nav className="flex justify-center not-italic">
@@ -178,8 +170,7 @@ const Home = () => {
                 <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
                 {item.content}
               </p>
-               
-                
+
                 )}
               </React.Fragment>
             ))}
@@ -192,7 +183,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Info section */}
+        {}
         <section className="mt-2 md:mt-8">
           <div className="w-full flex justify-center">
             <div className="w-full xl:w-5/5 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
@@ -204,14 +195,14 @@ const Home = () => {
               </div>
               <div className="w-full xl:w-3/12 flex justify-start mt-3 lg:mt-0 md:justify-end">
                 {" "}
-                {/* Center align the button on mobile screens only */}
+                {}
                 <Button title="DFinance Roadmap" />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Governed by the Community */}
+        {}
         <section className="mt-[44px] md:mt-24 " id="gov">
           <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
             <h1 className="text-lg text-[28px] md:text-[45px] font-light">
@@ -223,7 +214,7 @@ const Home = () => {
 
             <div className="w-full flex justify-center mt-3">
               {" "}
-              {/* Center align the button on all screens */}
+              {}
               <Button
                 title="LEARN MORE"
               />
@@ -232,32 +223,13 @@ const Home = () => {
           </div>
         </section>
 
-        {/* How it Works */}
+        {}
         <HowITWork />
 
-        {/* Security Contributors */}
-        {/* <section className="mt-[44px] md:mt-24 ">
-          <h1 className="font-bold text-center font-poppins text-3xl lg:text-5xl text-[#2A1F9D] dark:text-darkText">
-            Security Contributors
-          </h1>
-          <br></br>
-          <p className="text-[12px] font-poppins font-[500] text-center lg:text-[18px] text-[#737373] dark:text-darkText">
-            Audited by the world’s leading security firms, security of the
-            DFinance<br></br>
-            Protocol is the highest priority.
-          </p>
-          <div className="flex flex-wrap gap-4 mx-auto items-center pt-[34px] pb-[24px]">
-            {SECURITY_CONTRIBUTORS_DATA.map((item) => (
-              <img
-                className="mx-auto mt-[29px] "
-                src={item.image}
-                draggable="false"
-              />
-            ))}
-          </div>
-        </section> */}
+        {}
+        {}
 
-        {/* FAQ */}
+        {}
         <section className="mt-[44px] md:mt-24 " id="faq">
           <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
             <div className="w-full">
@@ -326,7 +298,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Background Overlay Ellipse */}
+        {}
         <div className="absolute right-0 bottom-[0%] -z-10">
           <Ellipse
             position={"bottom-right"}
@@ -334,7 +306,7 @@ const Home = () => {
           />
         </div>
       </div>
-      {/* Footer */}
+      {}
       <button
         className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
           }`}

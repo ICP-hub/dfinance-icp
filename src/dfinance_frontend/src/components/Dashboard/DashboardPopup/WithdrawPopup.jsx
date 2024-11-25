@@ -45,6 +45,8 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
     }
   }, [isLoading, onLoadingChange]);
 
+  let formattedAmount;
+  
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value.replace(/,/g, ""); 
 
@@ -61,7 +63,6 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
       inputAmount = assetSupply.toString(); 
     }
 
-    let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
@@ -79,6 +80,7 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
 
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
+    formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {

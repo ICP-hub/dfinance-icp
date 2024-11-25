@@ -1,9 +1,6 @@
-import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import {  ChevronRight, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import {
-  WALLET_ASSETS_TABLE_ROW,
-  WALLET_ASSETS_TABLE_COL,
-} from "../../utils/constants";
+import {  WALLET_ASSETS_TABLE_COL,} from "../../utils/constants";
 import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "@mui/material";
@@ -318,7 +315,6 @@ const WalletDetails = () => {
       )}
 
       <div className="w-full mt-6">
-        {console.log("curent items ", currentItems)}
         {currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
             <div className="w-20 h-15">

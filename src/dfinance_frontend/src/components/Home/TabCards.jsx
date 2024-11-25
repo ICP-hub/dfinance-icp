@@ -15,7 +15,7 @@ const TabCards = ({ data }) => {
       'circle at bottom right'
     ];
 
-    // Randomly select a position
+    
     const randomPosition = positions[Math.floor(Math.random() * positions.length)];
 
     setGradientPosition(randomPosition);

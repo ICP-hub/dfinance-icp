@@ -10,7 +10,6 @@ const HowITWork = () => {
   useEffect(() => {
     Aos.init();
 
- 
   }, []);
   return (
     <section className="mt-20 font-poppins" id="HowItWorks">
@@ -20,11 +19,11 @@ const HowITWork = () => {
         </h1>
       </div>
 
-      {/* Container for grid items */}
+      {}
       <div className="mt-[21px] lg:mt-[53px]">
-        {/* Custom grid layout */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-20 max-w-full">
-          {/* First card */}
+          {}
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -46,7 +45,7 @@ const HowITWork = () => {
               </p>
             </div>
           </div>
-            {/* First card Mobile */}
+            {}
           <div
             data-aos="fade-left"
             data-aos-duration="2000"
@@ -68,7 +67,7 @@ const HowITWork = () => {
               </p>
             </div>
           </div>
-          {/* Second card */}
+          {}
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -91,7 +90,7 @@ const HowITWork = () => {
             </div>
           </div>
 
-          {/* Third card */}
+          {}
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -114,7 +113,7 @@ const HowITWork = () => {
               </p>
             </div>
           </div>
-          {/* Third card Mobile  */}
+          {}
           <div
             data-aos="fade-left"
             data-aos-duration="2000"
@@ -138,7 +137,7 @@ const HowITWork = () => {
             </div>
           </div>
 
-          {/* Fourth card  */}
+          {}
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -163,7 +162,7 @@ const HowITWork = () => {
             </div>
           </div>
 
-          {/* Fifth card  */}
+          {}
           <div
             data-aos="fade-left"
             data-aos-duration="2000"

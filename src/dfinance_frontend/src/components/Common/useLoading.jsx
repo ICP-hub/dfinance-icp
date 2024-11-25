@@ -1,31 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export function usePageLoading() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleLoad = () => {
-     
-        setIsLoading(false);
-      
+      setIsLoading(false);
     };
 
     const handleBeforeUnload = () => {
       setIsLoading(true);
     };
 
-    window.addEventListener('load', handleLoad);
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("load", handleLoad);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
-    if (document.readyState === 'complete') {
-      
-        setIsLoading(false);
-     
+    if (document.readyState === "complete") {
+      setIsLoading(false);
     }
 
     return () => {
-      window.removeEventListener('load', handleLoad);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("load", handleLoad);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
 

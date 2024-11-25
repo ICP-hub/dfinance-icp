@@ -7,11 +7,7 @@ import { useAuth } from "../../utils/useAuthClient";
 import FaucetDetails from "../../components/Faucet/FaucetDetails";
 import Element from "../../../public/element/Elements.svg";
 import { setUserData } from "../../redux/reducers/userReducer";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-  setConnectedWallet,
-} from "../../redux/reducers/utilityReducer";
+import {setIsWalletConnected,setWalletModalOpen,setConnectedWallet,} from "../../redux/reducers/utilityReducer";
 import icplogo from "../../../public/wallet/icp.png";
 import plug from "../../../public/wallet/plug.png";
 import bifinity from "../../../public/wallet/bifinity.png";
@@ -27,13 +23,11 @@ const Faucet = () => {
     isSwitchingWallet,
     connectedWallet,
   } = useSelector((state) => state.utility);
-  console.log("isWalletswitching", isSwitchingWallet, connectedWallet);
 
   const { isAuthenticated, login, logout, principal, createLedgerActor } =
     useAuth();
 
   const handleWalletConnect = () => {
-    console.log("connrcterd");
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
@@ -68,7 +62,7 @@ const Faucet = () => {
                   src={Element}
                   alt="Elements"
                   className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
-                  // Ensure image scales properly
+                 
                 />
               </div>
               <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg dark:text-darkText">

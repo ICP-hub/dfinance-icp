@@ -3,9 +3,9 @@ import { useEffect } from "react";
 import { TEMP_HERO_COUNTER_NUMBER } from "../../utils/constants";
 import useAssetData from "../Common/useAssets";
 const HeroSection = () => {
-  
+
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
-  
+
   return (
     <div
       id="hero"
@@ -13,11 +13,11 @@ const HeroSection = () => {
     >
       <div className="w-fit xl:w-[700px] gap-2 flex flex-col items-center justify-center px-8">
         <h1 className="text-xl md:text-3xl xl:text-4xl">
-          {/* "Lend" with the same gradient as "Borrow, Earn" */}
+          {}
           <span className="font-semibold bg-gradient-to-tr from-[#4659CF]/100 to-[#C562BD]/70 bg-clip-text text-transparent dark:text-darkText">
             Lend,&nbsp;
           </span>
-          {/* "Borrow, Earn" with the same gradient */}
+          {}
           <span className="font-semibold bg-gradient-to-tr from-purple-500 to-pink-400 bg-clip-text text-transparent ">
             Borrow
           </span>
@@ -34,7 +34,7 @@ const HeroSection = () => {
           <h1 className="text-[#2A1F9D] font-bold  dark:text-darkText">
             $ {totalSupplySize}
           </h1>
-          {/* <p className="text-sm font-normal text-[#585454] lg:my-3 dark:text-darkText">of liquidity is locked in crypto across {8} networks and over {15} markets.</p> */}
+          {}
           <p className="text-sm font-normal text-[#585454] dark:text-darkText lg:-mb-1 md:-mb-0">
             Total supply side positions on the platform
           </p>

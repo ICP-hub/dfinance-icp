@@ -57,9 +57,7 @@ const DebtStatus = () => {
       try {
         const usersData = await getAllUsers();
         setUsers(usersData);
-        console.log("liquidation", usersData)
       } catch (error) {
-        console.error('Error fetching users:', error);
       }
     };
 
@@ -69,7 +67,6 @@ const DebtStatus = () => {
   useEffect(() => {
     users.map((user, index) => {
       const userr = user[0].toString();
-      console.log("user", userr)
     })
   }, [users])
 
@@ -94,7 +91,6 @@ const DebtStatus = () => {
   const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
 
   const handleWalletConnect = () => {
-    console.log("connected");
     dispatch(setWalletModalOpen(!isWalletModalOpen))
   }
 
@@ -234,8 +230,6 @@ const DebtStatus = () => {
                         {mappedItem.reserves[0].map((item, index) => {
                           const assetName = item[1]?.reserve
                           const assetBorrow = (Number(item[1]?.asset_borrow) / 100000000);
-                          console.log("mappedItems", mappedItem)
-                          console.log("Asset Borrow:", assetBorrow);
                           if (assetBorrow > 0) {
                             return (
                               <img
@@ -264,8 +258,6 @@ const DebtStatus = () => {
                           const assetName = item[1]?.reserve 
                           const assetSupply = item[1]?.asset_supply  
 
-                          console.log("itemss:", assetName);
-                          console.log("Asset Supply:", assetSupply);
 
                           if (assetSupply > 0) {
                             return (

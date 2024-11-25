@@ -93,7 +93,7 @@ service : () -> {
   login : () -> (Result);
   queary_reserve_price : () -> (vec PriceCache) query;
   repay : (text, nat, opt text) -> (Result);
-  reset_faucet_usage : (text) -> (Result);
+  reset_faucet_usage : () -> (Result);
   supply : (text, nat64, bool) -> (Result);
   toggle_collateral : (text, nat, nat) -> ();
   update_balance : (principal, principal, nat) -> (Result_2);

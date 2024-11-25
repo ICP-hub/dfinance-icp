@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../Common/Button";
-import {
-  FAUCET_ASSETS_TABLE_ROW,
-  FAUCET_ASSETS_TABLE_COL,
-} from "../../utils/constants";
+import {FAUCET_ASSETS_TABLE_ROW,FAUCET_ASSETS_TABLE_COL,} from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import Pagination from "../Common/pagination";
@@ -145,14 +142,6 @@ const FaucetDetails = () => {
     ckICPBalance,
     ckUSDTBalance,
   ]);
-  console.log(
-    "balance in faucet detail",
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance
-  );
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -182,8 +171,8 @@ const FaucetDetails = () => {
       case "ICP":
         assetImage = icp;
         break;
-      case "ckUSDT": // Added case for ckUSDT
-        assetImage = ckUSDT; // Ensure ckUSDT is defined or imported
+      case "ckUSDT": 
+        assetImage = ckUSDT; 
         break;
       default:
         assetImage = null;
@@ -206,8 +195,7 @@ const FaucetDetails = () => {
       }, 500);
     }
   }, [filteredItems]);
-  
-  console.log("filteredItems in faucet detail", filteredItems);
+
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
@@ -273,7 +261,6 @@ const FaucetDetails = () => {
                     >
                       <td className="p-3 align-center py-7 px-2">
                         <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
-                          {console.log("Item in filtered items", item[0])}
                           {item[0] === "ckBTC" && (
                             <img
                               src={ckBTC}
@@ -302,9 +289,9 @@ const FaucetDetails = () => {
                               className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
-                          {item[0] === "ckUSDT" && ( // Added for ckUSDT
+                          {item[0] === "ckUSDT" && ( 
                             <img
-                              src={ckUSDT} // Ensure ckUSDT is defined or imported
+                              src={ckUSDT} 
                               alt="ckusdt logo"
                               className="w-8 h-8 rounded-full mr-2"
                             />
@@ -485,17 +472,7 @@ const FaucetDetails = () => {
                 </tbody>
               </table>
             </div>
-            {/* <div className="w-full flex justify-center mt-10">
-              <div id="pagination" className="flex gap-2">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(
-                    FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE
-                  )}
-                  onPageChange={(page) => setCurrentPage(page)}
-                />
-              </div>
-            </div> */}
+            {}
           </>
         )}
 
@@ -515,4 +492,3 @@ const FaucetDetails = () => {
   );
 };
 export default FaucetDetails;
-

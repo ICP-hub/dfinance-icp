@@ -13,28 +13,21 @@ import { ChevronLeft } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import DebtStatus from "./DebtStatus"
 import { setUserData } from '../../redux/reducers/userReducer'
-import {
-    setIsWalletConnected,
-    setWalletModalOpen,
-    setConnectedWallet
-} from '../../redux/reducers/utilityReducer'
+import {setIsWalletConnected,setWalletModalOpen,setConnectedWallet} from '../../redux/reducers/utilityReducer'
 
 const Liquidate = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
-    console.log("isWalletswitching", isSwitchingWallet, connectedWallet)
 
     const {
         isAuthenticated,
         login,
         logout,
-        principal,
-        createLedgerActor,
+
     } = useAuth()
 
     const handleWalletConnect = () => {
-        console.log("connrcterd");
         dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false }))
     }
 
@@ -49,7 +42,6 @@ const Liquidate = () => {
             navigate('/dashboard/wallet-details')
         }
     }, [isWalletCreated]);
-
 
     const loginHandlerIsSwitch = async (val) => {
         dispatch(setUserData(null));
@@ -76,8 +68,6 @@ const Liquidate = () => {
         setInputValue(event.target.value);
     };
 
-
-
     const walletDisplayName = (wallet) => {
         switch (wallet) {
             case 'ii':
@@ -93,28 +83,18 @@ const Liquidate = () => {
         }
     };
 
-
-
-
     const [showDebtStatus, setShowDebtStatus] = useState(false);
-    const [showWarning, setShowWarning] = useState(false); // Warning state
-
-
+    const [showWarning, setShowWarning] = useState(false); 
 
     useEffect(() => {
         if (isWalletCreated) {
             navigate('/dashboard/wallet-details')
         }
 
-        // Hide the warning if the user becomes authenticated
         if (isAuthenticated) {
             setShowWarning(false);
         }
     }, [isWalletCreated, isAuthenticated]);
-
-
-
-
 
     const { pathname } = useLocation();
     const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
@@ -123,9 +103,9 @@ const Liquidate = () => {
 
     const handleLiquidateClick = () => {
         if (!isAuthenticated) {
-            setShowWarning(true); // Show warning if not authenticated
+            setShowWarning(true); 
         } else {
-            setShowDebtStatus(true); // Show DebtStatus component if authenticated
+            setShowDebtStatus(true); 
         }
     }
 
@@ -156,7 +136,7 @@ const Liquidate = () => {
                             Check Users in Debt
                         </h1>
 
-                        {/* Display the warning if not authenticated */}
+                        {}
                         {showWarning && (
                             <div className="text-red-500 font-bold mb-4">
                                 Please connect your wallet to check the debt status.
@@ -206,7 +186,6 @@ const Liquidate = () => {
                                         </div>
                                     </div>
                                 )}
-
 
                             </div>
                             <p className='w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]'>Track wallet balance in read-only mode</p>

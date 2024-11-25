@@ -137,18 +137,10 @@ if (onLoadingChange) {
     setIsModalOpen(false);
     window.location.reload();
   };
-  const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset);
-  console.log("Fees:", fees);
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
-
-  if (!fees) {
-    return <p>Error: Fees data not available.</p>;
-  }
-
+  
   const numericBalance = parseFloat(balance);
-  const transferFee = Number(fees[normalizedAsset] || fees.default);
-  const supplyBalance = numericBalance - transferFee;
+ 
+  const supplyBalance = numericBalance;
 
   useEffect(() => {
     const handleClickOutside = (event) => {

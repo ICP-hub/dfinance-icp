@@ -46,7 +46,6 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
 
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
-  console.log("conversion rate ", conversionRate);
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -129,12 +128,9 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
   }, [amount, conversionRate]);
   useEffect(() => {
     if (balance && conversionRate) {
-      console.log("type of ", typeof conversionRate);
-      console.log("balance in supplypopup", balance, conversionRate);
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedMaxValue = balance * adjustedConversionRate;
 
-      console.log("converted in supplypopup", convertedMaxValue);
       setMaxUsdValue(convertedMaxValue);
     } else {
       setMaxUsdValue(0);
@@ -157,7 +153,6 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     }
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-    console.log("Amount as nat64:", amountAsNat64);
     const scaledAmount = amountAsNat64;
 
     const totalAmount = scaledAmount + transferfee;
@@ -176,9 +171,7 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
           subaccount: [],
         },
       });
-      console.log("Approve", approval);
       setIsApproved(true);
-      console.log("isApproved state after approval:", isApproved);
       toast.success(`Approval successful!`, {
         className: "custom-toast",
         position: "top-center",
@@ -190,7 +183,6 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
         progress: undefined,
       });
     } catch (error) {
-      console.error("Approval failed:", error);
       toast.error(`Error: ${error.message || "Approval failed!"}`, {
         className: "custom-toast",
         position: "top-center",
@@ -208,13 +200,11 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
 
-  console.log("Amount as nat64:", amountAsNat64);
 
   const scaledAmount = amountAsNat64;
 
   const handleSupplyETH = async () => {
     try {
-      console.log("Supply function called for", asset, amount);
 
       let ledgerActor;
       if (asset === "ckBTC") {
@@ -331,7 +321,6 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
       totalDebt,
       liquidationThreshold
     );
-    console.log("Health Factor:", healthFactor);
 
     const amountTaken = 0;
     const amountAdded = collateral ? usdValue || 0 : 0;

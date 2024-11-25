@@ -62,7 +62,7 @@ const MobileTopNav = ({
   useEffect(() => {
     if (previousIsTestnetMode.current !== isTestnetMode) {
       if (previousIsTestnetMode.current !== undefined) {
-        toast.dismiss(); // Dismiss any existing toasts
+        toast.dismiss(); 
       }
       toast.success(
         `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`
@@ -96,7 +96,6 @@ const MobileTopNav = ({
     }
   }, [theme]);
 
-  // Check screen size and conditionally render Drawer for mobile view
   const isLargeScreen = useMediaQuery("(min-width: 1134px)");
   const isMobile2 = window.innerWidth <= 640;
 
@@ -125,7 +124,6 @@ const MobileTopNav = ({
     }
   }, [isAuthenticated]);
 
-  // Unconditionally call all hooks, but only render Drawer for small screens
   const handleClose = () => {
     setIsMobileNav(false);
   };
@@ -167,24 +165,24 @@ const MobileTopNav = ({
 
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   useEffect(() => {
-    // Close the switchWalletDrop dropdown when location changes
+
     setSwitchWalletDrop(false);
   }, [location]);
 
   const handleSwitchWallet = () => {
     if (switchWalletDrop) {
-      logout(); // Logout when disconnecting
+      logout(); 
     } else {
       setSwitchWalletDrop(!switchWalletDrop);
     }
   };
 
   const handleViewOnExplorerClick = () => {
-    console.log("View on Explorer clicked");
+   
   };
 
   if (isLargeScreen) {
-    return null; // Return null if it's a large screen
+    return null; 
   }
 
   const switchWallet = () => {
@@ -198,16 +196,16 @@ const MobileTopNav = ({
       onClose={handleClose}
       PaperProps={{
         style: {
-          width: "80vw", // Adjust the width as needed
-          maxWidth: "440px", // Maximum width for the Drawer
-          height: "100vh", // Maximum height of the Drawer
-          maxHeight: "calc(100vh - 60px)", // Ensures it doesn't cover the whole screen
-          marginTop: "30px", // Adjust the margin as needed
-          marginBottom: "20px", // Space from the bottom
+          width: "80vw", 
+          maxWidth: "440px", 
+          height: "100vh", 
+          maxHeight: "calc(100vh - 60px)", 
+          marginTop: "30px", 
+          marginBottom: "20px", 
           borderRadius: "8px",
           display: "flex",
           flexDirection: "column",
-          backgroundColor: "transparent", // Ensure background is consistent
+          backgroundColor: "transparent", 
         },
       }}
     >
@@ -259,20 +257,10 @@ const MobileTopNav = ({
                     </h1>
                   </div>
                   <div className="flex flex-col-reverse   lg:block">
-                    {/* <div className="w-full flex flex-col lg1:flex-row justify-center mt-3  gap-3">
-                      <Button
-                        title="Switch Wallet"
-                        className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white "
-                      />
-                      <Button
-                        title="Disconnect"
-                        className=" bg-gradient-to-tr from-orange-400 to-purple-700 border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
-                        onClickHandler={handleLogout}
-                      />
-                    </div> */}
+                    {}
 
                     <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                      {/* First Container */}
+                      {}
                       <div className="hidden lg1:flex justify-center">
                         <div
                           className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -318,7 +306,7 @@ const MobileTopNav = ({
                           </div>
                         </div>
                       </div>
-                      {/* Second Container */}
+                      {}
                       <div className=" w-full flex justify-center">
                         <div
                           className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -358,7 +346,7 @@ const MobileTopNav = ({
                     key={index}
                     to={link.route}
                     className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} 
                     onClick={handleClose}
                   >
                     {link.title}
@@ -370,13 +358,13 @@ const MobileTopNav = ({
                     <NavLink
                       to={link.route}
                       className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} 
                       onClick={handleClose}
                     >
                       {link.title}
                     </NavLink>
                     {link.title === "Faucet" && (
-                      <>{/* Additional content for Faucet */}</>
+                      <>{}</>
                     )}
                   </React.Fragment>
                 );
@@ -386,7 +374,7 @@ const MobileTopNav = ({
                     key={index}
                     to={link.route}
                     className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} 
                     onClick={handleClose}
                   >
                     {link.title}
@@ -400,7 +388,7 @@ const MobileTopNav = ({
                 key={index}
                 to={link.route}
                 className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} // Custom margin
+                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} 
                 onClick={handleClose}
               >
                 {link.title}
@@ -459,11 +447,11 @@ const MobileTopNav = ({
         >
           Sound
         </label>
-        
-        {/* Info Icon */}
+
+        {}
         <Info size={16} className="ml-2 cursor-pointer" />
 
-        {/* Tooltip */}
+        {}
         <div className="absolute left-36 transform -translate-x-[40%] bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[30vw]">
           Enabling this will allow the user to hear sound when supply, borrow, repay, or withdraw functions are executed.
         </div>

@@ -4,20 +4,14 @@ import Footer from "../../components/Layout/Footer";
 import Ellipse from "../../components/Common/Ellipse";
 
 import DashboardNav from "../../components/Dashboard/DashboardNav";
-import { useAuth } from "../../utils/useAuthClient";
+
 
 const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
-  const { isAuthenticated, login } = useAuth();
+ 
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     login();
-  //   }
-  // }, []);
 
   return (
     <>
@@ -29,10 +23,10 @@ const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
           />
         </div>
 
-        {/* dashboard navbar */}
+        {}
         <Navbar isHomeNav={false} />
 
-        {/* main area */}
+        {}
         {isDGov ? (
           <div className="w-full">{children}</div>
         ) : (
@@ -43,7 +37,7 @@ const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
         )}
       </div>
 
-      {/* footer */}
+      {}
       <Footer />
     </>
   );

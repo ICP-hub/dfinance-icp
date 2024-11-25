@@ -9,48 +9,26 @@ import { useDispatch } from 'react-redux';
 import { setLedgerActor } from './redux/reducers/ledgerRedcuer';
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
 import { Principal } from "@dfinity/principal";
-import { useCallback } from "react";
-import ReactGA from "react-ga4";
-import { initGA, setUserId, trackPageView, trackEvent } from "./utils/googleAnalytics";
-import posthog from 'posthog-js';
+import {  trackPageView} from "./utils/googleAnalytics";
 
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
-  let TRACKING_ID = "G-EVCJPRHQYX";
   
   const {
-    isAuthenticated,
-    login,
-    logout,
-    updateClient,
-    authClient,
-    identity,
     principal,
     backendActor,
-    accountId,
     createLedgerActor,
     reloadLogin,
-    accountIdString,
   } = useAuth();
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const dispatch = useDispatch();
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-
-  // useEffect(() => {
-  //   initGA(TRACKING_ID);
-  //   setUserId(principalObj.toString());
-  // }, [principalObj]);
 
   const location = useLocation();
   useEffect(() => {
     trackPageView(location.pathname);
   }, [location]);
 
-  console.log("pricipalOBJ", principalObj.toString())
   
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
@@ -65,10 +43,8 @@ export default function App() {
             }));
           }
         } catch (error) {
-          console.error("Error fetching asset principal:", error);
         }
       } else {
-        console.error("Backend actor initialization failed.");
       }
     };
   
@@ -103,7 +79,6 @@ export default function App() {
       }
       return result.Ok.toText();
     } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
       throw error;
     }
   };
@@ -111,7 +86,6 @@ export default function App() {
   useEffect(() => {
     if (assetPrincipal.ckBTC) {
       const actor = createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory);
-      console.log("Created actor for ckBTC:", actor);
       
       dispatch(setLedgerActor({ asset: 'ckBTC', actor }));
     }

@@ -2,20 +2,14 @@ import React, { useEffect, useState } from 'react'
 import Button from '../../components/Common/Button'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import {
-    setIsWalletConnected,
-    setWalletModalOpen
-} from '../../redux/reducers/utilityReducer'
+import {setIsWalletConnected,setWalletModalOpen} from '../../redux/reducers/utilityReducer'
 import { STACK_DETAILS_TABS } from "../../utils/constants";
 
 
 import { Modal } from '@mui/material'
 import { useAuth } from "../../utils/useAuthClient"
 import Element from "../../../public/element/Elements.svg"
-import MySupply from '../../components/Dashboard/MySupply'
-import Error from '../Error'
 import StakesConnected from '../../components/Stake/StakesConnected'
-import Loading from "../../components/Common/Loading"
 
 import icplogo from '../../../public/wallet/icp.png'
 import plug from "../../../public/wallet/plug.png"
@@ -26,16 +20,12 @@ const StakeDetails = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
-    const {
-        isAuthenticated,
-        login,
-    } = useAuth()
+    const {isAuthenticated,login,} = useAuth()
 
 
 
     const handleWalletConnect = () => {
         dispatch(setWalletModalOpen(!isWalletModalOpen))
-        // dispatch(setIsWalletCreated(true))
     }
 
     const handleWallet = () => {
@@ -97,14 +87,12 @@ const StakeDetails = () => {
                 </div>
             </div>
 
-            {/* isAuthenticated */}
             {isAuthenticated ? <StakesConnected /> : <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
                 <div className="absolute right-0 top-0 h-full w-full md:w-1/2 pointer-events-none">
                     <img
                         src={Element}
                         alt="Elements"
                         className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
-                    // Ensure image scales properly
                     />
                 </div>
                 <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg dark:text-darkText">

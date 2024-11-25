@@ -133,7 +133,7 @@ const DebtStatus = () => {
       const isValid =
         mappedItem.reserves.length > 0 &&
         mappedItem.principal !== principal &&
-        mappedItem.healthFactor > 1 &&
+        mappedItem.healthFactor < 1 &&
         (mappedItem.principal.toLowerCase().includes(searchQuery.toLowerCase()) ||
           mappedItem.item[1].total_debt.toString().includes(searchQuery));
       return isValid;

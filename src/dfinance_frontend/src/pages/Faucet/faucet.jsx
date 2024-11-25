@@ -16,6 +16,7 @@ import icplogo from "../../../public/wallet/icp.png";
 import plug from "../../../public/wallet/plug.png";
 import bifinity from "../../../public/wallet/bifinity.png";
 import nfid from "../../../public/wallet/nfid.png";
+import WalletModal from "../../components/Dashboard/WalletModal";
 
 const Faucet = () => {
   const navigate = useNavigate();
@@ -38,81 +39,26 @@ const Faucet = () => {
     );
   };
 
-  const handleWallet = () => {
-    dispatch(
-      setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
-    );
-    dispatch(setIsWalletConnected(true));
-    navigate("/dashboard/my-supply");
-  };
-
-  useEffect(() => {
-    if (isWalletCreated) {
-      navigate("/dashboard/wallet-details");
-    }
-  }, [isWalletCreated]);
-
-  const loginHandlerIsSwitch = async (val) => {
-    dispatch(setUserData(null));
-    await logout();
-    await login(val);
-    dispatch(setConnectedWallet(val));
-    dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
-  };
-
-  const loginHandler = async (val) => {
-    await login(val);
-    dispatch(setConnectedWallet(val));
-  };
-
-  const handleLogout = () => {
-    dispatch(setUserData(null));
-    logout();
-  };
-
-  const [inputValue, setInputValue] = useState("");
-
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
-
-  const walletDisplayName = (wallet) => {
-    switch (wallet) {
-      case "ii":
-        return "Internet Identity";
-      case "plug":
-        return "Plug";
-      case "bifinity":
-        return "Bitfinity";
-      case "nfid":
-        return "NFID";
-      default:
-        return "Unknown Wallet";
-    }
-  };
-
   const [isTestnetMode, setIsTestnetMode] = useState(true); // Add state for testnet mode
 
   const handleTestnetModeToggle = () => {
     setIsTestnetMode((prevMode) => !prevMode);
   };
 
-  useEffect(() => {
-    if (isWalletCreated) {
-      navigate("/dashboard/faucet-details");
-    }
-  }, [isWalletCreated]);
 
   return (
     <>
       {isTestnetMode && (
         <>
-          
           <div className="mb-10 ml-2">
-        <p className="text-[#707086] text-[14px] text-justify  dark:text-darkTextSecondary leading-relaxed mt-3">
-        With our testnet Faucet you can receive free assets to test the Dfinance Protocol. Make sure to switch your wallet provider to the appropriate testnet network, select desired asset, and click ‘Faucet’ to get tokens transferred to your wallet. The assets on our testnet are not “real,” meaning they have no monetary value.
-        </p>
-      </div>
+            <p className="text-[#707086] text-[14px] text-justify  dark:text-darkTextSecondary leading-relaxed mt-3">
+              With our testnet Faucet you can receive free assets to test the
+              Dfinance Protocol. Make sure to switch your wallet provider to the
+              appropriate testnet network, select desired asset, and click
+              ‘Faucet’ to get tokens transferred to your wallet. The assets on
+              our testnet are not “real,” meaning they have no monetary value.
+            </p>
+          </div>
           {isAuthenticated ? (
             <FaucetDetails />
           ) : (
@@ -137,95 +83,7 @@ const Faucet = () => {
                 onClickHandler={handleWalletConnect}
               />
 
-              {(isSwitchingWallet || !isAuthenticated) && (
-                <Modal open={isWalletModalOpen} onClose={handleWalletConnect} >
-                  <div className="w-[300px] absolute bg-gray-100 shadow-xl rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-white dark:bg-darkOverlayBackground font-poppins">
-                    {connectedWallet ? (
-                      <h1 className="font-bold text-[#2A1F9D] dark:text-darkText">
-                        Switch wallet
-                      </h1>
-                    ) : (
-                      <h1 className="font-bold text-[#2A1F9D] dark:text-darkText">
-                        Connect a wallet
-                      </h1>
-                    )}
-                    <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">
-                      {connectedWallet && (
-                        <>
-                          <span className="text-[#2A1F9D] dark:text-blue-400 font-semibold">
-                            {walletDisplayName(connectedWallet)}
-                          </span>
-                          <span> is connected</span>
-                        </>
-                      )}
-                    </h1>
-                    <div className="flex flex-col gap-2 mt-3 text-sm">
-                      {connectedWallet !== "ii" && (
-                        <div
-                          className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
-                          onClick={() => {
-                            isSwitchingWallet
-                              ? loginHandlerIsSwitch("ii")
-                              : loginHandler("ii");
-                          }}
-                        >
-                          Internet Identity
-                          <div className="w-8 h-8">
-                            <img
-                              src={icplogo}
-                              alt="connect_wallet_icon"
-                              className="object-fill w-9 h-8 bg-white p-1 rounded-[20%]"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {connectedWallet !== "nfid" && (
-                        <div
-                          className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
-                          onClick={() => {
-                            isSwitchingWallet
-                              ? loginHandlerIsSwitch("nfid")
-                              : loginHandler("nfid");
-                          }}
-                        >
-                          NFID
-                          <div className="w-8 h-8">
-                            <img
-                              src={nfid}
-                              alt="connect_wallet_icon"
-                              className="object-fill w-9 h-8 bg-white p-1 rounded-[20%]"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <p className="w-full  text-xs my-3 text-gray-600 dark:text-[#CDB5AC]">
-                      Track wallet balance in read-only mode
-                    </p>
-
-                    <div className="w-full">
-                      <input
-                        type="text"
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-[#233D63] focus:outline-none focus:border-blue-500 placeholder:text-[#233D63] dark:border-darkTextSecondary1 dark:placeholder:text-darkTextSecondary1 text-gray-600 dark:text-darkTextSecondary1 text-xs rounded-md dark:bg-transparent"
-                        placeholder="Enter wallet address or username"
-                      />
-                    </div>
-
-                    {inputValue && (
-                      <div className="w-full flex mt-3">
-                        <Button
-                          title="Connect"
-                          onClickHandler={handleWallet}
-                          className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 px-20 shadow-lg font-semibold text-sm"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </Modal>
-              )}
+              {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
             </div>
           )}
         </>

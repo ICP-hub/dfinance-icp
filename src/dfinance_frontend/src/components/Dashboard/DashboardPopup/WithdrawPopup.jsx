@@ -242,7 +242,7 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    setPrevHethFactor(currentHealthFactor);
+    setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );

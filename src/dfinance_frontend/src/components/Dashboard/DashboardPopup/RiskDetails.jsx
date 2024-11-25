@@ -368,7 +368,11 @@ const RiskPopup = ({ onClose, userData }) => {
                   />
                   <rect
                     className="transition-bar"
-                    x={`${Math.max(currentLTVPosition - 0.25, 0)}%`}
+                    x={
+                      currentLTVPosition > 50
+                        ? `${currentLTVPosition - 1}%`
+                        : `${currentLTVPosition - 0.025}%`
+                    }
                     y="27"
                     width="0.25%"
                     height="9"

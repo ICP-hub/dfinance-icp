@@ -25,7 +25,6 @@ const useFetchConversionRate = (pollInterval = 2000) => {
 
   const fetchConversionRate = useCallback(async () => {
     try {
-
       if (!backendActor) {
         setError("Backend actor is not available.");
         return;
@@ -37,10 +36,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
       const rates = await Promise.all(
         assets.map(async (asset) => {
           try {
-            
             const result = await backendActor.get_cached_exchange_rate(asset);
-
-           
 
             if (result.Ok && result.Ok.cache && result.Ok.cache.length > 0) {
               const priceRecord = result.Ok.cache[0];
@@ -56,7 +52,6 @@ const useFetchConversionRate = (pollInterval = 2000) => {
               throw new Error(`Invalid response structure for ${asset}`);
             }
           } catch (error) {
-            
             return { asset, rate: null };
           }
         })
@@ -88,13 +83,19 @@ const useFetchConversionRate = (pollInterval = 2000) => {
 
       if (fetchedRates === assets.length) {
         console.log("All conversion rates fetched. Stopping polling.");
-        clearInterval(intervalIdRef.current); 
+        clearInterval(intervalIdRef.current);
       }
     } catch (error) {
-      
       setError(error.message);
     }
-  }, [backendActor, ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]);
+  }, [
+    backendActor,
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  ]);
 
   useEffect(() => {
     intervalIdRef.current = setInterval(() => {

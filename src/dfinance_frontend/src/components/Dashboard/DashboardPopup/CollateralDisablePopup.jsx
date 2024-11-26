@@ -1,13 +1,9 @@
 import React, { useState, useRef } from "react";
 import { Info, Check, Wallet, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
-import { Principal } from "@dfinity/principal";
-import { Fuel } from "lucide-react";
-import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
 

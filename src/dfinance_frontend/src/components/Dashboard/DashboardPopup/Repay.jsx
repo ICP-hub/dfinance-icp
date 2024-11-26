@@ -15,6 +15,7 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange 
 }) => {
   const {  backendActor, principal } = useAuth();
+  
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -31,7 +32,6 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
   const [maxUsdValue, setMaxUsdValue] = useState(0);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-  console.log("ledgerActors", ledgerActors);
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -111,8 +111,7 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
   }, [amount, conversionRate]);
 
   const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset); 
-  console.log("Fees:", fees); 
+ 
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
   if (!fees) {
@@ -195,7 +194,6 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
   }, [isLoading, onLoadingChange]);
 
   const handleRepayETH = async () => {
-    console.log("Repay function called for", asset);
 
     let ledgerActor;
     if (asset === "ckBTC") {

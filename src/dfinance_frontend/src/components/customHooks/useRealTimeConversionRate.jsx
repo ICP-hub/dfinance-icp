@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../utils/useAuthClient"; 
+import { useAuth } from "../../utils/useAuthClient";
 
 const useRealTimeConversionRate = (asset) => {
   const [conversionRate, setConversionRate] = useState(0);
   const [error, setError] = useState(null);
-  const { backendActor } = useAuth();  
+  const { backendActor } = useAuth();
 
   useEffect(() => {
     const fetchConversionRate = async () => {
@@ -16,7 +16,6 @@ const useRealTimeConversionRate = (asset) => {
         const result = await backendActor.get_cached_exchange_rate(asset);
 
         if (result.Ok && result.Ok.cache && result.Ok.cache.length > 0) {
-
           const rate = result.Ok.cache[0]?.[1]?.price;
 
           if (rate) {

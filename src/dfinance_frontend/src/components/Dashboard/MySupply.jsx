@@ -1458,16 +1458,40 @@ const MySupply = () => {
             </div>
             {isVisible && (
               <div className="flex items-center mx-4 mt-6 select-none">
-                <input
-                  type="checkbox"
-                  id="showZeroBalance"
-                  checked={showZeroBalance}
-                  onChange={handleCheckboxChange}
-                  className="mr-2 cursor-pointer"
-                />
+                {/* Custom checkbox */}
+                <div
+                  className={`w-3 h-3 border-2 border-transparent rounded-sm cursor-pointer 
+                flex justify-center items-center relative 
+                ${
+                  showZeroBalance
+                    ? "bg-gradient-to-r from-[#FCBD78]/40 to-[#FCBD78]/40 dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ring-2 ring-[#e0d2dd] dark:ring-darkBlue"
+                    : "bg-gray-200 dark:bg-gray-700 ring-2 ring-transparent dark:ring-transparent"
+                } 
+                focus:outline-none focus:ring-2 focus:ring-[#e0d2dd] dark:focus:ring-darkBlue`}
+                  onClick={() => setShowZeroBalance(!showZeroBalance)}
+                >
+                  {/* Tick mark */}
+                  {showZeroBalance && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="absolute stroke-black dark:stroke-white"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  )}
+                </div>
+
+                {/* Label */}
                 <label
                   htmlFor="showZeroBalance"
-                  className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer"
+                  className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer ml-2"
                 >
                   Show zero balance assets
                 </label>

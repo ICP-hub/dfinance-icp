@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import Button from "../../Common/Button";
+import { Info } from "lucide-react";
+import { Fuel } from "lucide-react";
 import { useSelector } from "react-redux";
-import { Check, X } from "lucide-react";
+import { Check, Wallet, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,9 +14,24 @@ import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 
-const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange 
+const WithdrawPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
 }) => {
-  const {  backendActor, principal } = useAuth();
+  const { createLedgerActor, backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -25,8 +42,14 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
     [principal]
   );
   const fees = useSelector((state) => state.fees.fees);
+  console.log("Asset:", asset);
+  console.log("Fees:", fees);
+  console.log("assetSupply:", assetSupply);
+
+  console.log("Current Collateral Status", collateral);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const [amount, setAmount] = useState("");
+  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -35,8 +58,16 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
-  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
-  
+
+  const isCollateral = true;
+
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
+
+  const numericBalance = parseFloat(balance);
+  const transferFee = fees[normalizedAsset] || fees.default;
+  const transferfee = Number(transferFee);
+  const supplyBalance = numericBalance - transferfee;
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -108,16 +139,27 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
-  
+  useEffect(() => {
+    if (assetSupply && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);  
+      const convertedMaxValue = assetSupply * adjustedConversionRate;  
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
+    }
+  }, [amount, conversionRate]);
 
   const ledgerActors = useSelector((state) => state.ledger);
+  console.log("ledgerActors", ledgerActors);
 
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+  console.log("Amount as nat64:", amountAsNat64);
 
   const scaledAmount = amountAsNat64; 
 
   const handleWithdraw = async () => {
+    console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -136,10 +178,13 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
     try {
       const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
-     
+      console.log("Amount as nat64:", amountAsNat64);
       const scaledAmount = amountAsNat64;
 
-      
+      console.log(
+        " current colletral status while withdraw ",
+        currentCollateralStatus
+      );
 
       const withdrawResult = await backendActor.withdraw(
         asset,
@@ -147,7 +192,7 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
         [],
         currentCollateralStatus
       );
-     
+      console.log("Withdraw result", withdrawResult);
 
       if ("Ok" in withdrawResult) {
         trackEvent(
@@ -197,8 +242,10 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
           draggable: true,
           progress: undefined,
         });
+        console.error("Withdraw error:", errorMsg);
       }
     } catch (error) {
+      console.error("Error withdrawing:", error);
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
     } finally {
       setIsLoading(false); 
@@ -234,7 +281,9 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
       totalCollateral,
       totalDebt,
       liquidationThreshold
-    )
+    );
+    console.log("Health Factor:", healthFactor);
+
     const amountTaken = collateral ? usdValue || 0 : 0;
     const amountAdded = 0;
     const totalCollateralValue =
@@ -242,6 +291,7 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
+    console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
@@ -281,6 +331,13 @@ const WithdrawPopup = ({asset, image, supplyRateAPR, balance, liquidationThresho
     const totalCollateralValue =
       parseFloat(totalCollateral) - parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
+
+    console.log("totalCollateralValue", totalCollateralValue);
+    console.log("totalDeptValue", totalDeptValue);
+    console.log("amountAdded", amountAdded);
+    console.log("liquidationThreshold", liquidationThreshold);
+    console.log("totalDebt", totalDebt);
+
     if (totalDeptValue === 0) {
       return Infinity;
     }

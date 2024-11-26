@@ -133,7 +133,7 @@ const DebtStatus = () => {
       const isValid =
         mappedItem.reserves.length > 0 &&
         mappedItem.principal !== principal &&
-        mappedItem.healthFactor < 1 &&
+        mappedItem.healthFactor > 1 &&
         (mappedItem.principal.toLowerCase().includes(searchQuery.toLowerCase()) ||
           mappedItem.item[1].total_debt.toString().includes(searchQuery));
       return isValid;
@@ -178,7 +178,7 @@ const DebtStatus = () => {
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center mt-8">
-        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Users List</h1>
+        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Debt users list</h1>
 
       </div>
 

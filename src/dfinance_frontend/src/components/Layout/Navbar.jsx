@@ -658,11 +658,11 @@ export default function Navbar({ isHomeNav }) {
                                 </button>
                                 <button
                                   className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday button1"
-                                  onClick={handleViewOnExplorerClick}
+                                  onClick={() => window.location.href = '/faucet'}
                                 >
-                                  <CiShare1 className="h-5 w-[18px] -ml-1 dark:text-darkText " />
+                                  <CiShare1 className="h-5 w-[18px] -ml-1 lg:-ml-8 dark:text-darkText " />
                                   <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
-                                    View On Explorer
+                                  Faucet Asset 
                                   </span>
                                 </button>
                               </div>

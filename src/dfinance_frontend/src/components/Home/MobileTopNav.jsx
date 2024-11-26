@@ -196,16 +196,16 @@ const MobileTopNav = ({
       onClose={handleClose}
       PaperProps={{
         style: {
-          width: "80vw", 
-          maxWidth: "440px", 
-          height: "100vh", 
-          maxHeight: "calc(100vh - 60px)", 
-          marginTop: "30px", 
-          marginBottom: "20px", 
+          width: "80vw",
+          maxWidth: "440px",
+          height: "100vh",
+          maxHeight: "calc(100vh - 60px)",
+          marginTop: "30px",
+          marginBottom: "20px",
           borderRadius: "8px",
           display: "flex",
           flexDirection: "column",
-          backgroundColor: "transparent", 
+          backgroundColor: "transparent",
         },
       }}
     >
@@ -320,12 +320,12 @@ const MobileTopNav = ({
                             <span className="ml-1">Copy Address</span>
                           </button>
                           <button
-                            className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday"
-                            onClick={handleViewOnExplorerClick}
+                            className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday justify-start"
+                            onClick={() => (window.location.href = "/faucet")}
                           >
-                            <CiShare1 className="h-5 w-4  dark:text-darkText " />
+                            <CiShare1 className="h-5 w-4 dark:text-darkText" />
                             <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
-                              View On Explorer
+                              Faucet Asset
                             </span>
                           </button>
                         </div>
@@ -346,7 +346,7 @@ const MobileTopNav = ({
                     key={index}
                     to={link.route}
                     className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} 
+                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
                     onClick={handleClose}
                   >
                     {link.title}
@@ -358,14 +358,12 @@ const MobileTopNav = ({
                     <NavLink
                       to={link.route}
                       className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} 
+                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
                       onClick={handleClose}
                     >
                       {link.title}
                     </NavLink>
-                    {link.title === "Faucet" && (
-                      <>{}</>
-                    )}
+                    {link.title === "Faucet" && <>{}</>}
                   </React.Fragment>
                 );
               } else if (!isTestnetMode && !link.testnet) {
@@ -374,7 +372,7 @@ const MobileTopNav = ({
                     key={index}
                     to={link.route}
                     className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} 
+                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
                     onClick={handleClose}
                   >
                     {link.title}
@@ -388,7 +386,7 @@ const MobileTopNav = ({
                 key={index}
                 to={link.route}
                 className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }} 
+                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
                 onClick={handleClose}
               >
                 {link.title}
@@ -439,35 +437,36 @@ const MobileTopNav = ({
               </div>
             )}
 
-<div className="flex items-center justify-between">
-      <div className="flex items-center relative group">
-        <label
-          htmlFor="darkMode"
-          className="ml-1 text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
-        >
-          Sound
-        </label>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center relative group">
+                <label
+                  htmlFor="darkMode"
+                  className="ml-1 text-[#2A1F9D] dark:text-darkTextSecondary text-nowrap"
+                >
+                  Sound
+                </label>
 
-        {}
-        <Info size={16} className="ml-2 cursor-pointer" />
+                {}
+                <Info size={16} className="ml-2 cursor-pointer" />
 
-        {}
-        <div className="absolute left-36 transform -translate-x-[40%] bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[30vw]">
-          Enabling this will allow the user to hear sound when supply, borrow, repay, or withdraw functions are executed.
-        </div>
-      </div>
+                {}
+                <div className="absolute left-36 transform -translate-x-[40%] bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[30vw]">
+                  Enabling this will allow the user to hear sound when supply,
+                  borrow, repay, or withdraw functions are executed.
+                </div>
+              </div>
 
-      <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
-        {isSoundOn ? "On" : "Off"}
+              <div className="flex items-center gap-3 text-[#2A1F9D] dark:text-darkTextSecondary">
+                {isSoundOn ? "On" : "Off"}
 
-        <div className="-mr-4">
-          <CustomizedSwitches
-            checked={isSoundOn}
-            onChange={handleSoundToggle}
-          />
-        </div>
-      </div>
-    </div>
+                <div className="-mr-4">
+                  <CustomizedSwitches
+                    checked={isSoundOn}
+                    onChange={handleSoundToggle}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

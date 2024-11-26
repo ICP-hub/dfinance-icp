@@ -922,45 +922,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 {renderAssetDetails(selectedAsset)}
 
                 <div className="flex items-center mt-2">
-                  <Fuel className="w-4 h-4 mr-1" />
-                  <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
-                  {selectedAsset === "ckBTC" && (
-                    <img
-                      src={ckBTC}
-                      alt="ckBTC icon"
-                      className="object-cover w-5 h-5 rounded-full" 
-                    />
-                  )}
-
-                  {selectedAsset === "ckETH" && (
-                    <img
-                      src={ckETH}
-                      alt="ckETH icon"
-                      className="object-cover w-5 h-5 rounded-full" 
-                    />
-                  )}
-
-                  {selectedAsset === "ckUSDC" && (
-                    <img
-                      src={ckUSDC}
-                      alt="ckUSDC icon"
-                      className="object-cover w-5 h-5 rounded-full" 
-                    />
-                  )}
-                  {selectedAsset === "ICP" && (
-                    <img
-                      src={icp}
-                      alt="ICP icon"
-                      className="object-cover w-5 h-5 rounded-full" 
-                    />
-                  )}
-                  {selectedAsset === "ckUSDT" && (
-                    <img
-                      src={ckUSDT}
-                      alt="ckUSDT icon"
-                      className="object-cover w-5 h-5 rounded-full"
-                    />
-                  )}
+                 
                 </div>
               </div>
               <div className="flex justify-between mt-4">

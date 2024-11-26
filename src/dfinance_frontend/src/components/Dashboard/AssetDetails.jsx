@@ -439,7 +439,19 @@ const AssetDetails = () => {
       : id === "ckUSDT"
       ? ckUSDTBalance
       : null;
-
+      const formatValue = (value) => {
+        const numericValue = parseFloat(value); 
+        if (isNaN(numericValue)) {
+          return "0.00"; 
+        }
+        if (numericValue === 0) {
+          return "0.00"; 
+        } else if (numericValue >= 1) {
+          return numericValue.toFixed(2); 
+        } else {
+          return numericValue.toFixed(7); 
+        }
+      };
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-7 md:-mt-7 lg:mt-10 my-6 gap-6 mb-[5rem]">
       <div className="w-full lg1:w-9/12  p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
@@ -543,35 +555,35 @@ const AssetDetails = () => {
                   {id === "ckBTC" && (
                     <>
                       <p>
-                        {ckBTCBalance} {id}
+                      {formatValue(ckBTCBalance)} {id}
                       </p>
                     </>
                   )}
                   {id === "ckETH" && (
                     <>
                       <p>
-                        {ckETHBalance} {id}
+                      {formatValue(ckETHBalance)} {id}
                       </p>
                     </>
                   )}
                   {id === "ckUSDC" && (
                     <>
                       <p>
-                        {ckUSDCBalance} {id}
+                      {formatValue(ckUSDCBalance)} {id}
                       </p>
                     </>
                   )}
                   {id === "ICP" && (
                     <>
                       <p>
-                        {ckICPBalance} {id}
+                      {formatValue(ckICPBalance)} {id}
                       </p>
                     </>
                   )}
                   {id === "ckUSDT" && (
                     <>
                       <p>
-                        {ckUSDTBalance} {id}
+                      {formatValue(ckUSDTBalance)} {id}
                       </p>
                     </>
                   )}
@@ -592,56 +604,126 @@ const AssetDetails = () => {
                 <div className="flex">
                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 ">
                     <div className="text-sm text-[#eeeef0] dark:text-darkText flex flex-col justify-center">
-                      {id === "ckBTC" && (
-                        <>
-                          <p>
-                            {ckBTCBalance} {id}
-                          </p>
-                          <p className="text-[11px] font-light">
-                            ${formatNumber(ckBTCUsdBalance)}
-                          </p>
-                        </>
-                      )}
-                      {id === "ckETH" && (
-                        <>
-                          <p>
-                            {ckETHBalance} {id}
-                          </p>
-                          <p className="text-[11px] font-light">
-                            ${formatNumber(ckETHUsdBalance)}
-                          </p>
-                        </>
-                      )}
-                      {id === "ckUSDC" && (
-                        <>
-                          <p>
-                            {ckUSDCBalance} {id}
-                          </p>
-                          <p className="text-[11px] font-light">
-                            ${formatNumber(ckUSDCUsdBalance)}
-                          </p>
-                        </>
-                      )}
-                      {id === "ICP" && (
-                        <>
-                          <p>
-                            {ckICPBalance} {id}
-                          </p>
-                          <p className="text-[11px] font-light">
-                            ${formatNumber(ckICPUsdBalance)}
-                          </p>
-                        </>
-                      )}
-                      {id === "ckUSDT" && (
-                        <>
-                          <p>
-                            {ckUSDTBalance} {id}
-                          </p>
-                          <p className="text-[11px] font-light">
-                            ${formatNumber(ckUSDTUsdBalance)} {}
-                          </p>
-                        </>
-                      )}
+                    {id === "ckBTC" && (
+                                      <>
+                                        <p>
+                                          {ckBTCBalance === 0
+                                            ? "0"
+                                            : ckBTCBalance >= 1
+                                            ? Number(
+                                                ckBTCBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                              })
+                                            : Number(
+                                                ckBTCBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 7,
+                                                maximumFractionDigits: 7,
+                                              })}
+                                        </p>
+                                        <p className="font-light">
+                                          ${formatNumber(ckBTCUsdBalance)}
+                                        </p>
+                                      </>
+                                    )}
+                                    {id === "ckETH" && (
+                                      <>
+                                        <p>
+                                          {ckETHBalance === 0
+                                            ? "0"
+                                            : ckETHBalance >= 1
+                                            ? Number(
+                                                ckETHBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                              })
+                                            : Number(
+                                                ckETHBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 7,
+                                                maximumFractionDigits: 7,
+                                              })}
+                                        </p>
+                                        <p className="font-light">
+                                          ${formatNumber(ckETHUsdBalance)}
+                                        </p>
+                                      </>
+                                    )}
+                                    {id === "ckUSDC" && (
+                                      <>
+                                        <p>
+                                          {ckUSDCBalance === 0
+                                            ? "0"
+                                            : ckUSDCBalance >= 1
+                                            ? Number(
+                                                ckUSDCBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                              })
+                                            : Number(
+                                                ckUSDCBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 7,
+                                                maximumFractionDigits: 7,
+                                              })}
+                                        </p>
+                                        <p className="font-light">
+                                          ${formatNumber(ckUSDCUsdBalance)}
+                                        </p>
+                                      </>
+                                    )}
+                                    {id === "ICP" && (
+                                      <>
+                                        <p>
+                                          {ckICPBalance === 0
+                                            ? "0"
+                                            : ckICPBalance >= 1
+                                            ? Number(
+                                                ckICPBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                              })
+                                            : Number(
+                                                ckICPBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 7,
+                                                maximumFractionDigits: 7,
+                                              })}
+                                        </p>
+                                        <p className="font-light">
+                                          ${formatNumber(ckICPUsdBalance)}
+                                        </p>
+                                      </>
+                                    )}
+                                    {id === "ckUSDT" && (
+                                      <>
+                                        <p>
+                                          {ckUSDTBalance === 0
+                                            ? "0"
+                                            : ckUSDTBalance >= 1
+                                            ? Number(
+                                                ckUSDTBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                              })
+                                            : Number(
+                                                ckUSDTBalance
+                                              ).toLocaleString(undefined, {
+                                                minimumFractionDigits: 7,
+                                                maximumFractionDigits: 7,
+                                              })}
+                                        </p>
+                                        <p className="font-light">
+                                          ${formatNumber(ckUSDTUsdBalance)}
+                                        </p>
+                                      </>
+                                    )}
                     </div>
                   </div>
                   <div className="ml-auto">

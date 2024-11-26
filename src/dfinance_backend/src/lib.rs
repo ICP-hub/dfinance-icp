@@ -8,6 +8,7 @@ use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use implementations::reserve;
+use protocol::libraries::logic::liquidation::LiquidationLogic;
 use protocol::libraries::logic::reserve::user_normalized_debt;
 use protocol::libraries::logic::reserve::user_normalized_supply;
 use protocol::libraries::logic::update::user_data;
@@ -65,31 +66,31 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
     }
 }
 
-// #[update]
-// async fn liquidation_call(
-//     asset: String,
-//     collateral_asset: String,
-//     amount: u64,
-//     on_behalf_of: String,
-// ) -> Result<(), String> {
-//     match LiquidationLogic::execute_liquidation(
-//         asset,
-//         collateral_asset,
-//         amount as u128,
-//         on_behalf_of,
-//     )
-//     .await
-//     {
-//         Ok(_) => {
-//             ic_cdk::println!("execute_liquidation function called successfully");
-//             Ok(())
-//         }
-//         Err(e) => {
-//             ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
-//             Err(e)
-//         }
-//     }
-// }
+#[update]
+async fn liquidation_call(
+    asset: String,
+    collateral_asset: String,
+    amount: u64,
+    on_behalf_of: String,
+) -> Result<(), String> {
+    match LiquidationLogic::execute_liquidation(
+        asset,
+        collateral_asset,
+        amount as u128,
+        on_behalf_of,
+    )
+    .await
+    {
+        Ok(_) => {
+            ic_cdk::println!("execute_liquidation function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
+            Err(e)
+        }
+    }
+}
 
 // Function to fetch the reserve-data based on the asset
 #[query]
@@ -596,17 +597,8 @@ fn calculate_dynamic_balance(
 
 // this function is for check which i will remove later.
 #[update]
-async fn get_user_account_data() -> Result<(u128, u128, u128, u128, u128, bool), String>
+async fn get_user_account_data() -> Result<(u128, u128, u128, u128, u128,u128, bool), String>
 {
-    // let test_params = UserAccountDataParams {
-    //     user: "4mgu5-maax3-snkev-o47j5-j7cls-ambfh-gbax3-mdo33-twdrp-q47xa-5ae".to_string(), // Replace with a valid principal ID
-    //     // user_config: UserConfig {
-    //     //     collateral: true,
-    //     //     borrowing: true,
-    //     // },
-    //     // reserves_count: 2,
-    // };
-
     let result = GenericLogic::calculate_user_account_data().await;
 
     result

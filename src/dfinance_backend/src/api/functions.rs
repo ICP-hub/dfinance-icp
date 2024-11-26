@@ -183,7 +183,6 @@ pub async fn faucet(asset: String, amount: u64) -> Result<Nat, String> {
     if user_principal == Principal::anonymous() {
         return Err("Anonymous principals are not allowed.".to_string());
     }
-    ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
     //Retrieve user data.
     let user_data_result = user_data(user_principal);

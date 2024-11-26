@@ -12,7 +12,9 @@ pub enum Error {
     WithdrawMoreThanSupply,
     RepayMoreThanDebt,
     InvalidUser,
-    LessRewardAmount
+    LessRewardAmount,
+    UnauthorizedAccess,
+    UserNotFound,
 }
 
 impl Error {
@@ -30,7 +32,9 @@ impl Error {
             Error::WithdrawMoreThanSupply => "Withdraw cannot be more than supply",
             Error::RepayMoreThanDebt => "Repay cannot be more than debt",
             Error::InvalidUser => "User is not equal to the caller",
-            Error::LessRewardAmount => "Total collateral value cannot be less than reward amount"
+            Error::LessRewardAmount => "Total collateral value cannot be less than reward amount",
+            Error::UnauthorizedAccess => "unauthorized access denied",
+            Error::UserNotFound => "user not found",
         }
     }
 }

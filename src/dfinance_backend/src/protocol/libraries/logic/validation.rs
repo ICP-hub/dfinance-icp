@@ -11,9 +11,9 @@ use core::panic;
 pub struct ValidationLogic;
 
 impl ValidationLogic {
-//     // -------------------------------------
-//     // -------------- SUPPLY ---------------
-//     // -------------------------------------
+    //     // -------------------------------------
+    //     // -------------- SUPPLY ---------------
+    //     // -------------------------------------
 
     pub async fn validate_supply(
         reserve: &ReserveData,
@@ -21,6 +21,21 @@ impl ValidationLogic {
         user: Principal,
         ledger_canister: Principal,
     ) {
+        // if user == Principal::anonymous() {
+        //     println!("Anonymous principals are not allowed.");
+        //     panic!("{:?}", Error::UnauthorizedAccess);
+        // }
+
+        if user != ic_cdk::caller() {
+            ic_cdk::println!("Invalid user: Caller does not match the user.");
+            panic!("{:?}", Error::InvalidUser);
+        }
+
+        if amount <= 0 {
+            ic_cdk::println!("Invalid amount: Amount must be greater than zero.");
+            panic!("{:?}", Error::InvalidAmount);
+        }
+
         // validating amount
         let user_balance = get_balance(ledger_canister, user).await;
         ic_cdk::println!("User balance: {:?}", user_balance);
@@ -30,10 +45,6 @@ impl ValidationLogic {
 
         let final_amount = amount + transfer_fees;
         ic_cdk::println!("final_amount : {:?}", final_amount);
-
-        if amount == 0 {
-            panic!("{:?}", Error::InvalidAmount);
-        }
 
         if final_amount > user_balance {
             panic!("{:?}", Error::MaxAmount);
@@ -47,12 +58,15 @@ impl ValidationLogic {
         );
 
         if !is_active {
+            ic_cdk::println!("Reserve is inactive.");
             panic!("{:?}", Error::ReserveInactive);
         }
         if is_paused {
+            ic_cdk::println!("Reserve is paused.");
             panic!("{:?}", Error::ReservePaused);
         }
         if is_frozen {
+            ic_cdk::println!("Reserve is frozen.");
             panic!("{:?}", Error::ReserveFrozen);
         }
         ic_cdk::println!("is_active : {:?}", is_active);
@@ -67,6 +81,7 @@ impl ValidationLogic {
         ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
 
         if final_total_supply >= supply_cap {
+            ic_cdk::println!("Supply cap exceeded: Final total supply exceeds the supply cap.");
             panic!("{:?}", Error::SupplyCapExceeded);
         }
     }
@@ -81,6 +96,22 @@ impl ValidationLogic {
         user: Principal,
         ledger_canister: Principal,
     ) {
+        // Anonymous user check
+        // if user == Principal::anonymous() {
+        //     ic_cdk::println!("Unauthorized access attempt by an anonymous user.");
+        //     panic!("{:?}", Error::UnauthorizedAccess);
+        // }
+
+        if user != ic_cdk::caller() {
+            ic_cdk::println!("Invalid user: Caller does not match the user.");
+            panic!("{:?}", Error::InvalidUser);
+        }
+
+        if amount <= 0 {
+            ic_cdk::println!("Invalid amount: Amount must be greater than zero.");
+            panic!("{:?}", Error::InvalidAmount);
+        }
+
         // validating amount
         let transfer_fees = get_fees(ledger_canister).await;
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
@@ -88,21 +119,16 @@ impl ValidationLogic {
         let final_amount = amount + transfer_fees;
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        if amount == 0 {
-            panic!("{:?}", Error::InvalidAmount);
-        }
-
-        if user != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
-        }
-
         // Fetching user data
         let user_data_result = mutate_state(|state| {
             let user_profile_data = &mut state.user_profile;
             user_profile_data
                 .get(&user)
                 .map(|user| user.0.clone())
-                .ok_or_else(|| panic!("User not found: {}", user.to_string()))
+                .ok_or_else(|| {
+                    ic_cdk::println!("User not found: {}", user.to_string());
+                    Error::UserNotFound
+                })
         });
 
         let mut user_data = match user_data_result {
@@ -129,6 +155,7 @@ impl ValidationLogic {
         }
 
         if final_amount > user_current_supply as u128 {
+            ic_cdk::println!("Withdraw amount exceeds current supply.");
             panic!("{:?}", Error::WithdrawMoreThanSupply);
         }
 
@@ -153,7 +180,7 @@ impl ValidationLogic {
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
         let user_total_collateral = user_data.total_collateral.unwrap_or(0) - amount;
-        
+
         let next_collateral = user_total_collateral - amount;
 
         // Calculating user liquidation threshold
@@ -197,7 +224,15 @@ impl ValidationLogic {
     //     // --------------------------------------
 
     pub async fn validate_borrow(reserve: &ReserveData, amount: u128, user_principal: Principal) {
-        if amount == 0 {
+        // Check if the caller is anonymous
+        // if user_principal == Principal::anonymous() {
+        //     panic!("{:?}", Error::UnauthorizedAccess);
+        // }
+
+        if user_principal != ic_cdk::caller() {
+            panic!("{:?}", Error::InvalidUser);
+        }
+        if amount <= 0 {
             panic!("{:?}", Error::InvalidAmount);
         }
 
@@ -220,10 +255,6 @@ impl ValidationLogic {
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
-
-        if user_principal != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
-        }
 
         // Fetch user data
         let user_data_result = mutate_state(|state| {
@@ -316,19 +347,24 @@ impl ValidationLogic {
         user: Principal,
         ledger_canister: Principal,
     ) {
+        // // Check if the caller is anonymous
+        // if user == Principal::anonymous() {
+        //     panic!("{:?}", Error::UnauthorizedAccess);
+        // }
+
+        // Check if the caller matches the provided user
+        if user != ic_cdk::caller() {
+            panic!("{:?}", Error::InvalidUser);
+        }
+
+        if amount <= 0 {
+            panic!("{:?}", Error::InvalidAmount);
+        }
         let transfer_fees = get_fees(ledger_canister).await;
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
         let final_amount = amount + transfer_fees;
         ic_cdk::println!("final_amount : {:?}", final_amount);
-
-        if amount == 0 {
-            panic!("{:?}", Error::InvalidAmount);
-        }
-
-        if user != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
-        }
 
         // Fetch user data
         let user_data_result = mutate_state(|state| {
@@ -397,6 +433,14 @@ impl ValidationLogic {
         liquidator: Principal,
         user: Principal,
     ) {
+        if liquidator != ic_cdk::caller() {
+            panic!("{:?}", Error::InvalidUser);
+        }
+
+        if repay_amount == 0 {
+            panic!("{:?}", Error::InvalidAmount);
+        }
+
         let repay_ledger_canister_id = mutate_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -406,9 +450,6 @@ impl ValidationLogic {
         })
         .unwrap();
 
-        if liquidator != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
-        }
 
         // Checking liquidator is present in user list
         // let _ = mutate_state(|state| {
@@ -427,10 +468,6 @@ impl ValidationLogic {
 
         let final_amount = repay_amount + transfer_fees;
         ic_cdk::println!("final_amount : {:?}", final_amount);
-
-        if repay_amount == 0 {
-            panic!("{:?}", Error::InvalidAmount);
-        }
 
         if final_amount > liquidator_balance {
             panic!("{:?}", Error::MaxAmount);

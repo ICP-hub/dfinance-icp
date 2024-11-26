@@ -146,6 +146,7 @@ pub async fn get_exchange_rates(
     quote_asset_symbol: Option<String>,
     amount: u128,
 ) -> Result<(u128, u64), String> {
+    // Step 1: Map the base_asset_symbol to the corresponding asset symbol
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc".to_string(),
         "ckETH" => "eth".to_string(),
@@ -153,7 +154,9 @@ pub async fn get_exchange_rates(
         "ckUSDT" => "usdt".to_string(),
         _ => base_asset_symbol.clone(),
     };
+    ic_cdk::println!("Mapped base asset symbol: {} -> {}", base_asset_symbol, base_asset);
 
+    // Step 2: Map the quote_asset_symbol to the corresponding asset symbol
     let quote_asset = match quote_asset_symbol {
         Some(symbol) => match symbol.as_str() {
             "ckBTC" => "btc".to_string(),
@@ -164,7 +167,9 @@ pub async fn get_exchange_rates(
         },
         None => "USDT".to_string(),
     };
+    ic_cdk::println!("Mapped quote asset symbol: -> {}", quote_asset);
 
+    // Step 3: Prepare the GetExchangeRateRequest arguments
     let args = GetExchangeRateRequest {
         timestamp: None,
         quote_asset: Asset {
@@ -176,6 +181,10 @@ pub async fn get_exchange_rates(
             symbol: base_asset.clone(),
         },
     };
+    ic_cdk::println!("exchange rate amount = {}",amount);
+    ic_cdk::println!("GetExchangeRateRequest args prepared: {:?}", args);
+
+    // Step 4: Call the get_exchange_rate method on the external canister
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
             Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
@@ -184,26 +193,31 @@ pub async fn get_exchange_rates(
             1_000_000_000,
         )
         .await;
+    ic_cdk::println!("GetExchangeRateResult: {:?}", res);
 
     match res {
         Ok(res_value) => match res_value.0 {
             GetExchangeRateResult::Ok(v) => {
+                // Step 5: Calculate exchange rate and total value
                 let quote = v.rate;
                 let pow = 10usize.pow(v.metadata.decimals);
                 let exchange_rate = (quote as u128 * 100000000) / (pow as u128 - 100000000);
-
                 let total_value: u128 = (quote as u128 * amount) / (pow as u128 - 100000000);
+                ic_cdk::println!("quote {} =",quote);
+                ic_cdk::println!("pow {} = ",pow);
+                ic_cdk::println!("Exchange rate: {}, Total value: {}", exchange_rate, total_value);
 
                 let time = ic_cdk::api::time();
+                ic_cdk::println!("Current time: {}", time);
 
-                // Fetching price-cache data
+                // Step 6: Fetch and update price-cache data
                 let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
                     let price_cache_data = &mut state.price_cache_list;
                     if let Some(price_cache) = price_cache_data.get(&base_asset) {
-                        ic_cdk::println!("calculate existing price cache = {:?}", price_cache.0);
+                        ic_cdk::println!("Price cache found: {:?}", price_cache.0);
                         Ok(price_cache.0.clone())
                     } else {
-                        ic_cdk::println!("creating new price cache : not found");
+                        ic_cdk::println!("Creating new price cache: not found");
                         let new_price_cache = PriceCache {
                             cache: HashMap::new(),
                         };
@@ -215,34 +229,46 @@ pub async fn get_exchange_rates(
 
                 let mut price_cache_data: PriceCache = match price_cache_result {
                     Ok(data) => {
-                        ic_cdk::println!("calculate price cache found: {:?}", data);
+                        ic_cdk::println!("Using existing price cache: {:?}", data);
                         data
                     }
                     Err(e) => {
+                        ic_cdk::println!("Error fetching price cache: {:?}", e);
                         panic!("{:?}", e);
                     }
                 };
 
                 price_cache_data.set_price(base_asset_symbol.clone(), exchange_rate as u128);
-                ic_cdk::println!("price cache after setting =  {:?}", price_cache_data);
+                ic_cdk::println!("Updated price cache: {:?}", price_cache_data);
 
-                // Save the updated price_cache_data back into the state
+                // Step 7: Save the updated price_cache_data back into the state
                 mutate_state(|state| {
                     state
                         .price_cache_list
                         .insert(base_asset.clone(), Candid(price_cache_data.clone()));
                 });
-                
+                ic_cdk::println!("Price cache saved back to state");
+
                 Ok((total_value, time))
             }
-            GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
+            GetExchangeRateResult::Err(e) => {
+                ic_cdk::println!("Error in exchange rate result: {:?}", e);
+                Err(format!("ERROR :: {:?}", e))
+            }
         },
-        Err(error) => Err(format!(
-            "Could not get USD/{} Rate - {:?} - {}",
-            base_asset_symbol, error.0, error.1
-        )),
+        Err(error) => {
+            ic_cdk::println!(
+                "Could not get USD/{} Rate - {:?} - {}",
+                base_asset_symbol, error.0, error.1
+            );
+            Err(format!(
+                "Could not get USD/{} Rate - {:?} - {}",
+                base_asset_symbol, error.0, error.1
+            ))
+        }
     }
 }
+
 
 //  async fn check_and_update_prices() {
 //         ic_cdk::spawn(async {

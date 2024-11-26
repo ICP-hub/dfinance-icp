@@ -1,6 +1,6 @@
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::get_all_assets;
-use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
+use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled_modified};
 use crate::protocol::libraries::types::datatypes::{UserData, UserState};
 use crate::{
     api::state_handler::{mutate_state, read_state},
@@ -119,7 +119,8 @@ impl UpdateLogic {
         };
 
         let platform_principal = ic_cdk::api::id();
-        let minted_result = mint_scaled(
+
+        let minted_result:Result<bool, String>  = mint_scaled_modified(
             &mut update_user_state,
             params.amount,
             reserve_cache.next_liquidity_index,
@@ -129,20 +130,30 @@ impl UpdateLogic {
         )
         .await;
 
-        match minted_result {
-            Ok(()) => {
-                println!("minting dtokens successfully");
+         match minted_result {
+            Ok(success) => {
+                if success {
+                    ic_cdk::println!("Minting of dTokens was successful.");
+                    true
+                } else {
+                    ic_cdk::println!("Minting of dTokens failed without an error.");
+                    false
+                    //return Err("Minting of dTokens failed without an error.".to_string());
+                }
             }
             Err(e) => {
-                panic!("Get error in minting the dtokens {:?}", e);
+                ic_cdk::println!("Error during minting of dTokens: {:?}", e);
+                return Err(format!("Error during minting of dTokens: {:?}", e));
             }
-        }
+        };
+
+        // Further processing can be done here using the `minting_success` variable.
 
         if let Some((_, reserve_data)) = user_reserve {
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.borrow_rate = reserve.borrow_rate.clone();
             reserve_data.asset_supply += params.amount;
-           // reserve_data.asset_price_when_supplied = usd_rate;
+            // reserve_data.asset_price_when_supplied = usd_rate;
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
             reserve_data.state = update_user_state.clone();
@@ -278,7 +289,7 @@ impl UpdateLogic {
             index: reserve_cache.curr_liquidity_index,
         };
 
-        let minted_result = mint_scaled(
+        let minted_result: Result<bool, String> = mint_scaled_modified(
             &mut update_user_state,
             params.amount,
             reserve_cache.next_debt_index,
@@ -289,13 +300,21 @@ impl UpdateLogic {
         .await;
 
         match minted_result {
-            Ok(()) => {
-                println!("minting dtokens successfully");
+            Ok(success) => {
+                if success {
+                    ic_cdk::println!("Minting of debtTokens was successful.");
+                    true
+                } else {
+                    ic_cdk::println!("Minting of debtTokens failed without an error.");
+                    false
+                    //return Err("Minting of dTokens failed without an error.".to_string());
+                }
             }
             Err(e) => {
-                panic!("Get error in minting the dtokens {:?}", e);
+                ic_cdk::println!("Error during minting of debtTokens: {:?}", e);
+                return Err(format!("Error during minting of debtTokens: {:?}", e));
             }
-        }
+        };
 
         let usd_rate = usd_amount.scaled_div(params.amount);
         if let Some((_, reserve_data)) = user_reserve {
@@ -448,7 +467,7 @@ impl UpdateLogic {
                 println!("minting debttoken successfully");
             }
             Err(e) => {
-                panic!("Get error in burning the dtoken {:?}", e);
+                return Err(format!("Get error in burning the dtoken {:?}", e));
             }
         };
 
@@ -576,7 +595,7 @@ impl UpdateLogic {
                 println!("minting debttoken successfully");
             }
             Err(e) => {
-                panic!("Get error in minting the debttoken {:?}", e);
+                return  Err(format!("Get error in minting the debttoken {:?}", e));
             }
         };
 

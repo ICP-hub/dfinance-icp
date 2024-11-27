@@ -78,7 +78,7 @@ impl SupplyLogic {
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates supply using the reserve_data
-        ValidationLogic::validate_supply(
+        let _ = ValidationLogic::validate_supply(
             &reserve_data,
             params.amount,
             user_principal,

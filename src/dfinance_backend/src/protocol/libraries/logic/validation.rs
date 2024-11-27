@@ -1,12 +1,15 @@
-use crate::api::functions::{get_balance, get_fees};
+use crate::api::functions::{get_balance, get_fees, get_total_supply};
 use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveData;
+use crate::protocol::libraries::logic::user::{nat_to_u128, GenericLogic};
 use crate::protocol::libraries::math::calculate::{
     cal_average_threshold, calculate_health_factor, calculate_ltv, UserPosition,
 };
-use candid::Principal;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
+use candid::{Nat, Principal};
 use core::panic;
+use std::string;
 
 pub struct ValidationLogic;
 
@@ -20,11 +23,14 @@ impl ValidationLogic {
         amount: u128,
         user: Principal,
         ledger_canister: Principal,
-    ) {
-        // if user == Principal::anonymous() {
-        //     println!("Anonymous principals are not allowed.");
-        //     panic!("{:?}", Error::UnauthorizedAccess);
-        // }
+    ) -> Result<(), String> {
+        if user == Principal::anonymous() {
+            println!("Anonymous principals are not allowed.");
+            panic!("{:?}", Error::UnauthorizedAccess);
+        }
+
+        ic_cdk::println!("validation amount = {}", amount);
+        ic_cdk::println!("validation reserve = {:?}", reserve);
 
         if user != ic_cdk::caller() {
             ic_cdk::println!("Invalid user: Caller does not match the user.");
@@ -77,13 +83,44 @@ impl ValidationLogic {
         let supply_cap = reserve.configuration.supply_cap;
         ic_cdk::println!("supply_cap : {:?}", supply_cap);
 
-        let final_total_supply = final_amount + reserve.total_supply as u128; //usd
-        ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
+        let d_token_canister_id = Principal::from_text(reserve.d_token_canister.clone().unwrap())
+            .map_err(|_| "Invalid user canister ID".to_string())?;
 
-        if final_total_supply >= supply_cap {
+        let total_supply = get_total_supply(d_token_canister_id).await;
+
+        let total_supply_u128 = match nat_to_u128(total_supply) {
+            Ok(bal) => {
+                ic_cdk::println!("balance converted to u128: {}", bal);
+                bal
+            }
+            Err(err) => {
+                ic_cdk::println!("Error converting balance to u128: {:?}", err);
+                return Err("Error converting balance to u128".to_string());
+            }
+        };
+
+        ic_cdk::println!("validation reserve accure = {}", reserve.accure_to_platform);
+
+        // Ask: is it okk to comment these line (i think because supply cap is total number of tokens not amount in usd).
+        // let final_total_supply = final_amount + reserve.total_supply as u128; //usd
+        // ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
+
+        //Ask: this is okk with.
+        let total_supply_amount_accure = total_supply_u128 + reserve.accure_to_platform + amount;
+        ic_cdk::println!(
+            "total supply with amount and accrue = {}",
+            total_supply_amount_accure
+        );
+
+        Ok(if total_supply_amount_accure >= supply_cap {
             ic_cdk::println!("Supply cap exceeded: Final total supply exceeds the supply cap.");
-            panic!("{:?}", Error::SupplyCapExceeded);
-        }
+            panic!("{:?}", Error::SupplyCapExceeded)
+        })
+
+        // if final_total_supply >= supply_cap {
+        //     ic_cdk::println!("Supply cap exceeded: Final total supply exceeds the supply cap.");
+        //     panic!("{:?}", Error::SupplyCapExceeded);
+        // }
     }
 
     // -------------------------------------
@@ -95,12 +132,13 @@ impl ValidationLogic {
         amount: u128,
         user: Principal,
         ledger_canister: Principal,
-    ) {
+    ) -> Result<(), String> {
+        ic_cdk::println!("withdraw amount for validation = {}", amount);
         // Anonymous user check
-        // if user == Principal::anonymous() {
-        //     ic_cdk::println!("Unauthorized access attempt by an anonymous user.");
-        //     panic!("{:?}", Error::UnauthorizedAccess);
-        // }
+        if user == Principal::anonymous() {
+            ic_cdk::println!("Unauthorized access attempt by an anonymous user.");
+            panic!("{:?}", Error::UnauthorizedAccess);
+        }
 
         if user != ic_cdk::caller() {
             ic_cdk::println!("Invalid user: Caller does not match the user.");
@@ -141,20 +179,27 @@ impl ValidationLogic {
             }
         };
 
-        let user_reserve = match user_data.reserves {
+        let user_reserve_data = match user_data.reserves {
             Some(ref mut reserves) => reserves
                 .iter_mut()
                 .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
             None => None,
         };
 
-        let mut user_current_supply = 0;
+        //let mut user_current_supply = 0;
+        let mut user_dtokens: Nat = Nat::from(0u128);
 
-        if let Some((_, reserve_data)) = user_reserve {
-            user_current_supply = reserve_data.asset_supply;
+        if let Some((_, reserve_data)) = user_reserve_data {
+            //user_current_supply = reserve_data.asset_supply;
+            let d_token_canister_id = Principal::from_text(reserve_data.d_token_canister.clone())
+                .map_err(|_| "Invalid user canister ID".to_string())?;
+            user_dtokens = get_balance(d_token_canister_id, user).await;
         }
 
-        if final_amount > user_current_supply as u128 {
+        ic_cdk::println!("withdraw user dtokens = {}", user_dtokens);
+
+        // TODO: get balance dtoken call user , compare final amount.
+        if final_amount > user_dtokens {
             ic_cdk::println!("Withdraw amount exceeds current supply.");
             panic!("{:?}", Error::WithdrawMoreThanSupply);
         }
@@ -183,6 +228,7 @@ impl ValidationLogic {
 
         let next_collateral = user_total_collateral - amount;
 
+        // Ask: is it a write to not let user withdraw there assets on the basis of general ltv and health factor validation because may be in frontend things are different.
         // Calculating user liquidation threshold
         let user_thrs = cal_average_threshold(
             amount,
@@ -217,6 +263,7 @@ impl ValidationLogic {
         if health_factor < 1 {
             panic!("{:?}", Error::HealthFactorLess);
         }
+        Ok(())
     }
 
     //     // --------------------------------------
@@ -225,15 +272,19 @@ impl ValidationLogic {
 
     pub async fn validate_borrow(reserve: &ReserveData, amount: u128, user_principal: Principal) {
         // Check if the caller is anonymous
-        // if user_principal == Principal::anonymous() {
-        //     panic!("{:?}", Error::UnauthorizedAccess);
-        // }
+        if user_principal == Principal::anonymous() {
+            panic!("{:?}", Error::UnauthorizedAccess);
+        }
 
         if user_principal != ic_cdk::caller() {
             panic!("{:?}", Error::InvalidUser);
         }
         if amount <= 0 {
             panic!("{:?}", Error::InvalidAmount);
+        }
+
+        if !reserve.configuration.borrowing_enabled {
+            panic!("{:?}", Error::BorrowingNotEnabled);
         }
 
         // validating reserve states
@@ -256,6 +307,8 @@ impl ValidationLogic {
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
+        // Ask: dont we need transfer fee.
+
         // Fetch user data
         let user_data_result = mutate_state(|state| {
             let user_profile_data = &mut state.user_profile;
@@ -275,61 +328,111 @@ impl ValidationLogic {
             }
         };
 
-        let user_total_debt = user_data.total_debt.unwrap_or(0);
+        // let mut total_collateral: u128 = 0;
+        // let mut total_debt: u128 = 0;
+        let mut avg_ltv: u128 = 0;
+        // let mut avg_liquidation_threshold: u128 = 0;
+        let mut health_factor: u128 = 0;
+        // let mut available_borrow: u128 = 0;
+        //let mut has_zero_ltv_collateral: bool = false;
 
-        let next_total_debt = amount + user_total_debt;
-        ic_cdk::println!("Next total debt: {}", next_total_debt);
+        let user_data_result: Result<(u128, u128, u128, u128, u128, u128, bool), String> =
+            GenericLogic::calculate_user_account_data().await;
 
-        let user_thrs = cal_average_threshold(
-            amount,
-            0,
-            reserve.configuration.liquidation_threshold,
-            user_data.total_collateral.unwrap(),
-            user_data.liquidation_threshold.unwrap(),
-        );
-        ic_cdk::println!("user_thr {:?}", user_thrs);
+        match user_data_result {
+            Ok((
+                t_collateral,
+                t_debt,
+                ltv,
+                liquidation_threshold,
+                h_factor,
+                a_borrow,
+                zero_ltv_collateral,
+            )) => {
+                // Assign the values to the previously declared variables
+                // total_collateral = t_collateral;
+                // total_debt = t_debt;
+                avg_ltv = ltv;
+                // avg_liquidation_threshold = liquidation_threshold;
+                health_factor = h_factor;
+                // available_borrow = a_borrow;
+                // has_zero_ltv_collateral = zero_ltv_collateral;
 
-        let user_position = UserPosition {
-            total_collateral_value: user_data.total_collateral.unwrap(),
-            total_borrowed_value: next_total_debt,
-            liquidation_threshold: user_thrs,
-        };
+                // Use the values
+                // println!("Total Collateral: {}", total_collateral);
+                // println!("Total Debt: {}", total_debt);
+                println!("Average LTV: {}", avg_ltv);
+                // println!(
+                //     "Average Liquidation Threshold: {}",
+                //     avg_liquidation_threshold
+                // );
+                println!("Health Factor: {}", health_factor);
+                //println!("Available Borrow: {}", available_borrow);
+                // println!("Has Zero LTV Collateral: {}", has_zero_ltv_collateral);
+            }
+            Err(e) => {
+                // Handle the error case
+                panic!("Error: {}", e);
+            }
+        }
 
-        let ltv = calculate_ltv(&user_position);
-        ic_cdk::println!("LTV {:?}", ltv);
-        ic_cdk::println!(
-            "user liq threshold {:?}",
-            user_data.liquidation_threshold.unwrap()
-        );
+        // TODO: need to use the user total function
+        // let user_total_debt = user_data.total_debt.unwrap_or(0);
 
-        if ltv > user_data.liquidation_threshold.unwrap() {
+        // let next_total_debt = amount + user_total_debt;
+        // ic_cdk::println!("Next total debt: {}", next_total_debt);
+
+        // let user_thrs = cal_average_threshold(
+        //     amount,
+        //     0,
+        //     reserve.configuration.liquidation_threshold,
+        //     user_data.total_collateral.unwrap(),
+        //     user_data.liquidation_threshold.unwrap(),
+        // );
+        // ic_cdk::println!("user_thr {:?}", user_thrs);
+
+        // let user_position = UserPosition {
+        //     total_collateral_value: user_data.total_collateral.unwrap(),
+        //     total_borrowed_value: next_total_debt,
+        //     liquidation_threshold: user_thrs,
+        // };
+
+        // let ltv = calculate_ltv(&user_position);
+        // ic_cdk::println!("LTV {:?}", ltv);
+        // ic_cdk::println!(
+        //     "user liq threshold {:?}",
+        //     user_data.liquidation_threshold.unwrap()
+        // );
+        ic_cdk::println!("borrow liquidation threshold = {:?}",user_data.liquidation_threshold);
+        if avg_ltv > user_data.liquidation_threshold.unwrap() {
             panic!("{:?}", Error::LTVGreaterThanThreshold);
         }
 
-        ic_cdk::println!(
-            "total_collateral_value: {}",
-            user_position.total_collateral_value
-        );
-        ic_cdk::println!(
-            "total_borrowed_value: {}",
-            user_position.total_borrowed_value
-        );
-        ic_cdk::println!(
-            "liquidation_threshold: {}",
-            user_position.liquidation_threshold
-        );
+        // ic_cdk::println!(
+        //     "total_collateral_value: {}",
+        //     user_position.total_collateral_value
+        // );
+        // ic_cdk::println!(
+        //     "total_borrowed_value: {}",
+        //     user_position.total_borrowed_value
+        // );
+        // ic_cdk::println!(
+        //     "liquidation_threshold: {}",
+        //     user_position.liquidation_threshold
+        // );
 
-        let health_factor = calculate_health_factor(&user_position);
+        // let health_factor = calculate_health_factor(&user_position);
 
         if health_factor < 1 {
             panic!("{:?}", Error::HealthFactorLess);
         }
 
-        // Validating supply cap limit
+        // Validating supply cap limit.
+        //Ask: am i need to do similar of the supply for borrow cap and need to make a get_total_borrow and we dont have any specfic icrc function for this.
         let borrow_cap = reserve.configuration.borrow_cap;
         ic_cdk::println!("borrow_cap : {:?}", borrow_cap);
 
-        let final_total_borrow = amount + reserve.total_borrowed;
+        let final_total_borrow = amount + (reserve.asset_borrow.scaled_mul(reserve.debt_index));
         ic_cdk::println!("final_total_supply : {:?}", final_total_borrow);
 
         if final_total_borrow >= borrow_cap {
@@ -348,9 +451,9 @@ impl ValidationLogic {
         ledger_canister: Principal,
     ) {
         // // Check if the caller is anonymous
-        // if user == Principal::anonymous() {
-        //     panic!("{:?}", Error::UnauthorizedAccess);
-        // }
+        if user == Principal::anonymous() {
+            panic!("{:?}", Error::UnauthorizedAccess);
+        }
 
         // Check if the caller matches the provided user
         if user != ic_cdk::caller() {
@@ -396,6 +499,10 @@ impl ValidationLogic {
 
         if let Some((_, reserve_data)) = user_reserve {
             user_current_debt = reserve_data.asset_borrow;
+        }
+
+        if user_current_debt == 0 {
+            panic!("{:?}", Error::NoDebtToRepay);
         }
 
         if final_amount > user_current_debt as u128 {
@@ -449,7 +556,6 @@ impl ValidationLogic {
                 .ok_or_else(|| panic!("No canister ID found for asset: {}", repay_asset))
         })
         .unwrap();
-
 
         // Checking liquidator is present in user list
         // let _ = mutate_state(|state| {

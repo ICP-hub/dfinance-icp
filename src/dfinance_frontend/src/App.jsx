@@ -101,7 +101,6 @@ export default function App() {
   useEffect(() => {
     if (assetPrincipal.ckBTC) {
       const actor = createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory);
-      console.log("Created actor for ckBTC:", actor);
 
       dispatch(setLedgerActor({ asset: "ckBTC", actor }));
     }

@@ -5,7 +5,10 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { useAuth } from "../../utils/useAuthClient";
-import {MY_ASSET_TO_SUPPLY_TABLE_COL,MY_BORROW_ASSET_TABLE_ROWS,} from "../../utils/constants";
+import {
+  MY_ASSET_TO_SUPPLY_TABLE_COL,
+  MY_BORROW_ASSET_TABLE_ROWS,
+} from "../../utils/constants";
 
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import Button from "../Common/Button";
@@ -13,7 +16,10 @@ import useAssetData from "../Common/useAssets";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
-import {setTotalUsdValueBorrow,setTotalUsdValueSupply,} from "../../redux/reducers/borrowSupplyReducer";
+import {
+  setTotalUsdValueBorrow,
+  setTotalUsdValueSupply,
+} from "../../redux/reducers/borrowSupplyReducer";
 
 import MySupplyModal from "./MySupplyModal";
 import WithdrawPopup from "./DashboardPopup/WithdrawPopup";
@@ -169,7 +175,6 @@ const MySupply = () => {
     }
 
     if (ckUSDTUsdRate) {
-
       const usdtAmount = availableBorrow / (ckUSDTUsdRate / 1e8);
       setBorrowableUSDT(usdtAmount);
     }
@@ -534,7 +539,6 @@ const MySupply = () => {
   let borrow_rate_apr = "0";
 
   if (filteredItems && filteredItems.length > 0) {
-
     const item = filteredItems[0][1].Ok;
 
     const total_supply = item.total_supply;
@@ -611,6 +615,7 @@ const MySupply = () => {
         </button>
       </div>
 
+      {/* MOBILE SCREEN */}
       <div className="w-full lg:w-6/12 lg:mt-20">
         <div
           className={`${
@@ -840,20 +845,21 @@ const MySupply = () => {
                                   </div>
                                 </div>
 
-                                <div className="flex justify-between text-xs text-[#233D63] font-semibold mt-4 mb-1">
-                                  <div className="flex items-center relative group">
-                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                <div className="flex justify-between text-xs text-[#233D63] font-semibold">
+                                  <div className="flex relative group">
+                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50 relative">
                                       APY:
                                     </p>
                                     {}
-                                    <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                      <Info size={14} />
-                                      {}
-                                      <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[25vw]">
-                                        The supply rate APY may vary based on
-                                        utilization levels and incentive
-                                        structures.
-                                      </div>
+                                    <span className="relative cursor-pointer">
+                                      <span className="group inline-flex ml-1">
+                                        <Info size={14} />
+                                        <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                                          The supply rate APY may vary based on
+                                          utilization levels and incentive
+                                          structures.
+                                        </div>
+                                      </span>
                                     </span>
                                   </div>
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
@@ -1065,31 +1071,27 @@ const MySupply = () => {
                   ) : (
                     <div className="w-full h-auto mt-4 relative ">
                       <div className="grid grid-cols-[2fr_1.14fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                        <div className="p-5 pl-4 inline-flex items-center">
-                          Asset
-                        </div>
+                        <div className="p-5 pl-4 inline-flex">Asset</div>
                         <div className="p-5 inline-flex items-center ">
                           Asset Supply
                         </div>
 
                         {}
-                        <div className="p-5 inline-flex items-center relative group">
+                        <div className="p-5 inline-flex relative gap-1">
                           <span>APY</span>
-                          {}
-                          <span className="ml-2 cursor-pointer relative group">
-                            <Info size={14} />
-                            {}
-                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                              The supply rate APY may vary based on utilization
-                              levels and incentive structures.
-                            </div>
+                          <span className="relative cursor-pointer">
+                            <span className="group inline-flex">
+                              <Info size={14} />
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs  w-[20vw] pointer-events-none">
+                                The supply rate APY may vary based on
+                                utilization levels and incentive structures.
+                              </div>
+                            </span>
                           </span>
                         </div>
 
-                        <div className="p-5 inline-flex items-center">
-                          Is Collateral
-                        </div>
-                        <div className="p-5 inline-flex items-center"></div>
+                        <div className="p-5 inline-flex">Is Collateral</div>
+                        <div className="p-5 inline-flex"></div>
                       </div>
 
                       {}
@@ -1580,7 +1582,7 @@ const MySupply = () => {
                                     {item[0]}
                                   </span>
                                 </div>
-                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6">
+                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-4 mt-6">
                                   <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                     Wallet Balance:
                                   </p>
@@ -1708,20 +1710,21 @@ const MySupply = () => {
                                   </p>
                                 </div>
 
-                                <div className="flex justify-between text-[#233D63]  text-xs font-semibold mt-4 mb-2">
-                                  <div className="flex items-center relative group">
+                                <div className="flex justify-between text-[#233D63]  text-xs font-semibold mb-4">
+                                  <div className="flex relative group">
                                     <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                       APY:
                                     </p>
                                     {}
-                                    <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                      <Info size={14} />
-                                      {}
-                                      <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                        The supply rate APY may vary based on
-                                        utilization levels and incentive
-                                        structures.
-                                      </div>
+                                    <span className="relative cursor-pointer">
+                                      <span className="group inline-flex ml-1">
+                                        <Info size={14} />
+                                        <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                                          The supply rate APY may vary based on
+                                          utilization levels and incentive
+                                          structures.
+                                        </div>
+                                      </span>
                                     </span>
                                   </div>
                                   <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
@@ -1845,36 +1848,32 @@ const MySupply = () => {
                       <div className="w-full z-10">
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           {}
-                          <div className="p-5 pl-4 inline-flex items-center">
-                            Asset
-                          </div>
+                          <div className="p-5 pl-4 inline-flex">Asset</div>
 
                           {}
-                          <div className="p-5 inline-flex items-center">
-                            Wallet Balance
-                          </div>
+                          <div className="p-5 inline-flex">Wallet Balance</div>
 
                           {}
-                          <div className="p-5 inline-flex items-center">
+                          <div className="p-5 inline-flex gap-1 ">
                             <span>APY</span>
-                            {}
-                            <span className="ml-2 cursor-pointer relative group">
-                              <Info size={14} />
-                              {}
-                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[15vw]">
-                                The supply rate APY may vary based on
-                                utilization levels and incentive structures.
-                              </div>
+                            <span className="relative cursor-pointer">
+                              <span className="group inline-flex">
+                                <Info size={14} />
+                                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs  w-[20vw] pointer-events-none">
+                                  The supply rate APY may vary based on
+                                  utilization levels and incentive structures.
+                                </div>
+                              </span>
                             </span>
                           </div>
 
                           {}
-                          <div className="p-5 inline-flex items-center">
+                          <div className="p-5 inline-flex">
                             Can be Collateral
                           </div>
 
                           {}
-                          <div className="p-5 inline-flex items-center"></div>
+                          <div className="p-5 inline-flex"></div>
                         </div>
                       </div>
 
@@ -2187,6 +2186,8 @@ const MySupply = () => {
           </div>
         </div>
       </div>
+
+      {/* MOBILE SCREEN */}
       <div className="w-full lg:w-6/12 md:-mt-6 lg:mt-20">
         <div
           className={`${
@@ -2410,18 +2411,19 @@ const MySupply = () => {
 
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
                                     <div className="flex items-center relative group">
-                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50 relative">
                                         APY:
                                       </p>
                                       {}
-                                      <span className="ml-2 cursor-pointer relative group dark:text-darkText dark:opacity-50">
-                                        <Info size={14} />
-                                        {}
-                                        <div className="absolute left-20 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                          The variable borrow interest rate may
-                                          change over time, influenced by market
-                                          trends and conditions.
-                                        </div>
+                                      <span className="relative cursor-pointer">
+                                        <span className="group inline-flex ml-1">
+                                          <Info size={14} />
+                                          <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                                            The variable borrow interest rate
+                                            may change over time, influenced by
+                                            market trends and conditions.
+                                          </div>
+                                        </span>
                                       </span>
                                     </div>
                                     <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
@@ -2593,17 +2595,17 @@ const MySupply = () => {
                           <div className="p-3 -ml-[4px]">Debt</div>
 
                           {}
-                          <div className="p-3 inline-flex items-center relative group">
+                          <div className="p-3 inline-flex relative gap-1">
                             <span>APY</span>
-                            {}
-                            <span className="ml-2 cursor-pointer relative group">
-                              <Info size={14} />
-                              {}
-                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                The variable borrow interest rate may change
-                                over time, influenced by market trends and
-                                conditions.
-                              </div>
+                            <span className="relative cursor-pointer">
+                              <span className="group inline-flex">
+                                <Info size={14} />
+                                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none">
+                                  The variable borrow interest rate may change
+                                  over time, influenced by market trends and
+                                  conditions.
+                                </div>
+                              </span>
                             </span>
                           </div>
 
@@ -3050,16 +3052,23 @@ const MySupply = () => {
                                     </span>
                                   </div>
                                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6 relative ">
-                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50 flex items-center">
-                                      Available:
-                                      <span className="ml-2 cursor-pointer relative">
-                                        <Info size={14} className="group" />
-
-                                        <div className="absolute left-20 transform -translate-x-[20%] bottom-full mt-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[30vw]">
-                                          This is the total amount you can
-                                          borrow, determined by your collateral
-                                          and limited by the borrow cap.
-                                        </div>
+                                    <p className="text-[#233D63] dark:text-darkText flex ">
+                                      <span className="dark:opacity-50">
+                                        Available:
+                                      </span>
+                                      <span className="relative cursor-pointer">
+                                        <span className="group inline-flex ml-1">
+                                          <Info
+                                            size={14}
+                                            className="dark:opacity-50"
+                                          />
+                                          <div className="absolute left-[85px] transform -translate-x-1/2 -mb-4 bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                                            This is the total amount you can
+                                            borrow, determined by your
+                                            collateral and limited by the borrow
+                                            cap.
+                                          </div>
+                                        </span>
                                       </span>
                                     </p>
 
@@ -3267,20 +3276,24 @@ const MySupply = () => {
                                     </p>
                                   </div>
 
-                                  <div className="flex justify-between text-[#233D63] dark:text-darkText dark:opacity-50 text-xs font-semibold mt-4 mb-1">
-                                    <div className="flex items-center relative group">
+                                  <div className="flex justify-between text-[#233D63] dark:text-darkText text-xs font-semibold mt-4 mb-1">
+                                    <div className="flex  relative group">
                                       <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                         APY:
                                       </p>
 
-                                      <span className="ml-2 cursor-pointer relative group">
-                                        <Info size={14} />
-
-                                        <div className="absolute left-28 transform -translate-x-[20%] bottom-full mb-0 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                          The variable borrow interest rate may
-                                          change over time, influenced by market
-                                          trends and conditions.
-                                        </div>
+                                      <span className="relative cursor-pointer">
+                                        <span className="group inline-flex ml-1">
+                                          <Info
+                                            size={14}
+                                            className="dark:opacity-50"
+                                          />
+                                          <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                                            The variable borrow interest rate
+                                            may change over time, influenced by
+                                            market trends and conditions.
+                                          </div>
+                                        </span>
                                       </span>
                                     </div>
                                     <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
@@ -3416,7 +3429,7 @@ const MySupply = () => {
               )}
             </div>
 
-            {}
+            {/* DESKTOP */}
             <div className="hidden xl:block mt-2">
               {isBorrowVisible && (
                 <>
@@ -3453,7 +3466,7 @@ const MySupply = () => {
                               key={index}
                               className="p-2 lgx:pl-4 font-[500]"
                             >
-                              <div className="inline-flex items-center relative">
+                              <div className="inline-flex relative gap-1">
                                 {}
                                 <p>
                                   {index === 2 ? item.header1 : item.header}
@@ -3461,25 +3474,29 @@ const MySupply = () => {
 
                                 {}
                                 {index === 1 && (
-                                  <span className="ml-2 cursor-pointer relative group">
-                                    <Info size={14} />
-                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                      This is the total amount you can borrow,
-                                      determined by your collateral and limited
-                                      by the borrow cap.
-                                    </div>
+                                  <span className="relative cursor-pointer">
+                                    <span className="group inline-flex">
+                                      <Info size={14} />
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs  w-[20vw] pointer-events-none">
+                                        This is the total amount you can borrow,
+                                        determined by your collateral and
+                                        limited by the borrow cap.
+                                      </div>
+                                    </span>
                                   </span>
                                 )}
 
                                 {}
                                 {index === 2 && (
-                                  <span className="ml-2 cursor-pointer relative group">
-                                    <Info size={14} />
-                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs border border-gray-300 w-[20vw]">
-                                      The variable borrow interest rate may
-                                      change over time, influenced by market
-                                      trends and conditions.
-                                    </div>
+                                  <span className="relative cursor-pointer">
+                                    <span className="group inline-flex">
+                                      <Info size={14} />
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs  w-[20vw] pointer-events-none">
+                                        The variable borrow interest rate may
+                                        change over time, influenced by market
+                                        trends and conditions.
+                                      </div>
+                                    </span>
                                   </span>
                                 )}
                               </div>

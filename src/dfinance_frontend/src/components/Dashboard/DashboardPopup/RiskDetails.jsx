@@ -289,8 +289,8 @@ const RiskPopup = ({ onClose, userData }) => {
                       : health_Factor_Value <= 1.5
                       ? "bg-orange-100 text-orange-500"
                       : health_Factor_Value <= 2
-                      ? "bg-orange-200 text-orange-300"
-                      : "bg-orange-300 text-orange-600"
+                      ? "bg-orange-300 text-orange-600"
+                      : "bg-orange-400 text-orange-800"
                   }`}
                 >
                   {parseFloat(health_Factor_Value)?.toFixed(2) || "0.00"}

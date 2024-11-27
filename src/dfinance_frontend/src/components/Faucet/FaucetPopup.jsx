@@ -38,6 +38,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [FaucetLimit, setFaucetLimit] = useState(initialLimits); 
   const [remainingFaucet, setRemainingFaucet] = useState(0);
   useEffect(() => {
+    if (isOpen) {
+     
+      document.body.style.overflow = "hidden";
+    } else {
+      
+      document.body.style.overflow = "";
+    }
+
+   
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+  useEffect(() => {
     if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
       const updatedLimits = { ...initialLimits };
       const updatedUsages = { ...initialUsages };

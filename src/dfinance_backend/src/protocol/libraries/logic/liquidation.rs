@@ -1,6 +1,9 @@
 use crate::api::functions::get_balance;
+use crate::get_asset_principal;
 use crate::protocol::libraries::logic::reserve::{self};
+use crate::protocol::libraries::logic::user::nat_to_u128;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
+use crate::protocol::libraries::logic::{liquidation, user};
 use crate::{
     api::{functions::asset_transfer, state_handler::mutate_state},
     declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
@@ -20,15 +23,47 @@ impl LiquidationLogic {
         on_behalf_of: String,
     ) -> Result<Nat, String> {
         // Reads the reserve data from the asset
-        ic_cdk::println!("liquidation amount to check = {}",amount);
+        ic_cdk::println!("liquidation amount to check = {}", amount);
         ic_cdk::println!(
             "params asset_name and collateral_asset {:?} {:?}",
             asset_name,
             collateral_asset
         );
 
-        if asset_name.is_empty() || collateral_asset.is_empty() || amount == 0 || on_behalf_of.is_empty() {
+        if asset_name.is_empty()
+            || collateral_asset.is_empty()
+            || amount == 0
+            || on_behalf_of.is_empty()
+        {
             return Err("Invalid input parameters".to_string());
+        }
+
+        let platform_principal = ic_cdk::api::id();
+
+        let user_principal = Principal::from_text(on_behalf_of)
+            .map_err(|_| "Invalid user canister ID".to_string())?;
+        ic_cdk::println!("User Principal (Debt User): {}", user_principal);
+
+        let liquidator_principal = api::caller();
+        ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
+
+        let liquidator_asset_principal = get_asset_principal(asset_name.clone()).unwrap();
+        let liquidator_asset_tokens =
+            get_balance(liquidator_asset_principal, liquidator_principal).await;
+
+        let liquidator_asset_tokens_u128 = match nat_to_u128(liquidator_asset_tokens) {
+            Ok(bal) => {
+                ic_cdk::println!("balance converted to u128: {}", bal);
+                bal
+            }
+            Err(err) => {
+                ic_cdk::println!("Error converting balance to u128: {:?}", err);
+                return Err("Error converting balance to u128".to_string());
+            }
+        };
+
+        if liquidator_asset_tokens_u128 < amount {
+            return Err("liquidator wallet balance is low to do liquidate".to_string());
         }
         let mut usd_amount = amount;
 
@@ -72,27 +107,17 @@ impl LiquidationLogic {
         };
 
         // repetation of code for dtoken canister.
-        let dtoken_canister = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&collateral_asset.to_string().clone())
-                .and_then(|reserve_data| reserve_data.d_token_canister.clone())
-                .ok_or_else(|| format!("No d_token_canister found for asset: {}", collateral_asset))
-        })?;
+        // let dtoken_canister = mutate_state(|state| {
+        //     let asset_index = &mut state.asset_index;
+        //     asset_index
+        //         .get(&collateral_asset.to_string().clone())
+        //         .and_then(|reserve_data| reserve_data.d_token_canister.clone())
+        //         .ok_or_else(|| format!("No d_token_canister found for asset: {}", collateral_asset))
+        // })?;
 
-        let dtoken_canister_principal = Principal::from_text(dtoken_canister)
-            .map_err(|_| "Invalid dtoken canister ID".to_string())?;
-
-        let platform_principal = ic_cdk::api::id();
-        
-        let user_principal = Principal::from_text(on_behalf_of)
-            .map_err(|_| "Invalid user canister ID".to_string())?;
-        ic_cdk::println!("User Principal (Debt User): {}", user_principal);
-
-        let liquidator_principal = api::caller();
-        ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
-
-        ic_cdk::println!("Checking balances before liquidation...");
+        let dtoken_canister_principal =
+            Principal::from_text(reserve_data.d_token_canister.clone().unwrap())
+                .map_err(|_| "Invalid dtoken canister ID".to_string())?;
 
         let asset = asset_name.clone();
 
@@ -112,17 +137,48 @@ impl LiquidationLogic {
                 // Handle the error case
                 ic_cdk::println!("Error fetching exchange rate: {}", e);
                 //0 // Or handle the error as appropriate for your logic
-                return Err("Failed to fetch exchange rate for collateral".to_string())
+                return Err("Failed to fetch exchange rate for collateral".to_string());
             }
         };
         //TODO: one validation remains to check the collateral amount of the user in comparsion of the amount want to liquate.
-        
+
+        let user_collateral = get_balance(dtoken_canister_principal, user_principal).await;
+
+        let user_collateral_u128 = match nat_to_u128(user_collateral) {
+            Ok(bal) => {
+                ic_cdk::println!("balance converted to u128: {}", bal);
+                bal
+            }
+            Err(err) => {
+                ic_cdk::println!("Error converting balance to u128: {:?}", err);
+                return Err("Error converting balance to u128".to_string());
+            }
+        };
+
+        let user_collateral_usd =
+            match get_exchange_rates(collateral_asset.clone(), None, user_collateral_u128).await {
+                Ok((total_value, _time)) => {
+                    // Store the total_value returned from the get_exchange_rates function
+                    total_value
+                }
+                Err(e) => {
+                    // Handle the error case
+                    ic_cdk::println!("Error fetching exchange rate: {}", e);
+                    //0 // Or handle the error as appropriate for your logic
+                    return Err("Failed to fetch exchange rate for collateral".to_string());
+                }
+            };
+
         ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
         let bonus =
             collateral_amount * (reserve_data.configuration.liquidation_bonus / 100) / 100000000;
         let reward_amount = Nat::from(collateral_amount as u128) + Nat::from(bonus);
         ic_cdk::println!("bonus: {}", bonus);
         let reward_amount_param = collateral_amount as u128 + bonus as u128;
+
+        if user_collateral_usd < reward_amount_param {
+            return Err("user does not have enough amount to return as reward".to_string());
+        }
         ic_cdk::println!("reward_amount_param: {}", reward_amount_param);
         let supply_param = ExecuteSupplyParams {
             asset: collateral_asset.to_string(),
@@ -136,10 +192,16 @@ impl LiquidationLogic {
         reserve::update_state(&mut reserve_data, &mut reserve_cache);
         ic_cdk::println!("Reserve state updated successfully");
 
-        let total_supplies= reserve_data.asset_supply.clone() + amount; //TODO not sure should store usd value or token amount
+        let total_supplies = reserve_data.asset_supply.clone() + amount; //TODO not sure should store usd value or token amount
         let total_borrow = reserve_data.asset_borrow;
 
-        reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
+        reserve::update_interest_rates(
+            &mut reserve_data,
+            &mut reserve_cache,
+            total_borrow,
+            total_supplies,
+        )
+        .await;
         // reserve_data.total_supply+=usd_amount; need to implement or not.
 
         let withdraw_param = ExecuteWithdrawParams {
@@ -150,7 +212,14 @@ impl LiquidationLogic {
         };
 
         // Validates supply using the reserve_data
-        ValidationLogic::validate_liquidation(asset_name, amount, reward_amount_param,liquidator_principal, user_principal).await;
+        ValidationLogic::validate_liquidation(
+            asset_name,
+            amount,
+            reward_amount_param,
+            liquidator_principal,
+            user_principal,
+        )
+        .await;
         ic_cdk::println!("Borrow validated successfully");
 
         // Repaying debt

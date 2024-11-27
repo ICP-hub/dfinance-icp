@@ -91,6 +91,8 @@ service : () -> {
   get_cached_exchange_rate : (text) -> (Result_4) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_5);
   get_reserve_data : (text) -> (Result_6) query;
+  get_total_borrow : (principal) -> (nat) query;
+  get_total_supply : (principal) -> (nat) query;
   get_user_account_data : () -> (Result_7);
   get_user_data : (text) -> (Result_8) query;
   initialize_reserve : () -> ();

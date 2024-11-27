@@ -15,6 +15,8 @@ pub enum Error {
     LessRewardAmount,
     UnauthorizedAccess,
     UserNotFound,
+    BorrowingNotEnabled,
+    NoDebtToRepay
 }
 
 impl Error {
@@ -35,6 +37,8 @@ impl Error {
             Error::LessRewardAmount => "Total collateral value cannot be less than reward amount",
             Error::UnauthorizedAccess => "unauthorized access denied",
             Error::UserNotFound => "user not found",
+            Error::BorrowingNotEnabled => "asset borrowing is not enabled",
+            Error::NoDebtToRepay => "no debt to repay"
         }
     }
 }

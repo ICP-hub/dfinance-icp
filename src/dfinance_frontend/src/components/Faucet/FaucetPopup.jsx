@@ -231,25 +231,59 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
         
         if (numericAmount > availableAmount) {
-          toast.error(
-            `Faucet limit exceeded! You can claim only up to $${availableAmount.toLocaleString()}`
-          );
+          toast.error(`Faucet limit exceeded! You can claim only up to $${availableAmount.toLocaleString()}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
           setLoading(false);
           return; 
         }
         const result = await backendActor.faucet(asset, natAmount);
 
         if (result.Err) {
-          toast.error(`Error from backend: ${result.Err}`);
+          toast.error(`Error from backend: ${result.Err}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
           setLoading(false);
           return;
         }
 
         setShowFaucetPayment(true);
-        toast.success(`Successfully claimed ${amount} ${asset}`);
+        toast.success(`Successfully claimed ${amount} ${asset}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } finally {
       setLoading(false); 
     }
@@ -287,12 +321,39 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         const updatedLimits = { ...FaucetLimit };
         updatedLimits[asset] = 50000000000;
         setFaucetLimit(updatedLimits);
-        toast.success(`Reset faucet succesfull for ${asset}`);
+        toast.success(`Reset faucet succesfull for ${asset}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Unexpected response from backend: ${result.Ok}`);
+        toast.error(`Unexpected response from backend: ${result.Ok}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       }
     } catch (error) {
-      toast.error("Failed to reset faucet usage");
+      toast.success("Failed to reset faucet usage", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } finally {
       setLoading(false);
     }
@@ -361,10 +422,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       className="button1 cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md button1"
                       onClick={handleMaxAmountClick}
                     >
-                      <span className="text-gray-500 text-[10px] dark:text-gray-400">
-                        Approx.
-                      </span>
-                      {"   "} $
+                 $
                       {(
                         FaucetLimit[asset] / 1e8 -
                         FaucetUsage[asset] / 1e8

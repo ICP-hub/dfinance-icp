@@ -19,6 +19,7 @@ impl LiquidationLogic {
     ) -> Result<Nat, String> {
         // Reads the reserve data from the asset
         ic_cdk::println!("params asset_name and collateral_asset {:?} {:?}",asset_name,collateral_asset);
+        ic_cdk::println!("liquidation amount = {}", amount);
         let mut usd_amount = amount ;
 
         let supply_amount_to_usd =

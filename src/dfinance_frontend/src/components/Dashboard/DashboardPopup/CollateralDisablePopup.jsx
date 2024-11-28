@@ -119,7 +119,16 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
 
     if (healthFactor <= 1) {
       toast.dismiss();
-      toast.info("Health Factor Less than 1");
+      toast.info("Health Factor Less than 1", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }
   }, [
     asset,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,amount,usdValue,currentCollateralStatus,totalCollateral,totalDebt,

@@ -281,7 +281,16 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
       setShowWarningPopup(false);
     } catch (error) {
-      toast.error(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
       setTransactionResult("failure");
     } finally {
       setIsLoading(false); 

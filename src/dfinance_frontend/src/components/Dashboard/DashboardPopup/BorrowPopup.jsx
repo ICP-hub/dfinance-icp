@@ -536,7 +536,7 @@ if (onLoadingChange) {
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
-            <p>
+            <p className="md:text-sm text-nowrap">
               You have received{" "}
               {scaledAmount / 100000000
                 ? scaledAmount / 100000000 >= 1e-8 &&

@@ -491,10 +491,10 @@ export const useAuthClient = (options = defaultOptions) => {
         const result = await backendActor.check_user(user);
         console.log("CheckUser res", result, user);
   
-        if (result.Ok && result.Ok === "User available" && isAuthenticated) {
-          const res = await backendActor.login();
-          console.log("login res in checkUser:", res);
-        }
+        // if (result.Ok && result.Ok === "User available" && isAuthenticated) {
+        //   // const res = await backendActor.login();
+        //   // console.log("login res in checkUser:", res);
+        // }
         return result;
       }
     } catch (error) {

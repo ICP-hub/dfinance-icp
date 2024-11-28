@@ -70,8 +70,9 @@ const MySupply = () => {
   const [borrowableICP, setBorrowableICP] = useState(0);
   const [borrowableUSDT, setBorrowableUSDT] = useState(0);
   const [showAllAssets, setShowAllAssets] = useState(false);
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-
+  // const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { userData, healthFactorBackend, refetchUserData ,userAccountData } = useUserData();
+  console.log("User Account Data",userAccountData)
   useEffect(() => {
     if (userData?.Ok?.available_borrow) {
       // dispatch(setToggled(user))

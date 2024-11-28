@@ -234,7 +234,7 @@ pub async fn get_exchange_rates(
                     }
                     Err(e) => {
                         ic_cdk::println!("Error fetching price cache: {:?}", e);
-                        panic!("{:?}", e);
+                        return Err("Error fetching price cache".to_string());
                     }
                 };
 

@@ -61,7 +61,8 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
         }
         Err(e) => {
             ic_cdk::println!("Error calling execute_supply: {:?}", e);
-            Err(e)
+            // Ask: what error to mention
+            return Err("Error calling execute_supply".to_string());
         }
     }
 }
@@ -121,7 +122,8 @@ async fn borrow(asset: String, amount: u64) -> Result<(), String> {
         }
         Err(e) => {
             ic_cdk::println!("Error calling execute_borrow: {:?}", e);
-            Err(e)
+              // Ask: what error to mention
+            Err("Error calling execute_borrow".to_string())
         }
     }
 }
@@ -217,7 +219,8 @@ async fn repay(asset: String, amount: u128, on_behalf: Option<String>) -> Result
         }
         Err(e) => {
             ic_cdk::println!("Error calling execute_repay: {:?}", e);
-            Err(e)
+              // Ask: what error to mention
+            Err("Error calling execute_repay".to_string())
         }
     }
 }
@@ -245,7 +248,8 @@ pub async fn withdraw(
         }
         Err(e) => {
             ic_cdk::println!("Error calling execute_withdraw: {:?}", e);
-            Err(e)
+            // Ask: what error to mention.
+            return Err("Error calling execute withdraw".to_string());
         }
     }
 }

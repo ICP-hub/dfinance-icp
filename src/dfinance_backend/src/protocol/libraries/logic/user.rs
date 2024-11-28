@@ -193,10 +193,10 @@ pub struct GenericLogic;
 impl GenericLogic {
     pub async fn calculate_user_account_data(//params: UserAccountDataParams,
     ) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
-        let user_principal = ic_cdk::caller();
-        // let user_principal =
-        //     Principal::from_text("2yzea-eor3x-qrtez-wufbs-gxejs-wrtch-rwod6-sulyy-zh5ks-gmtqc-xae")
-        //         .unwrap();
+        //let user_principal = ic_cdk::caller();
+        let user_principal =
+            Principal::from_text("itr3g-wt5i4-ymygg-oniof-s75ka-vcrij-hutgw-5iqac-u7xmc-wwcnw-7qe")
+                .unwrap();
         ic_cdk::println!("Principal of the user: {:?}", user_principal);
 
         let user_data_result = user_data(user_principal);

@@ -2,14 +2,13 @@ use crate::api::functions::{get_balance, get_fees, get_total_supply};
 use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveData;
+use crate::get_asset_principal;
 use crate::protocol::libraries::logic::user::{nat_to_u128, GenericLogic};
 use crate::protocol::libraries::math::calculate::{
     cal_average_threshold, calculate_health_factor, calculate_ltv, UserPosition,
 };
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use candid::{Nat, Principal};
-use core::panic;
-use std::string;
 
 pub struct ValidationLogic;
 
@@ -23,10 +22,10 @@ impl ValidationLogic {
         amount: u128,
         user: Principal,
         ledger_canister: Principal,
-    ) -> Result<(), String> {
+    ) -> Result<(), Error> {
         if user == Principal::anonymous() {
             println!("Anonymous principals are not allowed.");
-            panic!("{:?}", Error::UnauthorizedAccess);
+            return Err(Error::UnauthorizedAccess);
         }
 
         ic_cdk::println!("validation amount = {}", amount);
@@ -34,12 +33,12 @@ impl ValidationLogic {
 
         if user != ic_cdk::caller() {
             ic_cdk::println!("Invalid user: Caller does not match the user.");
-            panic!("{:?}", Error::InvalidUser);
+            return Err(Error::InvalidUser);
         }
 
         if amount <= 0 {
             ic_cdk::println!("Invalid amount: Amount must be greater than zero.");
-            panic!("{:?}", Error::InvalidAmount);
+            return Err(Error::InvalidAmount);
         }
 
         // validating amount
@@ -53,7 +52,7 @@ impl ValidationLogic {
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
         if final_amount > user_balance {
-            panic!("{:?}", Error::MaxAmount);
+            return Err(Error::MaxAmount);
         }
 
         // validating reserve states
@@ -65,15 +64,15 @@ impl ValidationLogic {
 
         if !is_active {
             ic_cdk::println!("Reserve is inactive.");
-            panic!("{:?}", Error::ReserveInactive);
+            return Err(Error::ReserveInactive);
         }
         if is_paused {
             ic_cdk::println!("Reserve is paused.");
-            panic!("{:?}", Error::ReservePaused);
+            return Err(Error::ReservePaused);
         }
         if is_frozen {
             ic_cdk::println!("Reserve is frozen.");
-            panic!("{:?}", Error::ReserveFrozen);
+            return Err(Error::ReserveFrozen);
         }
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);
@@ -83,10 +82,13 @@ impl ValidationLogic {
         let supply_cap = reserve.configuration.supply_cap;
         ic_cdk::println!("supply_cap : {:?}", supply_cap);
 
-        let d_token_canister_id = Principal::from_text(reserve.d_token_canister.clone().unwrap())
-            .map_err(|_| "Invalid user canister ID".to_string())?;
+        let d_token_canister_id = Principal::from_text(reserve.d_token_canister.clone().unwrap());
+        let d_token_canister_id_result = match d_token_canister_id {
+            Ok(id) => id,
+            Err(_) => return Err(Error::NoCanisterIdFound),
+        };
 
-        let total_supply = get_total_supply(d_token_canister_id).await;
+        let total_supply = get_total_supply(d_token_canister_id_result).await;
 
         let total_supply_u128 = match nat_to_u128(total_supply) {
             Ok(bal) => {
@@ -95,7 +97,7 @@ impl ValidationLogic {
             }
             Err(err) => {
                 ic_cdk::println!("Error converting balance to u128: {:?}", err);
-                return Err("Error converting balance to u128".to_string());
+                return Err(Error::ConversionErrorToU128);
             }
         };
 
@@ -112,10 +114,11 @@ impl ValidationLogic {
             total_supply_amount_accure
         );
 
-        Ok(if total_supply_amount_accure >= supply_cap {
+        if total_supply_amount_accure >= supply_cap {
             ic_cdk::println!("Supply cap exceeded: Final total supply exceeds the supply cap.");
-            panic!("{:?}", Error::SupplyCapExceeded)
-        })
+            return Err(Error::SupplyCapExceeded);
+        }
+        Ok(())
 
         // if final_total_supply >= supply_cap {
         //     ic_cdk::println!("Supply cap exceeded: Final total supply exceeds the supply cap.");
@@ -132,22 +135,22 @@ impl ValidationLogic {
         amount: u128,
         user: Principal,
         ledger_canister: Principal,
-    ) -> Result<(), String> {
+    ) -> Result<(), Error> {
         ic_cdk::println!("withdraw amount for validation = {}", amount);
         // Anonymous user check
         if user == Principal::anonymous() {
             ic_cdk::println!("Unauthorized access attempt by an anonymous user.");
-            panic!("{:?}", Error::UnauthorizedAccess);
+            return Err(Error::UnauthorizedAccess);
         }
 
         if user != ic_cdk::caller() {
             ic_cdk::println!("Invalid user: Caller does not match the user.");
-            panic!("{:?}", Error::InvalidUser);
+            return Err(Error::InvalidUser);
         }
 
         if amount <= 0 {
             ic_cdk::println!("Invalid amount: Amount must be greater than zero.");
-            panic!("{:?}", Error::InvalidAmount);
+            return Err(Error::InvalidAmount);
         }
 
         // validating amount
@@ -165,7 +168,6 @@ impl ValidationLogic {
                 .map(|user| user.0.clone())
                 .ok_or_else(|| {
                     ic_cdk::println!("User not found: {}", user.to_string());
-                    Error::UserNotFound
                 })
         });
 
@@ -175,7 +177,7 @@ impl ValidationLogic {
                 data
             }
             Err(e) => {
-                panic!("{:?}", e);
+                return Err(Error::UserNotFound);
             }
         };
 
@@ -191,8 +193,11 @@ impl ValidationLogic {
 
         if let Some((_, reserve_data)) = user_reserve_data {
             //user_current_supply = reserve_data.asset_supply;
-            let d_token_canister_id = Principal::from_text(reserve_data.d_token_canister.clone())
-                .map_err(|_| "Invalid user canister ID".to_string())?;
+            let d_token_canister = Principal::from_text(reserve_data.d_token_canister.clone());
+            let d_token_canister_id = match d_token_canister {
+                Ok(id) => id,
+                Err(_) => return Err(Error::ConversionErrorFromTextToPrincipal),
+            };
             user_dtokens = get_balance(d_token_canister_id, user).await;
         }
 
@@ -201,7 +206,7 @@ impl ValidationLogic {
         // TODO: get balance dtoken call user , compare final amount.
         if final_amount > user_dtokens {
             ic_cdk::println!("Withdraw amount exceeds current supply.");
-            panic!("{:?}", Error::WithdrawMoreThanSupply);
+            return Err(Error::WithdrawMoreThanSupply);
         }
 
         // validating reserve states
@@ -212,13 +217,13 @@ impl ValidationLogic {
         );
 
         if !is_active {
-            panic!("{:?}", Error::ReserveInactive);
+            return Err(Error::ReserveInactive);
         }
         if is_paused {
-            panic!("{:?}", Error::ReservePaused);
+            return Err(Error::ReservePaused);
         }
         if is_frozen {
-            panic!("{:?}", Error::ReserveFrozen);
+            return Err(Error::ReserveFrozen);
         }
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);
@@ -254,14 +259,14 @@ impl ValidationLogic {
         );
 
         if ltv >= user_data.liquidation_threshold.unwrap() {
-            panic!("{:?}", Error::LTVGreaterThanThreshold);
+            return Err(Error::LTVGreaterThanThreshold);
         }
 
         // Calculating health factor
         let health_factor = calculate_health_factor(&user_position);
 
         if health_factor < 1 {
-            panic!("{:?}", Error::HealthFactorLess);
+            return Err(Error::HealthFactorLess);
         }
         Ok(())
     }
@@ -270,21 +275,25 @@ impl ValidationLogic {
     //     // --------------- BORROW ---------------
     //     // --------------------------------------
 
-    pub async fn validate_borrow(reserve: &ReserveData, amount: u128, user_principal: Principal) {
+    pub async fn validate_borrow(
+        reserve: &ReserveData,
+        amount: u128,
+        user_principal: Principal,
+    ) -> Result<(), Error> {
         // Check if the caller is anonymous
         if user_principal == Principal::anonymous() {
-            panic!("{:?}", Error::UnauthorizedAccess);
+            return Err(Error::UnauthorizedAccess);
         }
 
         if user_principal != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
+            return Err(Error::InvalidUser);
         }
         if amount <= 0 {
-            panic!("{:?}", Error::InvalidAmount);
+            return Err(Error::InvalidAmount);
         }
 
         if !reserve.configuration.borrowing_enabled {
-            panic!("{:?}", Error::BorrowingNotEnabled);
+            return Err(Error::BorrowingNotEnabled);
         }
 
         // validating reserve states
@@ -295,13 +304,13 @@ impl ValidationLogic {
         );
 
         if !is_active {
-            panic!("{:?}", Error::ReserveInactive);
+            return Err(Error::ReserveInactive);
         }
         if is_paused {
-            panic!("{:?}", Error::ReservePaused);
+            return Err(Error::ReservePaused);
         }
         if is_frozen {
-            panic!("{:?}", Error::ReserveFrozen);
+            return Err(Error::ReserveFrozen);
         }
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);
@@ -315,7 +324,7 @@ impl ValidationLogic {
             user_profile_data
                 .get(&user_principal)
                 .map(|user| user.0.clone())
-                .ok_or_else(|| panic!("User not found: {}", user_principal.to_string()))
+                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
         });
 
         let user_data = match user_data_result {
@@ -324,7 +333,7 @@ impl ValidationLogic {
                 data
             }
             Err(e) => {
-                panic!("{:?}", e);
+                return Err(Error::UserNotFound);
             }
         };
 
@@ -370,9 +379,9 @@ impl ValidationLogic {
                 //println!("Available Borrow: {}", available_borrow);
                 // println!("Has Zero LTV Collateral: {}", has_zero_ltv_collateral);
             }
-            Err(e) => {
+            Err(_) => {
                 // Handle the error case
-                panic!("Error: {}", e);
+                return Err(Error::CalculateUserAccountDataError);
             }
         }
 
@@ -403,9 +412,12 @@ impl ValidationLogic {
         //     "user liq threshold {:?}",
         //     user_data.liquidation_threshold.unwrap()
         // );
-        ic_cdk::println!("borrow liquidation threshold = {:?}",user_data.liquidation_threshold);
+        ic_cdk::println!(
+            "borrow liquidation threshold = {:?}",
+            user_data.liquidation_threshold
+        );
         if avg_ltv > user_data.liquidation_threshold.unwrap() {
-            panic!("{:?}", Error::LTVGreaterThanThreshold);
+            return Err(Error::LTVGreaterThanThreshold);
         }
 
         // ic_cdk::println!(
@@ -424,7 +436,7 @@ impl ValidationLogic {
         // let health_factor = calculate_health_factor(&user_position);
 
         if health_factor < 1 {
-            panic!("{:?}", Error::HealthFactorLess);
+            return Err(Error::HealthFactorLess);
         }
 
         // Validating supply cap limit.
@@ -436,8 +448,9 @@ impl ValidationLogic {
         ic_cdk::println!("final_total_supply : {:?}", final_total_borrow);
 
         if final_total_borrow >= borrow_cap {
-            panic!("{:?}", Error::BorrowCapExceeded);
+            return Err(Error::BorrowCapExceeded);
         };
+        Ok(())
     }
 
     //     // --------------------------------------
@@ -449,19 +462,19 @@ impl ValidationLogic {
         amount: u128,
         user: Principal,
         ledger_canister: Principal,
-    ) {
+    ) -> Result<(), Error> {
         // // Check if the caller is anonymous
         if user == Principal::anonymous() {
-            panic!("{:?}", Error::UnauthorizedAccess);
+            return Err(Error::UnauthorizedAccess);
         }
 
         // Check if the caller matches the provided user
         if user != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
+            return Err(Error::InvalidUser);
         }
 
         if amount <= 0 {
-            panic!("{:?}", Error::InvalidAmount);
+            return Err(Error::InvalidAmount);
         }
         let transfer_fees = get_fees(ledger_canister).await;
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
@@ -475,7 +488,7 @@ impl ValidationLogic {
             user_profile_data
                 .get(&user)
                 .map(|user| user.0.clone())
-                .ok_or_else(|| panic!("User not found: {}", user.to_string()))
+                .ok_or_else(|| format!("User not found: {}", user.to_string()))
         });
 
         let mut user_data = match user_data_result {
@@ -483,8 +496,8 @@ impl ValidationLogic {
                 ic_cdk::println!("User found: {:?}", data);
                 data
             }
-            Err(e) => {
-                panic!("{:?}", e);
+            Err(_) => {
+                return Err(Error::UserNotFound);
             }
         };
 
@@ -502,11 +515,11 @@ impl ValidationLogic {
         }
 
         if user_current_debt == 0 {
-            panic!("{:?}", Error::NoDebtToRepay);
+            return Err(Error::NoDebtToRepay);
         }
 
         if final_amount > user_current_debt as u128 {
-            panic!("{:?}", Error::RepayMoreThanDebt);
+            return Err(Error::RepayMoreThanDebt);
         }
 
         let (is_active, is_frozen, is_paused) = (
@@ -516,17 +529,18 @@ impl ValidationLogic {
         );
 
         if !is_active {
-            panic!("{:?}", Error::ReserveInactive);
+            return Err(Error::ReserveInactive);
         }
         if is_paused {
-            panic!("{:?}", Error::ReservePaused);
+            return Err(Error::ReservePaused);
         }
         if is_frozen {
-            panic!("{:?}", Error::ReserveFrozen);
+            return Err(Error::ReserveFrozen);
         }
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
+        Ok(())
     }
 
     //     // --------------------------------------
@@ -539,23 +553,32 @@ impl ValidationLogic {
         reward_amount: u128,
         liquidator: Principal,
         user: Principal,
-    ) {
+    ) -> Result<(), Error>{
         if liquidator != ic_cdk::caller() {
-            panic!("{:?}", Error::InvalidUser);
+            return Err(Error::InvalidUser);
         }
 
         if repay_amount == 0 {
-            panic!("{:?}", Error::InvalidAmount);
+            return Err(Error::InvalidAmount);
         }
 
-        let repay_ledger_canister_id = mutate_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&repay_asset.to_string().clone())
-                .map(|principal| principal.clone())
-                .ok_or_else(|| panic!("No canister ID found for asset: {}", repay_asset))
-        })
-        .unwrap();
+        let repay_ledger_canister = get_asset_principal(repay_asset.clone());
+        let repay_ledger_canister_id = match repay_ledger_canister {
+            Ok(id ) =>{
+                id
+            }
+            Err(_) =>{
+                return Err(Error::NoCanisterIdFound);
+            }
+        };
+        // let repay_ledger_canister_id = mutate_state(|state| {
+        //     let reserve_list = &state.reserve_list;
+        //     reserve_list
+        //         .get(&repay_asset.to_string().clone())
+        //         .map(|principal| principal.clone())
+        //         .ok_or_else(|| format!("No canister ID found for asset: {}", repay_asset))
+        // })
+        // .unwrap();
 
         // Checking liquidator is present in user list
         // let _ = mutate_state(|state| {
@@ -576,7 +599,7 @@ impl ValidationLogic {
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
         if final_amount > liquidator_balance {
-            panic!("{:?}", Error::MaxAmount);
+            return Err(Error::MaxAmount);
         }
 
         // Fetch user data
@@ -585,7 +608,7 @@ impl ValidationLogic {
             user_profile_data
                 .get(&user)
                 .map(|user| user.0.clone())
-                .ok_or_else(|| panic!("User not found: {}", user.to_string()))
+                .ok_or_else(|| format!("User not found: {}", user.to_string()))
         });
 
         let user_data = match user_data_result {
@@ -593,13 +616,13 @@ impl ValidationLogic {
                 ic_cdk::println!("User found: {:?}", data);
                 data
             }
-            Err(e) => {
-                panic!("{:?}", e);
+            Err(_) => {
+                return Err(Error::UserNotFound);
             }
         };
 
         if user_data.total_collateral.unwrap_or(0) < reward_amount {
-            panic!("{:?}", Error::LessRewardAmount);
+            return Err(Error::LessRewardAmount);
         }
 
         let reserve_data_result = mutate_state(|state| {
@@ -607,7 +630,7 @@ impl ValidationLogic {
             asset_index
                 .get(&repay_asset.to_string().clone())
                 .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| panic!("Reserve not found for asset: {}", repay_asset.to_string()))
+                .ok_or_else(|| format!("Reserve not found for asset: {}", repay_asset.to_string()))
         });
 
         let reserve_data = match reserve_data_result {
@@ -616,7 +639,7 @@ impl ValidationLogic {
                 data
             }
             Err(e) => {
-                panic!("{:?}", e);
+                return Err(Error::NoReserveDataFound);
             }
         };
 
@@ -628,16 +651,17 @@ impl ValidationLogic {
         );
 
         if !is_active {
-            panic!("{:?}", Error::ReserveInactive);
+            return Err(Error::ReserveInactive);
         }
         if is_paused {
-            panic!("{:?}", Error::ReservePaused);
+            return Err(Error::ReservePaused);
         }
         if is_frozen {
-            panic!("{:?}", Error::ReserveFrozen);
+            return Err(Error::ReserveFrozen);
         }
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
+        Ok(())
     }
 }

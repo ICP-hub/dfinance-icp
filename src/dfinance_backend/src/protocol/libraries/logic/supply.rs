@@ -1,10 +1,13 @@
 use candid::{Nat, Principal};
+//use serde::de::value::Error;
 pub struct SupplyLogic;
 use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
+use crate::constants::errors::Error;
 
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
+use crate::get_asset_principal;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
@@ -15,16 +18,25 @@ impl SupplyLogic {
     // ----------- SUPPLY LOGIC ------------
     // -------------------------------------
 
-    pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
+    pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         ic_cdk::println!("Starting execute_supply with params: {:?}", params);
 
-        let ledger_canister_id = mutate_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&params.asset.to_string().clone())
-                .map(|principal| principal.clone())
-                .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
-        })?;
+        let ledger_canister = get_asset_principal(params.asset.clone());
+        let ledger_canister_id = match ledger_canister {
+            Ok(id ) =>{
+                id
+            }
+            Err(_) =>{
+                return Err(Error::NoCanisterIdFound);
+            }
+        };
+        // let ledger_canister_id = mutate_state(|state| {
+        //     let reserve_list = &state.reserve_list;
+        //     reserve_list
+        //         .get(&params.asset.to_string().clone())
+        //         .map(|principal| principal.clone())
+        //         .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+        // })?;
         
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
@@ -44,6 +56,7 @@ impl SupplyLogic {
             }
             Err(e) => {
                 ic_cdk::println!("Error getting exchange rate: {:?}", e);
+                return Err(Error::ExchangeRateError);
             }
         }
 
@@ -65,7 +78,7 @@ impl SupplyLogic {
             }
             Err(e) => {
                 ic_cdk::println!("Error: {}", e);
-                return Err(e);
+                return Err(Error::NoReserveDataFound);
             }
         };
 
@@ -135,11 +148,8 @@ impl SupplyLogic {
                 println!("Asset transfer from user to backend canister executed successfully");
                 Ok(new_balance)
             }
-            Err(e) => {
-                return Err(format!(
-                    "Asset transfer failed, burned dtoken. Error: {:?}",
-                    e
-                ));
+            Err(_) => {
+                return Err(Error::ErrorMintDTokens);
             }
         }
     }
@@ -148,27 +158,39 @@ impl SupplyLogic {
     // ---------- WITHDRAW LOGIC -----------
     // -------------------------------------
 
-    pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, String> {
+    pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
         ic_cdk::println!("Starting execute_withdraw with params: {:?}", params);
 
         let (user_principal, liquidator_principal) =
             if let Some(on_behalf_of) = params.on_behalf_of.clone() {
-                let user_principal = Principal::from_text(on_behalf_of)
-                    .map_err(|_| "Invalid user canister ID".to_string())?;
+                let user_principal = Principal::from_text(on_behalf_of);
+                let user_principal_id = match user_principal {
+                    Ok(id) => id,
+                    Err(_) => return Err(Error::ConversionErrorFromTextToPrincipal),
+                };
                 let liquidator_principal = ic_cdk::caller();
-                (user_principal, Some(liquidator_principal))
+                (user_principal_id, Some(liquidator_principal))
             } else {
                 let user_principal = ic_cdk::caller();
                 (user_principal, None)
             };
 
-        let ledger_canister_id = mutate_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&params.asset.to_string().clone())
-                .map(|principal| principal.clone())
-                .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
-        })?;
+        // let ledger_canister_id = mutate_state(|state| {
+        //     let reserve_list = &state.reserve_list;
+        //     reserve_list
+        //         .get(&params.asset.to_string().clone())
+        //         .map(|principal| principal.clone())
+        //         .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+        // })?;
+        let ledger_canister = get_asset_principal(params.asset.clone());
+        let ledger_canister_id = match ledger_canister {
+            Ok(id ) =>{
+                id
+            }
+            Err(_) =>{
+                return Err(Error::NoCanisterIdFound);
+            }
+        };
 
         let platform_principal = ic_cdk::api::id();
         let withdraw_amount = Nat::from(params.amount);
@@ -183,9 +205,7 @@ impl SupplyLogic {
                 usd_amount = amount_in_usd;
                 ic_cdk::println!("Withdraw amount in USD: {:?}", amount_in_usd);
             }
-            Err(e) => {
-                ic_cdk::println!("Error getting exchange rate: {:?}", e);
-            }
+            Err(_) => return Err(Error::ExchangeRateError)
         }
 
         ic_cdk::println!("Withdraw amount in USD: {:?}", usd_amount);
@@ -213,7 +233,7 @@ impl SupplyLogic {
             }
             Err(e) => {
                 ic_cdk::println!("Error: {}", e);
-                return Err(e);
+                return Err(Error::NoReserveDataFound);
             }
         };
 
@@ -268,12 +288,7 @@ impl SupplyLogic {
 
                 Ok(new_balance)
             }
-            Err(e) => {
-                return Err(format!(
-                    "Asset transfer failed, minted dtoken. Error: {:?}",
-                    e
-                ));
-            }
+            Err(_) => return Err(Error::ErrorBurnDTokens),
         }
     }
 }

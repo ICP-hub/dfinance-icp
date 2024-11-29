@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 const useUserData = () => {
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal ,fetchReserveData} = useAuth();
   const [userData, setUserData] = useState(null);
+  
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
   const [error, setError] = useState(null);
 
@@ -33,7 +34,7 @@ const useUserData = () => {
     } else {
     }
   };
-
+ 
   useEffect(() => {
     fetchUserData();
   }, [principal, backendActor]);

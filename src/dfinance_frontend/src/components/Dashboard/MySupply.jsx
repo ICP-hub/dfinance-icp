@@ -100,7 +100,7 @@ const MySupply = () => {
     }
   }, []);
 
-  const { assets, reserveData, filteredItems } = useAssetData();
+  const { assets, reserveData, filteredItems ,asset_supply,asset_borrow } = useAssetData();
 
   const visibleItems = filteredItems.filter((item) => {
     const balance =
@@ -634,8 +634,8 @@ const MySupply = () => {
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
-                      const assetSupply =
-                        Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
+                      const assetSupply =asset_supply
+                      console.log("asset suply",asset_supply)
                       let usdValue = 0;
 
                       if (asset === "ckBTC") {
@@ -692,13 +692,10 @@ const MySupply = () => {
                         {userData?.Ok?.reserves[0]?.map(
                           (reserveGroup, index) => {
                             const asset = reserveGroup[0];
-                            const assetSupply =
-                              Number(reserveGroup[1]?.asset_supply || 0n) /
-                              100000000;
+                            const assetSupply =asset_supply;
 
-                            const assetBorrow =
-                              Number(reserveGroup[1]?.asset_borrow || 0n) /
-                              100000000;
+                            const assetBorrow =asset_borrow
+                            
 
                             const collateralStatus =
                               reserveGroup[1]?.is_collateral;
@@ -1107,12 +1104,10 @@ const MySupply = () => {
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];
-                              const assetSupply =
-                                Number(reserveGroup[1]?.asset_supply || 0n) /
-                                100000000;
-                              const assetBorrow =
-                                Number(reserveGroup[1]?.asset_borrow || 0n) /
-                                100000000;
+                              const assetSupply =asset_supply;
+                              
+                              const assetBorrow =asset_borrow;
+                              
                               const collateralStatus =
                                 reserveGroup[1]?.is_collateral;
                               if (assetSupply <= 0) return null;
@@ -2203,8 +2198,8 @@ const MySupply = () => {
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
-                      const assetBorrow =
-                        Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
+                      const assetBorrow =asset_borrow;
+                      
                       let usdValue = 0;
 
                       if (asset === "ckBTC") {
@@ -2252,7 +2247,7 @@ const MySupply = () => {
                   {!userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].every(
-                    (reserveGroup) => reserveGroup[1]?.asset_borrow === 0n
+                    (reserveGroup) => asset_borrow === 0n
                   ) ? (
                     noBorrowMessage
                   ) : (
@@ -2263,17 +2258,15 @@ const MySupply = () => {
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];
-                              if (reserveGroup[1]?.asset_borrow <= 0)
+                              if (asset_borrow <= 0)
                                 return null;
                               const item = filteredItems.find(
                                 (item) => item[0] === asset
                               );
-                              const assetSupply =
-                                Number(reserveGroup[1]?.asset_supply || 0n) /
-                                100000000;
-                              const assetBorrow =
-                                Number(reserveGroup[1]?.asset_borrow || 0n) /
-                                100000000;
+                              const assetSupply = asset_supply
+                             
+                              const assetBorrow =asset_borrow
+                               
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
@@ -2577,7 +2570,7 @@ const MySupply = () => {
                   {!userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].every(
-                    (reserveGroup) => reserveGroup[1]?.asset_borrow === 0n
+                    (reserveGroup) => asset_borrow === 0n
                   ) ? (
                     noBorrowMessage
                   ) : (
@@ -2629,20 +2622,17 @@ const MySupply = () => {
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];
                               if (
-                                Number(reserveGroup[1]?.asset_borrow || 0n) /
-                                  100000000 <=
+                                asset_borrow<=
                                 0
                               )
                                 return null;
                               const item = filteredItems.find(
                                 (item) => item[0] === asset
                               );
-                              const assetSupply =
-                                Number(reserveGroup[1]?.asset_supply || 0n) /
-                                100000000;
-                              const assetBorrow =
-                                Number(reserveGroup[1]?.asset_borrow || 0n) /
-                                100000000;
+                              const assetSupply = asset_supply;
+                             
+                              const assetBorrow =asset_borrow;
+                              
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance

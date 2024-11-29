@@ -211,9 +211,9 @@ export const useAuthClient = (options = defaultOptions) => {
       if (!identity.getPrincipal().isAnonymous()) {
         const result = await backendActor.check_user(user);
 
-        if (result.Ok && result.Ok === "User available" && isAuthenticated) {
-          const res = await backendActor.login();
-        }
+        // if (result.Ok && result.Ok === "User available" && isAuthenticated) {
+        //   const res = await backendActor.login();
+        // }
         return result;
       }
     } catch (error) {

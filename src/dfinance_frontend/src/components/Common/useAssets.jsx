@@ -18,7 +18,8 @@ const useAssetData = (searchQuery = '') => {
   const [totalReserveFactor, setTotalReserveFactor] = useState(0)
   const [interestAccure, setInterestAccure] = useState(0)
   const [error, setError] = useState(null);
-
+  const [asset_supply, setAssetSupply] = useState(0);
+  const [asset_borrow, setAssetBorrow] = useState(0);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -46,6 +47,34 @@ const useAssetData = (searchQuery = '') => {
     fetchAssets();
   }, [backendActor]);
 
+  const fetchAssetSupply = async (asset) => {
+    if (backendActor) {
+      console.log("Backend Actor initialized:", backendActor);
+      try {
+        console.log("Calling get asset supply for", asset);
+        const result = await backendActor.get_asset_supply(asset);
+        setAssetSupply(result);
+      } catch (error) {
+        console.error("Error fetching asset supply:", error);
+      }
+    } else {
+      console.error("Backend actor initialization failed.");
+    }
+  };
+  const fetchAssetBorrow = async (asset) => {
+    if (backendActor) {
+      console.log("Backend Actor initialized:", backendActor);
+      try {
+        console.log("Calling get asset borrow for", asset);
+        const result = await backendActor.get_asset_borrow(asset);
+        setAssetBorrow(result);
+      } catch (error) {
+        console.error("Error fetching asset borrow:", error);
+      }
+    } else {
+      console.error("Backend actor initialization failed.");
+    }
+  };
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0 || !fetchReserveData) return;
@@ -58,6 +87,8 @@ const useAssetData = (searchQuery = '') => {
         let totalAccruedValue = 0;
 
         for (const asset of assets) {
+          await fetchAssetSupply(asset);
+          await fetchAssetBorrow(asset);
           const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
           const supplyCap = parseFloat(Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000);
@@ -120,7 +151,7 @@ const useAssetData = (searchQuery = '') => {
 
   const formatNumber = useFormatNumber();
 
-  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize, totalReserveFactor, interestAccure };
+  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize, totalReserveFactor, interestAccure ,asset_supply ,asset_borrow};
 };
 
 export default useAssetData;

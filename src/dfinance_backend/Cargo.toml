@@ -29,7 +29,7 @@ dotenv = "0.15.0"
 env_logger = "0.11"
 ic-xrc-types = "1.0.0"
 regex.workspace = true
-
+num-traits = "0.2"
 [dev-dependencies]
 pocket-ic = "4.0.0"
 tokio = { version = "1", features = ["full"] }

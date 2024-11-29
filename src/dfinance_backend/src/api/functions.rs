@@ -13,6 +13,10 @@ use candid::{Nat, Principal};
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
+// use ic_cdk::api::call::{call_after};
+// // use ic_cdk::prelude::*;
+// use ic_cdk::time::current_time;
+// use std::time::Duration;
 
 // Icrc2_transfer_from inter canister call.
 pub async fn asset_transfer_from(
@@ -71,24 +75,6 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
     balance
 }
 
-// #[update]
-// pub async fn update_balance(canister: Principal, principal: Principal) -> Nat {
-//     let account = Account {
-//         owner: principal,
-//         subaccount: None,
-//     };
-
-//     let encoded_args = encode_args((account,)).unwrap();
-
-//     let raw_response =
-//         ic_cdk::api::call::call_raw(canister, "icrc1_update_balance_of", &encoded_args, 0)
-//             .await
-//             .unwrap();
-
-//     let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
-
-//     balance
-// }
 #[update]
 pub async fn update_balance(
     canister: Principal,
@@ -161,8 +147,8 @@ pub async fn asset_transfer(
     }
 }
 
-//#[update] //TODO need to a update func or not (i think it was implemented for pocketic, if not then what is the need of this function) -- done
-// if dont use then comment it out. --- need to look it again.
+//#[update] //TODO need a update func or not (i think it was implemented for pocketic, if not then what is the need of this function) -- done
+// if dont use then comment it out. ---might be needed later.
 // pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
 //     let backend_canister_principal = ic_cdk::api::id();
 //     //let user_principal = ic_cdk::caller();
@@ -256,7 +242,7 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
         return Err("Asset cannot be an empty string.".to_string());
     }
 
-    // Validate user principal (avoid anonymous principal)
+   
     let user_principal = ic_cdk::caller();
 
     // Validate user principal (avoid anonymous principal)
@@ -282,16 +268,6 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     ic_cdk::println!("amount again = {}", amount);
     // Ask : is it right way to convert it to the usd amount.
     let mut rate: Option<u128> = None;
-
-    // match get_cached_exchange_rate(asset.clone()).await {
-    //     Ok((amount, _timestamp)) => {
-    //         rate = Some(amount);
-    //         ic_cdk::println!("facet usd amount = {:?}", rate);
-    //     }
-    //     Err(err) => {
-    //         println!("getting error in the conversion {}", err);
-    //     }
-    // }
 
     
     match get_cached_exchange_rate(asset.clone()) {
@@ -472,3 +448,40 @@ pub fn reset_faucet_usage() -> Result<(), String> {
     ic_cdk::println!("updated user data after facuet reset = {:?}", user_data);
     Ok(())
 }
+
+
+
+// #[update]
+// pub fn schedule_faucet_reset() {
+//     let now = current_time();  // Get the current time in seconds (Unix timestamp)
+
+//     // Calculate how much time remains until midnight UTC
+//     let midnight_utc = calculate_midnight_utc(now);
+//     let time_until_midnight = midnight_utc - now;
+
+//     // Schedule the first reset using call_after
+//     call_after(
+//         Duration::from_secs(time_until_midnight),
+//         ic_cdk::canister_id(),
+//         "reset_faucet_usage",
+//         (),
+//     );
+
+//     // Schedule subsequent resets every 24 hours (86400 seconds = 24 hours)
+//     call_after(
+//         Duration::from_secs(24 * 60 * 60),
+//         ic_cdk::canister_id(),
+//         "reset_faucet_usage",
+//         (),
+//     );
+// }
+
+
+// /// Helper function to calculate the next midnight UTC time
+// fn calculate_midnight_utc(now: u64) -> u64 {
+// // Get the current UTC time and calculate the next midnight
+// let now = chrono::NaiveDateTime::from_timestamp(now as i64, 0);
+// let midnight = now.date().and_hms(0, 0, 0);  // Midnight today in UTC
+// let midnight_utc = midnight.timestamp() as u64;
+// midnight_utc
+// }

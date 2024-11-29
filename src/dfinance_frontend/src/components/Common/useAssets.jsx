@@ -53,7 +53,7 @@ const useAssetData = (searchQuery = '') => {
       try {
         console.log("Calling get asset supply for", asset);
         const result = await backendActor.get_asset_supply(asset);
-        setAssetSupply(result);
+        setAssetSupply(result.Ok);
       } catch (error) {
         console.error("Error fetching asset supply:", error);
       }
@@ -66,8 +66,8 @@ const useAssetData = (searchQuery = '') => {
       console.log("Backend Actor initialized:", backendActor);
       try {
         console.log("Calling get asset borrow for", asset);
-        const result = await backendActor.get_asset_borrow(asset);
-        setAssetBorrow(result);
+        const result = await backendActor.get_asset_debt(asset);
+        setAssetBorrow(result.Ok);
       } catch (error) {
         console.error("Error fetching asset borrow:", error);
       }

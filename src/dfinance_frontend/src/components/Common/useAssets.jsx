@@ -18,8 +18,8 @@ const useAssetData = (searchQuery = '') => {
   const [totalReserveFactor, setTotalReserveFactor] = useState(0)
   const [interestAccure, setInterestAccure] = useState(0)
   const [error, setError] = useState(null);
-  const [asset_supply, setAssetSupply] = useState(0);
-  const [asset_borrow, setAssetBorrow] = useState(0);
+  const [asset_supply, setAssetSupply] = useState({});
+  const [asset_borrow, setAssetBorrow] = useState({});
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -49,24 +49,32 @@ const useAssetData = (searchQuery = '') => {
 
   const fetchAssetSupply = async (asset) => {
     if (backendActor) {
+      console.log("Backend Actor initialized:", backendActor);
       try {
+        console.log("Calling get asset supply for", asset);
         const result = await backendActor.get_asset_supply(asset);
-        setAssetSupply(result.Ok);
+        // Set asset supply in the state object using the asset name as the key
+        setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
-        setError(error.message);
+        console.error("Error fetching asset supply:", error);
       }
     } else {
+      console.error("Backend actor initialization failed.");
     }
   };
+  
   const fetchAssetBorrow = async (asset) => {
     if (backendActor) {
+      console.log("Backend Actor initialized:", backendActor);
       try {
+        console.log("Calling get asset borrow for", asset);
         const result = await backendActor.get_asset_debt(asset);
-        setAssetBorrow(result.Ok);
+        setAssetBorrow(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
-        setError(error.message);
+        console.error("Error fetching asset borrow:", error);
       }
     } else {
+      console.error("Backend actor initialization failed.");
     }
   };
   useEffect(() => {
@@ -75,7 +83,7 @@ const useAssetData = (searchQuery = '') => {
       try {
         const data = {};
         let totalMarketSizeTemp = 0;
-        let totalSupplies = parseInt(0);
+        let totalSupplies = parseFloat(0);
         let totalBorrowes = parseFloat(0.0);
         let reserveFactors = 0;
         let totalAccruedValue = 0;
@@ -117,7 +125,7 @@ const useAssetData = (searchQuery = '') => {
           totalAccruedValue += accruedValue;
 
           totalMarketSizeTemp += supplyCap;
-          totalSupplies += parseInt(totalSupply);
+          totalSupplies +=(totalSupply);
           totalBorrowes += totalBorrow
           reserveFactors = reserveFactor
         }

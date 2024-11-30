@@ -57,13 +57,14 @@ const MySupply = () => {
   const [borrowableICP, setBorrowableICP] = useState(0);
   const [borrowableUSDT, setBorrowableUSDT] = useState(0);
   const [showAllAssets, setShowAllAssets] = useState(false);
-  const { userData } = useUserData();
+  const { userData ,userAccountData } = useUserData();
 
   useEffect(() => {
-    if (userData?.Ok?.available_borrow) {
+    if (userAccountData?.Ok?.available_borrow) {
       setAvailableBorrow(Number(userData.Ok.available_borrow) / 100000000);
     }
   }, [userData]);
+  
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -102,7 +103,20 @@ const MySupply = () => {
 
   const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
     useAssetData();
-
+const getAssetSupplyValue = (asset) => {
+  if (asset_supply[asset] !== undefined) {
+    const supplyValue = Number(asset_supply[asset]) / 1e8;
+    return supplyValue;  
+  }
+  return 'Supply not defined';
+};
+const getAssetBorrowValue = (asset) => {
+  if (asset_supply[asset] !== undefined) {
+    const  borrowValue = Number(asset_borrow[asset]) / 1e8;
+    return borrowValue;  // Format as a number with 2 decimals
+  }
+  return 'borrow not defined';
+};
   const visibleItems = filteredItems.filter((item) => {
     const balance =
       item[0] === "ckBTC"
@@ -558,9 +572,9 @@ const MySupply = () => {
       const reservesWithCalculations = userData.Ok.reserves[0].map(
         (reserveGroup) => {
           const totalCollateralValue =
-            Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
+          Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
           const totalBorrowedValue =
-            Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
+          Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
           const liquidationThreshold =
             Number(userData?.liquidation_threshold) / 100000000 || 0.8;
 
@@ -590,7 +604,22 @@ const MySupply = () => {
 
   let totalUsdValueSupply = 0;
   let totalUsdValueBorrow = 0;
+const [totalAssetSupply, setTotalAssetSupply] = useState(0);
+const [totalAssetBorrow, setTotalAssetBorrow] = useState(0);
+useEffect(() => {
+  let totalSupply = 0;
+  let totalBorrow = 0;
+  userData?.Ok?.reserves[0]?.forEach((reserveGroup) => {
+    const asset = reserveGroup[0];
+    const assetSupply = getAssetSupplyValue(asset);
+    const assetBorrow = getAssetBorrowValue(asset);
+    totalSupply += assetSupply;
+    totalBorrow += assetBorrow;
+  });
 
+  setTotalAssetSupply(totalSupply);
+  setTotalAssetBorrow(totalBorrow);
+}, [userData]);
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 md:-mt-[3rem]">
       <div className="flex justify-center -mb-30 lg:hidden">
@@ -635,8 +664,7 @@ const MySupply = () => {
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
-                      const assetSupply = Number(asset_supply) / 1e8;
-                      console.log("asset suply", asset_supply);
+                      const assetSupply = getAssetSupplyValue(asset);
                       let usdValue = 0;
 
                       if (asset === "ckBTC") {
@@ -681,7 +709,11 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
-                  {asset_supply === 0 ? (
+                
+                {!userData?.Ok?.reserves?.[0]?.length ||
+                  userData.Ok.reserves[0].every(
+                    (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
+                  ) ? (
                     noSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px]  scrollbar-none ">
@@ -690,16 +722,12 @@ const MySupply = () => {
                         {userData?.Ok?.reserves[0]?.map(
                           (reserveGroup, index) => {
                             const asset = reserveGroup[0]; 
-                            if (asset_supply <= 0) return null;
+                            if (getAssetSupplyValue(asset) <= 0) return null;
                            const item = filteredItems.find(
                               (item) => item[0] === asset
                             ); 
-                            const assetSupply =
-                              Number(asset_supply) / 1e8 || 0;
-
-                            const assetBorrow =
-                              Number(asset_borrow) / 1e8 || 0;
-
+                            const assetSupply = getAssetSupplyValue(asset);
+                            const assetBorrow = getAssetBorrowValue(asset);
                             const collateralStatus =
                               reserveGroup[1]?.is_collateral;
                            
@@ -882,11 +910,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue(asset);
+                                          const assetBorrow = getAssetBorrowValue(asset);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral;
 
@@ -942,11 +967,8 @@ const MySupply = () => {
                                           (reserveGroup) =>
                                             reserveGroup[0] === item[0]
                                         );
-                                      const assetSupply =
-                                        Number(asset_supply) / 1e8 || 0;
-
-                                      const assetBorrow =
-                                        Number(asset_borrow) / 1e8 || 0;
+                                        const assetSupply = getAssetSupplyValue(asset);
+                                        const assetBorrow = getAssetBorrowValue(asset);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
                                       const totalCollateral =
@@ -992,11 +1014,8 @@ const MySupply = () => {
                                           (reserveGroup) =>
                                             reserveGroup[0] === item[0]
                                         );
-                                      const assetSupply =
-                                        Number(asset_supply) / 1e8 || 0;
-
-                                      const assetBorrow =
-                                        Number(asset_borrow) / 1e8 || 0;
+                                        const assetSupply = getAssetSupplyValue(asset);
+                                        const assetBorrow = getAssetBorrowValue(asset);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
                                       const totalCollateral =
@@ -1053,7 +1072,10 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                  {asset_supply === 0 ? (
+                {!userData?.Ok?.reserves?.[0]?.length ||
+                  userData.Ok.reserves[0].every(
+                    (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
+                  ) ? (
                     noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative ">
@@ -1084,23 +1106,20 @@ const MySupply = () => {
                       {}
                       <div
   className={`w-full h-auto max-h-auto overflow-y-auto scrollbar-none ${
-    asset_supply > 0 ? "h-[260px]" : ""
+   totalAssetSupply > 0 ? "h-[260px]" : ""
   }`}
 >
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];
-                             if (asset_supply <= 0) return null;
+                             if (getAssetSupplyValue(asset)<= 0) return null;
 
                               const item = filteredItems.find(
                                 (item) => item[0] === asset
                               ); 
-                              const assetSupply =
-                                Number(asset_supply) / 1e8 || 0;
-
-                              const assetBorrow =
-                                Number(asset_borrow) / 1e8 || 0;
+                              const assetSupply = getAssetSupplyValue(asset);
+                                      const assetBorrow = getAssetBorrowValue(asset);
 
                               const collateralStatus =
                                 reserveGroup[1]?.is_collateral;
@@ -1251,11 +1270,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue(asset);
+                                          const assetBorrow = getAssetBorrowValue(asset);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral;
                                         const totalCollateral =
@@ -1308,11 +1324,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue(asset);
+                                          const assetBorrow = getAssetBorrowValue(asset);
                                         const totalCollateral =
                                           parseFloat(
                                             Number(
@@ -1357,11 +1370,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue(asset);
+                                          const assetBorrow = getAssetBorrowValue(asset);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral ??
                                           true;
@@ -1735,11 +1745,8 @@ const MySupply = () => {
                                           (reserveGroup) =>
                                             reserveGroup[0] === item[0]
                                         );
-                                      const assetSupply =
-                                        Number(asset_supply) / 1e8 || 0;
-
-                                      const assetBorrow =
-                                        Number(asset_borrow) / 1e8 || 0;
+                                        const assetSupply = getAssetSupplyValue( item[0]);
+                                        const assetBorrow = getAssetBorrowValue( item[0]);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
                                       const totalCollateral =
@@ -2076,11 +2083,8 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
 
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue( item[0]);
+                                          const assetBorrow = getAssetBorrowValue( item[0]);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral ??
                                           true;
@@ -2176,9 +2180,8 @@ const MySupply = () => {
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
-                      const assetSupply = Number(asset_supply) / 1e8 || 0;
-
-                      const assetBorrow = Number(asset_borrow) / 1e8 || 0;
+                      const assetSupply = getAssetSupplyValue(asset);
+                      const assetBorrow = getAssetBorrowValue(asset);
 
                       let usdValue = 0;
 
@@ -2224,7 +2227,11 @@ const MySupply = () => {
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
-                  {asset_borrow === 0 ? (
+                {!userData?.Ok?.reserves ||
+                  !userData?.Ok?.reserves[0] ||
+                  userData?.Ok?.reserves[0].every(
+                    (reserveGroup) => reserveGroup[1]?.asset_borrow === 0n
+                  ) ? (
                     noBorrowMessage
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
@@ -2234,15 +2241,12 @@ const MySupply = () => {
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];
-                              if (asset_borrow <= 0) return null;
+                              if ( getAssetBorrowValue(asset) <= 0n) return null;
                               const item = filteredItems.find(
                                 (item) => item[0] === asset
                               );
-                              const assetSupply =
-                                Number(asset_supply) / 1e8 || 0;
-
-                              const assetBorrow =
-                                Number(asset_borrow) / 1e8 || 0;
+                              const assetSupply = getAssetSupplyValue(asset);
+                              const assetBorrow = getAssetBorrowValue(asset);
 
                               const ckBalance =
                                 asset === "ckBTC"
@@ -2420,11 +2424,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue(asset);
+                                          const assetBorrow = getAssetBorrowValue(asset);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral ??
                                           true;
@@ -2487,11 +2488,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue(asset);
+                                          const assetBorrow = getAssetBorrowValue(asset);
                                         const totalCollateral = parseFloat(
                                           Number(
                                             userData?.Ok?.total_collateral
@@ -2541,7 +2539,11 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {asset_borrow === 0 ? (
+                  {!userData?.Ok?.reserves ||
+                  !userData?.Ok?.reserves[0] ||
+                  userData?.Ok?.reserves[0].every(
+                    (reserveGroup) => reserveGroup[1]?.asset_borrow === 0n
+                  ) ? (
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6">
@@ -2580,23 +2582,19 @@ const MySupply = () => {
                       {}
                       <div
                         className={`w-full h-auto max-h-auto overflow-y-auto scrollbar-none ${
-                          asset_borrow > 0 ? "h-[260px]" : ""
+                          totalAssetBorrow > 0 ? "h-[260px]" : ""
                         }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
                           {userData?.Ok?.reserves[0]?.map(
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];
-                              if (asset_borrow <= 0) return null;
+                              if (getAssetBorrowValue(asset) <= 0n) return null;
                               const item = filteredItems.find(
                                 (item) => item[0] === asset
                               );
-                              const assetSupply =
-                                Number(asset_supply) / 1e8 || 0;
-
-                              const assetBorrow =
-                                Number(asset_borrow) / 1e8 || 0;
-
+                              const assetSupply = getAssetSupplyValue(asset) ;
+                              const assetBorrow = getAssetBorrowValue(asset);
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
@@ -2743,11 +2741,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue(asset);
+                                          const assetBorrow = getAssetBorrowValue(asset);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral;
                                         const totalCollateral =
@@ -2809,11 +2804,8 @@ const MySupply = () => {
                                             (reserveGroup) =>
                                               reserveGroup[0] === item[0]
                                           );
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue(asset);
+                                          const assetBorrow = getAssetBorrowValue(asset);
                                         const totalCollateral =
                                           parseFloat(
                                             Number(
@@ -2928,7 +2920,7 @@ const MySupply = () => {
                 <>
                   {}
 
-                  {filteredItems.length === 0 ? (
+                  {filteredItems.length === 0 || availableBorrow ===0? (
                     noAssetsToBorrowMessage
                   ) : (
                     <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none">
@@ -3314,8 +3306,8 @@ const MySupply = () => {
                                     onClickHandler={() => {
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral;
-                                        const assetSupply = Number(asset_supply) / 1e8 || 0n;
-                                        const assetBorrow = Number(asset_borrow) / 1e8 || 0n;
+                                        const assetSupply = getAssetSupplyValue(item[0]);
+                                        const assetBorrow = getAssetBorrowValue(item[0]);
                                       const totalCollateral =
                                         parseFloat(
                                           Number(
@@ -3448,7 +3440,7 @@ const MySupply = () => {
 
                   <div className="w-full h-auto mt-6">
                     {}
-                    {filteredItems.length === 0 ? (
+                    {filteredItems.length === 0 ||availableBorrow ===0? (
                       noAssetsToBorrowMessage
                     ) : (
                       <div
@@ -3833,11 +3825,8 @@ const MySupply = () => {
                                       onClickHandler={() => {
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral;
-                                        const assetSupply =
-                                          Number(asset_supply) / 1e8 || 0;
-
-                                        const assetBorrow =
-                                          Number(asset_borrow) / 1e8 || 0;
+                                          const assetSupply = getAssetSupplyValue( item[0]);
+                                          const assetBorrow = getAssetBorrowValue( item[0]);
                                         const totalCollateral =
                                           parseFloat(
                                             Number(
@@ -3851,7 +3840,6 @@ const MySupply = () => {
                                         const Ltv =
                                           Number(userData?.Ok?.ltv) /
                                             100000000 || 0;
-                                        console.log("LTV IN borrow ", Ltv);
 
                                         let borrowableValue = "0.0000";
                                         let borrowableAssetValue = "0.0000";
@@ -3903,11 +3891,6 @@ const MySupply = () => {
                                             ).toFixed(8);
                                           }
                                         }
-                                        console.log(
-                                          " borrowableValue and  borrowableAssetValue",
-                                          borrowableValue,
-                                          borrowableAssetValue
-                                        );
                                         handleModalOpen(
                                           "borrow",
                                           item[0],

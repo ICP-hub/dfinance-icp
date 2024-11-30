@@ -42,11 +42,7 @@ const WithdrawPopup = ({
     [principal]
   );
   const fees = useSelector((state) => state.fees.fees);
-  console.log("Asset:", asset);
-  console.log("Fees:", fees);
-  console.log("assetSupply:", assetSupply);
 
-  console.log("Current Collateral Status", collateral);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const [amount, setAmount] = useState("");
   const [maxUsdValue, setMaxUsdValue] = useState(0);
@@ -150,16 +146,13 @@ const WithdrawPopup = ({
   }, [amount, conversionRate]);
 
   const ledgerActors = useSelector((state) => state.ledger);
-  console.log("ledgerActors", ledgerActors);
 
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
-  console.log("Amount as nat64:", amountAsNat64);
 
   const scaledAmount = amountAsNat64; 
 
   const handleWithdraw = async () => {
-    console.log("Withdraw function called for", asset, amount);
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -178,13 +171,9 @@ const WithdrawPopup = ({
     try {
       const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
-      console.log("Amount as nat64:", amountAsNat64);
       const scaledAmount = amountAsNat64;
 
-      console.log(
-        " current colletral status while withdraw ",
-        currentCollateralStatus
-      );
+     
 
       const withdrawResult = await backendActor.withdraw(
         asset,
@@ -192,7 +181,6 @@ const WithdrawPopup = ({
         [],
         currentCollateralStatus
       );
-      console.log("Withdraw result", withdrawResult);
 
       if ("Ok" in withdrawResult) {
         trackEvent(
@@ -242,10 +230,8 @@ const WithdrawPopup = ({
           draggable: true,
           progress: undefined,
         });
-        console.error("Withdraw error:", errorMsg);
       }
     } catch (error) {
-      console.error("Error withdrawing:", error);
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
     } finally {
       setIsLoading(false); 
@@ -282,7 +268,6 @@ const WithdrawPopup = ({
       totalDebt,
       liquidationThreshold
     );
-    console.log("Health Factor:", healthFactor);
 
     const amountTaken = collateral ? usdValue || 0 : 0;
     const amountAdded = 0;
@@ -291,7 +276,6 @@ const WithdrawPopup = ({
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
@@ -332,11 +316,6 @@ const WithdrawPopup = ({
       parseFloat(totalCollateral) - parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
 
-    console.log("totalCollateralValue", totalCollateralValue);
-    console.log("totalDeptValue", totalDeptValue);
-    console.log("amountAdded", amountAdded);
-    console.log("liquidationThreshold", liquidationThreshold);
-    console.log("totalDebt", totalDebt);
 
     if (totalDeptValue === 0) {
       return Infinity;

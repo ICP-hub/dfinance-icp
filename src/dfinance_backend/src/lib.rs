@@ -932,7 +932,14 @@ pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, 
 
     Ok(user_reserve_data.variable_borrow_index)
 }
+// this function is for check which i will remove later.
+#[update]
+async fn get_user_account_data() -> Result<(u128, u128, u128, u128, u128,u128, bool), String>
+{
+    let result = GenericLogic::calculate_user_account_data().await;
 
+    result
+}
 export_candid!();
 
 //TODO validation on toggle collateral and faucet

@@ -57,7 +57,7 @@ const DashboardNav = () => {
   const getAssetBorrowValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]) / 1e8;
-      return borrowValue; // Format as a number with 2 decimals
+      return borrowValue; 
     }
     return `noBorrow`;
   };
@@ -230,40 +230,32 @@ const DashboardNav = () => {
     if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
         const reservesData = userData.Ok.reserves[0];
-  
-        // Calculate net APY for the reserves
+
         const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
         setNetApy(calculatedNetApy);
-  
-        // Process the reserve data and get the supply/borrow values for each asset
+
         reservesData.forEach((reserveGroup) => {
-          const asset = reserveGroup[0]; // Asset name (e.g., 'ckUSDT')
-          const reserve = reserveGroup[1]; // Reserve data
-  
-          // Log the reserve data to the console for debugging
-          console.log("reserve", reserve);
-  
-          // Get asset supply value
+          const asset = reserveGroup[0]; 
+          const reserve = reserveGroup[1]; 
+
           const supply = getAssetSupplyValue(reserve);
-          // Set the supply value to the state if it's non-zero
+
           if (supply > 0) {
             setAssetSupply(supply);
           }
-  
-          // Get asset borrow value
+
           const borrow = getAssetBorrowValue(reserve);
-          // Set the borrow value to the state if it's non-zero
+
           if (borrow > 0) {
             setAssetBorrow(borrow);
           }
         });
       };
-  
-      // Run the updateState function to process the data
+
       updateState();
     }
   }, [userData, reserveData, calculateNetSupplyApy]);
-  
+
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
       const borrow = Number(userData.Ok.total_debt) / 100000000;

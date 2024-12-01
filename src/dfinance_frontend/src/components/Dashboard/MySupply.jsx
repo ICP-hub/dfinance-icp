@@ -602,7 +602,7 @@ const MySupply = () => {
   const getAssetBorrowValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]) / 1e8;
-      return borrowValue; // Format as a number with 2 decimals
+      return borrowValue; 
     }
     return noBorrowMessage;
   };
@@ -624,7 +624,6 @@ const MySupply = () => {
     setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
   }, [userData]);
-  console.log("asset supply ", asset_supply);
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 md:-mt-[3rem]">
       <div className="flex justify-center -mb-30 lg:hidden">
@@ -714,25 +713,25 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
-                  {/* Show "No Supply" message if assetSupply is less than 0 or undefined */}
+                  {}
                   {!userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].filter(
                     (reserveGroup) => getAssetSupplyValue(reserveGroup[0]) > 0n
                   ).length === 0 ? (
-                    // Show "No Borrow" if no assets have borrow > 0n or data is loading
+
                     noSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px] scrollbar-none">
                       <div className="w-full">
-                        {/* Loop through reserves and filter based on supply > 0 */}
+                        {}
                         {userData?.Ok?.reserves[0]?.length === 0
-                            ? noSupplyMessage // Display a loading message if assets are being fetched
+                            ? noSupplyMessage 
                             : userData?.Ok?.reserves[0]
                                 ?.filter(
                                   (reserveGroup) =>
                                     getAssetSupplyValue(reserveGroup[0]) > 0n
-                                ) // Only map assets with borrow > 0n
+                                ) 
                                 .map((reserveGroup, index) => {
                                   const asset = reserveGroup[0];
                                   const assetSupply =
@@ -774,7 +773,7 @@ const MySupply = () => {
                                 key={index}
                                 className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
                               >
-                                {/* Asset logo */}
+                                {}
                                 <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                                   {asset === "ckBTC" && (
                                     <img
@@ -814,7 +813,7 @@ const MySupply = () => {
                                   {asset}
                                 </div>
 
-                                {/* Asset Supply Section */}
+                                {}
                                 <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-4 mt-6">
                                   <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                     Asset Supply:
@@ -884,7 +883,7 @@ const MySupply = () => {
                                   </div>
                                 </div>
 
-                                {/* APY Section */}
+                                {}
                                 <div className="flex justify-between text-xs text-[#233D63] font-semibold">
                                   <div className="flex relative group">
                                     <p className="text-[#233D63] dark:text-darkText dark:opacity-50 relative">
@@ -911,7 +910,7 @@ const MySupply = () => {
                                   </p>
                                 </div>
 
-                                {/* Collateral Section */}
+                                {}
                                 <div className="flex justify-between text-xs text-[#233D63] font-semibold mt-3 mb-4">
                                   <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
                                     Collateral
@@ -966,7 +965,7 @@ const MySupply = () => {
                                   </div>
                                 </div>
 
-                                {/* Buttons for Supply/Withdraw */}
+                                {}
                                 <div className="flex justify-between gap-4">
                                   <Button
                                     title={"Supply"}
@@ -1082,19 +1081,19 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                  {/* Check if reserves data exists and show "No supply" if all reserves have 0 supply */}
+                  {}
                   {!userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].filter(
                     (reserveGroup) => getAssetSupplyValue(reserveGroup[0]) > 0n
                   ).length === 0 ? (
-                    // Show "No Borrow" if no assets have borrow > 0n or data is loading
+
                     noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative">
-                      {/* Map over reserves and filter out assets with supply value <= 0 */}
+                      {}
                       <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                        {/* Header Row for Asset, Asset Supply, APY, Collateral, Actions */}
+                        {}
                         {userData?.Ok?.reserves[0].some(
                           (reserveGroup) =>
                             getAssetSupplyValue(reserveGroup[0]) > 0
@@ -1121,14 +1120,14 @@ const MySupply = () => {
                           </div>
                         )}
 
-                        {/* Map through reserves and display only those with supply > 0 */}
+                        {}
                         {userData?.Ok?.reserves[0]?.length === 0
-                            ? noSupplyMessage // Display a loading message if assets are being fetched
+                            ? noSupplyMessage 
                             : userData?.Ok?.reserves[0]
                                 ?.filter(
                                   (reserveGroup) =>
                                     getAssetSupplyValue(reserveGroup[0]) > 0n
-                                ) // Only map assets with borrow > 0n
+                                ) 
                                 .map((reserveGroup, index) => {
                                   const asset = reserveGroup[0];
                                   const assetSupply =
@@ -1136,7 +1135,7 @@ const MySupply = () => {
                                   const item = filteredItems.find(
                                     (item) => item[0] === asset
                                   );
-                            
+
                             const assetBorrow = getAssetBorrowValue(asset);
                             const collateralStatus =
                               reserveGroup[1]?.is_collateral;
@@ -2259,20 +2258,20 @@ const MySupply = () => {
                   userData?.Ok?.reserves[0].filter(
                     (reserveGroup) => getAssetBorrowValue(reserveGroup[0]) > 0n
                   ).length === 0 ? (
-                    // Show "No Borrow" if no assets have borrow > 0n
+
                     noBorrowMessage
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                       <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none">
                         <div className="w-full">
-                          {/* Show loading message until all assets are fetched */}
+                          {}
                           {userData?.Ok?.reserves[0]?.length === 0
-                            ? noBorrowMessage // Display a loading message if assets are being fetched
+                            ? noBorrowMessage 
                             : userData?.Ok?.reserves[0]
                                 ?.filter(
                                   (reserveGroup) =>
                                     getAssetBorrowValue(reserveGroup[0]) > 0n
-                                ) // Only map assets with borrow > 0n
+                                ) 
                                 .map((reserveGroup, index) => {
                                   const asset = reserveGroup[0];
                                   const assetBorrow =
@@ -2314,7 +2313,7 @@ const MySupply = () => {
                                       className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
                                     >
                                       <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                        {/* Add logic to display asset images */}
+                                        {}
                                         {asset === "ckBTC" && (
                                           <img
                                             src={ckBTC}
@@ -2358,7 +2357,7 @@ const MySupply = () => {
                                           Debt
                                         </p>
                                         <div className="text-right text-[#2A1F9D] dark:text-darkText mt-4">
-                                          {/* Display borrow value */}
+                                          {}
                                           {assetBorrow === 0n
                                             ? "0n"
                                             : assetBorrow >= 1e-8 &&
@@ -2586,13 +2585,13 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {/* Check if the data is loading or if there are no borrowable assets */}
+                  {}
                   {!userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].filter(
                     (reserveGroup) => getAssetBorrowValue(reserveGroup[0]) > 0n
                   ).length === 0 ? (
-                    // Show "No Borrow" if no assets have borrow > 0n or data is loading
+
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6">

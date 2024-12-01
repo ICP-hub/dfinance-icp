@@ -39,14 +39,13 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [remainingFaucet, setRemainingFaucet] = useState(0);
   useEffect(() => {
     if (isOpen) {
-     
+
       document.body.style.overflow = "hidden";
     } else {
-      
+
       document.body.style.overflow = "";
     }
 
-   
     return () => {
       document.body.style.overflow = "";
     };
@@ -101,7 +100,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           fetchConversionRate(),
         ]);
       } catch (error) {
-        
+
       }
     };
     fetchAllData();
@@ -140,7 +139,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       const usdTAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDTUsdRate;
       const truncatedBtcAmount = Math.trunc(usdTAmount * 1e8) / 1e8;
-      
+
       setFaucetUSDT(truncatedBtcAmount);
     }
   }, [ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]);
@@ -180,7 +179,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     const numericAmount = parseFloat(inputAmount);
 
-    
     if (exchangeRate && numericAmount > exchangeRate) {
       return; 
     }
@@ -199,7 +197,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   };
 
   const handleMaxAmountClick = () => {
-    
+
     if (exchangeRate) {
       const formattedAmount = parseFloat(exchangeRate).toFixed(8);
       const displayAmount = formatWithCommas(formattedAmount);
@@ -229,7 +227,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
         const natAmount = Math.round(numericAmount * Math.pow(10, 8)); 
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
-        
+
         if (numericAmount > availableAmount) {
           toast.error(`Faucet limit exceeded! You can claim only up to $${availableAmount.toLocaleString()}`, {
         className: "custom-toast",
@@ -365,29 +363,23 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       const midnightUTC = new Date(
         Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
       );
-      const timeUntilMidnight = midnightUTC.getTime() - now.getTime(); // Time remaining until midnight
-  
-      console.log(`Reset will occur in: ${timeUntilMidnight / 1000} seconds`);
-  
-      // Schedule the reset once at midnight
+      const timeUntilMidnight = midnightUTC.getTime() - now.getTime(); 
+
       setTimeout(() => {
-        handleResetFaucetUsage(); // Reset faucet usage at midnight
-  
-        // After midnight reset, schedule it to run again every 24 hours
+        handleResetFaucetUsage(); 
+
         setInterval(() => {
-          handleResetFaucetUsage(); // Reset every 24 hours
-        }, 24 * 60 * 60 * 1000); // 24 hours
-      }, timeUntilMidnight); // Only runs once at midnight
+          handleResetFaucetUsage(); 
+        }, 24 * 60 * 60 * 1000); 
+      }, timeUntilMidnight); 
     };
-  
-    resetFaucetLimitsAtMidnight(); // Initialize the midnight reset logic
-  
+
+    resetFaucetLimitsAtMidnight(); 
+
     return () => {
-      // Cleanup logic if needed, e.g. clearing intervals, though this should only run once per day
-      console.log("Cleaning up reset timer.");
+
     };
-  }, []); // Run only once on mount
-  
+  }, []); 
 
   return (
     <>

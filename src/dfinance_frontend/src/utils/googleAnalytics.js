@@ -13,7 +13,6 @@ export const setUserId = (userId) => {
       throw new Error("Invalid user ID provided");
     }
   } catch (error) {
-    console.error(error);
     toast.error(error.message);
   }
 };

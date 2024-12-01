@@ -41,7 +41,6 @@ const RiskPopup = ({ onClose, userData }) => {
 
   const calculateHealthFactorPosition = (value) => {
     if (typeof value !== "number" || isNaN(value)) {
-      console.error("Invalid Health Factor value:", value);
       return NaN;
     }
 
@@ -73,11 +72,6 @@ const RiskPopup = ({ onClose, userData }) => {
       typeof max !== "number" ||
       min === max
     ) {
-      console.error("Invalid input values for LTV position calculation:", {
-        value,
-        min,
-        max,
-      });
       return NaN;
     }
     return ((value - min) / (max - min)) * 100;
@@ -89,11 +83,6 @@ const RiskPopup = ({ onClose, userData }) => {
       typeof max !== "number" ||
       min === max
     ) {
-      console.error("Invalid input values for LTV position calculation:", {
-        value,
-        min,
-        max,
-      });
       return NaN;
     }
     return ((value - min) / (max - min)) * 100;

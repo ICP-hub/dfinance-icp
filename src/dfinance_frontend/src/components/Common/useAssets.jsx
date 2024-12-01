@@ -49,32 +49,24 @@ const useAssetData = (searchQuery = '') => {
 
   const fetchAssetSupply = async (asset) => {
     if (backendActor) {
-      console.log("Backend Actor initialized:", backendActor);
       try {
-        console.log("Calling get asset supply for", asset);
         const result = await backendActor.get_asset_supply(asset);
         // Set asset supply in the state object using the asset name as the key
         setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
-        console.error("Error fetching asset supply:", error);
       }
     } else {
-      console.error("Backend actor initialization failed.");
     }
   };
   
   const fetchAssetBorrow = async (asset) => {
     if (backendActor) {
-      console.log("Backend Actor initialized:", backendActor);
       try {
-        console.log("Calling get asset borrow for", asset);
         const result = await backendActor.get_asset_debt(asset);
         setAssetBorrow(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
-        console.error("Error fetching asset borrow:", error);
       }
     } else {
-      console.error("Backend actor initialization failed.");
     }
   };
   useEffect(() => {

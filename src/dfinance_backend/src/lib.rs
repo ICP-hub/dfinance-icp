@@ -1,4 +1,5 @@
 use api::functions::get_balance;
+use api::functions::reset_faucet_usage;
 use api::functions::update_balance;
 use candid::encode_args;
 use candid::Nat;
@@ -40,10 +41,17 @@ use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
 
+use ic_cdk::println;
+use ic_cdk_timers::set_timer_interval;
+use std::time::Duration;
+
+const ONE_DAY: Duration = Duration::from_secs(86400);
+
 #[init]
-fn init() {
+async fn init() {
     // initialize_reserve();
     ic_cdk::println!("function called");
+    schedule_midnight_task().await;
 }
 
 // Function to call the execute_supply logic
@@ -171,7 +179,7 @@ pub fn get_asset_principal(asset_name: String) -> Result<Principal, String> {
 
 // Get all users
 #[query]
-fn get_all_users() -> Vec<(Principal, UserData)> {
+pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     read_state(|state| {
         state
             .user_profile
@@ -706,10 +714,10 @@ fn calculate_dynamic_balance(
 #[query]
 pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
     ic_cdk::println!("Entering get_asset_supply function");
-    
+
     // Log the asset name being passed
     ic_cdk::println!("Asset name received: {}", asset_name);
-    
+
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {:?}", user_principal);
 
@@ -731,7 +739,10 @@ pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
     let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
         Some(data) => data,
         None => {
-            ic_cdk::println!("Error: User reserve data not found for asset: {}", asset_name);
+            ic_cdk::println!(
+                "Error: User reserve data not found for asset: {}",
+                asset_name
+            );
             return Err("User reserve data not found".to_string());
         }
     };
@@ -747,20 +758,24 @@ pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
 
     ic_cdk::println!("Asset reserve data fetched successfully");
 
-    let d_token_canister_principal = match Principal::from_text(asset_reserve.d_token_canister.unwrap()) {
-        Ok(principal) => principal,
-        Err(e) => {
-            ic_cdk::println!("Error parsing DToken canister principal: {}", e);
-            return Err("Error parsing DToken canister principal".to_string());
-        }
-    };
+    let d_token_canister_principal =
+        match Principal::from_text(asset_reserve.d_token_canister.unwrap()) {
+            Ok(principal) => principal,
+            Err(e) => {
+                ic_cdk::println!("Error parsing DToken canister principal: {}", e);
+                return Err("Error parsing DToken canister principal".to_string());
+            }
+        };
 
     ic_cdk::println!(
         "DToken canister principal parsed successfully: {:?}",
         d_token_canister_principal
     );
 
-    ic_cdk::println!("Fetching balance from DToken canister for user: {:?}", user_principal);
+    ic_cdk::println!(
+        "Fetching balance from DToken canister for user: {:?}",
+        user_principal
+    );
     let get_balance_value: Nat = get_balance(d_token_canister_principal, user_principal).await;
 
     ic_cdk::println!(
@@ -779,7 +794,10 @@ pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
         }
     };
 
-    ic_cdk::println!("Fetching normalized supply data for user reserve: {:?}", user_reserve_data);
+    ic_cdk::println!(
+        "Fetching normalized supply data for user reserve: {:?}",
+        user_reserve_data
+    );
     let (_, user_reserve) = user_reserve_data;
 
     let normalized_supply_data = match user_normalized_supply(user_reserve.clone()) {
@@ -807,28 +825,36 @@ pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
 #[query]
 pub async fn get_asset_debt(asset_name: String) -> Result<u128, String> {
     let user_principal = ic_cdk::caller();
-    let user_data_result = user_data(user_principal);
+    ic_cdk::println!("User principal: {:?}", user_principal);
 
+    let user_data_result = user_data(user_principal);
     let mut user_data = match user_data_result {
         Ok(data) => {
             ic_cdk::println!("User found: {:?}", data);
             data
         }
         Err(e) => {
-            ic_cdk::println!("Error: {}", e);
+            ic_cdk::println!("Error fetching user data: {}", e);
             return Err("User not found".to_string());
         }
     };
 
     let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
-        Some(data) => data,
+        Some(data) => {
+            ic_cdk::println!("User reserve data found: {:?}", data);
+            data
+        }
         None => {
+            ic_cdk::println!("User reserve data not found for asset: {}", asset_name);
             return Err("User reserve data not found".to_string());
         }
     };
 
     let asset_reserve = match get_reserve_data(asset_name.clone()) {
-        Ok(data) => data,
+        Ok(data) => {
+            ic_cdk::println!("Asset reserve data found: {:?}", data);
+            data
+        }
         Err(e) => {
             ic_cdk::println!("Error fetching asset reserve data: {}", e);
             return Err("Error fetching asset reserve data".to_string());
@@ -837,10 +863,13 @@ pub async fn get_asset_debt(asset_name: String) -> Result<u128, String> {
 
     let debt_token_canister_principal =
         match Principal::from_text(asset_reserve.debt_token_canister.unwrap()) {
-            Ok(principal) => principal,
+            Ok(principal) => {
+                ic_cdk::println!("Debt token canister principal: {:?}", principal);
+                principal
+            }
             Err(e) => {
-                ic_cdk::println!("Error parsing DToken canister principal: {}", e);
-                return Err("Error parsing DToken canister principal".to_string());
+                ic_cdk::println!("Error parsing debt token canister principal: {}", e);
+                return Err("Error parsing debt token canister principal".to_string());
             }
         };
 
@@ -850,7 +879,6 @@ pub async fn get_asset_debt(asset_name: String) -> Result<u128, String> {
     );
 
     let get_balance_value: Nat = get_balance(debt_token_canister_principal, user_principal).await;
-
     ic_cdk::println!(
         "Fetched balance from DToken canister: {:?}",
         get_balance_value
@@ -868,9 +896,13 @@ pub async fn get_asset_debt(asset_name: String) -> Result<u128, String> {
     };
 
     let (_, user_reserve) = user_reserve_data;
+    ic_cdk::println!("User reserve: {:?}", user_reserve);
 
     let normalized_debt_data = match user_normalized_debt(user_reserve.clone()) {
-        Ok(data) => data,
+        Ok(data) => {
+            ic_cdk::println!("Normalized debt data: {:?}", data);
+            data
+        }
         Err(e) => {
             ic_cdk::println!("Error from the normalized supply function: {}", e);
             return Err("Error from the normalized supply function".to_string());
@@ -878,11 +910,14 @@ pub async fn get_asset_debt(asset_name: String) -> Result<u128, String> {
     };
 
     ic_cdk::println!(
-        "Values in normalized supply data = {:?}",
+        "Values in normalized supply data: {:?}",
         normalized_debt_data
     );
 
-    Ok(normalized_debt_data.scaled_mul(nat_convert_value))
+    let result = normalized_debt_data.scaled_mul(nat_convert_value);
+    ic_cdk::println!("Final debt value: {}", result);
+
+    Ok(result)
 }
 
 #[query]
@@ -955,15 +990,42 @@ pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, 
 
 // this function is for check which i will remove later.
 #[update]
-async fn get_user_account_data() -> Result<(u128, u128, u128, u128, u128,u128, bool), String>
-{
+async fn get_user_account_data() -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
     let result = GenericLogic::calculate_user_account_data().await;
 
     result
 }
 
-    result
+#[query]
+pub async fn schedule_midnight_task() {
+    // Schedule the task to run at midnight
+    let _timer_id = set_timer_interval(time_until_midnight(), || {
+        ic_cdk::spawn(async {
+            // Task for midnight: Reset faucet usage and update the sum
+            let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+
+            for (user_principal, _) in vector_user_data {
+                // Reset the faucet usage for the user without printing any logs
+                if let Err(_) = reset_faucet_usage(user_principal).await {
+                    // Optionally handle the error, but don't log anything
+                    // In a production environment, you may want to handle errors silently
+                }
+            }
+        });
+    });
 }
+
+fn time_until_midnight() -> Duration {
+    let now = ic_cdk::api::time();
+    let nanos_since_midnight = now % ONE_DAY.as_nanos() as u64;
+    Duration::from_nanos(ONE_DAY.as_nanos() as u64 - nanos_since_midnight)
+}
+
+#[ic_cdk::post_upgrade]
+pub async fn post_upgrade() {
+    schedule_midnight_task().await;
+}
+
 export_candid!();
 
 //TODO validation on toggle collateral and faucet

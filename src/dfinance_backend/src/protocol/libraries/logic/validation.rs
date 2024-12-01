@@ -11,9 +11,9 @@ use core::panic;
 pub struct ValidationLogic;
 
 impl ValidationLogic {
-//     // -------------------------------------
-//     // -------------- SUPPLY ---------------
-//     // -------------------------------------
+    //     // -------------------------------------
+    //     // -------------- SUPPLY ---------------
+    //     // -------------------------------------
 
     pub async fn validate_supply(
         reserve: &ReserveData,
@@ -153,7 +153,7 @@ impl ValidationLogic {
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
         let user_total_collateral = user_data.total_collateral.unwrap_or(0) - amount;
-        
+
         let next_collateral = user_total_collateral - amount;
 
         // Calculating user liquidation threshold
@@ -316,6 +316,8 @@ impl ValidationLogic {
         user: Principal,
         ledger_canister: Principal,
     ) {
+        ic_cdk::println!("Starting validate_repay function");
+
         let transfer_fees = get_fees(ledger_canister).await;
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
@@ -323,10 +325,12 @@ impl ValidationLogic {
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
         if amount == 0 {
+            ic_cdk::println!("Invalid amount: 0");
             panic!("{:?}", Error::InvalidAmount);
         }
 
         // if user != ic_cdk::caller() {
+        //     ic_cdk::println!("Invalid user: {:?} is not the caller", user);
         //     panic!("{:?}", Error::InvalidUser);
         // }
 
@@ -345,24 +349,45 @@ impl ValidationLogic {
                 data
             }
             Err(e) => {
+                ic_cdk::println!("Error finding user: {:?}", e);
                 panic!("{:?}", e);
             }
         };
 
         let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
-            None => None,
+            Some(ref mut reserves) => {
+                ic_cdk::println!("User reserves found: {:?}", reserves);
+                reserves
+                    .iter_mut()
+                    .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap())
+            }
+            None => {
+                ic_cdk::println!("No reserves found for user");
+                None
+            }
         };
 
         let mut user_current_debt = 0;
 
-        if let Some((_, reserve_data)) = user_reserve {
+        if let Some((asset_name, reserve_data)) = user_reserve {
+            ic_cdk::println!(
+                "User reserve found: {:?}, Reserve data: {:?}",
+                asset_name,
+                reserve_data
+            );
             user_current_debt = reserve_data.asset_borrow;
+        } else {
+            ic_cdk::println!("No matching user reserve found");
         }
 
+        ic_cdk::println!("User current debt: {:?}", user_current_debt);
+
         if final_amount > user_current_debt as u128 {
+            ic_cdk::println!(
+                "Repay amount exceeds current debt: final_amount = {:?}, user_current_debt = {:?}",
+                final_amount,
+                user_current_debt
+            );
             panic!("{:?}", Error::RepayMoreThanDebt);
         }
 
@@ -372,18 +397,27 @@ impl ValidationLogic {
             reserve.configuration.paused,
         );
 
+        ic_cdk::println!(
+            "Reserve status - is_active: {:?}, is_frozen: {:?}, is_paused: {:?}",
+            is_active,
+            is_frozen,
+            is_paused
+        );
+
         if !is_active {
+            ic_cdk::println!("Reserve is inactive");
             panic!("{:?}", Error::ReserveInactive);
         }
         if is_paused {
+            ic_cdk::println!("Reserve is paused");
             panic!("{:?}", Error::ReservePaused);
         }
         if is_frozen {
+            ic_cdk::println!("Reserve is frozen");
             panic!("{:?}", Error::ReserveFrozen);
         }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
+
+        ic_cdk::println!("Validation completed successfully");
     }
 
     //     // --------------------------------------

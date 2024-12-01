@@ -3,11 +3,11 @@ use std::string;
 use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
-use crate::{get_asset_principal, get_cached_exchange_rate};
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
+use crate::{get_asset_principal, get_cached_exchange_rate};
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::{call, query};
@@ -242,7 +242,6 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
         return Err("Asset cannot be an empty string.".to_string());
     }
 
-   
     let user_principal = ic_cdk::caller();
 
     // Validate user principal (avoid anonymous principal)
@@ -269,7 +268,6 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     // Ask : is it right way to convert it to the usd amount.
     let mut rate: Option<u128> = None;
 
-    
     match get_cached_exchange_rate(asset.clone()) {
         Ok(price_cache) => {
             // Fetch the specific CachedPrice for the asset from the PriceCache
@@ -283,17 +281,12 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
             }
         }
         Err(err) => {
-            ic_cdk::println!(
-                "Error fetching exchange rate for {}: {}",
-                asset,
-                err
-            );
+            ic_cdk::println!("Error fetching exchange rate for {}: {}", asset, err);
             rate = None; // Explicitly set rate to None in case of an error
         }
     }
-    
 
-    let usd_amount = ScalingMath::scaled_mul(amount ,rate.unwrap());
+    let usd_amount = ScalingMath::scaled_mul(amount, rate.unwrap());
 
     ic_cdk::println!("usd amount of the facut = {}", usd_amount);
 
@@ -318,13 +311,13 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
             return Err("amount is too much".to_string());
         }
         user_reserve_data.faucet_usage += usd_amount;
-        ic_cdk::println!("if faucet usage = {}",user_reserve_data.faucet_usage);
+        ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
     } else {
         let mut new_reserve = UserReserveData {
             reserve: asset.clone(),
             ..Default::default()
         };
-    
+
         if usd_amount > new_reserve.faucet_limit {
             ic_cdk::println!("amount is too much");
             return Err("amount is too much".to_string());
@@ -334,23 +327,23 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
             ic_cdk::println!("amount is too much second");
             return Err("amount is too much".to_string());
         }
-    
+
         new_reserve.faucet_usage += usd_amount;
-        ic_cdk::println!("else faucet usage = {}",new_reserve.faucet_usage);
-    
+        ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
+
         if let Some(ref mut reserves) = user_data.reserves {
             reserves.push((asset.clone(), new_reserve.clone()));
         } else {
             user_data.reserves = Some(vec![(asset.clone(), new_reserve.clone())]);
         }
-    
+
         ic_cdk::println!(
             "faucet new_reserve.faucet_usage = {}",
             new_reserve.faucet_usage
         );
     }
 
-    ic_cdk::println!("user data before submit = {:?}",user_data);
+    ic_cdk::println!("user data before submit = {:?}", user_data);
 
     // Fetched canister ids, user principal and amount
     let ledger_canister_id = mutate_state(|state| {
@@ -405,9 +398,8 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
 }
 
 #[update]
-pub fn reset_faucet_usage() -> Result<(), String> {
-
-    let user_principal = ic_cdk::caller();
+pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String> {
+    // let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
@@ -449,8 +441,6 @@ pub fn reset_faucet_usage() -> Result<(), String> {
     Ok(())
 }
 
-
-
 // #[update]
 // pub fn schedule_faucet_reset() {
 //     let now = current_time();  // Get the current time in seconds (Unix timestamp)
@@ -475,7 +465,6 @@ pub fn reset_faucet_usage() -> Result<(), String> {
 //         (),
 //     );
 // }
-
 
 // /// Helper function to calculate the next midnight UTC time
 // fn calculate_midnight_utc(now: u64) -> u64 {

@@ -206,6 +206,11 @@ impl UpdateLogic {
         reserve: &ReserveData,
         usd_amount: u128,
     ) -> Result<(), String> {
+        ic_cdk::println!(
+            "Starting update_user_data_borrow for user: {:?}",
+            user_principal
+        );
+
         let asset_reserve = read_state(|state| {
             let asset_index = &state.asset_index;
             asset_index
@@ -213,6 +218,8 @@ impl UpdateLogic {
                 .map(|reserve| reserve.0.clone())
                 .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
         });
+
+        ic_cdk::println!("Asset reserve read: {:?}", asset_reserve);
 
         let user_data_result = user_data(user_principal);
 
@@ -249,6 +256,7 @@ impl UpdateLogic {
 
         // Function to check if the user has a reserve for the asset
         let user_reserve = user_reserve(&mut user_data, &params.asset);
+        ic_cdk::println!("User reserve: {:?}", user_reserve);
 
         let asset_borrow = match user_reserve {
             Some((_, reserve)) => reserve.asset_borrow,
@@ -258,13 +266,10 @@ impl UpdateLogic {
         let asset_reserve_data = match asset_reserve {
             Ok(data) => {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
-
                 data
             }
-
             Err(e) => {
                 ic_cdk::println!("Error: {}", e);
-
                 return Err(e);
             }
         };
@@ -275,6 +280,8 @@ impl UpdateLogic {
             adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
             last_liquidity_index: reserve_cache.curr_debt_index,
         };
+
+        ic_cdk::println!("Update user state: {:?}", update_user_state);
 
         let minted_result = mint_scaled(
             &mut update_user_state,
@@ -288,7 +295,7 @@ impl UpdateLogic {
 
         match minted_result {
             Ok(()) => {
-                println!("minting dtokens successfully");
+                ic_cdk::println!("Minting dtokens successfully");
             }
             Err(e) => {
                 panic!("Get error in minting the dtokens {:?}", e);
@@ -296,6 +303,8 @@ impl UpdateLogic {
         }
 
         let usd_rate = usd_amount.scaled_div(params.amount);
+        ic_cdk::println!("Calculated USD rate: {}", usd_rate);
+
         if let Some((_, reserve_data)) = user_reserve {
             reserve_data.supply_rate = asset_reserve_data.current_liquidity_rate;
             reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
@@ -305,9 +314,11 @@ impl UpdateLogic {
             reserve_data.asset_borrow += params.amount;
             reserve_data.last_update_timestamp = current_timestamp();
             reserve_data.state = update_user_state.clone();
+
             if reserve_data.variable_borrow_index == 0 {
                 reserve_data.variable_borrow_index = 100000000;
             }
+
             ic_cdk::println!(
                 "Updated asset borrow for existing reserve: {:?}",
                 reserve_data
@@ -317,7 +328,6 @@ impl UpdateLogic {
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
                 borrow_rate: asset_reserve_data.current_liquidity_rate,
-
                 asset_price_when_borrowed: usd_rate,
                 asset_borrow: params.amount,
                 is_borrowed: true,
@@ -378,7 +388,7 @@ impl UpdateLogic {
                 user_data.total_collateral.unwrap_or(0),
                 user_data.liquidation_threshold.unwrap_or(0),
             );
-          
+
             ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
             user_data.liquidation_threshold = Some(user_thrs);
 
@@ -512,6 +522,10 @@ impl UpdateLogic {
         reserve: &ReserveData,
         usd_amount: u128,
     ) -> Result<(), String> {
+        ic_cdk::println!(
+            "Starting update_user_data_repay for user: {:?}",
+            user_principal
+        );
         let user_data_result = user_data(user_principal);
 
         let mut user_data = match user_data_result {
@@ -524,43 +538,56 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-      
-        ic_cdk::println!("repay user update = {:?}", user_data);
 
+        ic_cdk::println!("Repay user update initial data = {:?}", user_data);
 
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0),
             total_borrowed_value: user_data.total_debt.unwrap_or(0) - usd_amount.clone(),
             liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0),
         };
+        ic_cdk::println!("Calculated user position: {:?}", user_position);
+
         user_data.total_debt =
             Some((user_data.total_debt.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
         user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
         let health_factor = calculate_health_factor(&user_position);
         user_data.health_factor = Some(health_factor);
-        
-
         ic_cdk::println!("Updated user health factor: {}", health_factor);
 
         let ltv = calculate_ltv(&user_position);
         user_data.ltv = Some(ltv);
+        ic_cdk::println!("Updated user LTV: {}", ltv);
 
+        ic_cdk::println!(
+            "avaliable borrow without update = {}",
+            user_data.available_borrow.unwrap()
+        );
+        ic_cdk::println!("usd amount = {}", usd_amount);
         user_data.available_borrow = Some(user_data.available_borrow.unwrap() + usd_amount);
+        ic_cdk::println!(
+            "Updated user available borrow: {}",
+            user_data.available_borrow.unwrap()
+        );
 
-        // Function to check if the user has a reserve for the asset
         let user_reserve = user_reserve(&mut user_data, &params.asset);
 
         let asset_borrow = match user_reserve {
             Some((_, reserve)) => reserve.asset_borrow,
             None => 0,
         };
+        ic_cdk::println!("User reserve asset borrow: {}", asset_borrow);
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
             last_liquidity_index: reserve_cache.curr_debt_index,
         };
+        ic_cdk::println!("Updated user state: {:?}", update_user_state);
 
         let platform_principal: Principal = ic_cdk::api::id();
+
+        ic_cdk::println!("Calling burn_scaled with params: amount={}, next_debt_index={:?}, user_principal={:?}, debt_token_canister={:?}, platform_principal={:?}",
+                         params.amount, reserve_cache.next_debt_index, user_principal, reserve.debt_token_canister.clone().unwrap(), platform_principal);
 
         let burn_scaled_result = burn_scaled(
             &mut update_user_state,
@@ -571,12 +598,14 @@ impl UpdateLogic {
             platform_principal,
         )
         .await;
+
         match burn_scaled_result {
             Ok(()) => {
-                println!("minting debttoken successfully");
+                ic_cdk::println!("Minting debttoken successfully");
             }
             Err(e) => {
-                panic!("Get error in minting the debttoken {:?}", e);
+                ic_cdk::println!("Error in minting the debttoken: {:?}", e);
+                return Err(format!("Get error in minting the debttoken {:?}", e));
             }
         };
 
@@ -599,19 +628,23 @@ impl UpdateLogic {
                     reserve_data
                 );
             } else {
-                return Err(format!(
+                let error_msg = format!(
                     "Insufficient borrow for repay: requested {}, available {}",
                     params.amount, reserve_data.asset_borrow
-                ));
+                );
+                ic_cdk::println!("{}", error_msg);
+                return Err(error_msg);
             }
         } else {
-            return Err(format!(
+            let error_msg = format!(
                 "Cannot repay from a non-existing reserve for asset: {}",
                 params.asset
-            ));
+            );
+            ic_cdk::println!("{}", error_msg);
+            return Err(error_msg);
         }
 
-        // Saves the updated user data back to state
+        ic_cdk::println!("Saving updated user data to state: {:?}", user_data);
         mutate_state(|state| {
             state
                 .user_profile
@@ -774,7 +807,3 @@ pub fn user_reserve<'a>(
     };
     user_reserve
 }
-
-
-
-

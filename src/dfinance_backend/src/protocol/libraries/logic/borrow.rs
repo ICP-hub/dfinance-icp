@@ -16,7 +16,7 @@ use candid::{Nat, Principal};
 pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> {
     ic_cdk::println!("Starting execute_borrow with params: {:?}", params);
 
-    // Fetched canister ids, user principal and amount
+    // Fetch canister ids, user principal, and amount
     let ledger_canister_id = mutate_state(|state| {
         let reserve_list = &state.reserve_list;
         reserve_list
@@ -26,8 +26,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     })?;
 
     let user_principal = ic_cdk::caller();
+    ic_cdk::println!("User principal: {:?}", user_principal);
 
     let platform_principal = ic_cdk::api::id();
+    ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
     let debttoken_canister = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -36,18 +38,16 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
             .and_then(|reserve_data| reserve_data.debt_token_canister.clone())
             .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
     })?;
-
-    ic_cdk::println!("Debt caniser id {:?}", debttoken_canister);
-
+    ic_cdk::println!("Debt canister ID: {:?}", debttoken_canister);
 
     let amount_nat = Nat::from(params.amount);
+    ic_cdk::println!("Borrow amount in Nat: {:?}", amount_nat);
 
     let mut usd_amount = params.amount;
     let borrow_amount_to_usd: Result<(u128, u64), String> =
         get_exchange_rates(params.asset.clone(), None, params.amount).await;
     match borrow_amount_to_usd {
         Ok((amount_in_usd, _timestamp)) => {
-            // Extracted the amount in USD
             usd_amount = amount_in_usd;
             ic_cdk::println!("Borrow amount in USD: {:?}", amount_in_usd);
         }
@@ -55,10 +55,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
             ic_cdk::println!("Error getting exchange rate: {:?}", e);
         }
     }
-
-    ic_cdk::println!("Borrow amount in USD: {:?}", usd_amount);
-
-    ic_cdk::println!("Canister ids, principal and amount successfully");
+    ic_cdk::println!("Final borrow amount in USD: {:?}", usd_amount);
 
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -83,6 +80,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     if reserve_data.asset_borrow == 0 {
         *&mut reserve_data.debt_index = 100000000;
     }
+    ic_cdk::println!("Updated debt index for reserve data: {:?}", reserve_data.debt_index);
 
     let mut reserve_cache = reserve::cache(&reserve_data);
     ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
@@ -91,7 +89,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-    // Converting asset to usdt value
+    // Converting asset to USDT value
     if let Some(userlist) = &mut reserve_data.userlist {
         if !userlist
             .iter()
@@ -102,24 +100,18 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     } else {
         reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
     }
-
-    ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
+    ic_cdk::println!("User list of reserve: {:?}", reserve_data.userlist.clone());
 
     // Validates supply using the reserve_data
-    ValidationLogic::validate_borrow(
-        &reserve_data,
-        usd_amount,
-        user_principal,
-    )
-    .await;
+    ValidationLogic::validate_borrow(&reserve_data, usd_amount, user_principal).await;
     ic_cdk::println!("Borrow validated successfully");
 
-    
-    let total_borrow=reserve_data.asset_borrow+ params.amount;
+    let total_borrow = reserve_data.asset_borrow + params.amount;
     let total_supplies = reserve_data.asset_supply;
-    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, total_supplies).await;
-    reserve_data.total_borrowed+= usd_amount;
-    ic_cdk::println!("Interest rates updated successfully");
+    let _ = reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, total_borrow, total_supplies).await;
+    reserve_data.total_borrowed += usd_amount;
+    ic_cdk::println!("Interest rates updated successfully. Total borrowed: {:?}", reserve_data.total_borrowed);
+
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
@@ -132,8 +124,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         params,
         &reserve_data,
         usd_amount,
-    )
-    .await;
+    ).await;
+    ic_cdk::println!("User data updated successfully");
 
     // Transfers borrow amount from the pool to the user
     match asset_transfer_from(
@@ -141,22 +133,19 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         platform_principal,
         user_principal,
         amount_nat.clone(),
-    )
-    .await
+    ).await
     {
         Ok(new_balance) => {
-            ic_cdk::println!("Asset transfer from backend to user executed successfully");
-
+            ic_cdk::println!("Asset transfer from backend to user executed successfully. New balance: {:?}", new_balance);
             Ok(new_balance)
         }
         Err(e) => {
-            return Err(format!(
-                "Asset transfer failed, burned debttoken. Error: {:?}",
-                e
-            ));
+            ic_cdk::println!("Asset transfer failed, burned debt token. Error: {:?}", e);
+            Err(format!("Asset transfer failed, burned debt token. Error: {:?}", e))
         }
     }
 }
+
 
 // -------------------------------------
 // ------------ REPAY LOGIC ------------
@@ -184,9 +173,13 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
             .map(|principal| principal.clone())
             .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
     })?;
+    ic_cdk::println!("Ledger canister ID: {:?}", ledger_canister_id);
+
     let platform_principal = ic_cdk::api::id();
-   
+    ic_cdk::println!("Platform principal: {:?}", platform_principal);
+
     let repay_amount = Nat::from(params.amount);
+    ic_cdk::println!("Repay amount: {:?}", repay_amount);
 
     // Converting asset value to usdt
     let mut usd_amount = params.amount;
@@ -206,10 +199,12 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
 
     // Determines the sender principal
     let transfer_from_principal = if let Some(liquidator) = liquidator_principal {
+        ic_cdk::println!("Liquidator principal: {:?}", liquidator);
         liquidator
     } else {
         user_principal
     };
+    ic_cdk::println!("Transfer from principal: {:?}", transfer_from_principal);
 
     // Reads the reserve data from the asset
     let reserve_data_result = mutate_state(|state| {
@@ -239,7 +234,6 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-
     // Validates repay using the reserve_data
     ValidationLogic::validate_repay(
         &reserve_data,
@@ -249,11 +243,17 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     )
     .await;
     ic_cdk::println!("Repay validated successfully");
-    ic_cdk::println!("asset borrow {:?}",reserve_data.asset_borrow);
+    ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
+
     let total_borrow = reserve_data.asset_borrow - params.amount;
     let total_supplies = reserve_data.asset_supply;
-    let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache , total_borrow, total_supplies).await;
+    ic_cdk::println!("Total borrow after repay: {:?}", total_borrow);
+    ic_cdk::println!("Total supplies: {:?}", total_supplies);
+
+    let _ = reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, total_borrow, total_supplies).await;
     reserve_data.total_borrowed = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
+    ic_cdk::println!("Total borrowed after updating interest rates: {:?}", reserve_data.total_borrowed);
+
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
@@ -265,11 +265,12 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
         &reserve_cache,
         params.clone(),
         &reserve_data,
-        params.amount,
+        usd_amount,
     )
     .await;
+    ic_cdk::println!("User data updated successfully");
 
-    // Transfers the asset from the user to our backend cansiter
+    // Transfers the asset from the user to our backend canister
     match asset_transfer_from(
         ledger_canister_id,
         transfer_from_principal,
@@ -279,14 +280,12 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     .await
     {
         Ok(new_balance) => {
-            println!("Asset transfer from user to backend executed successfully");
+            ic_cdk::println!("Asset transfer from user to backend executed successfully, new balance: {:?}", new_balance);
             Ok(new_balance)
         }
         Err(e) => {
-            return Err(format!(
-                "Asset transfer failed, minted debttoken. Error: {:?}",
-                e
-            ));
+            ic_cdk::println!("Asset transfer failed, error: {:?}", e);
+            Err(format!("Asset transfer failed, minted debt token. Error: {:?}", e))
         }
     }
 }

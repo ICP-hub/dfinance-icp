@@ -51,10 +51,10 @@ pub struct GenericLogic;
 impl GenericLogic {
     pub async fn calculate_user_account_data(//params: UserAccountDataParams,
     ) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
-        //let user_principal = ic_cdk::caller();
-        let user_principal =
-            Principal::from_text("bx6ze-ifwxs-2d5ag-oxtkx-u454p-75uwc-oxbnf-xslko-uwc5s-5tuqb-sae")
-                .unwrap();
+        let user_principal = ic_cdk::caller();
+        // let user_principal =
+        //     Principal::from_text("65j2k-jdu5y-vcmph-e4elp-mz7hc-cfo45-4aype-qzzf2-j25xy-qldem-mae")
+        //         .unwrap();
         ic_cdk::println!("Principal of the user: {:?}", user_principal);
 
         let user_data_result = user_data(user_principal);

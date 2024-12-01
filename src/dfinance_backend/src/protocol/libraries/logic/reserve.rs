@@ -166,9 +166,9 @@ pub async fn burn_scaled(
 
     // Perform token transfer from the user to the platform to burn the tokens
     match asset_transfer(
-        user_principal,
-        token_canister_principal,
         platform_principal,
+        token_canister_principal,
+        user_principal,
         Nat::from(burn_amount),
     )
     .await

@@ -365,18 +365,29 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       const midnightUTC = new Date(
         Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
       );
-      const timeUntilMidnight = midnightUTC.getTime();
-      const humanReadableTime = new Date(timeUntilMidnight).toUTCString();
+      const timeUntilMidnight = midnightUTC.getTime() - now.getTime(); // Time remaining until midnight
+  
+      console.log(`Reset will occur in: ${timeUntilMidnight / 1000} seconds`);
+  
+      // Schedule the reset once at midnight
       setTimeout(() => {
-        handleResetFaucetUsage();
+        handleResetFaucetUsage(); // Reset faucet usage at midnight
+  
+        // After midnight reset, schedule it to run again every 24 hours
         setInterval(() => {
-          handleResetFaucetUsage();
-        }, 24 * 60 * 60 * 1000);
-      }, timeUntilMidnight);
+          handleResetFaucetUsage(); // Reset every 24 hours
+        }, 24 * 60 * 60 * 1000); // 24 hours
+      }, timeUntilMidnight); // Only runs once at midnight
     };
-
-    resetFaucetLimitsAtMidnight();
-  }, []);
+  
+    resetFaucetLimitsAtMidnight(); // Initialize the midnight reset logic
+  
+    return () => {
+      // Cleanup logic if needed, e.g. clearing intervals, though this should only run once per day
+      console.log("Cleaning up reset timer.");
+    };
+  }, []); // Run only once on mount
+  
 
   return (
     <>

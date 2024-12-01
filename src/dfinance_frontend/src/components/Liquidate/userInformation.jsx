@@ -37,7 +37,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
   const [transactionResult, setTransactionResult] = useState(null); 
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
-
+  
   const [userdata, setUserData] = useState();
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
@@ -63,7 +63,22 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
-
+  const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
+  useAssetData();
+  const getAssetSupplyValue = (asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      return supplyValue;
+    }
+    return `no assets suplied`;
+  };
+  const getAssetBorrowValue = (asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      return borrowValue; // Format as a number with 2 decimals
+    }
+    return `no assets borrowed`;
+  };
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   function roundToDecimal(value, decimalPlaces) {
@@ -659,7 +674,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   };
 
-  const { filteredItems } = useAssetData();
+
 
   const formatNumber = useFormatNumber();
   let liquidation_bonus = "";
@@ -852,10 +867,8 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[1]?.reserve;
-                    const assetSupply =
-                      Number(item?.[1]?.asset_supply || 0n) / 100000000;
-                    const assetBorrow =
-                      Number(item?.[1]?.asset_borrow || 0n) / 100000000;
+                    const assetSupply = getAssetSupplyValue(assetName);
+      const assetBorrow = getAssetBorrowValue(assetName);
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let collateralRate = 0;
@@ -989,8 +1002,7 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[1]?.reserve;
 
-                    const assetBorrow =
-                      Number(item?.[1]?.asset_borrow || 0n) / 100000000; 
+                    const assetBorrow = getAssetBorrowValue(assetName);
                     const assetBorrowAmount = Number(assetBorrow / 2);
                     let assetBorrowAmountInUSD = 0;
                     if (assetName === "ckBTC" && ckBTCUsdRate) {

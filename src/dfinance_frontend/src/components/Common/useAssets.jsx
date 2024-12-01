@@ -51,7 +51,7 @@ const useAssetData = (searchQuery = '') => {
     if (backendActor) {
       console.log("Backend Actor initialized:", backendActor);
       try {
-        console.log("Calling get asset supply for", asset);
+        console.log("asset name to check = ", asset);
         const result = await backendActor.get_asset_supply(asset);
         // Set asset supply in the state object using the asset name as the key
         setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));

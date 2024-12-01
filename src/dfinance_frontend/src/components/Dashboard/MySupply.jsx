@@ -63,11 +63,12 @@ const MySupply = () => {
       setLoading(false);
     }
   }, [userData, userAccountData]);
+
   useEffect(() => {
-    if (userData?.Ok?.available_borrow) {
-      setAvailableBorrow(Number(userData.Ok.available_borrow) / 100000000);
+    if (userAccountData?.Ok?.[5]) {
+      setAvailableBorrow(Number(userAccountData?.Ok?.[5]) / 100000000);
     }
-  }, [userData]);
+  }, [userAccountData]);
 
   const {
     ckBTCUsdRate,

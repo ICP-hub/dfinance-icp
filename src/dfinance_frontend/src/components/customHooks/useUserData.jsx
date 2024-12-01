@@ -13,7 +13,6 @@ const useUserData = () => {
         }
         try {
             const result = await backendActor.get_user_data(user);
-            console.log("get_user_data in supplypopup:", result);
 
             if (result && result.Ok && Number(result.Ok.health_factor)/100000000) {
                 setHealthFactorBackend(Number(result.Ok.health_factor)/10000000000);
@@ -22,7 +21,6 @@ const useUserData = () => {
             }
             return result;
         } catch (error) {
-            console.error("Error fetching user data:", error);
             setError(error.message);
         }
     };
@@ -31,27 +29,20 @@ const useUserData = () => {
         if (backendActor) {
             try {
                 const result = await getUserData(principal.toString());
-                console.log("get_user_data:", result);
                 setUserData(result);
             } catch (error) {
-                console.error("Error fetching user data:", error);
             }
         } else {
-            console.error("Backend actor initialization failed.");
         }
     };
     const fetchUserAccountData = async () => {
         if (backendActor) {
-            console.log("Backend Actor initialized:", backendActor);
             try {
-                console.log("Calling get_user_account_data...");
                 const result = await backendActor.get_user_account_data();
                 setUserAccountData(result);
             } catch (error) {
-                console.error("Error fetching user data:", error);
             }
         } else {
-            console.error("Backend actor initialization failed.");
         }
         
     };
@@ -60,12 +51,10 @@ const useUserData = () => {
         fetchUserData();
     }, [principal, backendActor]);
     useEffect(() => {
-        console.log("Fetching user data...");
         fetchUserAccountData();
       }, []);
       
       useEffect(() => {
-        console.log("Updated userAccountData:", userAccountData);
       }, [userAccountData]);
       
 

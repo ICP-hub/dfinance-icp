@@ -30,7 +30,6 @@ const TransactionHistory = () => {
   const { isWalletCreated, isWalletModalOpen } = useSelector(state => state.utility)
 
   const handleWalletConnect = () => {
-    console.log("connrcterd");
     dispatch(setWalletModalOpen(!isWalletModalOpen))
   }
 

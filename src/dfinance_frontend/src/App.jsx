@@ -55,10 +55,8 @@ export default function App() {
             }));
           }
         } catch (error) {
-          console.error("Error fetching asset principal:", error);
         }
       } else {
-        console.error("Backend actor initialization failed.");
       }
     };
 
@@ -93,7 +91,6 @@ export default function App() {
       }
       return result.Ok.toText();
     } catch (error) {
-      console.error(`Error fetching asset principal for ${asset}:`, error);
       throw error;
     }
   };

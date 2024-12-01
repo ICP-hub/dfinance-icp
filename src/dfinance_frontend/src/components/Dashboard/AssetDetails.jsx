@@ -88,11 +88,24 @@ const AssetDetails = () => {
   };
 
   const { id } = useParams();
-
+  const { filteredItems ,asset_supply,asset_borrow } = useAssetData();
   const { userData } = useUserData();
-
+  const getAssetSupplyValue = (asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      return supplyValue;
+    }
+    return `noSupply`;
+  };
+  const getAssetBorrowValue = (asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      return borrowValue; // Format as a number with 2 decimals
+    }
+    return `noBorrow`;
+  };
   const [isFilter, setIsFilter] = React.useState(false);
-  const { filteredItems } = useAssetData();
+  
 
   const { assetDetailFilter } = useSelector((state) => state.utility);
 
@@ -682,12 +695,8 @@ const AssetDetails = () => {
                           (reserveGroup) => reserveGroup[0] === id
                         );
                         
-                        const assetSupply =
-                          Number(reserveData?.[1]?.asset_supply || 0n) /
-                          100000000;
-                        const assetBorrow =
-                          Number(reserveData?.[1]?.asset_borrow || 0n) /
-                          100000000;
+                        const assetSupply = getAssetSupplyValue(id);
+                        const assetBorrow = getAssetBorrowValue(id);
                         const currentCollateralStatus =
                           reserveData?.[1]?.is_collateral;
 

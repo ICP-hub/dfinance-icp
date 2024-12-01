@@ -41,13 +41,26 @@ const DashboardNav = () => {
     setNetWorth(calculatedNetWorth);
   }, [totalUsdValueBorrow, totalUsdValueSupply]);
 
-  const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
+  const { totalMarketSize, totalSupplySize, totalBorrowSize ,asset_supply ,asset_borrow } = useAssetData();
 
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-
+  const getAssetSupplyValue = (asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      return supplyValue;
+    }
+    return `noSupply`;
+  };
+  const getAssetBorrowValue = (asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      return borrowValue; 
+    }
+    return `noBorrow`;
+  };
   const tooltipRef = useRef(null);
 
   const toggleTooltip = () => {
@@ -198,8 +211,8 @@ const DashboardNav = () => {
       const supplyApy = Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) / 100000000;
       const debtApy = Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
 
-      const assetSupply = Number(reserve[1]?.asset_supply || 0n) / 100000000;
-      const assetBorrowed = Number(reserve[1]?.asset_borrow || 0n) / 100000000;
+      const assetSupply = getAssetSupplyValue(assetKey);
+      const assetBorrowed = getAssetBorrowValue(assetKey);
       const assetBorrowedInUSD = assetBorrowed * conversionRate;
       totalBorrowedInUSD = assetBorrowedInUSD;
       weightedDebtApySum = assetBorrowedInUSD * debtApy;
@@ -217,22 +230,32 @@ const DashboardNav = () => {
     if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
         const reservesData = userData.Ok.reserves[0];
-        const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
 
+        const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
         setNetApy(calculatedNetApy);
 
-        const reserve = reservesData[0];
-        const supply = reserve[1] ? Number(reserve[1].asset_supply || 0n) / 100000000 : 0;
-        setAssetSupply(supply);
+        reservesData.forEach((reserveGroup) => {
+          const asset = reserveGroup[0]; 
+          const reserve = reserveGroup[1]; 
 
-        const borrow = Number(userData.Ok.total_debt || 0n) / 100000000;
-        setAssetBorrow(borrow);
+          const supply = getAssetSupplyValue(reserve);
 
+          if (supply > 0) {
+            setAssetSupply(supply);
+          }
+
+          const borrow = getAssetBorrowValue(reserve);
+
+          if (borrow > 0) {
+            setAssetBorrow(borrow);
+          }
+        });
       };
 
-      updateState(); 
+      updateState();
     }
-  }, [userData, reserveData, calculateNetSupplyApy]); 
+  }, [userData, reserveData, calculateNetSupplyApy]);
+
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
       const borrow = Number(userData.Ok.total_debt) / 100000000;

@@ -17,7 +17,7 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
-
+import useAssetData from "../Common/useAssets";
 const ITEMS_PER_PAGE = 8;
 
 const DebtStatus = () => {
@@ -26,7 +26,8 @@ const DebtStatus = () => {
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
+  useAssetData();
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
@@ -129,7 +130,20 @@ const DebtStatus = () => {
   }, [showPopup]);
 
   const formatNumber = useFormatNumber();
-
+  const getAssetSupplyValue = (asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      return supplyValue;
+    }
+    return `no assets suplied`;
+  };
+  const getAssetBorrowValue = (asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      return borrowValue; // Format as a number with 2 decimals
+    }
+    return `no assets borrowed`;
+  };
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center mt-8">
@@ -206,8 +220,8 @@ const DebtStatus = () => {
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[1]?.reserve;
-                            const assetBorrow =
-                              Number(item[1]?.asset_borrow) / 100000000;
+                            const assetSupply = getAssetSupplyValue(assetName);
+                            const assetBorrow = getAssetBorrowValue(assetName);
                             if (assetBorrow > 0) {
                               return (
                                 <img
@@ -239,7 +253,8 @@ const DebtStatus = () => {
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[1]?.reserve;
-                            const assetSupply = item[1]?.asset_supply;
+                            const assetSupply = getAssetSupplyValue( assetName );
+                            const assetBorrow = getAssetBorrowValue( assetName );
 
                             if (assetSupply > 0) {
                               return (

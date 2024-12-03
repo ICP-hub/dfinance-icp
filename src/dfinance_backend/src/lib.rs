@@ -25,6 +25,7 @@ use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
 use protocol::libraries::types::datatypes::UserReserveData;
 use serde::de::value::Error;
+use protocol::libraries::logic::liquidation::LiquidationLogic;
 mod api;
 mod constants;
 pub mod declarations;
@@ -76,31 +77,31 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
     }
 }
 
-// #[update]
-// async fn liquidation_call(
-//     asset: String,
-//     collateral_asset: String,
-//     amount: u64,
-//     on_behalf_of: String,
-// ) -> Result<(), String> {
-//     match LiquidationLogic::execute_liquidation(
-//         asset,
-//         collateral_asset,
-//         amount as u128,
-//         on_behalf_of,
-//     )
-//     .await
-//     {
-//         Ok(_) => {
-//             ic_cdk::println!("execute_liquidation function called successfully");
-//             Ok(())
-//         }
-//         Err(e) => {
-//             ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
-//             Err(e)
-//         }
-//     }
-// }
+#[update]
+async fn liquidation_call(
+    asset: String,
+    collateral_asset: String,
+    amount: u64,
+    on_behalf_of: String,
+) -> Result<(), String> {
+    match LiquidationLogic::execute_liquidation(
+        asset,
+        collateral_asset,
+        amount as u128,
+        on_behalf_of,
+    )
+    .await
+    {
+        Ok(_) => {
+            ic_cdk::println!("execute_liquidation function called successfully");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
+            Err(e)
+        }
+    }
+}
 
 // Function to fetch the reserve-data based on the asset
 #[query]

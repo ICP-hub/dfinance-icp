@@ -96,6 +96,7 @@ service : () -> {
   get_user_account_data : () -> (Result_8);
   get_user_data : (text) -> (Result_9) query;
   initialize_reserve : () -> ();
+  liquidation_call : (text, text, nat64, text) -> (Result);
   login : () -> (Result);
   queary_reserve_price : () -> (vec PriceCache) query;
   repay : (text, nat, opt text) -> (Result);

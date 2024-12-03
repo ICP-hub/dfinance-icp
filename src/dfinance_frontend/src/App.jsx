@@ -10,10 +10,12 @@ import { setLedgerActor } from "./redux/reducers/ledgerRedcuer";
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
 import { Principal } from "@dfinity/principal";
 import { trackPageView } from "./utils/googleAnalytics";
+import useAssetData from "./components/Common/useAssets";
 
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
   let TRACKING_ID = "G-EVCJPRHQYX";
+  const { filteredItems, loading } = useAssetData();
 
   const {
     isAuthenticated,
@@ -54,8 +56,7 @@ export default function App() {
               [asset]: result,
             }));
           }
-        } catch (error) {
-        }
+        } catch (error) {}
       } else {
       }
     };
@@ -134,9 +135,7 @@ export default function App() {
   const isLoading = usePageLoading();
   const routes = useRoutes(routesList);
 
-  if (isLoading) {
-    return <Loading isLoading={isLoading} />;
-  }
+ 
 
   return routes;
 }

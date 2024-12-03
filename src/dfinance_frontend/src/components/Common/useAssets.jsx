@@ -20,6 +20,8 @@ const useAssetData = (searchQuery = '') => {
   const [error, setError] = useState(null);
   const [asset_supply, setAssetSupply] = useState({});
   const [asset_borrow, setAssetBorrow] = useState({});
+  const [loading, setLoading] = useState(true); 
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -31,6 +33,7 @@ const useAssetData = (searchQuery = '') => {
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate]);
+
   useEffect(() => {
 
     const fetchAssets = async () => {
@@ -72,6 +75,7 @@ const useAssetData = (searchQuery = '') => {
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0 || !fetchReserveData) return;
+      setLoading(true);
       try {
         const data = {};
         let totalMarketSizeTemp = 0;
@@ -129,6 +133,9 @@ const useAssetData = (searchQuery = '') => {
         setInterestAccure(formatNumber(totalAccruedValue))
       } catch (err) {
         setError(err.message);
+        setLoading(false);
+      } finally{
+        setLoading(false);
       }
     };
 
@@ -145,7 +152,7 @@ const useAssetData = (searchQuery = '') => {
 
   const formatNumber = useFormatNumber();
 
-  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize, totalReserveFactor, interestAccure ,asset_supply ,asset_borrow};
+  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize, totalReserveFactor, interestAccure ,asset_supply ,asset_borrow,loading, setLoading};
 };
 
 export default useAssetData;

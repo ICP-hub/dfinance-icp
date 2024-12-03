@@ -56,7 +56,7 @@ const MySupply = () => {
   const [borrowableUSDC, setBorrowableUSDC] = useState(0);
   const [borrowableICP, setBorrowableICP] = useState(0);
   const [borrowableUSDT, setBorrowableUSDT] = useState(0);
-  const [showAllAssets, setShowAllAssets] = useState(false);
+  const [showAllAssets, setShowAllAssets] = useState(true);
   const { userData, userAccountData } = useUserData();
   useEffect(() => {
    
@@ -88,7 +88,7 @@ const MySupply = () => {
   } = useFetchConversionRate();
 
   const [showZeroBalance, setShowZeroBalance] = useState(
-    () => JSON.parse(localStorage.getItem("showZeroBalance")) || false
+    () => JSON.parse(localStorage.getItem("showZeroBalance")) || true
   );
 
   const handleCheckboxChange = () => {

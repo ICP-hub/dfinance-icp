@@ -114,7 +114,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            index: reserve_cache.curr_liquidity_index,
         };
 
         let platform_principal = ic_cdk::api::id();
@@ -278,7 +278,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
-            last_liquidity_index: reserve_cache.curr_debt_index,
+            index: reserve_cache.curr_debt_index,
         };
 
         ic_cdk::println!("Update user state: {:?}", update_user_state);
@@ -437,7 +437,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            index: reserve_cache.curr_liquidity_index,
         };
 
         let platform_principal = ic_cdk::api::id();
@@ -580,7 +580,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
-            last_liquidity_index: reserve_cache.curr_debt_index,
+            index: reserve_cache.curr_debt_index,
         };
         ic_cdk::println!("Updated user state: {:?}", update_user_state);
 

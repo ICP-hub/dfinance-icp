@@ -96,14 +96,14 @@ impl Default for UserReserveData {
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserState {
     pub adjusted_balance: u128, 
-    pub last_liquidity_index: u128, 
+    pub index: u128, 
 }
 
 impl Default for UserState {
     fn default() -> Self {
         Self {
             adjusted_balance: Default::default(),
-            last_liquidity_index: Default::default(),
+            index: Default::default(),
         }
     }
 }

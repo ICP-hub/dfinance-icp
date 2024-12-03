@@ -720,6 +720,9 @@ pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
     ic_cdk::println!("Asset name received: {}", asset_name);
 
     let user_principal = ic_cdk::caller();
+    // let user_principal =
+    //     Principal::from_text("5zy6g-mgmd2-itmdh-2u4lo-kqiyl-qyshe-zaz57-otq7p-6rgg5-46k5j-7ae")
+    //         .unwrap();
     ic_cdk::println!("User principal: {:?}", user_principal);
 
     let user_data_result = user_data(user_principal);
@@ -911,7 +914,7 @@ pub fn user_normalized_supply(user_reserve_data: UserReserveData) -> Result<u128
 
     if user_reserve_data.last_update_timestamp == current_time {
         ic_cdk::println!("No update needed as timestamps match.");
-        return Err("No update needed as timestamps match.".to_string());
+        return Ok(user_reserve_data.liquidity_index);
     }
 
     if user_reserve_data.supply_rate != 0 {
@@ -942,7 +945,7 @@ pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, 
 
     if user_reserve_data.last_update_timestamp == current_time {
         ic_cdk::println!("No update needed as timestamps match.");
-        return Err("No update needed as timestamps match.".to_string());
+        return Ok(user_reserve_data.variable_borrow_index);
     }
 
     if user_reserve_data.variable_borrow_index != 0 {

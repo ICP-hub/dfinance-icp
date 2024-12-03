@@ -596,7 +596,9 @@ const MySupply = () => {
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]) / 1e8;
-      return supplyValue;
+     
+      return supplyValue; 
+      console.log("supply value = ",supplyValue);
     }
     return noSupplyMessage;
   };
@@ -1767,6 +1769,7 @@ const MySupply = () => {
                                       const assetSupply = getAssetSupplyValue(
                                         item[0]
                                       );
+                                      console.log("asets supply ",assetSupply)
                                       const assetBorrow = getAssetBorrowValue(
                                         item[0]
                                       );

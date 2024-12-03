@@ -78,7 +78,7 @@ type UserReserveData = record {
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
-type UserState = record { adjusted_balance : nat; last_liquidity_index : nat };
+type UserState = record { adjusted_balance : nat; index : nat };
 service : () -> {
   borrow : (text, nat64) -> (Result);
   check_user : (text) -> (Result_1);

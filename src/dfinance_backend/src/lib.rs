@@ -12,7 +12,7 @@ use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc1::account::Account;
-use protocol::libraries::logic::liquidation::LiquidationLogic;
+
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::nat_to_u128;
@@ -26,6 +26,7 @@ use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
 use protocol::libraries::types::datatypes::UserReserveData;
 use serde::de::value::Error;
+use protocol::libraries::logic::liquidation::LiquidationLogic;
 mod api;
 mod constants;
 pub mod declarations;

@@ -56,20 +56,22 @@ const MySupply = () => {
   const [borrowableUSDC, setBorrowableUSDC] = useState(0);
   const [borrowableICP, setBorrowableICP] = useState(0);
   const [borrowableUSDT, setBorrowableUSDT] = useState(0);
-  const [showAllAssets, setShowAllAssets] = useState(false);
+  const [showAllAssets, setShowAllAssets] = useState(true);
   const { userData, userAccountData } = useUserData();
   useEffect(() => {
+   
     if (userData && userAccountData) {
       setLoading(false);
     }
   }, [userData, userAccountData]);
-
+  
   useEffect(() => {
-    if (userAccountData?.Ok?.[5]) {
-      setAvailableBorrow(Number(userAccountData?.Ok?.[5]) / 100000000);
+    
+    if (userAccountData?.Ok && userAccountData.Ok.length > 5 && userAccountData.Ok[5]) {
+      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
+      setAvailableBorrow(borrowValue);
     }
-  }, [userAccountData]);
-
+  }, [userAccountData]); 
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -86,7 +88,7 @@ const MySupply = () => {
   } = useFetchConversionRate();
 
   const [showZeroBalance, setShowZeroBalance] = useState(
-    () => JSON.parse(localStorage.getItem("showZeroBalance")) || false
+    () => JSON.parse(localStorage.getItem("showZeroBalance")) || true
   );
 
   const handleCheckboxChange = () => {
@@ -937,12 +939,12 @@ const MySupply = () => {
                                         const totalCollateral =
                                           parseFloat(
                                             Number(
-                                              userData?.Ok?.total_collateral
+                                              userAccountData?.Ok?.[0]
                                             ) / 100000000
                                           ) || 0;
                                         const totalDebt =
                                           parseFloat(
-                                            Number(userData?.Ok?.total_debt) /
+                                            Number(userAccountData?.Ok?.[1]) /
                                               100000000
                                           ) || 0;
                                         handleModalOpen(
@@ -990,15 +992,15 @@ const MySupply = () => {
                                         getAssetBorrowValue(asset);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
-                                      const totalCollateral =
+                                        const totalCollateral =
                                         parseFloat(
                                           Number(
-                                            userData?.Ok?.total_collateral
+                                            userAccountData?.Ok?.[0]
                                           ) / 100000000
                                         ) || 0;
                                       const totalDebt =
                                         parseFloat(
-                                          Number(userData?.Ok?.total_debt) /
+                                          Number(userAccountData?.Ok?.[1]) /
                                             100000000
                                         ) || 0;
                                       handleModalOpen(
@@ -1037,17 +1039,17 @@ const MySupply = () => {
                                         getAssetBorrowValue(asset);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
-                                      const totalCollateral =
-                                        parseFloat(
-                                          Number(
-                                            userData?.Ok?.total_collateral
-                                          ) / 100000000
-                                        ) || 0;
-                                      const totalDebt =
-                                        parseFloat(
-                                          Number(userData?.Ok?.total_debt) /
-                                            100000000
-                                        ) || 0;
+                                     const totalCollateral =
+                                          parseFloat(
+                                            Number(
+                                              userAccountData?.Ok?.[0]
+                                            ) / 100000000
+                                          ) || 0;
+                                        const totalDebt =
+                                          parseFloat(
+                                            Number(userAccountData?.Ok?.[1]) /
+                                              100000000
+                                          ) || 0;
                                       handleModalOpen(
                                         "withdraw",
                                         asset,
@@ -1294,17 +1296,17 @@ const MySupply = () => {
                                         getAssetBorrowValue(asset);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral;
-                                      const totalCollateral =
-                                        parseFloat(
-                                          Number(
-                                            userData?.Ok?.total_collateral
-                                          ) / 100000000
-                                        ) || 0;
-                                      const totalDebt =
-                                        parseFloat(
-                                          Number(userData?.Ok?.total_debt) /
-                                            100000000
-                                        ) || 0;
+                                     const totalCollateral =
+                                          parseFloat(
+                                            Number(
+                                              userAccountData?.Ok?.[0]
+                                            ) / 100000000
+                                          ) || 0;
+                                        const totalDebt =
+                                          parseFloat(
+                                            Number(userAccountData?.Ok?.[1]) /
+                                              100000000
+                                          ) || 0;
 
                                       handleModalOpen(
                                         "collateral",
@@ -1348,17 +1350,17 @@ const MySupply = () => {
                                         getAssetSupplyValue(asset);
                                       const assetBorrow =
                                         getAssetBorrowValue(asset);
-                                      const totalCollateral =
-                                        parseFloat(
-                                          Number(
-                                            userData?.Ok?.total_collateral
-                                          ) / 100000000
-                                        ) || 0;
-                                      const totalDebt =
-                                        parseFloat(
-                                          Number(userData?.Ok?.total_debt) /
-                                            100000000
-                                        ) || 0;
+                                     const totalCollateral =
+                                          parseFloat(
+                                            Number(
+                                              userAccountData?.Ok?.[0]
+                                            ) / 100000000
+                                          ) || 0;
+                                        const totalDebt =
+                                          parseFloat(
+                                            Number(userAccountData?.Ok?.[1]) /
+                                              100000000
+                                          ) || 0;
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
 
@@ -1398,17 +1400,17 @@ const MySupply = () => {
                                         getAssetBorrowValue(asset);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
-                                      const totalCollateral =
-                                        parseFloat(
-                                          Number(
-                                            userData?.Ok?.total_collateral
-                                          ) / 100000000
-                                        ) || 0;
-                                      const totalDebt =
-                                        parseFloat(
-                                          Number(userData?.Ok?.total_debt) /
-                                            100000000
-                                        ) || 0;
+                                     const totalCollateral =
+                                          parseFloat(
+                                            Number(
+                                              userAccountData?.Ok?.[0]
+                                            ) / 100000000
+                                          ) || 0;
+                                        const totalDebt =
+                                          parseFloat(
+                                            Number(userAccountData?.Ok?.[1]) /
+                                              100000000
+                                          ) || 0;
 
                                       handleModalOpen(
                                         "withdraw",
@@ -1775,13 +1777,17 @@ const MySupply = () => {
                                       );
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
-                                      const totalCollateral =
-                                        Number(
-                                          userData?.Ok?.total_collateral || 0n
-                                        ) / 100000000;
+                                        const totalCollateral =
+                                        parseFloat(
+                                          Number(
+                                            userAccountData?.Ok?.[0]
+                                          ) / 100000000
+                                        ) || 0;
                                       const totalDebt =
-                                        Number(userData?.Ok?.total_debt || 0n) /
-                                        100000000;
+                                        parseFloat(
+                                          Number(userAccountData?.Ok?.[1]) /
+                                            100000000
+                                        ) || 0;
                                       handleModalOpen(
                                         "supply",
                                         item[0],
@@ -2118,18 +2124,17 @@ const MySupply = () => {
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral ??
                                           true;
-                                        const totalCollateral =
+                                          const totalCollateral =
                                           parseFloat(
                                             Number(
-                                              userData?.Ok?.total_collateral
+                                              userAccountData?.Ok?.[0]
                                             ) / 100000000
                                           ) || 0;
                                         const totalDebt =
                                           parseFloat(
-                                            Number(userData?.Ok?.total_debt) /
+                                            Number(userAccountData?.Ok?.[1]) /
                                               100000000
                                           ) || 0;
-
                                         handleModalOpen(
                                           "supply",
                                           item[0],
@@ -2476,17 +2481,16 @@ const MySupply = () => {
                                             const currentCollateralStatus =
                                               reserveData?.[1]?.is_collateral ??
                                               true;
-                                            const totalCollateral =
+                                              const totalCollateral =
                                               parseFloat(
                                                 Number(
-                                                  userData?.Ok?.total_collateral
+                                                  userAccountData?.Ok?.[0]
                                                 ) / 100000000
                                               ) || 0;
                                             const totalDebt =
                                               parseFloat(
-                                                Number(
-                                                  userData?.Ok?.total_debt
-                                                ) / 100000000
+                                                Number(userAccountData?.Ok?.[1]) /
+                                                  100000000
                                               ) || 0;
                                             const Ltv =
                                               Number(userData?.Ok?.ltv) /
@@ -2507,21 +2511,22 @@ const MySupply = () => {
                                               "borrow",
                                               asset,
                                               (asset === "ckBTC" && ckBTC) ||
-                                                (asset === "ckETH" && ckETH) ||
-                                                (asset === "ckUSDC" &&
-                                                  ckUSDC) ||
-                                                (asset === "ICP" && icp) ||
-                                                (asset === "ckUSDT" && ckUSDT),
-                                              borrowRateApr,
-                                              ckBalance,
-                                              liquidationThreshold,
-                                              reserveliquidationThreshold,
-                                              assetSupply,
-                                              assetBorrow,
-                                              totalCollateral,
-                                              totalDebt,
-                                              currentCollateralStatus,
-                                              borrowableAsset
+                                            (asset === "ckETH" && ckETH) ||
+                                            (asset === "ckUSDC" && ckUSDC) ||
+                                            (asset === "ICP" && icp) ||
+                                            (asset === "ckUSDT" && ckUSDT),
+                                          borrowRateApr,
+                                          ckBalance,
+                                          liquidationThreshold,
+                                          reserveliquidationThreshold,
+                                          assetSupply,
+                                          assetBorrow,
+                                          totalCollateral,
+                                          totalDebt,
+                                          currentCollateralStatus,
+                                          Ltv,
+                                          availableBorrow,
+                                          borrowableAsset
                                             );
                                           }}
                                           disabled={isTableDisabled}
@@ -2539,15 +2544,17 @@ const MySupply = () => {
                                               getAssetSupplyValue(asset);
                                             const assetBorrow =
                                               getAssetBorrowValue(asset);
-                                            const totalCollateral = parseFloat(
-                                              Number(
-                                                userData?.Ok?.total_collateral
-                                              ) / 100000000
-                                            );
-                                            const totalDebt = parseFloat(
-                                              Number(userData?.Ok?.total_debt) /
-                                                100000000
-                                            );
+                                              const totalCollateral =
+                                              parseFloat(
+                                                Number(
+                                                  userAccountData?.Ok?.[0]
+                                                ) / 100000000
+                                              ) || 0;
+                                            const totalDebt =
+                                              parseFloat(
+                                                Number(userAccountData?.Ok?.[1]) /
+                                                  100000000
+                                              ) || 0;
                                             handleModalOpen(
                                               "repay",
                                               asset,
@@ -2791,15 +2798,15 @@ const MySupply = () => {
                                           getAssetBorrowValue(asset);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral;
-                                        const totalCollateral =
+                                          const totalCollateral =
                                           parseFloat(
                                             Number(
-                                              userData?.Ok?.total_collateral
+                                              userAccountData?.Ok?.[0]
                                             ) / 100000000
                                           ) || 0;
                                         const totalDebt =
                                           parseFloat(
-                                            Number(userData?.Ok?.total_debt) /
+                                            Number(userAccountData?.Ok?.[1]) /
                                               100000000
                                           ) || 0;
                                         const Ltv =
@@ -2833,8 +2840,8 @@ const MySupply = () => {
                                           assetBorrow,
                                           totalCollateral,
                                           totalDebt,
-                                          Ltv,
                                           currentCollateralStatus,
+                                          Ltv,
                                           availableBorrow,
                                           borrowableAsset
                                         );
@@ -2854,15 +2861,15 @@ const MySupply = () => {
                                           getAssetSupplyValue(asset);
                                         const assetBorrow =
                                           getAssetBorrowValue(asset);
-                                        const totalCollateral =
+                                          const totalCollateral =
                                           parseFloat(
                                             Number(
-                                              userData?.Ok?.total_collateral
+                                              userAccountData?.Ok?.[0]
                                             ) / 100000000
                                           ) || 0;
                                         const totalDebt =
                                           parseFloat(
-                                            Number(userData?.Ok?.total_debt) /
+                                            Number(userAccountData?.Ok?.[1]) /
                                               100000000
                                           ) || 0;
                                         handleModalOpen(
@@ -3360,15 +3367,16 @@ const MySupply = () => {
                                         item[0]
                                       );
                                       const totalCollateral =
-                                        parseFloat(
-                                          Number(
-                                            userData?.Ok?.total_collateral
-                                          ) / 100000000
-                                        ) || 0;
-                                      const totalDebt = parseFloat(
-                                        Number(userData?.Ok?.total_debt) /
+                                      parseFloat(
+                                        Number(
+                                          userAccountData?.Ok?.[0]
+                                        ) / 100000000
+                                      ) || 0;
+                                    const totalDebt =
+                                      parseFloat(
+                                        Number(userAccountData?.Ok?.[1]) /
                                           100000000
-                                      );
+                                      ) || 0;
                                       const Ltv =
                                         Number(userData?.Ok?.ltv) / 100000000 ||
                                         0;
@@ -3885,13 +3893,14 @@ const MySupply = () => {
                                         const totalCollateral =
                                           parseFloat(
                                             Number(
-                                              userData?.Ok?.total_collateral
+                                              userAccountData?.Ok?.[0]
                                             ) / 100000000
                                           ) || 0;
-                                        const totalDebt = parseFloat(
-                                          Number(userData?.Ok?.total_debt) /
-                                            100000000
-                                        );
+                                        const totalDebt =
+                                          parseFloat(
+                                            Number(userAccountData?.Ok?.[1]) /
+                                              100000000
+                                          ) || 0;
                                         const Ltv =
                                           Number(userData?.Ok?.ltv) /
                                             100000000 || 0;

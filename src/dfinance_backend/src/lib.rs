@@ -13,6 +13,7 @@ use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc1::account::Account;
 
+use protocol::libraries::logic::liquidation::LiquidationLogic;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::nat_to_u128;
@@ -26,7 +27,6 @@ use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
 use protocol::libraries::types::datatypes::UserReserveData;
 use serde::de::value::Error;
-use protocol::libraries::logic::liquidation::LiquidationLogic;
 mod api;
 mod constants;
 pub mod declarations;
@@ -343,7 +343,7 @@ pub async fn login() -> Result<(), String> {
     //let mut has_zero_ltv_collateral: bool = false;
 
     let user_data_result: Result<(u128, u128, u128, u128, u128, u128, bool), String> =
-        GenericLogic::calculate_user_account_data().await;
+        GenericLogic::calculate_user_account_data(Some(user_principal)).await;
 
     match user_data_result {
         Ok((
@@ -714,13 +714,19 @@ fn calculate_dynamic_balance(
 
 // TODO: need to make a function by getting the asset name and then get user reserve data then call this below function and return the value of it. it will be a query function.
 #[query]
-pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
+pub async fn get_asset_supply(
+    asset_name: String,
+    on_behalf: Option<Principal>,
+) -> Result<u128, String> {
     ic_cdk::println!("Entering get_asset_supply function");
 
     // Log the asset name being passed
     ic_cdk::println!("Asset name received: {}", asset_name);
 
-    let user_principal = ic_cdk::caller();
+    let user_principal = match on_behalf {
+        Some(principal) => principal,
+        None => ic_cdk::caller(),
+    };
     // let user_principal =
     //     Principal::from_text("5zy6g-mgmd2-itmdh-2u4lo-kqiyl-qyshe-zaz57-otq7p-6rgg5-46k5j-7ae")
     //         .unwrap();
@@ -821,6 +827,7 @@ pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
         normalized_supply_data
     );
 
+    // Ask : if we send the token amount by multiplying the interest rate into the token value, is it a right approach.
     let result = normalized_supply_data.scaled_mul(nat_convert_value);
     ic_cdk::println!("Final calculated asset supply: {}", result);
 
@@ -828,8 +835,14 @@ pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
 }
 
 #[query]
-pub async fn get_asset_debt(asset_name: String) -> Result<u128, String> {
-    let user_principal = ic_cdk::caller();
+pub async fn get_asset_debt(
+    asset_name: String,
+    on_behalf: Option<Principal>,
+) -> Result<u128, String> {
+    let user_principal = match on_behalf {
+        Some(principal) => principal,
+        None => ic_cdk::caller(),
+    };
     let user_data_result = user_data(user_principal);
 
     let mut user_data = match user_data_result {
@@ -978,8 +991,10 @@ pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, 
 
 // this function is for check which i will remove later.
 #[update]
-async fn get_user_account_data() -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
-    let result = GenericLogic::calculate_user_account_data().await;
+async fn get_user_account_data(
+    on_behalf: Option<Principal>,
+) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
+    let result = GenericLogic::calculate_user_account_data(on_behalf).await;
 
     result
 }

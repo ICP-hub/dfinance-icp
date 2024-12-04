@@ -49,9 +49,13 @@ pub struct UserAccountDataParams {
 pub struct GenericLogic;
 
 impl GenericLogic {
-    pub async fn calculate_user_account_data(//params: UserAccountDataParams,
+    pub async fn calculate_user_account_data(
+        on_behalf: Option<Principal>,
     ) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
-        let user_principal = ic_cdk::caller();
+        let user_principal = match on_behalf {
+            Some(principal) => principal,
+            None => ic_cdk::caller(),
+        };
         // let user_principal =
         //     Principal::from_text("65j2k-jdu5y-vcmph-e4elp-mz7hc-cfo45-4aype-qzzf2-j25xy-qldem-mae")
         //         .unwrap();

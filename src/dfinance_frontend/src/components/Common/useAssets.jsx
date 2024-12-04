@@ -54,6 +54,7 @@ const useAssetData = (searchQuery = '') => {
     if (backendActor) {
       try {
         const result = await backendActor.get_asset_supply(asset);
+        console.log("getassetsupply", result);
         // Set asset supply in the state object using the asset name as the key
         setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
@@ -66,6 +67,7 @@ const useAssetData = (searchQuery = '') => {
     if (backendActor) {
       try {
         const result = await backendActor.get_asset_debt(asset);
+        console.log("getassetdebt", result);
         setAssetBorrow(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
       }

@@ -31,6 +31,7 @@ const useUserData = () => {
     if (backendActor) {
       try {
         const result = await getUserData(principal.toString());
+        console.log("getUserData", result)
         setUserData(result);
       } catch (error) {}
     } else {
@@ -40,7 +41,7 @@ const useUserData = () => {
     if (backendActor) {
       try {
         const result = await backendActor.get_user_account_data();
-
+        console.log("get_user_data", result)
         if (!result) {
         } else {
           setUserAccountData(result);
@@ -66,11 +67,10 @@ const useUserData = () => {
   useEffect(() => {
     fetchUserData();
   }, [principal, backendActor]);
+
   useEffect(() => {
     fetchUserAccountData();
-  }, [userAccountData]);
-
-  useEffect(() => {}, [userAccountData]);
+  }, []);
 
   return {
     userData,

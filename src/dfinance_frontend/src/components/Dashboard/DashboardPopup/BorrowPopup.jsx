@@ -202,16 +202,23 @@ if (onLoadingChange) {
     asset, reserveliquidationThreshold, liquidationThreshold, assetSupply,assetBorrow,amount,usdValue,isAcknowledged,value,isAcknowledgmentRequired,setIsAcknowledged,
   ]);
 
-  const amountTaken = usdValue || 0;
-  const amountAdded = 0;
+ 
+  
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
     liquidationThreshold
   ) => {
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
+     const amountTaken = usdValue || 0;
+    let totalCollateralValue =
+      parseFloat(totalCollateral);
+      if (totalCollateralValue < 0) {
+        totalCollateralValue = 0;  
+      }
+      let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);  
+      if (totalDeptValue < 0) {
+        totalDeptValue = 0;  
+      }
     if (totalDeptValue === 0) {
       return Infinity;
     }
@@ -220,8 +227,7 @@ if (onLoadingChange) {
     );
   };
 
-  const totalDeptValueLTV = parseFloat(totalDebt) + parseFloat(amountTaken);
-
+ 
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
     if (totalCollateral === 0) {
       return 0;

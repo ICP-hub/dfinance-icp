@@ -382,14 +382,14 @@ impl ValidationLogic {
 
         ic_cdk::println!("User current debt: {:?}", user_current_debt);
 
-        if final_amount > user_current_debt as u128 {
-            ic_cdk::println!(
-                "Repay amount exceeds current debt: final_amount = {:?}, user_current_debt = {:?}",
-                final_amount,
-                user_current_debt
-            );
-            panic!("{:?}", Error::RepayMoreThanDebt);
-        }
+        // if final_amount > user_current_debt as u128 {
+        //     ic_cdk::println!(
+        //         "Repay amount exceeds current debt: final_amount = {:?}, user_current_debt = {:?}",
+        //         final_amount,
+        //         user_current_debt
+        //     );
+        //     panic!("{:?}", Error::RepayMoreThanDebt);
+        // }
 
         let (is_active, is_frozen, is_paused) = (
             reserve.configuration.active,

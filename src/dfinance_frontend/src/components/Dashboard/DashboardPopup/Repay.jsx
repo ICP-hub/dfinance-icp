@@ -90,16 +90,24 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
   };
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue =
-        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue); 
-    } else {
-      setUsdValue(0); 
-    }
-  }, [amount, conversionRate]);
+    useEffect(() => {
+      if (amount && conversionRate) {
+        const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+  
+        // Convert amount to a number and remove commas
+        const numericAmount = Number(amount.replace(/,/g, ''));
+  
+        // Calculate the converted value
+        let convertedValue = numericAmount * adjustedConversionRate;
+  
+        // Truncate the converted value to 7 decimal places without rounding
+        const truncatedValue = (Math.floor(convertedValue * Math.pow(10, 8)) / Math.pow(10, 8)).toFixed(8);
+  
+        setUsdValue(truncatedValue); 
+      } else {
+        setUsdValue(0); 
+      }
+    }, [amount, conversionRate]);
   useEffect(() => {
     if (assetBorrow && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -322,11 +330,17 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
       totalDebt,
       liquidationThreshold
     );
-    const amountTaken = 0;
+   
     const amountAdded = usdValue || 0;
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountTaken);
-    const totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
+    let totalCollateralValue =
+      parseFloat(totalCollateral) ;
+      if (totalCollateralValue < 0) {
+        totalCollateralValue = 0;  
+      }
+      let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);  
+      if (totalDeptValue < 0) {
+        totalDeptValue = 0;  
+      }
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
@@ -340,7 +354,10 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
     const amountAdded = usdValue || 0;
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountTaken);
-    const totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
+    let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;  // Set to 0 if the value is negative
+    }
     if (totalDeptValue === 0) {
       return Infinity;
     }

@@ -15,12 +15,6 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
-
-      if (result && result.Ok && Number(result.Ok.health_factor) / 100000000) {
-        setHealthFactorBackend(Number(result.Ok.health_factor) / 10000000000);
-      } else {
-        setError("Health factor not found");
-      }
       return result;
     } catch (error) {
       setError(error.message);
@@ -40,7 +34,12 @@ const useUserData = () => {
     if (backendActor) {
       try {
         const result = await backendActor.get_user_account_data();
-
+        if (result && result.Ok && Number(result?.Ok?.[4]) / 100000000) {
+          setHealthFactorBackend(Number(result?.Ok?.[4]) / 10000000000);
+          
+        } else {
+          setError("Health factor not found");
+        }
         if (!result) {
         } else {
           setUserAccountData(result);
@@ -58,6 +57,7 @@ const useUserData = () => {
           draggable: true,
           progress: undefined,
         });
+        console.error(error.message)
       }
     } 
   };
@@ -68,9 +68,9 @@ const useUserData = () => {
   }, [principal, backendActor]);
   useEffect(() => {
     fetchUserAccountData();
-  }, [userAccountData]);
+  }, []);
 
-  useEffect(() => {}, [userAccountData]);
+  
 
   return {
     userData,

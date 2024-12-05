@@ -43,7 +43,7 @@ const Footer = () => {
                 }}
               />
             <p className="mt-6 font-light text-[13px]">
-              DFinance is a decentralized lending and borrowing protocol on ICP. The protocol uniquely combines liquidity mining with deflationary buy and burn mechanics.
+              DFinance is a decentralized lending and borrowing protocol on ICP.
             </p>
           </div>
           <div className="w-full sxs3:w-6/12 md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-[8px]">

@@ -325,9 +325,15 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     const amountTaken = 0;
     const amountAdded = collateral ? usdValue || 0 : 0;
 
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
+    let totalCollateralValue =
+    parseFloat(totalCollateral) + parseFloat(amountTaken);
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;  
+    }
+    let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);  
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;  
+    }
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     setPrevHealthFactor(currentHealthFactor);
@@ -338,11 +344,17 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     asset,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,amount,usdValue,]);
 
   const calculateHealthFactor = ( totalCollateral, totalDebt, liquidationThreshold) => {
-    const amountTaken = 0;
+    
     const amountAdded = collateral ? usdValue || 0 : 0;
-    const totalCollateralValue =
+    let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
+      if (totalCollateralValue < 0) {
+        totalCollateralValue = 0;  
+      }
+      let totalDeptValue = parseFloat(totalDebt);  
+      if (totalDeptValue < 0) {
+        totalDeptValue = 0;  
+      }
     if (totalDeptValue === 0) {
       return Infinity;
     }

@@ -133,7 +133,8 @@ export const useAuthClient = (options = defaultOptions) => {
       if (isSwitchingWallet == false) {
         window.location.reload();
       }
-    } catch (error) {}
+    } catch (error) 
+    {console.error(error.message)}
   };
 
   const checkSession = () => {

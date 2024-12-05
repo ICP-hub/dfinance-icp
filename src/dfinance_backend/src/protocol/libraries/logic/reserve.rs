@@ -2,6 +2,7 @@ use crate::api::functions::get_balance;
 use crate::api::functions::update_balance;
 use crate::protocol::libraries::logic::user::nat_to_u128;
 use crate::protocol::libraries::math::math_utils;
+use crate::protocol::libraries::types::datatypes::UserReserveData;
 use ic_cdk::api::time;
 
 use crate::declarations::assets::ReserveCache;
@@ -149,16 +150,18 @@ pub async fn update_interest_rates(
 pub async fn burn_scaled(
     user_state: &mut UserState,
     amount: u128,
-    current_liquidity_index: u128,
+    index: u128,
     user_principal: Principal,
     token_canister_principal: Principal,
     platform_principal: Principal,
 ) -> Result<(), String> {
+    //TODO if user is not caller, then 
+    //TODO if to is not backend, transfer it to other
     ic_cdk::println!("burn user state value = {:?}", user_state);
     ic_cdk::println!("burn amount value = {}", amount);
     ic_cdk::println!(
         "burn current_liquidity_index value = {}",
-        current_liquidity_index
+        index
     );
     ic_cdk::println!("burn user_principal value = {}", user_principal);
     ic_cdk::println!(
@@ -167,7 +170,7 @@ pub async fn burn_scaled(
     );
     ic_cdk::println!("burn platform_principal value = {}", platform_principal);
 
-    let adjusted_amount = amount.scaled_div(current_liquidity_index);
+    let adjusted_amount = amount.scaled_div(index);
     ic_cdk::println!("adjusted_amount calculated = {}", adjusted_amount);
 
     if adjusted_amount == 0 {
@@ -189,12 +192,16 @@ pub async fn burn_scaled(
     };
 
     let balance_increase =
-        (balance.scaled_mul(current_liquidity_index)) - (balance.scaled_mul(user_state.index));
+        (balance.scaled_mul(index)) - (balance.scaled_mul(user_state.index));
     ic_cdk::println!("balance_increase calculated = {}", balance_increase);
 
     ic_cdk::println!("user_state before update = {:?}", user_state);
-    user_state.index = current_liquidity_index;
+    user_state.index = index;
     ic_cdk::println!("user_state after updating index = {:?}", user_state);
+
+
+    //TODO add setbalance
+    user_state.adjusted_balance -= adjusted_amount;
 
     if balance_increase > amount {
         let amount_to_mint = balance_increase - amount;
@@ -248,12 +255,13 @@ pub async fn burn_scaled(
 }
 
 pub async fn mint_scaled(
-    user_state: &mut UserState,
+    user_state: &mut UserReserveData,
     amount: u128,
-    current_liquidity_index: u128,
+    index: u128,
     user_principal: Principal,
     token_canister_principal: Principal,
     platform_principal: Principal,
+    minting_dtoken: bool,
 ) -> Result<(), String> {
     ic_cdk::println!("--- mint_scaled_modified called ---");
     ic_cdk::println!("Initial user state: {:?}", user_state);
@@ -261,47 +269,79 @@ pub async fn mint_scaled(
     ic_cdk::println!("Current liquidity index value: {}", current_liquidity_index);
     ic_cdk::println!("User principal value: {}", user_principal);
     ic_cdk::println!(
-        "Token canister principal value: {}",
+        "current_liquidity_index value = {}",
+        index
+    );
+    ic_cdk::println!("user_principal value = {}", user_principal);
+    ic_cdk::println!(
+        "token_canister_principal value = {}",
         token_canister_principal
     );
     ic_cdk::println!("Platform principal value: {}", platform_principal);
 
-    let adjusted_amount: u128 = amount.scaled_div(current_liquidity_index);
-    ic_cdk::println!("Adjusted amount value: {}", adjusted_amount);
-
+    let adjusted_amount: u128 = amount.scaled_div(index);
     if adjusted_amount == 0 {
         ic_cdk::println!("Error: Invalid mint amount");
         return Err("Invalid mint amount".to_string());
     }
 
     // Calculate interest accrued since the last liquidity index update
+    // let balance_increase = (user_state
+    //     .adjusted_balance
+    //     .scaled_mul(current_liquidity_index))
+    //     - (user_state
+    //         .adjusted_balance
+    //         .scaled_mul(user_state.index));
+
+    // user_state.adjusted_balance += adjusted_amount + balance_increase;
+
+    // user_state.index = current_liquidity_index;
+
+    // ic_cdk::println!("updated user state value = {:?}", user_state);
+
+    // let newmint: u128 = adjusted_amount as u128;
+
+    // // Perform token transfer to the user with the newly minted aTokens
+    // match asset_transfer(
+    //     user_principal,
+    //     token_canister_principal,
+    //     platform_principal,
+    //     Nat::from(newmint),
+    // )
+    // .await
+    // {
+    //     Ok(_) => {
+    //         ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+    //         Ok(())
+    //     }
+    //     Err(err) => Err(format!("Minting failed. Error: {:?}", err)),
+    // }
     let balance_nat = get_balance(token_canister_principal, user_principal).await;
-    ic_cdk::println!("Balance (Nat) fetched: {}", balance_nat);
-
+    
     let balance = nat_to_u128(balance_nat).unwrap();
-    ic_cdk::println!("Balance as u128: {}", balance);
+    println!("Balance as u128: {}", balance);
+    let mut balance_increase = 0u128;
+    if minting_dtoken {
+       balance_increase = (balance.scaled_mul(index))
+        - (balance.scaled_mul(user_state.liquidity_index)); //fetch from user
 
-    let balance_increase =
-        (balance.scaled_mul(current_liquidity_index)) - (balance.scaled_mul(user_state.index));
-    ic_cdk::println!("Balance increase: {}", balance_increase);
+    // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+    user_state.d_token_balance += adjusted_amount;
+    user_state.liquidity_index = index;
+    } else {
+        balance_increase = (balance.scaled_mul(index))
+        - (balance.scaled_mul(user_state.variable_borrow_index)); //fetch from user
 
-    user_state.adjusted_balance += adjusted_amount + balance_increase;
-    ic_cdk::println!(
-        "Updated user adjusted balance: {}",
-        user_state.adjusted_balance
-    );
-
-    user_state.index = current_liquidity_index;
-    ic_cdk::println!("Updated user liquidity index: {}", user_state.index);
-
-    // Update balance with old balance + adjusted amount
-    let _ = update_balance(
-        token_canister_principal,
-        user_principal,
-        balance + adjusted_amount,
-    );
-    ic_cdk::println!("Updated user balance: {}", balance + adjusted_amount);
-    ic_cdk::println!("Updated user state value: {:?}", user_state);
+    // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+    user_state.debt_token_blance += adjusted_amount;
+    user_state.variable_borrow_index = index;
+    }
+    
+     //same
+    //TODO add into total supply also
+    //update balance with oldbalance +adjusted_amount
+    // let _ = update_balance(token_canister_principal, user_principal, balance+adjusted_amount);
+    // ic_cdk::println!("updated user state value = {:?}", user_state);
 
     let newmint: u128 = amount as u128 + balance_increase;
     ic_cdk::println!("New mint value: {}", newmint);

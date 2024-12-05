@@ -311,10 +311,16 @@ const WithdrawPopup = ({
     liquidationThreshold
   ) => {
     const amountTaken = collateral ? usdValue || 0 : 0;
-    const amountAdded = 0;
-    const totalCollateralValue =
-      parseFloat(totalCollateral) - parseFloat(amountTaken);
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
+    
+    let totalCollateralValue =
+      parseFloat(totalCollateral) -parseFloat(amountTaken);
+      if (totalCollateralValue < 0) {
+        totalCollateralValue = 0;  
+      }
+      let totalDeptValue = parseFloat(totalDebt) ;  
+      if (totalDeptValue < 0) {
+        totalDeptValue = 0;  
+      }
 
 
     if (totalDeptValue === 0) {

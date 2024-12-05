@@ -144,6 +144,19 @@ const DebtStatus = () => {
     }
     return `no assets borrowed`;
   };
+  const formatValue = (value) => {
+    const numericValue = parseFloat(value); 
+    if (isNaN(numericValue)) {
+      return "0.00"; 
+    }
+    if (numericValue === 0) {
+      return "0.00"; 
+    } else if (numericValue >= 1) {
+      return numericValue.toFixed(2); 
+    } else {
+      return numericValue.toFixed(7); 
+    }
+  };
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center mt-8">
@@ -208,10 +221,9 @@ const DebtStatus = () => {
                           <div>
                             <p className="font-medium">
                               $
-                              {formatNumber(
-                                Number(mappedItem.item[1].total_debt) /
-                                  100000000
-                              )}
+                              {formatValue(
+  Number(mappedItem.item[1].total_debt) / 100000000
+)}
                             </p>
                           </div>
                         </div>
@@ -219,9 +231,10 @@ const DebtStatus = () => {
                       <td className="p-5 align-top hidden md:table-cell py-8">
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
-                            const assetName = item[1]?.reserve;
-                            const assetSupply = getAssetSupplyValue(assetName);
-                            const assetBorrow = getAssetBorrowValue(assetName);
+                            
+                            const assetName = item[0];
+                            const assetSupply = item[1]?.asset_supply;
+                            const assetBorrow = item[1]?.asset_borrow;
                             if (assetBorrow > 0) {
                               return (
                                 <img
@@ -252,9 +265,9 @@ const DebtStatus = () => {
                       <td className="p-5 align-top hidden md:table-cell py-8">
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
-                            const assetName = item[1]?.reserve;
-                            const assetSupply = getAssetSupplyValue( assetName );
-                            const assetBorrow = getAssetBorrowValue( assetName );
+                            const assetName = item[0];
+                            const assetSupply = item[1]?.asset_supply;
+                            const assetBorrow = item[1]?.asset_borrow;
 
                             if (assetSupply > 0) {
                               return (

@@ -866,10 +866,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
 
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
-                    const assetName = item[1]?.reserve;
-                    const assetSupply = getAssetSupplyValue(assetName);
-      const assetBorrow = getAssetBorrowValue(assetName);
-                    const assetBorrowAmount = Math.floor(assetBorrow / 2);
+                    const assetName = item[0];
+                    const assetSupply =
+                    Number(item?.[1]?.asset_supply || 0n) / 100000000;
+                  const assetBorrow =
+                    Number(item?.[1]?.asset_borrow || 0n) / 100000000;
+                  const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let collateralRate = 0;
                     if (assetName === "ckBTC" && ckBTCUsdRate) {
@@ -1000,10 +1002,13 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                 </h3>
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
-                    const assetName = item[1]?.reserve;
+                    const assetName = item[0];
 
-                    const assetBorrow = getAssetBorrowValue(assetName);
-                    const assetBorrowAmount = Number(assetBorrow / 2);
+                    
+                  const assetBorrow =
+                    Number(item?.[1]?.asset_borrow || 0n) / 100000000;
+                  const assetBorrowAmount = Math.floor(assetBorrow / 2);
+                    
                     let assetBorrowAmountInUSD = 0;
                     if (assetName === "ckBTC" && ckBTCUsdRate) {
                       assetBorrowAmountInUSD = assetBorrowAmount * ckBTCUsdRate;

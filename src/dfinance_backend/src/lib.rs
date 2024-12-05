@@ -888,7 +888,7 @@ pub async fn get_asset_debt(
     let get_balance_value: Nat = get_balance(debt_token_canister_principal, user_principal).await;
 
     ic_cdk::println!(
-        "Fetched balance from DToken canister: {:?}",
+        "Fetched balance from DebtToken canister: {:?}",
         get_balance_value
     );
 

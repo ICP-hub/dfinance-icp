@@ -8,7 +8,7 @@ use crate::{
         state_handler::{mutate_state, read_state},
     },
     declarations::assets::ReserveData,
-    get_reserve_data,
+    get_cached_exchange_rate, get_reserve_data,
     protocol::libraries::{
         math::{
             calculate::{cal_average_threshold, get_exchange_rates, UserPosition},
@@ -118,26 +118,45 @@ impl GenericLogic {
                 }
             };
 
-            let asset_price_result =
-                get_exchange_rates(user_reserve_data.reserve.clone(), None, 100000000).await;
+            // let asset_price_result =
+            // get_cached_exchange_rate(user_reserve_data.reserve.clone());
 
-            let asset_price = match asset_price_result {
-                Ok((amount, _)) => amount,
-                Err(err) => {
-                    ic_cdk::println!(
-                        "Error fetching asset price for {}: {}",
-                        user_reserve_data.reserve,
-                        err
-                    );
-                    return Err(err);
+            // let asset_price = match asset_price_result {
+            //     Ok((amount, _)) => amount,
+            //     Err(err) => {
+            //         ic_cdk::println!(
+            //             "Error fetching asset price for {}: {}",
+            //             user_reserve_data.reserve,
+            //             err
+            //         );
+            //         return Err(err);
+            //     }
+            // };
+            // ic_cdk::println!(
+            //     "Asset price for reserve '{}': {}",
+            //     user_reserve_data.reserve,
+            //     asset_price
+            // );
+            let mut rate: Option<u128> = None;
+
+            match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+                Ok(price_cache) => {
+                    // Fetch the specific CachedPrice for the asset from the PriceCache
+                    if let Some(cached_price) = price_cache.cache.get(&user_reserve_data.reserve.clone()) {
+                        let amount = cached_price.price; // Access the `price` field
+                        rate = Some(amount);
+                        ic_cdk::println!("Fetched exchange rate for {}: {:?}", user_reserve_data.reserve.clone(), rate);
+                    } else {
+                        ic_cdk::println!("No cached price found for {}", user_reserve_data.reserve.clone());
+                        rate = None; // Explicitly set rate to None if the asset is not in the cache
+                    }
                 }
-            };
-            ic_cdk::println!(
-                "Asset price for reserve '{}': {}",
-                user_reserve_data.reserve,
-                asset_price
-            );
-
+                Err(err) => {
+                    ic_cdk::println!("Error fetching exchange rate for {}: {}", user_reserve_data.reserve.clone(), err);
+                    rate = None; // Explicitly set rate to None in case of an error
+                }
+            }
+            let asset_price =rate.unwrap();
             if user_reserve_data.is_collateral {
                 ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 

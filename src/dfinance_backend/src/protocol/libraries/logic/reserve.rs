@@ -1,4 +1,8 @@
+use crate::api::functions::get_balance;
+use crate::api::functions::update_balance;
+use crate::protocol::libraries::logic::user::nat_to_u128;
 use crate::protocol::libraries::math::math_utils;
+use crate::protocol::libraries::types::datatypes::UserReserveData;
 use ic_cdk::api::time;
 
 use crate::declarations::assets::ReserveCache;
@@ -117,19 +121,86 @@ pub async fn update_interest_rates(
 
 
   
+// pub async fn burn_scaled(
+//     user_state: &mut UserState,
+//     amount: u128,
+//     current_liquidity_index: u128,
+//     user_principal: Principal,
+//     token_canister_principal: Principal,
+//     platform_principal: Principal,
+// ) -> Result<(), String> {
+//     ic_cdk::println!("burn user state value = {:?}", user_state);
+//     ic_cdk::println!("burn amount value = {}", amount);
+//     ic_cdk::println!(
+//         "burn current_liquidity_index value = {}",
+//         current_liquidity_index
+//     );
+//     ic_cdk::println!("burn user_principal value = {}", user_principal);
+//     ic_cdk::println!(
+//         "burn token_canister_principal value = {}",
+//         token_canister_principal
+//     );
+//     ic_cdk::println!("burn platform_principal value = {}", platform_principal);
+
+//     let adjusted_amount = amount.scaled_div(current_liquidity_index);
+
+//     if adjusted_amount == 0 {
+//         return Err("Invalid burn amount".to_string());
+//     }
+
+//     // Calculate interest accrued since the last liquidity index update
+//     let balance_increase = (user_state
+//         .adjusted_balance
+//         .scaled_mul(current_liquidity_index))
+//         - (user_state
+//             .adjusted_balance
+//             .scaled_mul(user_state.last_liquidity_index));
+
+//     if adjusted_amount > user_state.adjusted_balance + balance_increase {
+//         return Err("Insufficient balance to burn".to_string());
+//     }
+
+//     user_state.adjusted_balance -= adjusted_amount;
+
+//     user_state.last_liquidity_index = current_liquidity_index;
+
+//     ic_cdk::println!("burn updated user state = {:?}", user_state);
+
+//     let burn_amount = adjusted_amount as u128;
+
+//     // Perform token transfer from the user to the platform to burn the tokens
+//     match asset_transfer(
+//         platform_principal,
+//         token_canister_principal,
+//         user_principal,
+//         Nat::from(burn_amount),
+//     )
+//     .await
+//     {
+//         Ok(_) => {
+//             ic_cdk::println!("Dtoken transfer from user to backend executed successfully");
+//             Ok(())
+//         }
+//         Err(err) => Err(format!("Burning failed. Error: {:?}", err)),
+//     }
+// }
+
+//TODO change the param of burn function according to mint
 pub async fn burn_scaled(
     user_state: &mut UserState,
     amount: u128,
-    current_liquidity_index: u128,
+    index: u128,
     user_principal: Principal,
     token_canister_principal: Principal,
     platform_principal: Principal,
 ) -> Result<(), String> {
+    //TODO if user is not caller, then 
+    //TODO if to is not backend, transfer it to other
     ic_cdk::println!("burn user state value = {:?}", user_state);
     ic_cdk::println!("burn amount value = {}", amount);
     ic_cdk::println!(
         "burn current_liquidity_index value = {}",
-        current_liquidity_index
+        index
     );
     ic_cdk::println!("burn user_principal value = {}", user_principal);
     ic_cdk::println!(
@@ -138,62 +209,104 @@ pub async fn burn_scaled(
     );
     ic_cdk::println!("burn platform_principal value = {}", platform_principal);
 
-    let adjusted_amount = amount.scaled_div(current_liquidity_index);
+    let adjusted_amount = amount.scaled_div(index);
+    ic_cdk::println!("adjusted_amount calculated = {}", adjusted_amount);
 
     if adjusted_amount == 0 {
         return Err("Invalid burn amount".to_string());
     }
 
-    // Calculate interest accrued since the last liquidity index update
-    let balance_increase = (user_state
-        .adjusted_balance
-        .scaled_mul(current_liquidity_index))
-        - (user_state
-            .adjusted_balance
-            .scaled_mul(user_state.last_liquidity_index));
+    let balance_nat = get_balance(token_canister_principal, user_principal).await;
+    ic_cdk::println!("balance_nat retrieved = {:?}", balance_nat);
 
-    if adjusted_amount > user_state.adjusted_balance + balance_increase {
-        return Err("Insufficient balance to burn".to_string());
-    }
+    let balance = match nat_to_u128(balance_nat) {
+        Ok(bal) => {
+            ic_cdk::println!("balance converted to u128: {}", bal);
+            bal
+        }
+        Err(err) => {
+            ic_cdk::println!("Error converting balance to u128: {:?}", err);
+            return Err("Error converting balance to u128".to_string());
+        }
+    };
 
+    let balance_increase =
+        (balance.scaled_mul(index)) - (balance.scaled_mul(user_state.index));
+    ic_cdk::println!("balance_increase calculated = {}", balance_increase);
+
+    ic_cdk::println!("user_state before update = {:?}", user_state);
+    user_state.index = index;
+    ic_cdk::println!("user_state after updating index = {:?}", user_state);
+
+
+    //TODO add setbalance
     user_state.adjusted_balance -= adjusted_amount;
 
-    user_state.last_liquidity_index = current_liquidity_index;
+    if balance_increase > amount {
+        let amount_to_mint = balance_increase - amount;
+        ic_cdk::println!(
+            "balance_increase is greater than amount, amount_to_mint = {}",
+            amount_to_mint
+        );
 
-    ic_cdk::println!("burn updated user state = {:?}", user_state);
-
-    let burn_amount = adjusted_amount as u128;
-
-    // Perform token transfer from the user to the platform to burn the tokens
-    match asset_transfer(
-        platform_principal,
-        token_canister_principal,
-        user_principal,
-        Nat::from(burn_amount),
-    )
-    .await
-    {
-        Ok(_) => {
-            ic_cdk::println!("Dtoken transfer from user to backend executed successfully");
-            Ok(())
+        match asset_transfer(
+            user_principal,
+            token_canister_principal,
+            platform_principal,
+            Nat::from(amount_to_mint),
+        )
+        .await
+        {
+            Ok(_) => {
+                ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+                Ok(())
+            }
+            Err(err) => {
+                ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+                Err(format!("Minting failed. Error: {:?}", err))
+            }
         }
-        Err(err) => Err(format!("Burning failed. Error: {:?}", err)),
+    } else {
+        let amount_to_burn = amount - balance_increase;
+        ic_cdk::println!(
+            "balance_increase is not greater than amount, amount_to_burn = {}",
+            amount_to_burn
+        );
+
+        match asset_transfer(
+            platform_principal,
+            token_canister_principal,
+            user_principal,
+            Nat::from(amount_to_burn),
+        )
+        .await
+        {
+            Ok(_) => {
+                ic_cdk::println!("Dtoken transfer from user to backend executed successfully");
+                Ok(())
+            }
+            Err(err) => {
+                ic_cdk::println!("Error: Burning failed. Error: {:?}", err);
+                Err(format!("Burning failed. Error: {:?}", err))
+            }
+        }
     }
 }
 
 pub async fn mint_scaled(
-    user_state: &mut UserState,
+    user_state: &mut UserReserveData,
     amount: u128,
-    current_liquidity_index: u128,
+    index: u128,
     user_principal: Principal,
     token_canister_principal: Principal,
     platform_principal: Principal,
+    minting_dtoken: bool,
 ) -> Result<(), String> {
     ic_cdk::println!("user state value = {:?}", user_state);
     ic_cdk::println!("amount value = {}", amount);
     ic_cdk::println!(
         "current_liquidity_index value = {}",
-        current_liquidity_index
+        index
     );
     ic_cdk::println!("user_principal value = {}", user_principal);
     ic_cdk::println!(
@@ -202,26 +315,70 @@ pub async fn mint_scaled(
     );
     ic_cdk::println!("platform_principal value = {}", platform_principal);
 
-    let adjusted_amount: u128 = amount.scaled_div(current_liquidity_index);
+    let adjusted_amount: u128 = amount.scaled_div(index);
     if adjusted_amount == 0 {
         return Err("Invalid mint amount".to_string());
     }
 
     // Calculate interest accrued since the last liquidity index update
-    let balance_increase = (user_state
-        .adjusted_balance
-        .scaled_mul(current_liquidity_index))
-        - (user_state
-            .adjusted_balance
-            .scaled_mul(user_state.last_liquidity_index));
+    // let balance_increase = (user_state
+    //     .adjusted_balance
+    //     .scaled_mul(current_liquidity_index))
+    //     - (user_state
+    //         .adjusted_balance
+    //         .scaled_mul(user_state.index));
 
-    user_state.adjusted_balance += adjusted_amount + balance_increase;
+    // user_state.adjusted_balance += adjusted_amount + balance_increase;
 
-    user_state.last_liquidity_index = current_liquidity_index;
+    // user_state.index = current_liquidity_index;
 
-    ic_cdk::println!("updated user state value = {:?}", user_state);
+    // ic_cdk::println!("updated user state value = {:?}", user_state);
 
-    let newmint: u128 = adjusted_amount as u128;
+    // let newmint: u128 = adjusted_amount as u128;
+
+    // // Perform token transfer to the user with the newly minted aTokens
+    // match asset_transfer(
+    //     user_principal,
+    //     token_canister_principal,
+    //     platform_principal,
+    //     Nat::from(newmint),
+    // )
+    // .await
+    // {
+    //     Ok(_) => {
+    //         ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+    //         Ok(())
+    //     }
+    //     Err(err) => Err(format!("Minting failed. Error: {:?}", err)),
+    // }
+    let balance_nat = get_balance(token_canister_principal, user_principal).await;
+    
+    let balance = nat_to_u128(balance_nat).unwrap();
+    println!("Balance as u128: {}", balance);
+    let mut balance_increase = 0u128;
+    if minting_dtoken {
+       balance_increase = (balance.scaled_mul(index))
+        - (balance.scaled_mul(user_state.liquidity_index)); //fetch from user
+
+    // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+    user_state.d_token_balance += adjusted_amount;
+    user_state.liquidity_index = index;
+    } else {
+        balance_increase = (balance.scaled_mul(index))
+        - (balance.scaled_mul(user_state.variable_borrow_index)); //fetch from user
+
+    // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+    user_state.debt_token_blance += adjusted_amount;
+    user_state.variable_borrow_index = index;
+    }
+    
+     //same
+    //TODO add into total supply also
+    //update balance with oldbalance +adjusted_amount
+    // let _ = update_balance(token_canister_principal, user_principal, balance+adjusted_amount);
+    // ic_cdk::println!("updated user state value = {:?}", user_state);
+
+    let newmint: u128 = amount as u128 + balance_increase;
 
     // Perform token transfer to the user with the newly minted aTokens
     match asset_transfer(

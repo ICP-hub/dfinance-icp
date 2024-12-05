@@ -9,9 +9,9 @@ pub struct ReserveData {
     pub debt_token_canister: Option<String>,
     pub borrow_rate: u128, 
     pub current_liquidity_rate: u128,
-    pub total_supply: u128,
+    pub total_supply: u128, //TODO remove
     pub asset_supply: u128,
-    pub total_borrowed: u128,
+    pub total_borrowed: u128, //TODO remove
     pub asset_borrow: u128,
     pub liquidity_index: u128,
     pub debt_index: u128,

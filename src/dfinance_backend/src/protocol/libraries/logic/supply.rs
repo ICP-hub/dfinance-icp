@@ -35,19 +35,19 @@ impl SupplyLogic {
         // Converting asset to usdt value
         let mut usd_amount = params.amount;
 
-        let supply_amount_to_usd =
-            get_exchange_rates(params.asset.clone(), None, params.amount.clone()).await;
-        match supply_amount_to_usd {
-            Ok((amount_in_usd, _timestamp)) => {
-                usd_amount = amount_in_usd;
-                ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
-            }
-            Err(e) => {
-                ic_cdk::println!("Error getting exchange rate: {:?}", e);
-            }
-        }
+        // let supply_amount_to_usd =
+        //     get_exchange_rates(params.asset.clone(), None, params.amount.clone()).await;
+        // match supply_amount_to_usd {
+        //     Ok((amount_in_usd, _timestamp)) => {
+        //         usd_amount = amount_in_usd;
+        //         ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
+        //     }
+        //     Err(e) => {
+        //         ic_cdk::println!("Error getting exchange rate: {:?}", e);
+        //     }
+        // }
 
-        ic_cdk::println!("Supply amount in USD: {:?}", usd_amount);
+        // ic_cdk::println!("Supply amount in USD: {:?}", usd_amount);
 
         // Reads the reserve data from the asset
         let reserve_data_result = mutate_state(|state| {
@@ -90,7 +90,7 @@ impl SupplyLogic {
         let total_supplies= reserve_data.asset_supply.clone() + params.amount; //TODO not sure should store usd value or token amount
         let total_borrow = reserve_data.asset_borrow;
         let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
-        reserve_data.total_supply+=usd_amount;
+        // reserve_data.total_supply+=usd_amount;
 
         ic_cdk::println!("Interest rates updated successfully");
 

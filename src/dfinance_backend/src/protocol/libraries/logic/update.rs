@@ -105,26 +105,31 @@ impl UpdateLogic {
         }
 
         // Function to check if the user has a reserve for the asset
-        let user_reserve = user_reserve(&mut user_data, &params.asset);
-
-        let asset_supply = match user_reserve {
-            Some((_, reserve_data)) => reserve_data.asset_supply,
-            None => 0,
+        let mut user_reserve = user_reserve(&mut user_data, &params.asset);
+        let mut user_reserve_data = match user_reserve.as_mut() {
+            Some((_, reserve_data)) => reserve_data,
+            None => return Err("No reserve found for the user".to_string()), // or handle appropriately
         };
+        // let asset_supply = match user_reserve {
+        //     Some((_, reserve_data)) => reserve_data.asset_supply,
+        //     None => 0,
+        // };
 
-        let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
-        };
+        // let mut update_user_state = UserState {
+        //     adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
+        //     index: reserve_cache.curr_liquidity_index,
+        // };
 
         let platform_principal = ic_cdk::api::id();
         let minted_result = mint_scaled(
-            &mut update_user_state,
+            // &mut update_user_state,
+            &mut user_reserve_data,
             params.amount,
             reserve_cache.next_liquidity_index,
             user_principal,
             Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
+            true
         )
         .await;
 
@@ -145,7 +150,7 @@ impl UpdateLogic {
             reserve_data.asset_price_when_supplied = usd_rate;
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
-            reserve_data.state = update_user_state.clone();
+            // reserve_data.state = update_user_state.clone();
             if reserve_data.liquidity_index == 0 {
                 reserve_data.liquidity_index = 100000000;
             }
@@ -174,7 +179,7 @@ impl UpdateLogic {
                 is_collateral: true,
                 liquidity_index: 100000000,
                 last_update_timestamp: current_timestamp(),
-                state: update_user_state.clone(),
+                // state: update_user_state.clone(),
                 ..Default::default()
             };
 
@@ -255,7 +260,7 @@ impl UpdateLogic {
             Some((user_data.available_borrow.unwrap() as i128 - usd_amount as i128).max(0) as u128);
 
         // Function to check if the user has a reserve for the asset
-        let user_reserve = user_reserve(&mut user_data, &params.asset);
+        let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         ic_cdk::println!("User reserve: {:?}", user_reserve);
 
         let asset_borrow = match user_reserve {
@@ -276,20 +281,24 @@ impl UpdateLogic {
 
         let platform_principal = ic_cdk::api::id();
 
-        let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
-            last_liquidity_index: reserve_cache.curr_debt_index,
+        // let mut update_user_state = UserState {
+        //     adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
+        //     index: reserve_cache.curr_debt_index,
+        // };
+        let mut user_reserve_data = match user_reserve.as_mut() {
+            Some((_, reserve_data)) => reserve_data,
+            None => return Err("No reserve found for the user".to_string()), // or handle appropriately
         };
-
-        ic_cdk::println!("Update user state: {:?}", update_user_state);
-
+        // ic_cdk::println!("Update user state: {:?}", update_user_state);
+        
         let minted_result = mint_scaled(
-            &mut update_user_state,
+            &mut user_reserve_data,
             params.amount,
             reserve_cache.next_debt_index,
             user_principal,
             Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
+            false
         )
         .await;
 
@@ -313,7 +322,7 @@ impl UpdateLogic {
             reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.asset_borrow += params.amount;
             reserve_data.last_update_timestamp = current_timestamp();
-            reserve_data.state = update_user_state.clone();
+            // reserve_data.state = update_user_state.clone();
 
             if reserve_data.variable_borrow_index == 0 {
                 reserve_data.variable_borrow_index = 100000000;
@@ -436,8 +445,8 @@ impl UpdateLogic {
         };
 
         let mut update_user_state = UserState {
-            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
-            last_liquidity_index: reserve_cache.curr_liquidity_index,
+            adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply), //TODO fetch this from get_asset_supply
+            index: reserve_cache.curr_liquidity_index,
         };
 
         let platform_principal = ic_cdk::api::id();
@@ -580,7 +589,7 @@ impl UpdateLogic {
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_debt_index.scaled_mul(asset_borrow),
-            last_liquidity_index: reserve_cache.curr_debt_index,
+            index: reserve_cache.curr_debt_index,
         };
         ic_cdk::println!("Updated user state: {:?}", update_user_state);
 

@@ -551,10 +551,10 @@ const DashboardNav = () => {
                                       : data.count <= 1
                                         ? "text-red-500"
                                         : data.count <= 1.5
-                                          ? "text-orange-500"
+                                          ? "text-orange-600"
                                           : data.count <= 2
-                                            ? "text-orange-300"
-                                            : "text-orange-600"
+                                            ? "text-orange-400"
+                                            : "text-orange-300"
                                   : data.title === "Total Borrows"
                                     ? "text-[#2A1F9D] dark:text-darkBlue"
                                     : "text-[#2A1F9D] dark:text-darkBlue"

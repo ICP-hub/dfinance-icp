@@ -65,6 +65,7 @@ type UserReserveData = record {
   principal_stable_debt : nat64;
   asset_borrow : nat;
   last_update_timestamp : nat64;
+  d_token_balance : nat;
   is_collateral : bool;
   asset_price_when_borrowed : nat;
   liquidity_index : nat;
@@ -75,10 +76,11 @@ type UserReserveData = record {
   state : UserState;
   faucet_usage : nat;
   borrow_rate : nat;
+  debt_token_blance : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
-type UserState = record { adjusted_balance : nat; last_liquidity_index : nat };
+type UserState = record { adjusted_balance : nat; index : nat };
 service : () -> {
   borrow : (text, nat64) -> (Result);
   check_user : (text) -> (Result_1);

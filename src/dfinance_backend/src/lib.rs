@@ -332,6 +332,8 @@ pub async fn login() -> Result<(), String> {
     let user_principal = ic_cdk::caller();
     let canister_id: Principal = ic_cdk::api::id();
 
+    let user_principal_string = user_principal.to_string();
+
     ic_cdk::println!("User principal: {}", user_principal);
 
     let mut user_total_collateral: u128 = 0;
@@ -343,7 +345,7 @@ pub async fn login() -> Result<(), String> {
     //let mut has_zero_ltv_collateral: bool = false;
 
     let user_data_result: Result<(u128, u128, u128, u128, u128, u128, bool), String> =
-        GenericLogic::calculate_user_account_data().await;
+        GenericLogic::calculate_user_account_data(Some(user_principal_string)).await;
 
     match user_data_result {
         Ok((
@@ -714,13 +716,23 @@ fn calculate_dynamic_balance(
 
 // TODO: need to make a function by getting the asset name and then get user reserve data then call this below function and return the value of it. it will be a query function.
 #[query]
-pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
+pub async fn get_asset_supply(asset_name: String, on_behalf: Option<String>
+) -> Result<u128, String> {
     ic_cdk::println!("Entering get_asset_supply function");
 
     // Log the asset name being passed
     ic_cdk::println!("Asset name received: {}", asset_name);
 
-    let user_principal = ic_cdk::caller();
+    let user_principal = match on_behalf {
+        // If `on_behalf` is Some, we parse the Principal from the string
+        Some(ref principal_str) => {
+            // Parse the principal string into a Principal and return an error if it fails
+            Principal::from_text(principal_str)
+                .map_err(|e| format!("Failed to parse Principal: {}", e))?
+        },
+        // If `on_behalf` is None, we use the caller's principal
+        None => ic_cdk::caller(),
+    };
     ic_cdk::println!("User principal: {:?}", user_principal);
 
     let user_data_result = user_data(user_principal);
@@ -825,8 +837,19 @@ pub async fn get_asset_supply(asset_name: String) -> Result<u128, String> {
 }
 
 #[query]
-pub async fn get_asset_debt(asset_name: String) -> Result<u128, String> {
-    let user_principal = ic_cdk::caller();
+pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>,
+) -> Result<u128, String> {
+    let user_principal = match on_behalf {
+        // If `on_behalf` is Some, we parse the Principal from the string
+        Some(ref principal_str) => {
+            // Parse the principal string into a Principal and return an error if it fails
+            Principal::from_text(principal_str)
+                .map_err(|e| format!("Failed to parse Principal: {}", e))?
+        },
+        // If `on_behalf` is None, we use the caller's principal
+        None => ic_cdk::caller(),
+    };
+
     let user_data_result = user_data(user_principal);
 
     let mut user_data = match user_data_result {
@@ -975,9 +998,10 @@ pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, 
 
 // this function is for check which i will remove later.
 #[update]
-async fn get_user_account_data() -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
-    let result = GenericLogic::calculate_user_account_data().await;
-
+async fn get_user_account_data(
+    on_behalf: Option<String>,
+) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
+    let result = GenericLogic::calculate_user_account_data(on_behalf).await;
     result
 }
 

@@ -86,14 +86,14 @@ service : () -> {
   faucet : (text, nat) -> (Result_2);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
-  get_asset_debt : (text) -> (Result_3) query;
+  get_asset_debt : (text, opt text) -> (Result_3) query;
   get_asset_principal : (text) -> (Result_4) query;
-  get_asset_supply : (text) -> (Result_3) query;
+  get_asset_supply : (text, opt text) -> (Result_3) query;
   get_balance : (principal, principal) -> (nat) query;
   get_cached_exchange_rate : (text) -> (Result_5) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_6);
   get_reserve_data : (text) -> (Result_7) query;
-  get_user_account_data : () -> (Result_8);
+  get_user_account_data : (opt text) -> (Result_8);
   get_user_data : (text) -> (Result_9) query;
   initialize_reserve : () -> ();
   liquidation_call : (text, text, nat64, text) -> (Result);

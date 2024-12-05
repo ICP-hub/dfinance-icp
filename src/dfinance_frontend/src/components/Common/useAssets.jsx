@@ -5,7 +5,7 @@ import useFetchConversionRate from '../customHooks/useFetchConversionRate';
 
 const useAssetData = (searchQuery = '') => {
 
-  const {
+  const {principal,
     fetchReserveData,
     backendActor
   } = useAuth();
@@ -53,11 +53,11 @@ const useAssetData = (searchQuery = '') => {
   const fetchAssetSupply = async (asset) => {
     if (backendActor) {
       try {
-        const result = await backendActor.get_asset_supply(asset);
-        console.log("getassetsupply", result);
-        // Set asset supply in the state object using the asset name as the key
+        const result = await backendActor.get_asset_supply(asset,[principal]);
+        
         setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
+        console.error(error.message)
       }
     } else {
     }
@@ -66,10 +66,10 @@ const useAssetData = (searchQuery = '') => {
   const fetchAssetBorrow = async (asset) => {
     if (backendActor) {
       try {
-        const result = await backendActor.get_asset_debt(asset);
-        console.log("getassetdebt", result);
+        const result = await backendActor.get_asset_debt(asset,[principal]);
         setAssetBorrow(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
+        console.error(error.message)
       }
     } else {
     }
@@ -136,6 +136,7 @@ const useAssetData = (searchQuery = '') => {
       } catch (err) {
         setError(err.message);
         setLoading(false);
+        console.error(error.message)
       } finally{
         setLoading(false);
       }

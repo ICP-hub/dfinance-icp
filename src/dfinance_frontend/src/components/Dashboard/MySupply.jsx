@@ -595,14 +595,14 @@ const MySupply = () => {
       setCalculatedReserves(reservesWithCalculations);
     }
   }, [userData]);
-  const getAssetSupplyValue = (asset) => {
+  const getAssetSupplyValue = (asset,principal) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]) / 1e8;
       return supplyValue;
     }
     return noSupplyMessage;
   };
-  const getAssetBorrowValue = (asset) => {
+  const getAssetBorrowValue = (asset,principal) => {
     if (asset_supply[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]) / 1e8;
       return borrowValue; 

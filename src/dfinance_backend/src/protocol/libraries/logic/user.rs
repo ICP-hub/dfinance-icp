@@ -49,9 +49,19 @@ pub struct UserAccountDataParams {
 pub struct GenericLogic;
 
 impl GenericLogic {
-    pub async fn calculate_user_account_data(//params: UserAccountDataParams,
+    pub async fn calculate_user_account_data(
+        on_behalf: Option<String>
     ) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
-        let user_principal = ic_cdk::caller();
+        let user_principal = match on_behalf {
+            // If `on_behalf` is Some, we parse the Principal from the string
+            Some(ref principal_str) => {
+                // Parse the principal string into a Principal and return an error if it fails
+                Principal::from_text(principal_str)
+                    .map_err(|e| format!("Failed to parse Principal: {}", e))?
+            },
+            // If `on_behalf` is None, we use the caller's principal
+            None => ic_cdk::caller(),
+        };
         // let user_principal =
         //     Principal::from_text("65j2k-jdu5y-vcmph-e4elp-mz7hc-cfo45-4aype-qzzf2-j25xy-qldem-mae")
         //         .unwrap();
@@ -92,7 +102,9 @@ impl GenericLogic {
 
         for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
             ic_cdk::println!("Processing reserve: {:?}", user_reserve_data);
-
+if !user_reserve_data.is_using_as_collateral_or_borrow{
+    continue;
+}
             let reserve_data_result = mutate_state(|state| {
                 let asset_index = &mut state.asset_index;
                 asset_index

@@ -55,6 +55,7 @@ use std::cell::RefCell;
 const MAX_MESSAGE_SIZE: u64 = 1024 * 1024;
 
 #[cfg(not(feature = "u256-tokens"))]
+
 pub type Tokens = ic_icrc1_tokens_u64::U64;
 
 #[cfg(feature = "u256-tokens")]

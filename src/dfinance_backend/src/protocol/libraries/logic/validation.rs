@@ -78,24 +78,27 @@ impl ValidationLogic {
     pub async fn validate_withdraw(
         reserve: &ReserveData,
         amount: u128,
+        usd_amount: u128,
         user: Principal,
         ledger_canister: Principal,
     ) {
         // validating amount
         let transfer_fees = get_fees(ledger_canister).await;
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
-
+    
         let final_amount = amount + transfer_fees;
         ic_cdk::println!("final_amount : {:?}", final_amount);
-
+    
         if amount == 0 {
+            ic_cdk::println!("Error: Invalid Amount");
             panic!("{:?}", Error::InvalidAmount);
         }
-
+    
         if user != ic_cdk::caller() {
+            ic_cdk::println!("Error: Invalid User, expected user: {:?}", ic_cdk::caller());
             panic!("{:?}", Error::InvalidUser);
         }
-
+    
         // Fetching user data
         let user_data_result = mutate_state(|state| {
             let user_profile_data = &mut state.user_profile;
@@ -104,58 +107,61 @@ impl ValidationLogic {
                 .map(|user| user.0.clone())
                 .ok_or_else(|| panic!("User not found: {}", user.to_string()))
         });
-
+    
         let mut user_data = match user_data_result {
             Ok(data) => {
                 ic_cdk::println!("User found: {:?}", data);
                 data
             }
             Err(e) => {
+                ic_cdk::println!("Error fetching user data: {:?}", e);
                 panic!("{:?}", e);
             }
         };
-
+    
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
                 .iter_mut()
                 .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
             None => None,
         };
-
+    
         let mut user_current_supply = 0;
-
+    
         if let Some((_, reserve_data)) = user_reserve {
             user_current_supply = reserve_data.asset_supply;
         }
-
-        if final_amount > user_current_supply as u128 {
-            panic!("{:?}", Error::WithdrawMoreThanSupply);
-        }
-
+    
+        ic_cdk::println!("User current supply: {:?}", user_current_supply);
+    
         // validating reserve states
         let (is_active, is_frozen, is_paused) = (
             reserve.configuration.active,
             reserve.configuration.frozen,
             reserve.configuration.paused,
         );
-
+    
         if !is_active {
+            ic_cdk::println!("Error: Reserve inactive");
             panic!("{:?}", Error::ReserveInactive);
         }
         if is_paused {
+            ic_cdk::println!("Error: Reserve paused");
             panic!("{:?}", Error::ReservePaused);
         }
         if is_frozen {
+            ic_cdk::println!("Error: Reserve frozen");
             panic!("{:?}", Error::ReserveFrozen);
         }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
+        ic_cdk::println!("Reserve status: active: {:?}, paused: {:?}, frozen: {:?}", is_active, is_paused, is_frozen);
 
-        let user_total_collateral = user_data.total_collateral.unwrap_or(0) - amount;
-
-        let next_collateral = user_total_collateral - amount;
-
+        // Ask: change amount to the usd amount because we are subtracting usd amoun.
+        let user_total_collateral = user_data.total_collateral.unwrap_or(0) - usd_amount;
+        ic_cdk::println!("User first collateral: {:?}", user_total_collateral);
+    
+        // let next_collateral = user_total_collateral - amount;
+        // ic_cdk::println!("User next collateral: {:?}", next_collateral);
+    
         // Calculating user liquidation threshold
         let user_thrs = cal_average_threshold(
             amount,
@@ -164,33 +170,38 @@ impl ValidationLogic {
             user_data.total_collateral.unwrap_or(0),
             user_data.liquidation_threshold.unwrap_or(0),
         );
-        ic_cdk::println!("user_thr {:?}", user_thrs);
-
+        ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
+    
         let user_position = UserPosition {
-            total_collateral_value: next_collateral,
+            total_collateral_value: user_total_collateral,
             total_borrowed_value: user_data.total_debt.unwrap_or(0),
             liquidation_threshold: user_thrs,
         };
-
+    
         // Calculating LTV
         let ltv = calculate_ltv(&user_position);
-        ic_cdk::println!("LTV {:?}", ltv);
+        ic_cdk::println!("Loan-to-Value (LTV): {:?}", ltv);
+    
         ic_cdk::println!(
-            "user liq threshold {:?}",
+            "User liquidation threshold: {:?}",
             user_data.liquidation_threshold.unwrap()
         );
-
+    
         if ltv >= user_data.liquidation_threshold.unwrap() {
+            ic_cdk::println!("Error: LTV greater than threshold");
             panic!("{:?}", Error::LTVGreaterThanThreshold);
         }
-
+    
         // Calculating health factor
         let health_factor = calculate_health_factor(&user_position);
-
+        ic_cdk::println!("Health factor: {:?}", health_factor);
+    
         if health_factor < 1 {
+            ic_cdk::println!("Error: Health factor less than 1");
             panic!("{:?}", Error::HealthFactorLess);
         }
     }
+    
 
     //     // --------------------------------------
     //     // --------------- BORROW ---------------
@@ -317,93 +328,105 @@ impl ValidationLogic {
         ledger_canister: Principal,
     ) {
         ic_cdk::println!("Starting validate_repay function");
-
+        ic_cdk::println!("amount repay {} = ",amount);
+        ic_cdk::println!("reserve repay {:?} = ",reserve);
+    
+        // Fetching transfer fees
         let transfer_fees = get_fees(ledger_canister).await;
-        ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
-
+        ic_cdk::println!("Transfer fees fetched: {:?}", transfer_fees);
+    
         let final_amount = amount + transfer_fees;
-        ic_cdk::println!("final_amount : {:?}", final_amount);
-
+        ic_cdk::println!("Final amount to be repaid (including fees): {:?}", final_amount);
+    
+        // Check if the amount is valid
         if amount == 0 {
             ic_cdk::println!("Invalid amount: 0");
             panic!("{:?}", Error::InvalidAmount);
         }
-
+    
+        // Uncomment and validate user if necessary
         // if user != ic_cdk::caller() {
         //     ic_cdk::println!("Invalid user: {:?} is not the caller", user);
         //     panic!("{:?}", Error::InvalidUser);
         // }
-
+    
         // Fetch user data
         let user_data_result = mutate_state(|state| {
             let user_profile_data = &mut state.user_profile;
-            user_profile_data
+            let result = user_profile_data
                 .get(&user)
                 .map(|user| user.0.clone())
-                .ok_or_else(|| panic!("User not found: {}", user.to_string()))
+                .ok_or_else(|| panic!("User not found: {}", user.to_string()));
+            ic_cdk::println!("User data result from state mutation: {:?}", result);
+            result
         });
-
+    
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User data fetched successfully: {:?}", data);
                 data
             }
             Err(e) => {
-                ic_cdk::println!("Error finding user: {:?}", e);
+                ic_cdk::println!("Error fetching user data: {:?}", e);
                 panic!("{:?}", e);
             }
         };
-
+    
+        // Fetch user reserves
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => {
                 ic_cdk::println!("User reserves found: {:?}", reserves);
-                reserves
+                let found_reserve = reserves
                     .iter_mut()
-                    .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap())
+                    .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap());
+                ic_cdk::println!("Found user reserve: {:?}", found_reserve);
+                found_reserve
             }
             None => {
                 ic_cdk::println!("No reserves found for user");
                 None
             }
         };
-
+    
         let mut user_current_debt = 0;
-
+    
         if let Some((asset_name, reserve_data)) = user_reserve {
             ic_cdk::println!(
-                "User reserve found: {:?}, Reserve data: {:?}",
+                "User reserve found for asset: {:?}, Reserve data: {:?}",
                 asset_name,
                 reserve_data
             );
             user_current_debt = reserve_data.asset_borrow;
+            ic_cdk::println!("User's current debt updated: {:?}", user_current_debt);
         } else {
             ic_cdk::println!("No matching user reserve found");
         }
-
-        ic_cdk::println!("User current debt: {:?}", user_current_debt);
-
-        if final_amount > user_current_debt as u128 {
-            ic_cdk::println!(
-                "Repay amount exceeds current debt: final_amount = {:?}, user_current_debt = {:?}",
-                final_amount,
-                user_current_debt
-            );
-            panic!("{:?}", Error::RepayMoreThanDebt);
-        }
-
+    
+        ic_cdk::println!("User's current debt: {:?}", user_current_debt);
+    
+        // Uncomment and validate if final_amount exceeds current debt
+        // if final_amount > user_current_debt as u128 {
+        //     ic_cdk::println!(
+        //         "Repay amount exceeds current debt: final_amount = {:?}, user_current_debt = {:?}",
+        //         final_amount,
+        //         user_current_debt
+        //     );
+        //     panic!("{:?}", Error::RepayMoreThanDebt);
+        // }
+    
+        // Fetch reserve status
         let (is_active, is_frozen, is_paused) = (
             reserve.configuration.active,
             reserve.configuration.frozen,
             reserve.configuration.paused,
         );
-
+    
         ic_cdk::println!(
-            "Reserve status - is_active: {:?}, is_frozen: {:?}, is_paused: {:?}",
-            is_active,
-            is_frozen,
-            is_paused
+            "Reserve status - Active: {:?}, Frozen: {:?}, Paused: {:?}",
+            is_active, is_frozen, is_paused
         );
-
+    
+        // Check reserve status
         if !is_active {
             ic_cdk::println!("Reserve is inactive");
             panic!("{:?}", Error::ReserveInactive);
@@ -416,9 +439,10 @@ impl ValidationLogic {
             ic_cdk::println!("Reserve is frozen");
             panic!("{:?}", Error::ReserveFrozen);
         }
-
+    
         ic_cdk::println!("Validation completed successfully");
     }
+    
 
     //     // --------------------------------------
     //     // ---------------LIQUIDATION---------------

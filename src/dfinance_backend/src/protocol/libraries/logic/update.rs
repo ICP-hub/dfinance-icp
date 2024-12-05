@@ -364,7 +364,7 @@ impl UpdateLogic {
         reserve: &ReserveData,
         usd_amount: u128,
     ) -> Result<(), String> {
-        // Fetchs user data
+        // Fetching user data
         let user_data_result = user_data(user_principal);
 
         let mut user_data = match user_data_result {
@@ -380,6 +380,8 @@ impl UpdateLogic {
 
         user_data.net_worth =
             Some((user_data.net_worth.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
+        ic_cdk::println!("Updated net worth: {:?}", user_data.net_worth);
+
         if params.is_collateral {
             let user_thrs = cal_average_threshold(
                 0,
@@ -399,18 +401,21 @@ impl UpdateLogic {
                 user_data.total_collateral.unwrap_or(0),
                 user_data.max_ltv.unwrap_or(0),
             );
-            ic_cdk::println!(" user_max_ltv: {:?}", user_max_ltv);
+            ic_cdk::println!("user_max_ltv: {:?}", user_max_ltv);
             user_data.max_ltv = Some(user_max_ltv);
 
             user_data.total_collateral = Some(
                 (user_data.total_collateral.unwrap() as i128 - usd_amount.clone() as i128).max(0)
                     as u128,
             );
+            ic_cdk::println!("Updated total collateral: {:?}", user_data.total_collateral);
+
             user_data.available_borrow = Some(
                 (user_data.available_borrow.unwrap() as i128
                     - ((usd_amount.scaled_mul(reserve.configuration.ltv)) / 100) as i128)
                     .max(0) as u128,
             );
+            ic_cdk::println!("Updated available borrow: {:?}", user_data.available_borrow);
 
             let user_position = UserPosition {
                 total_collateral_value: user_data.total_collateral.unwrap_or(0),
@@ -425,6 +430,7 @@ impl UpdateLogic {
 
             let ltv = calculate_ltv(&user_position);
             user_data.ltv = Some(ltv);
+            ic_cdk::println!("Updated user LTV: {}", ltv);
         }
 
         // Function to check if the user has a reserve for the asset
@@ -434,11 +440,14 @@ impl UpdateLogic {
             Some((_, reserve)) => reserve.asset_supply,
             None => 0,
         };
+        ic_cdk::println!("Asset supply for user: {}", asset_supply);
 
         let mut update_user_state = UserState {
             adjusted_balance: reserve_cache.curr_liquidity_index.scaled_mul(asset_supply),
             index: reserve_cache.curr_liquidity_index,
         };
+
+        ic_cdk::println!("Update user state before burn: {:?}", update_user_state);
 
         let platform_principal = ic_cdk::api::id();
 
@@ -451,17 +460,18 @@ impl UpdateLogic {
             platform_principal,
         )
         .await;
+
         match burn_scaled_result {
             Ok(()) => {
-                println!("minting debttoken successfully");
+                ic_cdk::println!("Burning dToken successfully completed");
             }
             Err(e) => {
-                panic!("Get error in burning the dtoken {:?}", e);
+                panic!("Error in burning the dToken: {:?}", e);
             }
         };
 
         ic_cdk::println!(
-            "withdraw before update user state = {:?}",
+            "Withdraw before updating user state = {:?}",
             update_user_state
         );
 
@@ -492,6 +502,7 @@ impl UpdateLogic {
                     params.amount, reserve_data.asset_supply
                 ));
             }
+
             if reserve_data.asset_supply == 0 {
                 reserve_data.is_collateral = true;
             }
@@ -503,7 +514,7 @@ impl UpdateLogic {
             ));
         }
 
-        // Saves the updated user data back to state
+        // Save the updated user data back to state
         mutate_state(|state| {
             state
                 .user_profile

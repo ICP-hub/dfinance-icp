@@ -8,7 +8,7 @@ use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::get_exchange_rates;
+use crate::protocol::libraries::math::calculate::{get_exchange_rates, update_reserves_price};
 
 impl SupplyLogic {
     // -------------------------------------
@@ -25,7 +25,7 @@ impl SupplyLogic {
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
-        
+
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
@@ -35,6 +35,7 @@ impl SupplyLogic {
         // Converting asset to usdt value
         let mut usd_amount = params.amount;
 
+        update_reserves_price().await;
         let supply_amount_to_usd =
             get_exchange_rates(params.asset.clone(), None, params.amount.clone()).await;
         match supply_amount_to_usd {
@@ -87,10 +88,16 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Supply validated successfully");
 
-        let total_supplies= reserve_data.asset_supply.clone() + params.amount; //TODO not sure should store usd value or token amount
+        let total_supplies = reserve_data.asset_supply.clone() + params.amount; //TODO not sure should store usd value or token amount
         let total_borrow = reserve_data.asset_borrow;
-        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
-        reserve_data.total_supply+=usd_amount;
+        let _ = reserve::update_interest_rates(
+            &mut reserve_data,
+            &mut reserve_cache,
+            total_borrow,
+            total_supplies,
+        )
+        .await;
+        reserve_data.total_supply += usd_amount;
 
         ic_cdk::println!("Interest rates updated successfully");
 
@@ -153,12 +160,19 @@ impl SupplyLogic {
 
         let (user_principal, liquidator_principal) =
             if let Some(on_behalf_of) = params.on_behalf_of.clone() {
+                ic_cdk::println!("Processing withdrawal on behalf of: {}", on_behalf_of);
                 let user_principal = Principal::from_text(on_behalf_of)
                     .map_err(|_| "Invalid user canister ID".to_string())?;
                 let liquidator_principal = ic_cdk::caller();
+                ic_cdk::println!("User principal: {:?}", user_principal);
+                ic_cdk::println!("Liquidator principal: {:?}", liquidator_principal);
                 (user_principal, Some(liquidator_principal))
             } else {
                 let user_principal = ic_cdk::caller();
+                ic_cdk::println!(
+                    "No liquidator, using caller as user principal: {:?}",
+                    user_principal
+                );
                 (user_principal, None)
             };
 
@@ -169,17 +183,21 @@ impl SupplyLogic {
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
+        ic_cdk::println!("Ledger canister ID: {:?}", ledger_canister_id);
 
         let platform_principal = ic_cdk::api::id();
-        let withdraw_amount = Nat::from(params.amount);
+        ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-        // Converting asset value to usdt
+        let withdraw_amount = Nat::from(params.amount);
+        ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
+
+        update_reserves_price().await;
+        // Converting asset value to USD
         let mut usd_amount = params.amount;
         let withdraw_amount_to_usd =
             get_exchange_rates(params.asset.clone(), None, params.amount).await;
         match withdraw_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
-                // Extracted the amount in USD
                 usd_amount = amount_in_usd;
                 ic_cdk::println!("Withdraw amount in USD: {:?}", amount_in_usd);
             }
@@ -188,12 +206,14 @@ impl SupplyLogic {
             }
         }
 
-        ic_cdk::println!("Withdraw amount in USD: {:?}", usd_amount);
+        ic_cdk::println!("Final Withdraw amount in USD: {:?}", usd_amount);
 
         // Determines the receiver principal
         let transfer_to_principal = if let Some(liquidator) = liquidator_principal {
+            ic_cdk::println!("Transferring to liquidator: {:?}", liquidator);
             liquidator
         } else {
+            ic_cdk::println!("Transferring to user: {:?}", user_principal);
             user_principal
         };
 
@@ -229,22 +249,42 @@ impl SupplyLogic {
         ValidationLogic::validate_withdraw(
             &reserve_data,
             params.amount,
+            usd_amount,
             user_principal,
             ledger_canister_id,
         )
         .await;
         ic_cdk::println!("Withdraw validated successfully");
 
-        let total_supplies=  reserve_data.asset_supply - params.amount;
+        // Ask: if we subtract the upcoming amount, it will go into the -.
+        let total_supplies = reserve_data.asset_supply - params.amount;
         let total_borrow = reserve_data.asset_borrow;
-        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
-        reserve_data.total_supply =  (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
+        ic_cdk::println!("Total supplies after withdraw: {:?}", total_supplies);
+        ic_cdk::println!("Total borrow amount: {:?}", total_borrow);
+
+        let _ = reserve::update_interest_rates(
+            &mut reserve_data,
+            &mut reserve_cache,
+            total_borrow,
+            total_supplies,
+        )
+        .await;
+        ic_cdk::println!("Interest rates updated successfully");
+
+        reserve_data.total_supply =
+            (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
+        ic_cdk::println!(
+            "Updated reserve total supply: {:?}",
+            reserve_data.total_supply
+        );
+
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
+        ic_cdk::println!("Reserve data saved back to state");
 
-        // ----------- Update logic here -------------
+        // Update logic
         let _ = UpdateLogic::update_user_data_withdraw(
             user_principal,
             &reserve_cache,
@@ -253,8 +293,9 @@ impl SupplyLogic {
             usd_amount.clone(),
         )
         .await;
+        ic_cdk::println!("User data updated after withdrawal");
 
-        // Transfers the asset from the user to our backend cansiter
+        // Transfers the asset from the user to our backend canister
         match asset_transfer_from(
             ledger_canister_id,
             platform_principal,
@@ -264,15 +305,15 @@ impl SupplyLogic {
         .await
         {
             Ok(new_balance) => {
-                println!("Asset transfer from backend to user executed successfully");
-
+                ic_cdk::println!("Asset transfer from backend to user executed successfully");
                 Ok(new_balance)
             }
             Err(e) => {
-                return Err(format!(
+                ic_cdk::println!("Error during asset transfer: {:?}", e);
+                Err(format!(
                     "Asset transfer failed, minted dtoken. Error: {:?}",
                     e
-                ));
+                ))
             }
         }
     }

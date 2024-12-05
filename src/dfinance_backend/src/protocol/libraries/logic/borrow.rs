@@ -1,13 +1,12 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
+use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::declarations::storable::Candid;
-use crate::protocol::libraries::math::calculate::get_exchange_rates;
+use crate::protocol::libraries::math::calculate::{get_exchange_rates, update_reserves_price};
 use candid::{Nat, Principal};
-
 
 // -------------------------------------
 // ----------- BORROW LOGIC ------------
@@ -42,6 +41,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     let amount_nat = Nat::from(params.amount);
     ic_cdk::println!("Borrow amount in Nat: {:?}", amount_nat);
+
+    update_reserves_price().await;
 
     let mut usd_amount = params.amount;
     let borrow_amount_to_usd: Result<(u128, u64), String> =
@@ -80,7 +81,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
     if reserve_data.asset_borrow == 0 {
         *&mut reserve_data.debt_index = 100000000;
     }
-    ic_cdk::println!("Updated debt index for reserve data: {:?}", reserve_data.debt_index);
+    ic_cdk::println!(
+        "Updated debt index for reserve data: {:?}",
+        reserve_data.debt_index
+    );
 
     let mut reserve_cache = reserve::cache(&reserve_data);
     ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
@@ -108,9 +112,18 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 
     let total_borrow = reserve_data.asset_borrow + params.amount;
     let total_supplies = reserve_data.asset_supply;
-    let _ = reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, total_borrow, total_supplies).await;
+    let _ = reserve::update_interest_rates(
+        &mut reserve_data,
+        &mut reserve_cache,
+        total_borrow,
+        total_supplies,
+    )
+    .await;
     reserve_data.total_borrowed += usd_amount;
-    ic_cdk::println!("Interest rates updated successfully. Total borrowed: {:?}", reserve_data.total_borrowed);
+    ic_cdk::println!(
+        "Interest rates updated successfully. Total borrowed: {:?}",
+        reserve_data.total_borrowed
+    );
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -124,7 +137,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         params,
         &reserve_data,
         usd_amount,
-    ).await;
+    )
+    .await;
     ic_cdk::println!("User data updated successfully");
 
     // Transfers borrow amount from the pool to the user
@@ -133,19 +147,25 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         platform_principal,
         user_principal,
         amount_nat.clone(),
-    ).await
+    )
+    .await
     {
         Ok(new_balance) => {
-            ic_cdk::println!("Asset transfer from backend to user executed successfully. New balance: {:?}", new_balance);
+            ic_cdk::println!(
+                "Asset transfer from backend to user executed successfully. New balance: {:?}",
+                new_balance
+            );
             Ok(new_balance)
         }
         Err(e) => {
             ic_cdk::println!("Asset transfer failed, burned debt token. Error: {:?}", e);
-            Err(format!("Asset transfer failed, burned debt token. Error: {:?}", e))
+            Err(format!(
+                "Asset transfer failed, burned debt token. Error: {:?}",
+                e
+            ))
         }
     }
 }
-
 
 // -------------------------------------
 // ------------ REPAY LOGIC ------------
@@ -180,6 +200,8 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
 
     let repay_amount = Nat::from(params.amount);
     ic_cdk::println!("Repay amount: {:?}", repay_amount);
+
+    update_reserves_price().await;
 
     // Converting asset value to usdt
     let mut usd_amount = params.amount;
@@ -226,6 +248,10 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
         }
     };
 
+    if reserve_data.debt_index == 0 {
+        reserve_data.debt_index = 100000000;
+    }
+
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
     ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
@@ -250,9 +276,19 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     ic_cdk::println!("Total borrow after repay: {:?}", total_borrow);
     ic_cdk::println!("Total supplies: {:?}", total_supplies);
 
-    let _ = reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, total_borrow, total_supplies).await;
-    reserve_data.total_borrowed = (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
-    ic_cdk::println!("Total borrowed after updating interest rates: {:?}", reserve_data.total_borrowed);
+    let _ = reserve::update_interest_rates(
+        &mut reserve_data,
+        &mut reserve_cache,
+        total_borrow,
+        total_supplies,
+    )
+    .await;
+    reserve_data.total_borrowed =
+        (reserve_data.total_borrowed as i128 - usd_amount as i128).max(0) as u128;
+    ic_cdk::println!(
+        "Total borrowed after updating interest rates: {:?}",
+        reserve_data.total_borrowed
+    );
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -280,12 +316,18 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
     .await
     {
         Ok(new_balance) => {
-            ic_cdk::println!("Asset transfer from user to backend executed successfully, new balance: {:?}", new_balance);
+            ic_cdk::println!(
+                "Asset transfer from user to backend executed successfully, new balance: {:?}",
+                new_balance
+            );
             Ok(new_balance)
         }
         Err(e) => {
             ic_cdk::println!("Asset transfer failed, error: {:?}", e);
-            Err(format!("Asset transfer failed, minted debt token. Error: {:?}", e))
+            Err(format!(
+                "Asset transfer failed, minted debt token. Error: {:?}",
+                e
+            ))
         }
     }
 }

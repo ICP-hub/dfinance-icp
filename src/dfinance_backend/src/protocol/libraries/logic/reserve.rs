@@ -71,6 +71,7 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
         reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
     }
 
+    ic_cdk::println!("current debt = {}",reserve_cache.curr_debt_index);
     if reserve_cache.curr_debt_index != 0 {
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
             reserve_cache.curr_debt_rate,
@@ -89,15 +90,38 @@ pub async fn update_interest_rates(
     total_borrowed: u128,
     total_supplies: u128,
 ) {
+    // Initial reserve data
+    ic_cdk::println!("Starting update_interest_rates function");
+    ic_cdk::println!("Initial reserve data: {:?}", reserve_data);
+    ic_cdk::println!("Initial reserve cache: {:?}", reserve_cache);
+    ic_cdk::println!("Total borrowed: {:?}", total_borrowed);
+    ic_cdk::println!("Total supplies: {:?}", total_supplies);
+
+    // Calculating total debt
     let total_debt = total_borrowed.scaled_mul(reserve_cache.curr_debt_index);
+    ic_cdk::println!("Total debt calculated: {:?}", total_debt);
+
+    // Calculating total supply
     let total_supply = total_supplies.scaled_mul(reserve_cache.curr_liquidity_index);
+    ic_cdk::println!("Total supply calculated: {:?}", total_supply);
+
+    // Initializing interest rate parameters
     let asset = reserve_data
         .asset_name
         .clone()
-        .unwrap_or("no token".to_string());
+        .unwrap_or_else(|| "no token".to_string());
+    ic_cdk::println!("Asset name: {:?}", asset);
+
     let interest_rate_params = initialize_interest_rate_params(&asset);
-    ic_cdk::println!("interest rate params {:?}", interest_rate_params);
-    ic_cdk::println!("total debt: {:?}", total_debt);
+    ic_cdk::println!("Initialized interest rate parameters: {:?}", interest_rate_params);
+
+    // Calculating interest rates
+    ic_cdk::println!(
+        "Current debt rate: {:?}, Reserve factor: {:?}",
+        reserve_cache.curr_debt_rate,
+        reserve_cache.reserve_factor
+    );
+
     let (next_liquidity_rate, next_debt_rate) = calculate_interest_rates(
         total_supply,
         total_borrowed,
@@ -106,15 +130,21 @@ pub async fn update_interest_rates(
         &interest_rate_params,
         reserve_cache.reserve_factor,
     );
+
+    ic_cdk::println!("Next liquidity rate: {:?}", next_liquidity_rate);
+    ic_cdk::println!("Next debt rate: {:?}", next_debt_rate);
+
+    // Updating reserve data
     reserve_data.asset_borrow = total_borrowed;
     reserve_data.asset_supply = total_supply;
     reserve_data.current_liquidity_rate = next_liquidity_rate;
     reserve_data.borrow_rate = next_debt_rate;
-    ic_cdk::println!(
-        "reserve_data.total_borrowed: {:?}",
-        reserve_data.total_borrowed
-    );
+
+    // Final reserve data
+    ic_cdk::println!("Updated reserve data: {:?}", reserve_data);
+    ic_cdk::println!("reserve_data.total_borrowed: {:?}", reserve_data.total_borrowed);
 }
+
 
 pub async fn burn_scaled(
     user_state: &mut UserState,

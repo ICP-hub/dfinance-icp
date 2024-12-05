@@ -68,9 +68,9 @@ const useUserData = () => {
   }, [principal, backendActor]);
   useEffect(() => {
     fetchUserAccountData();
-  }, [userAccountData]);
+  }, []);
 
-  useEffect(() => {}, [userAccountData]);
+  
 
   return {
     userData,

@@ -266,7 +266,7 @@ pub async fn mint_scaled(
     ic_cdk::println!("--- mint_scaled_modified called ---");
     ic_cdk::println!("Initial user state: {:?}", user_state);
     ic_cdk::println!("Amount value: {}", amount);
-    ic_cdk::println!("Current liquidity index value: {}", current_liquidity_index);
+    ic_cdk::println!("Current liquidity index value: {}", index);
     ic_cdk::println!("User principal value: {}", user_principal);
     ic_cdk::println!(
         "current_liquidity_index value = {}",

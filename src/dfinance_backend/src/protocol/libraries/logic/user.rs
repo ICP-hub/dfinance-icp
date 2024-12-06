@@ -50,23 +50,29 @@ pub struct GenericLogic;
 
 impl GenericLogic {
     pub async fn calculate_user_account_data(
-        on_behalf: Option<Principal>,
+        on_behalf: Option<String>,
     ) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
         let user_principal = match on_behalf {
-            Some(principal) => principal,
+            // If `on_behalf` is Some, we parse the Principal from the string
+            Some(ref principal_str) => {
+                // Parse the principal string into a Principal and return an error if it fails
+                Principal::from_text(principal_str)
+                    .map_err(|e| format!("Failed to parse Principal: {}", e))?
+            }
+            // If `on_behalf` is None, we use the caller's principal
             None => ic_cdk::caller(),
         };
         // let user_principal =
         //     Principal::from_text("65j2k-jdu5y-vcmph-e4elp-mz7hc-cfo45-4aype-qzzf2-j25xy-qldem-mae")
         //         .unwrap();
-        ic_cdk::println!("Principal of the user: {:?}", user_principal);
+        ic_cdk::println!("Principal of the user: {:?}", user_principal.to_string());
 
         let user_data_result = user_data(user_principal);
         ic_cdk::println!("Fetching user data...");
 
         let user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User data found");
                 data
             }
             Err(e) => {
@@ -85,7 +91,7 @@ impl GenericLogic {
             .reserves
             .as_ref()
             .ok_or_else(|| format!("Reserves not found for user"))?;
-        ic_cdk::println!("User reserves found: {:?}", user_data_reserves);
+        ic_cdk::println!("User reserves found");
 
         let mut total_collateral = 0u128;
         let mut total_debt = 0u128;
@@ -95,8 +101,11 @@ impl GenericLogic {
         let mut available_borrow = 0u128;
 
         for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
-            ic_cdk::println!("Processing reserve: {:?}", user_reserve_data);
-
+            ic_cdk::println!("Processing reserve: {:?}", reserve_name);
+            if !user_reserve_data.is_using_as_collateral_or_borrow {
+                ic_cdk::println!("no supply no borrow, skipping..... {:?}", reserve_name);
+                continue;
+            }
             let reserve_data_result = mutate_state(|state| {
                 let asset_index = &mut state.asset_index;
                 asset_index
@@ -109,7 +118,7 @@ impl GenericLogic {
 
             let reserve_data = match reserve_data_result {
                 Ok(data) => {
-                    ic_cdk::println!("Reserve data found for asset: {:?}", data);
+                    ic_cdk::println!("Reserve data found for asset");
                     data
                 }
                 Err(e) => {
@@ -142,21 +151,34 @@ impl GenericLogic {
             match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
                 Ok(price_cache) => {
                     // Fetch the specific CachedPrice for the asset from the PriceCache
-                    if let Some(cached_price) = price_cache.cache.get(&user_reserve_data.reserve.clone()) {
+                    if let Some(cached_price) =
+                        price_cache.cache.get(&user_reserve_data.reserve.clone())
+                    {
                         let amount = cached_price.price; // Access the `price` field
                         rate = Some(amount);
-                        ic_cdk::println!("Fetched exchange rate for {}: {:?}", user_reserve_data.reserve.clone(), rate);
+                        ic_cdk::println!(
+                            "Fetched exchange rate for {}: {:?}",
+                            user_reserve_data.reserve.clone(),
+                            rate
+                        );
                     } else {
-                        ic_cdk::println!("No cached price found for {}", user_reserve_data.reserve.clone());
+                        ic_cdk::println!(
+                            "No cached price found for {}",
+                            user_reserve_data.reserve.clone()
+                        );
                         rate = None; // Explicitly set rate to None if the asset is not in the cache
                     }
                 }
                 Err(err) => {
-                    ic_cdk::println!("Error fetching exchange rate for {}: {}", user_reserve_data.reserve.clone(), err);
+                    ic_cdk::println!(
+                        "Error fetching exchange rate for {}: {}",
+                        user_reserve_data.reserve.clone(),
+                        err
+                    );
                     rate = None; // Explicitly set rate to None in case of an error
                 }
             }
-            let asset_price =rate.unwrap();
+            let asset_price = rate.unwrap();
             if user_reserve_data.is_collateral {
                 ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
@@ -168,16 +190,11 @@ impl GenericLogic {
                 .await;
 
                 ic_cdk::println!(
-                    "User balance for collateral reserve '{}': {}",
+                    "User balance in usd for collateral reserve '{}': {}",
                     user_reserve_data.reserve,
                     user_balance
                 );
 
-                ic_cdk::println!(
-                    "user data total collateral = {:?}",
-                    user_data.total_collateral
-                );
-                ic_cdk::println!("user data total debt = {:?}", user_data.total_debt);
                 //Ask jyotirmay : the total collateral this time should be bigger than the userdata.total_collateral.
                 total_collateral += user_balance;
                 ic_cdk::println!("Total collateral so far: {}", total_collateral);
@@ -201,7 +218,11 @@ impl GenericLogic {
                 );
 
                 available_borrow += user_balance.scaled_mul(reserve_data.configuration.ltv) / 100;
-                ic_cdk::println!("avaible borrow inside if statement = {}", available_borrow);
+                ic_cdk::println!(
+                    "available borrow after adding collateral of {} = {}",
+                    reserve_name,
+                    available_borrow
+                );
             }
 
             if user_reserve_data.is_borrowed {
@@ -224,23 +245,21 @@ impl GenericLogic {
                     available_borrow = 0;
                 }
                 ic_cdk::println!(
-                    "avaible borrow inside else statement = {}",
+                    "avaible borrow after subtracting debt = {}",
                     available_borrow
                 );
-                ic_cdk::println!("user debt of the user data = {:?}", user_data.total_debt);
             }
         }
 
-        ic_cdk::println!(
-            "Total collateral: {}, Total debt: {}, Avg LTV: {}, Avg Liquidation Threshold: {}",
-            total_collateral,
-            total_debt,
-            avg_ltv,
-            avg_liquidation_threshold
-        );
+        // ic_cdk::println!(
+        //     "Total collateral: {}, Total debt: {}, Avg LTV: {}, Avg Liquidation Threshold: {}",
+        //     total_collateral,
+        //     total_debt,
+        //     avg_ltv,
+        //     avg_liquidation_threshold
+        // );
 
         avg_ltv = if total_collateral != 0 {
-            ic_cdk::println!("was it inside");
             // weighted average.
             avg_ltv.scaled_div(total_collateral)
         } else {
@@ -249,10 +268,6 @@ impl GenericLogic {
         ic_cdk::println!("Final Avg LTV: {}", avg_ltv);
 
         avg_liquidation_threshold = if total_collateral != 0 {
-            ic_cdk::println!(
-                "division of two things = {}",
-                avg_liquidation_threshold.scaled_div(total_collateral)
-            );
             avg_liquidation_threshold.scaled_div(total_collateral)
         } else {
             0
@@ -268,9 +283,9 @@ impl GenericLogic {
         } else {
             (total_collateral * avg_liquidation_threshold) / total_debt
         };
-        ic_cdk::println!("Calculated Health Factor: {}", health_factor);
+        ic_cdk::println!("Calculated Final Health Factor: {}", health_factor);
 
-        ic_cdk::println!("avaiable borrow = {}", available_borrow);
+        ic_cdk::println!("Final avaiable borrow = {}", available_borrow);
 
         ic_cdk::println!(
             "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
@@ -301,17 +316,14 @@ impl GenericLogic {
     ) -> u128 {
         ic_cdk::println!("Calculating user balance in base currency...");
         ic_cdk::println!("User principal: {:?}", user_principal);
-        ic_cdk::println!("Reserve data: {:?}", reserve);
+        ic_cdk::println!("Reserve: {:?}", reserve.reserve);
         ic_cdk::println!("Asset price: {}", asset_price);
 
         let asset_reserve = get_reserve_data(reserve.reserve.clone()).unwrap();
         // Simulate fetching user bto_i128(scaled balance multiplied by normalized income)
         let d_token_canister_principal: Principal =
             Principal::from_text(asset_reserve.d_token_canister.unwrap()).unwrap();
-        ic_cdk::println!(
-            "DToken canister principal: {:?}",
-            d_token_canister_principal
-        );
+
         let get_balance_value: Nat = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
         ic_cdk::println!(
             "Fetched balance from DToken canister: {:?}",
@@ -352,7 +364,7 @@ impl GenericLogic {
     ) -> u128 {
         ic_cdk::println!("Calculating user balance in debt currency...");
         ic_cdk::println!("User principal: {:?}", user_principal);
-        ic_cdk::println!("Reserve data: {:?}", reserve);
+        ic_cdk::println!("Reserve data: {:?}", reserve.reserve);
         ic_cdk::println!("Asset price: {}", asset_price);
 
         let asset_reserve = get_reserve_data(reserve.reserve.clone()).unwrap();

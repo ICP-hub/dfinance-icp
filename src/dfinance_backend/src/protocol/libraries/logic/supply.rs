@@ -182,7 +182,7 @@ impl SupplyLogic {
     
         let mut reserve_data = match reserve_data_result {
             Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset: {:?}", data);
+                ic_cdk::println!("Reserve data found for asset");
                 data
             }
             Err(e) => {
@@ -231,10 +231,9 @@ impl SupplyLogic {
             ic_cdk::println!("Creating new user list with the current user.");
             reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
         }
-        ic_cdk::println!("Updated user list of reserve: {:?}", reserve_data.userlist.clone());
-    
-        // Update state with new reserve data
-        ic_cdk::println!("Updating state with new reserve data...");
+
+        // ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
+
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));

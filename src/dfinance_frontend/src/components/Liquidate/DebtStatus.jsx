@@ -18,26 +18,30 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useAssetData from "../Common/useAssets";
-const ITEMS_PER_PAGE = 8;
-
+import useUserData from "../customHooks/useUserData";
 const DebtStatus = () => {
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [userAccountData, setUserAccountData] = useState(null);
+  const { userData} = useUserData();
+  const [loading ,setLoading ]= useState (true);
+  const [fetchedCount, setFetchedCount] = useState(0);
   const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
-  useAssetData();
+    useAssetData();
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
+  
 
   const navigate = useNavigate();
 
-  const { getAllUsers, principal } = useAuth();
+  const { getAllUsers, principal ,backendActor } = useAuth();
 
   const [users, setUsers] = useState([]);
-
+  
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -76,25 +80,58 @@ const DebtStatus = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredUsers = users
-    .map((item) => {
-      const mappedItem = {
-        reserves: item[1].reserves,
-        principal: item[0].toText(),
-        healthFactor: Number(item[1]?.health_factor) / 100000000,
-        item,
-      };
-      return mappedItem;
-    })
-    .filter((mappedItem) => {
-      const isValid =
-        mappedItem.reserves.length > 0 &&
-        mappedItem.principal !== principal &&
-        mappedItem.healthFactor >1 &&
-        (mappedItem.principal.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          mappedItem.item[1].total_debt.toString().includes(searchQuery));
-      return isValid;
-    });
+  .map((item) => {
+    const mappedItem = {
+      reserves: item[1].reserves,
+      principal: item[0].toText(), 
+      healthFactor: Number(item[1]?.health_factor) / 100000000,
+      item,
+    };
+    return mappedItem;
+  })
+  .filter((mappedItem) => {
+    const isValid =
+      mappedItem.reserves.length > 0 &&
+      mappedItem.principal !== principal &&
+      mappedItem.healthFactor > 1 &&
+      (mappedItem.principal
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+        mappedItem.item[1].total_debt.toString().includes(searchQuery));
+    return isValid;
+  });
 
+const fetchUserAccountData = async (userData) => {
+  console.log("Mapped item principal:", userData.principal); 
+  if (backendActor) {
+    try {
+      const result = await backendActor.get_user_account_data([userData.principal]);
+
+      if (result?.Err === "ERROR :: Pending") {
+        console.warn("Pending state detected. Retrying...");
+        setTimeout(() => fetchUserAccountData(userData), 1000); 
+        return;
+      }
+
+      if (result) {
+        setUserAccountData(result);
+      } else {
+        console.warn("No result returned for principal:", userData.principal);
+      }
+    } catch (error) {
+      console.error("Error fetching user account data:", error.message);
+    }
+  }
+};
+
+useEffect(() => {
+  filteredUsers.forEach((userData) => {
+    fetchUserAccountData(userData);
+  });
+}, [filteredUsers]);  
+
+
+  
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
@@ -130,38 +167,26 @@ const DebtStatus = () => {
   }, [showPopup]);
 
   const formatNumber = useFormatNumber();
-  const getAssetSupplyValue = (asset) => {
-    if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]) / 1e8;
-      return supplyValue;
-    }
-    return `no assets suplied`;
-  };
-  const getAssetBorrowValue = (asset) => {
-    if (asset_supply[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]) / 1e8;
-      return borrowValue; // Format as a number with 2 decimals
-    }
-    return `no assets borrowed`;
-  };
+ 
   const formatValue = (value) => {
-    const numericValue = parseFloat(value); 
+    const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
-      return "0.00"; 
+      return "0.00";
     }
     if (numericValue === 0) {
-      return "0.00"; 
+      return "0.00";
     } else if (numericValue >= 1) {
-      return numericValue.toFixed(2); 
+      return numericValue.toFixed(2);
     } else {
-      return numericValue.toFixed(7); 
+      return numericValue.toFixed(7);
     }
   };
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center mt-8">
-        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">Debt users list</h1>
-
+        <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">
+          Debt users list
+        </h1>
       </div>
 
       <div className="w-full mt-6">
@@ -222,8 +247,9 @@ const DebtStatus = () => {
                             <p className="font-medium">
                               $
                               {formatValue(
-  Number(mappedItem.item[1].total_debt) / 100000000
-)}
+                                Number(userAccountData?.Ok?.[1]) /
+                                  100000000
+                              )}
                             </p>
                           </div>
                         </div>
@@ -231,7 +257,6 @@ const DebtStatus = () => {
                       <td className="p-5 align-top hidden md:table-cell py-8">
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
-                            
                             const assetName = item[0];
                             const assetSupply = item[1]?.asset_supply;
                             const assetBorrow = item[1]?.asset_borrow;

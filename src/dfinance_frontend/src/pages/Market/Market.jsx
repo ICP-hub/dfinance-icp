@@ -425,74 +425,123 @@ const WalletDetails = () => {
                             {}
                             <p className="min-w-[70px] text-center">
                               {item[0] === "ckBTC" &&
+                              
                                 (isFinite(
-                                  Number(item[1].Ok.total_supply) /
-                                    100000000 /
-                                    (ckBTCUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_supply) /
-                                        100000000 /
-                                        (ckBTCUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 
                                     )
                                   : "0.00")}
                               {item[0] === "ckETH" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_supply) /
-                                    100000000 /
-                                    (ckETHUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_supply) /
-                                        100000000 /
-                                        (ckETHUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 
                                     )
                                   : "0.00")}
                               {item[0] === "ckUSDC" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_supply) /
-                                    100000000 /
-                                    (ckUSDCUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_supply) /
-                                        100000000 /
-                                        (ckUSDCUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000
                                     )
                                   : "0.00")}
                               {item[0] === "ICP" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_supply) /
-                                    100000000 /
-                                    (ckICPUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_supply) /
-                                        100000000 /
-                                        (ckICPUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 
                                     )
                                   : "0.00")}
                               {item[0] === "ckUSDT" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_supply) /
-                                    100000000 /
-                                    (ckUSDTUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_supply) /
-                                        100000000 /
-                                        (ckUSDTUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 
                                     )
                                   : "0.00")}
                             </p>
 
                             {}
                             <p className="font-light text-[12px] text-center">
-                              ${" "}
-                              {formatNumber(
-                                Number(item[1].Ok.total_supply) / 100000000
-                              )}
+                              {item[0] === "ckBTC" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 *
+                                    (ckBTCUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 *
+                                        (ckBTCUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckETH" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 *
+                                    (ckETHUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 *
+                                        (ckETHUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckUSDC" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 *
+                                    (ckUSDCUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 *
+                                        (ckUSDCUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ICP" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 *
+                                    (ckICPUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 *
+                                        (ckICPUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckUSDT" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_supply) /
+                                    100000000 *
+                                    (ckUSDTUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_supply) /
+                                        100000000 *
+                                        (ckUSDTUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
                             </p>
+
+                            {}
                           </div>
                           <div
                             className="md:hidden justify-center ml-6"
@@ -518,76 +567,121 @@ const WalletDetails = () => {
                       <td className="p-2 align-center hidden md:table-cell">
                         <div className="flex justify-center flex-row">
                           <div>
-                            <p className="min-w-[150px] text-center">
-                              {}
+                          <p className="min-w-[150px] text-center">
                               {item[0] === "ckBTC" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_borrowed) /
-                                    100000000 /
-                                    (ckBTCUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_borrowed) /
-                                        100000000 /
-                                        (ckBTCUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 
                                     )
                                   : "0.00")}
                               {item[0] === "ckETH" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_borrowed) /
-                                    100000000 /
-                                    (ckETHUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_borrowed) /
-                                        100000000 /
-                                        (ckETHUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 
                                     )
                                   : "0.00")}
                               {item[0] === "ckUSDC" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_borrowed) /
-                                    100000000 /
-                                    (ckUSDCUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_borrowed) /
-                                        100000000 /
-                                        (ckUSDCUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000
                                     )
                                   : "0.00")}
                               {item[0] === "ICP" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_borrowed) /
-                                    100000000 /
-                                    (ckICPUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_borrowed) /
-                                        100000000 /
-                                        (ckICPUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 
                                     )
                                   : "0.00")}
                               {item[0] === "ckUSDT" &&
                                 (isFinite(
-                                  Number(item[1].Ok.total_borrowed) /
-                                    100000000 /
-                                    (ckUSDTUsdRate / 1e8)
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 
                                 )
                                   ? formatValue(
-                                      Number(item[1].Ok.total_borrowed) /
-                                        100000000 /
-                                        (ckUSDTUsdRate / 1e8)
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 
                                     )
                                   : "0.00")}
                             </p>
 
                             {}
                             <p className="font-light text-[12px] text-center">
-                              ${" "}
-                              {formatNumber(
-                                Number(item[1]?.Ok?.total_borrowed) / 100000000
-                              )}
+                              {item[0] === "ckBTC" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 *
+                                    (ckBTCUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 *
+                                        (ckBTCUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckETH" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 *
+                                    (ckETHUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 *
+                                        (ckETHUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckUSDC" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 *
+                                    (ckUSDCUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 *
+                                        (ckUSDCUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ICP" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 *
+                                    (ckICPUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 *
+                                        (ckICPUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
+                              {item[0] === "ckUSDT" &&
+                                (isFinite(
+                                  Number(item[1].Ok.asset_borrow) /
+                                    100000000 *
+                                    (ckUSDTUsdRate / 1e8)
+                                )
+                                  ? formatValue(
+                                      Number(item[1].Ok.asset_borrow) /
+                                        100000000 *
+                                        (ckUSDTUsdRate / 1e8)
+                                    )
+                                  : "0.00")}
                             </p>
                           </div>
                         </div>

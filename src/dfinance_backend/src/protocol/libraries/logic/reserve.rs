@@ -335,23 +335,25 @@ pub async fn mint_scaled(
     let mut balance_increase = 0u128;
     let mut balance_increase = 0u128;
     if minting_dtoken {
-        balance_increase =
-            (balance.scaled_mul(index)) - (balance.scaled_mul(user_state.liquidity_index));
-        ic_cdk::println!("Balance increase for dtoken: {}", balance_increase);
-
-        user_state.d_token_balance += adjusted_amount;
-        ic_cdk::println!("Updated d_token_balance: {}", user_state.d_token_balance);
-        user_state.liquidity_index = index;
-        ic_cdk::println!("Updated liquidity_index: {}", user_state.liquidity_index);
+        println!("minting dtoken**************");
+       balance_increase = (balance.scaled_mul(index))
+        - (balance.scaled_mul(user_state.liquidity_index)); //fetch from user
+        println!("balance incr dtoken{}", balance_increase);
+    // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+    user_state.d_token_balance += adjusted_amount;
+    println!("user new dtoken balance {}", user_state.d_token_balance);
+    user_state.liquidity_index = index;
+    println!("user new liq index {}", user_state.liquidity_index);
     } else {
-        balance_increase =
-            (balance.scaled_mul(index)) - (balance.scaled_mul(user_state.variable_borrow_index));
-        ic_cdk::println!("Balance increase for debt token: {}", balance_increase);
-
-        user_state.debt_token_blance += adjusted_amount;
-        ic_cdk::println!("Updated debt_token_blance: {}", user_state.debt_token_blance);
-        user_state.variable_borrow_index = index;
-        ic_cdk::println!("Updated variable_borrow_index: {}", user_state.variable_borrow_index);
+        println!("minting debttoken*************");
+        balance_increase = (balance.scaled_mul(index))
+        - (balance.scaled_mul(user_state.variable_borrow_index)); //fetch from user
+        println!("balance incr debttoken{}", balance_increase);
+    // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+    user_state.debt_token_blance += adjusted_amount;
+    println!("new debt balance {}", user_state.debt_token_blance);
+    user_state.variable_borrow_index = index;
+    println!("new debt index {}", user_state.variable_borrow_index);
     }
 
     //same
@@ -361,8 +363,7 @@ pub async fn mint_scaled(
     // ic_cdk::println!("updated user state value = {:?}", user_state);
 
     let newmint: u128 = amount as u128 + balance_increase;
-    ic_cdk::println!("New mint value: {}", newmint);
-
+    println!("minted token {}", newmint);
     // Perform token transfer to the user with the newly minted aTokens
     match asset_transfer(
         user_principal,

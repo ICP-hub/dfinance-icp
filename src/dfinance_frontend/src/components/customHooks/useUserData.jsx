@@ -38,7 +38,7 @@ const useUserData = () => {
   const fetchUserAccountData = async () => {
     if (backendActor) {
       try {
-        const result = await backendActor.get_user_account_data();
+        const result = await backendActor.get_user_account_data([principal.toString()]);
 
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
@@ -51,9 +51,9 @@ const useUserData = () => {
           
         } else {
           setError("Health factor not found");
+          
         }
         if (!result) {
-          console.log("result", result)
         } else {
           setUserAccountData(result);
         }

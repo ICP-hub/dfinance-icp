@@ -332,6 +332,8 @@ pub async fn login() -> Result<(), String> {
     let user_principal = ic_cdk::caller();
     let canister_id: Principal = ic_cdk::api::id();
 
+    let user_principal_string = user_principal.to_string();
+
     ic_cdk::println!("User principal: {}", user_principal);
 
     let mut user_total_collateral: u128 = 0;
@@ -343,7 +345,7 @@ pub async fn login() -> Result<(), String> {
     //let mut has_zero_ltv_collateral: bool = false;
 
     let user_data_result: Result<(u128, u128, u128, u128, u128, u128, bool), String> =
-        GenericLogic::calculate_user_account_data(Some(user_principal)).await;
+        GenericLogic::calculate_user_account_data(Some(user_principal_string)).await;
 
     match user_data_result {
         Ok((
@@ -714,9 +716,7 @@ fn calculate_dynamic_balance(
 
 // TODO: need to make a function by getting the asset name and then get user reserve data then call this below function and return the value of it. it will be a query function.
 #[query]
-pub async fn get_asset_supply(
-    asset_name: String,
-    on_behalf: Option<Principal>,
+pub async fn get_asset_supply(asset_name: String, on_behalf: Option<String>
 ) -> Result<u128, String> {
     ic_cdk::println!("Entering get_asset_supply function");
 
@@ -724,20 +724,22 @@ pub async fn get_asset_supply(
     ic_cdk::println!("Asset name received: {}", asset_name);
 
     let user_principal = match on_behalf {
-        Some(principal) => principal,
+        // If `on_behalf` is Some, we parse the Principal from the string
+        Some(ref principal_str) => {
+            // Parse the principal string into a Principal and return an error if it fails
+            Principal::from_text(principal_str)
+                .map_err(|e| format!("Failed to parse Principal: {}", e))?
+        },
+        // If `on_behalf` is None, we use the caller's principal
         None => ic_cdk::caller(),
     };
-    // let user_principal =
-    //     Principal::from_text("5zy6g-mgmd2-itmdh-2u4lo-kqiyl-qyshe-zaz57-otq7p-6rgg5-46k5j-7ae")
-    //         .unwrap();
-    ic_cdk::println!("User principal: {:?}", user_principal);
+    ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
     let user_data_result = user_data(user_principal);
-    ic_cdk::println!("Fetching user data for principal: {:?}", user_principal);
+    
 
     let mut user_data = match user_data_result {
         Ok(data) => {
-            ic_cdk::println!("User found: {:?}", data);
             data
         }
         Err(e) => {
@@ -751,14 +753,14 @@ pub async fn get_asset_supply(
         Some(data) => data,
         None => {
             ic_cdk::println!(
-                "Error: User reserve data not found for asset: {}",
+                "Error: User reserve data not found for asset while get asset supply returing 0: {}",
                 asset_name
             );
-            return Err("User reserve data not found".to_string());
+            return Ok(0);
         }
     };
 
-    ic_cdk::println!("Fetching asset reserve data for asset: {}", asset_name);
+    
     let asset_reserve = match get_reserve_data(asset_name.clone()) {
         Ok(data) => data,
         Err(e) => {
@@ -778,17 +780,10 @@ pub async fn get_asset_supply(
             }
         };
 
-    ic_cdk::println!(
-        "DToken canister principal parsed successfully: {:?}",
-        d_token_canister_principal
-    );
 
-    ic_cdk::println!(
-        "Fetching balance from DToken canister for user: {:?}",
-        user_principal
-    );
+
     let get_balance_value: Nat = get_balance(d_token_canister_principal, user_principal).await;
-
+    
     ic_cdk::println!(
         "Fetched balance from DToken canister: {:?}",
         get_balance_value
@@ -804,11 +799,11 @@ pub async fn get_asset_supply(
             return Err("Error converting Nat to u128".to_string());
         }
     };
-
-    ic_cdk::println!(
-        "Fetching normalized supply data for user reserve: {:?}",
-        user_reserve_data
-    );
+    if nat_convert_value == 0{
+        ic_cdk::println!("balance 0, returnin....");
+        return Ok(0);
+    }
+    
     let (_, user_reserve) = user_reserve_data;
 
     let normalized_supply_data = match user_normalized_supply(user_reserve.clone()) {
@@ -822,10 +817,7 @@ pub async fn get_asset_supply(
         }
     };
 
-    ic_cdk::println!(
-        "Normalized supply data fetched successfully: {:?}",
-        normalized_supply_data
-    );
+
 
     // Ask : if we send the token amount by multiplying the interest rate into the token value, is it a right approach.
     let result = normalized_supply_data.scaled_mul(nat_convert_value);
@@ -835,19 +827,24 @@ pub async fn get_asset_supply(
 }
 
 #[query]
-pub async fn get_asset_debt(
-    asset_name: String,
-    on_behalf: Option<Principal>,
+pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>,
 ) -> Result<u128, String> {
     let user_principal = match on_behalf {
-        Some(principal) => principal,
+        // If `on_behalf` is Some, we parse the Principal from the string
+        Some(ref principal_str) => {
+            // Parse the principal string into a Principal and return an error if it fails
+            Principal::from_text(principal_str)
+                .map_err(|e| format!("Failed to parse Principal: {}", e))?
+        },
+        // If `on_behalf` is None, we use the caller's principal
         None => ic_cdk::caller(),
     };
+
     let user_data_result = user_data(user_principal);
 
     let mut user_data = match user_data_result {
         Ok(data) => {
-            ic_cdk::println!("User found: {:?}", data);
+            
             data
         }
         Err(e) => {
@@ -859,9 +856,14 @@ pub async fn get_asset_debt(
     let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
         Some(data) => data,
         None => {
-            return Err("User reserve data not found".to_string());
+            return Ok(0);
         }
     };
+    let (_, user_reserve) = user_reserve_data;
+    if !user_reserve.is_borrowed {
+        return Ok(0);
+    }
+    
 
     let asset_reserve = match get_reserve_data(asset_name.clone()) {
         Ok(data) => data,
@@ -871,19 +873,16 @@ pub async fn get_asset_debt(
         }
     };
 
+
     let debt_token_canister_principal =
         match Principal::from_text(asset_reserve.debt_token_canister.unwrap()) {
             Ok(principal) => principal,
             Err(e) => {
-                ic_cdk::println!("Error parsing DToken canister principal: {}", e);
-                return Err("Error parsing DToken canister principal".to_string());
+                ic_cdk::println!("Error parsing DebtToken canister principal: {}", e);
+                return Err("Error parsing DebtToken canister principal".to_string());
             }
         };
 
-    ic_cdk::println!(
-        "DToken canister principal: {:?}",
-        debt_token_canister_principal
-    );
 
     let get_balance_value: Nat = get_balance(debt_token_canister_principal, user_principal).await;
 
@@ -903,7 +902,7 @@ pub async fn get_asset_debt(
         }
     };
 
-    let (_, user_reserve) = user_reserve_data;
+    
 
     let normalized_debt_data = match user_normalized_debt(user_reserve.clone()) {
         Ok(data) => data,
@@ -914,7 +913,7 @@ pub async fn get_asset_debt(
     };
 
     ic_cdk::println!(
-        "Values in normalized supply data = {:?}",
+        "Values in normalized debt data = {:?}",
         normalized_debt_data
     );
 
@@ -992,10 +991,9 @@ pub fn user_normalized_debt(user_reserve_data: UserReserveData) -> Result<u128, 
 // this function is for check which i will remove later.
 #[update]
 async fn get_user_account_data(
-    on_behalf: Option<Principal>,
+    on_behalf: Option<String>,
 ) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
     let result = GenericLogic::calculate_user_account_data(on_behalf).await;
-
     result
 }
 

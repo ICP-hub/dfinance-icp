@@ -5,7 +5,7 @@ import useFetchConversionRate from '../customHooks/useFetchConversionRate';
 
 const useAssetData = (searchQuery = '') => {
 
-  const {
+  const {principal,
     fetchReserveData,
     backendActor
   } = useAuth();
@@ -53,11 +53,11 @@ const useAssetData = (searchQuery = '') => {
   const fetchAssetSupply = async (asset) => {
     if (backendActor) {
       try {
-        const result = await backendActor.get_asset_supply(asset);
-        console.log("getassetsupply", result);
-        // Set asset supply in the state object using the asset name as the key
+        const result = await backendActor.get_asset_supply(asset,[principal]);
+        
         setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
+        console.error(error.message)
       }
     } else {
     }
@@ -66,10 +66,10 @@ const useAssetData = (searchQuery = '') => {
   const fetchAssetBorrow = async (asset) => {
     if (backendActor) {
       try {
-        const result = await backendActor.get_asset_debt(asset);
-        console.log("getassetdebt", result);
+        const result = await backendActor.get_asset_debt(asset,[principal]);
         setAssetBorrow(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
+        console.error(error.message)
       }
     } else {
     }
@@ -92,8 +92,8 @@ const useAssetData = (searchQuery = '') => {
           const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
           const supplyCap = parseFloat(Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000);
-          const totalSupply = parseFloat(Number(reserveDataForAsset.Ok.total_supply) / 100000000);
-          const totalBorrow = parseFloat(Number(reserveDataForAsset.Ok.total_borrowed) / 100000000);
+          const totalSupply = parseFloat(Number(reserveDataForAsset.Ok.asset_supply) / 100000000);
+          const totalBorrow = parseFloat(Number(reserveDataForAsset.Ok.asset_borrow) / 100000000);
           const reserveFactor = parseFloat(Number(reserveDataForAsset.Ok.configuration.reserve_factor) / 100000000);
           const interestAccure = parseFloat(Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000);
           const assetName = (reserveDataForAsset.Ok.asset_name).toString();
@@ -136,6 +136,7 @@ const useAssetData = (searchQuery = '') => {
       } catch (err) {
         setError(err.message);
         setLoading(false);
+        console.error(error.message)
       } finally{
         setLoading(false);
       }
@@ -147,7 +148,7 @@ const useAssetData = (searchQuery = '') => {
   const filteredItems = reserveData && Object.keys(reserveData).length > 0
     ? Object.entries(reserveData).filter(([asset, data]) =>
       asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (data.total_supply && data.total_supply.toString().includes(searchQuery)) ||
+      (data.asset_supply && data.asset_supply.toString().includes(searchQuery)) ||
       (data.borrow_rate && data.borrow_rate.some(rate => rate.toString().includes(searchQuery)))
     )
     : [];

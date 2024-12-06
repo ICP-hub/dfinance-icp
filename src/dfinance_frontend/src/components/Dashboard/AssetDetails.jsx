@@ -54,8 +54,8 @@ const AssetDetails = () => {
     if (assetData?.Ok) {
       setBorrowRateAPR(Number(assetData.Ok.borrow_rate) / 100000000);
       setSupplyRateAPR(Number(assetData.Ok.current_liquidity_rate) / 100000000);
-      setTotalBorrowed(Number(assetData.Ok.total_borrowed) / 100000000);
-      setTotalSupplied(Number(assetData.Ok.total_supply) / 100000000);
+      setTotalBorrowed(Number(assetData.Ok.asset_borrow) / 100000000);
+      setTotalSupplied(Number(assetData.Ok.asset_supply) / 100000000);
       setBorrowCap(Number(assetData.Ok.configuration?.borrow_cap) / 100000000);
       setSupplyCap(Number(assetData.Ok.configuration?.supply_cap) / 100000000);
       setLtv(Number(assetData.Ok.configuration?.ltv) / 100000000);

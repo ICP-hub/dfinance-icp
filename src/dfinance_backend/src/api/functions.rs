@@ -233,7 +233,7 @@ pub async fn asset_transfer(
 
 #[update]
 pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
-    ic_cdk::println!("Starting fraucet with params: {:?} {:?}", asset, amount);
+    ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
 
     ic_cdk::println!("it is going forward");
     // validate asset
@@ -256,7 +256,7 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
 
     let mut user_data = match user_data_result {
         Ok(data) => {
-            ic_cdk::println!("User found: {:?}", data);
+            ic_cdk::println!("User found");
             data
         }
         Err(e) => {
@@ -411,7 +411,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String>
 
     let mut user_data = match user_data_result {
         Ok(data) => {
-            ic_cdk::println!("User found: {:?}", data);
+            ic_cdk::println!("User found");
             data
         }
         Err(e) => {
@@ -440,37 +440,3 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String>
     ic_cdk::println!("updated user data after facuet reset = {:?}", user_data);
     Ok(())
 }
-
-// #[update]
-// pub fn schedule_faucet_reset() {
-//     let now = current_time();  // Get the current time in seconds (Unix timestamp)
-
-//     // Calculate how much time remains until midnight UTC
-//     let midnight_utc = calculate_midnight_utc(now);
-//     let time_until_midnight = midnight_utc - now;
-
-//     // Schedule the first reset using call_after
-//     call_after(
-//         Duration::from_secs(time_until_midnight),
-//         ic_cdk::canister_id(),
-//         "reset_faucet_usage",
-//         (),
-//     );
-
-//     // Schedule subsequent resets every 24 hours (86400 seconds = 24 hours)
-//     call_after(
-//         Duration::from_secs(24 * 60 * 60),
-//         ic_cdk::canister_id(),
-//         "reset_faucet_usage",
-//         (),
-//     );
-// }
-
-// /// Helper function to calculate the next midnight UTC time
-// fn calculate_midnight_utc(now: u64) -> u64 {
-// // Get the current UTC time and calculate the next midnight
-// let now = chrono::NaiveDateTime::from_timestamp(now as i64, 0);
-// let midnight = now.date().and_hms(0, 0, 0);  // Midnight today in UTC
-// let midnight_utc = midnight.timestamp() as u64;
-// midnight_utc
-// }

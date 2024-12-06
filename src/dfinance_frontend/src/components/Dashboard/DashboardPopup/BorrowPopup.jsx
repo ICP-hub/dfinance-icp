@@ -355,12 +355,12 @@ if (onLoadingChange) {
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                     }`}
                     onClick={() => {
-                      if (parseFloat(borrowableAssetValue) > 0) {
+                      if (parseFloat(borrowableValue) > 0) {
                         handleMaxClick();
                       }
                     }}
                   >
-                    {parseFloat(borrowableAssetValue)?.toLocaleString(
+                    {parseFloat(borrowableValue)?.toLocaleString(
                       undefined,
                       {
                         minimumFractionDigits: 7,

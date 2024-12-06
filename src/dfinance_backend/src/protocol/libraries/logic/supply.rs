@@ -15,9 +15,139 @@ impl SupplyLogic {
     // ----------- SUPPLY LOGIC ------------
     // -------------------------------------
 
+    // pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
+    //     ic_cdk::println!("Starting execute_supply with params: {:?}", params);
+
+    //     let ledger_canister_id = mutate_state(|state| {
+    //         let reserve_list = &state.reserve_list;
+    //         reserve_list
+    //             .get(&params.asset.to_string().clone())
+    //             .map(|principal| principal.clone())
+    //             .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+    //     })?;
+
+    //     let user_principal = ic_cdk::caller();
+    //     ic_cdk::println!("User principal: {:?}", user_principal.to_string());
+
+    //     let platform_principal = ic_cdk::api::id();
+
+    //     let amount_nat = Nat::from(params.amount);
+    //     // Converting asset to usdt value
+    //     let mut usd_amount = params.amount;
+
+    //     // let supply_amount_to_usd =
+    //     //     get_exchange_rates(params.asset.clone(), None, params.amount.clone()).await;
+    //     // match supply_amount_to_usd {
+    //     //     Ok((amount_in_usd, _timestamp)) => {
+    //     //         usd_amount = amount_in_usd;
+    //     //         ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
+    //     //     }
+    //     //     Err(e) => {
+    //     //         ic_cdk::println!("Error getting exchange rate: {:?}", e);
+    //     //     }
+    //     // }
+
+    //     // ic_cdk::println!("Supply amount in USD: {:?}", usd_amount);
+
+    //     // Reads the reserve data from the asset
+    //     let reserve_data_result = mutate_state(|state| {
+    //         let asset_index = &mut state.asset_index;
+    //         asset_index
+    //             .get(&params.asset.to_string().clone())
+    //             .map(|reserve| reserve.0.clone())
+    //             .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
+    //     });
+
+    //     let mut reserve_data = match reserve_data_result {
+    //         Ok(data) => {
+    //             ic_cdk::println!("Reserve data found for asset: {:?}", data);
+    //             data
+    //         }
+    //         Err(e) => {
+    //             ic_cdk::println!("Error: {}", e);
+    //             return Err(e);
+    //         }
+    //     };
+
+    //     // Fetches the reserve logic cache having the current values
+    //     let mut reserve_cache = reserve::cache(&reserve_data);
+    //     ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
+
+    //     // Updates the liquidity index
+    //     reserve::update_state(&mut reserve_data, &mut reserve_cache);
+    //     ic_cdk::println!("Reserve state updated successfully");
+
+    //     // Validates supply using the reserve_data
+    //     ValidationLogic::validate_supply(
+    //         &reserve_data,
+    //         params.amount,
+    //         user_principal,
+    //         ledger_canister_id,
+    //     )
+    //     .await;
+    //     ic_cdk::println!("Supply validated successfully");
+
+    //     let total_supplies = reserve_data.asset_supply.clone() + params.amount; //TODO not sure should store usd value or token amount
+    //     let total_borrow = reserve_data.asset_borrow;
+    //     let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
+    //     // reserve_data.total_supply+=usd_amount;
+
+    //     ic_cdk::println!("Interest rates updated successfully");
+
+    //     if let Some(userlist) = &mut reserve_data.userlist {
+    //         if !userlist
+    //             .iter()
+    //             .any(|(principal, _)| principal == &user_principal.to_string())
+    //         {
+    //             userlist.push((user_principal.to_string(), true));
+    //         }
+    //     } else {
+    //         reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
+    //     }
+
+    //     ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
+
+    //     mutate_state(|state| {
+    //         let asset_index = &mut state.asset_index;
+    //         asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+    //     });
+
+    //     // ----------- Update logic here -------------
+    //     let _ = UpdateLogic::update_user_data_supply(
+    //         user_principal,
+    //         &reserve_cache,
+    //         params.clone(),
+    //         &reserve_data,
+    //         usd_amount.clone(),
+    //     )
+    //     .await;
+
+    //     // Transfers the asset from the user to our backend cansiter
+    //     match asset_transfer_from(
+    //         ledger_canister_id,
+    //         user_principal,
+    //         platform_principal,
+    //         amount_nat.clone(),
+    //     )
+    //     .await
+    //     {
+    //         Ok(new_balance) => {
+    //             println!("Asset transfer from user to backend canister executed successfully");
+    //             Ok(new_balance)
+    //         }
+    //         Err(e) => {
+    //             return Err(format!(
+    //                 "Asset transfer failed, burned dtoken. Error: {:?}",
+    //                 e
+    //             ));
+    //         }
+    //     }
+    // }
+
     pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
         ic_cdk::println!("Starting execute_supply with params: {:?}", params);
-
+    
+        // Fetch the ledger canister ID
         let ledger_canister_id = mutate_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -25,31 +155,23 @@ impl SupplyLogic {
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
-
+        ic_cdk::println!("Ledger canister ID: {:?}", ledger_canister_id);
+    
+        // Fetch the user principal
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
-
+    
+        // Fetch the platform principal
         let platform_principal = ic_cdk::api::id();
-
+        ic_cdk::println!("Platform principal: {:?}", platform_principal);
+    
+        // Convert amount to Nat
         let amount_nat = Nat::from(params.amount);
-        // Converting asset to usdt value
+        ic_cdk::println!("Converted amount to Nat: {:?}", amount_nat);
+    
         let mut usd_amount = params.amount;
-
-        // let supply_amount_to_usd =
-        //     get_exchange_rates(params.asset.clone(), None, params.amount.clone()).await;
-        // match supply_amount_to_usd {
-        //     Ok((amount_in_usd, _timestamp)) => {
-        //         usd_amount = amount_in_usd;
-        //         ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
-        //     }
-        //     Err(e) => {
-        //         ic_cdk::println!("Error getting exchange rate: {:?}", e);
-        //     }
-        // }
-
-        // ic_cdk::println!("Supply amount in USD: {:?}", usd_amount);
-
-        // Reads the reserve data from the asset
+    
+        // Fetch reserve data
         let reserve_data_result = mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index
@@ -57,7 +179,7 @@ impl SupplyLogic {
                 .map(|reserve| reserve.0.clone())
                 .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
         });
-
+    
         let mut reserve_data = match reserve_data_result {
             Ok(data) => {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
@@ -68,16 +190,16 @@ impl SupplyLogic {
                 return Err(e);
             }
         };
-
-        // Fetches the reserve logic cache having the current values
+    
+        // Fetch and update reserve cache
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
-
-        // Updates the liquidity index
+    
         reserve::update_state(&mut reserve_data, &mut reserve_cache);
         ic_cdk::println!("Reserve state updated successfully");
-
-        // Validates supply using the reserve_data
+    
+        // Validate supply
+        ic_cdk::println!("Validating supply...");
         ValidationLogic::validate_supply(
             &reserve_data,
             params.amount,
@@ -86,63 +208,69 @@ impl SupplyLogic {
         )
         .await;
         ic_cdk::println!("Supply validated successfully");
-
-        let total_supplies = reserve_data.asset_supply.clone() + params.amount; //TODO not sure should store usd value or token amount
+    
+        // Update interest rates
+        let total_supplies = reserve_data.asset_supply.clone() + params.amount;
+        ic_cdk::println!("Total supplies: {:?}", total_supplies);
         let total_borrow = reserve_data.asset_borrow;
-        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
-        // reserve_data.total_supply+=usd_amount;
-
+        ic_cdk::println!("Total borrow: {:?}", total_borrow);
+        let _ = reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, total_borrow, total_supplies).await;
         ic_cdk::println!("Interest rates updated successfully");
-
+    
+        // Update user list
+        ic_cdk::println!("Updating user list...");
         if let Some(userlist) = &mut reserve_data.userlist {
             if !userlist
                 .iter()
                 .any(|(principal, _)| principal == &user_principal.to_string())
             {
+                ic_cdk::println!("Adding new user to the user list.");
                 userlist.push((user_principal.to_string(), true));
             }
         } else {
+            ic_cdk::println!("Creating new user list with the current user.");
             reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
         }
-
-        ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
-
+        ic_cdk::println!("Updated user list of reserve: {:?}", reserve_data.userlist.clone());
+    
+        // Update state with new reserve data
+        ic_cdk::println!("Updating state with new reserve data...");
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
-
-        // ----------- Update logic here -------------
+        ic_cdk::println!("Reserve data updated in state");
+    
+        // Update user data supply
         let _ = UpdateLogic::update_user_data_supply(
             user_principal,
             &reserve_cache,
             params.clone(),
             &reserve_data,
             usd_amount.clone(),
-        )
-        .await;
-
-        // Transfers the asset from the user to our backend cansiter
+        ).await;
+        ic_cdk::println!("User data supply updated");
+    
+        // Execute asset transfer
         match asset_transfer_from(
             ledger_canister_id,
             user_principal,
             platform_principal,
             amount_nat.clone(),
-        )
-        .await
+        ).await
         {
             Ok(new_balance) => {
-                println!("Asset transfer from user to backend canister executed successfully");
+                ic_cdk::println!("Asset transfer from user to backend canister executed successfully");
                 Ok(new_balance)
             }
             Err(e) => {
-                return Err(format!(
-                    "Asset transfer failed, burned dtoken. Error: {:?}",
-                    e
-                ));
+                ic_cdk::println!("Asset transfer failed, burned dtoken. Error: {:?}", e);
+                Err(format!("Asset transfer failed, burned dtoken. Error: {:?}", e))
             }
         }
     }
+    
+    
 
     // -------------------------------------
     // ---------- WITHDRAW LOGIC -----------

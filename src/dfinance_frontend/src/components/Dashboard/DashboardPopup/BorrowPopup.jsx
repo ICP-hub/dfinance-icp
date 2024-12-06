@@ -300,7 +300,7 @@ if (onLoadingChange) {
   }, [amount, conversionRate]);
 
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableAssetValue).toFixed(8);
+    const maxAmount = parseFloat(borrowableValue).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
 
     const formattedAmount = `${parseInt(integerPart).toLocaleString(

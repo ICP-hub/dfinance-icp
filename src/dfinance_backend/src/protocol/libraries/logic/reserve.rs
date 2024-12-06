@@ -308,12 +308,7 @@ pub async fn mint_scaled(
         "current_liquidity_index value = {}",
         index
     );
-    ic_cdk::println!("user_principal value = {}", user_principal);
-    ic_cdk::println!(
-        "token_canister_principal value = {}",
-        token_canister_principal
-    );
-    ic_cdk::println!("platform_principal value = {}", platform_principal);
+   
 
     let adjusted_amount: u128 = amount.scaled_div(index);
     if adjusted_amount == 0 {
@@ -357,19 +352,25 @@ pub async fn mint_scaled(
     println!("Balance as u128: {}", balance);
     let mut balance_increase = 0u128;
     if minting_dtoken {
+        println!("minting dtoken**************");
        balance_increase = (balance.scaled_mul(index))
         - (balance.scaled_mul(user_state.liquidity_index)); //fetch from user
-
+        println!("balance incr dtoken{}", balance_increase);
     // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
     user_state.d_token_balance += adjusted_amount;
+    println!("user new dtoken balance {}", user_state.d_token_balance);
     user_state.liquidity_index = index;
+    println!("user new liq index {}", user_state.liquidity_index);
     } else {
+        println!("minting debttoken*************");
         balance_increase = (balance.scaled_mul(index))
         - (balance.scaled_mul(user_state.variable_borrow_index)); //fetch from user
-
+        println!("balance incr debttoken{}", balance_increase);
     // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
     user_state.debt_token_blance += adjusted_amount;
+    println!("new debt balance {}", user_state.debt_token_blance);
     user_state.variable_borrow_index = index;
+    println!("new debt index {}", user_state.variable_borrow_index);
     }
     
      //same
@@ -379,7 +380,7 @@ pub async fn mint_scaled(
     // ic_cdk::println!("updated user state value = {:?}", user_state);
 
     let newmint: u128 = amount as u128 + balance_increase;
-
+    println!("minted token {}", newmint);
     // Perform token transfer to the user with the newly minted aTokens
     match asset_transfer(
         user_principal,

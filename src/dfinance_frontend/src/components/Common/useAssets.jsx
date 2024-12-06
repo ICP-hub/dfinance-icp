@@ -92,8 +92,8 @@ const useAssetData = (searchQuery = '') => {
           const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
           const supplyCap = parseFloat(Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000);
-          const totalSupply = parseFloat(Number(reserveDataForAsset.Ok.total_supply) / 100000000);
-          const totalBorrow = parseFloat(Number(reserveDataForAsset.Ok.total_borrowed) / 100000000);
+          const totalSupply = parseFloat(Number(reserveDataForAsset.Ok.asset_supply) / 100000000);
+          const totalBorrow = parseFloat(Number(reserveDataForAsset.Ok.asset_borrow) / 100000000);
           const reserveFactor = parseFloat(Number(reserveDataForAsset.Ok.configuration.reserve_factor) / 100000000);
           const interestAccure = parseFloat(Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000);
           const assetName = (reserveDataForAsset.Ok.asset_name).toString();
@@ -148,7 +148,7 @@ const useAssetData = (searchQuery = '') => {
   const filteredItems = reserveData && Object.keys(reserveData).length > 0
     ? Object.entries(reserveData).filter(([asset, data]) =>
       asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (data.total_supply && data.total_supply.toString().includes(searchQuery)) ||
+      (data.asset_supply && data.asset_supply.toString().includes(searchQuery)) ||
       (data.borrow_rate && data.borrow_rate.some(rate => rate.toString().includes(searchQuery)))
     )
     : [];

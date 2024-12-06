@@ -83,7 +83,7 @@ const DebtStatus = () => {
   .map((item) => {
     const mappedItem = {
       reserves: item[1].reserves,
-      principal: item[0].toText(), // This will convert the principal to a string
+      principal: item[0].toText(), 
       healthFactor: Number(item[1]?.health_factor) / 100000000,
       item,
     };
@@ -102,14 +102,14 @@ const DebtStatus = () => {
   });
 
 const fetchUserAccountData = async (userData) => {
-  console.log("Mapped item principal:", userData.principal); // Accessing principal from the passed userData
+  console.log("Mapped item principal:", userData.principal); 
   if (backendActor) {
     try {
       const result = await backendActor.get_user_account_data([userData.principal]);
 
       if (result?.Err === "ERROR :: Pending") {
         console.warn("Pending state detected. Retrying...");
-        setTimeout(() => fetchUserAccountData(userData), 1000); // Retry with the same userData
+        setTimeout(() => fetchUserAccountData(userData), 1000); 
         return;
       }
 
@@ -128,10 +128,10 @@ useEffect(() => {
   filteredUsers.forEach((userData) => {
     fetchUserAccountData(userData);
   });
-}, [filteredUsers]);  // Trigger the effect when filteredUsers changes
+}, [filteredUsers]);  
 
 
-  console.log("total debt ",userAccountData)
+  
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;

@@ -107,7 +107,7 @@ impl ValidationLogic {
 
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                
                 data
             }
             Err(e) => {
@@ -236,7 +236,7 @@ impl ValidationLogic {
 
         let user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                
                 data
             }
             Err(e) => {
@@ -345,7 +345,7 @@ impl ValidationLogic {
 
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+              
                 data
             }
             Err(e) => {

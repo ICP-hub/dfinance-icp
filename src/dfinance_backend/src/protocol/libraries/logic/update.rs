@@ -43,7 +43,7 @@ impl UpdateLogic {
 
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User found in update_user_data_supply");
                 data
             }
             Err(e) => {
@@ -53,12 +53,12 @@ impl UpdateLogic {
         };
 
         let usd_rate = usd_amount.scaled_div(params.amount);
-        ic_cdk::println!(
-            "Converted amount: {} to USD amount: {} with rate: {}",
-            params.amount.clone(),
-            usd_amount,
-            usd_rate
-        );
+        // ic_cdk::println!(
+        //     "Converted amount: {} to USD amount: {} with rate: {}",
+        //     params.amount.clone(),
+        //     usd_amount,
+        //     usd_rate
+        // );
 
         user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
 
@@ -70,7 +70,7 @@ impl UpdateLogic {
                 user_data.total_collateral.unwrap_or(0),
                 user_data.max_ltv.unwrap_or(0),
             );
-            ic_cdk::println!(" user_max_ltv: {:?}", user_max_ltv);
+            // ic_cdk::println!(" user_max_ltv: {:?}", user_max_ltv);
             user_data.max_ltv = Some(user_max_ltv);
             let user_thrs = cal_average_threshold(
                 usd_amount,
@@ -79,7 +79,7 @@ impl UpdateLogic {
                 user_data.total_collateral.unwrap_or(0),
                 user_data.liquidation_threshold.unwrap_or(0),
             );
-            ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
+            // ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
 
             user_data.liquidation_threshold = Some(user_thrs);
             user_data.total_collateral = Some(user_data.total_collateral.unwrap_or(0) + usd_amount);
@@ -92,7 +92,7 @@ impl UpdateLogic {
 
             let health_factor = calculate_health_factor(&user_position);
             user_data.health_factor = Some(health_factor);
-            ic_cdk::println!("Updated user health factor: {}", health_factor);
+            // ic_cdk::println!("Updated user health factor: {}", health_factor);
 
             let ltv = calculate_ltv(&user_position);
 
@@ -151,9 +151,10 @@ impl UpdateLogic {
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
             // reserve_data.state = update_user_state.clone();
-            if reserve_data.liquidity_index == 0 {
-                reserve_data.liquidity_index = 100000000;
-            }
+            // reserve_data.liquidity_index = reserve.liquidity_index;
+            // if reserve_data.liquidity_index == 0 {
+            //     reserve_data.liquidity_index = 100000000;
+            // }
             if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
                 if reserve_data.is_borrowed {
                     reserve_data.is_using_as_collateral_or_borrow = true;
@@ -174,10 +175,10 @@ impl UpdateLogic {
                 reserve: params.asset.clone(),
                 asset_supply: params.amount,
                 supply_rate: reserve.current_liquidity_rate,
-                asset_price_when_supplied: usd_rate,
+                asset_price_when_supplied: usd_rate,//remove
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
-                liquidity_index: 100000000,
+                // liquidity_index: reserve.liquidity_index.clone(),
                 last_update_timestamp: current_timestamp(),
                 // state: update_user_state.clone(),
                 ..Default::default()
@@ -199,7 +200,7 @@ impl UpdateLogic {
                 .insert(user_principal, Candid(user_data.clone()));
         });
 
-        ic_cdk::println!("User data updated successfully: {:?}", user_data);
+        ic_cdk::println!("User data updated successfully");
         Ok(())
     }
 
@@ -230,7 +231,7 @@ impl UpdateLogic {
 
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User found: update_user_data_borrow");
                 data
             }
             Err(e) => {
@@ -378,7 +379,7 @@ impl UpdateLogic {
 
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User found:update_user_data_withdraw");
                 data
             }
             Err(e) => {
@@ -539,7 +540,7 @@ impl UpdateLogic {
 
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User found: update_user_data_repay");
                 data
             }
             Err(e) => {
@@ -674,7 +675,7 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
 
     let mut user_data = match user_data_result {
         Ok(data) => {
-            ic_cdk::println!("User found: {:?}", data);
+            ic_cdk::println!("User found toggle");
             data
         }
         Err(e) => {

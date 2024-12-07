@@ -136,7 +136,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
         &reserve_cache,
         params,
         &reserve_data,
-        usd_amount,
+       // usd_amount,
     )
     .await;
     ic_cdk::println!("User data updated successfully");
@@ -301,7 +301,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
         &reserve_cache,
         params.clone(),
         &reserve_data,
-        usd_amount,
+       // usd_amount,
     )
     .await;
     ic_cdk::println!("User data updated successfully");

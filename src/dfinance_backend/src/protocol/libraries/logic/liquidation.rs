@@ -164,14 +164,14 @@ impl LiquidationLogic {
                     "Dtoken Asset transfer from backend to liquidator executed successfully"
                 );
                 let _ =
-                    UpdateLogic::update_user_data_withdraw(user_principal,&reserve_cache, withdraw_param, &reserve_data, 0).await;
+                    UpdateLogic::update_user_data_withdraw(user_principal,&reserve_cache, withdraw_param, &reserve_data).await;
                 let _ = UpdateLogic::update_user_data_supply(
                     liquidator_principal,
                     &reserve_cache,
                     supply_param,
 
                     &reserve_data,
-                    usd_amount,
+                    //usd_amount,
                 )
                 .await;
                 Ok(balance)

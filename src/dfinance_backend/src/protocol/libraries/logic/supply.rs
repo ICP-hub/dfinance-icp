@@ -246,7 +246,7 @@ impl SupplyLogic {
             &reserve_cache,
             params.clone(),
             &reserve_data,
-            usd_amount.clone(),
+            //usd_amount.clone(),
         ).await;
         ic_cdk::println!("User data supply updated");
     
@@ -410,7 +410,7 @@ impl SupplyLogic {
             &reserve_cache,
             params,
             &reserve_data,
-            usd_amount.clone(),
+            // usd_amount.clone(),
         )
         .await;
         ic_cdk::println!("User data updated after withdrawal");

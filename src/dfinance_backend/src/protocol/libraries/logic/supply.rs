@@ -195,7 +195,7 @@ impl SupplyLogic {
 
         // Validates supply using the reserve_data
         //TODO replace the validation code from backend three 
-        ValidationLogic::validate_supply(
+        let _ = ValidationLogic::validate_supply(
             &reserve_data,
             params.amount,
             user_principal,
@@ -345,10 +345,10 @@ impl SupplyLogic {
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates withdraw using the reserve_data
-        ValidationLogic::validate_withdraw(
+        let _ = ValidationLogic::validate_withdraw(
             &reserve_data,
             params.amount,
-            usd_amount,
+            //usd_amount,
             user_principal,
             ledger_canister_id,
         )

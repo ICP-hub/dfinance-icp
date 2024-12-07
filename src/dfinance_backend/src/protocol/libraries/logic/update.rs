@@ -238,8 +238,8 @@ impl UpdateLogic {
 
        // user_data.total_debt = Some(user_data.total_debt.unwrap_or(0) + usd_amount);
        // Ask: doing the same as above using params amount which is in token value.
-        user_data.net_worth =
-            Some((user_data.net_worth.unwrap_or(0) as i128 - params.amount as i128).max(0) as u128);
+        // user_data.net_worth =
+        //     Some((user_data.net_worth.unwrap_or(0) as i128 - params.amount as i128).max(0) as u128);
         let user_position = UserPosition {
             total_collateral_value: user_data.total_collateral.unwrap_or(0),
             total_borrowed_value: user_data.total_debt.unwrap_or(0),
@@ -386,9 +386,9 @@ impl UpdateLogic {
         };
 
         //Ask: which is doing the same as above.
-        user_data.net_worth =
-            Some((user_data.net_worth.unwrap_or(0) as i128 - params.amount as i128).max(0) as u128);
-        ic_cdk::println!("Updated net worth: {:?}", user_data.net_worth);
+        // user_data.net_worth =
+        //     Some((user_data.net_worth.unwrap_or(0) as i128 - params.amount as i128).max(0) as u128);
+        // ic_cdk::println!("Updated net worth: {:?}", user_data.net_worth);
 
         if params.is_collateral {
             // let user_thrs = cal_average_threshold(

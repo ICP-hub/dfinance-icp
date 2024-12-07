@@ -12,7 +12,22 @@ pub enum Error {
     WithdrawMoreThanSupply,
     RepayMoreThanDebt,
     InvalidUser,
-    LessRewardAmount
+    LessRewardAmount,
+    UnauthorizedAccess,
+    UserNotFound,
+    BorrowingNotEnabled,
+    NoDebtToRepay,
+    NoCanisterIdFound,
+    ConversionErrorToU128,
+    ExchangeRateError,
+    ErrorBurnDTokens,
+    ErrorMintDTokens,
+    ErrorBurnDebtTokens,
+    ErrorMintDebtTokens,
+    ConversionErrorFromTextToPrincipal,
+    NoReserveDataFound,
+    CalculateUserAccountDataError,
+    ErrorPriceCache
 }
 
 impl Error {
@@ -30,7 +45,22 @@ impl Error {
             Error::WithdrawMoreThanSupply => "Withdraw cannot be more than supply",
             Error::RepayMoreThanDebt => "Repay cannot be more than debt",
             Error::InvalidUser => "User is not equal to the caller",
-            Error::LessRewardAmount => "Total collateral value cannot be less than reward amount"
+            Error::LessRewardAmount => "Total collateral value cannot be less than reward amount",
+            Error::UnauthorizedAccess => "unauthorized access denied",
+            Error::UserNotFound => "user not found",
+            Error::BorrowingNotEnabled => "asset borrowing is not enabled",
+            Error::NoDebtToRepay => "no debt to repay",
+            Error::NoCanisterIdFound => "no canister id found",
+            Error::ConversionErrorToU128 => "Error converting balance to u128",
+            Error::ExchangeRateError => "Error getting in exchange rate",
+            Error::ErrorBurnDTokens => "Asset transfer failed, burned dtoken.",
+            Error::ErrorMintDTokens => "Asset transfer failed, mint dtoken.",
+            Error::ErrorBurnDebtTokens => "Asset transfer failed, burned debttoken.",
+            Error::ErrorMintDebtTokens => "Asset transfer failed, mint debttoken.",
+            Error::ConversionErrorFromTextToPrincipal => "conversion error from text to principal",
+            Error::NoReserveDataFound => "no reserve data found of the given asset",
+            Error::CalculateUserAccountDataError => "Failed to calculate user account data",
+            Error::ErrorPriceCache => "Error in fetching price cache",
         }
     }
 }

@@ -17,7 +17,7 @@ impl SupplyLogic {
 
     pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, String> {
         ic_cdk::println!("Starting execute_supply with params: {:?}", params);
-
+        //TODO fetch from function in read state
         let ledger_canister_id = mutate_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -32,24 +32,8 @@ impl SupplyLogic {
         let platform_principal = ic_cdk::api::id();
 
         let amount_nat = Nat::from(params.amount);
-        // Converting asset to usdt value
-        let mut usd_amount = params.amount;
-
-        // let supply_amount_to_usd =
-        //     get_exchange_rates(params.asset.clone(), None, params.amount.clone()).await;
-        // match supply_amount_to_usd {
-        //     Ok((amount_in_usd, _timestamp)) => {
-        //         usd_amount = amount_in_usd;
-        //         ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
-        //     }
-        //     Err(e) => {
-        //         ic_cdk::println!("Error getting exchange rate: {:?}", e);
-        //     }
-        // }
-
-        // ic_cdk::println!("Supply amount in USD: {:?}", usd_amount);
-
-        // Reads the reserve data from the asset
+        
+        //TODO create a comman func to get asset reserve data in mutate state
         let reserve_data_result = mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index
@@ -69,7 +53,6 @@ impl SupplyLogic {
             }
         };
 
-        // Fetches the reserve logic cache having the current values
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
@@ -78,6 +61,7 @@ impl SupplyLogic {
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates supply using the reserve_data
+        //TODO replace the validation code from backend three 
         ValidationLogic::validate_supply(
             &reserve_data,
             params.amount,
@@ -87,23 +71,13 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Supply validated successfully");
 
-        let total_supplies= reserve_data.asset_supply.clone() + params.amount; //TODO not sure should store usd value or token amount
+        let total_supplies= reserve_data.asset_supply.clone() + params.amount; 
         let total_borrow = reserve_data.asset_borrow;
         let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
-        // reserve_data.total_supply+=usd_amount;
+       
 
         ic_cdk::println!("Interest rates updated successfully");
 
-        if let Some(userlist) = &mut reserve_data.userlist {
-            if !userlist
-                .iter()
-                .any(|(principal, _)| principal == &user_principal.to_string())
-            {
-                userlist.push((user_principal.to_string(), true));
-            }
-        } else {
-            reserve_data.userlist = Some(vec![(user_principal.to_string(), true)]);
-        }
 
         // ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
 
@@ -111,7 +85,7 @@ impl SupplyLogic {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
-
+        let usd_amount=0u128;
         // ----------- Update logic here -------------
         let _ = UpdateLogic::update_user_data_supply(
             user_principal,

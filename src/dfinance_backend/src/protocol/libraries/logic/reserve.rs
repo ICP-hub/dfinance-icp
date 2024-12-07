@@ -44,8 +44,10 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
 
          reserve_factor: reserve_data.configuration.reserve_factor.clone(),
 
-         curr_debt:reserve_data.asset_borrow,
-         curr_supply: reserve_data.asset_supply,
+         curr_debt:reserve_data.asset_borrow, //TODO take from total_supply of debt token or update this while minting and burning the tokens
+         //next_debt
+         curr_supply: reserve_data.asset_supply, //TODO take from total_supply of d token or update this while minting and burning the tokens
+
 
     }
 }
@@ -59,7 +61,7 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
     }
 
     update_indexes(reserve_data, reserve_cache);
-    accrue_to_treasury(reserve_data, reserve_cache);
+    accrue_to_treasury(reserve_data, reserve_cache); //TODO review this code
 
     reserve_data.last_update_timestamp = current_time;
 }
@@ -75,7 +77,7 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
         
         reserve_data.liquidity_index = reserve_cache.next_liquidity_index;
     }
-
+    //TODO compare the total_debt
     if reserve_cache.curr_debt_index != 0 {
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
             reserve_cache.curr_debt_rate,
@@ -111,8 +113,8 @@ pub async fn update_interest_rates(
             reserve_cache.reserve_factor,           
            
         );
-        reserve_data.asset_borrow= total_borrowed;
-        reserve_data.asset_supply= total_supply;
+        reserve_data.asset_borrow= total_borrowed; //TODO remove this
+        reserve_data.asset_supply= total_supply;   //TODO remove this
         reserve_data.current_liquidity_rate = next_liquidity_rate;
         reserve_data.borrow_rate = next_debt_rate;
         ic_cdk::println!("reserve_data.total_borrowed: {:?}", reserve_data.total_borrowed);
@@ -187,21 +189,19 @@ pub async fn update_interest_rates(
 
 //TODO change the param of burn function according to mint
 pub async fn burn_scaled(
-    user_state: &mut UserState,
+    user_state: &mut UserReserveData,
     amount: u128,
     index: u128,
     user_principal: Principal,
     token_canister_principal: Principal,
     platform_principal: Principal,
+    burn_dtoken: bool,
 ) -> Result<(), String> {
-    //TODO if user is not caller, then 
+    //TODO if user is not caller, then
     //TODO if to is not backend, transfer it to other
     ic_cdk::println!("burn user state value = {:?}", user_state);
     ic_cdk::println!("burn amount value = {}", amount);
-    ic_cdk::println!(
-        "burn current_liquidity_index value = {}",
-        index
-    );
+    ic_cdk::println!("burn current_liquidity_index value = {}", index);
     ic_cdk::println!("burn user_principal value = {}", user_principal);
     ic_cdk::println!(
         "burn token_canister_principal value = {}",
@@ -230,17 +230,26 @@ pub async fn burn_scaled(
         }
     };
 
-    let balance_increase =
-        (balance.scaled_mul(index)) - (balance.scaled_mul(user_state.index));
-    ic_cdk::println!("balance_increase calculated = {}", balance_increase);
+    let mut balance_increase = 0u128;
+    if burn_dtoken {
+        balance_increase =
+            (balance.scaled_mul(index)) - (balance.scaled_mul(user_state.liquidity_index));
+        ic_cdk::println!("balance_increase calculated = {}", balance_increase);
+
+        user_state.d_token_balance -= adjusted_amount;
+        user_state.liquidity_index = index;
+        
+    } else {
+        balance_increase =
+            (balance.scaled_mul(index)) - (balance.scaled_mul(user_state.variable_borrow_index)); //fetch from user
+
+        // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+        user_state.debt_token_blance -= adjusted_amount;
+        user_state.variable_borrow_index = index;
+    }
 
     ic_cdk::println!("user_state before update = {:?}", user_state);
-    user_state.index = index;
     ic_cdk::println!("user_state after updating index = {:?}", user_state);
-
-
-    //TODO add setbalance
-    user_state.adjusted_balance -= adjusted_amount;
 
     if balance_increase > amount {
         let amount_to_mint = balance_increase - amount;

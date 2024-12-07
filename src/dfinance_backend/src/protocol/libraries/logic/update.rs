@@ -321,9 +321,9 @@ impl UpdateLogic {
             reserve_data.last_update_timestamp = current_timestamp();
             // reserve_data.state = update_user_state.clone();
 
-            if reserve_data.variable_borrow_index == 0 {
-                reserve_data.variable_borrow_index = 100000000;
-            }
+            // if reserve_data.variable_borrow_index == 0 {
+            //     reserve_data.variable_borrow_index = 100000000;
+            // }
 
             ic_cdk::println!(
                 "Updated asset borrow for existing reserve: {:?}",
@@ -338,7 +338,7 @@ impl UpdateLogic {
                 asset_borrow: params.amount,
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
-                variable_borrow_index: 100000000,
+                // variable_borrow_index: 100000000,
                 last_update_timestamp: current_timestamp(),
                 ..Default::default()
             };
@@ -623,7 +623,7 @@ impl UpdateLogic {
 
         match burn_scaled_result {
             Ok(()) => {
-                ic_cdk::println!("Minting debttoken successfully");
+                ic_cdk::println!("Burning debttoken successfully");
             }
             Err(e) => {
                 ic_cdk::println!("Error in minting the debttoken: {:?}", e);
@@ -640,7 +640,7 @@ impl UpdateLogic {
                 reserve_data.last_update_timestamp = current_timestamp();
                 if reserve_data.asset_borrow == params.amount {
                     reserve_data.is_borrowed = false;
-                    reserve_data.variable_borrow_index = 0;
+                    // reserve_data.variable_borrow_index = 0;
                     if !reserve_data.is_collateral {
                         reserve_data.is_using_as_collateral_or_borrow = false;
                     }

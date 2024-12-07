@@ -242,14 +242,12 @@ pub async fn burn_scaled(
     } else {
         balance_increase =
             (balance.scaled_mul(index)) - (balance.scaled_mul(user_state.variable_borrow_index)); //fetch from user
-
+            ic_cdk::println!("balance_increase calculated = {}", balance_increase);
         // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
         user_state.debt_token_blance -= adjusted_amount;
         user_state.variable_borrow_index = index;
     }
 
-    ic_cdk::println!("user_state before update = {:?}", user_state);
-    ic_cdk::println!("user_state after updating index = {:?}", user_state);
 
     if balance_increase > amount {
         let amount_to_mint = balance_increase - amount;
@@ -267,7 +265,7 @@ pub async fn burn_scaled(
         .await
         {
             Ok(_) => {
-                ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+                ic_cdk::println!("token transfer from backend to user executed successfully");
                 Ok(())
             }
             Err(err) => {
@@ -291,7 +289,7 @@ pub async fn burn_scaled(
         .await
         {
             Ok(_) => {
-                ic_cdk::println!("Dtoken transfer from user to backend executed successfully");
+                ic_cdk::println!("token transfer from user to backend executed successfully");
                 Ok(())
             }
             Err(err) => {

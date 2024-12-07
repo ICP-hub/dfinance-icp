@@ -322,7 +322,7 @@ impl GenericLogic {
         let asset_reserve = get_reserve_data(reserve.reserve.clone()).unwrap();
         // Simulate fetching user bto_i128(scaled balance multiplied by normalized income)
         let d_token_canister_principal: Principal =
-            Principal::from_text(asset_reserve.d_token_canister.unwrap()).unwrap();
+            Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
 
         let get_balance_value: Nat = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
         ic_cdk::println!(
@@ -341,7 +341,7 @@ impl GenericLogic {
                 return 0;
             }
         };
-        let normalized_supply = user_normalized_supply(reserve.clone());
+        let normalized_supply = user_normalized_supply(asset_reserve);
         ic_cdk::println!("user balance normailized supply = {:?}", normalized_supply);
         let user_scaled_balanced_normalized =
             user_scaled_balance.scaled_mul(normalized_supply.unwrap());
@@ -371,7 +371,7 @@ impl GenericLogic {
 
         ic_cdk::println!("Fetching debt token canister principal from reserve...");
         let debt_token_canister_principal =
-            Principal::from_text(asset_reserve.debt_token_canister.unwrap()).unwrap();
+            Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
 
         // let get_balance_value = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
         ic_cdk::println!("Fetching balance of user...");
@@ -399,7 +399,7 @@ impl GenericLogic {
         //let mut user_variable_debt: u128 = 1_000_000;
         if user_variable_debt != 0 {
             user_variable_debt =
-                user_variable_debt.scaled_mul(user_normalized_debt(reserve.clone()).unwrap());
+                user_variable_debt.scaled_mul(user_normalized_debt(asset_reserve).unwrap());
             ic_cdk::println!(
                 "User variable debt after normalization: {}",
                 user_variable_debt

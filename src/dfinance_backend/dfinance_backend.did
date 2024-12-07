@@ -99,7 +99,6 @@ service : () -> {
   get_user_data : (text) -> (Result_9) query;
   initialize_reserve : () -> ();
   liquidation_call : (text, text, nat64, text) -> (Result);
-  login : () -> (Result);
   queary_reserve_price : () -> (vec PriceCache) query;
   repay : (text, nat, opt text) -> (Result);
   reset_faucet_usage : (principal) -> (Result);
@@ -108,8 +107,8 @@ service : () -> {
   toggle_collateral : (text, nat, nat) -> ();
   update_balance : (principal, principal, nat) -> (Result_3);
   update_reserves_price : () -> ();
-  user_normalized_debt : (UserReserveData) -> (Result_3) query;
-  user_normalized_supply : (UserReserveData) -> (Result_3) query;
+  user_normalized_debt : (ReserveData) -> (Result_3) query;
+  user_normalized_supply : (ReserveData) -> (Result_3) query;
   user_position : (text) -> (Result_10) query;
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

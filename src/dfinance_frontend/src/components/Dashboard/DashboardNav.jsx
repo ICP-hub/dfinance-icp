@@ -104,13 +104,13 @@ const DashboardNav = () => {
     { id: 2, title: "Total Borrows", count: 0 }, 
   ]);
 
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { userData, healthFactorBackend, refetchUserData ,userAccountData } = useUserData();
   const formatNumber = useFormatNumber();
 
   const updateNetWorthAndHealthFactor = (data) => {
     if (!data || !data.Ok) return;
     const { net_worth, health_factor } = data.Ok;
-
+console.log("healtyhfactor basckend",healthFactorBackend)
     const updatedTab = walletDetailTab.map((item) => {
       if (item.id === 0) {
         return {
@@ -119,10 +119,12 @@ const DashboardNav = () => {
           style: { visibility: net_worth[0] > 0 ? "visible" : "hidden" },
         };
       } else if (item.id === 2) {
-        const healthValue =
-          Number(health_factor[0]) / 10000000000 > 100
-            ? "♾️"
-            : parseFloat((Number(health_factor[0]) / 10000000000).toFixed(2));
+        const healthValue = 
+    healthFactorBackend && !isNaN(Number(healthFactorBackend)) // Ensure it's valid
+      ? Number(healthFactorBackend) > 100
+        ? "♾️"
+        : parseFloat(Number(healthFactorBackend).toFixed(2)) // Only format the number
+      : "-"; // Fallback for invalid data
         return {
           ...item,
           count: healthValue,
@@ -512,10 +514,7 @@ const DashboardNav = () => {
                                   {}
                                   {isTooltipVisible && (
                                     <>
-                                      {}
-                                      {}
-
-                                      {}
+                                    
                                       <div
                                         ref={tooltipRef}
                                         className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
@@ -541,7 +540,7 @@ const DashboardNav = () => {
                             </div>
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-
+{console.log("data",data.count)}
                             <span
                               className={`font-bold text-[20px] ${data.title === "Health Factor"
                                   ? data.count === 0 && assetSupply === 0
@@ -688,7 +687,7 @@ const DashboardNav = () => {
             </div>
           )}
           {isPopupOpen && (
-            <RiskPopup onClose={handleClosePopup} userData={userData} />
+            <RiskPopup onClose={handleClosePopup} userData={userData} userAccountData={userAccountData} />
           )}
         </div>
         {}

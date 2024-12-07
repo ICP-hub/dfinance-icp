@@ -3,14 +3,14 @@ import { liquidationThresholdLabel } from "../../../utils/constants";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 
-const RiskPopup = ({ onClose, userData }) => {
+const RiskPopup = ({ onClose, userData , userAccountData }) => {
   const popupRef = useRef(null);
 
   const health_Factor_Value =
-    userData?.Ok?.health_factor / 10000000000 > 100
+  (Number(userAccountData?.Ok?.[4] )/ 10000000000) > 100
       ? Infinity
       : parseFloat(
-          Number(userData?.Ok?.health_factor / 10000000000).toFixed(2)
+        (Number(userAccountData?.Ok?.[4] )/ 10000000000).toFixed(2)
         );
 
   const Ltv_Value = parseFloat(Number(userData?.Ok?.ltv / 100000000) * 100)
@@ -18,8 +18,9 @@ const RiskPopup = ({ onClose, userData }) => {
     : 0;
 
   const liquidationThreshold_Value =
-    Number(userData?.Ok?.liquidation_threshold) / 100000000
-      ? (Number(userData?.Ok?.liquidation_threshold) / 100000000).toFixed(2)
+  Number(userAccountData?.Ok?.[3]) /
+  100000000 || 0
+      ? (Number(userAccountData?.Ok?.[3]) / 100000000).toFixed(2)
       : "0.00";
 
   const healthFactorMinValue = 1;

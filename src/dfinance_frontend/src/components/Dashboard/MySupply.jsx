@@ -2659,8 +2659,8 @@ const MySupply = () => {
                                 Number(item?.[1]?.Ok?.borrow_rate) /
                                   100000000 || 0;
                               const liquidationThreshold =
-                                Number(userData.Ok?.liquidation_threshold) /
-                                  100000000 || 0;
+                              Number(userAccountData?.Ok?.[3]) /
+                              100000000 || 0;
                               const reserveliquidationThreshold =
                                 Number(
                                   item?.[1]?.Ok.configuration
@@ -3452,9 +3452,8 @@ const MySupply = () => {
                                           : item[0] === "ckUSDT"
                                           ? ckUSDTBalance
                                           : null,
-                                        Number(
-                                          userData.Ok?.liquidation_threshold
-                                        ) / 100000000,
+                                          Number(userAccountData?.Ok?.[3]) /
+                                          100000000 || 0,
                                         Number(
                                           item?.[1]?.Ok?.configuration
                                             .liquidation_threshold
@@ -4018,9 +4017,8 @@ const MySupply = () => {
                                             : item[0] === "ckUSDT"
                                             ? ckUSDTBalance
                                             : null,
-                                          Number(
-                                            userData.Ok?.liquidation_threshold
-                                          ) / 100000000,
+                                            Number(userAccountData?.Ok?.[3]) /
+                                            100000000 || 0,
                                           Number(
                                             item?.[1]?.Ok?.configuration
                                               .liquidation_threshold

@@ -94,12 +94,13 @@ service : () -> {
   get_cached_exchange_rate : (text) -> (Result_4) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_5);
   get_reserve_data : (text) -> (Result_6) query;
+  get_total_supply : (principal) -> (nat) query;
   get_user_account_data : (opt text) -> (Result_7);
   get_user_data : (text) -> (Result_8) query;
   initialize_reserve : () -> ();
   liquidation_call : (text, text, nat64, text) -> (Result);
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : (principal) -> (Result_9);
+  register_user : (text) -> (Result_9);
   repay : (text, nat, opt text) -> (Result);
   reset_faucet_usage : (principal) -> (Result);
   schedule_midnight_task : () -> () query;
@@ -107,8 +108,8 @@ service : () -> {
   toggle_collateral : (text, nat, nat) -> ();
   update_balance : (principal, principal, nat) -> (Result_2);
   update_reserves_price : () -> ();
-  user_normalized_debt : (ReserveData) -> (Result_3) query;
-  user_normalized_supply : (ReserveData) -> (Result_3) query;
+  user_normalized_debt : (ReserveData) -> (Result_2) query;
+  user_normalized_supply : (ReserveData) -> (Result_2) query;
   user_position : (text) -> (Result_10) query;
   withdraw : (text, nat, opt text, bool) -> (Result);
 }

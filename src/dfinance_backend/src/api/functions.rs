@@ -75,6 +75,20 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
     balance
 }
 
+#[query]
+pub async fn get_total_supply(canister_id: Principal) -> Nat {
+    let raw_response: Result<(Nat,), _> =
+        ic_cdk::api::call::call(canister_id, "icrc1_total_supply", ()).await;
+
+    match raw_response {
+        Ok((balance,)) => balance,
+        Err(e) => {
+            ic_cdk::println!("Error calling icrc1_total_supply: {:?}", e);
+            ic_cdk::api::trap(&format!("Failed to call icrc1_total_supply: {:?}", e));
+        }
+    }
+}
+
 #[update]
 pub async fn update_balance(
     canister: Principal,

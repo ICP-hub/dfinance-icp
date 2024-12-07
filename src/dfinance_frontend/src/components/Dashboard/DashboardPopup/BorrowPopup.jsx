@@ -300,7 +300,7 @@ if (onLoadingChange) {
   }, [amount, conversionRate]);
 
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableAssetValue).toFixed(8);
+    const maxAmount = parseFloat(borrowableValue).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
 
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
@@ -355,12 +355,12 @@ if (onLoadingChange) {
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                     }`}
                     onClick={() => {
-                      if (parseFloat(borrowableAssetValue) > 0) {
+                      if (parseFloat(borrowableValue) > 0) {
                         handleMaxClick();
                       }
                     }}
                   >
-                    {parseFloat(borrowableAssetValue)?.toLocaleString(
+                    {parseFloat(borrowableValue)?.toLocaleString(
                       undefined,
                       {
                         minimumFractionDigits: 7,

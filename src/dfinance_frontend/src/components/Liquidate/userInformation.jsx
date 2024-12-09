@@ -22,7 +22,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import { trackEvent } from "../../utils/googleAnalytics";
 
-const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
+const UserInformationPopup = ({ onClose, mappedItem, principal , userAccountData}) => {
   const { backendActor, principal: currentUserPrincipal } = useAuth();
 
   const [rewardAmount, setRewardAmount] = useState();
@@ -674,7 +674,10 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
     }
   };
 
+  const value = Number(userAccountData?.Ok?.[4]);
 
+  
+  
 
   const formatNumber = useFormatNumber();
   let liquidation_bonus = "";
@@ -1142,13 +1145,12 @@ const UserInformationPopup = ({ onClose, mappedItem, principal }) => {
                       User Health Factor
                     </p>
                     <p className="text-xs font-medium ">
-                      {parseFloat(
-                        Number(mappedItem?.item[1]?.health_factor) / 10000000000
+                      {(
+                        Number(userAccountData?.Ok?.[4]) / 10000000000
                       ) > 100
                         ? "Infinity"
                         : parseFloat(
-                          Number(mappedItem?.item[1]?.health_factor) /
-                          10000000000
+                          Number(userAccountData?.Ok?.[4]) / 10000000000 
                         ).toFixed(2)}
                     </p>
                   </div>

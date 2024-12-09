@@ -110,7 +110,6 @@ const DashboardNav = () => {
   const updateNetWorthAndHealthFactor = (data) => {
     if (!data || !data.Ok) return;
     const { net_worth, health_factor } = data.Ok;
-console.log("healtyhfactor basckend",healthFactorBackend)
     const updatedTab = walletDetailTab.map((item) => {
       if (item.id === 0) {
         return {
@@ -540,7 +539,6 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                             </div>
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-{console.log("data",data.count)}
                             <span
                               className={`font-bold text-[20px] ${data.title === "Health Factor"
                                   ? data.count === 0 && assetSupply === 0

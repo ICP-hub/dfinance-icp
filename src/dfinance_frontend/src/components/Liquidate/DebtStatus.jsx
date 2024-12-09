@@ -25,39 +25,33 @@ const DebtStatus = () => {
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userAccountData, setUserAccountData] = useState(null);
-  const { userData} = useUserData();
-  const [loading ,setLoading ]= useState (true);
-  const [fetchedCount, setFetchedCount] = useState(0);
+  const [userAccountData, setUserAccountData] = useState({});
+  const { userData } = useUserData();
+  const [filteredUsers, setFilteredUsers] = useState([]); 
+  const [loading, setLoading] = useState(true);
   const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
     useAssetData();
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
-  
 
   const navigate = useNavigate();
-
-  const { getAllUsers, principal ,backendActor } = useAuth();
-
+  const { getAllUsers, principal, backendActor } = useAuth();
   const [users, setUsers] = useState([]);
-  
+
+  const [userLoadingStates, setUserLoadingStates] = useState({});
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const usersData = await getAllUsers();
         setUsers(usersData);
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
     };
-
     fetchUsers();
   }, [getAllUsers]);
-
-  useEffect(() => {
-    users.map((user, index) => {
-      const userr = user[0].toString();
-    });
-  }, [users]);
 
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
@@ -79,61 +73,87 @@ const DebtStatus = () => {
   const ITEMS_PER_PAGE = 8;
   const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredUsers = users
-  .map((item) => {
-    const mappedItem = {
-      reserves: item[1].reserves,
-      principal: item[0].toText(), 
-      healthFactor: Number(item[1]?.health_factor) / 100000000,
-      item,
-    };
-    return mappedItem;
-  })
-  .filter((mappedItem) => {
-    const isValid =
-      mappedItem.reserves.length > 0 &&
-      mappedItem.principal !== principal &&
-      mappedItem.healthFactor < 1 &&
-      (mappedItem.principal
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-        mappedItem.item[1].total_debt.toString().includes(searchQuery));
-    return isValid;
-  });
+  const fetchUserAccountData = async (userData) => {
+    const principal = userData?.principal;
 
-const fetchUserAccountData = async (userData) => {
-  console.log("Mapped item principal:", userData.principal); 
-  if (backendActor) {
-    try {
-      const result = await backendActor.get_user_account_data([userData.principal]);
-
-      if (result?.Err === "ERROR :: Pending") {
-        console.warn("Pending state detected. Retrying...");
-        setTimeout(() => fetchUserAccountData(userData), 1000); 
-        return;
-      }
-
-      if (result) {
-        setUserAccountData(result);
-      } else {
-        console.warn("No result returned for principal:", userData.principal);
-      }
-    } catch (error) {
-      console.error("Error fetching user account data:", error.message);
+    if (!principal) {
+      console.warn("Invalid principal for user:", userData); 
+      return; 
     }
-  }
-};
 
-useEffect(() => {
-  filteredUsers.forEach((userData) => {
-    fetchUserAccountData(userData);
-  });
-}, [filteredUsers]);  
+    setUserLoadingStates((prevState) => ({
+      ...prevState,
+      [principal]: true,
+    }));
 
+    if (backendActor) {
+      try {
+        const result = await backendActor.get_user_account_data([principal]);
 
-  
+        if (result?.Err === "ERROR :: Pending") {
+          console.warn("Pending state detected. Retrying...");
+          setTimeout(() => fetchUserAccountData(userData), 1000);
+          return;
+        }
+
+        if (result) {
+
+          setUserAccountData((prevState) => ({
+            ...prevState,
+            [principal]: result,
+          }));
+
+          setUserLoadingStates((prevState) => ({
+            ...prevState,
+            [principal]: false,
+          }));
+        } else {
+          console.warn("No result returned for principal:", principal);
+        }
+      } catch (error) {
+        console.error("Error fetching user account data:", error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    users.forEach((userData) => {
+      const principal = userData[0]?.toText ? userData[0].toText() : null; 
+      if (!principal) {
+        console.warn("Invalid principal found in userData:", userData);
+        return; 
+      }
+
+      fetchUserAccountData({ ...userData, principal });
+    });
+  }, [users]);
+
+  useEffect(() => {
+
+    if (Object.keys(userAccountData).length === users.length) {
+      const filtered = users
+        .map((item) => {
+          const principal = item[0].toText();
+          const accountData = userAccountData[principal]; 
+
+          const totalDebt = Number(accountData?.Ok?.[1])/1e8 || 0; 
+          const healthFactor = accountData ? Number(accountData?.Ok?.[4]) / 10000000000 : 0;
+
+          return {
+            reserves: item[1].reserves,
+            principal: principal,
+            healthFactor: healthFactor,
+            item,
+            totalDebt,
+          };
+        })
+        .filter((mappedItem) => mappedItem.healthFactor < 1); 
+
+      setFilteredUsers(filtered); 
+    }
+  }, [users, userAccountData]);
+
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
-
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
@@ -154,9 +174,11 @@ useEffect(() => {
       closePopup();
     }
   };
+
   const truncateText = (text, length) => {
     return text.length > length ? text.substring(0, length) + "..." : text;
   };
+
   useEffect(() => {
     if (showPopup) {
       document.addEventListener("mousedown", handleOutsideClick);
@@ -167,7 +189,6 @@ useEffect(() => {
   }, [showPopup]);
 
   const formatNumber = useFormatNumber();
- 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
@@ -181,6 +202,7 @@ useEffect(() => {
       return numericValue.toFixed(7);
     }
   };
+
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center mt-8">
@@ -190,14 +212,11 @@ useEffect(() => {
       </div>
 
       <div className="w-full mt-6">
+        {}
         {filteredUsers.length === 0 ? (
-          <div className=" flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
+          <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
             <div className="w-20 h-15">
-              <img
-                src="/Transaction/empty file.gif"
-                alt="empty"
-                className="w-30"
-              />
+              <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
             </div>
             <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
               No users found!
@@ -210,10 +229,7 @@ useEffect(() => {
                 <thead>
                   <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                     {LIQUIDATION_USERLIST_COL.slice(0, 2).map((item, index) => (
-                      <td
-                        key={index}
-                        className="p-3 pl-1 whitespace-nowrap py-4"
-                      >
+                      <td key={index} className="p-3 pl-1 whitespace-nowrap py-4">
                         {item.header}
                       </td>
                     ))}
@@ -229,65 +245,62 @@ useEffect(() => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((mappedItem, index) => (
-                    <tr
-                      key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${
-                        index !== users.length - 1 ? "gradient-line-bottom" : ""
-                      }`}
-                    >
-                      <td className="p-2 align-top py-8 ">
-                        <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
-                          <p>{truncateText(mappedItem.principal, 14)}</p>
-                        </div>
-                      </td>
-                      <td className="p-2 align-top py-8 ">
-                        <div className="flex flex-row ml-2 mt-2">
-                          <div>
-                            <p className="font-medium">
-                              $
-                              {formatValue(
-                                Number(userAccountData?.Ok?.[1]) /
-                                  100000000
-                              )}
-                            </p>
+                  {currentItems.map((mappedItem, index) => {
+                    const userLoading = userLoadingStates[mappedItem.principal];
+                    return (
+                      <tr
+                        key={index}
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${
+                          index !== users.length - 1 ? "gradient-line-bottom" : ""
+                        }`}
+                      >
+                        <td className="p-2 align-top py-8 ">
+                          <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
+                            <p>{truncateText(mappedItem.principal, 14)}</p>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-5 align-top hidden md:table-cell py-8">
-                        <div className="flex gap-2 items-center">
-                          {mappedItem.reserves[0].map((item, index) => {
-                            const assetName = item[0];
-                            const assetSupply = item[1]?.asset_supply;
-                            const assetBorrow = item[1]?.asset_borrow;
-                            if (assetBorrow > 0) {
-                              return (
-                                <img
-                                  key={index}
-                                  src={
-                                    assetName === "ckBTC"
-                                      ? ckBTC
-                                      : assetName === "ckETH"
-                                      ? ckETH
-                                      : assetName === "ckUSDC"
-                                      ? ckUSDC
-                                      : assetName === "ICP"
-                                      ? icp
-                                      : assetName === "ckUSDT"
-                                      ? ckUSDT
-                                      : undefined
-                                  }
-                                  alt={assetName}
-                                  className="rounded-[50%] w-7"
-                                />
-                              );
-                            }
-                            return null;
-                          })}
-                        </div>
-                      </td>
-
-                      <td className="p-5 align-top hidden md:table-cell py-8">
+                        </td>
+                        <td className="p-2 align-top py-8 ">
+                          <div className="flex flex-row ml-2 mt-2">
+                            <div>
+                              <p className="font-medium">
+                                { `$${formatValue(mappedItem.totalDebt)}`}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-5 align-top hidden md:table-cell py-8">
+                          <div className="flex gap-2 items-center">
+                            {mappedItem.reserves[0].map((item, index) => {
+                              const assetName = item[0];
+                              const assetSupply = item[1]?.asset_supply;
+                              const assetBorrow = item[1]?.asset_borrow;
+                              if (assetBorrow > 0) {
+                                return (
+                                  <img
+                                    key={index}
+                                    src={
+                                      assetName === "ckBTC"
+                                        ? ckBTC
+                                        : assetName === "ckETH"
+                                        ? ckETH
+                                        : assetName === "ckUSDC"
+                                        ? ckUSDC
+                                        : assetName === "ICP"
+                                        ? icp
+                                        : assetName === "ckUSDT"
+                                        ? ckUSDT
+                                        : undefined
+                                    }
+                                    alt={assetName}
+                                    className="rounded-[50%] w-7"
+                                  />
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+                        </td>
+                        <td className="p-5 align-top hidden md:table-cell py-8">
                         <div className="flex gap-2 items-center">
                           {mappedItem.reserves[0].map((item, index) => {
                             const assetName = item[0];
@@ -320,43 +333,22 @@ useEffect(() => {
                           })}
                         </div>
                       </td>
-                      <td className="p-3 align-top hidden md:table-cell pt-5 py-8">
-                        {mappedItem.item.borrow_apy}
-                      </td>
-                      <td className="p-3 align-top flex py-8">
-                        <div className="w-full flex justify-end align-center">
-                          <Button
-                            title={
-                              <>
-                                <span className="hidden lg:inline">
-                                  Liquidate
-                                </span>
-                                <span className="inline lg:hidden">
-                                  <svg
-                                    width="40"
-                                    height="46"
-                                    viewBox="0 0 42 42"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-6 h-6"
-                                  >
-                                    <path
-                                      d="M27.7247 24.967L27.6958 13.8482L16.577 13.8193C16.4611 13.8036 16.3433 13.813 16.2314 13.8468C16.1195 13.8807 16.0161 13.9381 15.9284 14.0154C15.8406 14.0926 15.7705 14.1878 15.7227 14.2945C15.675 14.4012 15.6507 14.5169 15.6515 14.6338C15.6523 14.7507 15.6783 14.866 15.7276 14.972C15.7769 15.078 15.8483 15.1722 15.9372 15.2481C16.026 15.3241 16.1302 15.3801 16.2425 15.4123C16.3549 15.4445 16.4729 15.4522 16.5885 15.4349L24.9204 15.4695L13.8824 26.5076C13.7293 26.6606 13.6434 26.8682 13.6434 27.0846C13.6434 27.301 13.7293 27.5086 13.8824 27.6616C14.0354 27.8146 14.2429 27.9006 14.4594 27.9006C14.6758 27.9006 14.8833 27.8146 15.0364 27.6616L26.0744 16.6235L26.109 24.9555C26.1098 25.172 26.1966 25.3794 26.3502 25.5319C26.5039 25.6845 26.7119 25.7698 26.9284 25.769C27.1449 25.7683 27.3523 25.6815 27.5049 25.5279C27.6574 25.3742 27.7427 25.1662 27.742 24.9497L27.7247 24.967Z"
-                                      fill="white"
-                                    />
-                                  </svg>
-                                </span>
-                              </>
-                            }
-                            className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-[12px] lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
-                            onClickHandler={() =>
-                              handleDetailsClick(mappedItem)
-                            }
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+
+                        <td className="p-3 align-top hidden md:table-cell pt-5 py-8">
+                          {mappedItem.item.borrow_apy}
+                        </td>
+                        <td className="p-3 align-top flex py-8">
+                          <div className="w-full flex justify-end align-center">
+                            <Button
+                              title={<span className="inline">Liquidate</span>}
+                              className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-[12px] lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
+                              onClickHandler={() => handleDetailsClick(mappedItem)}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -377,6 +369,7 @@ useEffect(() => {
           onClose={() => setShowUserInfoPopup(false)}
           mappedItem={selectedAsset}
           principal={selectedAsset.principal}
+          userAccountData={userAccountData[selectedAsset.principal]} 
         />
       )}
     </div>

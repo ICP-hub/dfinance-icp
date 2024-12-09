@@ -129,16 +129,15 @@ const DebtStatus = () => {
   }, [users]);
 
   useEffect(() => {
-
     if (Object.keys(userAccountData).length === users.length) {
       const filtered = users
         .map((item) => {
           const principal = item[0].toText();
-          const accountData = userAccountData[principal]; 
-
-          const totalDebt = Number(accountData?.Ok?.[1])/1e8 || 0; 
+          const accountData = userAccountData[principal];
+  
+          const totalDebt = Number(accountData?.Ok?.[1])/1e8 || 0;
           const healthFactor = accountData ? Number(accountData?.Ok?.[4]) / 10000000000 : 0;
-
+  
           return {
             reserves: item[1].reserves,
             principal: principal,
@@ -147,11 +146,12 @@ const DebtStatus = () => {
             totalDebt,
           };
         })
-        .filter((mappedItem) => mappedItem.healthFactor < 1); 
-
-      setFilteredUsers(filtered); 
+        .filter((mappedItem) => mappedItem.healthFactor > 1 && mappedItem.principal !== principal); 
+  
+      setFilteredUsers(filtered);
     }
-  }, [users, userAccountData]);
+  }, [users, userAccountData, principal]);
+  
 
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;

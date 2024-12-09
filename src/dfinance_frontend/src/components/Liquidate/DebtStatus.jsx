@@ -146,7 +146,7 @@ const DebtStatus = () => {
             totalDebt,
           };
         })
-        .filter((mappedItem) => mappedItem.healthFactor > 1 && mappedItem.principal !== principal); 
+        .filter((mappedItem) => mappedItem.healthFactor < 1 && mappedItem.principal !== principal); 
   
       setFilteredUsers(filtered);
     }

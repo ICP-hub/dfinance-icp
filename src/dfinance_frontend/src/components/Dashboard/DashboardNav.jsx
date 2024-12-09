@@ -464,7 +464,7 @@ const DashboardNav = () => {
 
       <div className="w-full flex flex-wrap justify-start items-center gap-2 sxs3:mb-2 md:mb-9 lg:mb-2">
         <div className="flex">
-          {}
+          
           <div className="relative">
             <div
               className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
@@ -499,18 +499,18 @@ const DashboardNav = () => {
                           style={{ minWidth: "220px", flex: "1 0 220px" }}
                         >
                           <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                            {}
+                            
                             <div className="flex items-center">
                               {data.title}
                               {data.title === "Net APY" && (
                                 <span className="relative inline-block ml-1">
-                                  {}
+                                  
                                   <Info
                                     size={15}
                                     className="ml-1 align-middle "
                                     onClick={toggleTooltip}
                                   />
-                                  {}
+                                  
                                   {isTooltipVisible && (
                                     <>
                                     
@@ -529,8 +529,8 @@ const DashboardNav = () => {
                                           supplied.
                                         </span>
 
-                                        {}
-                                        {}
+                                        
+                                        
                                       </div>
                                     </>
                                   )}
@@ -599,7 +599,7 @@ const DashboardNav = () => {
                   return (
                     <div key={index} className="relative group">
                       <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                        {}
+                        
                         <div className="flex items-center">
                           {data.title}
                           {data.title === "Net APY" && (
@@ -608,16 +608,16 @@ const DashboardNav = () => {
                               onMouseEnter={() => setIsTooltipVisible(true)}
                               onMouseLeave={() => setIsTooltipVisible(false)}
                             >
-                              {}
+                              
                               <Info size={15} className="ml-1 align-middle cursor-pointer" onClick={toggleTooltip} />
 
-                              {}
+                              
                               {isTooltipVisible && (
                                 <>
-                                  {}
-                                  {}
+                                  
+                                  
 
-                                  {}
+                                  
                                   <div
                                     ref={tooltipRef}
                                     className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
@@ -631,7 +631,7 @@ const DashboardNav = () => {
                                       is borrowed than supplied.
                                     </span>
 
-                                    {}
+                                    
                                     <span
                                       className={`tooltip-arrow ${theme === "dark"
                                           ? "tooltip-arrow-dark"
@@ -656,10 +656,10 @@ const DashboardNav = () => {
                                   : data.count <= 1
                                     ? "text-red-500"
                                     : data.count <= 1.5
-                                      ? "text-orange-500"
+                                      ? "text-orange-600"
                                       : data.count <= 2
-                                        ? "text-orange-300"
-                                        : "text-orange-600"
+                                        ? "text-orange-400"
+                                        : "text-orange-300"
                               : data.title === "Total Borrows"
                                 ? "text-[#2A1F9D] dark:text-darkBlue"
                                 : "text-[#2A1F9D] dark:text-darkBlue"
@@ -688,7 +688,7 @@ const DashboardNav = () => {
             <RiskPopup onClose={handleClosePopup} userData={userData} userAccountData={userAccountData} />
           )}
         </div>
-        {}
+        
       </div>
     </div>
   );

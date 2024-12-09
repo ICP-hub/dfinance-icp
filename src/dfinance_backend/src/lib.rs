@@ -193,9 +193,9 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
 
 // Initialize user if not found
 #[update]
-fn check_user(user: String) -> Result<String, String> {
-    let user_principal =
-        Principal::from_text(&user).map_err(|_| "Invalid user canister ID".to_string())?;
+fn register_user(user_principal: Principal) -> Result<String, String> {
+    // let user_principal =
+    //     Principal::from_text(&user).map_err(|_| "Invalid user canister ID".to_string())?;
 
     let user_data = mutate_state(|state| {
         let user_index = &mut state.user_profile;

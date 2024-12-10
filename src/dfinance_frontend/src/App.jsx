@@ -14,7 +14,7 @@ import useAssetData from "./components/Common/useAssets";
 
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
-  let TRACKING_ID = "G-EVCJPRHQYX";
+  let TRACKING_ID = "G-P3L1ZRL8TV";
   const { filteredItems, loading } = useAssetData();
 
   const {

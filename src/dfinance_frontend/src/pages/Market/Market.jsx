@@ -479,6 +479,7 @@ const WalletDetails = () => {
 
                             {}
                             <p className="font-light text-[12px] text-center">
+                              $
                               {item[0] === "ckBTC" &&
                                 (isFinite(
                                   Number(item[1].Ok.asset_supply) /
@@ -622,6 +623,7 @@ const WalletDetails = () => {
 
                             {}
                             <p className="font-light text-[12px] text-center">
+                              $
                               {item[0] === "ckBTC" &&
                                 (isFinite(
                                   Number(item[1].Ok.asset_borrow) /

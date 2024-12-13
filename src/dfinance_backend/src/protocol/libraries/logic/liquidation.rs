@@ -14,21 +14,21 @@ impl LiquidationLogic {
     pub async fn execute_liquidation(
         asset_name: String,
         collateral_asset: String,
-        amount: u128,
-        on_behalf_of: String,
+        amount: Nat,
+        on_behalf_of: Principal,
     ) -> Result<Nat, String> {
         // Reads the reserve data from the asset
         ic_cdk::println!("params asset_name and collateral_asset {:?} {:?}",asset_name,collateral_asset);
         ic_cdk::println!("liquidation amount = {}", amount);
-        let mut usd_amount = amount ;
+        let mut usd_amount =  Nat::from(0u128) ;
 
         let supply_amount_to_usd =
-            get_exchange_rates(asset_name.clone(), None, amount ).await;
+            get_exchange_rates(asset_name.clone(), None, amount.clone() ).await;
         match supply_amount_to_usd {
             Ok((amount_in_usd, _timestamp)) => {
                 // Extracted the amount in USD
                 usd_amount = amount_in_usd;
-                ic_cdk::println!("Supply amount in USD: {:?}", amount_in_usd);
+                ic_cdk::println!("Supply amount in USD: {:?}", usd_amount);
             }
             Err(e) => {
                 // Handling the error
@@ -51,7 +51,7 @@ impl LiquidationLogic {
                 })
         });
 
-        let reserve_data = match reserve_data_result {
+        let mut reserve_data = match reserve_data_result {
             Ok(data) => {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
                 data
@@ -75,8 +75,7 @@ impl LiquidationLogic {
 
         let platform_principal = ic_cdk::api::id();
 
-        let user_principal = Principal::from_text(on_behalf_of)
-            .map_err(|_| "Invalid user canister ID".to_string())?;
+        let user_principal = on_behalf_of;
         ic_cdk::println!("User Principal (Debt User): {}", user_principal);
 
         let liquidator_principal = api::caller();
@@ -95,18 +94,18 @@ impl LiquidationLogic {
             Err(e) => {
                 // Handle the error case
                 ic_cdk::println!("Error fetching exchange rate: {}", e);
-                0 // Or handle the error as appropriate for your logic
+                Nat::from(0u128) // Or handle the error as appropriate for your logic
             }
         };
         ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
-        let bonus = collateral_amount * (reserve_data.configuration.liquidation_bonus  / 100) / 100000000;
-        let reward_amount = Nat::from(collateral_amount as u128) + Nat::from(bonus);
+        let bonus = collateral_amount.clone() * (reserve_data.configuration.liquidation_bonus.clone()  /  Nat::from(100u128)) / Nat::from(100000000u128);
+        let reward_amount: Nat = collateral_amount.clone() + bonus.clone();
         ic_cdk::println!("bonus: {}", bonus);
-        let reward_amount_param = collateral_amount as u128 + bonus as u128;
+        let reward_amount_param = collateral_amount + bonus;
         ic_cdk::println!("reward_amount_param: {}", reward_amount_param);
         let supply_param = ExecuteSupplyParams {
             asset: collateral_asset.to_string(),
-            amount: reward_amount_param,
+            amount: reward_amount_param.clone(),
             is_collateral: true,
         };
         let mut reserve_cache = reserve::cache(&reserve_data);
@@ -123,7 +122,7 @@ impl LiquidationLogic {
         // ic_cdk::println!("Borrow validated successfully");
 
         // Repaying debt
-        let repay_response = repay(asset.clone(), amount, Some(user_principal.to_string())).await;
+        let repay_response = repay(asset.clone(), amount, Some(user_principal)).await;
 
         match repay_response {
             Ok(_) => ic_cdk::println!("Repayment successful"),
@@ -170,7 +169,7 @@ impl LiquidationLogic {
                     &reserve_cache,
                     supply_param,
 
-                    &reserve_data,
+                    &mut reserve_data,
                     //usd_amount,
                 )
                 .await;

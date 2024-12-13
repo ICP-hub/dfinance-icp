@@ -42,9 +42,12 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow;
 use crate::protocol::libraries::logic::supply::SupplyLogic;
 use crate::protocol::libraries::types::datatypes::UserData;
+use ic_cdk::api::management_canister::http_request::HttpResponse;
+use ic_cdk::api::management_canister::http_request::TransformArgs;
 
 use ic_cdk::println;
 use ic_cdk_timers::set_timer_interval;
+use std::string;
 use std::time::Duration;
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
@@ -62,7 +65,7 @@ async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), S
     ic_cdk::println!("Starting deposit function");
     let params = ExecuteSupplyParams {
         asset,
-        amount: amount as u128,
+        amount: Nat::from(amount),
         is_collateral,
     };
     ic_cdk::println!("Parameters for execute_supply: {:?}", params);
@@ -83,12 +86,12 @@ async fn liquidation_call(
     asset: String,
     collateral_asset: String,
     amount: u64,
-    on_behalf_of: String,
+    on_behalf_of: Principal,
 ) -> Result<(), String> {
     match LiquidationLogic::execute_liquidation(
         asset,
         collateral_asset,
-        amount as u128,
+        Nat::from(amount),
         on_behalf_of,
     )
     .await
@@ -122,7 +125,7 @@ async fn borrow(asset: String, amount: u64) -> Result<(), String> {
     ic_cdk::println!("Starting borrow function");
     let params = ExecuteBorrowParams {
         asset,
-        amount: amount as u128,
+        amount: Nat::from(amount),
     };
     ic_cdk::println!("Parameters for execute_borrow: {:?}", params);
 
@@ -193,9 +196,9 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
 
 // Initialize user if not found
 #[update]
-fn register_user(user_principal: Principal) -> Result<String, String> {
-    // let user_principal =
-    //     Principal::from_text(&user).map_err(|_| "Invalid user canister ID".to_string())?;
+fn register_user(user: String) -> Result<String, String> {
+    let user_principal =
+        Principal::from_text(&user).map_err(|_| "Invalid user canister ID".to_string())?;
 
     let user_data = mutate_state(|state| {
         let user_index = &mut state.user_profile;
@@ -214,11 +217,11 @@ fn register_user(user_principal: Principal) -> Result<String, String> {
 
 // Repays debt of the user
 #[update]
-async fn repay(asset: String, amount: u128, on_behalf: Option<String>) -> Result<(), String> {
+async fn repay(asset: String, amount: Nat, on_behalf: Option<Principal>) -> Result<(), String> {
     ic_cdk::println!("Starting repay function");
     let params = ExecuteRepayParams {
         asset,
-        amount: amount as u128,
+        amount: amount,
         on_behalf_of: on_behalf,
     };
     ic_cdk::println!("Parameters for execute_repay: {:?}", params);
@@ -239,13 +242,13 @@ async fn repay(asset: String, amount: u128, on_behalf: Option<String>) -> Result
 pub async fn withdraw(
     asset: String,
     amount: u128,
-    on_behalf: Option<String>,
+    on_behalf: Option<Principal>,
     collateral: bool,
 ) -> Result<(), String> {
     ic_cdk::println!("Starting withdraw function");
     let params = ExecuteWithdrawParams {
         asset,
-        amount: amount as u128,
+        amount: Nat::from(amount),
         on_behalf_of: on_behalf,
         is_collateral: collateral,
     };
@@ -611,7 +614,7 @@ pub async fn withdraw(
 // }
 
 #[query]
-pub async fn user_position(asset_name: String) -> Result<(u128, u128), String> {
+pub async fn user_position(asset_name: String) -> Result<(Nat, Nat), String> {
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {}", user_principal);
 
@@ -638,24 +641,24 @@ pub async fn user_position(asset_name: String) -> Result<(u128, u128), String> {
     let prev_liq_index = user_reserve_data.liquidity_index.clone();
     let prev_borrow_index = user_reserve_data.variable_borrow_index.clone();
 
-    let updated_asset_supply = if user_reserve_data.asset_supply > 0 {
+    let updated_asset_supply = if user_reserve_data.asset_supply > Nat::from(0u128) {
         calculate_dynamic_balance(
-            user_reserve_data.asset_supply,
+            user_reserve_data.asset_supply.clone(),
             prev_liq_index,
-            user_reserve_data.liquidity_index,
+            user_reserve_data.liquidity_index.clone(),
         )
     } else {
-        0
+        Nat::from(0u128)
     };
 
-    let updated_asset_borrow = if user_reserve_data.asset_borrow > 0 {
+    let updated_asset_borrow = if user_reserve_data.asset_borrow > Nat::from(0u128) {
         calculate_dynamic_balance(
-            user_reserve_data.asset_borrow,
+            user_reserve_data.asset_borrow.clone(),
             prev_borrow_index,
-            user_reserve_data.variable_borrow_index,
+            user_reserve_data.variable_borrow_index.clone(),
         )
     } else {
-        0
+        Nat::from(0u128)
     };
 
     ic_cdk::println!(
@@ -704,12 +707,12 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
 }
 
 fn calculate_dynamic_balance(
-    initial_deposit: u128,
-    prev_liquidity_index: u128,
-    new_liquidity_index: u128,
-) -> u128 {
-    if prev_liquidity_index == 0 {
-        return 0;
+    initial_deposit: Nat,
+    prev_liquidity_index: Nat,
+    new_liquidity_index: Nat,
+) -> Nat {
+    if prev_liquidity_index == Nat::from(0u128) {
+        return Nat::from(0u128);
     }
     initial_deposit * (new_liquidity_index / prev_liquidity_index)
 }
@@ -719,7 +722,7 @@ fn calculate_dynamic_balance(
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<String>,
-) -> Result<u128, String> {
+) -> Result<Nat, String> {
     ic_cdk::println!("Entering get_asset_supply function");
 
     // Log the asset name being passed
@@ -755,7 +758,7 @@ pub async fn get_asset_supply(
                 "Error: User reserve data not found for asset while get asset supply returing 0: {}",
                 asset_name
             );
-            return Ok(0);
+            return Ok(Nat::from(0u128));
         }
     };
 
@@ -785,19 +788,19 @@ pub async fn get_asset_supply(
         get_balance_value
     );
 
-    let nat_convert_value: u128 = match nat_to_u128(get_balance_value) {
-        Ok(amount) => {
-            ic_cdk::println!("Successfully converted Nat to u128: {}", amount);
-            amount
-        }
-        Err(e) => {
-            ic_cdk::println!("Error converting Nat to u128: {}", e);
-            return Err("Error converting Nat to u128".to_string());
-        }
-    };
-    if nat_convert_value == 0 {
+    // let nat_convert_value: u128 = match nat_to_u128(get_balance_value) {
+    //     Ok(amount) => {
+    //         ic_cdk::println!("Successfully converted Nat to u128: {}", amount);
+    //         amount
+    //     }
+    //     Err(e) => {
+    //         ic_cdk::println!("Error converting Nat to u128: {}", e);
+    //         return Err("Error converting Nat to u128".to_string());
+    //     }
+    // };
+    if get_balance_value == Nat::from(0u128) {
         ic_cdk::println!("balance 0, returnin....");
-        return Ok(0);
+        return Ok(Nat::from(0u128));
     }
 
     let (_, user_reserve) = user_reserve_data;
@@ -814,14 +817,14 @@ pub async fn get_asset_supply(
     };
 
     // Ask : if we send the token amount by multiplying the interest rate into the token value, is it a right approach.
-    let result = normalized_supply_data.scaled_mul(nat_convert_value);
+    let result = normalized_supply_data.scaled_mul(get_balance_value);
     ic_cdk::println!("Final calculated asset supply: {}", result);
 
     Ok(result)
 }
 
 #[query]
-pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Result<u128, String> {
+pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Result<Nat, String> {
     let user_principal = match on_behalf {
         // If `on_behalf` is Some, we parse the Principal from the string
         Some(ref principal_str) => {
@@ -846,12 +849,12 @@ pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Re
     let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
         Some(data) => data,
         None => {
-            return Ok(0);
+            return Ok(Nat::from(0u128));
         }
     };
     let (_, user_reserve) = user_reserve_data;
     if !user_reserve.is_borrowed {
-        return Ok(0);
+        return Ok( Nat::from(0u128));
     }
 
     let asset_reserve = match get_reserve_data(asset_name.clone()) {
@@ -878,16 +881,16 @@ pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Re
         get_balance_value
     );
 
-    let nat_convert_value: u128 = match nat_to_u128(get_balance_value) {
-        Ok(amount) => {
-            ic_cdk::println!("User scaled balance: {}", amount);
-            amount
-        }
-        Err(e) => {
-            ic_cdk::println!("Error converting Nat to u128: {}", e);
-            return Err("Error converting Nat to u128".to_string());
-        }
-    };
+    // let nat_convert_value: u128 = match nat_to_u128(get_balance_value) {
+    //     Ok(amount) => {
+    //         ic_cdk::println!("User scaled balance: {}", amount);
+    //         amount
+    //     }
+    //     Err(e) => {
+    //         ic_cdk::println!("Error converting Nat to u128: {}", e);
+    //         return Err("Error converting Nat to u128".to_string());
+    //     }
+    // };
 
     let normalized_debt_data = match user_normalized_debt(asset_reserve.clone()) {
         Ok(data) => data,
@@ -902,29 +905,27 @@ pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Re
         normalized_debt_data
     );
 
-    Ok(normalized_debt_data.scaled_mul(nat_convert_value))
+    Ok(normalized_debt_data.scaled_mul(get_balance_value))
 }
 
 #[query]
-pub fn user_normalized_supply(reserve_data:ReserveData) -> Result<u128, String> {
+pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, String> {
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
         ic_cdk::println!("No update needed as timestamps match.");
         return Ok(reserve_data.liquidity_index);
-    }
-
-    else {
+    } else {
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_data.current_liquidity_rate,
             reserve_data.last_update_timestamp,
         );
-        ic_cdk::println!(
-            "Calculated cumulated liquidity interest: {} based on supply rate: {}",
-            cumulated_liquidity_interest,
-            reserve_data.current_liquidity_rate
-        );
+        // ic_cdk::println!(
+        //     "Calculated cumulated liquidity interest: {} based on supply rate: {}",
+        //     cumulated_liquidity_interest,
+        //     reserve_data.current_liquidity_rate
+        // );
 
         ic_cdk::println!(
             "Updated liquidity index: {} for reserve",
@@ -933,17 +934,16 @@ pub fn user_normalized_supply(reserve_data:ReserveData) -> Result<u128, String> 
         //  user_reserve_data.liquidity_index =
         return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
     }
-    
 }
 
 #[query]
-pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<u128, String> {
+pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, String> {
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
         ic_cdk::println!("No update needed as timestamps match.");
-        return  Ok(reserve_data.debt_index)
+        return Ok(reserve_data.debt_index);
     }
     //instead of userreservedata use value from reservedata
     else {
@@ -953,15 +953,15 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<u128, String> {
             reserve_data.borrow_rate
         );
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
-            (reserve_data.borrow_rate / 100) as u128, //TODO check if this dividing by 100 is necessary or not
+            reserve_data.borrow_rate / Nat::from(100u128), //TODO check if this dividing by 100 is necessary or not
             reserve_data.last_update_timestamp,
             current_time,
         );
-        ic_cdk::println!(
-            "Calculated cumulated borrow interest: {} based on borrow rate: {}",
-            cumulated_borrow_interest,
-            reserve_data.borrow_rate //take it from reserve of asset
-        );
+        // ic_cdk::println!(
+        //     "Calculated cumulated borrow interest: {} based on borrow rate: {}",
+        //     cumulated_borrow_interest,
+        //     reserve_data.borrow_rate //take it from reserve of asset
+        // );
 
         ic_cdk::println!(
             "Updated variable borrow index: {} for reserve",
@@ -969,15 +969,13 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<u128, String> {
         );
         return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
     }
-
-   
 }
 
 // this function is for check which i will remove later.
 #[update]
 async fn get_user_account_data(
-    on_behalf: Option<String>,
-) -> Result<(u128, u128, u128, u128, u128, u128, bool), String> {
+    on_behalf: Option<Principal>,
+) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), String> {
     let result = GenericLogic::calculate_user_account_data(on_behalf).await;
     result
 }

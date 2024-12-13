@@ -19,7 +19,7 @@ impl ValidationLogic {
 
     pub async fn validate_supply(
         reserve: &ReserveData,
-        amount: u128,
+        amount: Nat,
         user: Principal,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
@@ -36,7 +36,7 @@ impl ValidationLogic {
             return Err(Error::InvalidUser);
         }
 
-        if amount <= 0 {
+        if amount <= Nat::from(0u128) {
             ic_cdk::println!("Invalid amount: Amount must be greater than zero.");
             return Err(Error::InvalidAmount);
         }
@@ -48,7 +48,7 @@ impl ValidationLogic {
         let transfer_fees = get_fees(ledger_canister).await;
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
-        let final_amount = amount + transfer_fees;
+        let final_amount = amount.clone() + transfer_fees;
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
         if final_amount > user_balance {
@@ -79,7 +79,7 @@ impl ValidationLogic {
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
         // Validating supply cap limit
-        let supply_cap = reserve.configuration.supply_cap;
+        let supply_cap = reserve.configuration.supply_cap.clone();
         ic_cdk::println!("supply_cap : {:?}", supply_cap);
 
         let d_token_canister_id: Result<Principal, candid::types::principal::PrincipalError> =
@@ -91,16 +91,16 @@ impl ValidationLogic {
 
         let total_supply = get_total_supply(d_token_canister_id_result).await;
 
-        let total_supply_u128 = match nat_to_u128(total_supply) {
-            Ok(bal) => {
-                ic_cdk::println!("balance converted to u128: {}", bal);
-                bal
-            }
-            Err(err) => {
-                ic_cdk::println!("Error converting balance to u128: {:?}", err);
-                return Err(Error::ConversionErrorToU128);
-            }
-        };
+        // let total_supply_u128 = match nat_to_u128(total_supply) {
+        //     Ok(bal) => {
+        //         ic_cdk::println!("balance converted to u128: {}", bal);
+        //         bal
+        //     }
+        //     Err(err) => {
+        //         ic_cdk::println!("Error converting balance to u128: {:?}", err);
+        //         return Err(Error::ConversionErrorToU128);
+        //     }
+        // };
 
         ic_cdk::println!("validation reserve accure = {}", reserve.accure_to_platform);
 
@@ -109,7 +109,7 @@ impl ValidationLogic {
         // ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
 
         //Ask: this is okk with.
-        let total_supply_amount_accure = total_supply_u128 + reserve.accure_to_platform + amount;
+        let total_supply_amount_accure = total_supply + reserve.accure_to_platform.clone() + amount;
         ic_cdk::println!(
             "total supply with amount and accrue = {}",
             total_supply_amount_accure
@@ -133,7 +133,7 @@ impl ValidationLogic {
 
     pub async fn validate_withdraw(
         reserve: &ReserveData,
-        amount: u128,
+        amount: Nat,
         user: Principal,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
@@ -149,7 +149,7 @@ impl ValidationLogic {
             return Err(Error::InvalidUser);
         }
 
-        if amount <= 0 {
+        if amount <= Nat::from(0u128) {
             ic_cdk::println!("Invalid amount: Amount must be greater than zero.");
             return Err(Error::InvalidAmount);
         }
@@ -232,13 +232,13 @@ impl ValidationLogic {
 
         // let mut total_collateral: u128 = 0;
         // let mut total_debt: u128 = 0;
-        let mut avg_ltv: u128 = 0;
+        let mut avg_ltv  = Nat::from(0u128);
         // let mut avg_liquidation_threshold: u128 = 0;
-        let mut health_factor: u128 = 0;
+        let mut health_factor = Nat::from(0u128);
         // let mut available_borrow: u128 = 0;
         //let mut has_zero_ltv_collateral: bool = false;
 
-        let user_data_result: Result<(u128, u128, u128, u128, u128, u128, bool), String> =
+        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), String> =
             GenericLogic::calculate_user_account_data(None).await;
 
         match user_data_result {
@@ -314,7 +314,7 @@ impl ValidationLogic {
         // Calculating health factor
         //let health_factor = calculate_health_factor(&user_position);
 
-        if health_factor < 1 {
+        if health_factor < Nat::from(1u128) {
             return Err(Error::HealthFactorLess);
         }
         Ok(())
@@ -326,7 +326,7 @@ impl ValidationLogic {
 
     pub async fn validate_borrow(
         reserve: &ReserveData,
-        amount: u128,
+        amount: Nat,
         user_principal: Principal,
     ) -> Result<(), Error> {
         // Check if the caller is anonymous
@@ -337,7 +337,7 @@ impl ValidationLogic {
         if user_principal != ic_cdk::caller() {
             return Err(Error::InvalidUser);
         }
-        if amount <= 0 {
+        if amount <= Nat::from(0u128) {
             return Err(Error::InvalidAmount);
         }
 
@@ -388,13 +388,13 @@ impl ValidationLogic {
 
         // let mut total_collateral: u128 = 0;
         // let mut total_debt: u128 = 0;
-        let mut avg_ltv: u128 = 0;
+        let mut avg_ltv = Nat::from(0u128);
         // let mut avg_liquidation_threshold: u128 = 0;
-        let mut health_factor: u128 = 0;
+        let mut health_factor =Nat::from(0u128);
         // let mut available_borrow: u128 = 0;
         //let mut has_zero_ltv_collateral: bool = false;
 
-        let user_data_result: Result<(u128, u128, u128, u128, u128, u128, bool), String> =
+        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), String> =
             GenericLogic::calculate_user_account_data(None).await;
 
         match user_data_result {
@@ -441,16 +441,16 @@ impl ValidationLogic {
             return Err(Error::LTVGreaterThanThreshold);
         }
 
-        if health_factor < 1 {
+        if health_factor < Nat::from(1u128) {
             return Err(Error::HealthFactorLess);
         }
 
         // Validating supply cap limit.
         //Ask: am i need to do similar of the supply for borrow cap and need to make a get_total_borrow and we dont have any specfic icrc function for this.
-        let borrow_cap = reserve.configuration.borrow_cap;
+        let borrow_cap = reserve.configuration.borrow_cap.clone();
         ic_cdk::println!("borrow_cap : {:?}", borrow_cap);
 
-        let final_total_borrow = amount + (reserve.asset_borrow.scaled_mul(reserve.debt_index));
+        let final_total_borrow = amount + (reserve.asset_borrow.clone().scaled_mul(reserve.debt_index.clone()));
         ic_cdk::println!("final_total_supply : {:?}", final_total_borrow);
 
         if final_total_borrow >= borrow_cap {
@@ -464,7 +464,7 @@ impl ValidationLogic {
 
     pub async fn validate_repay(
         reserve: &ReserveData,
-        amount: u128,
+        amount: Nat,
         user: Principal,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
@@ -478,7 +478,7 @@ impl ValidationLogic {
             return Err(Error::InvalidUser);
         }
 
-        if amount <= 0 {
+        if amount <= Nat::from(0u128) {
             return Err(Error::InvalidAmount);
         }
         let transfer_fees = get_fees(ledger_canister).await;
@@ -513,17 +513,17 @@ impl ValidationLogic {
             None => None,
         };
 
-        let mut user_current_debt = 0;
+        let mut user_current_debt = Nat::from(0u128);
 
         if let Some((_, reserve_data)) = user_reserve {
-            user_current_debt = reserve_data.asset_borrow;
+            user_current_debt = reserve_data.asset_borrow.clone();
         }
 
-        if user_current_debt == 0 {
+        if user_current_debt == Nat::from(0u128) {
             return Err(Error::NoDebtToRepay);
         }
 
-        if final_amount > user_current_debt as u128 {
+        if final_amount > user_current_debt  {
             return Err(Error::RepayMoreThanDebt);
         }
 

@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
@@ -20,32 +20,32 @@ pub struct Candid<T>(pub T);
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,
-    pub net_worth: Option<u128>, //FIXME i think we can remove this
-    pub total_collateral: Option<u128>,
-    pub total_debt: Option<u128>,
-    pub available_borrow: Option<u128>,
-    pub net_apy: Option<u128>,       //FIXME i think we can remove this
-    pub health_factor: Option<u128>, //FIXME can we remove this or just keep this
-    pub ltv: Option<u128>,       
-    pub liquidation_threshold: Option<u128>,
+    pub net_worth: Option<Nat>, //FIXME i think we can remove this
+    pub total_collateral: Option<Nat>,
+    pub total_debt: Option<Nat>,
+    pub available_borrow: Option<Nat>,
+    pub net_apy: Option<Nat>,       //FIXME i think we can remove this
+    pub health_factor: Option<Nat>, //FIXME can we remove this or just keep this
+    pub ltv: Option<Nat>,       
+    pub liquidation_threshold: Option<Nat>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
-    pub max_ltv: Option<u128>,
+    pub max_ltv: Option<Nat>,
 }
 
 impl Default for UserData {
     fn default() -> Self {
         Self {
             user_id: Default::default(),
-            net_worth: Some(0),
-            total_collateral: Some(0),
-            total_debt: Some(0),
-            available_borrow: Some(0),
-            net_apy: Some(0),
-            health_factor: Some(0),
-            ltv: Some(0),
-            liquidation_threshold: Some(0),
+            net_worth: Some(Nat::from(0u128)),
+            total_collateral: Some(Nat::from(0u128)),
+            total_debt: Some(Nat::from(0u128)),
+            available_borrow: Some(Nat::from(0u128)),
+            net_apy: Some(Nat::from(0u128)),
+            health_factor: Some(Nat::from(0u128)),
+            ltv: Some(Nat::from(0u128)),
+            liquidation_threshold: Some(Nat::from(0u128)),
             reserves: Default::default(),
-            max_ltv: Some(0),
+            max_ltv: Some(Nat::from(0u128)),
         }
     }
 }
@@ -54,22 +54,22 @@ impl Default for UserData {
 pub struct UserReserveData {
     pub reserve: String,
     pub principal_stable_debt: u64, //TODO remove
-    pub borrow_rate: u128, //FIXME i think there is no need for this
-    pub supply_rate: u128,
+    pub borrow_rate: Nat, //FIXME i think there is no need for this
+    pub supply_rate: Nat,
     pub last_update_timestamp: u64,
-    pub liquidity_index: u128,
-    pub asset_supply: u128,
-    pub asset_borrow: u128,
-    pub variable_borrow_index: u128,  
-    pub asset_price_when_supplied: u128, //TODO remove
-    pub asset_price_when_borrowed: u128,  //TODO remove
+    pub liquidity_index: Nat,
+    pub asset_supply: Nat,
+    pub asset_borrow: Nat,
+    pub variable_borrow_index: Nat,  
+    pub asset_price_when_supplied: Nat, //TODO remove
+    pub asset_price_when_borrowed: Nat,  //TODO remove
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
-    pub faucet_usage: u128,
-    pub faucet_limit: u128, 
-    pub d_token_balance: u128,
-    pub debt_token_blance: u128,
+    pub faucet_usage: Nat,
+    pub faucet_limit: Nat, 
+    pub d_token_balance: Nat,
+    pub debt_token_blance: Nat,
     pub state: UserState, //TODO remove this then
 }
 impl Default for UserReserveData {
@@ -90,7 +90,7 @@ impl Default for UserReserveData {
             is_collateral: true,
             is_borrowed: Default::default(),
             faucet_usage: Default::default(),
-            faucet_limit: 50000000000,
+            faucet_limit: Nat::from(50000000000u128),
             state: Default::default(),
             d_token_balance: Default::default(),
             debt_token_blance: Default::default(),
@@ -100,8 +100,8 @@ impl Default for UserReserveData {
 
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserState {
-    pub adjusted_balance: u128, 
-    pub index: u128, 
+    pub adjusted_balance: Nat, 
+    pub index: Nat, 
 }
 
 impl Default for UserState {
@@ -134,11 +134,11 @@ pub struct InitReserveInput {
 
 #[derive(Debug, CandidType, Deserialize, Serialize)]
 pub struct CalculateInterestRatesParams {
-    pub liquidity_added: u128,
-    pub liquidity_taken: u128,
-    pub total_stable_debt: u128,
-    pub total_variable_debt: u128,
-    pub average_stable_borrow_rate: u128,
+    pub liquidity_added: Nat,
+    pub liquidity_taken: Nat,
+    pub total_stable_debt: Nat,
+    pub total_variable_debt: Nat,
+    pub average_stable_borrow_rate: Nat,
     pub reserve: String,
     pub d_token: Option<String>,
 }

@@ -20,7 +20,7 @@ use crate::{
         types::datatypes::UserReserveData,
     },
 };
-use candid::Principal;
+use candid::{Nat, Principal};
 use ic_cdk::api::time;
 use ic_cdk::update;
 fn current_timestamp() -> u64 {
@@ -35,11 +35,14 @@ impl UpdateLogic {
         user_principal: Principal,
         reserve_cache: &ReserveCache,
         params: ExecuteSupplyParams,
-        reserve: &ReserveData,
+        reserve: &mut ReserveData,
         //usd_amount: u128,
     ) -> Result<(), String> {
-        ic_cdk::println!("Starting update_user_data_supply for user: {:?}", user_principal);
-    
+        ic_cdk::println!(
+            "Starting update_user_data_supply for user: {:?}",
+            user_principal
+        );
+
         // Fetch user data
         let user_data_result = user_data(user_principal);
         let mut user_data = match user_data_result {
@@ -52,7 +55,7 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-    
+
         // let usd_rate = usd_amount.scaled_div(params.amount);
         // ic_cdk::println!(
         //     "Converted amount: {} to USD amount: {} with rate: {}",
@@ -63,7 +66,7 @@ impl UpdateLogic {
 
         // user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
         // ic_cdk::println!("Updated net worth: {:?}", user_data.net_worth);
-    
+
         if params.is_collateral {
             // let user_max_ltv = cal_average_ltv(
             //     //usd_amount,
@@ -74,7 +77,7 @@ impl UpdateLogic {
             // );
             // ic_cdk::println!(" user_max_ltv: {:?}", user_max_ltv);
             //user_data.max_ltv = Some(user_max_ltv);
-    
+
             // let user_thrs = cal_average_threshold(
             //    // usd_amount,
             //     0,
@@ -84,31 +87,34 @@ impl UpdateLogic {
             // );
             // ic_cdk::println!("Calculated user liquidation threshold: {:?}", user_thrs);
             // user_data.liquidation_threshold = Some(user_thrs);
-    
+
             //user_data.total_collateral = Some(user_data.total_collateral.unwrap_or(0) + usd_amount);
             ic_cdk::println!("Updated total collateral: {:?}", user_data.total_collateral);
-    
+
             let user_position = UserPosition {
-                total_collateral_value: user_data.total_collateral.unwrap_or(0),
-                total_borrowed_value: user_data.total_debt.unwrap_or(0),
-                liquidation_threshold: user_data.liquidation_threshold.unwrap(),
+                total_collateral_value: user_data
+                    .total_collateral
+                    .clone()
+                    .unwrap_or(Nat::from(0u128)),
+                total_borrowed_value: user_data.total_debt.clone().unwrap_or(Nat::from(0u128)),
+                liquidation_threshold: user_data.liquidation_threshold.clone().unwrap(),
             };
-    
+
             let health_factor = calculate_health_factor(&user_position);
-            user_data.health_factor = Some(health_factor);
+            user_data.health_factor = Some(health_factor.clone());
             ic_cdk::println!("Calculated health factor: {}", health_factor);
-    
+
             let ltv = calculate_ltv(&user_position);
-            user_data.ltv = Some(ltv);
+            user_data.ltv = Some(ltv.clone());
             ic_cdk::println!("Calculated LTV: {:?}", ltv);
-    
+
             // user_data.available_borrow = Some(
             //     user_data.available_borrow.unwrap_or(0)
             //         + (usd_amount.scaled_mul(reserve.configuration.ltv)) / 100,
             // );
             ic_cdk::println!("Updated available borrow: {:?}", user_data.available_borrow);
         }
-    
+
         // Check if the user has a reserve for the asset
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         let mut user_reserve_data = match user_reserve.as_mut() {
@@ -119,19 +125,20 @@ impl UpdateLogic {
                 return Err(error_msg);
             }
         };
-    
+
         let platform_principal = ic_cdk::api::id();
         let minted_result = mint_scaled(
+            reserve,
             &mut user_reserve_data,
-            params.amount,
-            reserve_cache.next_liquidity_index,
+            params.amount.clone(),
+            reserve_cache.next_liquidity_index.clone(),
             user_principal,
             Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
             true,
         )
         .await;
-    
+
         match minted_result {
             Ok(()) => {
                 ic_cdk::println!("Minting dtokens successfully");
@@ -142,12 +149,12 @@ impl UpdateLogic {
                 return Err(error_msg);
             }
         }
-    
+
         if let Some((_, reserve_data)) = user_reserve {
             reserve_data.reserve = params.asset.clone();
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.borrow_rate = reserve.borrow_rate.clone();
-            reserve_data.asset_supply += params.amount;
+            reserve_data.asset_supply += params.amount.clone();
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
             // reserve_data.state = update_user_state.clone();
@@ -164,30 +171,33 @@ impl UpdateLogic {
             } else {
                 reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
             }
-    
-            ic_cdk::println!("Updated asset supply for existing reserve: {:?}", reserve_data);
+
+            ic_cdk::println!(
+                "Updated asset supply for existing reserve: {:?}",
+                reserve_data
+            );
         } else {
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
                 asset_supply: params.amount,
-                supply_rate: reserve.current_liquidity_rate,
-              
+                supply_rate: reserve.current_liquidity_rate.clone(),
+
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
                 // liquidity_index: reserve.liquidity_index.clone(),
                 last_update_timestamp: current_timestamp(),
                 ..Default::default()
             };
-    
+
             if let Some(ref mut reserves) = user_data.reserves {
                 reserves.push((params.asset.clone(), new_reserve));
             } else {
                 user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
             }
-    
+
             ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
         }
-    
+
         // Save the updated user data back to state
         mutate_state(|state| {
             state
@@ -198,15 +208,14 @@ impl UpdateLogic {
         ic_cdk::println!("User data updated successfully");
         Ok(())
     }
-    
 
     // ------------- Update user data function for borrow -------------
     pub async fn update_user_data_borrow(
         user_principal: Principal,
         reserve_cache: &ReserveCache,
         params: ExecuteBorrowParams,
-        reserve: &ReserveData,
-       // usd_amount: u128,
+        reserve: &mut ReserveData,
+        // usd_amount: u128,
     ) -> Result<(), String> {
         ic_cdk::println!(
             "Starting update_user_data_borrow for user: {:?}",
@@ -236,18 +245,24 @@ impl UpdateLogic {
             }
         };
 
-       // user_data.total_debt = Some(user_data.total_debt.unwrap_or(0) + usd_amount);
-       // Ask: doing the same as above using params amount which is in token value.
+        // user_data.total_debt = Some(user_data.total_debt.unwrap_or(0) + usd_amount);
+        // Ask: doing the same as above using params amount which is in token value.
         // user_data.net_worth =
         //     Some((user_data.net_worth.unwrap_or(0) as i128 - params.amount as i128).max(0) as u128);
         let user_position = UserPosition {
-            total_collateral_value: user_data.total_collateral.unwrap_or(0),
-            total_borrowed_value: user_data.total_debt.unwrap_or(0),
-            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0),
+            total_collateral_value: user_data
+                .total_collateral
+                .clone()
+                .unwrap_or(Nat::from(0u128)),
+            total_borrowed_value: user_data.total_debt.clone().unwrap_or(Nat::from(0u128)),
+            liquidation_threshold: user_data
+                .liquidation_threshold
+                .clone()
+                .unwrap_or(Nat::from(0u128)),
         };
 
         let health_factor = calculate_health_factor(&user_position);
-        user_data.health_factor = Some(health_factor);
+        user_data.health_factor = Some(health_factor.clone());
 
         ic_cdk::println!("Updated user health factor: {}", health_factor);
 
@@ -288,15 +303,16 @@ impl UpdateLogic {
             None => return Err("No reserve found for the user".to_string()), // or handle appropriately
         };
         // ic_cdk::println!("Update user state: {:?}", update_user_state);
-        
+
         let minted_result = mint_scaled(
+            reserve,
             &mut user_reserve_data,
-            params.amount,
-            reserve_cache.next_debt_index,
+            params.amount.clone(),
+            reserve_cache.next_debt_index.clone(),
             user_principal,
             Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
-            false
+            false,
         )
         .await;
 
@@ -426,18 +442,21 @@ impl UpdateLogic {
             ic_cdk::println!("Updated available borrow: {:?}", user_data.available_borrow);
 
             let user_position = UserPosition {
-                total_collateral_value: user_data.total_collateral.unwrap_or(0),
-                total_borrowed_value: user_data.total_debt.unwrap_or(0),
-                liquidation_threshold: user_data.liquidation_threshold.unwrap(),
+                total_collateral_value: user_data
+                    .total_collateral
+                    .clone()
+                    .unwrap_or(Nat::from(0u128)),
+                total_borrowed_value: user_data.total_debt.clone().unwrap_or(Nat::from(0u128)),
+                liquidation_threshold: user_data.liquidation_threshold.clone().unwrap(),
             };
 
             let health_factor = calculate_health_factor(&user_position);
-            user_data.health_factor = Some(health_factor);
+            user_data.health_factor = Some(health_factor.clone());
 
             ic_cdk::println!("Updated user health factor: {}", health_factor);
 
             let ltv = calculate_ltv(&user_position);
-            user_data.ltv = Some(ltv);
+            user_data.ltv = Some(ltv.clone());
             ic_cdk::println!("Updated user LTV: {}", ltv);
         }
 
@@ -465,12 +484,12 @@ impl UpdateLogic {
 
         let burn_scaled_result = burn_scaled(
             &mut user_reserve_data,
-            params.amount,
-            reserve_cache.next_liquidity_index,
+            params.amount.clone(),
+            reserve_cache.next_liquidity_index.clone(),
             user_principal,
             Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
-            true
+            true,
         )
         .await;
 
@@ -498,7 +517,7 @@ impl UpdateLogic {
 
             if reserve_data.asset_supply >= params.amount {
                 reserve_data.asset_supply -= params.amount;
-               // reserve_data.state = update_user_state.clone();
+                // reserve_data.state = update_user_state.clone();
                 ic_cdk::println!(
                     "Reduced asset supply for existing reserve: {:?}",
                     reserve_data
@@ -511,7 +530,7 @@ impl UpdateLogic {
                 ));
             }
 
-            if reserve_data.asset_supply == 0 {
+            if reserve_data.asset_supply == Nat::from(0u128) {
                 reserve_data.is_collateral = true;
             }
         } else {
@@ -539,7 +558,7 @@ impl UpdateLogic {
         reserve_cache: &ReserveCache,
         params: ExecuteRepayParams,
         reserve: &ReserveData,
-       // usd_amount: u128,
+        // usd_amount: u128,
     ) -> Result<(), String> {
         ic_cdk::println!(
             "Starting update_user_data_repay for user: {:?}",
@@ -562,33 +581,40 @@ impl UpdateLogic {
 
         //Ask: removed usd amount subtract from this as per withdraw.
         let user_position = UserPosition {
-            total_collateral_value: user_data.total_collateral.unwrap_or(0),
-            total_borrowed_value: user_data.total_debt.unwrap_or(0),
-            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0),
+            total_collateral_value: user_data
+                .total_collateral
+                .clone()
+                .unwrap_or(Nat::from(0u128)),
+            total_borrowed_value: user_data.total_debt.clone().unwrap_or(Nat::from(0u128)),
+            liquidation_threshold: user_data
+                .liquidation_threshold
+                .clone()
+                .unwrap_or(Nat::from(0u128)),
         };
         ic_cdk::println!("Calculated user position: {:?}", user_position);
 
         // user_data.total_debt =
         //     Some((user_data.total_debt.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
         // Ask: doing same as above.
-        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + params.amount);
+        user_data.net_worth =
+            Some(user_data.net_worth.unwrap_or(Nat::from(0u128)) + params.amount.clone());
         let health_factor = calculate_health_factor(&user_position);
-        user_data.health_factor = Some(health_factor);
+        user_data.health_factor = Some(health_factor.clone());
         ic_cdk::println!("Updated user health factor: {}", health_factor);
 
         let ltv = calculate_ltv(&user_position);
-        user_data.ltv = Some(ltv);
+        user_data.ltv = Some(ltv.clone());
         ic_cdk::println!("Updated user LTV: {}", ltv);
 
         ic_cdk::println!(
             "avaliable borrow without update = {}",
-            user_data.available_borrow.unwrap()
+            user_data.available_borrow.clone().unwrap()
         );
         //ic_cdk::println!("usd amount = {}", usd_amount);
         //user_data.available_borrow = Some(user_data.available_borrow.unwrap() + usd_amount);
         ic_cdk::println!(
             "Updated user available borrow: {}",
-            user_data.available_borrow.unwrap()
+            user_data.available_borrow.clone().unwrap()
         );
 
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
@@ -616,12 +642,12 @@ impl UpdateLogic {
 
         let burn_scaled_result = burn_scaled(
             &mut user_reserve_data,
-            params.amount,
-            reserve_cache.next_debt_index,
+            params.amount.clone(),
+            reserve_cache.next_debt_index.clone(),
             user_principal,
             Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
             platform_principal,
-            false
+            false,
         )
         .await;
 
@@ -636,11 +662,11 @@ impl UpdateLogic {
         };
 
         if let Some((_, reserve_data)) = user_reserve {
-            if reserve_data.asset_borrow >= params.amount {
-                reserve_data.asset_borrow -= params.amount;
-                reserve_data.supply_rate = reserve.current_liquidity_rate;
-                reserve_data.borrow_rate = reserve.borrow_rate;
-               // reserve_data.state = update_user_state.clone();
+            if reserve_data.asset_borrow >= params.amount.clone() {
+                reserve_data.asset_borrow -= params.amount.clone();
+                reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
+                reserve_data.borrow_rate = reserve.borrow_rate.clone();
+                // reserve_data.state = update_user_state.clone();
                 reserve_data.last_update_timestamp = current_timestamp();
                 if reserve_data.asset_borrow == params.amount {
                     reserve_data.is_borrowed = false;
@@ -683,7 +709,7 @@ impl UpdateLogic {
 }
 
 #[update]
-pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
+pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) {
     let user_principal = ic_cdk::caller();
     //TODO add validations
     //Retrieve user data.
@@ -751,26 +777,24 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
         added_usd_amount.clone(),
         usd_amount.clone(),
         reserve_data.configuration.liquidation_threshold,
-        user_data.total_collateral.unwrap(),
+        user_data.total_collateral.clone().unwrap(),
         user_data.liquidation_threshold.unwrap(),
     );
 
     user_data.total_collateral = Some(
-        ((user_data.total_collateral.unwrap() as i128 - usd_amount.clone() as i128
-            + added_usd_amount.clone() as i128)
-            .max(0)) as u128,
+        (user_data.total_collateral.unwrap() - usd_amount.clone() + added_usd_amount.clone())
+            .max(Nat::from(0u128)),
     );
-    user_data.liquidation_threshold = Some(user_thrs);
+    user_data.liquidation_threshold = Some(user_thrs.clone());
     user_data.available_borrow = Some(
-        ((user_data.available_borrow.unwrap() as i128 - usd_amount.clone() as i128
-            + added_usd_amount.clone() as i128)
-            .max(0)) as u128,
+        (user_data.available_borrow.unwrap() - usd_amount.clone() + added_usd_amount.clone())
+            .max(Nat::from(0u128)),
     );
     ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
 
     let user_position = UserPosition {
-        total_collateral_value: user_data.total_collateral.unwrap_or(0),
-        total_borrowed_value: user_data.total_debt.unwrap_or(0),
+        total_collateral_value: user_data.total_collateral.clone().unwrap_or(Nat::from(0u128)),
+        total_borrowed_value: user_data.total_debt.clone().unwrap_or(Nat::from(0u128)),
         liquidation_threshold: user_thrs,
     };
 

@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use serde::Serialize;
@@ -11,7 +11,7 @@ use super::math_utils::ScalingMath;
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct CachedPrice {
-    pub price: u128,
+    pub price: Nat,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
@@ -19,13 +19,17 @@ pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,
 }
 
+fn get_max_value() -> Nat {
+    Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
+}
+
 impl PriceCache {
 
-    pub fn get_cached_price_simple(&self, asset: &str) -> Option<u128> {
-        self.cache.get(asset).map(|cached_price| cached_price.price)
+    pub fn get_cached_price_simple(&self, asset: &str) -> Option<Nat> {
+        self.cache.get(asset).map(|cached_price| cached_price.price.clone())
     }
 
-    // pub fn get_cached_price(&self, asset: &str) -> Option<(u128, u64)> {
+    // pub fn get_cached_price(&self, asset: &str) -> Option<(Nat, u64)> {
     //     if let Some(cached_price) = self.cache.get(asset) {
     //         let current_time = SystemTime::now()
     //             .duration_since(SystemTime::UNIX_EPOCH)
@@ -38,7 +42,7 @@ impl PriceCache {
     //     None
     // }
 
-    pub fn set_price(&mut self, asset: String, price: u128) {
+    pub fn set_price(&mut self, asset: String, price: Nat) {
         self.cache.insert(asset, CachedPrice { price });
     }
 }
@@ -77,7 +81,7 @@ pub async fn update_reserves_price() {
     for asset_name in keys {
         ic_cdk::println!("Updating price for asset: {}", asset_name);
 
-        match get_exchange_rates(asset_name.clone(), None, 0).await {
+        match get_exchange_rates(asset_name.clone(), None, Nat::from(0u128)).await {
             Ok((exchange_rate, timestamp)) => {
                 ic_cdk::println!(
                     "Successfully updated exchange rate for {}: {} at {}",
@@ -108,44 +112,45 @@ pub fn queary_reserve_price() -> Vec<PriceCache>{
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
-    pub total_collateral_value: u128,
-    pub total_borrowed_value: u128,
-    pub liquidation_threshold: u128,
+    pub total_collateral_value: Nat,
+    pub total_borrowed_value: Nat,
+    pub liquidation_threshold: Nat,
 }
-pub fn calculate_health_factor(position: &UserPosition) -> u128 {
-    if position.total_borrowed_value == 0 {
-        return u128::MAX; 
+pub fn calculate_health_factor(position: &UserPosition) -> Nat {
+    if position.total_borrowed_value == Nat::from(0u128) {
+        // TODO: ask bhanu for max value in nat.
+        return get_max_value(); 
     }
 
-    (position.total_collateral_value * position.liquidation_threshold)
-        / position.total_borrowed_value
+    (position.total_collateral_value.clone() * position.liquidation_threshold.clone())
+        / position.total_borrowed_value.clone()
 }
 
-pub fn calculate_ltv(position: &UserPosition) -> u128 {
-    if position.total_collateral_value == 0 {
-        return 0;
+pub fn calculate_ltv(position: &UserPosition) -> Nat {
+    if position.total_collateral_value == Nat::from(0u128) {
+        return  Nat::from(0u128);
     }
 
     position
-        .total_borrowed_value
-        .scaled_div(position.total_collateral_value)
+        .total_borrowed_value.clone()
+        .scaled_div(position.total_collateral_value.clone())
 }
 
 pub fn cal_average_threshold(
-    amount: u128,
-    amount_taken: u128,
-    reserve_liq_thres: u128,
-    user_total_collateral: u128,
-    user_liq_thres: u128,
-) -> u128 {
-    let numerator = (amount.scaled_mul(reserve_liq_thres))
-        + (user_total_collateral.scaled_mul(user_liq_thres))
-        - (amount_taken.scaled_mul(reserve_liq_thres));
+    amount: Nat,
+    amount_taken: Nat,
+    reserve_liq_thres: Nat,
+    user_total_collateral: Nat,
+    user_liq_thres: Nat,
+) -> Nat {
+    let numerator = (amount.clone().scaled_mul(reserve_liq_thres.clone()))
+        + (user_total_collateral.clone().scaled_mul(user_liq_thres))
+        - (amount_taken.clone().scaled_mul(reserve_liq_thres));
 
     let denominator = amount + user_total_collateral - amount_taken;
 
-    if denominator == 0 {
-        return 0u128;
+    if denominator == Nat::from(0u128) {
+        return Nat::from(0u128);
     }
 
     let result = numerator.scaled_div(denominator);
@@ -153,20 +158,20 @@ pub fn cal_average_threshold(
 }
 
 pub fn cal_average_ltv(
-    amount: u128,
-    amount_taken: u128,
-    reserve_ltv: u128,
-    user_total_collateral: u128,
-    user_max_ltv: u128,
-) -> u128 {
-    let numerator = (amount.scaled_mul(reserve_ltv))
-        + (user_total_collateral.scaled_mul(user_max_ltv))
-        - (amount_taken.scaled_mul(reserve_ltv));
+    amount: Nat,
+    amount_taken: Nat,
+    reserve_ltv: Nat,
+    user_total_collateral: Nat,
+    user_max_ltv: Nat,
+) -> Nat {
+    let numerator = (amount.clone().scaled_mul(reserve_ltv.clone()))
+        + (user_total_collateral.clone().scaled_mul(user_max_ltv))
+        - (amount_taken.clone().scaled_mul(reserve_ltv));
 
     let denominator = amount + user_total_collateral - amount_taken;
 
-    if denominator == 0 {
-        return 0u128;
+    if denominator == Nat::from(0u128) {
+        return Nat::from(0u128);
     }
 
     let result = numerator.scaled_div(denominator);
@@ -178,8 +183,8 @@ pub fn cal_average_ltv(
 pub async fn get_exchange_rates(
     base_asset_symbol: String,
     quote_asset_symbol: Option<String>,
-    amount: u128,
-) -> Result<(u128, u64), String> {
+    amount: Nat,
+) -> Result<(Nat, u64), String> {
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc".to_string(),
         "ckETH" => "eth".to_string(),
@@ -224,9 +229,9 @@ pub async fn get_exchange_rates(
             GetExchangeRateResult::Ok(v) => {
                 let quote = v.rate;
                 let pow = 10usize.pow(v.metadata.decimals);
-                let exchange_rate = (quote as u128 * 100000000) / (pow as u128 - 100000000);
+                let exchange_rate = Nat::from(quote) * Nat::from(100000000u128) / Nat::from(pow) - Nat::from(100000000u128);
 
-                let total_value: u128 = (quote as u128 * amount) / (pow as u128 - 100000000);
+                let total_value = (Nat::from(quote) * amount) / (Nat::from(pow) - Nat::from(100000000u128));
 
                 let time = ic_cdk::api::time();
 
@@ -258,7 +263,7 @@ pub async fn get_exchange_rates(
                     }
                 };
 
-                price_cache_data.set_price(base_asset_symbol.clone(), exchange_rate as u128);
+                price_cache_data.set_price(base_asset_symbol.clone(), exchange_rate);
                 ic_cdk::println!("price cache after setting =  {:?}", price_cache_data);
 
                 // Save the updated price_cache_data back into the state
@@ -286,7 +291,7 @@ pub async fn get_exchange_rates(
 
 //                 for (asset_symbol, reserve_data) in assets.iter_mut() {
 //                     // Fetch the current price using get_exchange_rates
-//                     let current_price_result = get_exchange_rates(asset_symbol.clone(), Some("USD".to_string()), 1u128).await;
+//                     let current_price_result = get_exchange_rates(asset_symbol.clone(), Some("USD".to_string()), 1Nat).await;
 
 //                     match current_price_result {
 //                         Ok((current_price, _timestamp)) => {
@@ -314,7 +319,7 @@ pub async fn get_exchange_rates(
 //     }
 
 //     // Function to update user data for a specific asset if the price changes
-//     async fn update_user_data_for_asset(user_principal: Principal, asset_symbol: String, new_price: u128) {
+//     async fn update_user_data_for_asset(user_principal: Principal, asset_symbol: String, new_price: Nat) {
 //         USER_PROFILES.with(|user_profiles| {
 //             if let Some(user_data) = user_profiles.borrow_mut().get_mut(&user_principal) {
 //                 if let Some(reserves) = &mut user_data.reserves {
@@ -330,7 +335,7 @@ pub async fn get_exchange_rates(
 //     }
 
 //     // Function to recalculate the health factor based on the new price
-//     fn recalculate_health_factor(user_data: &mut UserData, reserve_data: &mut UserReserveData, new_price: u128) {
+//     fn recalculate_health_factor(user_data: &mut UserData, reserve_data: &mut UserReserveData, new_price: Nat) {
 //         // Example calculation of health factor (modify according to your business logic)
 //         let new_health_factor = (reserve_data.asset_supply * new_price) / reserve_data.asset_borrow;
 //         user_data.health_factor = Some(new_health_factor);

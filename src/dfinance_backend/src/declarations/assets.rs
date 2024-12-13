@@ -1,5 +1,5 @@
-// pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund
-use candid::{CandidType, Deserialize};
+// pub accrued_to_treasury: Nat,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund
+use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
@@ -7,18 +7,18 @@ pub struct ReserveData {
     pub id: u16,
     pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,
-    pub borrow_rate: u128, 
-    pub current_liquidity_rate: u128,
-    pub total_supply: u128, //TODO remove
-    pub asset_supply: u128,
-    pub total_borrowed: u128, //TODO remove
-    pub asset_borrow: u128,
-    pub liquidity_index: u128,
-    pub debt_index: u128,
+    pub borrow_rate: Nat, 
+    pub current_liquidity_rate: Nat,
+    pub total_supply: Nat, //TODO remove
+    pub asset_supply: Nat,
+    pub total_borrowed: Nat, //TODO remove
+    pub asset_borrow: Nat,
+    pub liquidity_index: Nat,
+    pub debt_index: Nat,
     pub configuration: ReserveConfiguration,
     pub can_be_collateral: Option<bool>,
     pub last_update_timestamp: u64,
-    pub accure_to_platform: u128,
+    pub accure_to_platform: Nat,
     pub userlist: Option<Vec<(String, bool)>> //TODO remove this if not needed for liq bot
 }
 
@@ -26,58 +26,58 @@ pub struct ReserveData {
 pub struct ReserveCache {
     pub reserve_configuration: ReserveConfiguration,
     //Liquidity Index(t)=Liquidity Index(t−1) ×(1+ Borrow Interest Rate×Δt/365×100) 
-    pub curr_liquidity_index: u128,
-    pub next_liquidity_index: u128,
-    pub curr_liquidity_rate: u128,
+    pub curr_liquidity_index: Nat,
+    pub next_liquidity_index: Nat,
+    pub curr_liquidity_rate: Nat,
     //next_rate if needed
     pub d_token_canister: Option<String>, //TODO remove 
     pub debt_token_canister: Option<String>, //remove
     pub reserve_last_update_timestamp: u64,
-    pub curr_debt_index: u128,
-    pub next_debt_index: u128,
-    pub curr_debt_rate: u128,
-    pub next_debt_rate: u128,
+    pub curr_debt_index: Nat,
+    pub next_debt_index: Nat,
+    pub curr_debt_rate: Nat,
+    pub next_debt_rate: Nat,
     pub debt_last_update_timestamp: u64, //for variable debt it is needed or not 
-    pub reserve_factor: u128,
+    pub reserve_factor: Nat,
 
-    pub curr_debt: u128,
-    pub curr_supply: u128,
+    pub curr_debt: Nat,
+    pub curr_supply: Nat,
    
 }
 
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct ReserveConfiguration {
-    pub ltv: u128,
-    pub liquidation_threshold: u128,
-    pub liquidation_bonus: u128,  
+    pub ltv: Nat,
+    pub liquidation_threshold: Nat,
+    pub liquidation_bonus: Nat,  
     pub borrowing_enabled: bool, 
-    pub borrow_cap: u128,   //TODO set it according to borrow
-    pub supply_cap: u128,   //set it according to supply     
-    pub liquidation_protocol_fee: u128, 
+    pub borrow_cap: Nat,   //TODO set it according to borrow
+    pub supply_cap: Nat,   //set it according to supply     
+    pub liquidation_protocol_fee: Nat, 
     pub active: bool,
     pub frozen: bool,
     pub paused: bool,
-    pub reserve_factor: u128,
+    pub reserve_factor: Nat,
 }
 
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteSupplyParams {
     pub asset: String,
-    pub amount: u128,
+    pub amount: Nat,
     pub is_collateral: bool,
 
 }
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct CalculateInterestRatesParams {
-    pub unbacked: u128,
-    pub liquidity_added: u128,
-    pub liquidity_taken: u128,
-    pub total_stable_debt: u128,
-    pub total_variable_debt: u128,
-    pub average_stable_borrow_rate: u128,
-    pub reserve_factor: u128,
+    pub unbacked: Nat,
+    pub liquidity_added: Nat,
+    pub liquidity_taken: Nat,
+    pub total_stable_debt: Nat,
+    pub total_variable_debt: Nat,
+    pub average_stable_borrow_rate: Nat,
+    pub reserve_factor: Nat,
     pub reserve: String,
     pub d_token: String,
 }
@@ -103,20 +103,20 @@ pub enum InterestRateMode {
 #[derive(Debug, CandidType, Deserialize, Clone, PartialEq)]
 pub struct ExecuteBorrowParams {
     pub asset: String,
-    pub amount: u128,
+    pub amount: Nat,
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteRepayParams {
     pub asset: String,
-    pub amount: u128,
-    pub on_behalf_of: Option<String>,
+    pub amount: Nat,
+    pub on_behalf_of: Option<Principal>,
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteWithdrawParams {
     pub asset: String,
-    pub amount: u128,
-    pub on_behalf_of: Option<String>,
+    pub amount: Nat,
+    pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }

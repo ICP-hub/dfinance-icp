@@ -110,8 +110,18 @@ const MySupply = () => {
     }
   }, []);
 
-  const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
+  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow } =
     useAssetData();
+
+    useEffect(() =>{
+      const fetchData = async () => {
+      for (const asset of assets) {
+         fetchAssetSupply(asset);
+         fetchAssetBorrow(asset);
+      }}
+    
+      fetchData();
+    },[assets])
 
   const visibleItems = filteredItems.filter((item) => {
     const balance =

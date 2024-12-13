@@ -2,7 +2,17 @@ import ReactGA from "react-ga4";
 import { toast } from "react-toastify";
 
 export const initGA = (trackingId) => {
-  ReactGA.initialize(trackingId, { debug_mode: true });
+  ReactGA.initialize(trackingId, {
+    debug_mode: true,
+    gaOptions: {
+      settings: {
+        enhanced_measurement_settings: {
+          scrolls: false, 
+          page_views: false,
+        },
+      },
+    }
+  });
 };
 
 export const setUserId = (userId) => {
@@ -19,10 +29,6 @@ export const setUserId = (userId) => {
 
 export const setUserProperties = (properties) => {
   ReactGA.set(properties);
-};
-
-export const trackPageView = (path) => {
-  ReactGA.send({ hitType: "pageview", page: path });
 };
 
 export const trackEvent = (action, category, label) => {

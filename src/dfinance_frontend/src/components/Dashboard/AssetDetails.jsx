@@ -88,7 +88,18 @@ const AssetDetails = () => {
   };
 
   const { id } = useParams();
-  const { filteredItems ,asset_supply,asset_borrow } = useAssetData();
+  const {assets, filteredItems ,asset_supply,asset_borrow , fetchAssetBorrow, fetchAssetSupply } = useAssetData();
+  
+  useEffect(() =>{
+    const fetchData = async () => {
+    for (const asset of assets) {
+       fetchAssetSupply(asset);
+       fetchAssetBorrow(asset);
+    }}
+  
+    fetchData();
+  },[assets])
+  
   const { userData } = useUserData();
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {

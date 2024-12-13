@@ -9,14 +9,13 @@ import { useDispatch } from "react-redux";
 import { setLedgerActor } from "./redux/reducers/ledgerRedcuer";
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
 import { Principal } from "@dfinity/principal";
-import { trackPageView } from "./utils/googleAnalytics";
 import useAssetData from "./components/Common/useAssets";
 
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
   let TRACKING_ID = "G-EVCJPRHQYX";
   const { filteredItems, loading } = useAssetData();
-
+  
   const {
     isAuthenticated,
     login,
@@ -39,10 +38,6 @@ export default function App() {
     [principal]
   );
 
-  const location = useLocation();
-  useEffect(() => {
-    trackPageView(location.pathname);
-  }, [location]);
 
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
@@ -136,6 +131,5 @@ export default function App() {
   const routes = useRoutes(routesList);
 
  
-
   return routes;
 }

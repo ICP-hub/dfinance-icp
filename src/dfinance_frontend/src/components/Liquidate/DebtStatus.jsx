@@ -29,8 +29,20 @@ const DebtStatus = () => {
   const { userData } = useUserData();
   const [filteredUsers, setFilteredUsers] = useState([]); 
   const [loading, setLoading] = useState(true);
-  const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
+  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetBorrow, fetchAssetSupply } =
     useAssetData();
+
+    useEffect(() =>{
+      const fetchData = async () => {
+      for (const asset of assets) {
+         fetchAssetSupply(asset);
+         fetchAssetBorrow(asset);
+      }}
+    
+      fetchData();
+    },[assets])
+  
+    
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };

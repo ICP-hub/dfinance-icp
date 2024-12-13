@@ -63,8 +63,19 @@ const UserInformationPopup = ({ onClose, mappedItem, principal , userAccountData
 
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
-  const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
+  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetBorrow, fetchAssetSupply  } =
   useAssetData();
+
+  useEffect(() =>{
+    const fetchData = async () => {
+    for (const asset of assets) {
+       fetchAssetSupply(asset);
+       fetchAssetBorrow(asset);
+    }}
+  
+    fetchData();
+  },[assets])
+
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]) / 1e8;

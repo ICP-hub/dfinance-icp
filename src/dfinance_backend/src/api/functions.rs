@@ -1,22 +1,28 @@
-use std::string;
-
 use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
+use crate::protocol::libraries::logic::user::nat_to_u128;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
-use crate::{get_asset_principal, get_cached_exchange_rate};
+use crate::{get_asset_principal, get_cached_exchange_rate, get_reserve_data};
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
+//use reqwest::Client;
+use serde::de::value::Error;
 use serde::Serialize;
 // use ic_cdk::api::call::{call_after};
 // // use ic_cdk::prelude::*;
 // use ic_cdk::time::current_time;
 // use std::time::Duration;
+use ic_cdk::api::management_canister::http_request::{
+    http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse, TransformArgs,
+    TransformContext,
+};
+use serde_json::json;
 
 // Icrc2_transfer_from inter canister call.
 pub async fn asset_transfer_from(
@@ -93,7 +99,7 @@ pub async fn get_total_supply(canister_id: Principal) -> Nat {
 pub async fn update_balance(
     canister: Principal,
     principal: Principal,
-    amount: u128,
+    amount: Nat,
 ) -> Result<Nat, String> {
     let account = Account {
         owner: principal,
@@ -246,7 +252,7 @@ pub async fn asset_transfer(
 // }
 
 #[update]
-pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
+pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
     ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
 
     ic_cdk::println!("it is going forward");
@@ -278,15 +284,52 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
         }
     };
 
+    let ledger_canister_id = mutate_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&asset.to_string().clone())
+            .map(|principal| principal.clone())
+            .ok_or_else(|| format!("No canister ID found for asset: {}", asset))
+    })?;
+
+    let platform_principal = ic_cdk::api::id();
+    ic_cdk::println!("Platform principal: {:?}", platform_principal);
+
+    let wallet_value = get_balance(ledger_canister_id, platform_principal).await;
+
+    ic_cdk::println!("balance of wallet = {}", wallet_value);
+
+    let youy = "message is going correctly".to_string();
+    send_email_via_sendgrid(youy).await;
+    if amount > wallet_value {
+        ic_cdk::println!("wallet balance is low");
+        send_admin_notifications("initial").await;
+        return Err("wallet balance is low, faucet not possible".to_string());
+    }
+
+    if (wallet_value.clone() - amount.clone()) == Nat::from(0u128) {
+        ic_cdk::println!("wallet balance is low");
+        send_admin_notifications("mid").await;
+    }
+
+    if (wallet_value.clone() - amount.clone())
+        <= Nat::from(1000u128).scaled_mul(Nat::from(100000000u128))
+    {
+        ic_cdk::println!("wallet balance is low");
+        send_admin_notifications("final").await;
+    }
+    // wallet value - amount == 0 ==> urgent need faucet it.
+    // wallet value - amount < 1000 ==> low balance   100_000_000
+
     ic_cdk::println!("amount again = {}", amount);
     // Ask : is it right way to convert it to the usd amount.
-    let mut rate: Option<u128> = None;
+    let mut rate: Option<Nat> = None;
 
     match get_cached_exchange_rate(asset.clone()) {
         Ok(price_cache) => {
             // Fetch the specific CachedPrice for the asset from the PriceCache
             if let Some(cached_price) = price_cache.cache.get(&asset) {
-                let amount = cached_price.price; // Access the `price` field
+                let amount = cached_price.price.clone(); // Access the `price` field
                 rate = Some(amount);
                 ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
             } else {
@@ -300,7 +343,8 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
         }
     }
 
-    let usd_amount = ScalingMath::scaled_mul(amount, rate.unwrap());
+    //TODO: conversion to nat.
+    let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.unwrap());
 
     ic_cdk::println!("usd amount of the facut = {}", usd_amount);
 
@@ -315,12 +359,14 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
             "faucet user_reserve_data.faucet_limit = {}",
             user_reserve_data.faucet_limit
         );
-        if usd_amount > user_reserve_data.faucet_limit {
+        if usd_amount.clone() > user_reserve_data.faucet_limit {
             ic_cdk::println!("amount is too much");
             return Err("amount is too much".to_string());
         }
 
-        if (user_reserve_data.faucet_usage + usd_amount) > user_reserve_data.faucet_limit {
+        if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
+            > user_reserve_data.faucet_limit
+        {
             ic_cdk::println!("amount is too much second");
             return Err("amount is too much".to_string());
         }
@@ -337,7 +383,9 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
             return Err("amount is too much".to_string());
         }
 
-        if (new_reserve.faucet_usage + usd_amount) > new_reserve.faucet_limit {
+        if (new_reserve.faucet_usage.clone() + usd_amount.clone())
+            > new_reserve.faucet_limit.clone()
+        {
             ic_cdk::println!("amount is too much second");
             return Err("amount is too much".to_string());
         }
@@ -375,7 +423,7 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     }
 
     let platform_principal = ic_cdk::api::id();
-    let amount_nat = Nat::from(amount as u128);
+    //let amount_nat = Nat::from(amount as u128);
 
     // Need to ask from anshika -- > should i implement these two comments for the validation purpose.
     // Check if the user has already claimed within a certain period --- need to use.
@@ -394,7 +442,7 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
         ledger_canister_id,
         platform_principal,
         user_principal,
-        amount_nat.clone(),
+        amount.clone(),
     )
     .await
     {
@@ -436,7 +484,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String>
     // Access and mutate reserves
     if let Some(user_data_reserves) = user_data.reserves.as_mut() {
         for (_reserve_name, user_reserve_data) in user_data_reserves.iter_mut() {
-            user_reserve_data.faucet_usage = 0;
+            user_reserve_data.faucet_usage = Nat::from(0u128);
         }
     } else {
         return Err("Reserves not found for user".to_string());
@@ -453,4 +501,89 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String>
 
     ic_cdk::println!("updated user data after facuet reset = {:?}", user_data);
     Ok(())
+}
+
+async fn send_admin_notifications(stage: &str) {
+    let message = match stage {
+        "initial" => "Dear Admin,\n\nThe platform's faucet balance is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team".to_string(),
+        "mid" => "Dear Admin,\n\nUrgent: The platform's faucet balance is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team".to_string(),
+        "final" => "Dear Admin,\n\nReminder: The platform's faucet balance is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team".to_string(),
+        _ => "".to_string(),
+    };
+    send_email_via_sendgrid(message).await;
+}
+
+pub async fn send_email_via_sendgrid(message: String) -> String {
+    let url = "https://api.sendgrid.com/v3/mail/send";
+    // Add: company sendgrid api key.
+    let api_key = "";
+
+    ic_cdk::println!("Preparing to send email via SendGrid...");
+    ic_cdk::println!("Using URL: {}", url);
+
+    // Prepare the headers for the SendGrid API request
+    let request_headers = vec![
+        HttpHeader {
+            name: "Authorization".to_string(),
+            value: format!("Bearer {}", api_key),
+        },
+        HttpHeader {
+            name: "Content-Type".to_string(),
+            value: "application/json".to_string(),
+        },
+    ];
+
+    ic_cdk::println!("Headers prepared: {:?}", request_headers);
+
+    // Prepare the email data (JSON payload)
+    let email_data = json!( {
+        "personalizations": [
+            {
+                "to": [{"email": "sm6047787@gmail.com"}],
+                "subject": "Faucet Amount Low - Mint More Tokens"
+            }
+        ],
+        "from": { "email": "jyotirmay2000gupta@gmail.com" }, // Sender email address
+        "content": [
+            {
+                "type": "text/plain",
+                "value": message,
+            }
+        ]
+    });
+
+    ic_cdk::println!("Email data prepared: {}", email_data);
+
+    // Convert the email data into bytes
+    let request_body: Option<Vec<u8>> = Some(email_data.to_string().as_bytes().to_vec());
+    ic_cdk::println!("Request body: {:?}", request_body);
+
+    // Prepare the HTTP request for sending the email without the transform
+    let request = CanisterHttpRequestArgument {
+        url: url.to_string(),
+        method: HttpMethod::POST,
+        body: request_body,
+        max_response_bytes: None,
+        transform: None, // Removed the transform
+        headers: request_headers,
+    };
+
+    ic_cdk::println!("Request prepared: {:?}", request);
+
+    // Send the HTTP request to SendGrid
+    let timeout = 120_000_000_000; // Increase timeout to 120 seconds
+    ic_cdk::println!("Sending HTTP request with timeout: {}", timeout);
+
+    match http_request(request, timeout).await {
+        Ok((response,)) => {
+            let response_body =
+                String::from_utf8(response.body).expect("Response body is not UTF-8 encoded.");
+            ic_cdk::println!("Email sent successfully. Response body: {}", response_body);
+            format!("Email sent successfully. Response: {}", response_body)
+        }
+        Err((r, m)) => {
+            ic_cdk::println!("Error sending email. RejectionCode: {:?}, Error: {}", r, m);
+            format!("Error sending email. RejectionCode: {:?}, Error: {}", r, m)
+        }
+    }
 }

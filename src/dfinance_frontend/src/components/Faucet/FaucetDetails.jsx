@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../Common/Button";
-import {FAUCET_ASSETS_TABLE_ROW,FAUCET_ASSETS_TABLE_COL,} from "../../utils/constants";
+import {
+  FAUCET_ASSETS_TABLE_ROW,
+  FAUCET_ASSETS_TABLE_COL,
+} from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import Pagination from "../Common/pagination";
@@ -129,7 +132,7 @@ const FaucetDetails = () => {
         setAssets(allAssets);
       } catch (error) {
         setError(error);
-      } 
+      }
     };
 
     fetchAllData();
@@ -171,8 +174,8 @@ const FaucetDetails = () => {
       case "ICP":
         assetImage = icp;
         break;
-      case "ckUSDT": 
-        assetImage = ckUSDT; 
+      case "ckUSDT":
+        assetImage = ckUSDT;
         break;
       default:
         assetImage = null;
@@ -289,9 +292,9 @@ const FaucetDetails = () => {
                               className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
-                          {item[0] === "ckUSDT" && ( 
+                          {item[0] === "ckUSDT" && (
                             <img
-                              src={ckUSDT} 
+                              src={ckUSDT}
                               alt="ckusdt logo"
                               className="w-8 h-8 rounded-full mr-2"
                             />
@@ -442,7 +445,12 @@ const FaucetDetails = () => {
                           <Button
                             title={
                               <>
-                                <span className="hidden lg:inline">Faucet</span>
+                                <span
+                                  className="hidden lg:inline"
+                                  id="faucet-button"
+                                >
+                                  Faucet
+                                </span>
                                 <span className="inline lg:hidden">
                                   <svg
                                     width="42"

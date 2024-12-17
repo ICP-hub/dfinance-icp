@@ -59,7 +59,7 @@ export default function Navbar({ isHomeNav }) {
   const handleSoundToggle = () => {
     dispatch(toggleSound());
   };
-  const isMobile = window.innerWidth <= 1115; 
+  const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -77,11 +77,9 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
-
   };
 
   useEffect(() => {
-
     window.addEventListener("scroll", handleCloseDropdownOnScroll);
 
     return () => {
@@ -93,7 +91,6 @@ export default function Navbar({ isHomeNav }) {
   const location = useLocation();
 
   useEffect(() => {
-
     setSwitchWalletDrop(false);
     setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
@@ -105,7 +102,7 @@ export default function Navbar({ isHomeNav }) {
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [selectedToken, setSelectedToken] = useState("ETH");
-  const [balance, setBalance] = useState(0); 
+  const [balance, setBalance] = useState(0);
   const [insufficientBalance, setInsufficientBalance] = useState(false);
   const [showTestnetPopup, setShowTestnetPopup] = useState(false);
   const handleEthChange = (e) => {
@@ -133,11 +130,9 @@ export default function Navbar({ isHomeNav }) {
     setSelectedToken(selectedToken === "ETH" ? "1INCH" : "ETH");
   };
   const handleTransaction = () => {
-
     if (selectedToken === "ETH" && Number(ethValue) > balance) {
       setInsufficientBalance(true);
     } else {
-
     }
   };
   const handleInputFocus = () => {
@@ -189,9 +184,8 @@ export default function Navbar({ isHomeNav }) {
 
   const handleSwitchWallet = () => {
     if (switchWalletDrop) {
-      logout(); 
+      logout();
     } else {
-
       setSwitchWalletDrop(!switchWalletDrop);
       setSwitchTokenDrop(false);
       setDropdownVisible(false);
@@ -239,22 +233,18 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-  const handleViewOnExplorerClick = () => {
-
-  };
+  const handleViewOnExplorerClick = () => {};
 
   const handleLaunchApp = () => {
-    navigate("/dashboard"); 
+    navigate("/dashboard");
   };
   const handleClose = () => {
     setSwitchTokenDrop(false);
   };
   const handleWalletConnect = () => {
-
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
-
   };
 
   const [showTransactionOverlay, setShowTransactionOverlay] = useState(false);
@@ -291,12 +281,12 @@ export default function Navbar({ isHomeNav }) {
   useEffect(() => {
     if (previousIsTestnetMode.current !== isTestnetMode) {
       if (previousIsTestnetMode.current !== undefined) {
-        toast.dismiss(); 
+        toast.dismiss();
       }
       toast.success(
         `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`,
         {
-          className: "custom-toast", 
+          className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
         }
@@ -381,16 +371,15 @@ export default function Navbar({ isHomeNav }) {
 
   const handleLogoClick = () => {
     if (location.pathname === "/") {
-
       window.scrollTo(0, 0);
     } else {
-
       navigate("/dashboard");
       setTimeout(() => {
         window.scrollTo(0, 0);
       }, 100);
     }
   };
+
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
@@ -451,6 +440,11 @@ export default function Navbar({ isHomeNav }) {
                             <NavLink
                               key={index}
                               to={link.route}
+                              id={
+                                link.title === "Dashboard"
+                                  ? "dashboard-guide"
+                                  : undefined
+                              }
                               className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
                             >
                               {link.title}
@@ -462,6 +456,11 @@ export default function Navbar({ isHomeNav }) {
                               <NavLink
                                 to={link.route}
                                 className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                                id={
+                                  link.title === "Faucet"
+                                    ? "faucet-navbar"
+                                    : undefined
+                                }
                               >
                                 {link.title}
                               </NavLink>
@@ -537,8 +536,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                      {}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
@@ -658,11 +656,13 @@ export default function Navbar({ isHomeNav }) {
                                 </button>
                                 <button
                                   className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday button1"
-                                  onClick={() => window.location.href = '/faucet'}
+                                  onClick={() =>
+                                    (window.location.href = "/faucet")
+                                  }
                                 >
                                   <CiShare1 className="h-5 w-[18px] -ml-1 lg:-ml-8 dark:text-darkText " />
                                   <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
-                                  Faucet Asset 
+                                    Faucet Asset
                                   </span>
                                 </button>
                               </div>
@@ -756,8 +756,8 @@ export default function Navbar({ isHomeNav }) {
                               {}
                               <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                 Enabling this will allow the user to hear sound
-                                when supply, borrow, repay, or withdraw
-                                actions are performed.
+                                when supply, borrow, repay, or withdraw actions
+                                are performed.
                               </div>
                             </div>
 
@@ -783,14 +783,12 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                      {}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
               </div>
             ) : (
-
               <div className="flex gap-3">
                 <Button
                   title={"Connect Wallet"}
@@ -814,8 +812,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                          {}
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                         </div>
                       </div>
                     )}

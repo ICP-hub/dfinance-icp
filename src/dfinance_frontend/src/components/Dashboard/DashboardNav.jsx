@@ -145,14 +145,13 @@ const DashboardNav = () => {
           style: { visibility: net_worth[0] > 0 ? "visible" : "hidden" },
         };
       } else if (item.id === 2) {
-        const healthValue =
-        !userAccountData?.Ok?.[4]
-            ? "-"
-            : (Number(userAccountData?.Ok?.[4]) / 10000000000) > 100
-                ? "♾️"
-                : parseFloat(
-                    (Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2)
-                  );
+        const healthValue = !userAccountData?.Ok?.[4]
+          ? "-"
+          : Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
+          ? "♾️"
+          : parseFloat(
+              (Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2)
+            );
         return {
           ...item,
           count: healthValue,
@@ -188,7 +187,7 @@ const DashboardNav = () => {
     reserveData,
     totalUsdValueSupply,
     totalUsdValueBorrow,
-    userAccountData
+    userAccountData,
   ]);
 
   useEffect(() => {
@@ -531,7 +530,7 @@ const DashboardNav = () => {
       </div>
 
       <div className="w-full flex flex-wrap justify-start items-center gap-2 sxs3:mb-2 md:mb-9 lg:mb-2">
-        <div className="flex">
+        <div id="dashboard-nav-details" className="flex market-nav-details">
           <div className="relative">
             <div
               className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
@@ -603,8 +602,8 @@ const DashboardNav = () => {
                             <span
                               className={`font-bold text-[20px] ${
                                 data.title === "Health Factor"
-                                  ? data.count === 0 && assetSupply === 0
-                                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                                  ? data.count === 0 
+                                    ? "text-red-500"
                                     : data.count > 3
                                     ? "text-green-500"
                                     : data.count <= 1
@@ -735,6 +734,7 @@ const DashboardNav = () => {
                 shouldRenderRiskDetailsButton &&
                 assetBorrow !== 0 && (
                   <button
+                    id="risk-details"
                     className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md dark:text-darkTextSecondary button1"
                     onClick={handleOpenPopup}
                   >

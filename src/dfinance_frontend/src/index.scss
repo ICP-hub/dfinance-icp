@@ -405,3 +405,26 @@ button:active {
 .tooltip-arrow-dark {
   border-top-color: #252347;
 }
+
+#dashboard-guide {
+  position: relative; 
+  display: inline-block;
+  margin: 0; 
+  padding: 0; 
+  z-index: 10;
+}
+
+.__floater__arrow{
+  width: 500px !important;
+  height: 500px !important;
+}
+
+.react-joyride-portal{
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.react-joyride__tooltip {
+  position: fixed;
+  z-index: 9999;   
+}

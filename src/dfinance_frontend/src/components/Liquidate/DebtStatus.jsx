@@ -27,22 +27,29 @@ const DebtStatus = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [userAccountData, setUserAccountData] = useState({});
   const { userData } = useUserData();
-  const [filteredUsers, setFilteredUsers] = useState([]); 
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetBorrow, fetchAssetSupply } =
-    useAssetData();
+  const {
+    assets,
+    reserveData,
+    filteredItems,
+    asset_supply,
+    asset_borrow,
+    fetchAssetBorrow,
+    fetchAssetSupply,
+  } = useAssetData();
 
-    useEffect(() =>{
-      const fetchData = async () => {
+  useEffect(() => {
+    const fetchData = async () => {
       for (const asset of assets) {
-         fetchAssetSupply(asset);
-         fetchAssetBorrow(asset);
-      }}
-    
-      fetchData();
-    },[assets])
-  
-    
+        fetchAssetSupply(asset);
+        fetchAssetBorrow(asset);
+      }
+    };
+
+    fetchData();
+  }, [assets]);
+
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
@@ -89,8 +96,8 @@ const DebtStatus = () => {
     const principal = userData?.principal;
 
     if (!principal) {
-      console.warn("Invalid principal for user:", userData); 
-      return; 
+      console.warn("Invalid principal for user:", userData);
+      return;
     }
 
     setUserLoadingStates((prevState) => ({
@@ -109,7 +116,6 @@ const DebtStatus = () => {
         }
 
         if (result) {
-
           setUserAccountData((prevState) => ({
             ...prevState,
             [principal]: result,
@@ -130,10 +136,10 @@ const DebtStatus = () => {
 
   useEffect(() => {
     users.forEach((userData) => {
-      const principal = userData[0]?.toText ? userData[0].toText() : null; 
+      const principal = userData[0]?.toText ? userData[0].toText() : null;
       if (!principal) {
         console.warn("Invalid principal found in userData:", userData);
-        return; 
+        return;
       }
 
       fetchUserAccountData({ ...userData, principal });
@@ -141,29 +147,41 @@ const DebtStatus = () => {
   }, [users]);
 
   useEffect(() => {
-    if (Object.keys(userAccountData).length === users.length) {
+    if (
+      users &&
+      Array.isArray(users) &&
+      Object.keys(userAccountData || {}).length === users.length
+    ) {
       const filtered = users
         .map((item) => {
+          if (!item || !item[0]) return null;
           const principal = item[0].toText();
-          const accountData = userAccountData[principal];
+          const accountData = userAccountData?.[principal];
   
-          const totalDebt = Number(accountData?.Ok?.[1])/1e8 || 0;
-          const healthFactor = accountData ? Number(accountData?.Ok?.[4]) / 10000000000 : 0;
+          const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
+          const healthFactor = accountData
+            ? Number(accountData?.Ok?.[4]) / 10000000000
+            : 0;
   
           return {
-            reserves: item[1].reserves,
+            reserves: item[1]?.reserves || [],
             principal: principal,
             healthFactor: healthFactor,
             item,
             totalDebt,
           };
         })
-        .filter((mappedItem) => mappedItem.healthFactor < 1 && mappedItem.principal !== principal); 
+        .filter(
+          (mappedItem) =>
+            mappedItem &&
+            mappedItem.healthFactor < 1 &&
+            mappedItem.principal !== principal &&
+            mappedItem.totalDebt > 0
+        );
   
       setFilteredUsers(filtered);
     }
   }, [users, userAccountData, principal]);
-  
 
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
@@ -228,7 +246,11 @@ const DebtStatus = () => {
         {filteredUsers.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
             <div className="w-20 h-15">
-              <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+              <img
+                src="/Transaction/empty file.gif"
+                alt="empty"
+                className="w-30"
+              />
             </div>
             <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
               No users found!
@@ -241,7 +263,10 @@ const DebtStatus = () => {
                 <thead>
                   <tr className="text-left text-[#233D63] dark:text-darkTextSecondary">
                     {LIQUIDATION_USERLIST_COL.slice(0, 2).map((item, index) => (
-                      <td key={index} className="p-3 pl-1 whitespace-nowrap py-4">
+                      <td
+                        key={index}
+                        className="p-3 pl-1 whitespace-nowrap py-4"
+                      >
                         {item.header}
                       </td>
                     ))}
@@ -263,7 +288,9 @@ const DebtStatus = () => {
                       <tr
                         key={index}
                         className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${
-                          index !== users.length - 1 ? "gradient-line-bottom" : ""
+                          index !== users.length - 1
+                            ? "gradient-line-bottom"
+                            : ""
                         }`}
                       >
                         <td className="p-2 align-top py-8 ">
@@ -275,76 +302,79 @@ const DebtStatus = () => {
                           <div className="flex flex-row ml-2 mt-2">
                             <div>
                               <p className="font-medium">
-                                { `$${formatValue(mappedItem.totalDebt)}`}
+                                {`$${formatValue(mappedItem.totalDebt)}`}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td className="p-5 align-top hidden md:table-cell py-8">
                           <div className="flex gap-2 items-center">
-                            {mappedItem.reserves[0].map((item, index) => {
-                              const assetName = item[0];
-                              const assetSupply = item[1]?.asset_supply;
-                              const assetBorrow = item[1]?.asset_borrow;
-                              if (assetBorrow > 0) {
-                                return (
-                                  <img
-                                    key={index}
-                                    src={
-                                      assetName === "ckBTC"
-                                        ? ckBTC
-                                        : assetName === "ckETH"
-                                        ? ckETH
-                                        : assetName === "ckUSDC"
-                                        ? ckUSDC
-                                        : assetName === "ICP"
-                                        ? icp
-                                        : assetName === "ckUSDT"
-                                        ? ckUSDT
-                                        : undefined
-                                    }
-                                    alt={assetName}
-                                    className="rounded-[50%] w-7"
-                                  />
-                                );
-                              }
-                              return null;
-                            })}
+                            {Array.isArray(mappedItem?.reserves?.[0]) &&
+                              mappedItem.reserves[0].map((item, index) => {
+                                const assetName = item?.[0];
+                                const assetSupply = item?.[1]?.asset_supply;
+                                const assetBorrow = item?.[1]?.asset_borrow;
+
+                                if (assetBorrow > 0) {
+                                  return (
+                                    <img
+                                      key={index}
+                                      src={
+                                        assetName === "ckBTC"
+                                          ? ckBTC
+                                          : assetName === "ckETH"
+                                          ? ckETH
+                                          : assetName === "ckUSDC"
+                                          ? ckUSDC
+                                          : assetName === "ICP"
+                                          ? icp
+                                          : assetName === "ckUSDT"
+                                          ? ckUSDT
+                                          : undefined
+                                      }
+                                      alt={assetName || "asset"}
+                                      className="rounded-[50%] w-7"
+                                    />
+                                  );
+                                }
+                                return null;
+                              })}
                           </div>
                         </td>
                         <td className="p-5 align-top hidden md:table-cell py-8">
-                        <div className="flex gap-2 items-center">
-                          {mappedItem.reserves[0].map((item, index) => {
-                            const assetName = item[0];
-                            const assetSupply = item[1]?.asset_supply;
-                            const assetBorrow = item[1]?.asset_borrow;
+                          <div className="flex gap-2 items-center">
+                            {Array.isArray(mappedItem?.reserves?.[0]) &&
+                              mappedItem.reserves[0].map((item, index) => {
+                                const assetName = item?.[0];
+                                const assetSupply = item?.[1]?.asset_supply;
+                                const assetBorrow = item?.[1]?.asset_borrow;
 
-                            if (assetSupply > 0) {
-                              return (
-                                <img
-                                  key={index}
-                                  src={
-                                    assetName === "ckBTC"
-                                      ? ckBTC
-                                      : assetName === "ckETH"
-                                      ? ckETH
-                                      : assetName === "ckUSDC"
-                                      ? ckUSDC
-                                      : assetName === "ICP"
-                                      ? icp
-                                      : assetName === "ckUSDT"
-                                      ? ckUSDT
-                                      : undefined
-                                  }
-                                  alt={assetName}
-                                  className="rounded-[50%] w-7"
-                                />
-                              );
-                            }
-                            return null;
-                          })}
-                        </div>
-                      </td>
+                                if (assetSupply > 0) {
+                                  return (
+                                    <img
+                                      key={index}
+                                      src={
+                                        assetName === "ckBTC"
+                                          ? ckBTC
+                                          : assetName === "ckETH"
+                                          ? ckETH
+                                          : assetName === "ckUSDC"
+                                          ? ckUSDC
+                                          : assetName === "ICP"
+                                          ? icp
+                                          : assetName === "ckUSDT"
+                                          ? ckUSDT
+                                          : undefined
+                                      }
+                                      alt={assetName || "asset"}
+                                      className="rounded-[50%] w-7"
+                                    />
+                                  );
+                                }
+                                return null;
+                              })}
+                          </div>
+                        </td>
 
                         <td className="p-3 align-top hidden md:table-cell pt-5 py-8">
                           {mappedItem.item.borrow_apy}
@@ -354,7 +384,9 @@ const DebtStatus = () => {
                             <Button
                               title={<span className="inline">Liquidate</span>}
                               className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-[12px] lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
-                              onClickHandler={() => handleDetailsClick(mappedItem)}
+                              onClickHandler={() =>
+                                handleDetailsClick(mappedItem)
+                              }
                             />
                           </div>
                         </td>
@@ -381,7 +413,7 @@ const DebtStatus = () => {
           onClose={() => setShowUserInfoPopup(false)}
           mappedItem={selectedAsset}
           principal={selectedAsset.principal}
-          userAccountData={userAccountData[selectedAsset.principal]} 
+          userAccountData={userAccountData[selectedAsset.principal]}
         />
       )}
     </div>

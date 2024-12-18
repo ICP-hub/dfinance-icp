@@ -355,9 +355,9 @@ pub async fn burn_scaled(
         
         let mut amount_to_burn = amount - balance_increase;
         //TODO handle negative
-        if balance - amount_to_burn < 1000 {
-             amount_to_burn = balance;
-        }
+        // if balance - amount_to_burn < 1000 {
+        //      amount_to_burn = balance;
+        // }
         ic_cdk::println!(
             "balance_increase is not greater than amount, amount_to_burn = {}",
             amount_to_burn

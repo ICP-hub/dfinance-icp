@@ -82,6 +82,7 @@ const useUserData = () => {
     error,
     userAccountData,
     refetchUserData: fetchUserData,
+    fetchUserAccountData
   };
 };
 

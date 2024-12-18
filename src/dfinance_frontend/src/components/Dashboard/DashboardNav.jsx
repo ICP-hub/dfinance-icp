@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { TAB_CARD_DATA,} from "../../utils/constants";
+import { TAB_CARD_DATA } from "../../utils/constants";
 import { useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
@@ -21,11 +21,9 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
 
 const DashboardNav = () => {
+  const { isAuthenticated } = useAuth();
 
-  const { isAuthenticated } =
-    useAuth();
-  const { reserveData } = useAssetData();
-  const [netWorth, setNetWorth] = useState()
+  const [netWorth, setNetWorth] = useState();
 
   const totalUsdValueBorrow = useSelector(
     (state) => state.borrowSupply.totalUsdValueBorrow
@@ -41,7 +39,28 @@ const DashboardNav = () => {
     setNetWorth(calculatedNetWorth);
   }, [totalUsdValueBorrow, totalUsdValueSupply]);
 
-  const { totalMarketSize, totalSupplySize, totalBorrowSize ,asset_supply ,asset_borrow } = useAssetData();
+  const {
+    assets,
+    totalMarketSize,
+    totalSupplySize,
+    totalBorrowSize,
+    asset_supply,
+    asset_borrow,
+    fetchAssetBorrow,
+    fetchAssetSupply,
+    reserveData,
+  } = useAssetData();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      for (const asset of assets) {
+        fetchAssetSupply(asset);
+        fetchAssetBorrow(asset);
+      }
+    };
+
+    fetchData();
+  }, [assets]);
 
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
@@ -57,7 +76,7 @@ const DashboardNav = () => {
   const getAssetBorrowValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]) / 1e8;
-      return borrowValue; 
+      return borrowValue;
     }
     return `noBorrow`;
   };
@@ -84,47 +103,55 @@ const DashboardNav = () => {
     {
       id: 0,
       title: "Net Worth",
-      count: "-", 
+      count: "-",
     },
     {
       id: 1,
       title: "Net APY",
-      count: "-", 
+      count: "-",
     },
     {
       id: 2,
       title: "Health Factor",
-      count: "-", 
+      count: "-",
     },
   ]);
 
   const [walletDetailTabs, setWalletDetailTabs] = useState([
-    { id: 0, title: "Total Market Size", count: 0 }, 
-    { id: 1, title: "Total Available", count: 0 }, 
-    { id: 2, title: "Total Borrows", count: 0 }, 
+    { id: 0, title: "Total Market Size", count: 0 },
+    { id: 1, title: "Total Available", count: 0 },
+    { id: 2, title: "Total Borrows", count: 0 },
   ]);
 
-  const { userData, healthFactorBackend, refetchUserData ,userAccountData } = useUserData();
+  const {
+    userData,
+    healthFactorBackend,
+    refetchUserData,
+    userAccountData,
+    fetchUserAccountData,
+  } = useUserData();
   const formatNumber = useFormatNumber();
 
   const updateNetWorthAndHealthFactor = (data) => {
     if (!data || !data.Ok) return;
     const { net_worth, health_factor } = data.Ok;
-console.log("healtyhfactor basckend",healthFactorBackend)
     const updatedTab = walletDetailTab.map((item) => {
       if (item.id === 0) {
         return {
           ...item,
-          count: calculatedNetWorth ? `$${formatNumber(calculatedNetWorth)}` : "-",
+          count: calculatedNetWorth
+            ? `$${formatNumber(calculatedNetWorth)}`
+            : "-",
           style: { visibility: net_worth[0] > 0 ? "visible" : "hidden" },
         };
       } else if (item.id === 2) {
-        const healthValue = 
-    healthFactorBackend && !isNaN(Number(healthFactorBackend)) // Ensure it's valid
-      ? Number(healthFactorBackend) > 100
-        ? "♾️"
-        : parseFloat(Number(healthFactorBackend).toFixed(2)) // Only format the number
-      : "-"; // Fallback for invalid data
+        const healthValue = !userAccountData?.Ok?.[4]
+          ? "-"
+          : Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
+          ? "♾️"
+          : parseFloat(
+              (Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2)
+            );
         return {
           ...item,
           count: healthValue,
@@ -142,7 +169,6 @@ console.log("healtyhfactor basckend",healthFactorBackend)
         return {
           ...item,
           count: netApy !== 0 ? `${netApy.toFixed(4)}%` : "-",
-
         };
       }
 
@@ -156,7 +182,13 @@ console.log("healtyhfactor basckend",healthFactorBackend)
     if (userData && reserveData) {
       updateNetWorthAndHealthFactor(userData);
     }
-  }, [userData, reserveData, totalUsdValueSupply, totalUsdValueBorrow]);
+  }, [
+    userData,
+    reserveData,
+    totalUsdValueSupply,
+    totalUsdValueBorrow,
+    userAccountData,
+  ]);
 
   useEffect(() => {
     if (netApy !== undefined) {
@@ -186,7 +218,7 @@ console.log("healtyhfactor basckend",healthFactorBackend)
       case "ICP":
         return ckICPUsdRate;
       case "ckUSDT":
-        return ckUSDTUsdRate; 
+        return ckUSDTUsdRate;
       default:
         return null;
     }
@@ -196,49 +228,59 @@ console.log("healtyhfactor basckend",healthFactorBackend)
     fetchConversionRate();
   }, [fetchConversionRate]);
 
-  const calculateNetSupplyApy = useCallback((reserves, reserveData) => {
-    let totalSuppliedInUSD = 0;
-    let weightedApySum = 0;
-    let totalBorrowedInUSD = 0;
-    let weightedDebtApySum = 0;
-    let numerator = 0;
-    let denominator = 0;
+  const calculateNetSupplyApy = useCallback(
+    (reserves, reserveData) => {
+      let totalSuppliedInUSD = 0;
+      let weightedApySum = 0;
+      let totalBorrowedInUSD = 0;
+      let weightedDebtApySum = 0;
+      let numerator = 0;
+      let denominator = 0;
 
-    reserves.forEach((reserve) => {
-      const assetKey = reserve[0];
+      reserves.forEach((reserve) => {
+        const assetKey = reserve[0];
 
-      if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok) return;
+        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok)
+          return;
 
-      const conversionRate = getConversionRate(assetKey);
-      const supplyApy = Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) / 100000000;
-      const debtApy = Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
+        const conversionRate = getConversionRate(assetKey);
+        const supplyApy =
+          Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) /
+          100000000;
+        const debtApy =
+          Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
 
-      const assetSupply = getAssetSupplyValue(assetKey);
-      const assetBorrowed = getAssetBorrowValue(assetKey);
-      const assetBorrowedInUSD = assetBorrowed * conversionRate;
-      totalBorrowedInUSD = assetBorrowedInUSD;
-      weightedDebtApySum = assetBorrowedInUSD * debtApy;
+        const assetSupply = getAssetSupplyValue(assetKey);
+        const assetBorrowed = getAssetBorrowValue(assetKey);
+        const assetBorrowedInUSD = assetBorrowed * conversionRate;
+        totalBorrowedInUSD = assetBorrowedInUSD;
+        weightedDebtApySum = assetBorrowedInUSD * debtApy;
 
-      const assetSupplyInUSD = assetSupply * conversionRate;
-      totalSuppliedInUSD = assetSupplyInUSD;
-      weightedApySum = assetSupplyInUSD * supplyApy;
-      numerator = numerator + weightedApySum - weightedDebtApySum;
-      denominator = denominator + totalSuppliedInUSD;
-    });
+        const assetSupplyInUSD = assetSupply * conversionRate;
+        totalSuppliedInUSD = assetSupplyInUSD;
+        weightedApySum = assetSupplyInUSD * supplyApy;
+        numerator = numerator + weightedApySum - weightedDebtApySum;
+        denominator = denominator + totalSuppliedInUSD;
+      });
 
-    return denominator > 0 ? numerator / denominator : 0;
-  }, [reserveData]);
+      return denominator > 0 ? numerator / denominator : 0;
+    },
+    [reserveData]
+  );
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
         const reservesData = userData.Ok.reserves[0];
 
-        const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
+        const calculatedNetApy = calculateNetSupplyApy(
+          reservesData,
+          reserveData
+        );
         setNetApy(calculatedNetApy);
 
         reservesData.forEach((reserveGroup) => {
-          const asset = reserveGroup[0]; 
-          const reserve = reserveGroup[1]; 
+          const asset = reserveGroup[0];
+          const reserve = reserveGroup[1];
 
           const supply = getAssetSupplyValue(reserve);
 
@@ -265,30 +307,35 @@ console.log("healtyhfactor basckend",healthFactorBackend)
     }
   }, [userData]);
 
-  useEffect(() => {
-  }, [netApy]);
+  useEffect(() => {}, [netApy]);
 
   const updateWalletDetailTabs = () => {
     const updatedTabs = walletDetailTabs.map((item) => {
       switch (item.id) {
         case 0:
-          return { ...item, count: <><span className="font-light">$</span>{totalSupplySize}</> };  
+          return {
+            ...item,
+            count: (
+              <>
+                <span className="font-light">$</span>
+                {totalSupplySize}
+              </>
+            ),
+          };
         case 1:
-
           const convertToNumber = (value) => {
-            if (typeof value === 'string') {
-
-              const numberValue = parseFloat(value.replace(/[^0-9.]/g, ''));
-              if (value.includes('K')) {
-                return numberValue * 1e3;  
+            if (typeof value === "string") {
+              const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
+              if (value.includes("K")) {
+                return numberValue * 1e3;
               }
-              if (value.includes('M')) {
-                return numberValue * 1e6;  
+              if (value.includes("M")) {
+                return numberValue * 1e6;
               }
 
               return numberValue;
             }
-            return 0; 
+            return 0;
           };
 
           const supply = convertToNumber(totalSupplySize);
@@ -296,17 +343,35 @@ console.log("healtyhfactor basckend",healthFactorBackend)
 
           const result = !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
 
-          const formattedResult = formatNumber(result === "0.00" ? "0" : result);
-          return { ...item, count: <><span className="font-light">$</span>{formattedResult}</> };  
+          const formattedResult = formatNumber(
+            result === "0.00" ? "0" : result
+          );
+          return {
+            ...item,
+            count: (
+              <>
+                <span className="font-light">$</span>
+                {formattedResult}
+              </>
+            ),
+          };
         case 2:
-          return { ...item, count:  <><span className="font-light">$</span>{totalBorrowSize}</>};  
+          return {
+            ...item,
+            count: (
+              <>
+                <span className="font-light">$</span>
+                {totalBorrowSize}
+              </>
+            ),
+          };
         default:
           return item;
       }
     });
 
     setWalletDetailTabs(updatedTabs);
-};
+  };
   useEffect(() => {
     updateWalletDetailTabs();
   }, [totalMarketSize]);
@@ -415,7 +480,7 @@ console.log("healtyhfactor basckend",healthFactorBackend)
     ckETH: ckETH,
     ckUSDC: ckUSDC,
     ICP: icp,
-    ckUSDT: ckUSDT, 
+    ckUSDT: ckUSDT,
   };
 
   const assetImage = assetImages[id] || null;
@@ -454,8 +519,9 @@ console.log("healtyhfactor basckend",healthFactorBackend)
         )}
 
         <div
-          className={`md:hidden flex ml-auto ${isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
-            }`}
+          className={`md:hidden flex ml-auto ${
+            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+          }`}
         >
           <button onClick={toggleMenu} className="rounded-md button1 z-10">
             <EllipsisVertical color={checkColor} size={30} />
@@ -464,12 +530,12 @@ console.log("healtyhfactor basckend",healthFactorBackend)
       </div>
 
       <div className="w-full flex flex-wrap justify-start items-center gap-2 sxs3:mb-2 md:mb-9 lg:mb-2">
-        <div className="flex">
-          {}
+        <div id="dashboard-nav-details" className="flex market-nav-details">
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
-                } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
+                isMenuOpen ? "block" : "hidden"
+              } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -488,9 +554,8 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                       ? walletDetailTab
                       : walletDetailTabs
                     ).map((data, index) => {
-
                       if (data.title === "Health Factor" && assetBorrow === 0) {
-                        return null; 
+                        return null;
                       }
 
                       return (
@@ -500,21 +565,18 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                           style={{ minWidth: "220px", flex: "1 0 220px" }}
                         >
                           <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                            {}
                             <div className="flex items-center">
                               {data.title}
                               {data.title === "Net APY" && (
                                 <span className="relative inline-block ml-1">
-                                  {}
                                   <Info
                                     size={15}
                                     className="ml-1 align-middle "
                                     onClick={toggleTooltip}
                                   />
-                                  {}
+
                                   {isTooltipVisible && (
                                     <>
-                                    
                                       <div
                                         ref={tooltipRef}
                                         className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
@@ -529,9 +591,6 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                                           suggests more is borrowed than
                                           supplied.
                                         </span>
-
-                                        {}
-                                        {}
                                       </div>
                                     </>
                                   )}
@@ -540,26 +599,26 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                             </div>
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-{console.log("data",data.count)}
                             <span
-                              className={`font-bold text-[20px] ${data.title === "Health Factor"
-                                  ? data.count === 0 && assetSupply === 0
-                                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                              className={`font-bold text-[20px] ${
+                                data.title === "Health Factor"
+                                  ? data.count === 0 
+                                    ? "text-red-500"
                                     : data.count > 3
-                                      ? "text-green-500"
-                                      : data.count <= 1
-                                        ? "text-red-500"
-                                        : data.count <= 1.5
-                                          ? "text-orange-600"
-                                          : data.count <= 2
-                                            ? "text-orange-400"
-                                            : "text-orange-300"
+                                    ? "text-green-500"
+                                    : data.count <= 1
+                                    ? "text-red-500"
+                                    : data.count <= 1.5
+                                    ? "text-orange-600"
+                                    : data.count <= 2
+                                    ? "text-orange-400"
+                                    : "text-orange-300"
                                   : data.title === "Total Borrows"
-                                    ? "text-[#2A1F9D] dark:text-darkBlue"
-                                    : "text-[#2A1F9D] dark:text-darkBlue"
-                                }`}
+                                  ? "text-[#2A1F9D] dark:text-darkBlue"
+                                  : "text-[#2A1F9D] dark:text-darkBlue"
+                              }`}
                             >
-                             {data.count !== null ? data.count : "\u00A0"}
+                              {data.count !== null ? data.count : "\u00A0"}
                             </span>
                           </button>
                         </div>
@@ -593,15 +652,13 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                   ? walletDetailTab
                   : walletDetailTabs
                 ).map((data, index) => {
-
                   if (data.title === "Health Factor" && assetBorrow === 0) {
-                    return null; 
+                    return null;
                   }
 
                   return (
                     <div key={index} className="relative group">
                       <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                        {}
                         <div className="flex items-center">
                           {data.title}
                           {data.title === "Net APY" && (
@@ -610,16 +667,14 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                               onMouseEnter={() => setIsTooltipVisible(true)}
                               onMouseLeave={() => setIsTooltipVisible(false)}
                             >
-                              {}
-                              <Info size={15} className="ml-1 align-middle cursor-pointer" onClick={toggleTooltip} />
+                              <Info
+                                size={15}
+                                className="ml-1 align-middle cursor-pointer"
+                                onClick={toggleTooltip}
+                              />
 
-                              {}
                               {isTooltipVisible && (
                                 <>
-                                  {}
-                                  {}
-
-                                  {}
                                   <div
                                     ref={tooltipRef}
                                     className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
@@ -633,12 +688,12 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                                       is borrowed than supplied.
                                     </span>
 
-                                    {}
                                     <span
-                                      className={`tooltip-arrow ${theme === "dark"
+                                      className={`tooltip-arrow ${
+                                        theme === "dark"
                                           ? "tooltip-arrow-dark"
                                           : ""
-                                        }`}
+                                      }`}
                                     ></span>
                                   </div>
                                 </>
@@ -650,22 +705,23 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                         <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
                         <span
-                          className={`font-bold text-[20px] ${data.title === "Health Factor"
+                          className={`font-bold text-[20px] ${
+                            data.title === "Health Factor"
                               ? data.count === 0 && assetSupply === 0
                                 ? "text-[#2A1F9D] dark:text-darkBlue"
                                 : data.count > 3
-                                  ? "text-green-500"
-                                  : data.count <= 1
-                                    ? "text-red-500"
-                                    : data.count <= 1.5
-                                      ? "text-orange-500"
-                                      : data.count <= 2
-                                        ? "text-orange-300"
-                                        : "text-orange-600"
+                                ? "text-green-500"
+                                : data.count <= 1
+                                ? "text-red-500"
+                                : data.count <= 1.5
+                                ? "text-orange-600"
+                                : data.count <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                               : data.title === "Total Borrows"
-                                ? "text-[#2A1F9D] dark:text-darkBlue"
-                                : "text-[#2A1F9D] dark:text-darkBlue"
-                            }`}
+                              ? "text-[#2A1F9D] dark:text-darkBlue"
+                              : "text-[#2A1F9D] dark:text-darkBlue"
+                          }`}
                         >
                           {data.count !== null ? data.count : "\u00A0"}
                         </span>
@@ -678,6 +734,7 @@ console.log("healtyhfactor basckend",healthFactorBackend)
                 shouldRenderRiskDetailsButton &&
                 assetBorrow !== 0 && (
                   <button
+                    id="risk-details"
                     className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md dark:text-darkTextSecondary button1"
                     onClick={handleOpenPopup}
                   >
@@ -687,10 +744,13 @@ console.log("healtyhfactor basckend",healthFactorBackend)
             </div>
           )}
           {isPopupOpen && (
-            <RiskPopup onClose={handleClosePopup} userData={userData} userAccountData={userAccountData} />
+            <RiskPopup
+              onClose={handleClosePopup}
+              userData={userData}
+              userAccountData={userAccountData}
+            />
           )}
         </div>
-        {}
       </div>
     </div>
   );

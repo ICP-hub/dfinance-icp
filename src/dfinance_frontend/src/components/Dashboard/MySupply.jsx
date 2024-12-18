@@ -65,15 +65,24 @@ const MySupply = () => {
   }, [userData, userAccountData]);
 
   useEffect(() => {
-    if (
-      userAccountData?.Ok &&
-      userAccountData.Ok.length > 5 &&
-      userAccountData.Ok[5]
-    ) {
-      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
-      setAvailableBorrow(borrowValue);
+    const hasCollateral = userData?.Ok?.reserves[0]?.some(
+      (reserveGroup) => reserveGroup[1]?.is_collateral !== false
+    );
+  
+    if (hasCollateral) {
+      if (
+        userAccountData?.Ok &&
+        userAccountData.Ok.length > 5 &&
+        userAccountData.Ok[5]
+      ) {
+        const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
+        setAvailableBorrow(borrowValue);
+      }
+    } else {
+      setAvailableBorrow(0);
     }
-  }, [userAccountData]);
+  }, [userAccountData, userData]);
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -110,8 +119,18 @@ const MySupply = () => {
     }
   }, []);
 
-  const { assets, reserveData, filteredItems, asset_supply, asset_borrow } =
+  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow } =
     useAssetData();
+
+    useEffect(() =>{
+      const fetchData = async () => {
+      for (const asset of assets) {
+         fetchAssetSupply(asset);
+         fetchAssetBorrow(asset);
+      }}
+    
+      fetchData();
+    },[assets])
 
   const visibleItems = filteredItems.filter((item) => {
     const balance =
@@ -661,6 +680,7 @@ const MySupply = () => {
           } lg:block`}
         >
           <div
+          id="your-supplies"
             className={`w-full  lgx:overflow-none   ${
               isSupplyVisible ? "min-h-auto" : "min-h-[100px]"
             } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
@@ -1443,12 +1463,14 @@ const MySupply = () => {
           </div>
 
           <div
+               id="dashboard-assets-to-supply"
             className={`w-full mt-6  lgx:overflow-none  ${
               isVisible ? "min-h-auto" : "min-h-[100px]"
             } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40  rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
-              <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
+              <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText"
+         >
                 Assets to supply
               </h1>
               <button
@@ -2197,6 +2219,7 @@ const MySupply = () => {
           } lg:block`}
         >
           <div
+               id="your-borrow"
             className={`w-full  lgx:overflow-none  sxs3:-mt-6 md:-mt-0 ${
               isborrowVisible ? "min-h-auto" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
@@ -2898,6 +2921,7 @@ const MySupply = () => {
           </div>
 
           <div
+               id="dashboard-assets-to-borrow"
             className={`w-full mt-6 scrollbar-none lgx:overflow-none hide-scrollbar ${
               isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
@@ -2966,7 +2990,7 @@ const MySupply = () => {
                 <>
                   {}
 
-                  {filteredItems.length === 0 || availableBorrow === 0 ? (
+                  {filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
                     <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none">
@@ -3510,7 +3534,7 @@ const MySupply = () => {
 
                   <div className="w-full h-auto mt-6">
                     {}
-                    {filteredItems.length === 0 || availableBorrow === 0 ? (
+                    {filteredItems.length === 0  ? (
                       noAssetsToBorrowMessage
                     ) : (
                       <div

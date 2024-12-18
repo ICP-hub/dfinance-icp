@@ -7,12 +7,17 @@ use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::{get_exchange_rates, update_reserves_price};
 use candid::{Nat, Principal};
+use ic_cdk::update;
 
 // -------------------------------------
 // ----------- BORROW LOGIC ------------
 // -------------------------------------
-
-pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> {
+#[update]
+pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
+    let params = ExecuteBorrowParams {
+        asset,
+        amount,
+    };
     ic_cdk::println!("Starting execute_borrow with params: {:?}", params);
 
     // Fetch canister ids, user principal, and amount
@@ -170,8 +175,15 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, String> 
 // -------------------------------------
 // ------------ REPAY LOGIC ------------
 // -------------------------------------
+#[update]
+pub async fn execute_repay(asset: String, amount: Nat, on_behalf_of: Option<Principal>) -> Result<Nat, String> {
 
-pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, String> {
+    let params = ExecuteRepayParams {
+        asset,
+        amount,
+        on_behalf_of,
+    };
+
     ic_cdk::println!("Starting execute_repay with params: {:?}", params);
 
     let (user_principal, liquidator_principal) =

@@ -29,7 +29,25 @@ import liquidationTable from "../public/Helpers/liquidation-table.png";
 import debtStatusImage from "../public/Helpers/get-debt-status-button.png";
 import faucetPage from "../public/Helpers/faucet-page.png";
 import dFinanceHomePage from "../public/Helpers/dfinance-homepage.png";
-
+import dfinanceHomePageLight from "../public/Helpers/dfinance-homepageLight.png";
+import faucetPageLight from "../public/Helpers/faucet-pageLight.png";
+import faucetbuttonLight from "../public/Helpers/faucet-buttonLight.png";
+import faucetPopupLight from "../public/Helpers/faucet-popupLight.png";
+import dashboardPageLight from "../public/Helpers/Dashboard-page-light.png";
+import dashboardAssetsToSupplyButtonLight from "../public/Helpers/assetsToSupplyLight.png";
+import assetsToSupplyPopupLight from "../public/Helpers/assets-to-supply-popupLight.png";
+import dashboardAssetsToBorrowButtonLight from "../public/Helpers/assets-to-borrowLight.png";
+import assetsToBorrowPopupLight from "../public/Helpers/assets-to-borrow-popupLight.png";
+import yourBorrowRepayButtonLight from "../public/Helpers/your-borrowLight.png";
+import yourBorrowRepayPopupLight from "../public/Helpers/your-borrow-repay-popupLight.png";
+import yourSuppliesWithdrawButtonLight from "../public/Helpers/you-suppliesLight.png";
+import yourSuppliesWithdrawPopupLight from "../public/Helpers/your-supplies-withdraw-popupLight.png";
+import dashboarNavDetailsLight from "../public/Helpers/dashboard-nav-detailsLight.png";
+import riskDetailsLight from "../public/Helpers/risk-detailsLight.png";
+import marketPageLight from "../public/Helpers/market-pageLight.png";
+import marketeNavbarDetailsLight from "../public/Helpers/market-page-detailsLight.png";
+import debtStatusImageLight from "../public/Helpers/get-debt-status-buttonLight.png";
+import liquidationTableLight from "../public/Helpers/liquidation-tableLight.png";
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
@@ -62,9 +80,9 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={dFinanceHomePage}
+               src={theme === "dark" ? dFinanceHomePage : dfinanceHomePageLight}
               alt="dFinanceHomePage"
-              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+              className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
             />
           </div>
         ),
@@ -82,7 +100,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={faucetPage}
+              src={theme === "dark" ? faucetPage : faucetPageLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -100,7 +118,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={faucetbutton}
+              src={theme === "dark" ? faucetbutton : faucetbuttonLight}
               alt="Faucet Button"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -110,7 +128,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={faucetPopup}
+              src={theme === "dark" ? faucetPopup : faucetPopupLight}
               alt="Faucet Popup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -134,7 +152,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={dashboardPage}
+              src={theme === "dark" ? dashboardPage : dashboardPageLight}
               alt="dashboardPage"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -152,7 +170,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={dashboardAssetsToSupplyButton}
+               src={theme === "dark" ? dashboardAssetsToSupplyButton : dashboardAssetsToSupplyButtonLight}
               alt="dashboardAssetsToSupplyButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -163,7 +181,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={assetsToSupplyPopup}
+              src={theme === "dark" ? assetsToSupplyPopup : assetsToSupplyPopupLight}
               alt="assetsToSupplyPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -181,7 +199,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={dashboardAssetsToBorrowButton}
+              src={theme === "dark" ? dashboardAssetsToBorrowButton : dashboardAssetsToBorrowButtonLight}
               alt="dashboardAssetsToBorrowButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -191,7 +209,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={assetsToBorrowPopup}
+              src={theme === "dark" ? assetsToBorrowPopup : assetsToBorrowPopupLight}
               alt="assetsToBorrowPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -209,7 +227,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={yourBorrowRepayButton}
+              src={theme === "dark" ? yourBorrowRepayButton : yourBorrowRepayButtonLight}
               alt="yourBorrowRepayButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -220,7 +238,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={yourBorrowRepayPopup}
+              src={theme === "dark" ? yourBorrowRepayPopup : yourBorrowRepayPopupLight}
               alt="yourBorrowRepayPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -238,7 +256,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={yourSuppliesWithdrawButton}
+              src={theme === "dark" ? yourSuppliesWithdrawButton : yourSuppliesWithdrawButtonLight}
               alt="yourSuppliesWithdrawButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -248,7 +266,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={yourSuppliesWithdrawPopup}
+              src={theme === "dark" ? yourSuppliesWithdrawPopup : yourSuppliesWithdrawPopupLight}
               alt="yourSuppliesWithdrawPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -266,7 +284,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={dashboarNavDetails}
+              src={theme === "dark" ? dashboarNavDetails : dashboarNavDetailsLight}
               alt="dashboarNavDetails"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -277,7 +295,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={riskDetails}
+              src={theme === "dark" ? riskDetails : riskDetailsLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -297,7 +315,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={marketPage}
+              src={theme === "dark" ? marketPage : marketPageLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -317,7 +335,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={marketPage}
+              src={theme === "dark" ? marketPage : marketPageLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -335,7 +353,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={marketeNavbarDetails}
+              src={theme === "dark" ? marketeNavbarDetails : marketeNavbarDetailsLight}
               alt="marketeNavbarDetails"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -354,13 +372,13 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={debtStatusImage}
+              src={theme === "dark" ? debtStatusImage : debtStatusImageLight}
               alt="Faucet Button"
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
             <img
               loading="lazy"
-              src={liquidationTable}
+              src={theme === "dark" ? liquidationTable : liquidationTableLight}
               alt="Faucet Popup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />

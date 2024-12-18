@@ -235,7 +235,6 @@ pub async fn asset_transfer(
 pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
 
-    ic_cdk::println!("it is going forward");
     // validate asset
     if asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
@@ -249,7 +248,8 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err("Anonymous principals are not allowed.".to_string());
     }
-    ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
+
+    ic_cdk::println!("user id {:?}", user_principal.to_string());
 
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
@@ -264,25 +264,22 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
         }
     };
 
-    ic_cdk::println!("amount again = {}", amount);
-    // Ask : is it right way to convert it to the usd amount.
     let mut rate: Option<u128> = None;
 
     match get_cached_exchange_rate(asset.clone()) {
         Ok(price_cache) => {
-            // Fetch the specific CachedPrice for the asset from the PriceCache
             if let Some(cached_price) = price_cache.cache.get(&asset) {
-                let amount = cached_price.price; // Access the `price` field
+                let amount = cached_price.price; 
                 rate = Some(amount);
                 ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
             } else {
                 ic_cdk::println!("No cached price found for {}", asset);
-                rate = None; // Explicitly set rate to None if the asset is not in the cache
+                rate = None;
             }
         }
         Err(err) => {
             ic_cdk::println!("Error fetching exchange rate for {}: {}", asset, err);
-            rate = None; // Explicitly set rate to None in case of an error
+            rate = None; 
         }
     }
 
@@ -294,42 +291,32 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
 
-    ic_cdk::println!("outside the if statment");
     if let Some((_, user_reserve_data)) = user_reserve {
-        ic_cdk::println!("inside if statement");
+       
         ic_cdk::println!(
             "faucet user_reserve_data.faucet_limit = {}",
             user_reserve_data.faucet_limit
         );
-        if usd_amount > user_reserve_data.faucet_limit {
-            ic_cdk::println!("amount is too much");
-            return Err("amount is too much".to_string());
-        }
 
         if (user_reserve_data.faucet_usage + usd_amount) > user_reserve_data.faucet_limit {
-            ic_cdk::println!("amount is too much second");
-            return Err("amount is too much".to_string());
+            ic_cdk::println!("faucet limit exceeded");
+            return Err("faucet limit exceeded".to_string());
         }
         user_reserve_data.faucet_usage += usd_amount;
-        ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
+        ic_cdk::println!("new faucet usage = {}", user_reserve_data.faucet_usage);
     } else {
         let mut new_reserve = UserReserveData {
             reserve: asset.clone(),
             ..Default::default()
         };
-
-        if usd_amount > new_reserve.faucet_limit {
-            ic_cdk::println!("amount is too much");
-            return Err("amount is too much".to_string());
-        }
-
+        //TODO remove the repeatation of code
         if (new_reserve.faucet_usage + usd_amount) > new_reserve.faucet_limit {
-            ic_cdk::println!("amount is too much second");
-            return Err("amount is too much".to_string());
+            ic_cdk::println!("faucet limit exceeded");
+            return Err("faucet limit exceeded".to_string());
         }
 
         new_reserve.faucet_usage += usd_amount;
-        ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
+        ic_cdk::println!("new faucet usage = {}", new_reserve.faucet_usage);
 
         if let Some(ref mut reserves) = user_data.reserves {
             reserves.push((asset.clone(), new_reserve.clone()));
@@ -344,6 +331,8 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     }
 
     ic_cdk::println!("user data before submit = {:?}", user_data);
+
+    //TODO use it in read_state
 
     // Fetched canister ids, user principal and amount
     let ledger_canister_id = mutate_state(|state| {
@@ -363,9 +352,8 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     let platform_principal = ic_cdk::api::id();
     let amount_nat = Nat::from(amount as u128);
 
-    // Need to ask from anshika -- > should i implement these two comments for the validation purpose.
-    // Check if the user has already claimed within a certain period --- need to use.
-    // Check if the platform has sufficient balance -- need to use.
+    // TODO Check if the user has already claimed within a certain period --- need to use.
+    //TODO Check if the platform has sufficient balance -- need to use.
 
     // Save the updated user data back to state
     mutate_state(|state| {
@@ -397,7 +385,7 @@ pub async fn faucet(asset: String, amount: u128) -> Result<Nat, String> {
     }
 }
 
-#[update]
+#[update] //TODO check if this func need to be a update function
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String> {
     // let user_principal = ic_cdk::caller();
 

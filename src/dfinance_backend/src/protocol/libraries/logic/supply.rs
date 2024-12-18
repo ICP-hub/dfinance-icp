@@ -25,14 +25,14 @@ impl SupplyLogic {
                 .map(|principal| principal.clone())
                 .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
         })?;
-        
+
         let user_principal = ic_cdk::caller();
         ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
         let platform_principal = ic_cdk::api::id();
 
         let amount_nat = Nat::from(params.amount);
-        
+
         //TODO create a comman func to get asset reserve data in mutate state
         let reserve_data_result = mutate_state(|state| {
             let asset_index = &mut state.asset_index;
@@ -61,7 +61,8 @@ impl SupplyLogic {
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates supply using the reserve_data
-        //TODO replace the validation code from backend three 
+        //TODO replace the validation code from backend three
+        //TODO error handling
         ValidationLogic::validate_supply(
             &reserve_data,
             params.amount,
@@ -71,30 +72,39 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Supply validated successfully");
 
-        let total_supplies= reserve_data.asset_supply.clone() + params.amount; 
-        let total_borrow = reserve_data.asset_borrow;
-        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
+        // let total_supplies= reserve_data.asset_supply.clone() + params.amount;
+        // let total_borrow = reserve_data.asset_borrow;
+        let liq_added = params.amount;
+        let liq_taken = 0u128;
+        let _ = reserve::update_interest_rates(
+            &mut reserve_data,
+            &mut reserve_cache,
+            liq_taken,
+            liq_added,
+        )
+        .await;
+        // let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
        
 
         ic_cdk::println!("Interest rates updated successfully");
 
 
-        // ic_cdk::println!("user list of reserve {:?}", reserve_data.userlist.clone());
+        let _ = UpdateLogic::update_user_data_supply(
+            user_principal,
+            &reserve_cache,
+            params.clone(),
+            &mut reserve_data,
+            //usd_amount.clone(),
+        )
+        .await;
+        ic_cdk::println!("User data supply updated");
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
-        let usd_amount=0u128;
-        // ----------- Update logic here -------------
-        let _ = UpdateLogic::update_user_data_supply(
-            user_principal,
-            &reserve_cache,
-            params.clone(),
-            &reserve_data,
-            usd_amount.clone(),
-        )
-        .await;
+
+        //TODO update pricecache
 
         // Transfers the asset from the user to our backend cansiter
         match asset_transfer_from(
@@ -110,6 +120,7 @@ impl SupplyLogic {
                 Ok(new_balance)
             }
             Err(e) => {
+                //TODO add burn function here
                 return Err(format!(
                     "Asset transfer failed, burned dtoken. Error: {:?}",
                     e
@@ -121,9 +132,9 @@ impl SupplyLogic {
     // -------------------------------------
     // ---------- WITHDRAW LOGIC -----------
     // -------------------------------------
-
+    
     pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, String> {
-        ic_cdk::println!("Starting execute_withdraw with params: {:?}", params);
+        ic_cdk::println!("Starting execute_withdraw with params: {:?}", params.clone());
 
         let (user_principal, liquidator_principal) =
             if let Some(on_behalf_of) = params.on_behalf_of.clone() {
@@ -135,7 +146,7 @@ impl SupplyLogic {
                 let user_principal = ic_cdk::caller();
                 (user_principal, None)
             };
-
+        //TODO in readable form
         let ledger_canister_id = mutate_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -147,22 +158,6 @@ impl SupplyLogic {
         let platform_principal = ic_cdk::api::id();
         let withdraw_amount = Nat::from(params.amount);
 
-        // Converting asset value to usdt
-        let mut usd_amount = params.amount;
-        let withdraw_amount_to_usd =
-            get_exchange_rates(params.asset.clone(), None, params.amount).await;
-        match withdraw_amount_to_usd {
-            Ok((amount_in_usd, _timestamp)) => {
-                // Extracted the amount in USD
-                usd_amount = amount_in_usd;
-                ic_cdk::println!("Withdraw amount in USD: {:?}", amount_in_usd);
-            }
-            Err(e) => {
-                ic_cdk::println!("Error getting exchange rate: {:?}", e);
-            }
-        }
-
-        ic_cdk::println!("Withdraw amount in USD: {:?}", usd_amount);
 
         // Determines the receiver principal
         let transfer_to_principal = if let Some(liquidator) = liquidator_principal {
@@ -209,25 +204,32 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Withdraw validated successfully");
 
-        let total_supplies=  reserve_data.asset_supply - params.amount;
-        let total_borrow = reserve_data.asset_borrow;
-        let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
-        reserve_data.total_supply =  (reserve_data.total_supply as i128 - usd_amount as i128).max(0) as u128;
-        mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-        });
+        // let total_supplies=  reserve_data.asset_supply - params.amount;
+        // let total_borrow = reserve_data.asset_borrow;
+        let _ = reserve::update_interest_rates(
+            &mut reserve_data,
+            &mut reserve_cache,
+            params.amount,
+            0u128,
+        )
+        .await;
+        // let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
+       
+      
 
         // ----------- Update logic here -------------
         let _ = UpdateLogic::update_user_data_withdraw(
             user_principal,
             &reserve_cache,
-            params,
-            &reserve_data,
-            usd_amount.clone(),
+            params.clone(),
+            &mut reserve_data,
         )
         .await;
 
+        mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+        });
         // Transfers the asset from the user to our backend cansiter
         match asset_transfer_from(
             ledger_canister_id,
@@ -243,6 +245,7 @@ impl SupplyLogic {
                 Ok(new_balance)
             }
             Err(e) => {
+                //TODO mint the dtoken back to user
                 return Err(format!(
                     "Asset transfer failed, minted dtoken. Error: {:?}",
                     e

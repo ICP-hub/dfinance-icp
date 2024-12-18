@@ -27,6 +27,8 @@ const UserInformationPopup = ({
   mappedItem,
   principal,
   userAccountData,
+  asset_supply,
+    asset_borrow,
 }) => {
   const { backendActor, principal: currentUserPrincipal } = useAuth();
 
@@ -72,22 +74,11 @@ const UserInformationPopup = ({
     assets,
     reserveData,
     filteredItems,
-    asset_supply,
-    asset_borrow,
-    fetchAssetBorrow,
-    fetchAssetSupply,
+    
+    
   } = useAssetData();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      for (const asset of assets) {
-        fetchAssetSupply(asset);
-        fetchAssetBorrow(asset);
-      }
-    };
-
-    fetchData();
-  }, [assets]);
+ 
 
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
@@ -897,7 +888,7 @@ const UserInformationPopup = ({
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[0];
                     const assetSupply =
-                      Number(item?.[1]?.asset_supply || 0n) / 100000000;
+                    Number(getAssetSupplyValue(assetName))
                     const assetBorrow =
                       Number(item?.[1]?.asset_borrow || 0n) / 100000000;
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);

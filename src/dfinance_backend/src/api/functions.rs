@@ -12,7 +12,7 @@ use candid::{Nat, Principal};
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 //use reqwest::Client;
-use serde::de::value::Error;
+use crate::constants::errors::Error;
 use serde::Serialize;
 // use ic_cdk::api::call::{call_after};
 // // use ic_cdk::prelude::*;
@@ -64,7 +64,15 @@ struct Account {
 
 // Icrc1_balance inter canister call.
 #[query]
-pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
+pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Nat, Error> {
+    if canister == Principal::anonymous() {
+        return Err(Error::InvalidCanister);
+    }
+
+    // Validate the principal
+    if principal == Principal::anonymous() {
+        return Err(Error::InvalidPrincipal);
+    }
     let account = Account {
         owner: principal,
         subaccount: None,
@@ -78,16 +86,20 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Nat {
 
     let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
 
-    balance
+    Ok(balance)
 }
 
 #[query]
-pub async fn get_total_supply(canister_id: Principal) -> Nat {
+pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
+    if canister_id == Principal::anonymous() {
+        return Err(Error::InvalidCanister);
+    }
+
     let raw_response: Result<(Nat,), _> =
         ic_cdk::api::call::call(canister_id, "icrc1_total_supply", ()).await;
 
     match raw_response {
-        Ok((balance,)) => balance,
+        Ok((balance,)) => Ok(balance),
         Err(e) => {
             ic_cdk::println!("Error calling icrc1_total_supply: {:?}", e);
             ic_cdk::api::trap(&format!("Failed to call icrc1_total_supply: {:?}", e));
@@ -95,7 +107,6 @@ pub async fn get_total_supply(canister_id: Principal) -> Nat {
     }
 }
 
-#[update]
 pub async fn update_balance(
     canister: Principal,
     principal: Principal,
@@ -252,14 +263,23 @@ pub async fn asset_transfer(
 // }
 
 #[update]
-pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
+pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
 
-    ic_cdk::println!("it is going forward");
-    // validate asset
     if asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
-        return Err("Asset cannot be an empty string.".to_string());
+        return Err(Error::EmptyAsset);
+    }
+
+    if asset.len() != 6 && asset.len() != 7 {
+        ic_cdk::println!("Asset must have a length of 6 or 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    // Validate amount: must be non-negative and non-empty
+    if amount <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
     }
 
     let user_principal = ic_cdk::caller();
@@ -267,7 +287,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
     // Validate user principal (avoid anonymous principal)
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err("Anonymous principals are not allowed.".to_string());
+        return Err(Error::InvalidPrincipal);
     }
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
@@ -280,7 +300,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
             data
         }
         Err(e) => {
-            return Err(format!("Error: {}", e));
+            return Err(Error::InvalidUser);
         }
     };
 
@@ -289,22 +309,22 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
         reserve_list
             .get(&asset.to_string().clone())
             .map(|principal| principal.clone())
-            .ok_or_else(|| format!("No canister ID found for asset: {}", asset))
+            .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-    let wallet_value = get_balance(ledger_canister_id, platform_principal).await;
+    let wallet_value = get_balance(ledger_canister_id, platform_principal).await?;
 
     ic_cdk::println!("balance of wallet = {}", wallet_value);
 
-    let youy = "message is going correctly".to_string();
-    send_email_via_sendgrid(youy).await;
+    // let youy = "message is going correctly".to_string();
+    // send_email_via_sendgrid(youy).await;
     if amount > wallet_value {
         ic_cdk::println!("wallet balance is low");
         send_admin_notifications("initial").await;
-        return Err("wallet balance is low, faucet not possible".to_string());
+        return Err(Error::LowWalletBalance);
     }
 
     if (wallet_value.clone() - amount.clone()) == Nat::from(0u128) {
@@ -361,14 +381,14 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
         );
         if usd_amount.clone() > user_reserve_data.faucet_limit {
             ic_cdk::println!("amount is too much");
-            return Err("amount is too much".to_string());
+            return Err(Error::AmountTooMuch);
         }
 
         if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
             > user_reserve_data.faucet_limit
         {
             ic_cdk::println!("amount is too much second");
-            return Err("amount is too much".to_string());
+            return Err(Error::AmountTooMuch);
         }
         user_reserve_data.faucet_usage += usd_amount;
         ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
@@ -380,14 +400,14 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
 
         if usd_amount > new_reserve.faucet_limit {
             ic_cdk::println!("amount is too much");
-            return Err("amount is too much".to_string());
+            return Err(Error::AmountTooMuch);
         }
 
         if (new_reserve.faucet_usage.clone() + usd_amount.clone())
             > new_reserve.faucet_limit.clone()
         {
             ic_cdk::println!("amount is too much second");
-            return Err("amount is too much".to_string());
+            return Err(Error::AmountTooMuch);
         }
 
         new_reserve.faucet_usage += usd_amount;
@@ -407,23 +427,20 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
 
     ic_cdk::println!("user data before submit = {:?}", user_data);
 
-    // Fetched canister ids, user principal and amount
-    let ledger_canister_id = mutate_state(|state| {
-        let reserve_list = &state.reserve_list;
-        reserve_list
-            .get(&asset.to_string().clone())
-            .map(|principal| principal.clone())
-            .ok_or_else(|| format!("No canister ID found for asset: {}", asset))
-    })?;
-    ic_cdk::println!("ledger id {:?}", ledger_canister_id.to_string());
+    // // Fetched canister ids, user principal and amount
+    // let ledger_canister_id = mutate_state(|state| {
+    //     let reserve_list = &state.reserve_list;
+    //     reserve_list
+    //         .get(&asset.to_string().clone())
+    //         .map(|principal| principal.clone())
+    //         .ok_or_else(|| format!("No canister ID found for asset: {}", asset))
+    // })?;
+    // ic_cdk::println!("ledger id {:?}", ledger_canister_id.to_string());
 
     // Validate ledger canister ID
-    if ledger_canister_id.to_text().trim().is_empty() {
-        return Err("Ledger canister ID is invalid.".to_string());
-    }
-
-    let platform_principal = ic_cdk::api::id();
-    //let amount_nat = Nat::from(amount as u128);
+    // if ledger_canister_id.to_text().trim().is_empty() {
+    //     return Err("Ledger canister ID is invalid.".to_string());
+    // }
 
     // Need to ask from anshika -- > should i implement these two comments for the validation purpose.
     // Check if the user has already claimed within a certain period --- need to use.
@@ -451,21 +468,17 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, String> {
             Ok(new_balance)
         }
         Err(e) => {
-            return Err(format!(
-                "Asset transfer failed, burned debttoken. Error: {:?}",
-                e
-            ));
+            return Err(Error::ErrorBurnDebtTokens);
         }
     }
 }
 
-#[update]
-pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String> {
+pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {
     // let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err("Anonymous principals are not allowed.".to_string());
+        return Err(Error::InvalidPrincipal);
     }
 
     //Retrieve user data.
@@ -477,7 +490,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String>
             data
         }
         Err(e) => {
-            return Err(format!("Error: {}", e));
+            return Err(Error::InvalidUser);
         }
     };
 
@@ -487,7 +500,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), String>
             user_reserve_data.faucet_usage = Nat::from(0u128);
         }
     } else {
-        return Err("Reserves not found for user".to_string());
+        return Err(Error::NoUserReserveDataFound);
     }
 
     ic_cdk::println!("User data after faucet reset = {:?}", user_data);

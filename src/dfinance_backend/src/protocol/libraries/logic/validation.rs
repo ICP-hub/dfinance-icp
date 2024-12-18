@@ -42,7 +42,7 @@ impl ValidationLogic {
         }
 
         // validating amount
-        let user_balance = get_balance(ledger_canister, user).await;
+        let user_balance = get_balance(ledger_canister, user).await?;
         ic_cdk::println!("User balance: {:?}", user_balance);
 
         let transfer_fees = get_fees(ledger_canister).await;
@@ -89,7 +89,7 @@ impl ValidationLogic {
             Err(_) => return Err(Error::NoCanisterIdFound),
         };
 
-        let total_supply = get_total_supply(d_token_canister_id_result).await;
+        let total_supply = get_total_supply(d_token_canister_id_result).await?;
 
         // let total_supply_u128 = match nat_to_u128(total_supply) {
         //     Ok(bal) => {
@@ -199,7 +199,7 @@ impl ValidationLogic {
             Ok(id) => id,
             Err(_) => return Err(Error::ConversionErrorFromTextToPrincipal),
         };
-        user_dtokens = get_balance(d_token_canister_id, user).await;
+        user_dtokens = get_balance(d_token_canister_id, user).await?;
         // }
 
         ic_cdk::println!("withdraw user dtokens = {}", user_dtokens);
@@ -238,7 +238,7 @@ impl ValidationLogic {
         // let mut available_borrow: u128 = 0;
         //let mut has_zero_ltv_collateral: bool = false;
 
-        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), String> =
+        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
             GenericLogic::calculate_user_account_data(None).await;
 
         match user_data_result {
@@ -394,7 +394,7 @@ impl ValidationLogic {
         // let mut available_borrow: u128 = 0;
         //let mut has_zero_ltv_collateral: bool = false;
 
-        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), String> =
+        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
             GenericLogic::calculate_user_account_data(None).await;
 
         match user_data_result {

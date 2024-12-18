@@ -1,6 +1,11 @@
-#[derive(Debug)]
+use candid::CandidType;
+
+#[derive(Debug ,CandidType)]
+#[derive(Clone)]
 pub enum Error {
     InvalidAmount,
+    InvalidCanister,
+    InvalidPrincipal,
     MaxAmount,
     ReserveInactive,
     ReservePaused,
@@ -20,6 +25,8 @@ pub enum Error {
     NoCanisterIdFound,
     ConversionErrorToU128,
     ExchangeRateError,
+    ErrorMintTokens,
+    ErrorBurnTokens,
     ErrorBurnDTokens,
     ErrorMintDTokens,
     ErrorBurnDebtTokens,
@@ -27,13 +34,25 @@ pub enum Error {
     ConversionErrorFromTextToPrincipal,
     NoReserveDataFound,
     CalculateUserAccountDataError,
-    ErrorPriceCache
+    ErrorPriceCache,
+    EmptyAsset,
+    LowWalletBalance,
+    AmountTooMuch,
+    InvalidAssetLength,
+    NoUserReserveDataFound,
+    InvalidBurnAmount,
+    InvalidMintAmount,
+    ErrorParsingPrincipal,
+    NormalizedSupply,
+    NormalizedDebt
 }
 
 impl Error {
     pub fn message(&self) -> &str {
         match self {
             Error::InvalidAmount => "Amount must be greater than 0",
+            Error::InvalidCanister => "Invalid canister id",
+            Error::InvalidPrincipal => "Invalid principal id",
             Error::MaxAmount => "Amount must be less than user balance",
             Error::ReserveInactive => "Action requires an active reserve",
             Error::ReservePaused => "Action cannot be performed because the reserve is paused",
@@ -53,14 +72,26 @@ impl Error {
             Error::NoCanisterIdFound => "no canister id found",
             Error::ConversionErrorToU128 => "Error converting balance to u128",
             Error::ExchangeRateError => "Error getting in exchange rate",
+            Error::ErrorMintTokens => "Errors in minting the tokens",
+            Error::ErrorBurnTokens => "Errors in Burning the tokens",
             Error::ErrorBurnDTokens => "Asset transfer failed, burned dtoken.",
             Error::ErrorMintDTokens => "Asset transfer failed, mint dtoken.",
             Error::ErrorBurnDebtTokens => "Asset transfer failed, burned debttoken.",
             Error::ErrorMintDebtTokens => "Asset transfer failed, mint debttoken.",
             Error::ConversionErrorFromTextToPrincipal => "conversion error from text to principal",
             Error::NoReserveDataFound => "no reserve data found of the given asset",
+            Error::NoUserReserveDataFound => "user reserves data not found",
             Error::CalculateUserAccountDataError => "Failed to calculate user account data",
             Error::ErrorPriceCache => "Error in fetching price cache",
+            Error::EmptyAsset => "Asset cannot be an empty string",
+            Error::LowWalletBalance => "wallet balance is low, faucet not possible",
+            Error::AmountTooMuch => "Amount is too much",
+            Error::InvalidAssetLength => "Lenght of the asset is invalid",
+            Error::InvalidBurnAmount => "Invalid burn amount",
+            Error::InvalidMintAmount => "Invalid mint amount",
+            Error::ErrorParsingPrincipal => "Failed to parse Principal",
+            Error::NormalizedSupply => "Error from the normalized supply function",
+            Error::NormalizedDebt => "Error from the normalized debt function"
         }
     }
 }

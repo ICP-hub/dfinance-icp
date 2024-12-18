@@ -12,8 +12,8 @@ use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc1::account::Account;
+use crate::constants::errors::Error;
 
-use protocol::libraries::logic::liquidation::LiquidationLogic;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::nat_to_u128;
@@ -26,7 +26,6 @@ use protocol::libraries::math::calculate::UserPosition;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
 use protocol::libraries::types::datatypes::UserReserveData;
-use serde::de::value::Error;
 mod api;
 mod constants;
 pub mod declarations;
@@ -60,52 +59,52 @@ pub async fn init() {
 }
 
 // Function to call the execute_supply logic
-#[update]
-async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), String> {
-    ic_cdk::println!("Starting deposit function");
-    let params = ExecuteSupplyParams {
-        asset,
-        amount: Nat::from(amount),
-        is_collateral,
-    };
-    ic_cdk::println!("Parameters for execute_supply: {:?}", params);
-    match SupplyLogic::execute_supply(params).await {
-        Ok(_) => {
-            ic_cdk::println!("execute_supply function called successfully");
-            Ok(())
-        }
-        Err(e) => {
-            ic_cdk::println!("Error calling execute_supply: {:?}", e);
-            Err(e)
-        }
-    }
-}
+// #[update]
+// async fn supply(asset: String, amount: u64, is_collateral: bool) -> Result<(), String> {
+//     ic_cdk::println!("Starting deposit function");
+//     let params = ExecuteSupplyParams {
+//         asset,
+//         amount: Nat::from(amount),
+//         is_collateral,
+//     };
+//     ic_cdk::println!("Parameters for execute_supply: {:?}", params);
+//     match SupplyLogic::execute_supply(params).await {
+//         Ok(_) => {
+//             ic_cdk::println!("execute_supply function called successfully");
+//             Ok(())
+//         }
+//         Err(e) => {
+//             ic_cdk::println!("Error calling execute_supply: {:?}", e);
+//             Err(e)
+//         }
+//     }
+// }
 
-#[update]
-async fn liquidation_call(
-    asset: String,
-    collateral_asset: String,
-    amount: u64,
-    on_behalf_of: Principal,
-) -> Result<(), String> {
-    match LiquidationLogic::execute_liquidation(
-        asset,
-        collateral_asset,
-        Nat::from(amount),
-        on_behalf_of,
-    )
-    .await
-    {
-        Ok(_) => {
-            ic_cdk::println!("execute_liquidation function called successfully");
-            Ok(())
-        }
-        Err(e) => {
-            ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
-            Err(e)
-        }
-    }
-}
+// #[update]
+// async fn liquidation_call(
+//     asset: String,
+//     collateral_asset: String,
+//     amount: u64,
+//     on_behalf_of: Principal,
+// ) -> Result<(), String> {
+//     match LiquidationLogic::execute_liquidation(
+//         asset,
+//         collateral_asset,
+//         Nat::from(amount),
+//         on_behalf_of,
+//     )
+//     .await
+//     {
+//         Ok(_) => {
+//             ic_cdk::println!("execute_liquidation function called successfully");
+//             Ok(())
+//         }
+//         Err(e) => {
+//             ic_cdk::println!("Error calling execute_liquidation: {:?}", e);
+//             Err(e)
+//         }
+//     }
+// }
 
 // Function to fetch the reserve-data based on the asset
 #[query]
@@ -120,26 +119,26 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, String> {
 }
 
 // Function to call the execute_borrow logic
-#[update]
-async fn borrow(asset: String, amount: u64) -> Result<(), String> {
-    ic_cdk::println!("Starting borrow function");
-    let params = ExecuteBorrowParams {
-        asset,
-        amount: Nat::from(amount),
-    };
-    ic_cdk::println!("Parameters for execute_borrow: {:?}", params);
+// #[update]
+// async fn borrow(asset: String, amount: u64) -> Result<(), String> {
+//     ic_cdk::println!("Starting borrow function");
+//     let params = ExecuteBorrowParams {
+//         asset,
+//         amount: Nat::from(amount),
+//     };
+//     ic_cdk::println!("Parameters for execute_borrow: {:?}", params);
 
-    match borrow::execute_borrow(params).await {
-        Ok(_) => {
-            ic_cdk::println!("execute_borrow function called successfully");
-            Ok(())
-        }
-        Err(e) => {
-            ic_cdk::println!("Error calling execute_borrow: {:?}", e);
-            Err(e)
-        }
-    }
-}
+//     match borrow::execute_borrow(params).await {
+//         Ok(_) => {
+//             ic_cdk::println!("execute_borrow function called successfully");
+//             Ok(())
+//         }
+//         Err(e) => {
+//             ic_cdk::println!("Error calling execute_borrow: {:?}", e);
+//             Err(e)
+//         }
+//     }
+// }
 
 // Function to get the user data based on the principal
 #[query]
@@ -196,9 +195,9 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
 
 // Initialize user if not found
 #[update]
-fn register_user(user: String) -> Result<String, String> {
-    let user_principal =
-        Principal::from_text(&user).map_err(|_| "Invalid user canister ID".to_string())?;
+fn register_user() -> Result<String, String> {
+
+    let user_principal = ic_cdk::caller();
 
     let user_data = mutate_state(|state| {
         let user_index = &mut state.user_profile;
@@ -216,54 +215,54 @@ fn register_user(user: String) -> Result<String, String> {
 }
 
 // Repays debt of the user
-#[update]
-async fn repay(asset: String, amount: Nat, on_behalf: Option<Principal>) -> Result<(), String> {
-    ic_cdk::println!("Starting repay function");
-    let params = ExecuteRepayParams {
-        asset,
-        amount: amount,
-        on_behalf_of: on_behalf,
-    };
-    ic_cdk::println!("Parameters for execute_repay: {:?}", params);
-    match borrow::execute_repay(params).await {
-        Ok(_) => {
-            ic_cdk::println!("execute_repay function called successfully");
-            Ok(())
-        }
-        Err(e) => {
-            ic_cdk::println!("Error calling execute_repay: {:?}", e);
-            Err(e)
-        }
-    }
-}
+// #[update]
+// async fn repay(asset: String, amount: Nat, on_behalf: Option<Principal>) -> Result<(), String> {
+//     ic_cdk::println!("Starting repay function");
+//     let params = ExecuteRepayParams {
+//         asset,
+//         amount: amount,
+//         on_behalf_of: on_behalf,
+//     };
+//     ic_cdk::println!("Parameters for execute_repay: {:?}", params);
+//     match borrow::execute_repay(params).await {
+//         Ok(_) => {
+//             ic_cdk::println!("execute_repay function called successfully");
+//             Ok(())
+//         }
+//         Err(e) => {
+//             ic_cdk::println!("Error calling execute_repay: {:?}", e);
+//             Err(e)
+//         }
+//     }
+// }
 
 // Withdraws amount from the collateral/supply
-#[update]
-pub async fn withdraw(
-    asset: String,
-    amount: u128,
-    on_behalf: Option<Principal>,
-    collateral: bool,
-) -> Result<(), String> {
-    ic_cdk::println!("Starting withdraw function");
-    let params = ExecuteWithdrawParams {
-        asset,
-        amount: Nat::from(amount),
-        on_behalf_of: on_behalf,
-        is_collateral: collateral,
-    };
-    ic_cdk::println!("Parameters for execute_withdraw: {:?}", params);
-    match SupplyLogic::execute_withdraw(params).await {
-        Ok(_) => {
-            ic_cdk::println!("execute_withdraw function called successfully");
-            Ok(())
-        }
-        Err(e) => {
-            ic_cdk::println!("Error calling execute_withdraw: {:?}", e);
-            Err(e)
-        }
-    }
-}
+// #[update]
+// pub async fn withdraw(
+//     asset: String,
+//     amount: u128,
+//     on_behalf: Option<Principal>,
+//     collateral: bool,
+// ) -> Result<(), String> {
+//     ic_cdk::println!("Starting withdraw function");
+//     let params = ExecuteWithdrawParams {
+//         asset,
+//         amount: Nat::from(amount),
+//         on_behalf_of: on_behalf,
+//         is_collateral: collateral,
+//     };
+//     ic_cdk::println!("Parameters for execute_withdraw: {:?}", params);
+//     match SupplyLogic::execute_withdraw(params).await {
+//         Ok(_) => {
+//             ic_cdk::println!("execute_withdraw function called successfully");
+//             Ok(())
+//         }
+//         Err(e) => {
+//             ic_cdk::println!("Error calling execute_withdraw: {:?}", e);
+//             Err(e)
+//         }
+//     }
+// }
 //TODO: seperate this function in two functions one for liq_index called as user_normalized_supply and another for debt_index called as user_normalized_debt
 // fn update_user_reserve_state(user_reserve_data: &mut UserReserveData) -> Result<(), String> {
 //     let current_time = ic_cdk::api::time() / 1_000_000_000;
@@ -722,7 +721,7 @@ fn calculate_dynamic_balance(
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<String>,
-) -> Result<Nat, String> {
+) -> Result<Nat, Error> {
     ic_cdk::println!("Entering get_asset_supply function");
 
     // Log the asset name being passed
@@ -733,7 +732,7 @@ pub async fn get_asset_supply(
         Some(ref principal_str) => {
             // Parse the principal string into a Principal and return an error if it fails
             Principal::from_text(principal_str)
-                .map_err(|e| format!("Failed to parse Principal: {}", e))?
+                .map_err(|e| Error::ErrorParsingPrincipal)?
         }
         // If `on_behalf` is None, we use the caller's principal
         None => ic_cdk::caller(),
@@ -746,7 +745,7 @@ pub async fn get_asset_supply(
         Ok(data) => data,
         Err(e) => {
             ic_cdk::println!("Error fetching user data: {}", e);
-            return Err("User not found".to_string());
+            return Err(Error::UserNotFound);
         }
     };
 
@@ -766,7 +765,7 @@ pub async fn get_asset_supply(
         Ok(data) => data,
         Err(e) => {
             ic_cdk::println!("Error fetching asset reserve data: {}", e);
-            return Err("Error fetching asset reserve data".to_string());
+            return Err(Error::NoReserveDataFound);
         }
     };
 
@@ -777,11 +776,11 @@ pub async fn get_asset_supply(
             Ok(principal) => principal,
             Err(e) => {
                 ic_cdk::println!("Error parsing DToken canister principal: {}", e);
-                return Err("Error parsing DToken canister principal".to_string());
+                return Err(Error::ErrorParsingPrincipal);
             }
         };
 
-    let get_balance_value: Nat = get_balance(d_token_canister_principal, user_principal).await;
+    let get_balance_value: Nat = get_balance(d_token_canister_principal, user_principal).await?;
 
     ic_cdk::println!(
         "Fetched balance from DToken canister: {:?}",
@@ -812,7 +811,7 @@ pub async fn get_asset_supply(
         }
         Err(e) => {
             ic_cdk::println!("Error from the normalized supply function: {}", e);
-            return Err("Error from the normalized supply function".to_string());
+            return Err(Error::NormalizedSupply);
         }
     };
 
@@ -824,13 +823,13 @@ pub async fn get_asset_supply(
 }
 
 #[query]
-pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Result<Nat, String> {
+pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Result<Nat, Error> {
     let user_principal = match on_behalf {
         // If `on_behalf` is Some, we parse the Principal from the string
         Some(ref principal_str) => {
             // Parse the principal string into a Principal and return an error if it fails
             Principal::from_text(principal_str)
-                .map_err(|e| format!("Failed to parse Principal: {}", e))?
+                .map_err(|e| Error::ErrorParsingPrincipal)?
         }
         // If `on_behalf` is None, we use the caller's principal
         None => ic_cdk::caller(),
@@ -842,7 +841,7 @@ pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Re
         Ok(data) => data,
         Err(e) => {
             ic_cdk::println!("Error: {}", e);
-            return Err("User not found".to_string());
+            return Err(Error::UserNotFound);
         }
     };
 
@@ -861,7 +860,7 @@ pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Re
         Ok(data) => data,
         Err(e) => {
             ic_cdk::println!("Error fetching asset reserve data: {}", e);
-            return Err("Error fetching asset reserve data".to_string());
+            return Err(Error::NoReserveDataFound);
         }
     };
 
@@ -870,11 +869,11 @@ pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Re
             Ok(principal) => principal,
             Err(e) => {
                 ic_cdk::println!("Error parsing DebtToken canister principal: {}", e);
-                return Err("Error parsing DebtToken canister principal".to_string());
+                return Err(Error::ErrorParsingPrincipal);
             }
         };
 
-    let get_balance_value: Nat = get_balance(debt_token_canister_principal, user_principal).await;
+    let get_balance_value: Nat = get_balance(debt_token_canister_principal, user_principal).await?;
 
     ic_cdk::println!(
         "Fetched balance from DebtToken canister: {:?}",
@@ -895,8 +894,7 @@ pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Re
     let normalized_debt_data = match user_normalized_debt(asset_reserve.clone()) {
         Ok(data) => data,
         Err(e) => {
-            ic_cdk::println!("Error from the normalized supply function: {}", e);
-            return Err("Error from the normalized supply function".to_string());
+            return Err(Error::NormalizedDebt);
         }
     };
 
@@ -908,7 +906,6 @@ pub async fn get_asset_debt(asset_name: String, on_behalf: Option<String>) -> Re
     Ok(normalized_debt_data.scaled_mul(get_balance_value))
 }
 
-#[query]
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, String> {
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
@@ -936,8 +933,7 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, String> 
     }
 }
 
-#[query]
-pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, String> {
+pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
 
@@ -975,7 +971,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, String> {
 #[update]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
-) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), String> {
+) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
     let result = GenericLogic::calculate_user_account_data(on_behalf).await;
     result
 }

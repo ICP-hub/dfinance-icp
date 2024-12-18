@@ -1,6 +1,7 @@
 use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_cdk::query;
 use num_traits::cast::ToPrimitive;
+use crate::constants::errors::Error;
 
 use crate::{
     api::{
@@ -58,7 +59,7 @@ pub struct GenericLogic;
 impl GenericLogic {
     pub async fn calculate_user_account_data(
         on_behalf: Option<Principal>,
-    ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), String> {
+    ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
         let user_principal = match on_behalf {
             // If `on_behalf` is Some, we parse the Principal from the string
             Some(principal_str) => {
@@ -84,7 +85,7 @@ impl GenericLogic {
             }
             Err(e) => {
                 ic_cdk::println!("Error fetching user data: {}", e);
-                return Err(e);
+                return Err(Error::UserNotFound);
             }
         };
 
@@ -99,7 +100,7 @@ impl GenericLogic {
         let user_data_reserves = user_data
             .reserves
             .as_ref()
-            .ok_or_else(|| format!("Reserves not found for user"))?;
+            .ok_or_else(|| Error::NoUserReserveDataFound)?;
         ic_cdk::println!("User reserves found");
 
         let mut total_collateral = Nat::from(0u128);
@@ -132,7 +133,7 @@ impl GenericLogic {
                 }
                 Err(e) => {
                     ic_cdk::println!("Error: {}", e);
-                    return Err(e);
+                    return Err(Error::NoReserveDataFound);
                 }
             };
 
@@ -196,7 +197,7 @@ impl GenericLogic {
                     &user_reserve_data,
                     asset_price.clone(),
                 )
-                .await;
+                .await?;
 
                 ic_cdk::println!(
                     "User balance in usd for collateral reserve '{}': {}",
@@ -242,7 +243,7 @@ impl GenericLogic {
                     &user_reserve_data,
                     asset_price.clone(),
                 )
-                .await;
+                .await?;
                 total_debt += user_debt.clone();
                 ic_cdk::println!(
                     "Total debt for borrowed reserve '{}': {}",
@@ -250,7 +251,7 @@ impl GenericLogic {
                     total_debt
                 );
                 available_borrow -= user_debt;
-                if available_borrow == u128::MAX {
+                if available_borrow == max {
                     available_borrow = Nat::from(0u128);
                 }
                 ic_cdk::println!(
@@ -323,7 +324,7 @@ impl GenericLogic {
         user_principal: Principal,
         reserve: &UserReserveData,
         asset_price: Nat,
-    ) -> Nat {
+    ) -> Result<Nat,Error> {
         ic_cdk::println!("Calculating user balance in base currency...");
         ic_cdk::println!("User principal: {:?}", user_principal);
         ic_cdk::println!("Reserve: {:?}", reserve.reserve);
@@ -334,7 +335,7 @@ impl GenericLogic {
         let d_token_canister_principal: Principal =
             Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
 
-        let user_scaled_balance: Nat = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
+        let user_scaled_balance = get_balance(d_token_canister_principal, user_principal).await?; // fetch from d token balance of user
         ic_cdk::println!(
             "Fetched balance from DToken canister: {:?}",
             user_scaled_balance
@@ -364,14 +365,14 @@ impl GenericLogic {
             "last of the base currency  = {}",
             user_scaled_balanced_normalized.clone().scaled_mul(asset_price.clone())
         );
-        user_scaled_balanced_normalized.clone().scaled_mul(asset_price.clone())
+        Ok(user_scaled_balanced_normalized.clone().scaled_mul(asset_price.clone()))
     }
 
     pub async fn get_user_debt_in_base_currency(
         user_principal: Principal,
         reserve: &UserReserveData,
         asset_price: Nat,
-    ) -> Nat {
+    ) -> Result<Nat,Error> {
         ic_cdk::println!("Calculating user balance in debt currency...");
         ic_cdk::println!("User principal: {:?}", user_principal);
         ic_cdk::println!("Reserve data: {:?}", reserve.reserve);
@@ -385,7 +386,7 @@ impl GenericLogic {
 
         // let get_balance_value = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
         ic_cdk::println!("Fetching balance of user...");
-        let mut user_variable_debt = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
+        let mut user_variable_debt = get_balance(debt_token_canister_principal, user_principal).await?; // fetch from d token balance of user
         ic_cdk::println!("Balance value fetched: {:?}", user_variable_debt);
 
         // ic_cdk::println!("Converting balance value from Nat to u128...");
@@ -418,7 +419,7 @@ impl GenericLogic {
 
         let result = user_variable_debt.scaled_mul(asset_price);
         ic_cdk::println!("Final user debt in base currency: {}", result);
-        result
+        Ok(result)
     }
 }
 

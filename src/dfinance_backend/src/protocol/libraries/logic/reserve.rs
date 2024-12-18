@@ -4,6 +4,7 @@ use crate::protocol::libraries::logic::user::nat_to_u128;
 use crate::protocol::libraries::math::math_utils;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use ic_cdk::api::time;
+use crate::constants::errors::Error;
 
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
@@ -191,7 +192,7 @@ pub async fn burn_scaled(
     token_canister_principal: Principal,
     platform_principal: Principal,
     burn_dtoken: bool,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     //TODO if user is not caller, then
     //TODO if to is not backend, transfer it to other
     ic_cdk::println!("burn user state value = {:?}", user_state);
@@ -208,10 +209,10 @@ pub async fn burn_scaled(
     ic_cdk::println!("adjusted_amount calculated = {}", adjusted_amount);
 
     if adjusted_amount == Nat::from(0u128) {
-        return Err("Invalid burn amount".to_string());
+        return Err(Error::InvalidBurnAmount);
     }
 
-    let balance = get_balance(token_canister_principal, user_principal).await;
+    let balance = get_balance(token_canister_principal, user_principal).await?;
     ic_cdk::println!("balance_nat retrieved = {:?}", balance);
 
     // let balance = match nat_to_u128(balance_nat) {
@@ -263,7 +264,7 @@ pub async fn burn_scaled(
             }
             Err(err) => {
                 ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
-                Err(format!("Minting failed. Error: {:?}", err))
+                Err(Error::ErrorMintTokens)
             }
         }
     } else {
@@ -287,7 +288,7 @@ pub async fn burn_scaled(
             }
             Err(err) => {
                 ic_cdk::println!("Error: Burning failed. Error: {:?}", err);
-                Err(format!("Burning failed. Error: {:?}", err))
+                Err(Error::ErrorBurnTokens)
             }
         }
     }
@@ -302,7 +303,7 @@ pub async fn mint_scaled(
     token_canister_principal: Principal,
     platform_principal: Principal,
     minting_dtoken: bool,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     ic_cdk::println!("--- mint_scaled_modified called ---");
     ic_cdk::println!("Initial user state: {:?}", user_state);
     ic_cdk::println!("Amount value: {}", amount);
@@ -320,7 +321,7 @@ pub async fn mint_scaled(
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
     if adjusted_amount == Nat::from(0u128) {
         ic_cdk::println!("Error: Invalid mint amount");
-        return Err("Invalid mint amount".to_string());
+        return Err(Error::InvalidMintAmount);
     }
 
     // Calculate interest accrued since the last liquidity index update
@@ -354,7 +355,7 @@ pub async fn mint_scaled(
     //     }
     //     Err(err) => Err(format!("Minting failed. Error: {:?}", err)),
     // }
-    let balance = get_balance(token_canister_principal, user_principal).await;
+    let balance = get_balance(token_canister_principal, user_principal).await?;
     ic_cdk::println!("Fetched balance in Nat: {:?}", balance);
 
     //let balance = nat_to_u128(balance_nat).unwrap();
@@ -408,7 +409,7 @@ pub async fn mint_scaled(
         }
         Err(err) => {
             ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
-            Err(format!("Minting failed. Error: {:?}", err))
+            Err(Error::ErrorMintTokens)
         }
     }
 }

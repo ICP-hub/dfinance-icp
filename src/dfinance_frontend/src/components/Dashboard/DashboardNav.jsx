@@ -282,13 +282,13 @@ const DashboardNav = () => {
           const asset = reserveGroup[0];
           const reserve = reserveGroup[1];
 
-          const supply = getAssetSupplyValue(reserve);
+          const supply = getAssetSupplyValue(asset);
 
           if (supply > 0) {
             setAssetSupply(supply);
           }
 
-          const borrow = getAssetBorrowValue(reserve);
+          const borrow = getAssetBorrowValue(asset);
 
           if (borrow > 0) {
             setAssetBorrow(borrow);

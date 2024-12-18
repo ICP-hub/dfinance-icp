@@ -548,13 +548,26 @@ const MySupply = () => {
       </p>
     </div>
   );
-
+  const getAssetSupplyValue = (asset, principal) => {
+    if (asset_supply[asset] !== undefined) {
+      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      return supplyValue;
+    }
+    return noSupplyMessage;
+  };
+  const getAssetBorrowValue = (asset, principal) => {
+    if (asset_supply[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      return borrowValue;
+    }
+    return noBorrowMessage;
+  };
   const isTableDisabled =
     !userData?.Ok?.reserves ||
     !userData?.Ok?.reserves[0] ||
     userData?.Ok?.reserves[0].every(
       (reserveGroup) =>
-        reserveGroup[1]?.asset_supply === 0n ||
+        asset_supply === 0n ||
         reserveGroup[1]?.is_collateral === false
     );
 
@@ -616,20 +629,7 @@ const MySupply = () => {
       setCalculatedReserves(reservesWithCalculations);
     }
   }, [userData]);
-  const getAssetSupplyValue = (asset, principal) => {
-    if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]) / 1e8;
-      return supplyValue;
-    }
-    return noSupplyMessage;
-  };
-  const getAssetBorrowValue = (asset, principal) => {
-    if (asset_supply[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]) / 1e8;
-      return borrowValue;
-    }
-    return noBorrowMessage;
-  };
+  
   let totalUsdValueSupply = 0;
   let totalUsdValueBorrow = 0;
   const [totalAssetSupply, setTotalAssetSupply] = useState(0);
@@ -2289,6 +2289,7 @@ const MySupply = () => {
                       <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none">
                         <div className="w-full">
                           {}
+                         
                           {userData?.Ok?.reserves[0]?.length === 0
                             ? noBorrowMessage
                             : userData?.Ok?.reserves[0]

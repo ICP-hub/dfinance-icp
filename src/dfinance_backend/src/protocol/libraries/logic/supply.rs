@@ -71,9 +71,9 @@ impl SupplyLogic {
         )
         .await;
         ic_cdk::println!("Supply validated successfully");
+        
+        //TODO call mint function here
 
-        // let total_supplies= reserve_data.asset_supply.clone() + params.amount;
-        // let total_borrow = reserve_data.asset_borrow;
         let liq_added = params.amount;
         let liq_taken = 0u128;
         let _ = reserve::update_interest_rates(
@@ -83,7 +83,7 @@ impl SupplyLogic {
             liq_added,
         )
         .await;
-        // let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
+    
        
 
         ic_cdk::println!("Interest rates updated successfully");
@@ -94,7 +94,6 @@ impl SupplyLogic {
             &reserve_cache,
             params.clone(),
             &mut reserve_data,
-            //usd_amount.clone(),
         )
         .await;
         ic_cdk::println!("User data supply updated");
@@ -204,8 +203,6 @@ impl SupplyLogic {
         .await;
         ic_cdk::println!("Withdraw validated successfully");
 
-        // let total_supplies=  reserve_data.asset_supply - params.amount;
-        // let total_borrow = reserve_data.asset_borrow;
         let _ = reserve::update_interest_rates(
             &mut reserve_data,
             &mut reserve_cache,
@@ -213,7 +210,6 @@ impl SupplyLogic {
             0u128,
         )
         .await;
-        // let _= reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache,total_borrow ,total_supplies).await;
        
       
 

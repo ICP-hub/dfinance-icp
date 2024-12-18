@@ -11,6 +11,7 @@ pub struct InterestRateParams {
     pub variable_rate_slope2: u128,
 }
 
+//TODO put it in constant folder
 pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     ic_cdk::println!("asset name in initialize {:?}", asset.to_string());
     match asset {
@@ -59,87 +60,13 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     }
 }
 
-// fn calculate_utilization_rate(total_supply: u128, total_borrowed: u128) -> u128 {
-//     if total_supply == 0 {
-//         0
-//     } else {
-//         total_borrowed.scaled_div(total_supply) * 100
-//     }
-// }
 
-// pub fn calculate_interest_rates(
-//     total_supply: u128,
-//     total_borrowed: u128, //without interest
-//     total_debt: u128,     //include interest
-//     borrow_rate: u128,
-//     params: &InterestRateParams,
-//     reserve_factor: u128,
-// ) -> (u128, u128) {
-//     ic_cdk::println!("total debt: {:?}", total_debt);
-//     if total_debt == 0 {
-//         return (0, params.base_variable_borrow_rate);
-//     }
-
-//     let utilization_rate = calculate_utilization_rate(
-//         total_supply.clone() + total_debt.clone(),
-//         total_borrowed.clone(),
-//     );
-//     ic_cdk::println!("utilization_rate: {:?}", utilization_rate);
-//     let mut current_variable_borrow_rate = params.base_variable_borrow_rate.clone();
-//     ic_cdk::println!(
-//         "params.optimal_usage_ratio: {:?}",
-//         params.optimal_usage_ratio
-//     );
-//     if utilization_rate > params.optimal_usage_ratio {
-//         let excess_borrow_usage_ratio = (utilization_rate - params.optimal_usage_ratio)
-//             .scaled_div(params.max_excess_usage_ratio);
-
-//         current_variable_borrow_rate += params.variable_rate_slope1
-//             + params.variable_rate_slope2 * excess_borrow_usage_ratio / 100000000;
-//         ic_cdk::println!(
-//             "current_variable_borrow_rate: {:?}",
-//             current_variable_borrow_rate
-//         );
-//     } else {
-//         current_variable_borrow_rate += params
-//             .variable_rate_slope1
-//             .scaled_mul(utilization_rate.scaled_div(params.optimal_usage_ratio));
-//     }
-
-//     let overall_borrow_rate =
-//         calculate_overall_borrow_rate(total_debt, current_variable_borrow_rate);
-
-//     ic_cdk::println!("overall_borrow_rate: {:?}", overall_borrow_rate);
-//     let current_liquidity_rate = overall_borrow_rate
-//         .scaled_mul(utilization_rate / 100)
-//         .scaled_mul(100000000 - (reserve_factor / 100));
-//     ic_cdk::println!("current_liquidity_rate: {:?}", current_liquidity_rate);
-
-//     (current_liquidity_rate, current_variable_borrow_rate)
-// }
-
-// fn calculate_overall_borrow_rate(total_debt: u128, current_variable_borrow_rate: u128) -> u128 {
-//     if total_debt == 0 {
-//         return 0;
-//     }
-
-//     let weighted_variable_rate = total_debt.scaled_mul(current_variable_borrow_rate);
-
-//     weighted_variable_rate.scaled_div(total_debt)
-// }
-fn calculate_utilization_rate(total_supply: u128, total_borrowed: u128) -> u128 {
-    if total_supply == 0 {
-        0
-    } else {
-        total_borrowed.scaled_div(total_supply) * 100
-    }
-}
 pub async fn calculate_interest_rates(
     liq_added: u128,
-    liq_taken: u128, //without interest
-    total_debt: u128,     //include interest
-    dtoken: Principal,
-    user: Principal,
+    liq_taken: u128, 
+    total_debt: u128,    
+    dtoken: Principal,//TODO remove
+    user: Principal, //TODO remove
     params: &InterestRateParams,
     reserve_factor: u128,
     asset: String,
@@ -155,6 +82,7 @@ pub async fn calculate_interest_rates(
     //TODO handle error
     let reserve = get_reserve_data(asset).unwrap();
     // if total_debt != 0 {
+       //TODO verify asset_supply is updated
        let total_supply = reserve.asset_supply;
        let available_liq = total_supply + liq_added - liq_taken;
        let available_liq_plus_debt= available_liq + total_debt;
@@ -174,35 +102,6 @@ pub async fn calculate_interest_rates(
        curr_borrow_rate +=
             params.variable_rate_slope1 * borrow_usage_ratio * 100 / params.optimal_usage_ratio;
     }
-
-    // let utilization_rate = calculate_utilization_rate(
-    //     total_supply.clone() + total_debt.clone(),
-    //     total_borrowed.clone(),
-    // );
-    // ic_cdk::println!("utilization_rate: {:?}", utilization_rate);
-    // let mut current_variable_borrow_rate = params.base_variable_borrow_rate.clone();
-    // ic_cdk::println!(
-    //     "params.optimal_usage_ratio: {:?}",
-    //     params.optimal_usage_ratio
-    // );
-    // if utilization_rate > params.optimal_usage_ratio {
-    //     let excess_borrow_usage_ratio = (utilization_rate - params.optimal_usage_ratio)
-    //         .scaled_div(params.max_excess_usage_ratio);
-
-    //     current_variable_borrow_rate += params.variable_rate_slope1
-    //         + params.variable_rate_slope2 * excess_borrow_usage_ratio / 100000000;
-    //     ic_cdk::println!(
-    //         "current_variable_borrow_rate: {:?}",
-    //         current_variable_borrow_rate
-    //     );
-    // } else {
-    //     current_variable_borrow_rate += params
-    //         .variable_rate_slope1
-    //         .scaled_mul(utilization_rate.scaled_div(params.optimal_usage_ratio));
-    // }
-
-    
-
     ic_cdk::println!("overall_borrow_rate: {:?}", curr_borrow_rate);
     current_liquidity_rate = (curr_borrow_rate
         .scaled_mul(supply_usage_ratio))
@@ -211,7 +110,7 @@ pub async fn calculate_interest_rates(
 
     (current_liquidity_rate, curr_borrow_rate)
 }
-//TODO confirm this function
+
 
 
 

@@ -73,7 +73,7 @@ pub trait ScalingMath {
     fn scaled_to_float(self) -> f64;
     fn to_scaled(self) -> u128;
 }
-
+ //TODO return in Nat when Merge the Nat changes
 impl ScalingMath for u128 {
     fn scaled_mul(self, other: u128) -> u128 {
         self.mul(other) / SCALING_FACTOR
@@ -86,7 +86,7 @@ impl ScalingMath for u128 {
     fn scaled_to_float(self) -> f64 {
         self.div(SCALING_FACTOR) as f64
     }
-
+    
     fn to_scaled(self) -> u128 {
         self.mul(SCALING_FACTOR)
     }

@@ -64,7 +64,7 @@ impl UpdateLogic {
                 return Err(error_msg);
             }
         };
-    
+        //TODO remove mint function from here
         let platform_principal = ic_cdk::api::id();
         let minted_result = mint_scaled(
             reserve,

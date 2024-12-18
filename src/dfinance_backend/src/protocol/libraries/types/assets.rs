@@ -9,3 +9,4 @@ pub type AssetIndex = StableBTreeMap<String, Candid<ReserveData>, VMem>;
 pub type UserProfile = StableBTreeMap<Principal, Candid<UserData>, VMem>;
 pub type ReserveList =  StableBTreeMap<String,Principal, VMem>;
 pub type PriceCacheList =  StableBTreeMap<String,Candid<PriceCache>, VMem>;
+pub type CanisterList =  StableBTreeMap<String,Principal, VMem>;

@@ -6,4 +6,5 @@ pub struct State {
     pub user_profile: UserProfile,
     pub reserve_list: ReserveList,
     pub price_cache_list: PriceCacheList,
+    pub canister_list:CanisterList, 
 }

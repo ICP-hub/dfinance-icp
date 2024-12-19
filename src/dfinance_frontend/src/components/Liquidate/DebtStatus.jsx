@@ -275,7 +275,7 @@ const DebtStatus = () => {
         .filter(
           (mappedItem) =>
             mappedItem &&
-            mappedItem.healthFactor > 1 &&
+            mappedItem.healthFactor < 1 &&
             mappedItem.principal !== principal &&
             mappedItem.totalDebt > 0
         );

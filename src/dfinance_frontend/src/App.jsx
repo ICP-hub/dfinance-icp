@@ -60,6 +60,8 @@ import WarningPopup from "../public/Helpers/WarningPopup.png";
 import WarningPopupLight from "../public/Helpers/WarningPopupLight.png";
 import LiquidationSuccessfull  from "../public/Helpers/Liquidation Successfull.png";
 import LiquidationSuccessfullLight  from "../public/Helpers/LiquidationSuccessfullLight.png";
+import CollateralInformationCall from "../public/Helpers/colateralInformationCall.png";
+import CollateralInformationCallLight from "../public/Helpers/colateralInformationCallLight.png";
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
@@ -400,12 +402,7 @@ export default function App() {
               alt="Faucet Button"
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
-            <img
-              loading="lazy"
-              src={theme === "dark" ? liquidationTable : liquidationTableLight}
-              alt="Faucet Popup"
-              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-            />
+            
           </div>
         ),
         placement: "center",
@@ -416,6 +413,15 @@ export default function App() {
           <div className="relative flex flex-col text-justify">
             <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
             <p className="mb-4">
+            Here it will show  the list of users with a health factor less than 1
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? liquidationTable : liquidationTableLight}
+              alt="Faucet Popup"
+              className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+             <p className="mb-4">
             Click the 'Liquidate' button in the 'Liquidation' list to view debt details and open the user information popup.
             </p>
             <img
@@ -424,6 +430,20 @@ export default function App() {
               alt="Faucet Button"
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
+            
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation1",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            This will now open the 'User Information' popup, displaying the user's principal and health factor.
+            </p>
+            
             <img
               loading="lazy"
               src={theme === "dark" ? userInformation : userInformationLight}
@@ -458,11 +478,29 @@ export default function App() {
           <div className="relative flex flex-col text-justify">
             <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
             <p className="mb-4">
-            "Now select the collateral asset to view the details and rewards given to the user."
+            "Now, select the collateral asset to view the details and rewards given to the liquidator based on the selected asset, and then click on 'Approve Liquidation' to proceed with the call."
             </p>
             <img
               loading="lazy"
               src={theme === "dark" ? CollateralInformation : CollateralInformationLight}
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            "Click on 'Call Liquidation' to proceed with the call."
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? CollateralInformationCall : CollateralInformationCallLight}
               alt="Faucet Popup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -506,6 +544,23 @@ export default function App() {
         ),
         placement: "center",
       },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">End of Tour</h1>
+            <p className="mb-4">
+              This is the end of your tour. You're all set to explore the site and start using all the features!
+            </p>
+            <div className="text-center mb-4">
+              <span className="text-green-500 text-[40px]">&#10003;</span> {/* Checkmark symbol */}
+            </div>
+          </div>
+        ),
+        placement: "center",
+      }
+      
+      
     ],
     styles: {
       options: {

@@ -34,7 +34,7 @@ const SupplyInfo = ({formatNumber,supplyCap,totalSupplied,supplyRateAPR,ltv,canB
   };
 
   const assetRate = getAssetRate(id);
-  const totalSuppliedAsset = assetRate && totalSupplied ? (Number(totalSupplied)) / assetRate : 0;
+  const totalSuppliedAsset = assetRate && totalSupplied ? (Number(totalSupplied)) * assetRate : 0;
   const totalSuppliedCap = assetRate && supplyCap ? (Number(supplyCap)) / assetRate : 0;
   const formatValue = (value) => {
     const numericValue = parseFloat(value); 
@@ -68,7 +68,7 @@ const SupplyInfo = ({formatNumber,supplyCap,totalSupplied,supplyRateAPR,ltv,canB
             />
             <p>
               {" "}
-              <span>{formatValue(totalSuppliedAsset)}</span> of{" "}
+              <span>{formatValue(totalSupplied)}</span> of{" "}
 
               <span>
                 {supplyCap ? formatNumber(Number(totalSuppliedCap)) : "N/A"}
@@ -76,7 +76,7 @@ const SupplyInfo = ({formatNumber,supplyCap,totalSupplied,supplyRateAPR,ltv,canB
             </p>
             <p className="text-[12px] -mt-3">
               {" "}
-              <span>${formatNumber(Number(totalSupplied))}</span> of{" "}
+              <span>${formatNumber(Number(totalSuppliedAsset))}</span> of{" "}
               <span>
                 ${supplyCap ? formatNumber(Number(supplyCap.toString())) : "N/A"}
               </span>

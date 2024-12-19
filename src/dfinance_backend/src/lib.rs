@@ -18,11 +18,9 @@ use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::nat_to_u128;
 use protocol::libraries::logic::user::GenericLogic;
-use protocol::libraries::math::calculate::calculate_health_factor;
-use protocol::libraries::math::calculate::calculate_ltv;
-use protocol::libraries::math::calculate::get_exchange_rates;
+
 use protocol::libraries::math::calculate::PriceCache;
-use protocol::libraries::math::calculate::UserPosition;
+
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
 use protocol::libraries::types::datatypes::UserReserveData;
@@ -925,7 +923,7 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, String> 
         // );
 
         ic_cdk::println!(
-            "Updated liquidity index: {} for reserve",
+            "previoys liquidity index: {} for reserve",
             reserve_data.liquidity_index
         );
         //  user_reserve_data.liquidity_index =
@@ -949,18 +947,19 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
             reserve_data.borrow_rate
         );
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
-            reserve_data.borrow_rate / Nat::from(100u128), //TODO check if this dividing by 100 is necessary or not
+            reserve_data.borrow_rate, //TODO check if this dividing by 100 is necessary or not
             reserve_data.last_update_timestamp,
             current_time,
         );
-        // ic_cdk::println!(
-        //     "Calculated cumulated borrow interest: {} based on borrow rate: {}",
-        //     cumulated_borrow_interest,
-        //     reserve_data.borrow_rate //take it from reserve of asset
-        // );
+        ic_cdk::println!(
+            "Calculated cumulated borrow interest: {} based on borrow rate: {} and and new debt index {}",
+            cumulated_borrow_interest,
+            reserve_data.borrow_rate, //take it from reserve of asset
+            cumulated_borrow_interest.scaled_mul(reserve_data.debt_index)
+        );
 
         ic_cdk::println!(
-            "Updated variable borrow index: {} for reserve",
+            "Previous variable borrow index: {} for reserve",
             reserve_data.debt_index
         );
         return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
@@ -968,7 +967,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
 }
 
 // this function is for check which i will remove later.
-#[update]
+#[update]  //TODO why this is kept as update func?
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
@@ -976,19 +975,19 @@ async fn get_user_account_data(
     result
 }
 
-#[query]
+#[query]  //TODO check if we need this as query function or not.
 pub async fn schedule_midnight_task() {
-    // Schedule the task to run at midnight
+   
     let _timer_id = set_timer_interval(time_until_midnight(), || {
-        // Spawn a new async task to run at midnight
+       
         ic_cdk::spawn(async {
-            // Task for midnight: Reset faucet usage and update the sum
+           
             let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
 
             for (user_principal, _) in vector_user_data {
-                // Reset the faucet usage for the user without printing any logs
+                // Reset the faucet usage for the user 
                 if let Err(_) = reset_faucet_usage(user_principal).await {
-                    // Optionally handle the error, but don't log anything
+                    // Optionally handle the error
                 }
             }
         });

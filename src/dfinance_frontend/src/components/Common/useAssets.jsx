@@ -54,7 +54,6 @@ const useAssetData = (searchQuery = '') => {
     if (backendActor) {
       try {
         const result = await backendActor.get_asset_supply(asset,[principal]);
-        
         setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
         console.error(error.message)
@@ -74,6 +73,8 @@ const useAssetData = (searchQuery = '') => {
     } else {
     }
   };
+
+
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0 || !fetchReserveData) return;
@@ -87,8 +88,6 @@ const useAssetData = (searchQuery = '') => {
         let totalAccruedValue = 0;
 
         for (const asset of assets) {
-          await fetchAssetSupply(asset);
-          await fetchAssetBorrow(asset);
           const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
           const supplyCap = parseFloat(Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000);
@@ -155,7 +154,7 @@ const useAssetData = (searchQuery = '') => {
 
   const formatNumber = useFormatNumber();
 
-  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize, totalReserveFactor, interestAccure ,asset_supply ,asset_borrow,loading, setLoading};
+  return { assets, reserveData, filteredItems, totalMarketSize, totalSupplySize, totalBorrowSize, totalReserveFactor, interestAccure ,asset_supply ,asset_borrow,loading, setLoading, fetchAssetBorrow, fetchAssetSupply};
 };
 
 export default useAssetData;

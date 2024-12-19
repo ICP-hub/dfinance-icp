@@ -51,7 +51,13 @@ const Footer = () => {
             <div className="w-full flex flex-col mt-5">
               {
                 FOOTER_LINK_1 && FOOTER_LINK_1.map((link, index) => (
-                  <NavLink key={index} to={link.route} className={`pb-2 font-light`}>{link.title}</NavLink>
+                  <NavLink  
+                  id={
+                    link.title === "Liquidation"
+                      ? "footer-liquidation"
+                      : undefined
+                  } 
+                  key={index} to={link.route} className={`pb-2 mt-2 font-light`}>{link.title}</NavLink>
                 ))
               }
             </div>

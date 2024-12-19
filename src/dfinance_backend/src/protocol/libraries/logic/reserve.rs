@@ -4,6 +4,7 @@ use crate::protocol::libraries::logic::user::nat_to_u128;
 use crate::protocol::libraries::math::math_utils;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use ic_cdk::api::time;
+use ic_cdk::caller;
 use crate::constants::errors::Error;
 
 use crate::declarations::assets::ReserveCache;
@@ -80,45 +81,117 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
             reserve_cache.reserve_last_update_timestamp,
             current_timestamp(),
         );
-        reserve_cache.next_debt_index =
-            cumulated_borrow_interest.scaled_mul(reserve_cache.curr_debt_index.clone());
-        reserve_data.debt_index = reserve_cache.next_debt_index.clone();
+        ic_cdk::println!("cumulated borrow interest when performing action {}", cumulated_borrow_interest);
+        reserve_cache.next_debt_index = cumulated_borrow_interest.scaled_mul(reserve_cache.curr_debt_index);
+        ic_cdk::println!("next debt index {}", reserve_cache.next_debt_index);
+        reserve_data.debt_index = reserve_cache.next_debt_index;
     }
 }
 
-pub async fn update_interest_rates(
-    reserve_data: &mut ReserveData,
-    reserve_cache: &mut ReserveCache,
-    total_borrowed: Nat,
-    total_supplies: Nat,
-) {
-    let total_debt = total_borrowed.clone().scaled_mul(reserve_cache.curr_debt_index.clone());
-    let total_supply = total_supplies.scaled_mul(reserve_cache.curr_liquidity_index.clone());
-    let asset = reserve_data
-        .asset_name
-        .clone()
-        .unwrap_or("no token".to_string());
-    let interest_rate_params = initialize_interest_rate_params(&asset);
-    ic_cdk::println!("interest rate params {:?}", interest_rate_params);
-    ic_cdk::println!("total debt: {:?}", total_debt);
-    let (next_liquidity_rate, next_debt_rate) = calculate_interest_rates(
-        total_supply.clone(),
-        total_borrowed.clone(),
-        total_debt,
-        reserve_cache.curr_debt_rate.clone(),
-        &interest_rate_params,
-        reserve_cache.reserve_factor.clone(),
-    );
-    reserve_data.asset_borrow = total_borrowed; //TODO remove this
-    reserve_data.asset_supply = total_supply; //TODO remove this
-    reserve_data.current_liquidity_rate = next_liquidity_rate;
-    reserve_data.borrow_rate = next_debt_rate;
-    ic_cdk::println!(
-        "reserve_data.total_borrowed: {:?}",
-        reserve_data.total_borrowed
-    );
-}
 
+
+// pub async fn update_interest_rates(
+//         reserve_data: &mut ReserveData,
+//         reserve_cache: &mut ReserveCache,
+//         liq_taken: u128,
+//         liq_added: u128,
+//     ){
+//         let total_debt = reserve_cache.curr_debt.scaled_mul(reserve_cache.next_debt_index);
+//         // let total_supply= total_supplies.scaled_mul(reserve_cache.curr_liquidity_index);
+//         let asset=reserve_data.asset_name.clone().unwrap_or("no token".to_string());
+//         let user = caller();
+//         let dtoken = reserve_data.d_token_canister.clone().unwrap();
+//         let dtoken_principal = Principal::from_text(dtoken).unwrap();
+//         let interest_rate_params = initialize_interest_rate_params(&asset);
+//         ic_cdk::println!("interest rate params {:?}", interest_rate_params);
+//         ic_cdk::println!("total debt: {:?}", total_debt);
+       
+//         let (next_liquidity_rate, next_debt_rate) =
+//         calculate_interest_rates(
+//             total_supply,                        
+//             total_borrowed,                    
+//             total_debt,                
+//             reserve_cache.curr_debt_rate,   
+//             &interest_rate_params, 
+//             reserve_cache.reserve_factor,           
+           
+//         );
+//         // reserve_data.asset_borrow = total_debt; //TODO remove this
+//         // reserve_data.asset_supply= ;   //TODO remove this
+//         reserve_data.current_liquidity_rate = next_liquidity_rate;
+//         reserve_data.borrow_rate = next_debt_rate;
+//         ic_cdk::println!("reserve_data.total_borrowed: {:?}", reserve_data.total_borrowed);
+
+//     }
+
+// pub async fn update_interest_rates(
+//     reserve_data: &mut ReserveData,
+//     reserve_cache: &mut ReserveCache,
+//     total_borrowed: u128,
+//     total_supplies: u128,
+// ){
+//     let total_debt = total_borrowed.scaled_mul(reserve_cache.curr_debt_index);
+//     let total_supply= total_supplies.scaled_mul(reserve_cache.curr_liquidity_index);
+//     let asset=reserve_data.asset_name.clone().unwrap_or("no token".to_string());
+//     let interest_rate_params = initialize_interest_rate_params(&asset);
+//     ic_cdk::println!("interest rate params {:?}", interest_rate_params);
+//     ic_cdk::println!("total debt: {:?}", total_debt);
+//     let (next_liquidity_rate, next_debt_rate) =
+//     calculate_interest_rates(
+//         total_supply,                        
+//         total_borrowed,                    
+//         total_debt,                
+//         reserve_cache.curr_debt_rate,   
+//         &interest_rate_params, 
+//         reserve_cache.reserve_factor,           
+       
+//     );
+//     // reserve_data.asset_borrow= total_borrowed; //TODO remove this
+//     // reserve_data.asset_supply= total_supply;   //TODO remove this
+//     reserve_data.current_liquidity_rate = next_liquidity_rate;
+//     reserve_data.borrow_rate = next_debt_rate;
+//     ic_cdk::println!("reserve_data.total_borrowed: {:?}", reserve_data.total_borrowed);
+
+// }
+
+
+
+
+pub async fn update_interest_rates(
+        reserve_data: &mut ReserveData,
+        reserve_cache: &mut ReserveCache,
+        liq_taken: u128,
+        liq_added: u128,
+    ){
+        let total_debt = reserve_cache.curr_debt.scaled_mul(reserve_cache.next_debt_index);
+        // let total_supply= total_supplies.scaled_mul(reserve_cache.curr_liquidity_index);
+        let asset=reserve_data.asset_name.clone().unwrap_or("no token".to_string());
+        let user = caller();
+        let dtoken = reserve_data.d_token_canister.clone().unwrap();
+        let dtoken_principal = Principal::from_text(dtoken).unwrap();
+        let interest_rate_params = initialize_interest_rate_params(&asset);
+        ic_cdk::println!("interest rate params {:?}", interest_rate_params);
+        ic_cdk::println!("total debt: {:?}", total_debt);
+        let (next_liquidity_rate, next_debt_rate) =
+        calculate_interest_rates(
+            liq_added,                        
+            liq_taken,                    
+            total_debt,                
+            dtoken_principal,  
+            user, 
+            &interest_rate_params, 
+            reserve_cache.reserve_factor,           
+               reserve_data.asset_name.clone().expect("no name"),
+        ).await;
+        // reserve_data.asset_borrow = total_debt; //TODO remove this
+        // reserve_data.asset_supply= ;   //TODO remove this
+        reserve_data.current_liquidity_rate = next_liquidity_rate;
+        reserve_data.borrow_rate = next_debt_rate;
+        ic_cdk::println!("reserve_data.total_borrowed: {:?}", reserve_data.total_borrowed);
+
+    }
+
+  
 // pub async fn burn_scaled(
 //     user_state: &mut UserState,
 //     amount: u128,
@@ -185,6 +258,7 @@ pub async fn update_interest_rates(
 
 //TODO change the param of burn function according to mint.
 pub async fn burn_scaled(
+    reserve: &mut ReserveData,
     user_state: &mut UserReserveData,
     amount: Nat,
     index: Nat,
@@ -197,7 +271,7 @@ pub async fn burn_scaled(
     //TODO if to is not backend, transfer it to other
     ic_cdk::println!("burn user state value = {:?}", user_state);
     ic_cdk::println!("burn amount value = {}", amount);
-    ic_cdk::println!("burn current_liquidity_index value = {}", index);
+    ic_cdk::println!("burn index value = {}", index);
     ic_cdk::println!("burn user_principal value = {}", user_principal);
     ic_cdk::println!(
         "burn token_canister_principal value = {}",
@@ -205,34 +279,37 @@ pub async fn burn_scaled(
     );
     ic_cdk::println!("burn platform_principal value = {}", platform_principal);
 
-    let adjusted_amount = amount.clone().scaled_div(index.clone());
+    let mut adjusted_amount = amount.scaled_div(index);
     ic_cdk::println!("adjusted_amount calculated = {}", adjusted_amount);
 
     if adjusted_amount == Nat::from(0u128) {
         return Err(Error::InvalidBurnAmount);
     }
 
-    let balance = get_balance(token_canister_principal, user_principal).await?;
-    ic_cdk::println!("balance_nat retrieved = {:?}", balance);
-
-    // let balance = match nat_to_u128(balance_nat) {
-    //     Ok(bal) => {
-    //         ic_cdk::println!("balance converted to u128: {}", bal);
-    //         bal
-    //     }
-    //     Err(err) => {
-    //         ic_cdk::println!("Error converting balance to u128: {:?}", err);
-    //         return Err("Error converting balance to u128".to_string());
-    //     }
-    // };
-
-    let mut balance_increase = Nat::from(0u128);
+    let balance_nat = get_balance(token_canister_principal, user_principal).await;
+    ic_cdk::println!("balance_nat retrieved = {:?}", balance_nat);
+   
+    let balance = match nat_to_u128(balance_nat) {
+        Ok(bal) => {
+            ic_cdk::println!("balance converted to u128: {}", bal);
+            bal
+        }
+        Err(err) => {
+            ic_cdk::println!("Error converting balance to u128: {:?}", err);
+            return Err("Error converting balance to u128".to_string());
+        }
+    };
+    if adjusted_amount - balance < 1000 {
+        adjusted_amount = balance;
+    }
+    let mut balance_increase = 0u128;
     if burn_dtoken {
         balance_increase =
             (balance.clone().scaled_mul(index.clone())) - (balance.clone().scaled_mul(user_state.liquidity_index.clone()));
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
 
         user_state.d_token_balance -= adjusted_amount;
+        reserve.asset_supply -=adjusted_amount;
         user_state.liquidity_index = index;
     } else {
         balance_increase =
@@ -240,6 +317,7 @@ pub async fn burn_scaled(
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
         // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
         user_state.debt_token_blance -= adjusted_amount;
+        reserve.asset_borrow -= adjusted_amount;
         user_state.variable_borrow_index = index;
     }
 
@@ -268,7 +346,12 @@ pub async fn burn_scaled(
             }
         }
     } else {
-        let amount_to_burn = amount - balance_increase;
+        
+        let mut amount_to_burn = amount - balance_increase;
+        //TODO handle negative
+        if balance - amount_to_burn < 1000 {
+             amount_to_burn = balance;
+        }
         ic_cdk::println!(
             "balance_increase is not greater than amount, amount_to_burn = {}",
             amount_to_burn
@@ -295,7 +378,7 @@ pub async fn burn_scaled(
 }
 
 pub async fn mint_scaled(
-    reserve_data: &mut ReserveData,
+    reserve: &mut ReserveData,
     user_state: &mut UserReserveData,
     amount: Nat,
     index: Nat,
@@ -312,8 +395,8 @@ pub async fn mint_scaled(
     ic_cdk::println!("current_liquidity_index value = {}", index);
     ic_cdk::println!("user_principal value = {}", user_principal);
     ic_cdk::println!(
-        "token_canister_principal value = {}",
-        token_canister_principal
+        "current index value = {}",
+        index
     );
     ic_cdk::println!("Platform principal value: {}", platform_principal);
 
@@ -367,23 +450,25 @@ pub async fn mint_scaled(
         balance_increase =
             (balance.clone().scaled_mul(index.clone())) - (balance.clone().scaled_mul(user_state.liquidity_index.clone())); //fetch from user
         println!("balance incr dtoken{}", balance_increase);
-        // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
-        user_state.d_token_balance += adjusted_amount.clone();
-        reserve_data.asset_supply += adjusted_amount.clone();
-        println!("user new dtoken balance {}", user_state.d_token_balance);
-        user_state.liquidity_index = index;
-        println!("user new liq index {}", user_state.liquidity_index);
+    // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+    user_state.d_token_balance += adjusted_amount;
+    reserve.asset_supply += adjusted_amount;
+    println!("updated asset supply{}", reserve.asset_supply);
+    //TODO add adjusted_amount in reservedata asset_supply
+    println!("user new dtoken balance {}", user_state.d_token_balance);
+    user_state.liquidity_index = index;
+    println!("user new liq index {}", user_state.liquidity_index);
     } else {
         println!("minting debttoken*************");
         balance_increase =
             (balance.clone().scaled_mul(index.clone())) - (balance.clone().scaled_mul(user_state.variable_borrow_index.clone())); //fetch from user
         println!("balance incr debttoken{}", balance_increase);
-        // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
-        user_state.debt_token_blance += adjusted_amount.clone();
-        reserve_data.asset_borrow += adjusted_amount.clone();
-        println!("new debt balance {}", user_state.debt_token_blance);
-        user_state.variable_borrow_index = index;
-        println!("new debt index {}", user_state.variable_borrow_index);
+    // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
+    user_state.debt_token_blance += adjusted_amount;
+    println!("new debt balance {}", user_state.debt_token_blance);
+    reserve.asset_borrow += adjusted_amount;
+    user_state.variable_borrow_index = index;
+    println!("new debt index {}", user_state.variable_borrow_index);
     }
 
     //same

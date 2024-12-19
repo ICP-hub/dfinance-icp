@@ -153,13 +153,13 @@ export const error = [
       id: 3,
       title: "Stake",
       content:
-        "Deposit your DFinance into the protocol and earn rewards for securing the protocol",
+        "Deposit your DFinance into the protocol and earn rewards for securing the protocol (phase 3)",
     },
     {
       id: 4,
       title: "Vote",
       content:
-        "Participate in DFinance governance and vote on new proposals, new assets, and protocol upgrades",
+        "Participate in DFinance governance and vote on new proposals, new assets, and protocol upgrades Once DFIN token is live",
     },
   ];
 export const TAB_CARD_DATA = [

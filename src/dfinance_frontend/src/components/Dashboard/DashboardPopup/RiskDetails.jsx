@@ -131,7 +131,7 @@ const RiskPopup = ({ onClose, userData , userAccountData }) => {
       : health_Factor_Value <= 1.5
       ? "#fa6e0d"
       : health_Factor_Value <= 2
-      ? "yellow"
+      ? "#ea580c"
       : "orange";
 
   const ltvColor =

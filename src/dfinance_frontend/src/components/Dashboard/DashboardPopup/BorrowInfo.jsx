@@ -41,7 +41,7 @@ const BorrowInfo = ({
 
   const assetRate = getAssetRate(id);
   const totalBorrowedAsset =
-    assetRate && totalBorrowed ? Number(totalBorrowed) / assetRate : 0;
+    assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
   const totalBorrowedCap =
     assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
   const formatValue = (value) => {
@@ -76,14 +76,14 @@ const BorrowInfo = ({
             />
             <p>
               {" "}
-              <span>{formatValue(totalBorrowedAsset)}</span> of{" "}
+              <span>{formatValue(totalBorrowed)}</span> of{" "}
               <span>
                 {borrowCap ? formatNumber(Number(totalBorrowedCap)) : "N/A"}
               </span>
             </p>
             <p className="text-[12px] -mt-3">
               {" "}
-              <span>${formatNumber(Number(totalBorrowed))}</span> of{" "}
+              <span>${formatNumber(Number(totalBorrowedAsset))}</span> of{" "}
               <span>
                 $
                 {borrowCap ? formatNumber(Number(borrowCap.toString())) : "N/A"}

@@ -64,7 +64,7 @@ if (onLoadingChange) {
     }
 
     try {
-      const borrowResult = await backendActor.borrow(asset, scaledAmount);
+      const borrowResult = await backendActor.execute_borrow(asset, scaledAmount);
       
 
       if ("Ok" in borrowResult) {

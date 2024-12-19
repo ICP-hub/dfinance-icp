@@ -194,8 +194,15 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
 // Initialize user if not found
 #[update]
 fn register_user() -> Result<String, String> {
+    ic_cdk::println!("function is register running");
 
-    let user_principal = ic_cdk::caller();
+    let user_principal: Principal = ic_cdk::api::caller();
+    ic_cdk::println!("user principal register = {} ",user_principal);
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err("error in the princiapl".to_string());
+    }
 
     let user_data = mutate_state(|state| {
         let user_index = &mut state.user_profile;
@@ -473,7 +480,7 @@ fn register_user() -> Result<String, String> {
 
 //             let mut usd_amount: Option<u128> = None;
 //             let added_collateral_amount_to_usd =
-//                 get_exchange_rates(user_reserve_data.reserve.clone(), None, added_collateral).await;
+//                 (user_reserve_data.reserve.clone(), None, added_collateral).await;
 
 //             ic_cdk::println!(
 //                 "added collateral amount usd = {:?}",
@@ -947,7 +954,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
             reserve_data.borrow_rate
         );
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
-            reserve_data.borrow_rate, //TODO check if this dividing by 100 is necessary or not
+            reserve_data.borrow_rate.clone(), //TODO check if this dividing by 100 is necessary or not
             reserve_data.last_update_timestamp,
             current_time,
         );
@@ -955,13 +962,13 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
             "Calculated cumulated borrow interest: {} based on borrow rate: {} and and new debt index {}",
             cumulated_borrow_interest,
             reserve_data.borrow_rate, //take it from reserve of asset
-            cumulated_borrow_interest.scaled_mul(reserve_data.debt_index)
+            cumulated_borrow_interest.clone().scaled_mul(reserve_data.debt_index.clone())
         );
 
-        ic_cdk::println!(
-            "Previous variable borrow index: {} for reserve",
-            reserve_data.debt_index
-        );
+        // ic_cdk::println!(
+        //     "Previous variable borrow index: {} for reserve",
+        //     reserve_data.debt_index
+        // );
         return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
     }
 }
@@ -971,6 +978,8 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
+
+    ic_cdk::println!("error in user = {:?}",on_behalf);
     let result = GenericLogic::calculate_user_account_data(on_behalf).await;
     result
 }

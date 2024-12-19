@@ -218,7 +218,7 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
       } else if (asset === "ckUSDT") {
         ledgerActor = ledgerActors.ckUSDT;
       }
-      const sup = await backendActor.supply(
+      const sup = await backendActor.execute_supply(
         asset,
         scaledAmount,
         currentCollateralStatus

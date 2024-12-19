@@ -14,10 +14,7 @@ use ic_cdk::update;
 // -------------------------------------
 #[update]
 pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
-    let params = ExecuteBorrowParams {
-        asset,
-        amount,
-    };
+    let params = ExecuteBorrowParams { asset, amount };
     ic_cdk::println!("Starting execute_borrow with params: {:?}", params);
     //TODO fetch readable state
     // Fetch canister ids, user principal, and amount
@@ -49,7 +46,6 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
 
     update_reserves_price().await;
 
-    
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
@@ -85,20 +81,18 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-
     // TODO replace validate code from backend-three
-    ValidationLogic::validate_borrow(&reserve_data, params.amount, user_principal).await;
+    ValidationLogic::validate_borrow(&reserve_data, params.amount.clone(), user_principal).await;
     ic_cdk::println!("Borrow validated successfully");
     //TODO mint debt tokens here
     // let mut user_reserve = user_reserve(&mut user_data, &params.asset);
     //     ic_cdk::println!("User reserve: {:?}", user_reserve);
 
-
     //     let mut user_reserve_data = match user_reserve.as_mut() {
     //         Some((_, reserve_data)) => reserve_data,
     //         None => return Err("No reserve found for the user".to_string()), // or handle appropriately
     //     };
-        
+
     //     let minted_result = mint_scaled(
     //         reserve,
     //         &mut user_reserve_data,
@@ -122,11 +116,18 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
     // let total_borrow = reserve_data.asset_borrow + params.amount;
     // let total_supplies = reserve_data.asset_supply;
     //TODO keep liq_taken = 0
-    let _ = reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, params.amount, 0u128).await;
-    
-    ic_cdk::println!("Interest rates updated successfully. Total borrowed: {:?}", reserve_data.total_borrowed);
+    let _ = reserve::update_interest_rates(
+        &mut reserve_data,
+        &mut reserve_cache,
+        params.amount.clone(),
+        Nat::from(0u128),
+    )
+    .await;
 
-  
+    ic_cdk::println!(
+        "Interest rates updated successfully. Total borrowed: {:?}",
+        reserve_data.total_borrowed
+    );
 
     // ----------- Update logic here -------------
     let _ = UpdateLogic::update_user_data_borrow(
@@ -134,7 +135,8 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
         &reserve_cache,
         params.clone(),
         &mut reserve_data,
-    ).await;
+    )
+    .await;
     ic_cdk::println!("User data updated successfully");
 
     mutate_state(|state| {
@@ -173,14 +175,16 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
 // ------------ REPAY LOGIC ------------
 // -------------------------------------
 #[update]
-pub async fn execute_repay(asset: String, amount: Nat, on_behalf_of: Option<Principal>) -> Result<Nat, String> {
-
+pub async fn execute_repay(
+    asset: String,
+    amount: Nat,
+    on_behalf_of: Option<Principal>,
+) -> Result<Nat, String> {
     let params = ExecuteRepayParams {
         asset,
         amount,
         on_behalf_of,
     };
-
     ic_cdk::println!("Starting execute_repay with params: {:?}", params);
 
     let (user_principal, liquidator_principal) =
@@ -266,11 +270,16 @@ pub async fn execute_repay(asset: String, amount: Nat, on_behalf_of: Option<Prin
     // let total_supplies = reserve_data.asset_supply;
     // ic_cdk::println!("Total borrow after repay: {:?}", total_borrow);
     // ic_cdk::println!("Total supplies: {:?}", total_supplies);
-    
+
     //TODO call burn function here
 
-    let _ = reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, 0u128, params.amount).await;
-   
+    let _ = reserve::update_interest_rates(
+        &mut reserve_data,
+        &mut reserve_cache,
+        Nat::from(0u128),
+        params.amount.clone(),
+    )
+    .await;
 
     // ----------- Update logic here -------------
     let _ = UpdateLogic::update_user_data_repay(
@@ -281,7 +290,6 @@ pub async fn execute_repay(asset: String, amount: Nat, on_behalf_of: Option<Prin
     )
     .await;
     ic_cdk::println!("User data updated successfully");
-
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;

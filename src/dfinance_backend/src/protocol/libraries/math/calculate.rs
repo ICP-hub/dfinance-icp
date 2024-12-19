@@ -217,7 +217,7 @@ pub async fn get_exchange_rates(
     };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
-            Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai").unwrap(),
+            Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
             1_000_000_000,
@@ -229,7 +229,10 @@ pub async fn get_exchange_rates(
             GetExchangeRateResult::Ok(v) => {
                 let quote = v.rate;
                 let pow = 10usize.pow(v.metadata.decimals);
-                let exchange_rate = Nat::from(quote) * Nat::from(100000000u128) / Nat::from(pow) - Nat::from(100000000u128);
+                ic_cdk::println!("quote = {}",quote);
+                ic_cdk::println!("pow = {}",pow);
+                let exchange_rate =( Nat::from(quote) * Nat::from(100000000u128)) / (Nat::from(pow) - Nat::from(100000000u128));
+                ic_cdk::println!("exchange rate = {}", exchange_rate);
 
                 let total_value = (Nat::from(quote) * amount) / (Nat::from(pow) - Nat::from(100000000u128));
 

@@ -60,6 +60,9 @@ impl GenericLogic {
     pub async fn calculate_user_account_data(
         on_behalf: Option<Principal>,
     ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
+
+        ic_cdk::println!("to check the on behalf = {:?}",  on_behalf);
+        
         let user_principal = match on_behalf {
             // If `on_behalf` is Some, we parse the Principal from the string
             Some(principal_str) => {

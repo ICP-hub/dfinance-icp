@@ -271,11 +271,10 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         return Err(Error::EmptyAsset);
     }
 
-    if asset.len() != 6 && asset.len() != 7 {
-        ic_cdk::println!("Asset must have a length of 6 or 7 characters");
+    if asset.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
-
     // Validate amount: must be non-negative and non-empty
     if amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
@@ -289,8 +288,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
-
-    ic_cdk::println!("user id {:?}", user_principal.to_string());
+    ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
@@ -300,8 +298,8 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             ic_cdk::println!("User found");
             data
         }
-        Err(e) => {
-            return Err(Error::InvalidUser);
+        Err(_) => {
+            return Err(Error::UserNotFound);
         }
     };
 
@@ -316,24 +314,34 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-    let wallet_value = get_balance(ledger_canister_id, platform_principal).await?;
+    let balance_result = get_balance(ledger_canister_id, platform_principal).await;
+    //ic_cdk::println!("balance_nat retrieved = {:?}", balance_nat);
+   
+    let balance = match balance_result{
+        Ok(bal) => {
+            bal
+        }
+        Err(_) => {
+            return Err(Error::ErrorGetBalance);
+        }
+    };
 
-    ic_cdk::println!("balance of wallet = {}", wallet_value);
+    ic_cdk::println!("balance of wallet = {}", balance);
 
     // let youy = "message is going correctly".to_string();
     // send_email_via_sendgrid(youy).await;
-    if amount > wallet_value {
+    if amount > balance {
         ic_cdk::println!("wallet balance is low");
         send_admin_notifications("initial").await;
         return Err(Error::LowWalletBalance);
     }
 
-    if (wallet_value.clone() - amount.clone()) == Nat::from(0u128) {
+    if (balance.clone() - amount.clone()) == Nat::from(0u128) {
         ic_cdk::println!("wallet balance is low");
         send_admin_notifications("mid").await;
     }
 
-    if (wallet_value.clone() - amount.clone())
+    if (balance.clone() - amount.clone())
         <= Nat::from(1000u128).scaled_mul(Nat::from(100000000u128))
     {
         ic_cdk::println!("wallet balance is low");
@@ -348,18 +356,19 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     match get_cached_exchange_rate(asset.clone()) {
         Ok(price_cache) => {
+            // Fetch the specific CachedPrice for the asset from the PriceCache
             if let Some(cached_price) = price_cache.cache.get(&asset) {
                 let amount = cached_price.price.clone(); // Access the `price` field
                 rate = Some(amount);
                 ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
             } else {
                 ic_cdk::println!("No cached price found for {}", asset);
-                rate = None;
+                rate = None; // Explicitly set rate to None if the asset is not in the cache
             }
         }
         Err(err) => {
             ic_cdk::println!("Error fetching exchange rate for {}: {}", asset, err);
-            rate = None; 
+            rate = None; // Explicitly set rate to None in case of an error
         }
     }
 
@@ -372,8 +381,9 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
 
+    ic_cdk::println!("outside the if statment");
     if let Some((_, user_reserve_data)) = user_reserve {
-       
+        ic_cdk::println!("inside if statement");
         ic_cdk::println!(
             "faucet user_reserve_data.faucet_limit = {}",
             user_reserve_data.faucet_limit
@@ -390,7 +400,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             return Err(Error::AmountTooMuch);
         }
         user_reserve_data.faucet_usage += usd_amount;
-        ic_cdk::println!("new faucet usage = {}", user_reserve_data.faucet_usage);
+        ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
     } else {
         let mut new_reserve = UserReserveData {
             reserve: asset.clone(),
@@ -410,7 +420,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         }
 
         new_reserve.faucet_usage += usd_amount;
-        ic_cdk::println!("new faucet usage = {}", new_reserve.faucet_usage);
+        ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
 
         if let Some(ref mut reserves) = user_data.reserves {
             reserves.push((asset.clone(), new_reserve.clone()));
@@ -426,15 +436,24 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     ic_cdk::println!("user data before submit = {:?}", user_data);
 
-
+    // // Fetched canister ids, user principal and amount
+    // let ledger_canister_id = mutate_state(|state| {
+    //     let reserve_list = &state.reserve_list;
+    //     reserve_list
+    //         .get(&asset.to_string().clone())
+    //         .map(|principal| principal.clone())
+    //         .ok_or_else(|| format!("No canister ID found for asset: {}", asset))
+    // })?;
+    // ic_cdk::println!("ledger id {:?}", ledger_canister_id.to_string());
 
     // Validate ledger canister ID
     // if ledger_canister_id.to_text().trim().is_empty() {
     //     return Err("Ledger canister ID is invalid.".to_string());
     // }
 
-    // TODO Check if the user has already claimed within a certain period --- need to use.
-    //TODO Check if the platform has sufficient balance -- need to use.
+    // Need to ask from anshika -- > should i implement these two comments for the validation purpose.
+    // Check if the user has already claimed within a certain period --- need to use.
+    // Check if the platform has sufficient balance -- need to use.
 
     // Save the updated user data back to state
     mutate_state(|state| {

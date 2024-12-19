@@ -175,7 +175,7 @@ const WithdrawPopup = ({
 
      
 
-      const withdrawResult = await backendActor.withdraw(
+      const withdrawResult = await backendActor.execute_withdraw(
         asset,
         scaledAmount,
         [],

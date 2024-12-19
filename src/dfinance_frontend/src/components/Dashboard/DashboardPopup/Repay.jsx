@@ -225,7 +225,7 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
      
       const scaledAmount = amountAsNat64;
 
-      const repayResult = await backendActor.repay(asset, scaledAmount, [])
+      const repayResult = await backendActor.execute_repay(asset, scaledAmount, [])
 
       if ("Ok" in repayResult) {
         trackEvent(

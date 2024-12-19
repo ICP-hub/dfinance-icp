@@ -44,7 +44,8 @@ pub enum Error {
     InvalidMintAmount,
     ErrorParsingPrincipal,
     NormalizedSupply,
-    NormalizedDebt
+    NormalizedDebt,
+    ErrorGetBalance,
 }
 
 impl Error {
@@ -91,7 +92,8 @@ impl Error {
             Error::InvalidMintAmount => "Invalid mint amount",
             Error::ErrorParsingPrincipal => "Failed to parse Principal",
             Error::NormalizedSupply => "Error from the normalized supply function",
-            Error::NormalizedDebt => "Error from the normalized debt function"
+            Error::NormalizedDebt => "Error from the normalized debt function",
+            Error::ErrorGetBalance => "Getting error in get balance function"
         }
     }
 }

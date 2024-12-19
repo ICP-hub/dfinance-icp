@@ -1,3 +1,4 @@
+use crate::declarations::assets::ExecuteRepayParams;
 use crate::protocol::libraries::logic::borrow::execute_repay;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::{
@@ -132,7 +133,6 @@ pub async fn execute_liquidation(
     // ValidationLogic::validate_liquidation(asset_name, amount as f64, liquidator_principal).await;
     // ic_cdk::println!("Borrow validated successfully");
 
-    // Repaying debt
     let repay_response = execute_repay(asset.clone(), amount, Some(user_principal)).await;
 
     match repay_response {
@@ -173,21 +173,21 @@ pub async fn execute_liquidation(
             ic_cdk::println!(
                 "Dtoken Asset transfer from backend to liquidator executed successfully"
             );
-            let _ = UpdateLogic::update_user_data_withdraw(
-                user_principal,
-                &reserve_cache,
-                withdraw_param,
-                &reserve_data,
-            )
-            .await;
-            let _ = UpdateLogic::update_user_data_supply(
-                liquidator_principal,
-                &reserve_cache,
-                supply_param,
-                &mut reserve_data,
-                //usd_amount,
-            )
-            .await;
+            // let _ = UpdateLogic::update_user_data_withdraw(
+            //     user_principal,
+            //     &reserve_cache,
+            //     withdraw_param,
+            //     &reserve_data,
+            // )
+            // .await;
+            // let _ = UpdateLogic::update_user_data_supply(
+            //     liquidator_principal,
+            //     &reserve_cache,
+            //     supply_param,
+            //     &mut reserve_data,
+            //     //usd_amount,
+            // )
+            // .await;
             Ok(balance)
         }
         Err(err) => {

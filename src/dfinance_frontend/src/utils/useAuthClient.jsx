@@ -210,7 +210,9 @@ export const useAuthClient = (options = defaultOptions) => {
     try {
       const identity = authClient.getIdentity();
       if (!identity.getPrincipal().isAnonymous()) {
-        const result = await backendActor.register_user(user);
+        console.log("user prin = ",user.toString())
+        const result = await backendActor.register_user();
+        console.log("result = ",result);
        
         // if (result.Ok && result.Ok === "User available" && isAuthenticated) {
         //   const res = await backendActor.login();

@@ -117,7 +117,7 @@ impl UpdateLogic {
         } else {
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                supply_rate: reserve.current_liquidity_rate,
+                supply_rate: reserve.current_liquidity_rate.clone(),
               
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
@@ -462,11 +462,11 @@ impl UpdateLogic {
         };
 
         if let Some((_, reserve_data)) = user_reserve {
-                reserve_data.supply_rate = reserve.current_liquidity_rate;
-                reserve_data.borrow_rate = reserve.borrow_rate;
+                reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
+                reserve_data.borrow_rate = reserve.borrow_rate.clone();
                // reserve_data.state = update_user_state.clone();
                 reserve_data.last_update_timestamp = reserve.last_update_timestamp;
-                if reserve_data.asset_borrow == 0 {
+                if reserve_data.asset_borrow == Nat::from(0u128) {
                     reserve_data.is_borrowed = false;
                     // reserve_data.variable_borrow_index = 0;
                     if !reserve_data.is_collateral {

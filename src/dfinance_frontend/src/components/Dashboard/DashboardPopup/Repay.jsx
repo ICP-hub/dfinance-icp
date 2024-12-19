@@ -153,7 +153,6 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
     const totalAmount = scaledAmount + transferfee;
 
     try {
-
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
         memo: [],
@@ -167,21 +166,36 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
           subaccount: [],
         },
       });
-      setIsApproved(true);
-     
-
-      toast.success(`Approval successful!`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+    
+      // Handle success (Ok case)
+      if (approval?.Ok) {
+        setIsApproved(true);
+    
+        toast.success(`Approval successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (approval?.Err) {
+        // Handle error (Err case)
+        toast.error(`Error: ${approval.Err || "Approval failed!"}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
     } catch (error) {
-
+      // Catch any other unexpected errors
       toast.error(`Error: ${error.message || "Approval failed!"}`, {
         className: "custom-toast",
         position: "top-center",
@@ -193,6 +207,7 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
         progress: undefined,
       });
     }
+    
   };
 
   useEffect(() => {

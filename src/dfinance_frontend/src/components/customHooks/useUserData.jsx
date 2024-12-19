@@ -9,7 +9,7 @@ const useUserData = () => {
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
   const [error, setError] = useState(null);
-
+  const principalArray = principal ? principal.split('') : [];
   const getUserData = async (user) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");

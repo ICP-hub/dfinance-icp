@@ -27,8 +27,8 @@ const UserInformationPopup = ({
   mappedItem,
   principal,
   userAccountData,
-  asset_supply,
-    asset_borrow,
+  assetSupply,
+  assetBorrow,
 }) => {
   const { backendActor, principal: currentUserPrincipal } = useAuth();
 
@@ -80,16 +80,15 @@ const UserInformationPopup = ({
 
  
 
-  const getAssetSupplyValue = (asset) => {
-    if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]) / 1e8;
-      return supplyValue;
+  const getAssetSupplyValue = (principal, asset) => {
+    if (assetSupply[principal]?.[asset] !== undefined) {
+        return Number(assetSupply[principal][asset]) / 1e8;
     }
-    return `no assets suplied`;
-  };
+    return 0; // Default value if no data exists
+};
   const getAssetBorrowValue = (asset) => {
-    if (asset_supply[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+    if (assetBorrow[asset] !== undefined) {
+      const borrowValue = Number(assetBorrow[asset]) / 1e8;
       return borrowValue; // Format as a number with 2 decimals
     }
     return `no assets borrowed`;
@@ -888,7 +887,8 @@ const UserInformationPopup = ({
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[0];
                     const assetSupply =
-                    Number(getAssetSupplyValue(assetName))
+                    Number(getAssetSupplyValue(mappedItem.principal,assetName))
+                    console.log("assetSupply",assetSupply)
                     const assetBorrow =
                       Number(item?.[1]?.asset_borrow || 0n) / 100000000;
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);

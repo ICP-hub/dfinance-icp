@@ -48,10 +48,15 @@ import marketPageLight from "../public/Helpers/market-pageLight.png";
 import marketeNavbarDetailsLight from "../public/Helpers/market-page-detailsLight.png";
 import debtStatusImageLight from "../public/Helpers/get-debt-status-buttonLight.png";
 import liquidationTableLight from "../public/Helpers/liquidation-tableLight.png";
+
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
+  const isMobile = window.innerWidth <= 1115;
+  const isMobile2 = window.innerWidth <= 640;
+
+  const targetElement = isMobile ? "body" : "#dashboard-assets-to-supply";
 
   let TRACKING_ID = "G-EVCJPRHQYX";
   const { filteredItems, loading } = useAssetData();
@@ -80,7 +85,7 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-               src={theme === "dark" ? dFinanceHomePage : dfinanceHomePageLight}
+              src={theme === "dark" ? dFinanceHomePage : dfinanceHomePageLight}
               alt="dFinanceHomePage"
               className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
             />
@@ -89,7 +94,7 @@ export default function App() {
         placement: "center",
       },
       {
-        target: "#faucet-navbar",
+        target: "body",
         content: (
           <div className="text-justify relative flex flex-col justify-center">
             <h1 className="text-[22px] font-bold mb-3">Faucet</h1>
@@ -109,7 +114,7 @@ export default function App() {
         placement: "center",
       },
       {
-        target: "#faucet-button",
+        target: "body",
         content: (
           <div className="text-justify relative flex flex-col">
             <p className="mb-4">
@@ -137,7 +142,7 @@ export default function App() {
         placement: "center",
       },
       {
-        target: "#dashboard-guide",
+        target: "body",
         content: (
           <div className="relative flex flex-col text-justify">
             <h1 className="text-[22px] font-bold mb-3">Dashboard</h1>
@@ -170,7 +175,11 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-               src={theme === "dark" ? dashboardAssetsToSupplyButton : dashboardAssetsToSupplyButtonLight}
+              src={
+                theme === "dark"
+                  ? dashboardAssetsToSupplyButton
+                  : dashboardAssetsToSupplyButtonLight
+              }
               alt="dashboardAssetsToSupplyButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -181,13 +190,17 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? assetsToSupplyPopup : assetsToSupplyPopupLight}
+              src={
+                theme === "dark"
+                  ? assetsToSupplyPopup
+                  : assetsToSupplyPopupLight
+              }
               alt="assetsToSupplyPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "right",
+        placement: isMobile ? "center" : "right",
       },
       {
         target: "#dashboard-assets-to-borrow",
@@ -199,7 +212,11 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? dashboardAssetsToBorrowButton : dashboardAssetsToBorrowButtonLight}
+              src={
+                theme === "dark"
+                  ? dashboardAssetsToBorrowButton
+                  : dashboardAssetsToBorrowButtonLight
+              }
               alt="dashboardAssetsToBorrowButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -209,13 +226,17 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? assetsToBorrowPopup : assetsToBorrowPopupLight}
+              src={
+                theme === "dark"
+                  ? assetsToBorrowPopup
+                  : assetsToBorrowPopupLight
+              }
               alt="assetsToBorrowPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "left",
+        placement: isMobile ? "center" : "left",
       },
       {
         target: "#your-borrow",
@@ -227,7 +248,11 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? yourBorrowRepayButton : yourBorrowRepayButtonLight}
+              src={
+                theme === "dark"
+                  ? yourBorrowRepayButton
+                  : yourBorrowRepayButtonLight
+              }
               alt="yourBorrowRepayButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -238,13 +263,17 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? yourBorrowRepayPopup : yourBorrowRepayPopupLight}
+              src={
+                theme === "dark"
+                  ? yourBorrowRepayPopup
+                  : yourBorrowRepayPopupLight
+              }
               alt="yourBorrowRepayPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "left",
+        placement: isMobile ? "center" : "left",
       },
       {
         target: "#your-supplies",
@@ -256,7 +285,11 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? yourSuppliesWithdrawButton : yourSuppliesWithdrawButtonLight}
+              src={
+                theme === "dark"
+                  ? yourSuppliesWithdrawButton
+                  : yourSuppliesWithdrawButtonLight
+              }
               alt="yourSuppliesWithdrawButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -266,13 +299,17 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? yourSuppliesWithdrawPopup : yourSuppliesWithdrawPopupLight}
+              src={
+                theme === "dark"
+                  ? yourSuppliesWithdrawPopup
+                  : yourSuppliesWithdrawPopupLight
+              }
               alt="yourSuppliesWithdrawPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "right",
+        placement: isMobile ? "center" : "right",
       },
       {
         target: "#dashboard-nav-details",
@@ -284,7 +321,9 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? dashboarNavDetails : dashboarNavDetailsLight}
+              src={
+                theme === "dark" ? dashboarNavDetails : dashboarNavDetailsLight
+              }
               alt="dashboarNavDetails"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -301,7 +340,7 @@ export default function App() {
             />
           </div>
         ),
-        placement: "right",
+        placement: isMobile ? "center" : "right",
       },
       {
         target: "#market-page1",
@@ -353,13 +392,17 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? marketeNavbarDetails : marketeNavbarDetailsLight}
+              src={
+                theme === "dark"
+                  ? marketeNavbarDetails
+                  : marketeNavbarDetailsLight
+              }
               alt="marketeNavbarDetails"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "bottom",
+        placement: isMobile ? "center" : "bottom",
       },
       {
         target: "#footer-liquidation",
@@ -384,7 +427,7 @@ export default function App() {
             />
           </div>
         ),
-        placement: "top",
+        placement: isMobile ? "center" : "top",
       },
     ],
     styles: {
@@ -400,7 +443,7 @@ export default function App() {
         borderRadius: "12px",
         fontFamily: "'Poppins', sans-serif",
         fontSize: "13px",
-        border: '2px solid #525355',
+        border: "2px solid #525355",
       },
       buttonNext: {
         backgroundImage: "linear-gradient(to right, #4659CF, #2A1F9D)",
@@ -539,15 +582,15 @@ export default function App() {
   const handleJoyrideCallback = (data) => {
     const { status } = data;
 
-    if (status === "finished" || status === "skipped") {
-      if (isAuthenticated && principal) {
-        const storedData = localStorage.getItem("userGuideData");
-        const parsedData = storedData ? JSON.parse(storedData) : {};
-        parsedData[principal] = true;
-        localStorage.setItem("userGuideData", JSON.stringify(parsedData));
-        setJoyrideState((prevState) => ({ ...prevState, run: false }));
-      }
-    }
+    // if (status === "finished" || status === "skipped") {
+    //   if (isAuthenticated && principal) {
+    //     const storedData = localStorage.getItem("userGuideData");
+    //     const parsedData = storedData ? JSON.parse(storedData) : {};
+    //     parsedData[principal] = true;
+    //     localStorage.setItem("userGuideData", JSON.stringify(parsedData));
+    //     setJoyrideState((prevState) => ({ ...prevState, run: false }));
+    //   }
+    // }
 
     if (data.action === "next" && data.index === 0) {
       navigate("/Faucet");

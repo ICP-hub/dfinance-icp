@@ -440,11 +440,6 @@ export default function Navbar({ isHomeNav }) {
                             <NavLink
                               key={index}
                               to={link.route}
-                              id={
-                                link.title === "Dashboard"
-                                  ? "dashboard-guide"
-                                  : undefined
-                              }
                               className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
                             >
                               {link.title}
@@ -456,11 +451,6 @@ export default function Navbar({ isHomeNav }) {
                               <NavLink
                                 to={link.route}
                                 className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                                id={
-                                  link.title === "Faucet"
-                                    ? "faucet-navbar"
-                                    : undefined
-                                }
                               >
                                 {link.title}
                               </NavLink>

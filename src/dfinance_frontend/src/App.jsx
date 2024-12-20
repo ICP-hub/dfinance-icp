@@ -48,6 +48,20 @@ import marketPageLight from "../public/Helpers/market-pageLight.png";
 import marketeNavbarDetailsLight from "../public/Helpers/market-page-detailsLight.png";
 import debtStatusImageLight from "../public/Helpers/get-debt-status-buttonLight.png";
 import liquidationTableLight from "../public/Helpers/liquidation-tableLight.png";
+import liquidationButton from "../public/Helpers/Liquidate-button.png";
+import liquidationButtonLight from "../public/Helpers/Liquidate-buttonLight.png";
+import userInformation from "../public/Helpers/userInformation.png";
+import userInformationLight from "../public/Helpers/userInformationLight.png";
+import DebtInformation from "../public/Helpers/DebtInfomation.png";
+import DebtInformationLight  from "../public/Helpers/DebtInformationLight.png";
+import CollateralInformation from "../public/Helpers/CollateralInformation.png";
+import CollateralInformationLight from "../public/Helpers/CollateralInformationLight.png";
+import WarningPopup from "../public/Helpers/WarningPopup.png";
+import WarningPopupLight from "../public/Helpers/WarningPopupLight.png";
+import LiquidationSuccessfull  from "../public/Helpers/Liquidation Successfull.png";
+import LiquidationSuccessfullLight  from "../public/Helpers/LiquidationSuccessfullLight.png";
+import CollateralInformationCall from "../public/Helpers/colateralInformationCall.png";
+import CollateralInformationCallLight from "../public/Helpers/colateralInformationCallLight.png";
 
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
@@ -410,6 +424,18 @@ export default function App() {
           <div className="relative flex flex-col text-justify">
             <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
             <p className="mb-4">
+            Click on the 'Liquidation' button at the bottom of the page to navigate to the liquidation page.
+            </p>
+          </div>
+        ),
+        placement: isMobile ? "center" : "top",
+      },
+      {
+        target: "#liquidation",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
               In the "Liquidation" section, click on the "Get Debt Status
               Button" to see the liquidation List (if available).
             </p>
@@ -419,16 +445,165 @@ export default function App() {
               alt="Faucet Button"
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
+            
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation1",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            Here it will show  the list of users with a health factor less than 1
+            </p>
             <img
               loading="lazy"
               src={theme === "dark" ? liquidationTable : liquidationTableLight}
+              alt="Faucet Popup"
+              className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+             <p className="mb-4">
+             Click the 'Liquidate' button in the footer of the 'Liquidation' list to view debt details and open the user information popup.
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? liquidationButton : liquidationButtonLight}
+              alt="Faucet Button"
+              className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+            
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation1",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            This will now open the 'User Information' popup, displaying the user's principal and health factor.
+            </p>
+            
+            <img
+              loading="lazy"
+              src={theme === "dark" ? userInformation : userInformationLight}
               alt="Faucet Popup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: isMobile ? "center" : "top",
+        placement: "center",
       },
+      {
+        target: "#liquidation2",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            Now select the debt asset to view the repayment details.
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? DebtInformation : DebtInformationLight}
+              alt="Faucet Button"
+              className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            "Now, select the collateral asset to view the details and rewards given to the liquidator based on the selected asset, and then click on 'Approve Liquidation' to proceed with the call."
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? CollateralInformation : CollateralInformationLight}
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            "Click on 'Call Liquidation' to proceed with the call."
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? CollateralInformationCall : CollateralInformationCallLight}
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            A warning popup will appear—click 'YES, Call Liquidation' to proceed, then click 'Call Liquidation' to complete the process."
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? WarningPopup : WarningPopupLight}
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+            Liquidation successful. You’re done!
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? LiquidationSuccessfull : LiquidationSuccessfullLight}
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">End of Tour</h1>
+            <p className="mb-4">
+              This is the end of your tour. You're all set to explore the site and start using all the features!
+            </p>
+            <div className="text-center mb-4">
+              <span className="text-green-500 text-[40px]">&#10003;</span> {/* Checkmark symbol */}
+            </div>
+          </div>
+        ),
+        placement: "center",
+      }
+      
+      
     ],
     styles: {
       options: {
@@ -582,15 +757,15 @@ export default function App() {
   const handleJoyrideCallback = (data) => {
     const { status } = data;
 
-    // if (status === "finished" || status === "skipped") {
-    //   if (isAuthenticated && principal) {
-    //     const storedData = localStorage.getItem("userGuideData");
-    //     const parsedData = storedData ? JSON.parse(storedData) : {};
-    //     parsedData[principal] = true;
-    //     localStorage.setItem("userGuideData", JSON.stringify(parsedData));
-    //     setJoyrideState((prevState) => ({ ...prevState, run: false }));
-    //   }
-    // }
+    if (status === "finished" || status === "skipped") {
+      if (isAuthenticated && principal) {
+        const storedData = localStorage.getItem("userGuideData");
+        const parsedData = storedData ? JSON.parse(storedData) : {};
+        parsedData[principal] = true;
+        localStorage.setItem("userGuideData", JSON.stringify(parsedData));
+        setJoyrideState((prevState) => ({ ...prevState, run: false }));
+      }
+    }
 
     if (data.action === "next" && data.index === 0) {
       navigate("/Faucet");
@@ -600,6 +775,13 @@ export default function App() {
     }
     if (data.action === "next" && data.index === 9) {
       navigate("/market");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+    if (data.action === "next" && data.index === 12) {
+      navigate("/liquidate");
       window.scrollTo({
         top: 0,
         behavior: "smooth",

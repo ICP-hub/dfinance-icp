@@ -428,7 +428,7 @@ export default function App() {
             </p>
           </div>
         ),
-        placement: isMobile ? "center" : "top",
+        placement: isMobile ? "center" : "center",
       },
       {
         target: "#liquidation",
@@ -465,7 +465,7 @@ export default function App() {
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
              <p className="mb-4">
-             Click the 'Liquidate' button in the footer of the 'Liquidation' list to view debt details and open the user information popup.
+             Click the 'Liquidate' button in the 'Liquidation' list to view debt details and open the user information popup.
             </p>
             <img
               loading="lazy"
@@ -607,7 +607,7 @@ export default function App() {
     ],
     styles: {
       options: {
-        arrowColor: "#252347",
+        arrowColor: joyRideBackground,
         zIndex: 10000000,
         primaryColor: "#00bfff",
         position: "absolute",
@@ -781,6 +781,13 @@ export default function App() {
       });
     }
     if (data.action === "next" && data.index === 12) {
+      navigate("/liquidate");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+    if (data.action === "next" && data.index === 13) {
       navigate("/liquidate");
       window.scrollTo({
         top: 0,

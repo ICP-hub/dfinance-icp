@@ -1,11 +1,12 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
+use crate::constants::errors::Error;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::{get_exchange_rates, update_reserves_price};
+use crate::protocol::libraries::math::calculate::update_reserves_price;
 use candid::{Nat, Principal};
 use ic_cdk::update;
 
@@ -13,55 +14,79 @@ use ic_cdk::update;
 // ----------- BORROW LOGIC ------------
 // -------------------------------------
 #[update]
-pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
-    let params = ExecuteBorrowParams { asset, amount };
-    ic_cdk::println!("Starting execute_borrow with params: {:?}", params);
-    //TODO fetch readable state
-    // Fetch canister ids, user principal, and amount
-    let ledger_canister_id = mutate_state(|state| {
-        let reserve_list = &state.reserve_list;
-        reserve_list
-            .get(&params.asset.to_string().clone())
-            .map(|principal| principal.clone())
-            .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
-    })?;
+pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, Error> {
+    if asset.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
+
+    if asset.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if amount <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
 
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {:?}", user_principal);
 
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
+    if user_principal != ic_cdk::caller() {
+        return Err(Error::InvalidUser);
+    }
+
+    let params = ExecuteBorrowParams { asset, amount };
+    ic_cdk::println!("Starting execute_borrow with params: {:?}", params);
+
+    // TODO: look this error propogation.
+    let ledger_canister_id = read_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&params.asset.to_string().clone())
+            .map(|principal| principal.clone())
+            .ok_or_else(|| Error::NoCanisterIdFound)
+    })?;
+
+    // Ask: do we need validation in this.
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
-    //TODO fetch readable state
-    let debttoken_canister = mutate_state(|state| {
-        let asset_index = &mut state.asset_index;
+
+    // TODO: look this error propogation.
+    let debttoken_canister = read_state(|state| {
+        let asset_index = &state.asset_index;
         asset_index
             .get(&params.asset.to_string().clone())
             .and_then(|reserve_data| reserve_data.debt_token_canister.clone())
-            .ok_or_else(|| format!("No debt_token_canister found for asset: {}", params.asset))
+            .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
     ic_cdk::println!("Debt canister ID: {:?}", debttoken_canister);
 
-    //let amount_nat = Nat::from(params.amount);
-    //ic_cdk::println!("Borrow amount in Nat: {:?}", amount_nat);
-
-    update_reserves_price().await;
+    if let Err(e) = update_reserves_price().await {
+        ic_cdk::println!("Failed to update reserves price: {:?}", e);
+        return Err(e);
+    }
 
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
             .get(&params.asset.to_string())
             .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
+            .ok_or_else(|| Error::NoReserveDataFound)
     });
 
-    // Unwrap the Result to get ReserveData
     let mut reserve_data = match reserve_data_result {
         Ok(data) => {
             ic_cdk::println!("Reserve data found for asset: {:?}", data);
             data
         }
         Err(e) => {
-            ic_cdk::println!("Error: {}", e);
             return Err(e);
         }
     };
@@ -81,8 +106,10 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-    // TODO replace validate code from backend-three
-    ValidationLogic::validate_borrow(&reserve_data, params.amount.clone(), user_principal).await;
+    if let Err(e) = ValidationLogic::validate_borrow(&reserve_data, params.amount.clone(), user_principal).await {
+        ic_cdk::println!("Borrow validation failed: {:?}", e);
+        return Err(e);
+    }
     ic_cdk::println!("Borrow validated successfully");
     //TODO mint debt tokens here
     // let mut user_reserve = user_reserve(&mut user_data, &params.asset);
@@ -116,13 +143,17 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
     // let total_borrow = reserve_data.asset_borrow + params.amount;
     // let total_supplies = reserve_data.asset_supply;
     //TODO keep liq_taken = 0
-    let _ = reserve::update_interest_rates(
+
+    if let Err(e) = reserve::update_interest_rates(
         &mut reserve_data,
         &mut reserve_cache,
         params.amount.clone(),
         Nat::from(0u128),
     )
-    .await;
+    .await {
+        ic_cdk::println!("Failed to update interest rates: {:?}", e);
+        return Err(e);
+    }
 
     ic_cdk::println!(
         "Interest rates updated successfully. Total borrowed: {:?}",
@@ -130,13 +161,16 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
     );
 
     // ----------- Update logic here -------------
-    let _ = UpdateLogic::update_user_data_borrow(
+    if let Err(e) = UpdateLogic::update_user_data_borrow(
         user_principal,
         &reserve_cache,
         params.clone(),
         &mut reserve_data,
     )
-    .await;
+    .await {
+        ic_cdk::println!("Failed to update user data: {:?}", e);
+        return Err(e);
+    }
     ic_cdk::println!("User data updated successfully");
 
     mutate_state(|state| {
@@ -161,12 +195,9 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, String> {
             Ok(new_balance)
         }
         Err(e) => {
-            //TODO burn debttoken
-            ic_cdk::println!("Asset transfer failed, burned debt token. Error: {:?}", e);
-            Err(format!(
-                "Asset transfer failed, burned debt token. Error: {:?}",
-                e
-            ))
+            //TODO burn debttoken back to platform
+            ic_cdk::println!("Asset transfer failed, mint debt token. Error: {:?}", e);
+            return Err(Error::ErrorMintDebtTokens);
         }
     }
 }
@@ -179,7 +210,29 @@ pub async fn execute_repay(
     asset: String,
     amount: Nat,
     on_behalf_of: Option<Principal>,
-) -> Result<Nat, String> {
+) -> Result<Nat, Error> {
+    if asset.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
+
+    if asset.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if amount <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    if let Some(principal) = on_behalf_of {
+        if principal == Principal::anonymous() {
+            ic_cdk::println!("Anonymous principals are not allowed");
+            return Err(Error::InvalidPrincipal);
+        }
+    }
+
     let params = ExecuteRepayParams {
         asset,
         amount,
@@ -191,22 +244,40 @@ pub async fn execute_repay(
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
             let user_principal = on_behalf_of;
             let liquidator_principal = ic_cdk::caller();
+            if liquidator_principal == Principal::anonymous() {
+                ic_cdk::println!("Anonymous principals are not allowed");
+                return Err(Error::InvalidPrincipal);
+            }
+            if liquidator_principal != ic_cdk::caller() {
+                return Err(Error::InvalidUser);
+            }
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();
+            if user_principal == Principal::anonymous() {
+                ic_cdk::println!("Anonymous principals are not allowed");
+                return Err(Error::InvalidPrincipal);
+            }
+            if user_principal != ic_cdk::caller() {
+                return Err(Error::InvalidUser);
+            }
             ic_cdk::println!("Caller is: {:?}", user_principal.to_string());
             (user_principal, None)
         };
-    //TODO fetch readable state
-    let ledger_canister_id = mutate_state(|state| {
+
+        //TODO: look this error propogation.
+    let ledger_canister_id = read_state(|state| {
         let reserve_list = &state.reserve_list;
         reserve_list
             .get(&params.asset.to_string().clone())
             .map(|principal| principal.clone())
-            .ok_or_else(|| format!("No canister ID found for asset: {}", params.asset))
+            .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
-    update_reserves_price().await; // check.
+    if let Err(e) = update_reserves_price().await {
+        ic_cdk::println!("Failed to update reserves price: {:?}", e);
+        return Err(e);
+    }
 
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
@@ -223,13 +294,12 @@ pub async fn execute_repay(
     };
     ic_cdk::println!("Transfer from principal: {:?}", transfer_from_principal);
 
-    // Reads the reserve data from the asset
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
             .get(&params.asset.to_string().clone())
             .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
+            .ok_or_else(|| Error::NoReserveDataFound)
     });
 
     let mut reserve_data = match reserve_data_result {
@@ -238,7 +308,6 @@ pub async fn execute_repay(
             data
         }
         Err(e) => {
-            ic_cdk::println!("Error: {}", e);
             return Err(e);
         }
     };
@@ -256,39 +325,43 @@ pub async fn execute_repay(
     ic_cdk::println!("Reserve state updated successfully");
 
     // Validates repay using the reserve_data
-    let _ = ValidationLogic::validate_repay(
+    if let Err(e) = ValidationLogic::validate_repay(
         &reserve_data,
         params.amount.clone(),
         user_principal,
         ledger_canister_id,
     )
-    .await;
+    .await {
+        ic_cdk::println!("Repay validation failed: {:?}", e);
+        return Err(e);
+    }
     ic_cdk::println!("Repay validated successfully");
     ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
-    // let total_borrow = reserve_data.asset_borrow - params.amount;
-    // let total_supplies = reserve_data.asset_supply;
-    // ic_cdk::println!("Total borrow after repay: {:?}", total_borrow);
-    // ic_cdk::println!("Total supplies: {:?}", total_supplies);
-
     //TODO call burn function here
-
-    let _ = reserve::update_interest_rates(
+    if let Err(e) = reserve::update_interest_rates(
         &mut reserve_data,
         &mut reserve_cache,
         Nat::from(0u128),
         params.amount.clone(),
     )
-    .await;
+    .await {
+        ic_cdk::println!("Failed to update interest rates: {:?}", e);
+        return Err(e);
+    }
 
+    // TODO: proper error handling to do.
     // ----------- Update logic here -------------
-    let _ = UpdateLogic::update_user_data_repay(
+    if let Err(e) = UpdateLogic::update_user_data_repay(
         user_principal,
         &reserve_cache,
         params.clone(),
         &mut reserve_data,
     )
-    .await;
+    .await {
+        ic_cdk::println!("Failed to update user data: {:?}", e);
+        return Err(e);
+    }
     ic_cdk::println!("User data updated successfully");
 
     mutate_state(|state| {
@@ -315,10 +388,7 @@ pub async fn execute_repay(
         Err(e) => {
             //TODO mint debttoken back to user
             ic_cdk::println!("Asset transfer failed, error: {:?}", e);
-            Err(format!(
-                "Asset transfer failed, minted debt token. Error: {:?}",
-                e
-            ))
+            return Err(Error::ErrorBurnDebtTokens);
         }
     }
 }

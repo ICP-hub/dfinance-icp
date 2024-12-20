@@ -1,4 +1,4 @@
-use std::ops::{Div, Mul};
+use std::ops::Mul;
 
 use candid::Nat;
 
@@ -6,8 +6,7 @@ use candid::Nat;
 fn get_scaling_value() -> Nat {
     Nat::from(100000000u128)
 }
-// TODO: ask this from bhanu
-//const SCALING_FACTOR: Nat = Nat::from(100_000_000u128); // 10^8
+
 const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
 //leap year calculation left 
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
@@ -79,7 +78,6 @@ pub fn calculate_compounded_interest_with_current_timestamp(
 pub trait ScalingMath {
     fn scaled_mul(self, other: Self) -> Self;
     fn scaled_div(self, other: Self) -> Self;
-    //fn scaled_to_float(self) -> f64;
     fn to_scaled(self) -> Nat;
 }
 
@@ -91,10 +89,6 @@ impl ScalingMath for Nat {
     fn scaled_div(self, other: Nat) -> Nat {
         self.mul(get_scaling_value()) / other
     }
-    // TODO: ask it from bhanu
-    // fn scaled_to_float(self) -> f64 {
-    //     self.div(get_scaling_value()) as f64
-    // }
 
     fn to_scaled(self) -> Nat {
         self.mul(get_scaling_value())

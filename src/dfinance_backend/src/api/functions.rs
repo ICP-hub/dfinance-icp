@@ -2,26 +2,17 @@ use crate::api::state_handler::mutate_state;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
-use crate::protocol::libraries::logic::user::nat_to_u128;
-use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
-use crate::{get_asset_principal, get_cached_exchange_rate, get_reserve_data};
+use crate::get_cached_exchange_rate;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
-//use reqwest::Client;
 use crate::constants::errors::Error;
 use serde::Serialize;
-// use ic_cdk::api::call::{call_after};
-// // use ic_cdk::prelude::*;
-// use ic_cdk::time::current_time;
-// use std::time::Duration;
 use ic_cdk::api::management_canister::http_request::{
-    http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse, TransformArgs,
-    TransformContext,
-};
+    http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod};
 use serde_json::json;
 
 // Icrc2_transfer_from inter canister call.
@@ -275,7 +266,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
-    // Validate amount: must be non-negative and non-empty
+
     if amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
@@ -283,14 +274,16 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     let user_principal = ic_cdk::caller();
 
-    // Validate user principal (avoid anonymous principal)
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
+
+    if user_principal != ic_cdk::caller() {
+        return Err(Error::InvalidUser);
+    }
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
-    //Retrieve user data.
     let user_data_result = user_data(user_principal);
 
     let mut user_data = match user_data_result {
@@ -298,8 +291,8 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             ic_cdk::println!("User found");
             data
         }
-        Err(_) => {
-            return Err(Error::UserNotFound);
+        Err(e) => {
+            return Err(e);
         }
     };
 
@@ -315,21 +308,17 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
     let balance_result = get_balance(ledger_canister_id, platform_principal).await;
-    //ic_cdk::println!("balance_nat retrieved = {:?}", balance_nat);
-   
     let balance = match balance_result{
         Ok(bal) => {
             bal
         }
-        Err(_) => {
-            return Err(Error::ErrorGetBalance);
+        Err(e) => {
+            return Err(e);
         }
     };
 
     ic_cdk::println!("balance of wallet = {}", balance);
 
-    // let youy = "message is going correctly".to_string();
-    // send_email_via_sendgrid(youy).await;
     if amount > balance {
         ic_cdk::println!("wallet balance is low");
         send_admin_notifications("initial").await;
@@ -347,11 +336,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         ic_cdk::println!("wallet balance is low");
         send_admin_notifications("final").await;
     }
-    // wallet value - amount == 0 ==> urgent need faucet it.
-    // wallet value - amount < 1000 ==> low balance   100_000_000
 
-    ic_cdk::println!("amount again = {}", amount);
-    // Ask : is it right way to convert it to the usd amount.
     let mut rate: Option<Nat> = None;
 
     match get_cached_exchange_rate(asset.clone()) {
@@ -367,17 +352,15 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             }
         }
         Err(err) => {
-            ic_cdk::println!("Error fetching exchange rate for {}: {}", asset, err);
+            ic_cdk::println!("Error fetching exchange rate for {}: {:?}", asset, err);
             rate = None; // Explicitly set rate to None in case of an error
         }
     }
 
-    //TODO: conversion to nat.
     let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.unwrap());
 
     ic_cdk::println!("usd amount of the facut = {}", usd_amount);
 
-    // Function to check if the user has a reserve for the asset
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
 
@@ -436,26 +419,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     ic_cdk::println!("user data before submit = {:?}", user_data);
 
-    // // Fetched canister ids, user principal and amount
-    // let ledger_canister_id = mutate_state(|state| {
-    //     let reserve_list = &state.reserve_list;
-    //     reserve_list
-    //         .get(&asset.to_string().clone())
-    //         .map(|principal| principal.clone())
-    //         .ok_or_else(|| format!("No canister ID found for asset: {}", asset))
-    // })?;
-    // ic_cdk::println!("ledger id {:?}", ledger_canister_id.to_string());
-
-    // Validate ledger canister ID
-    // if ledger_canister_id.to_text().trim().is_empty() {
-    //     return Err("Ledger canister ID is invalid.".to_string());
-    // }
-
-    // Need to ask from anshika -- > should i implement these two comments for the validation purpose.
-    // Check if the user has already claimed within a certain period --- need to use.
-    // Check if the platform has sufficient balance -- need to use.
-
-    // Save the updated user data back to state
     mutate_state(|state| {
         state
             .user_profile
@@ -476,8 +439,8 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             ic_cdk::println!("Asset transfer from backend to user executed successfully");
             Ok(new_balance)
         }
-        Err(e) => {
-            return Err(Error::ErrorBurnDebtTokens);
+        Err(_) => {
+            return Err(Error::ErrorFaucetTokens);
         }
     }
 }
@@ -490,6 +453,10 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         return Err(Error::InvalidPrincipal);
     }
 
+    if user_principal != ic_cdk::caller() {
+        return Err(Error::InvalidUser);
+    }
+
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
 
@@ -499,7 +466,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
             data
         }
         Err(e) => {
-            return Err(Error::InvalidUser);
+            return Err(e);
         }
     };
 
@@ -537,13 +504,8 @@ async fn send_admin_notifications(stage: &str) {
 
 pub async fn send_email_via_sendgrid(message: String) -> String {
     let url = "https://api.sendgrid.com/v3/mail/send";
-    // Add: company sendgrid api key.
     let api_key = "";
 
-    ic_cdk::println!("Preparing to send email via SendGrid...");
-    ic_cdk::println!("Using URL: {}", url);
-
-    // Prepare the headers for the SendGrid API request
     let request_headers = vec![
         HttpHeader {
             name: "Authorization".to_string(),
@@ -557,7 +519,6 @@ pub async fn send_email_via_sendgrid(message: String) -> String {
 
     ic_cdk::println!("Headers prepared: {:?}", request_headers);
 
-    // Prepare the email data (JSON payload)
     let email_data = json!( {
         "personalizations": [
             {
@@ -565,7 +526,7 @@ pub async fn send_email_via_sendgrid(message: String) -> String {
                 "subject": "Faucet Amount Low - Mint More Tokens"
             }
         ],
-        "from": { "email": "jyotirmay2000gupta@gmail.com" }, // Sender email address
+        "from": { "email": "jyotirmay2000gupta@gmail.com" },
         "content": [
             {
                 "type": "text/plain",
@@ -578,22 +539,20 @@ pub async fn send_email_via_sendgrid(message: String) -> String {
 
     // Convert the email data into bytes
     let request_body: Option<Vec<u8>> = Some(email_data.to_string().as_bytes().to_vec());
-    ic_cdk::println!("Request body: {:?}", request_body);
 
-    // Prepare the HTTP request for sending the email without the transform
     let request = CanisterHttpRequestArgument {
         url: url.to_string(),
         method: HttpMethod::POST,
         body: request_body,
         max_response_bytes: None,
-        transform: None, // Removed the transform
+        transform: None,
         headers: request_headers,
     };
 
     ic_cdk::println!("Request prepared: {:?}", request);
 
     // Send the HTTP request to SendGrid
-    let timeout = 120_000_000_000; // Increase timeout to 120 seconds
+    let timeout = 120_000_000_000;
     ic_cdk::println!("Sending HTTP request with timeout: {}", timeout);
 
     match http_request(request, timeout).await {

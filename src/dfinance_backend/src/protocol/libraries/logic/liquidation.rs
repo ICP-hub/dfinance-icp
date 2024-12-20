@@ -1,6 +1,9 @@
+use crate::api::state_handler::read_state;
+use crate::constants::errors::Error;
 use crate::declarations::assets::ExecuteRepayParams;
 use crate::protocol::libraries::logic::borrow::execute_repay;
 use crate::protocol::libraries::logic::reserve::{self};
+use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::{
     api::{functions::asset_transfer, state_handler::mutate_state},
     declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams},
@@ -18,8 +21,27 @@ pub async fn execute_liquidation(
     collateral_asset: String,
     amount: Nat,
     on_behalf_of: Principal,
-) -> Result<Nat, String> {
-    // Reads the reserve data from the asset
+) -> Result<Nat, Error> {
+    if asset_name.trim().is_empty() && collateral_asset.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
+
+    if asset_name.len() > 7 && collateral_asset.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if amount <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    if on_behalf_of == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
     ic_cdk::println!(
         "params asset_name and collateral_asset {:?} {:?}",
         asset_name,
@@ -38,6 +60,7 @@ pub async fn execute_liquidation(
         Err(e) => {
             // Handling the error
             ic_cdk::println!("Error getting exchange rate: {:?}", e);
+           return Err(e)
         }
     }
 
@@ -48,35 +71,30 @@ pub async fn execute_liquidation(
         asset_index
             .get(&collateral_asset.to_string().clone())
             .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| {
-                format!(
-                    "Reserve not found for asset: {}",
-                    collateral_asset.to_string()
-                )
-            })
+            .ok_or_else(|| Error::NoReserveDataFound)
     });
 
-    let mut reserve_data = match reserve_data_result {
+    let reserve_data = match reserve_data_result {
         Ok(data) => {
             ic_cdk::println!("Reserve data found for asset: {:?}", data);
             data
         }
         Err(e) => {
-            ic_cdk::println!("Error: {}", e);
+            ic_cdk::println!("Error: {:?}", e);
             return Err(e);
         }
     };
 
-    let dtoken_canister = mutate_state(|state| {
-        let asset_index = &mut state.asset_index;
+    let dtoken_canister = read_state(|state| {
+        let asset_index = &state.asset_index;
         asset_index
             .get(&collateral_asset.to_string().clone())
             .and_then(|reserve_data| reserve_data.d_token_canister.clone())
-            .ok_or_else(|| format!("No d_token_canister found for asset: {}", collateral_asset))
+            .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
     let dtoken_canister_principal = Principal::from_text(dtoken_canister)
-        .map_err(|_| "Invalid dtoken canister ID".to_string())?;
+        .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
 
     let platform_principal = ic_cdk::api::id();
 
@@ -85,6 +103,14 @@ pub async fn execute_liquidation(
 
     let liquidator_principal = api::caller();
     ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
+
+    if liquidator_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+    if liquidator_principal != ic_cdk::caller() {
+        return Err(Error::InvalidUser);
+    }
 
     ic_cdk::println!("Checking balances before liquidation...");
 
@@ -103,7 +129,7 @@ pub async fn execute_liquidation(
         }
         Err(e) => {
             // Handle the error case
-            ic_cdk::println!("Error fetching exchange rate: {}", e);
+            ic_cdk::println!("Error fetching exchange rate: {:?}", e);
             Nat::from(0u128) // Or handle the error as appropriate for your logic
         }
     };
@@ -129,15 +155,14 @@ pub async fn execute_liquidation(
         amount: reward_amount_param,
     };
 
-    // Validates supply using the reserve_data
-    // ValidationLogic::validate_liquidation(asset_name, amount as f64, liquidator_principal).await;
-    // ic_cdk::println!("Borrow validated successfully");
+    //ValidationLogic::validate_liquidation(asset_name, amount, liquidator_principal).await;
+    ic_cdk::println!("Borrow validated successfully");
 
     let repay_response = execute_repay(asset.clone(), amount, Some(user_principal)).await;
 
     match repay_response {
         Ok(_) => ic_cdk::println!("Repayment successful"),
-        Err(e) => ic_cdk::trap(&format!("Repayment failed: {}", e)),
+        Err(e) => return Err(e),
     }
 
     // Burning dtoken
@@ -156,7 +181,7 @@ pub async fn execute_liquidation(
             balance
         }
         Err(err) => {
-            return Err(format!("Burn failed. Error: {:?}", err));
+            return Err(Error::ErrorBurnTokens);
         }
     };
     let usd_amount = 60812; //change it
@@ -190,18 +215,17 @@ pub async fn execute_liquidation(
             // .await;
             Ok(balance)
         }
-        Err(err) => {
-            asset_transfer(
+        Err(_) => {
+            if let Err(e) = asset_transfer(
                 user_principal,
                 dtoken_canister_principal,
                 platform_principal,
                 reward_amount.clone(),
             )
-            .await?;
-            return Err(format!(
-                "Mint to liquidator failed, minted dtoken to user. Error: {:?}",
-                err
-            ));
+            .await {
+                ic_cdk::println!("Error during asset transfer: {:?}", e);
+            }
+            return Err(Error::ErrorMintDTokens);
         }
     }
 }

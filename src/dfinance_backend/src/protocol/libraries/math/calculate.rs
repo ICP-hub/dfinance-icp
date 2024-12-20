@@ -3,10 +3,9 @@ use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use serde::Serialize;
 use std::collections::HashMap;
-
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
-
 use super::math_utils::ScalingMath;
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
@@ -29,43 +28,13 @@ impl PriceCache {
         self.cache.get(asset).map(|cached_price| cached_price.price.clone())
     }
 
-    // pub fn get_cached_price(&self, asset: &str) -> Option<(Nat, u64)> {
-    //     if let Some(cached_price) = self.cache.get(asset) {
-    //         let current_time = SystemTime::now()
-    //             .duration_since(SystemTime::UNIX_EPOCH)
-    //             .expect("Time went backwards")
-    //             .as_secs();
-    //         if current_time - cached_price.timestamp <= self.cache_duration.as_secs() {
-    //             return Some((cached_price.price, cached_price.timestamp));
-    //         }
-    //     }
-    //     None
-    // }
-
     pub fn set_price(&mut self, asset: String, price: Nat) {
         self.cache.insert(asset, CachedPrice { price });
     }
 }
 
-// #[update]
-// pub async fn update_reserves_price() {
-//     let keys: Vec<String> = read_state(|state| {
-//         let reserve_list = &state.reserve_list;
-
-//         reserve_list
-//             .iter()
-//             .map(|(key, _value)| key.clone())
-//             .collect()
-//     });
-//     ic_cdk::println!("keys = {:?}", keys);
-//     for asset_name in keys {
-//         ic_cdk::println!("asset name = {}", asset_name);
-//         let _ = get_exchange_rates(asset_name, None, 0).await;
-//     }
-// }
-
 #[update]
-pub async fn update_reserves_price() {
+pub async fn update_reserves_price()-> Result<(), Error> {
     // Fetch all the keys (asset names) from the reserve list
     let keys: Vec<String> = read_state(|state| {
         let reserve_list = &state.reserve_list;
@@ -91,10 +60,12 @@ pub async fn update_reserves_price() {
                 );
             }
             Err(err) => {
-                ic_cdk::println!("Failed to update exchange rate for {}: {}", asset_name, err);
+                ic_cdk::println!("Failed to update exchange rate for {}: {:?}", asset_name, err);
+                return Err(Error::ExchangeRateError);
             }
         }
     }
+    Ok(())
 }
 
 
@@ -184,7 +155,33 @@ pub async fn get_exchange_rates(
     base_asset_symbol: String,
     quote_asset_symbol: Option<String>,
     amount: Nat,
-) -> Result<(Nat, u64), String> {
+) -> Result<(Nat, u64), Error> {
+
+    if base_asset_symbol.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
+
+    if base_asset_symbol.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if let Some(asset) = quote_asset_symbol.clone() {
+        if asset.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
+    if asset.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+    }
+
+    if amount <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc".to_string(),
         "ckETH" => "eth".to_string(),
@@ -278,122 +275,14 @@ pub async fn get_exchange_rates(
                 
                 Ok((total_value, time))
             }
-            GetExchangeRateResult::Err(e) => Err(format!("ERROR :: {:?}", e)),
+            GetExchangeRateResult::Err(e) => {
+                ic_cdk::println!("Error: {:?}", e);
+                Err(Error::ExchangeRateError)   
+            },
         },
-        Err(error) => Err(format!(
-            "Could not get USD/{} Rate - {:?} - {}",
-            base_asset_symbol, error.0, error.1
-        )),
+        Err(error) => {
+            ic_cdk::println!("Error: {:?}", error);
+            Err(Error::ExchangeRateError)
+        },
     }
 }
-
-//  async fn check_and_update_prices() {
-//         ic_cdk::spawn(async {
-//             ASSET_INDEX.with(|asset_index| {
-//                 let mut assets = asset_index.borrow().clone();
-
-//                 for (asset_symbol, reserve_data) in assets.iter_mut() {
-//                     // Fetch the current price using get_exchange_rates
-//                     let current_price_result = get_exchange_rates(asset_symbol.clone(), Some("USD".to_string()), 1Nat).await;
-
-//                     match current_price_result {
-//                         Ok((current_price, _timestamp)) => {
-//                             // Compare current and previous prices (assuming `last_update_timestamp` stores the previous price)
-//                             if current_price != reserve_data.prev_price {
-//                                 // Fetch userlist and update user data
-//                                 if let Some(userlist) = &reserve_data.userlist {
-//                                     for (user_principal_str, _is_active) in userlist {
-//                                         let user_principal = Principal::from_text(user_principal_str).unwrap(); // Convert string to Principal
-//                                         update_user_data_for_asset(user_principal, asset_symbol.clone(), current_price).await;
-//                                     }
-//                                 }
-
-//                                 // Update the asset's last price in ReserveData
-//                                 reserve_data.current_liquidity_rate = current_price;
-//                             }
-//                         },
-//                         Err(err) => {
-//                             ic_cdk::println!("Error fetching exchange rate for asset {}: {}", asset_symbol, err);
-//                         }
-//                     }
-//                 }
-//             });
-//         });
-//     }
-
-//     // Function to update user data for a specific asset if the price changes
-//     async fn update_user_data_for_asset(user_principal: Principal, asset_symbol: String, new_price: Nat) {
-//         USER_PROFILES.with(|user_profiles| {
-//             if let Some(user_data) = user_profiles.borrow_mut().get_mut(&user_principal) {
-//                 if let Some(reserves) = &mut user_data.reserves {
-//                     for (reserve_asset, reserve_data) in reserves.iter_mut() {
-//                         if reserve_asset == &asset_symbol && reserve_data.is_using_as_collateral_or_borrow {
-//                             // Update health factor or other user metrics based on the new price
-//                             recalculate_health_factor(user_data, reserve_data, new_price);
-//                         }
-//                     }
-//                 }
-//             }
-//         });
-//     }
-
-//     // Function to recalculate the health factor based on the new price
-//     fn recalculate_health_factor(user_data: &mut UserData, reserve_data: &mut UserReserveData, new_price: Nat) {
-//         // Example calculation of health factor (modify according to your business logic)
-//         let new_health_factor = (reserve_data.asset_supply * new_price) / reserve_data.asset_borrow;
-//         user_data.health_factor = Some(new_health_factor);
-
-//         ic_cdk::println!("Updated health factor for user: {:?}", user_data);
-//     }
-
-//     // Timer initialization
-//     #[init]
-//     fn init() {
-//         start_timer();
-//         ic_cdk::println!("Timer initialized to check and update asset prices every minute.");
-//     }
-
-//     // Reinitialize the timer after upgrade
-//     #[post_upgrade]
-//     fn post_upgrade() {
-//         init();
-//     }
-
-//     // Start the timer to call the function every 1 minute
-//     #[update]
-//     fn start_timer() {
-//         TIMER_ID.with(|id| {
-//             if id.borrow().is_none() {
-//                 let timer_id = set_timer_interval(Duration::from_secs(60), check_and_update_prices);
-//                 *id.borrow_mut() = Some(timer_id);
-//                 ic_cdk::println!("Timer started.");
-//             } else {
-//                 ic_cdk::println!("Timer is already running.");
-//             }
-//         });
-//     }
-
-//     // Stop the timer dynamically
-//     #[update]
-//     fn stop_timer() {
-//         TIMER_ID.with(|id| {
-//             if let Some(timer_id) = id.borrow_mut().take() {
-//                 clear_timer(timer_id);  // Clears the timer
-//                 ic_cdk::println!("Timer stopped.");
-//             } else {
-//                 ic_cdk::println!("No active timer to stop.");
-//             }
-//         });
-//     }
-
-//     // Query to check if the timer is active
-//     #[query]
-//     fn timer_active() -> String {
-//         TIMER_ID.with(|id| {
-//             if id.borrow().is_some() {
-//                 "Timer is active".to_string()
-//             } else {
-//                 "Timer is not active".to_string()
-//             }
-//         })
-//     }

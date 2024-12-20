@@ -17,6 +17,7 @@ pub enum Error {
     WithdrawMoreThanSupply,
     RepayMoreThanDebt,
     InvalidUser,
+    InvalidUserId,
     LessRewardAmount,
     UnauthorizedAccess,
     UserNotFound,
@@ -35,6 +36,7 @@ pub enum Error {
     NoReserveDataFound,
     CalculateUserAccountDataError,
     ErrorPriceCache,
+    NoPriceCache,
     EmptyAsset,
     LowWalletBalance,
     AmountTooMuch,
@@ -46,6 +48,9 @@ pub enum Error {
     NormalizedSupply,
     NormalizedDebt,
     ErrorGetBalance,
+    ErrorFaucetTokens,
+    ErrorInterestRate,
+    NotFoundAssetPrincipal,
 }
 
 impl Error {
@@ -65,6 +70,7 @@ impl Error {
             Error::WithdrawMoreThanSupply => "Withdraw cannot be more than supply",
             Error::RepayMoreThanDebt => "Repay cannot be more than debt",
             Error::InvalidUser => "User is not equal to the caller",
+            Error::InvalidUserId => "Invalid user id",
             Error::LessRewardAmount => "Total collateral value cannot be less than reward amount",
             Error::UnauthorizedAccess => "unauthorized access denied",
             Error::UserNotFound => "user not found",
@@ -83,6 +89,7 @@ impl Error {
             Error::NoReserveDataFound => "no reserve data found of the given asset",
             Error::NoUserReserveDataFound => "user reserves data not found",
             Error::CalculateUserAccountDataError => "Failed to calculate user account data",
+            Error::NoPriceCache => "No price cache found",
             Error::ErrorPriceCache => "Error in fetching price cache",
             Error::EmptyAsset => "Asset cannot be an empty string",
             Error::LowWalletBalance => "wallet balance is low, faucet not possible",
@@ -93,7 +100,10 @@ impl Error {
             Error::ErrorParsingPrincipal => "Failed to parse Principal",
             Error::NormalizedSupply => "Error from the normalized supply function",
             Error::NormalizedDebt => "Error from the normalized debt function",
-            Error::ErrorGetBalance => "Getting error in get balance function"
+            Error::ErrorGetBalance => "Getting error in get balance function",
+            Error::ErrorFaucetTokens => "Error in faucet tokens",
+            Error::ErrorInterestRate => "Error in calculating interest rate",
+            Error::NotFoundAssetPrincipal => "No principal found for asset"
         }
     }
 }

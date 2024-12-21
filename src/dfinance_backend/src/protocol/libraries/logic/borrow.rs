@@ -1,6 +1,7 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::ONE_HUNDRED_MILLION;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
@@ -14,18 +15,18 @@ use ic_cdk::update;
 // ----------- BORROW LOGIC ------------
 // -------------------------------------
 #[update]
-pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, Error> {
-    if asset.trim().is_empty() {
+pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
+    if params.asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
     }
 
-    if asset.len() > 7 {
+    if params.asset.len() > 7 {
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
 
-    if amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -37,13 +38,6 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, Error> {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
-
-    if user_principal != ic_cdk::caller() {
-        return Err(Error::InvalidUser);
-    }
-
-    let params = ExecuteBorrowParams { asset, amount };
-    ic_cdk::println!("Starting execute_borrow with params: {:?}", params);
 
     // TODO: look this error propogation.
     let ledger_canister_id = read_state(|state| {
@@ -92,7 +86,7 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, Error> {
     };
 
     if reserve_data.asset_borrow == Nat::from(0u128) {
-        *&mut reserve_data.debt_index = Nat::from(100000000u128);
+        *&mut reserve_data.debt_index = Nat::from(ONE_HUNDRED_MILLION);
     }
     ic_cdk::println!(
         "Updated debt index for reserve data: {:?}",
@@ -207,38 +201,29 @@ pub async fn execute_borrow(asset: String, amount: Nat) -> Result<Nat, Error> {
 // -------------------------------------
 #[update]
 pub async fn execute_repay(
-    asset: String,
-    amount: Nat,
-    on_behalf_of: Option<Principal>,
+    params: ExecuteRepayParams
 ) -> Result<Nat, Error> {
-    if asset.trim().is_empty() {
+    if params.asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
     }
 
-    if asset.len() > 7 {
+    if params.asset.len() > 7 {
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
 
-    if amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
 
-    if let Some(principal) = on_behalf_of {
+    if let Some(principal) = params.on_behalf_of {
         if principal == Principal::anonymous() {
             ic_cdk::println!("Anonymous principals are not allowed");
             return Err(Error::InvalidPrincipal);
         }
     }
-
-    let params = ExecuteRepayParams {
-        asset,
-        amount,
-        on_behalf_of,
-    };
-    ic_cdk::println!("Starting execute_repay with params: {:?}", params);
 
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
@@ -248,18 +233,12 @@ pub async fn execute_repay(
                 ic_cdk::println!("Anonymous principals are not allowed");
                 return Err(Error::InvalidPrincipal);
             }
-            if liquidator_principal != ic_cdk::caller() {
-                return Err(Error::InvalidUser);
-            }
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();
             if user_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
                 return Err(Error::InvalidPrincipal);
-            }
-            if user_principal != ic_cdk::caller() {
-                return Err(Error::InvalidUser);
             }
             ic_cdk::println!("Caller is: {:?}", user_principal.to_string());
             (user_principal, None)
@@ -313,7 +292,7 @@ pub async fn execute_repay(
     };
 
     if reserve_data.debt_index == Nat::from(0u128) {
-        reserve_data.debt_index = Nat::from(100000000u128);
+        reserve_data.debt_index = Nat::from(ONE_HUNDRED_MILLION);
     }
 
     // Fetches the reserve logic cache having the current values

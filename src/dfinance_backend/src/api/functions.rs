@@ -1,18 +1,19 @@
 use crate::api::state_handler::mutate_state;
+use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
+use crate::get_cached_exchange_rate;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
-use crate::get_cached_exchange_rate;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
+use ic_cdk::api::management_canister::http_request::{
+    http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod,
+};
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
-use crate::constants::errors::Error;
 use serde::Serialize;
-use ic_cdk::api::management_canister::http_request::{
-    http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod};
 use serde_json::json;
 
 // Icrc2_transfer_from inter canister call.
@@ -69,14 +70,36 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
         subaccount: None,
     };
 
-    let encoded_args = encode_args((account,)).unwrap();
+    let encoded_args_result = encode_args((account,));
+    let encoded_args = match encoded_args_result {
+        Ok(args) => args,
+        Err(err) => {
+            ic_cdk::println!("Error encoding arguments: {:?}", err);
+            return Err(Error::ErrorEncoding);
+        }
+    };
 
-    let raw_response = ic_cdk::api::call::call_raw(canister, "icrc1_balance_of", &encoded_args, 0)
-        .await
-        .unwrap();
+    let raw_response_result =
+        ic_cdk::api::call::call_raw(canister, "icrc1_balance_of", &encoded_args, 0).await;
+    let raw_response = match raw_response_result {
+        Ok(response) => {
+            ic_cdk::println!("Call succeeded with response: {:?}", response);
+            response
+        }
+        Err((code, message)) => {
+            ic_cdk::println!("Call failed with code: {:?}, message: {}", code, message);
+            return Err(Error::ErrorRawResponse);
+        }
+    };
 
-    let balance: Nat = decode_one(&raw_response).expect("Failed to decode balance");
-
+    let balance_result = decode_one(&raw_response);
+    let balance = match balance_result {
+        Ok(bal) => bal,
+        Err(err) => {
+            ic_cdk::println!("Error decoding balance: {:?}", err);
+            return Err(Error::ErrorDecoding);
+        }
+    };
     Ok(balance)
 }
 
@@ -93,11 +116,12 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
         Ok((balance,)) => Ok(balance),
         Err(e) => {
             ic_cdk::println!("Error calling icrc1_total_supply: {:?}", e);
-            ic_cdk::api::trap(&format!("Failed to call icrc1_total_supply: {:?}", e));
+            Err(Error::ErrorRawResponse)
         }
     }
 }
 
+// not used now so error hanling later
 pub async fn update_balance(
     canister: Principal,
     principal: Principal,
@@ -125,16 +149,43 @@ pub async fn update_balance(
     }
 }
 
-pub async fn get_fees(canister: Principal) -> Nat {
-    let empty_arg = candid::encode_one(()).unwrap();
+pub async fn get_fees(canister: Principal) -> Result<Nat,Error> {
 
-    let raw_response = ic_cdk::api::call::call_raw(canister, "icrc1_fee", &empty_arg, 0)
-        .await
-        .unwrap();
+     if canister == Principal::anonymous() {
+        return Err(Error::InvalidCanister);
+    }
+    let empty_arg_result = candid::encode_one(());
+    let empty_arg = match empty_arg_result {
+        Ok(args) => args,
+        Err(err) => {
+            ic_cdk::println!("Error encoding arguments: {:?}", err);
+            return Err(Error::ErrorEncoding);
+        }
+    };
 
-    let fees: Nat = decode_one(&raw_response).expect("Failed to decode fees");
+    let raw_response_result = ic_cdk::api::call::call_raw(canister, "icrc1_fee", &empty_arg, 0)
+        .await;
+    let raw_response = match raw_response_result {
+        Ok(response) => {
+            ic_cdk::println!("Call succeeded with response: {:?}", response);
+            response
+        }
+        Err((code, message)) => {
+            ic_cdk::println!("Call failed with code: {:?}, message: {}", code, message);
+            return Err(Error::ErrorRawResponse);
+        }
+    };
 
-    fees
+    let fees_result = decode_one(&raw_response);
+    let fees = match fees_result {
+        Ok(fee) => fee,
+        Err(err) => {
+            ic_cdk::println!("Error decoding balance: {:?}", err);
+            return Err(Error::ErrorDecoding);
+        }
+    };
+
+    Ok(fees)
 }
 
 pub async fn asset_transfer(
@@ -279,9 +330,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         return Err(Error::InvalidPrincipal);
     }
 
-    if user_principal != ic_cdk::caller() {
-        return Err(Error::InvalidUser);
-    }
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
     let user_data_result = user_data(user_principal);
@@ -308,10 +356,8 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
     let balance_result = get_balance(ledger_canister_id, platform_principal).await;
-    let balance = match balance_result{
-        Ok(bal) => {
-            bal
-        }
+    let balance = match balance_result {
+        Ok(bal) => bal,
         Err(e) => {
             return Err(e);
         }

@@ -1,5 +1,6 @@
 use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::ONE_THOUSAND_UNITS;
 use crate::protocol::libraries::math::math_utils;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use ic_cdk::api::time;
@@ -181,7 +182,7 @@ pub async fn burn_scaled(
         }
     };
     if balance.clone() > adjusted_amount.clone()
-        && balance.clone() - adjusted_amount.clone() < Nat::from(1000u128)
+        && balance.clone() - adjusted_amount.clone() < Nat::from(ONE_THOUSAND_UNITS)
     {
         adjusted_amount = balance.clone();
     }
@@ -235,7 +236,7 @@ pub async fn burn_scaled(
     } else {
         let mut amount_to_burn = amount - balance_increase;
         //TODO handle negative
-        if balance.clone() - amount_to_burn.clone() < Nat::from(1000u128) {
+        if balance.clone() - amount_to_burn.clone() < Nat::from(ONE_THOUSAND_UNITS) {
             amount_to_burn = balance;
         }
         ic_cdk::println!(

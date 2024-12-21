@@ -34,7 +34,13 @@ impl ValidationLogic {
         };
         ic_cdk::println!("User balance: {:?}", user_balance);
 
-        let transfer_fees = get_fees(ledger_canister).await;
+        let transfer_fees_result = get_fees(ledger_canister).await;
+        let transfer_fees = match transfer_fees_result {
+            Ok(fees) => fees,
+            Err(e) => {
+                return Err(e);
+            }
+        };
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
         let final_amount = amount.clone() + transfer_fees;
@@ -118,8 +124,14 @@ impl ValidationLogic {
         ic_cdk::println!("withdraw amount for validation = {}", amount);
 
         // validating amount
-        let transfer_fees = get_fees(ledger_canister).await;
-        ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
+        let transfer_fees_result = get_fees(ledger_canister).await;
+        ic_cdk::println!("transfer_fees : {:?}", transfer_fees_result);
+        let transfer_fees = match transfer_fees_result {
+            Ok(fees) => fees,
+            Err(e) => {
+                return Err(e);
+            }
+        };
 
         let final_amount = amount + transfer_fees;
         ic_cdk::println!("final_amount : {:?}", final_amount);
@@ -322,8 +334,14 @@ impl ValidationLogic {
         ledger_canister: Principal,
     ) -> Result<(), Error> {
         // // Check if the caller is anonymous
-      
-        let transfer_fees = get_fees(ledger_canister).await;
+
+        let transfer_fees_result = get_fees(ledger_canister).await;
+        let transfer_fees = match transfer_fees_result {
+            Ok(fees) => fees,
+            Err(e) => {
+                return Err(e);
+            }
+        };
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
         let final_amount = amount + transfer_fees;
@@ -331,7 +349,7 @@ impl ValidationLogic {
 
         // Fetch user data
         let user_data_result = user_data(user);
-   
+
         let mut user_data = match user_data_result {
             Ok(data) => {
                 ic_cdk::println!("User found: {:?}", data);
@@ -394,7 +412,7 @@ impl ValidationLogic {
         reward_amount: u128,
         liquidator: Principal,
         user: Principal,
-    )-> Result<(),Error> {
+    ) -> Result<(), Error> {
         let repay_ledger_canister_id = read_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -412,7 +430,13 @@ impl ValidationLogic {
         //         .ok_or_else(|| panic!("Liquidator not found: {}", user.to_string()))
         // });
 
-        let transfer_fees = get_fees(repay_ledger_canister_id).await;
+        let transfer_fees_result = get_fees(repay_ledger_canister_id).await;
+        let transfer_fees = match transfer_fees_result {
+            Ok(fees) => fees,
+            Err(e) => {
+                return Err(e);
+            }
+        };
         ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
         let final_amount = repay_amount + transfer_fees;
@@ -433,9 +457,7 @@ impl ValidationLogic {
                 ic_cdk::println!("User found: {:?}", data);
                 data
             }
-            Err(e) => {
-                return Err(e)
-            }
+            Err(e) => return Err(e),
         };
 
         if user_data.total_collateral.unwrap_or(Nat::from(0u128)) < reward_amount {
@@ -455,9 +477,7 @@ impl ValidationLogic {
                 ic_cdk::println!("Reserve data found for asset: {:?}", data);
                 data
             }
-            Err(e) => {
-                return Err(e)
-            }
+            Err(e) => return Err(e),
         };
 
         // validating reserve states
@@ -471,10 +491,10 @@ impl ValidationLogic {
             return Err(Error::ReserveInactive);
         }
         if is_paused {
-           return Err(Error::ReservePaused);
+            return Err(Error::ReservePaused);
         }
         if is_frozen {
-            return  Err(Error::ReserveFrozen);
+            return Err(Error::ReserveFrozen);
         }
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);

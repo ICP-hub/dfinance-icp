@@ -38,7 +38,6 @@ impl UpdateLogic {
         reserve_cache: &ReserveCache,
         params: ExecuteSupplyParams,
         reserve: &mut ReserveData,
-        //usd_amount: u128,
     ) -> Result<(), Error> {
         ic_cdk::println!(
             "Starting update_user_data_supply for user: {:?}",
@@ -445,10 +444,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
-    }
-
-    if user_principal != ic_cdk::caller() {
-        return Err(Error::InvalidUser);
     }
 
     let user_data_result = user_data(user_principal);

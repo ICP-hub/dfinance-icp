@@ -6,6 +6,7 @@ type Error = variant {
   NoCanisterIdFound;
   ErrorBurnDebtTokens;
   SupplyCapExceeded;
+  ErrorDecoding;
   InvalidAmount;
   ErrorInterestRate;
   AmountTooMuch;
@@ -39,15 +40,34 @@ type Error = variant {
   ConversionErrorFromTextToPrincipal;
   NotFoundAssetPrincipal;
   BorrowCapExceeded;
+  ErrorEncoding;
   HealthFactorLess;
   UnauthorizedAccess;
   ReservePaused;
   ErrorBurnTokens;
   RepayMoreThanDebt;
   InvalidMintAmount;
+  ErrorRawResponse;
   UserNotFound;
   CalculateUserAccountDataError;
   NormalizedDebt;
+};
+type ExecuteBorrowParams = record { asset : text; amount : nat };
+type ExecuteRepayParams = record {
+  asset : text;
+  on_behalf_of : opt principal;
+  amount : nat;
+};
+type ExecuteSupplyParams = record {
+  asset : text;
+  is_collateral : bool;
+  amount : nat;
+};
+type ExecuteWithdrawParams = record {
+  asset : text;
+  is_collateral : bool;
+  on_behalf_of : opt principal;
+  amount : nat;
 };
 type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
@@ -132,11 +152,11 @@ type UserReserveData = record {
 type UserState = record { adjusted_balance : nat; index : nat };
 service : () -> {
   create_multiple_canisters : () -> (vec principal);
-  execute_borrow : (text, nat) -> (Result);
+  execute_borrow : (ExecuteBorrowParams) -> (Result);
   execute_liquidation : (text, text, nat, principal) -> (Result);
-  execute_repay : (text, nat, opt principal) -> (Result);
-  execute_supply : (text, nat, bool) -> (Result);
-  execute_withdraw : (text, nat, opt principal, bool) -> (Result);
+  execute_repay : (ExecuteRepayParams) -> (Result);
+  execute_supply : (ExecuteSupplyParams) -> (Result);
+  execute_withdraw : (ExecuteWithdrawParams) -> (Result);
   faucet : (text, nat) -> (Result);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;

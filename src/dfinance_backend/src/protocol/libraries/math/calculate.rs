@@ -5,6 +5,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::ONE_HUNDRED_MILLION;
 use crate::declarations::storable::Candid;
 use super::math_utils::ScalingMath;
 
@@ -228,10 +229,10 @@ pub async fn get_exchange_rates(
                 let pow = 10usize.pow(v.metadata.decimals);
                 ic_cdk::println!("quote = {}",quote);
                 ic_cdk::println!("pow = {}",pow);
-                let exchange_rate =( Nat::from(quote) * Nat::from(100000000u128)) / (Nat::from(pow) - Nat::from(100000000u128));
+                let exchange_rate =( Nat::from(quote) * Nat::from(ONE_HUNDRED_MILLION)) / (Nat::from(pow) - Nat::from(ONE_HUNDRED_MILLION));
                 ic_cdk::println!("exchange rate = {}", exchange_rate);
 
-                let total_value = (Nat::from(quote) * amount) / (Nat::from(pow) - Nat::from(100000000u128));
+                let total_value = (Nat::from(quote) * amount) / (Nat::from(pow) - Nat::from(ONE_HUNDRED_MILLION));
 
                 let time = ic_cdk::api::time();
 

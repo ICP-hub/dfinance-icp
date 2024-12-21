@@ -157,8 +157,12 @@ pub async fn execute_liquidation(
 
     //ValidationLogic::validate_liquidation(asset_name, amount, liquidator_principal).await;
     ic_cdk::println!("Borrow validated successfully");
-
-    let repay_response = execute_repay(asset.clone(), amount, Some(user_principal)).await;
+    let params_repay  = ExecuteRepayParams {
+        asset: asset.clone(),
+        amount: amount.clone(),
+        on_behalf_of: Some(user_principal),
+    };
+    let repay_response = execute_repay(params_repay).await;
 
     match repay_response {
         Ok(_) => ic_cdk::println!("Repayment successful"),

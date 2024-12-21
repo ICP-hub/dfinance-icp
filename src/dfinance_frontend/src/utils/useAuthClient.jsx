@@ -42,6 +42,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const [authClient, setAuthClient] = useState(null);
   const [identity, setIdentity] = useState(null);
   const [principal, setPrincipal] = useState(null);
+  const [user,setUser]=useState(null);
   const [backendActor, setBackendActor] = useState(null);
   const [accountId, setAccountId] = useState(null);
 
@@ -160,6 +161,7 @@ export const useAuthClient = (options = defaultOptions) => {
       setIdentity(identity);
 
       const principal = identity.getPrincipal();
+      setUser(principal)
       setPrincipal(principal.toString());
       initGA("G-EVCJPRHQYX");
       setUserId(principal.toString());
@@ -278,6 +280,7 @@ console.log("is authenticated",isAuthenticated)
     authClient,
     identity,
     principal,
+    user,
     backendActor,
     accountId,
     createLedgerActor,

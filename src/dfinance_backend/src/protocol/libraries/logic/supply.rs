@@ -15,18 +15,18 @@ use ic_cdk::update;
 // -------------------------------------
 
 #[update]
-pub async fn execute_supply(asset: String, amount: Nat, is_collateral: bool) -> Result<Nat, Error> {
-    if asset.trim().is_empty() {
+pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
+    if params.asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
     }
 
-    if asset.len() > 7 {
+    if params.asset.len() > 7 {
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
 
-    if amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -37,18 +37,6 @@ pub async fn execute_supply(asset: String, amount: Nat, is_collateral: bool) -> 
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
-
-    if user_principal != ic_cdk::caller() {
-        ic_cdk::println!("Invalid user: Caller does not match the user.");
-        return Err(Error::InvalidUser);
-    }
-
-    let params = ExecuteSupplyParams {
-        asset,
-        amount,
-        is_collateral,
-    };
-    ic_cdk::println!("Starting execute_supply with params: {:?}", params);
 
     let ledger_canister_id = read_state(|state| {
         let reserve_list = &state.reserve_list;
@@ -83,10 +71,10 @@ pub async fn execute_supply(asset: String, amount: Nat, is_collateral: bool) -> 
         }
     };
 
-    if let Err(e) = update_reserves_price().await {
-        ic_cdk::println!("Failed to update reserves price: {:?}", e);
-        return Err(e);
-    }
+    // if let Err(e) = update_reserves_price().await {
+    //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
+    //     return Err(e);
+    // }
 
     let mut reserve_cache = reserve::cache(&reserve_data);
     ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
@@ -95,7 +83,6 @@ pub async fn execute_supply(asset: String, amount: Nat, is_collateral: bool) -> 
     ic_cdk::println!("Reserve state updated successfully");
 
     // Validates supply using the reserve_data
-    //TODO: error handling
     if let Err(e) = ValidationLogic::validate_supply(
         &reserve_data,
         params.amount.clone(),
@@ -129,7 +116,8 @@ pub async fn execute_supply(asset: String, amount: Nat, is_collateral: bool) -> 
         params.clone(),
         &mut reserve_data,
     )
-    .await{
+    .await
+    {
         ic_cdk::println!("Failed to update user data: {:?}", e);
         return Err(e);
     }
@@ -165,40 +153,28 @@ pub async fn execute_supply(asset: String, amount: Nat, is_collateral: bool) -> 
 // -------------------------------------
 
 #[update]
-pub async fn execute_withdraw(
-    asset: String,
-    amount: Nat,
-    on_behalf_of: Option<Principal>,
-    is_collateral: bool,
-) -> Result<Nat, Error> {
-    if asset.trim().is_empty() {
+pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
+    if params.asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
     }
 
-    if asset.len() > 7 {
+    if params.asset.len() > 7 {
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
 
-    if amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
 
-    if let Some(principal) = on_behalf_of {
+    if let Some(principal) = params.on_behalf_of {
         if principal == Principal::anonymous() {
             ic_cdk::println!("Anonymous principals are not allowed");
             return Err(Error::InvalidPrincipal);
         }
     }
-
-    let params = ExecuteWithdrawParams {
-        asset,
-        amount,
-        on_behalf_of,
-        is_collateral,
-    };
 
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
@@ -208,20 +184,12 @@ pub async fn execute_withdraw(
                 ic_cdk::println!("Anonymous principals are not allowed");
                 return Err(Error::InvalidPrincipal);
             }
-            if liquidator_principal != ic_cdk::caller() {
-                ic_cdk::println!("Invalid user: Caller does not match the user.");
-                return Err(Error::InvalidUser);
-            }
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();
             if user_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
                 return Err(Error::InvalidPrincipal);
-            }
-            if user_principal != ic_cdk::caller() {
-                ic_cdk::println!("Invalid user: Caller does not match the user.");
-                return Err(Error::InvalidUser);
             }
             (user_principal, None)
         };
@@ -284,11 +252,11 @@ pub async fn execute_withdraw(
     if let Err(e) = ValidationLogic::validate_withdraw(
         &reserve_data,
         params.amount.clone(),
-        //usd_amount,
         user_principal,
         ledger_canister_id,
     )
-    .await {
+    .await
+    {
         ic_cdk::println!("Repay validation failed: {:?}", e);
         return Err(e);
     }
@@ -300,7 +268,8 @@ pub async fn execute_withdraw(
         params.amount.clone(),
         Nat::from(0u128),
     )
-    .await{
+    .await
+    {
         ic_cdk::println!("Failed to update interest rates: {:?}", e);
         return Err(e);
     }
@@ -312,7 +281,8 @@ pub async fn execute_withdraw(
         params.clone(),
         &mut reserve_data,
     )
-    .await{
+    .await
+    {
         ic_cdk::println!("Failed to update user data: {:?}", e);
         return Err(e);
     }

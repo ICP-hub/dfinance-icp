@@ -23,6 +23,9 @@ mod protocol;
 mod state;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
+use crate::declarations::assets::{
+    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
@@ -126,11 +129,6 @@ fn register_user() -> Result<String, Error> {
         return Err(Error::InvalidPrincipal);
     }
 
-    if user_principal != ic_cdk::caller() {
-        ic_cdk::println!("Invalid user: Caller does not match the user.");
-        return Err(Error::InvalidUser);
-    }
-
     let user_data = mutate_state(|state| {
         let user_index = &mut state.user_profile;
         match user_index.get(&user_principal) {
@@ -164,11 +162,6 @@ pub async fn user_position(asset_name: String) -> Result<(Nat, Nat), Error> {
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
-    }
-
-    if user_principal != ic_cdk::caller() {
-        ic_cdk::println!("Invalid user: Caller does not match the user.");
-        return Err(Error::InvalidUser);
     }
 
     let user_data_result = read_state(|state| {
@@ -396,7 +389,6 @@ pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
 ) -> Result<Nat, Error> {
-
     if asset_name.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
@@ -414,9 +406,7 @@ pub async fn get_asset_debt(
         }
     }
     let user_principal = match on_behalf {
-        Some( principal_str) => {
-            principal_str
-        }
+        Some(principal_str) => principal_str,
         None => ic_cdk::caller(),
     };
 

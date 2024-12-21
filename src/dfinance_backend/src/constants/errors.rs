@@ -51,6 +51,9 @@ pub enum Error {
     ErrorFaucetTokens,
     ErrorInterestRate,
     NotFoundAssetPrincipal,
+    ErrorEncoding,
+    ErrorRawResponse,
+    ErrorDecoding,
 }
 
 impl Error {
@@ -103,7 +106,10 @@ impl Error {
             Error::ErrorGetBalance => "Getting error in get balance function",
             Error::ErrorFaucetTokens => "Error in faucet tokens",
             Error::ErrorInterestRate => "Error in calculating interest rate",
-            Error::NotFoundAssetPrincipal => "No principal found for asset"
+            Error::NotFoundAssetPrincipal => "No principal found for asset",
+            Error::ErrorEncoding => "Error encoding arguments",
+            Error::ErrorRawResponse => "Error in raw response",
+            Error::ErrorDecoding => "Error decoding response",
         }
     }
 }

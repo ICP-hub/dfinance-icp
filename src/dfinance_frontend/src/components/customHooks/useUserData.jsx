@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Principal } from "@dfinity/principal";
 const useUserData = () => {
-  const { backendActor, principal, isAuthenticated } = useAuth();
+  const { backendActor, principal,user, isAuthenticated } = useAuth();
   const [userData, setUserData] = useState(null);
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
@@ -15,7 +15,7 @@ const useUserData = () => {
       throw new Error("Backend actor not initialized");
     }
     try {
-      const result = await backendActor.get_user_data(principal);
+      const result = await backendActor.get_user_data(user);
       return result;
     } catch (error) {
       setError(error.message);

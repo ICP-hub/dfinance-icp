@@ -634,7 +634,7 @@ export default function Navbar({ isHomeNav }) {
                             {}
                             <div className=" w-full flex justify-center">
                               <div
-                                className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                                className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                                 style={{ height: "70px", width: "160px" }}
                               >
                                 <button

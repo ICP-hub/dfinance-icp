@@ -35,6 +35,8 @@ import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
+import Loading from "../Common/Loading";
+import MiniLoader from "../Common/MiniLoader";
 
 const MySupply = () => {
   const navigate = useNavigate();
@@ -119,18 +121,33 @@ const MySupply = () => {
     }
   }, []);
 
-  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow } =
+  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow, loading: filteredDataLoading  } =
     useAssetData();
-
-    useEffect(() =>{
+    const [loadingUserData, setUserDataLoading] = useState(true)
+    useEffect(() => {
       const fetchData = async () => {
-      for (const asset of assets) {
-         fetchAssetSupply(asset);
-         fetchAssetBorrow(asset);
-      }}
+        if (assets.length === 0) return;
+    
+        setUserDataLoading(true); 
+        let completedRequests = 0;
+    
+        for (const asset of assets) {
+          try {
+            await fetchAssetSupply(asset);
+            await fetchAssetBorrow(asset);
+          } catch (error) {
+            console.error(`Error fetching data for asset ${asset}:`, error);
+          } finally {
+            completedRequests++;
+            if (completedRequests === assets.length) {
+              setUserDataLoading(false);
+            }
+          }
+        }
+      };
     
       fetchData();
-    },[assets])
+    }, [assets]);
 
   const visibleItems = filteredItems.filter((item) => {
     const balance =
@@ -738,8 +755,11 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
-                  {}
-                  {!userData?.Ok?.reserves ||
+                    {loadingUserData ? (
+                    <div className="h-[100px] flex justify-center items-center">
+                        <MiniLoader isLoading={true} />
+                    </div>
+                  ) : !userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].filter(
                     (reserveGroup) => getAssetSupplyValue(reserveGroup[0]) > 0n
@@ -1105,8 +1125,11 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                  {}
-                  {!userData?.Ok?.reserves ||
+                    {loadingUserData ? (
+                    <div className="min-h-[100px] flex justify-center items-center ">
+                        <MiniLoader isLoading={true} />
+                    </div>
+                  ) : !userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].filter(
                     (reserveGroup) => getAssetSupplyValue(reserveGroup[0]) > 0n
@@ -1530,7 +1553,11 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
-                  {visibleItems.length === 0 ? (
+                  {filteredDataLoading ? (
+                    <div className="min-h-[100px] flex justify-center items-center ">
+                        <MiniLoader isLoading={true} />
+                    </div>
+                  ) : visibleItems.length === 0 ? (
                     noAssetsToSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px] scrollbar-none">
@@ -1870,7 +1897,11 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isVisible && (
                 <>
-                  {visibleItems.length === 0 ? (
+                  {filteredDataLoading ? (
+                    <div className="min-h-[100px] flex justify-center items-center ">
+                        <MiniLoader isLoading={true} />
+                    </div>
+                  ) : visibleItems.length === 0 ? (
                     noAssetsToSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4">
@@ -2278,7 +2309,11 @@ const MySupply = () => {
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
-                  {!userData?.Ok?.reserves ||
+                  {loadingUserData ? (
+                    <div className="h-[100px] flex justify-center items-center">
+                        <MiniLoader isLoading={true} />
+                    </div>
+                  ) :!userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].filter(
                     (reserveGroup) => getAssetBorrowValue(reserveGroup[0]) > 0n
@@ -2615,8 +2650,11 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {}
-                  {!userData?.Ok?.reserves ||
+                   {loadingUserData ? (
+                    <div className="min-h-[100px] flex justify-center items-center ">
+                        <MiniLoader isLoading={true} />
+                    </div>
+                  ) : !userData?.Ok?.reserves ||
                   !userData?.Ok?.reserves[0] ||
                   userData?.Ok?.reserves[0].filter(
                     (reserveGroup) => getAssetBorrowValue(reserveGroup[0]) > 0n
@@ -2989,9 +3027,11 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isBorrowVisible && (
                 <>
-                  {}
-
-                  {filteredItems.length === 0 ? (
+                  {filteredDataLoading ? (
+                    <div className="min-h-[100px] flex justify-center items-center ">
+                        <MiniLoader isLoading={true} />
+                    </div>
+                  ) : filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
                     <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none">
@@ -3534,8 +3574,11 @@ const MySupply = () => {
                   )}
 
                   <div className="w-full h-auto mt-6">
-                    {}
-                    {filteredItems.length === 0  ? (
+                  {filteredDataLoading ? (
+                    <div className="min-h-[100px] flex justify-center items-center ">
+                        <MiniLoader isLoading={true} />
+                    </div>
+                  ) : filteredItems.length === 0  ? (
                       noAssetsToBorrowMessage
                     ) : (
                       <div

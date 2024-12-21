@@ -162,7 +162,7 @@ export const useAuthClient = (options = defaultOptions) => {
       const principal = identity.getPrincipal();
       setPrincipal(principal.toString());
       initGA("G-EVCJPRHQYX");
-      setUserId(principal.toString());
+      if(isAuthenticated){setUserId(principal.toString());}
 
       const accountId = AccountIdentifier.fromPrincipal({ principal });
       setAccountId(toHexString(accountId.bytes));

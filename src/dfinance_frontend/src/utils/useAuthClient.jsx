@@ -177,14 +177,11 @@ export const useAuthClient = (options = defaultOptions) => {
         { agent }
       );
       setBackendActor(backendActor);
-
-      if (backendActor) {
-        await checkUser();
-      } else {
-      }
+      console.log("is authenticated",isAuthenticated)
+      
     } catch (error) {}
   };
-
+  
   const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
@@ -193,7 +190,6 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
-console.log("is authenticated",isAuthenticated)
   const reloadLogin = async () => {
     try {
       if (
@@ -212,21 +208,19 @@ console.log("is authenticated",isAuthenticated)
   
     try {
       const identity = authClient.getIdentity();
-      const principal = identity.getPrincipal();
-  
-      if (!principal.isAnonymous()&&isAuthenticated) {
-       
+      if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
+        console.log("User principal =",principal.toString() );
   
         
         const result = await backendActor.register_user();
-       
+        console.log("Result from register_user =", result);
   
         if (result.Ok) {
           if (result.Ok === "User available") {
-           
+            console.log("User is already registered.");
             
           } else if (result.Ok === "User added") {
-           
+            console.log("User successfully added to the system.");
           }
         } else if (result.Err) {
           console.error("Error from backend:", result.Err);
@@ -244,6 +238,9 @@ console.log("is authenticated",isAuthenticated)
     }
   };
   
+  if (backendActor && isAuthenticated) {
+    checkUser();
+ }
 
   const fetchReserveData = async (asset) => {
     if (!backendActor) {

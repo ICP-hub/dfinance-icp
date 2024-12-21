@@ -62,10 +62,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     })?;
     ic_cdk::println!("Debt canister ID: {:?}", debttoken_canister);
 
-    if let Err(e) = update_reserves_price().await {
-        ic_cdk::println!("Failed to update reserves price: {:?}", e);
-        return Err(e);
-    }
+    // if let Err(e) = update_reserves_price().await {
+    //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
+    //     return Err(e);
+    // }
 
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -253,10 +253,10 @@ pub async fn execute_repay(
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
-    if let Err(e) = update_reserves_price().await {
-        ic_cdk::println!("Failed to update reserves price: {:?}", e);
-        return Err(e);
-    }
+    // if let Err(e) = update_reserves_price().await {
+    //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
+    //     return Err(e);
+    // }
 
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);

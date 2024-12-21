@@ -62,9 +62,13 @@ if (onLoadingChange) {
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-
+    const borrowParams = {
+      asset: asset,
+      
+      amount: scaledAmount,
+    };
     try {
-      const borrowResult = await backendActor.execute_borrow(asset, scaledAmount);
+      const borrowResult = await backendActor.execute_borrow(borrowParams);
       
 
       if ("Ok" in borrowResult) {

@@ -236,10 +236,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         }
     };
 
-    if let Err(e) = update_reserves_price().await {
-        ic_cdk::println!("Failed to update reserves price: {:?}", e);
-        return Err(e);
-    }
+    // if let Err(e) = update_reserves_price().await {
+    //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
+    //     return Err(e);
+    // }
 
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);

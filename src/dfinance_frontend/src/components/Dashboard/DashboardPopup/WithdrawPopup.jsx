@@ -173,13 +173,15 @@ const WithdrawPopup = ({
       let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
       const scaledAmount = amountAsNat64;
 
-     
+      const withdrawParams = {
+        asset: asset,
+        amount: scaledAmount,
+        on_behalf_of:[],
+        is_collateral: currentCollateralStatus,
+      };
 
       const withdrawResult = await backendActor.execute_withdraw(
-        asset,
-        scaledAmount,
-        [],
-        currentCollateralStatus
+        withdrawParams
       );
 
       if ("Ok" in withdrawResult) {
@@ -220,6 +222,7 @@ const WithdrawPopup = ({
         setIsVisible(false);
       } else if ("Err" in withdrawResult) {
         const errorMsg = withdrawResult.Err;
+        console.log("error",errorMsg)
         toast.error(`Withdraw failed: ${errorMsg}`, {
           className: "custom-toast",
           position: "top-center",
@@ -232,6 +235,7 @@ const WithdrawPopup = ({
         });
       }
     } catch (error) {
+      console.error(`Error: ${error.message || "Withdraw action failed!"}`);
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
     } finally {
       setIsLoading(false); 

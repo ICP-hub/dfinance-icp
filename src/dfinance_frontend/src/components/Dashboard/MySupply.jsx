@@ -103,7 +103,6 @@ const MySupply = () => {
   const [showZeroBalance, setShowZeroBalance] = useState(
     () => JSON.parse(localStorage.getItem("showZeroBalance")) || true
   );
-
   const handleCheckboxChange = () => {
     setShowZeroBalance((prev) => {
       const newValue = !prev;
@@ -3102,7 +3101,7 @@ const MySupply = () => {
                             const isEligible = total_supply - total_borrow != 0;
 
                             const itemClass =
-                              showAllAssets && !isEligible
+                              showAllAssets && !isEligible ||availableBorrow==0
                                 ? "opacity-50 pointer-events-none"
                                 : "";
 
@@ -3433,62 +3432,62 @@ const MySupply = () => {
                                           if (item[0] === "ckBTC") {
                                             borrowableValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckBTCUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable)
-                                                : formatConditional(Number(availableBorrow) / (ckBTCUsdRate / 1e8))
+                                                ? (remainingBorrowable)
+                                                : (Number(availableBorrow) / (ckBTCUsdRate / 1e8))
                                               : "0.00000000";
                                     
                                             borrowableAssetValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckBTCUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable * (ckBTCUsdRate / 1e8))
-                                                : formatConditional(Number(availableBorrow))
+                                                ? (remainingBorrowable * (ckBTCUsdRate / 1e8))
+                                                : (Number(availableBorrow))
                                               : "0.0000";
                                           } else if (item[0] === "ckETH") {
                                             borrowableValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckETHUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable)
-                                                : formatConditional(Number(availableBorrow) / (ckETHUsdRate / 1e8))
+                                                ? (remainingBorrowable)
+                                                : (Number(availableBorrow) / (ckETHUsdRate / 1e8))
                                               : "0.00000000";
                                     
                                             borrowableAssetValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckETHUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable * (ckETHUsdRate / 1e8))
-                                                : formatConditional(Number(availableBorrow))
+                                                ? (remainingBorrowable * (ckETHUsdRate / 1e8))
+                                                : (Number(availableBorrow))
                                               : "0.0000";
                                           } else if (item[0] === "ckUSDC") {
                                             borrowableValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckUSDCUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable)
-                                                : formatConditional(Number(availableBorrow) / (ckUSDCUsdRate / 1e8))
+                                                ? (remainingBorrowable)
+                                                : (Number(availableBorrow) / (ckUSDCUsdRate / 1e8))
                                               : "0.00000000";
                                     
                                             borrowableAssetValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckUSDCUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable * (ckUSDCUsdRate / 1e8))
-                                                : formatConditional(Number(availableBorrow))
+                                                ? (remainingBorrowable * (ckUSDCUsdRate / 1e8))
+                                                : (Number(availableBorrow))
                                               : "0.0000";
                                           } else if (item[0] === "ICP") {
                                             borrowableValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckICPUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable)
-                                                : formatConditional(Number(availableBorrow) / (ckICPUsdRate / 1e8))
+                                                ? (remainingBorrowable)
+                                                : (Number(availableBorrow) / (ckICPUsdRate / 1e8))
                                               : "0.00000000";
                                     
                                             borrowableAssetValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckICPUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable * (ckICPUsdRate / 1e8))
-                                                : formatConditional(Number(availableBorrow))
+                                                ? (remainingBorrowable * (ckICPUsdRate / 1e8))
+                                                : (Number(availableBorrow))
                                               : "0.0000";
                                           } else if (item[0] === "ckUSDT") {
                                             borrowableValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckUSDTUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable)
-                                                : formatConditional(Number(availableBorrow) / (ckUSDTUsdRate / 1e8))
+                                                ? (remainingBorrowable)
+                                                : (Number(availableBorrow) / (ckUSDTUsdRate / 1e8))
                                               : "0.00000000";
                                     
                                             borrowableAssetValue = Number(availableBorrow)
                                               ? remainingBorrowable < Number(availableBorrow) / (ckUSDTUsdRate / 1e8)
-                                                ? formatConditional(remainingBorrowable * (ckUSDTUsdRate / 1e8))
-                                                : formatConditional(Number(availableBorrow))
+                                                ? (remainingBorrowable * (ckUSDTUsdRate / 1e8))
+                                                : (Number(availableBorrow))
                                               : "0.0000";
                                           }
                                         }
@@ -3703,7 +3702,7 @@ const MySupply = () => {
                                 total_supply - total_borrow != 0;
 
                               const itemClass =
-                                showAllAssets && !isEligible
+                                showAllAssets && !isEligible ||availableBorrow==0
                                   ? "opacity-50 pointer-events-none"
                                   : "";
                               return (
@@ -4002,62 +4001,62 @@ const MySupply = () => {
       if (item[0] === "ckBTC") {
         borrowableValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckBTCUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable)
-            : formatConditional(Number(availableBorrow) / (ckBTCUsdRate / 1e8))
+            ? (remainingBorrowable)
+            : (Number(availableBorrow) / (ckBTCUsdRate / 1e8))
           : "0.00000000";
 
         borrowableAssetValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckBTCUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable * (ckBTCUsdRate / 1e8))
-            : formatConditional(Number(availableBorrow))
+            ? (remainingBorrowable * (ckBTCUsdRate / 1e8))
+            : (Number(availableBorrow))
           : "0.0000";
       } else if (item[0] === "ckETH") {
         borrowableValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckETHUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable)
-            : formatConditional(Number(availableBorrow) / (ckETHUsdRate / 1e8))
+            ? (remainingBorrowable)
+            : (Number(availableBorrow) / (ckETHUsdRate / 1e8))
           : "0.00000000";
 
         borrowableAssetValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckETHUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable * (ckETHUsdRate / 1e8))
-            : formatConditional(Number(availableBorrow))
+            ? (remainingBorrowable * (ckETHUsdRate / 1e8))
+            : (Number(availableBorrow))
           : "0.0000";
       } else if (item[0] === "ckUSDC") {
         borrowableValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckUSDCUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable)
-            : formatConditional(Number(availableBorrow) / (ckUSDCUsdRate / 1e8))
+            ? (remainingBorrowable)
+            : (Number(availableBorrow) / (ckUSDCUsdRate / 1e8))
           : "0.00000000";
 
         borrowableAssetValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckUSDCUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable * (ckUSDCUsdRate / 1e8))
-            : formatConditional(Number(availableBorrow))
+            ? (remainingBorrowable * (ckUSDCUsdRate / 1e8))
+            : (Number(availableBorrow))
           : "0.0000";
       } else if (item[0] === "ICP") {
         borrowableValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckICPUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable)
-            : formatConditional(Number(availableBorrow) / (ckICPUsdRate / 1e8))
+            ? (remainingBorrowable)
+            : (Number(availableBorrow) / (ckICPUsdRate / 1e8))
           : "0.00000000";
 
         borrowableAssetValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckICPUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable * (ckICPUsdRate / 1e8))
-            : formatConditional(Number(availableBorrow))
+            ? (remainingBorrowable * (ckICPUsdRate / 1e8))
+            : (Number(availableBorrow))
           : "0.0000";
       } else if (item[0] === "ckUSDT") {
         borrowableValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckUSDTUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable)
-            : formatConditional(Number(availableBorrow) / (ckUSDTUsdRate / 1e8))
+            ? (remainingBorrowable)
+            : (Number(availableBorrow) / (ckUSDTUsdRate / 1e8))
           : "0.00000000";
 
         borrowableAssetValue = Number(availableBorrow)
           ? remainingBorrowable < Number(availableBorrow) / (ckUSDTUsdRate / 1e8)
-            ? formatConditional(remainingBorrowable * (ckUSDTUsdRate / 1e8))
-            : formatConditional(Number(availableBorrow))
+            ? (remainingBorrowable * (ckUSDTUsdRate / 1e8))
+            : (Number(availableBorrow))
           : "0.0000";
       }
     }

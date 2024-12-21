@@ -177,7 +177,7 @@ export const useAuthClient = (options = defaultOptions) => {
       setBackendActor(backendActor);
 
       if (backendActor) {
-        await checkUser(principal);
+        await checkUser();
       } else {
       }
     } catch (error) {}
@@ -191,7 +191,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
-
+console.log("is authenticated",isAuthenticated)
   const reloadLogin = async () => {
     try {
       if (
@@ -203,27 +203,45 @@ export const useAuthClient = (options = defaultOptions) => {
     } catch (error) {}
   };
 
-  const checkUser = async (user) => {
+  const checkUser = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+  
     try {
       const identity = authClient.getIdentity();
-      if (!identity.getPrincipal().isAnonymous()) {
-        console.log("user prin = ",user.toString())
-        const result = await backendActor.register_user();
-        console.log("result = ",result);
+      const principal = identity.getPrincipal();
+  
+      if (!principal.isAnonymous()&&isAuthenticated) {
        
-        // if (result.Ok && result.Ok === "User available" && isAuthenticated) {
-        //   const res = await backendActor.login();
-        // }
+  
+        
+        const result = await backendActor.register_user();
+       
+  
+        if (result.Ok) {
+          if (result.Ok === "User available") {
+           
+            
+          } else if (result.Ok === "User added") {
+           
+          }
+        } else if (result.Err) {
+          console.error("Error from backend:", result.Err);
+          throw new Error(result.Err);
+        }
+  
         return result;
+      } else {
+        console.error("Anonymous principals are not allowed.");
+        throw new Error("Anonymous principals are not allowed.");
       }
     } catch (error) {
-      console.error(error.message)
+      console.error("Error in checkUser:", error.message);
       throw error;
     }
   };
+  
 
   const fetchReserveData = async (asset) => {
     if (!backendActor) {

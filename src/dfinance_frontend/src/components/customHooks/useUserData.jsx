@@ -4,18 +4,18 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Principal } from "@dfinity/principal";
 const useUserData = () => {
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal, isAuthenticated } = useAuth();
   const [userData, setUserData] = useState(null);
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
   const [error, setError] = useState(null);
 
-  const getUserData = async (user) => {
-    if (!backendActor) {
+  const getUserData = async () => {
+    if (!backendActor&& isAuthenticated) {
       throw new Error("Backend actor not initialized");
     }
     try {
-      const result = await backendActor.get_user_data(user);
+      const result = await backendActor.get_user_data(principal);
       return result;
     } catch (error) {
       setError(error.message);
@@ -26,7 +26,7 @@ const useUserData = () => {
   const fetchUserData = async () => {
     if (backendActor) {
       try {
-        const result = await getUserData(principal.toString());
+        const result = await getUserData();
         setUserData(result);
       } catch (error) {
         console.error(error.message)
@@ -36,7 +36,7 @@ const useUserData = () => {
   };
   
   const fetchUserAccountData = async () => {
-  if (backendActor) {
+  if (backendActor&& isAuthenticated) {
     try {
       console.log("principal in user account data = ", principal);
 

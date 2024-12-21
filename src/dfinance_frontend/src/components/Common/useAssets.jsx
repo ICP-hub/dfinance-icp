@@ -7,7 +7,8 @@ const useAssetData = (searchQuery = '') => {
 
   const {principal,
     fetchReserveData,
-    backendActor
+    backendActor,
+    isAuthenticated
   } = useAuth();
 
   const [assets, setAssets] = useState([]);
@@ -51,9 +52,9 @@ const useAssetData = (searchQuery = '') => {
   }, [backendActor]);
 
   const fetchAssetSupply = async (asset) => {
-    if (backendActor) {
+    if (backendActor&& isAuthenticated ) {
       try {
-        const result = await backendActor.get_asset_supply(asset,[principal]);
+        const result = await backendActor.get_asset_supply(asset,[]);
         setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
         console.error(error.message)
@@ -63,9 +64,9 @@ const useAssetData = (searchQuery = '') => {
   };
   
   const fetchAssetBorrow = async (asset) => {
-    if (backendActor) {
+    if (backendActor&& isAuthenticated) {
       try {
-        const result = await backendActor.get_asset_debt(asset,[principal]);
+        const result = await backendActor.get_asset_debt(asset,[]);
         setAssetBorrow(prev => ({ ...prev, [asset]: result.Ok }));
       } catch (error) {
         console.error(error.message)

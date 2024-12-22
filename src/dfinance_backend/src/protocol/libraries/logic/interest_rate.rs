@@ -1,4 +1,4 @@
-use crate::{constants::{errors::Error, interest_variables::{self, constants::{BASE_VARIABLE_BORROW_RATE, CKUSDC_MAX_EXCESS_USAGE_RATIO, CKUSDC_OPTIMAL_USAGE_RATIO, CKUSDC_VARIABLE_RATE_SLOPE2, CKUSDT_MAX_EXCESS_USAGE_RATIO, CKUSDT_OPTIMAL_USAGE_RATIO, CKUSDT_VARIABLE_RATE_SLOPE2, HUNDRED_UNITS, MAX_EXCESS_USAGE_RATIO, ONE_HUNDRED_MILLION, VARIABLE_RATE_SLOPE1, VARIABLE_RATE_SLOPE2}}}, get_reserve_data, protocol::libraries::math::math_utils::ScalingMath};
+use crate::{constants::{errors::Error, interest_variables::{self, constants::{BASE_VARIABLE_BORROW_RATE, CKUSDC_MAX_EXCESS_USAGE_RATIO, CKUSDC_OPTIMAL_USAGE_RATIO, CKUSDC_VARIABLE_RATE_SLOPE2, CKUSDT_MAX_EXCESS_USAGE_RATIO, CKUSDT_OPTIMAL_USAGE_RATIO, CKUSDT_VARIABLE_RATE_SLOPE2, MAX_EXCESS_USAGE_RATIO, VARIABLE_RATE_SLOPE1, VARIABLE_RATE_SLOPE2}}}, get_reserve_data, protocol::libraries::math::math_utils::ScalingMath};
 use candid::{CandidType, Deserialize, Nat};
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
 use serde::Serialize;
@@ -15,6 +15,7 @@ pub struct InterestRateParams {
 pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     println!("asset name in initialize {:?}", asset.to_string());
     match asset {
+        // TODO: need to write the vaiables again as per the use case.
         "ckBTC" => InterestRateParams {
             optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(OPTIMAL_USAGE_RATIO)),
             max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(MAX_EXCESS_USAGE_RATIO)),
@@ -114,14 +115,14 @@ pub async fn calculate_interest_rates(
     }
 
     // Check if borrow usage ratio exceeds optimal usage ratio
-    if borrow_usage_ratio > (params.optimal_usage_ratio.clone() / Nat::from(HUNDRED_UNITS)) {
+    if borrow_usage_ratio > (params.optimal_usage_ratio.clone() / Nat::from(100u128)) {
         ic_cdk::println!(
             "Borrow usage ratio more than optimal: {} vs {}",
             borrow_usage_ratio,
             params.optimal_usage_ratio
         );
 
-        let excess_borrow_usage_ratio = ((borrow_usage_ratio * Nat::from(HUNDRED_UNITS))
+        let excess_borrow_usage_ratio = ((borrow_usage_ratio * Nat::from(100u128))
             - params.optimal_usage_ratio.clone())
         .scaled_div(params.max_excess_usage_ratio.clone());
 
@@ -144,7 +145,7 @@ pub async fn calculate_interest_rates(
         );
 
         curr_borrow_rate +=
-            params.variable_rate_slope1.clone() * borrow_usage_ratio * Nat::from(HUNDRED_UNITS)
+            params.variable_rate_slope1.clone() * borrow_usage_ratio * Nat::from(100u128)
                 / params.optimal_usage_ratio.clone();
 
         ic_cdk::println!("Updated borrow rate: {:?}", curr_borrow_rate);
@@ -153,7 +154,7 @@ pub async fn calculate_interest_rates(
     ic_cdk::println!("Overall borrow rate: {:?}", curr_borrow_rate);
 
     current_liquidity_rate = (curr_borrow_rate.clone().scaled_mul(supply_usage_ratio))
-        .scaled_mul(Nat::from(ONE_HUNDRED_MILLION) - (reserve_factor / Nat::from(HUNDRED_UNITS)));
+        .scaled_mul(Nat::from(100000000u128) - (reserve_factor / Nat::from(100u128)));
 
     ic_cdk::println!(
         "Calculated liquidity rate before adjustment: {:?}",

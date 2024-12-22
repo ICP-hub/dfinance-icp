@@ -64,7 +64,6 @@ if (onLoadingChange) {
     }
     const borrowParams = {
       asset: asset,
-      
       amount: scaledAmount,
     };
     try {

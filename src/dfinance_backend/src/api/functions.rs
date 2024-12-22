@@ -352,6 +352,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
+    // TODO: ask bhanu what validation should i have here for the platform principal.
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
@@ -365,6 +366,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     ic_cdk::println!("balance of wallet = {}", balance);
 
+    // TODO: add what token to faucet by the admin.
     if amount > balance {
         ic_cdk::println!("wallet balance is low");
         send_admin_notifications("initial").await;

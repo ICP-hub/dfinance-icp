@@ -52,7 +52,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
 
     let amount_nat = params.amount.clone();
 
-    //TODO create a comman func to get asset reserve data in mutate state
+    //TODO: create a comman func to get asset reserve data in mutate state
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
@@ -71,6 +71,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         }
     };
 
+    // TODO: decide postion of this code.
     // if let Err(e) = update_reserves_price().await {
     //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
     //     return Err(e);

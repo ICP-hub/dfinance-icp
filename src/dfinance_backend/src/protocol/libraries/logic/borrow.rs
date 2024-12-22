@@ -1,7 +1,7 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::ONE_HUNDRED_MILLION;
+use crate::constants::interest_variables::constants::DEBT_INDEX;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
@@ -48,7 +48,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
-    // Ask: do we need validation in this.
+    // TODO: bhanu ask.
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
@@ -86,7 +86,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     };
 
     if reserve_data.asset_borrow == Nat::from(0u128) {
-        *&mut reserve_data.debt_index = Nat::from(ONE_HUNDRED_MILLION);
+        *&mut reserve_data.debt_index = Nat::from(DEBT_INDEX);
     }
     ic_cdk::println!(
         "Updated debt index for reserve data: {:?}",
@@ -292,7 +292,7 @@ pub async fn execute_repay(
     };
 
     if reserve_data.debt_index == Nat::from(0u128) {
-        reserve_data.debt_index = Nat::from(ONE_HUNDRED_MILLION);
+        reserve_data.debt_index = Nat::from(DEBT_INDEX);
     }
 
     // Fetches the reserve logic cache having the current values
@@ -317,7 +317,7 @@ pub async fn execute_repay(
     ic_cdk::println!("Repay validated successfully");
     ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
-    //TODO call burn function here
+    //TODO: call burn function here
     if let Err(e) = reserve::update_interest_rates(
         &mut reserve_data,
         &mut reserve_cache,
@@ -329,7 +329,6 @@ pub async fn execute_repay(
         return Err(e);
     }
 
-    // TODO: proper error handling to do.
     // ----------- Update logic here -------------
     if let Err(e) = UpdateLogic::update_user_data_repay(
         user_principal,
@@ -365,7 +364,7 @@ pub async fn execute_repay(
             Ok(new_balance)
         }
         Err(e) => {
-            //TODO mint debttoken back to user
+            //TODO: mint debttoken back to user
             ic_cdk::println!("Asset transfer failed, error: {:?}", e);
             return Err(Error::ErrorBurnDebtTokens);
         }

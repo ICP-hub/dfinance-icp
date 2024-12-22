@@ -2,6 +2,7 @@ use crate::api::functions::{get_balance, get_fees, get_total_supply};
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveData;
+use crate::get_cached_exchange_rate;
 use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::GenericLogic;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
@@ -133,7 +134,7 @@ impl ValidationLogic {
             }
         };
 
-        let final_amount = amount + transfer_fees;
+        let final_amount = amount.clone() + transfer_fees;
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
         // Fetching user data
@@ -186,34 +187,85 @@ impl ValidationLogic {
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
+        let mut total_collateral = Nat::from(0u128);
+        let mut total_debt = Nat::from(0u128);
         let mut avg_ltv = Nat::from(0u128);
         let mut health_factor = Nat::from(0u128);
+        let mut liquidation_threshold_var = Nat::from(0u128);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
             GenericLogic::calculate_user_account_data(None).await;
 
         match user_data_result {
             Ok((
-                _t_collateral,
-                _t_debt,
+                t_collateral,
+                t_debt,
                 ltv,
-                _liquidation_threshold,
+                liquidation_threshold,
                 h_factor,
                 _a_borrow,
                 _zero_ltv_collateral,
             )) => {
+                total_collateral = t_collateral;
+                total_debt = t_debt;
                 avg_ltv = ltv;
                 health_factor = h_factor;
+                liquidation_threshold_var = liquidation_threshold;
 
-                println!("Average LTV: {}", avg_ltv);
-                println!("Health Factor: {}", health_factor);
+                ic_cdk::println!("total collateral = {}", total_collateral);
+                ic_cdk::println!("total debt = {}", total_debt);
+                ic_cdk::println!("Average LTV: {}", avg_ltv);
+                ic_cdk::println!("liqudation user = {}", liquidation_threshold_var);
+                ic_cdk::println!("Health Factor: {}", health_factor);
             }
             Err(e) => {
                 return Err(e);
             }
         }
 
-        if avg_ltv >= user_data.liquidation_threshold.unwrap() {
+        //TODO: whether is should be none or zero.
+        let mut rate: Option<Nat> = None;
+
+        match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
+            Ok(price_cache) => {
+                // Fetch the specific CachedPrice for the asset from the PriceCache
+                if let Some(cached_price) =
+                    price_cache.cache.get(&reserve.asset_name.clone().unwrap())
+                {
+                    let amount = cached_price.price.clone();
+                    rate = Some(amount);
+                } else {
+                    rate = None;
+                }
+            }
+            Err(err) => {
+                // ic_cdk::println!(
+                //     "Error fetching exchange rate for {}: {:?}",
+                //     user_reserve_data.reserve.clone(),
+                //     err
+                // );
+                rate = None;
+            }
+        }
+
+        ic_cdk::println!("rate = {:?}", rate);
+
+        let usd_withdrawl = amount.clone().scaled_mul(rate.unwrap());
+        ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
+
+        // Calculate Adjusted Collateral
+        let adjusted_collateral = total_collateral - usd_withdrawl;
+        ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
+
+        let mut ltv = Nat::from(0u128);
+        // Calculate new ratio (Adjusted Collateral / Total Debt)
+        if adjusted_collateral != Nat::from(0u128) {
+            ltv = total_debt.scaled_div(adjusted_collateral);
+            ltv = ltv * Nat::from(100u128);
+            println!("New ltv: {}", ltv);
+        }
+
+        if ltv >= liquidation_threshold_var {
             return Err(Error::LTVGreaterThanThreshold);
         }
         if health_factor < Nat::from(1u128) {
@@ -268,37 +320,79 @@ impl ValidationLogic {
             }
         };
 
+        let mut total_collateral = Nat::from(0u128);
+        let mut total_debt = Nat::from(0u128);
         let mut avg_ltv = Nat::from(0u128);
         let mut health_factor = Nat::from(0u128);
+        let mut liquidation_threshold_var = Nat::from(0u128);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
             GenericLogic::calculate_user_account_data(None).await;
 
         match user_data_result {
             Ok((
-                _t_collateral,
-                _t_debt,
+                t_collateral,
+                t_debt,
                 ltv,
-                _liquidation_threshold,
+                liquidation_threshold,
                 h_factor,
                 _a_borrow,
                 _zero_ltv_collateral,
             )) => {
+                total_collateral = t_collateral;
+                total_debt = t_debt;
                 avg_ltv = ltv;
                 health_factor = h_factor;
-                println!("Average LTV: {}", avg_ltv);
-                println!("Health Factor: {}", health_factor);
+                liquidation_threshold_var = liquidation_threshold;
+                ic_cdk::println!("total collateral = {}", total_collateral);
+                ic_cdk::println!("total debt = {}", total_debt);
+                ic_cdk::println!("Average LTV: {}", avg_ltv);
+                ic_cdk::println!("Health Factor: {}", health_factor);
+                ic_cdk::println!("threshold: {}", liquidation_threshold_var);
             }
             Err(e) => {
                 // Handle the error case
                 return Err(e);
             }
         }
-        ic_cdk::println!(
-            "borrow liquidation threshold = {:?}",
-            user_data.liquidation_threshold
-        );
-        if avg_ltv > user_data.liquidation_threshold.unwrap() {
+        let mut rate: Option<Nat> = None;
+
+        match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
+            Ok(price_cache) => {
+                // Fetch the specific CachedPrice for the asset from the PriceCache
+                if let Some(cached_price) =
+                    price_cache.cache.get(&reserve.asset_name.clone().unwrap())
+                {
+                    let amount = cached_price.price.clone();
+                    rate = Some(amount);
+                } else {
+                    rate = None;
+                }
+            }
+            Err(err) => {
+                // ic_cdk::println!(
+                //     "Error fetching exchange rate for {}: {:?}",
+                //     user_reserve_data.reserve.clone(),
+                //     err
+                // );
+                rate = None;
+            }
+        }
+
+        ic_cdk::println!("rate = {:?}", rate);
+
+        let usd_borrow = amount.clone().scaled_mul(rate.unwrap());
+        ic_cdk::println!("usd withdraw amount = {}", usd_borrow);
+
+        let adjusted_debt = total_debt + usd_borrow;
+        ic_cdk::println!("adjusted amount = {}", adjusted_debt);
+
+        let mut ltv = Nat::from(0u128);
+        ltv = adjusted_debt.scaled_div(total_collateral);
+        ltv = ltv * Nat::from(100u128);
+        ic_cdk::println!("New ltv: {}", ltv);
+
+        if ltv >= liquidation_threshold_var {
             return Err(Error::LTVGreaterThanThreshold);
         }
 

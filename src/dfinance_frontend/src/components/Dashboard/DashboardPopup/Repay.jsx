@@ -218,14 +218,20 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
     }
 
     try {
-      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
       );
-     
       const scaledAmount = amountAsNat64;
+      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+      const repayParams = {
+        asset: asset,
+        amount: scaledAmount,
+        on_behalf_of:[]
+      }
+     
+    
 
-      const repayResult = await backendActor.execute_repay(asset, scaledAmount, [])
+      const repayResult = await backendActor.execute_repay(repayParams)
 
       if ("Ok" in repayResult) {
         trackEvent(

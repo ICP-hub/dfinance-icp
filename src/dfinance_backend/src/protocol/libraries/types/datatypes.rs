@@ -23,13 +23,13 @@ pub struct UserData {
     pub net_worth: Option<Nat>, //FIXME i think we can remove this
     pub total_collateral: Option<Nat>,
     pub total_debt: Option<Nat>,
-    pub available_borrow: Option<Nat>,
+    pub available_borrow: Option<Nat>,//FIXME i think we can remove this
     pub net_apy: Option<Nat>,       //FIXME i think we can remove this
-    pub health_factor: Option<Nat>, //FIXME can we remove this or just keep this
-    pub ltv: Option<Nat>,       
-    pub liquidation_threshold: Option<Nat>,
+    pub health_factor: Option<Nat>, //FIXME remove this
+    pub ltv: Option<Nat>,       //FIXME remove this
+    pub liquidation_threshold: Option<Nat>, //FIXME remove this
     pub reserves: Option<Vec<(String, UserReserveData)>>,
-    pub max_ltv: Option<Nat>,
+    pub max_ltv: Option<Nat>, //FIXME remove this
 }
 
 impl Default for UserData {

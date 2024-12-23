@@ -151,7 +151,6 @@ type UserReserveData = record {
 };
 type UserState = record { adjusted_balance : nat; index : nat };
 service : () -> {
-  create_multiple_canisters : () -> (vec principal);
   execute_borrow : (ExecuteBorrowParams) -> (Result);
   execute_liquidation : (text, text, nat, principal) -> (Result);
   execute_repay : (ExecuteRepayParams) -> (Result);

@@ -67,7 +67,7 @@ const Footer = () => {
             <div className="w-full flex flex-col mt-5">
               {
                 FOOTER_LINK_2 && FOOTER_LINK_2.map((link, index) => (
-                  <NavLink key={index} to={link.route} className={`pb-2 font-light`}>{link.title}</NavLink>
+                  <NavLink key={index} target={link.target} to={link.route} className={`pb-2 font-light`}>{link.title}</NavLink>
                 ))
               }
             </div>

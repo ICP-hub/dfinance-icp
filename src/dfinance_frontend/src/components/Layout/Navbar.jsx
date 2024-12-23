@@ -488,6 +488,7 @@ export default function Navbar({ isHomeNav }) {
                     : HOME_TOP_NAV_LINK.map((link, index) => (
                         <NavLink
                           key={index}
+                          target={link.target}
                           to={link.route}
                           className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                         >

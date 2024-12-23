@@ -384,6 +384,7 @@ const MobileTopNav = ({
           : HOME_TOP_NAV_LINK.map((link, index) => (
               <NavLink
                 key={index}
+                target={link.target}
                 to={link.route}
                 className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
                 style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}

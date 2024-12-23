@@ -45,7 +45,7 @@ export const FOOTER_LINK_1 = [
   {
     id: 4,
     title: "FAQ",
-    route: "/#",
+    route: "/#faq",
     icon: "",
   },
 ]
@@ -54,22 +54,26 @@ export const FOOTER_LINK_2 = [
   {
     id: 0,
     title: "Dev Forum",
-    route: "/#",
+    route: "https://forum.dfinity.org/t/dfinance-showcase/37942",
     icon: "",
+    target: "_blank",
   },
   {
     id: 1,
     title: "Telegram",
     route: "https://t.me/Dfinance_app",
     icon: "",
+    target: "_blank",
   },
   {
     id: 2,
     title: "Blogs",
     route: "/#",
     icon: "",
+    target: "_blank",
   },
-]
+];
+
 export const HOME_TOP_NAV_LINK = [
 
   {
@@ -83,6 +87,7 @@ export const HOME_TOP_NAV_LINK = [
     title: "Docs",
     route: "https://dfinance.notion.site/bbe01eaf7d414148bc4b9843675a532f?v=8b792ba254da44ecab1c0c016331c8af&pvs=4",
     icon: "",
+    target: "_blank",
   },
   {
     id: 2,

@@ -22,12 +22,12 @@ const Footer = () => {
 
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
-      <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] relative">
+      <footer className="w-full min-h-[35vh] xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] relative">
         {}
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"bottom-left"}
-            className="w-[300px] h-[300px] md:w-[400px] md:h-[400px]"
+            className="w-[300px] h-[300px] md:w-[400px] md:h-[630px]"
           />
         </div>
         <div className="w-full flex flex-wrap p-4">

@@ -365,14 +365,14 @@ impl UpdateLogic {
 
         ic_cdk::println!("Calling burn_scaled with params: amount={}, next_debt_index={:?}, user_principal={:?}, debt_token_canister={:?}, platform_principal={:?}",
                          params.amount, reserve_cache.next_debt_index, user_principal, reserve.debt_token_canister.clone().unwrap(), platform_principal);
-
+        let debt_token = reserve.debt_token_canister.clone().unwrap();
         let burn_scaled_result = burn_scaled(
             reserve,
             &mut user_reserve_data,
             params.amount.clone(),
             reserve_cache.next_debt_index.clone(),
             user_principal,
-            Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
+            Principal::from_text(debt_token).unwrap(),
             platform_principal,
             false,
         )
@@ -397,22 +397,18 @@ impl UpdateLogic {
                     reserve_data.is_using_as_collateral_or_borrow = false;
                 }
             }
-            ic_cdk::println!(
-                "Reduced asset borrow for existing reserve: {:?}",
-                reserve_data
-            );
         } else {
             return Err(Error::NoUserReserveDataFound);
         }
 
-        ic_cdk::println!("Saving updated user data to state: {:?}", user_data);
+        ic_cdk::println!("Saving updated user data to state");
         mutate_state(|state| {
             state
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()));
         });
 
-        ic_cdk::println!("User data updated successfully: {:?}", user_data);
+        ic_cdk::println!("User data updated successfully");
         Ok(())
     }
 }

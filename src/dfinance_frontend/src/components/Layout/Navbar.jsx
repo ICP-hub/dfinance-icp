@@ -642,7 +642,7 @@ export default function Navbar({ isHomeNav }) {
                                   className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary button1"
                                   onClick={copyToClipboard}
                                 >
-                                  <GrCopy className="h-5 w-4 ml-3 lg1:ml-0" />
+                                  <GrCopy className="h-5 w-4 ml-4 lg1:ml-6" />
                                   <span className="ml-1">Copy principal</span>
                                 </button>
                                 <button
@@ -651,7 +651,7 @@ export default function Navbar({ isHomeNav }) {
                                     (window.location.href = "/faucet")
                                   }
                                 >
-                                  <CiShare1 className="h-5 w-[18px] -ml-1 lg:-ml-8 dark:text-darkText " />
+                                  <CiShare1 className="h-5 -ml-[1px] w-[18px] dark:text-darkText" />
                                   <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
                                     Faucet Asset
                                   </span>

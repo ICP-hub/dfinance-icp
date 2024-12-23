@@ -223,7 +223,11 @@ impl GenericLogic {
 
                 let user_debt = match user_debt_in_base_currency {
                     Ok(data) => {
-                        ic_cdk::println!("user_balance_in_base_currency: {:?}", data);
+                        ic_cdk::println!(
+                            "user_debt_in_base_currency:{} : {:?}",
+                            reserve_name,
+                            data
+                        );
                         data
                     }
                     Err(e) => {
@@ -232,25 +236,20 @@ impl GenericLogic {
                 };
 
                 total_debt += user_debt.clone();
-                ic_cdk::println!(
-                    "Total debt for borrowed reserve '{}': {}",
-                    user_reserve_data.reserve,
-                    total_debt.clone()
-                );
-
-                if available_borrow < user_debt {
-                    available_borrow = Nat::from(0u128);
-                    }
-                    else {
-                     available_borrow -= total_debt.clone();
-                    }
-
-                ic_cdk::println!(
-                    "avaible borrow after subtracting debt = {}",
-                    available_borrow.clone()
-                );
+                ic_cdk::println!("Total debt for borrowed reserves {}", total_debt.clone());
             }
         }
+        if available_borrow < total_debt.clone() {
+            available_borrow = Nat::from(0u128);
+            }
+            else {
+             available_borrow -= total_debt.clone();
+            }
+
+        ic_cdk::println!(
+            "avaible borrow after subtracting debt = {}",
+            available_borrow.clone()
+        );
         avg_ltv = if total_collateral != Nat::from(0u128) {
             // weighted average.
             avg_ltv.scaled_div(total_collateral.clone())

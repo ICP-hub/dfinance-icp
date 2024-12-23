@@ -68,24 +68,7 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
     ))
 }
 
-#[update]
-async fn create_multiple_canisters() -> Vec<Principal> {
-    let mut canister_ids = Vec::new();
 
-    // Define different token names and symbols
-    let tokens = vec![
-        // ("ckBTC", "ckBTC"),
-        ("dckBTC", "dckBTC"),
-        ("debtckBTC", "debtckBTC"),
-    ];
-
-    for (token_name, token_symbol) in tokens {
-        let canister_id = create_token_canister(token_name, token_symbol).await;
-        canister_ids.push(canister_id);
-    }
-
-    canister_ids
-}
 
 pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Principal {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {

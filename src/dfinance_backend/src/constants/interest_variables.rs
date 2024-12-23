@@ -55,7 +55,7 @@ pub mod constants {
     pub const CKUSDT_SUPPLY_CAP: u128 = 10_000_000_000;
     pub const CKUSDT_RESERVE_FACTOR: u128 = 15;
 
-    pub const  DEBT_INDEX : u128 = 100000000;
-    pub const  PERCENTAGE_SCALE : u128 = 100000000;
+    pub const  DEBT_INDEX : u128 = 100000000; //FIXME initial_debt_index
+    pub const  PERCENTAGE_SCALE : u128 = 100000000; //FIXME yeh kya hai
 
 }

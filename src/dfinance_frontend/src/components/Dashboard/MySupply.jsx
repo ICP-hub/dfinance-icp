@@ -84,7 +84,6 @@ const MySupply = () => {
       setAvailableBorrow(0);
     }
   }, [userAccountData, userData]);
-  console.log("available borrow",availableBorrow )
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -1820,7 +1819,6 @@ const MySupply = () => {
                                       const assetSupply = getAssetSupplyValue(
                                         item[0]
                                       );
-                                      console.log("asets supply ",assetSupply)
                                       const assetBorrow = getAssetBorrowValue(
                                         item[0]
                                       );

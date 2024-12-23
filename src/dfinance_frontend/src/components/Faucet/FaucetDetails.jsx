@@ -22,6 +22,7 @@ import useFetchBalance from "../customHooks/useFetchBalance";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import Loading from "../Common/Loading";
+import MiniLoader from "../Common/MiniLoader";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -46,7 +47,7 @@ const FaucetDetails = () => {
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const {
@@ -188,16 +189,7 @@ const FaucetDetails = () => {
     setShowPopup(false);
   };
 
-  const { filteredItems } = useAssetData();
-  useEffect(() => {
-    if (filteredItems.length === 0) {
-      setLoading(true);
-    } else {
-      setTimeout(() => {
-        setLoading(false);
-      }, 500);
-    }
-  }, [filteredItems]);
+  const { filteredItems,loading } = useAssetData();
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
@@ -218,7 +210,7 @@ const FaucetDetails = () => {
       <div className="w-full mt-9 p-0 lg:px-1">
         {loading ? (
           <div className="w-full mt-[180px] mb-[300px] flex justify-center items-center ">
-            <Loading isLoading={true} />
+            <MiniLoader isLoading={true} />
           </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">

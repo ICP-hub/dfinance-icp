@@ -235,15 +235,19 @@ impl GenericLogic {
                 ic_cdk::println!(
                     "Total debt for borrowed reserve '{}': {}",
                     user_reserve_data.reserve,
-                    total_debt
+                    total_debt.clone()
                 );
-                available_borrow -= user_debt;
-                if available_borrow == max {
+
+                if available_borrow < user_debt {
                     available_borrow = Nat::from(0u128);
-                }
+                    }
+                    else {
+                     available_borrow -= total_debt.clone();
+                    }
+
                 ic_cdk::println!(
                     "avaible borrow after subtracting debt = {}",
-                    available_borrow
+                    available_borrow.clone()
                 );
             }
         }

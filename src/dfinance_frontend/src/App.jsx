@@ -48,10 +48,43 @@ import marketPageLight from "../public/Helpers/market-pageLight.png";
 import marketeNavbarDetailsLight from "../public/Helpers/market-page-detailsLight.png";
 import debtStatusImageLight from "../public/Helpers/get-debt-status-buttonLight.png";
 import liquidationTableLight from "../public/Helpers/liquidation-tableLight.png";
+import liquidationButton from "../public/Helpers/Liquidate-button.png";
+import liquidationButtonLight from "../public/Helpers/Liquidate-buttonLight.png";
+import userInformation from "../public/Helpers/userInformation.png";
+import userInformationLight from "../public/Helpers/userInformationLight.png";
+import DebtInformation from "../public/Helpers/DebtInfomation.png";
+import DebtInformationLight from "../public/Helpers/DebtInformationLight.png";
+import CollateralInformation from "../public/Helpers/CollateralInformation.png";
+import CollateralInformationLight from "../public/Helpers/CollateralInformationLight.png";
+import WarningPopup from "../public/Helpers/WarningPopup.png";
+import WarningPopupLight from "../public/Helpers/WarningPopupLight.png";
+import LiquidationSuccessfull from "../public/Helpers/Liquidation Successfull.png";
+import LiquidationSuccessfullLight from "../public/Helpers/LiquidationSuccessfullLight.png";
+import CollateralInformationCall from "../public/Helpers/colateralInformationCall.png";
+import CollateralInformationCallLight from "../public/Helpers/colateralInformationCallLight.png";
+import dashboardNavDetailsMenuDark from "../public/Helpers/dashboardNavDetailsMenuDark.png";
+import dashboardNavDetailsMenuLight from "../public/Helpers/dashboardNavDetailsMenuLight.png";
+import DashboarNavDetailsDarkSmall from "../public/Helpers/DashboarNavDetailsDarkSmall.png";
+import DashboarNavDetailsLightSmall from "../public/Helpers/DashboarNavDetailsLightSmall.png";
+import marketNavDetailsDarkSmall from "../public/Helpers/marketNavDetailsDarkSmall.png";
+import marketNavDetailsLightSmall from "../public/Helpers/marketNavDetailsLightSmall.png";
+import DfinanceHomeDarkSmall from "../public/Helpers/DfinanceHomeDarkSmall.png";
+import DfinanceHomeLightSmall from "../public/Helpers/DfinanceHomeLightSmall.png";
+import FaucetSmall from "../public/Helpers/FaucetSmall.png";
+import FaucetSmallLight from "../public/Helpers/FaucetSmallLight.png";
+import DashboardPageSmall from "../public/Helpers/DashboardPageSmall.png";
+import DashboardPageSmallLight from "../public/Helpers/DashboardPageSmallLight.png";
+import MarketPageSmall from "../public/Helpers/MarketPageSmall.png";
+import MarketPageSmallLight from "../public/Helpers/MarketPageSmallLight.png";
+
 export default function App() {
   const theme = useSelector((state) => state.theme.theme);
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
+  const isMobile = window.innerWidth <= 1115;
+  const isMobile2 = window.innerWidth <= 640;
+
+  const targetElement = isMobile ? "body" : "#dashboard-assets-to-supply";
 
   let TRACKING_ID = "G-EVCJPRHQYX";
   const { filteredItems, loading } = useAssetData();
@@ -78,18 +111,33 @@ export default function App() {
             <p className="mb-4">
               This guide will walk you through the key features.
             </p>
-            <img
-              loading="lazy"
-               src={theme === "dark" ? dFinanceHomePage : dfinanceHomePageLight}
-              alt="dFinanceHomePage"
-              className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
-            />
+            {isMobile2 ? (
+              <img
+                loading="lazy"
+                src={
+                  theme === "dark"
+                    ? DfinanceHomeDarkSmall
+                    : DfinanceHomeLightSmall
+                }
+                alt="dFinanceHomePage"
+                className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
+              />
+            ) : (
+              <img
+                loading="lazy"
+                src={
+                  theme === "dark" ? dFinanceHomePage : dfinanceHomePageLight
+                }
+                alt="dFinanceHomePage"
+                className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
+              />
+            )}
           </div>
         ),
         placement: "center",
       },
       {
-        target: "#faucet-navbar",
+        target: "body",
         content: (
           <div className="text-justify relative flex flex-col justify-center">
             <h1 className="text-[22px] font-bold mb-3">Faucet</h1>
@@ -98,18 +146,28 @@ export default function App() {
               available to faucet. Simply choose an asset from the list to
               proceed.
             </p>
-            <img
+            {isMobile2 ? (
+              <img
+              loading="lazy"
+              src={theme === "dark" ? FaucetSmall : FaucetSmallLight}
+              alt="Faucet Button"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+               ) : (
+                <img
               loading="lazy"
               src={theme === "dark" ? faucetPage : faucetPageLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
+              )}
+            
           </div>
         ),
         placement: "center",
       },
       {
-        target: "#faucet-button",
+        target: "body",
         content: (
           <div className="text-justify relative flex flex-col">
             <p className="mb-4">
@@ -137,7 +195,7 @@ export default function App() {
         placement: "center",
       },
       {
-        target: "#dashboard-guide",
+        target: "body",
         content: (
           <div className="relative flex flex-col text-justify">
             <h1 className="text-[22px] font-bold mb-3">Dashboard</h1>
@@ -150,12 +208,22 @@ export default function App() {
               assets, or <span className="font-semibold">repay</span> your
               borrowed amounts.
             </p>
-            <img
+            {isMobile2 ? (
+              <img
+              loading="lazy"
+              src={theme === "dark" ? DashboardPageSmall : DashboardPageSmallLight}
+              alt="dashboardPage"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+               ) : (
+                <img
               loading="lazy"
               src={theme === "dark" ? dashboardPage : dashboardPageLight}
               alt="dashboardPage"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
+              )}
+            
           </div>
         ),
         placement: "center",
@@ -170,7 +238,11 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-               src={theme === "dark" ? dashboardAssetsToSupplyButton : dashboardAssetsToSupplyButtonLight}
+              src={
+                theme === "dark"
+                  ? dashboardAssetsToSupplyButton
+                  : dashboardAssetsToSupplyButtonLight
+              }
               alt="dashboardAssetsToSupplyButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -181,13 +253,17 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? assetsToSupplyPopup : assetsToSupplyPopupLight}
+              src={
+                theme === "dark"
+                  ? assetsToSupplyPopup
+                  : assetsToSupplyPopupLight
+              }
               alt="assetsToSupplyPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "right",
+        placement: isMobile ? "center" : "right",
       },
       {
         target: "#dashboard-assets-to-borrow",
@@ -199,7 +275,11 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? dashboardAssetsToBorrowButton : dashboardAssetsToBorrowButtonLight}
+              src={
+                theme === "dark"
+                  ? dashboardAssetsToBorrowButton
+                  : dashboardAssetsToBorrowButtonLight
+              }
               alt="dashboardAssetsToBorrowButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -209,13 +289,17 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? assetsToBorrowPopup : assetsToBorrowPopupLight}
+              src={
+                theme === "dark"
+                  ? assetsToBorrowPopup
+                  : assetsToBorrowPopupLight
+              }
               alt="assetsToBorrowPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "left",
+        placement: isMobile ? "center" : "left",
       },
       {
         target: "#your-borrow",
@@ -227,7 +311,11 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? yourBorrowRepayButton : yourBorrowRepayButtonLight}
+              src={
+                theme === "dark"
+                  ? yourBorrowRepayButton
+                  : yourBorrowRepayButtonLight
+              }
               alt="yourBorrowRepayButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -238,13 +326,17 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? yourBorrowRepayPopup : yourBorrowRepayPopupLight}
+              src={
+                theme === "dark"
+                  ? yourBorrowRepayPopup
+                  : yourBorrowRepayPopupLight
+              }
               alt="yourBorrowRepayPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "left",
+        placement: isMobile ? "center" : "left",
       },
       {
         target: "#your-supplies",
@@ -256,7 +348,11 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? yourSuppliesWithdrawButton : yourSuppliesWithdrawButtonLight}
+              src={
+                theme === "dark"
+                  ? yourSuppliesWithdrawButton
+                  : yourSuppliesWithdrawButtonLight
+              }
               alt="yourSuppliesWithdrawButton"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -266,42 +362,83 @@ export default function App() {
             </p>
             <img
               loading="lazy"
-              src={theme === "dark" ? yourSuppliesWithdrawPopup : yourSuppliesWithdrawPopupLight}
+              src={
+                theme === "dark"
+                  ? yourSuppliesWithdrawPopup
+                  : yourSuppliesWithdrawPopupLight
+              }
               alt="yourSuppliesWithdrawPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "right",
+        placement: isMobile ? "center" : "right",
       },
       {
         target: "#dashboard-nav-details",
         content: (
-          <div className="relative flex flex-col text-justify">
-            <p className="mb-4">
-              In here we can see Net Worth, Net APY, and Health Factor (when
-              available).
-            </p>
-            <img
-              loading="lazy"
-              src={theme === "dark" ? dashboarNavDetails : dashboarNavDetailsLight}
-              alt="dashboarNavDetails"
-              className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-            />
-            <p className="mb-4">
-              On clicking the "Risk Details" button, a popup will appear showing
-              the Health Factor, Current LTV, Max LTV, and Liquidation
-              Threshold.
-            </p>
-            <img
-              loading="lazy"
-              src={theme === "dark" ? riskDetails : riskDetailsLight}
-              alt="Faucet Button"
-              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-            />
-          </div>
+          <>
+            {isMobile2 ? (
+              <div className="relative flex flex-col text-justify">
+                <p className="mb-4">Here Click on the menu button</p>
+                <p className="mb-4">
+                  Here we can see Net Worth, Net APY, and Health Factor (when
+                  available).
+                </p>
+                <img
+                  loading="lazy"
+                  src={
+                    theme === "dark"
+                      ? DashboarNavDetailsDarkSmall
+                      : DashboarNavDetailsLightSmall
+                  }
+                  alt="Faucet Button"
+                  className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30 mb-4"
+                />
+                <p className="mb-4">
+                  On clicking the "Risk Details" button, a popup will appear
+                  showing the Health Factor, Current LTV, Max LTV, and
+                  Liquidation Threshold.
+                </p>
+                <img
+                  loading="lazy"
+                  src={theme === "dark" ? riskDetails : riskDetailsLight}
+                  alt="Faucet Button"
+                  className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+                />
+              </div>
+            ) : (
+              <div className="relative flex flex-col text-justify">
+                <p className="mb-4">
+                  In here we can see Net Worth, Net APY, and Health Factor (when
+                  available).
+                </p>
+                <img
+                  loading="lazy"
+                  src={
+                    theme === "dark"
+                      ? dashboarNavDetails
+                      : dashboarNavDetailsLight
+                  }
+                  alt="dashboarNavDetails"
+                  className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+                />
+                <p className="mb-4">
+                  On clicking the "Risk Details" button, a popup will appear
+                  showing the Health Factor, Current LTV, Max LTV, and
+                  Liquidation Threshold.
+                </p>
+                <img
+                  loading="lazy"
+                  src={theme === "dark" ? riskDetails : riskDetailsLight}
+                  alt="Faucet Button"
+                  className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+                />
+              </div>
+            )}
+          </>
         ),
-        placement: "right",
+        placement: isMobile ? "center" : "right",
       },
       {
         target: "#market-page1",
@@ -313,12 +450,22 @@ export default function App() {
               Total Supplied, Supply APY, Total Borrowing, and Borrowing APY.
               Use it to evaluate assets for supply or borrowing.
             </p>
-            <img
-              loading="lazy"
-              src={theme === "dark" ? marketPage : marketPageLight}
-              alt="Faucet Button"
-              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-            />
+            {isMobile2 ? (
+               <img
+               loading="lazy"
+               src={theme === "dark" ? MarketPageSmall : MarketPageSmallLight}
+               alt="Faucet Button"
+               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+             />
+               ) : (
+                <img
+                loading="lazy"
+                src={theme === "dark" ? marketPage : marketPageLight}
+                alt="Faucet Button"
+                className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+              />
+              )}
+           
           </div>
         ),
         placement: "center",
@@ -333,12 +480,21 @@ export default function App() {
               Total Supplied, Supply APY, Total Borrowing, and Borrowing APY.
               Use it to evaluate assets for supply or borrowing.
             </p>
-            <img
-              loading="lazy"
-              src={theme === "dark" ? marketPage : marketPageLight}
-              alt="Faucet Button"
-              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-            />
+            {isMobile2 ? (
+               <img
+               loading="lazy"
+               src={theme === "dark" ? MarketPageSmall : MarketPageSmallLight}
+               alt="Faucet Button"
+               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+             />
+               ) : (
+                <img
+                loading="lazy"
+                src={theme === "dark" ? marketPage : marketPageLight}
+                alt="Faucet Button"
+                className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+              />
+              )}
           </div>
         ),
         placement: "center",
@@ -347,22 +503,53 @@ export default function App() {
         target: ".market-nav-details",
         content: (
           <div className="relative flex flex-col text-justify">
+            <p className="mb-4">Click on the menu button</p>
             <p className="mb-4">
               In here we can see Total Market Size, Total Available, and Total
               Borrows.
             </p>
-            <img
-              loading="lazy"
-              src={theme === "dark" ? marketeNavbarDetails : marketeNavbarDetailsLight}
-              alt="marketeNavbarDetails"
-              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-            />
+            {isMobile2 ? (
+              <img
+                loading="lazy"
+                src={
+                  theme === "dark"
+                    ? marketNavDetailsDarkSmall
+                    : marketNavDetailsLightSmall
+                }
+                alt="marketeNavbarDetails"
+                className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+              />
+            ) : (
+              <img
+                loading="lazy"
+                src={
+                  theme === "dark"
+                    ? marketeNavbarDetails
+                    : marketeNavbarDetailsLight
+                }
+                alt="marketeNavbarDetails"
+                className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+              />
+            )}
           </div>
         ),
-        placement: "bottom",
+        placement: isMobile ? "center" : "bottom",
       },
       {
         target: "#footer-liquidation",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+              Click on the 'Liquidation' button at the bottom of the page to
+              navigate to the liquidation page.
+            </p>
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation",
         content: (
           <div className="relative flex flex-col text-justify">
             <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
@@ -376,20 +563,184 @@ export default function App() {
               alt="Faucet Button"
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation1",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+              Here it will show the list of users with a health factor less than
+              1
+            </p>
             <img
               loading="lazy"
               src={theme === "dark" ? liquidationTable : liquidationTableLight}
+              alt="Faucet Popup"
+              className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+             <p className="mb-4">
+             Click the 'Liquidate' button in the 'Liquidation' list to view debt details and open the user information popup.
+            </p>
+            <img
+              loading="lazy"
+              src={
+                theme === "dark" ? liquidationButton : liquidationButtonLight
+              }
+              alt="Faucet Button"
+              className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation1",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+              This will now open the 'User Information' popup, displaying the
+              user's principal and health factor.
+            </p>
+
+            <img
+              loading="lazy"
+              src={theme === "dark" ? userInformation : userInformationLight}
               alt="Faucet Popup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
         ),
-        placement: "top",
+        placement: "center",
+      },
+      {
+        target: "#liquidation2",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+              Now select the debt asset to view the repayment details.
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? DebtInformation : DebtInformationLight}
+              alt="Faucet Button"
+              className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+              "Now, select the collateral asset to view the details and rewards
+              given to the liquidator based on the selected asset, and then
+              click on 'Approve Liquidation' to proceed with the call."
+            </p>
+            <img
+              loading="lazy"
+              src={
+                theme === "dark"
+                  ? CollateralInformation
+                  : CollateralInformationLight
+              }
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+              "Click on 'Call Liquidation' to proceed with the call."
+            </p>
+            <img
+              loading="lazy"
+              src={
+                theme === "dark"
+                  ? CollateralInformationCall
+                  : CollateralInformationCallLight
+              }
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">
+              A warning popup will appear—click 'YES, Call Liquidation' to
+              proceed, then click 'Call Liquidation' to complete the process."
+            </p>
+            <img
+              loading="lazy"
+              src={theme === "dark" ? WarningPopup : WarningPopupLight}
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+            <p className="mb-4">Liquidation successful. You’re done!</p>
+            <img
+              loading="lazy"
+              src={
+                theme === "dark"
+                  ? LiquidationSuccessfull
+                  : LiquidationSuccessfullLight
+              }
+              alt="Faucet Popup"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ),
+        placement: "center",
+      },
+      {
+        target: "#liquidation-guide",
+        content: (
+          <div className="relative flex flex-col text-justify">
+            <h1 className="text-[22px] font-bold mb-3">End of Tour</h1>
+            <p className="mb-4">
+              This is the end of your tour. You're all set to explore the site
+              and start using all the features!
+            </p>
+            <div className="text-center mb-4">
+              <span className="text-green-500 text-[40px]">&#10003;</span>{" "}
+              {/* Checkmark symbol */}
+            </div>
+          </div>
+        ),
+        placement: "center",
       },
     ],
     styles: {
       options: {
-        arrowColor: "#252347",
+        arrowColor: joyRideBackground,
         zIndex: 10000000,
         primaryColor: "#00bfff",
         position: "absolute",
@@ -400,7 +751,7 @@ export default function App() {
         borderRadius: "12px",
         fontFamily: "'Poppins', sans-serif",
         fontSize: "13px",
-        border: '2px solid #525355',
+        border: "2px solid #525355",
       },
       buttonNext: {
         backgroundImage: "linear-gradient(to right, #4659CF, #2A1F9D)",
@@ -557,6 +908,20 @@ export default function App() {
     }
     if (data.action === "next" && data.index === 9) {
       navigate("/market");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+    if (data.action === "next" && data.index === 12) {
+      navigate("/liquidate");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+    if (data.action === "next" && data.index === 13) {
+      navigate("/liquidate");
       window.scrollTo({
         top: 0,
         behavior: "smooth",

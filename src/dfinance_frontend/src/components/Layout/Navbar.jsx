@@ -440,11 +440,6 @@ export default function Navbar({ isHomeNav }) {
                             <NavLink
                               key={index}
                               to={link.route}
-                              id={
-                                link.title === "Dashboard"
-                                  ? "dashboard-guide"
-                                  : undefined
-                              }
                               className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
                             >
                               {link.title}
@@ -456,11 +451,6 @@ export default function Navbar({ isHomeNav }) {
                               <NavLink
                                 to={link.route}
                                 className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                                id={
-                                  link.title === "Faucet"
-                                    ? "faucet-navbar"
-                                    : undefined
-                                }
                               >
                                 {link.title}
                               </NavLink>
@@ -644,7 +634,7 @@ export default function Navbar({ isHomeNav }) {
                             {}
                             <div className=" w-full flex justify-center">
                               <div
-                                className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                                className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                                 style={{ height: "70px", width: "160px" }}
                               >
                                 <button

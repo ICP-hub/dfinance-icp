@@ -9,13 +9,14 @@ const useUserData = () => {
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
   const [error, setError] = useState(null);
-
-  const getUserData = async () => {
-    if (!backendActor&& isAuthenticated) {
+  const principalArray = principal ? principal.split('') : [];
+  const getUserData = async (user) => {
+    if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
     try {
       const result = await backendActor.get_user_data(user);
+      console.log("user in useUserData", user)
       return result;
     } catch (error) {
       setError(error.message);
@@ -23,10 +24,10 @@ const useUserData = () => {
     }
   };
 
-  const fetchUserData = async () => {
+  const fetchUserData = async (user) => {
     if (backendActor) {
       try {
-        const result = await getUserData();
+        const result = await getUserData(user);
         setUserData(result);
       } catch (error) {
         console.error(error.message)
@@ -87,8 +88,8 @@ const useUserData = () => {
 
 
   useEffect(() => {
-    fetchUserData();
-  }, [principal, backendActor]);
+    fetchUserData(user);
+  }, [user, backendActor]);
 
   useEffect(() => {
     fetchUserAccountData();

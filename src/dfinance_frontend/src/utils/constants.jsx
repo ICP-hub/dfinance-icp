@@ -59,8 +59,8 @@ export const FOOTER_LINK_2 = [
   },
   {
     id: 1,
-    title: "Discord",
-    route: "/#",
+    title: "Telegram",
+    route: "https://t.me/Dfinance_app",
     icon: "",
   },
   {

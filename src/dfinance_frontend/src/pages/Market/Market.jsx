@@ -27,6 +27,8 @@ import { Principal } from "@dfinity/principal";
 import useFormatNumber from "../../components/customHooks/useFormatNumber";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import WalletModal from "../../components/Dashboard/WalletModal";
+import Loading from "../../components/Common/Loading";
+import MiniLoader from "../../components/Common/MiniLoader";
 
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
@@ -164,7 +166,7 @@ const WalletDetails = () => {
     setCurrentPage(1);
   };
 
-  const { assets, reserveData, filteredItems, error } =
+  const { assets, reserveData, filteredItems, error, loading } =
     useAssetData(searchQuery);
 
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
@@ -315,7 +317,11 @@ const WalletDetails = () => {
       )}
 
       <div className="w-full mt-6">
-        {currentItems.length === 0 ? (
+      {loading ? (
+          <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center ">
+            <MiniLoader isLoading={true} />
+          </div>
+        ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
             <div className="w-20 h-15">
               <img

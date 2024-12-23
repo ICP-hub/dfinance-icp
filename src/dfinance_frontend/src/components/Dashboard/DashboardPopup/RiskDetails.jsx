@@ -24,7 +24,7 @@ const RiskPopup = ({ onClose, userData , userAccountData }) => {
       : "0.00";
 
   const healthFactorMinValue = 1;
-  const Max_Ltv = parseFloat(Number(userData?.Ok?.max_ltv / 100000000));
+  const Max_Ltv = parseFloat(Number(userAccountData?.Ok?.[2]) / 100000000).toFixed(2);
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       onClose();

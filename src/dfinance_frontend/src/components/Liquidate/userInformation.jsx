@@ -789,7 +789,7 @@ const UserInformationPopup = ({
           </h2>
           <p className="text-md text-[#989898] text-center dark:text-darkText mt-4 font-light">
             Are you sure you want to liquidate on behalf of "
-            <strong className="font-bold">{principal}</strong>"?{" "}
+            <strong className="font-bold">{principal.toString()}</strong>"?{" "}
             <strong className="font-bold text-red-500">{amountToRepay} </strong>{" "}
             <span className="font-bold">{selectedDebtAsset}</span> will be{" "}
             <strong className="underline">deducted</strong> from your account &{" "}

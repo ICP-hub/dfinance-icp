@@ -2,7 +2,7 @@ use crate::api::functions::{get_balance, get_fees, get_total_supply};
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveData;
-use crate::get_cached_exchange_rate;
+use crate::{get_asset_debt, get_cached_exchange_rate};
 use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::GenericLogic;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
@@ -428,7 +428,7 @@ impl ValidationLogic {
         ledger_canister: Principal,
     ) -> Result<(), Error> {
         // // Check if the caller is anonymous
-
+       //TODO remove transfer fee
         let transfer_fees_result = get_fees(ledger_canister).await;
         let transfer_fees = match transfer_fees_result {
             Ok(fees) => fees,
@@ -446,7 +446,7 @@ impl ValidationLogic {
 
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User found");
                 data
             }
             Err(e) => {
@@ -461,12 +461,12 @@ impl ValidationLogic {
             None => None,
         };
 
-        let mut user_current_debt = Nat::from(0u128);
-
-        if let Some((_, reserve_data)) = user_reserve {
-            user_current_debt = reserve_data.asset_borrow.clone();
-        }
-
+        let mut user_current_debt = get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
+        //TODO get asset borrow
+        // if let Some((_, reserve_data)) = user_reserve {
+        //     user_current_debt = reserve_data.asset_borrow.clone();
+        // }
+        
         if user_current_debt == Nat::from(0u128) {
             return Err(Error::NoDebtToRepay);
         }

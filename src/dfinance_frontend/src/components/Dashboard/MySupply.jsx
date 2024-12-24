@@ -84,7 +84,6 @@ const MySupply = () => {
       setAvailableBorrow(0);
     }
   }, [userAccountData, userData]);
-
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -775,7 +774,7 @@ const MySupply = () => {
                                 (reserveGroup) =>
                                   getAssetSupplyValue(reserveGroup[0]) > 0n
                               )
-                              .map((reserveGroup, index) => {
+                              .map((reserveGroup, index, filteredReserves) => {
                                 const asset = reserveGroup[0];
                                 const assetSupply = getAssetSupplyValue(asset);
                                 const item = filteredItems.find(
@@ -1110,6 +1109,10 @@ const MySupply = () => {
                                         className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
                                       />
                                     </div>
+                                   
+                                    {index !== filteredReserves.length - 1 && (
+                                  <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                                )}
                                   </div>
                                 );
                               })}
@@ -1816,7 +1819,6 @@ const MySupply = () => {
                                       const assetSupply = getAssetSupplyValue(
                                         item[0]
                                       );
-                                      console.log("asets supply ",assetSupply)
                                       const assetBorrow = getAssetBorrowValue(
                                         item[0]
                                       );

@@ -1,16 +1,16 @@
+use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
-use crate::protocol::libraries::math::math_utils;
-use crate::protocol::libraries::types::datatypes::UserReserveData;
-use ic_cdk::api::time;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
 use crate::protocol::libraries::logic::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
+use crate::protocol::libraries::math::math_utils;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::api::functions::asset_transfer;
+use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
+use ic_cdk::api::time;
 
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000
@@ -89,7 +89,7 @@ pub async fn update_interest_rates(
     reserve_cache: &mut ReserveCache,
     liq_taken: Nat,
     liq_added: Nat,
-) -> Result<(), Error>{
+) -> Result<(), Error> {
     let total_debt = reserve_cache
         .curr_debt
         .clone()
@@ -139,7 +139,6 @@ pub async fn update_interest_rates(
     Ok(())
 }
 
-
 //TODO change the param of burn function according to mint.
 pub async fn burn_scaled(
     reserve: &mut ReserveData,
@@ -170,8 +169,8 @@ pub async fn burn_scaled(
         return Err(Error::InvalidBurnAmount);
     }
 
-    let balance_result = get_balance(token_canister_principal, user_principal).await;
-    ic_cdk::println!("balance_nat retrieved = {:?}", balance_result);
+    let balance_result = get_balance(token_canister_principal, user_principal).await; //TODO handle error
+   
 
     let balance = match balance_result {
         Ok(bal) => bal,
@@ -190,7 +189,7 @@ pub async fn burn_scaled(
         balance_increase = (balance.clone().scaled_mul(index.clone()))
             - (balance
                 .clone()
-                .scaled_mul(user_state.liquidity_index.clone()));//fetch from user
+                .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
 
         user_state.d_token_balance -= adjusted_amount.clone();
@@ -200,7 +199,7 @@ pub async fn burn_scaled(
         balance_increase = (balance.clone().scaled_mul(index.clone()))
             - (balance
                 .clone()
-                .scaled_mul(user_state.variable_borrow_index.clone())); 
+                .scaled_mul(user_state.variable_borrow_index.clone()));
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
         // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
         user_state.debt_token_blance -= adjusted_amount.clone();
@@ -238,6 +237,11 @@ pub async fn burn_scaled(
         // if balance - amount_to_burn < 1000 {
         //      amount_to_burn = balance;
         // }
+        if balance.clone() > amount_to_burn.clone()
+            && balance.clone() - amount_to_burn.clone() < Nat::from(1000u128)
+        {
+            amount_to_burn = balance.clone();
+        }
         ic_cdk::println!(
             "balance_increase is not greater than amount, amount_to_burn = {}",
             amount_to_burn

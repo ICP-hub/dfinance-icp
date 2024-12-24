@@ -258,7 +258,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     )
     .await
     {
-        ic_cdk::println!("Repay validation failed: {:?}", e);
+        ic_cdk::println!("Withdraw validation failed: {:?}", e);
         return Err(e);
     }
     ic_cdk::println!("Withdraw validated successfully");

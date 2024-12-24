@@ -259,7 +259,6 @@ pub async fn execute_repay(
     // }
 
     let platform_principal = ic_cdk::api::id();
-    ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
     let repay_amount = params.amount.clone();
     ic_cdk::println!("Repay amount: {:?}", repay_amount);
@@ -271,7 +270,7 @@ pub async fn execute_repay(
     } else {
         user_principal
     };
-    ic_cdk::println!("Transfer from principal: {:?}", transfer_from_principal);
+    ic_cdk::println!("Transfer from principal: {:?}", transfer_from_principal.to_string());
 
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -283,7 +282,7 @@ pub async fn execute_repay(
 
     let mut reserve_data = match reserve_data_result {
         Ok(data) => {
-            ic_cdk::println!("Reserve data found for asset: {:?}", data);
+            ic_cdk::println!("Reserve data found for asset");
             data
         }
         Err(e) => {
@@ -307,7 +306,7 @@ pub async fn execute_repay(
     if let Err(e) = ValidationLogic::validate_repay(
         &reserve_data,
         params.amount.clone(),
-        user_principal,
+        user_principal, //TODO what if liq is repaying
         ledger_canister_id,
     )
     .await {

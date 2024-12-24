@@ -31,7 +31,7 @@ const UserInformationPopup = ({
   assetBorrow,
 }) => {
   const { backendActor, principal: currentUserPrincipal } = useAuth();
-
+  console.log("User principal", mappedItem.principal);
   const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
   const [isApproved, setIsApproved] = useState(false);
@@ -264,7 +264,7 @@ const UserInformationPopup = ({
         throw new Error("Backend actor is not initialized");
       }
 
-      const result = await backendActor.liquidation_call(
+      const result = await backendActor.execute_liquidation(
         selectedDebtAsset,
         selectedAsset,
         supplyAmount,

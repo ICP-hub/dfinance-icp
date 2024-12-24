@@ -57,36 +57,12 @@ impl UpdateLogic {
         };
 
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
-        let mut user_reserve_data = match user_reserve.as_mut() {
-            Some((_, reserve_data)) => reserve_data,
-            None => {
-                return Err(Error::NoUserReserveDataFound);
-            }
-        };
-        //TODO remove mint function from here
+        
+       
         let platform_principal = ic_cdk::api::id();
-        let minted_result = mint_scaled(
-            reserve,
-            &mut user_reserve_data,
-            params.amount.clone(),
-            reserve_cache.next_liquidity_index.clone(),
-            user_principal,
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
-            platform_principal,
-            true,
-        )
-        .await;
+       
 
-        match minted_result {
-            Ok(()) => {
-                ic_cdk::println!("Minting dtokens successfully");
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
-
-        if let Some((_, reserve_data)) = user_reserve {
+        let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.reserve = params.asset.clone();
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.borrow_rate = reserve.borrow_rate.clone();
@@ -107,6 +83,7 @@ impl UpdateLogic {
                 "Updated asset supply for existing reserve: {:?}",
                 reserve_data
             );
+            reserve_data
         } else {
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
@@ -123,10 +100,39 @@ impl UpdateLogic {
             } else {
                 user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
             }
+        
+            let new_reserve_data: &mut UserReserveData = if let Some((_, reserve_data)) = user_data
+            .reserves
+            .as_mut()
+            .and_then(|reserves| reserves.iter_mut().find(|(asset, _)| *asset == params.asset.clone()))
+        {
+            reserve_data
+        } else {
+            return Err(Error::EmptyAsset); // TODO use an appropriate error
+        };
+        new_reserve_data
+         
+        };
+        let minted_result = mint_scaled(
+            reserve,
+            &mut user_reserve_data,
+            params.amount.clone(),
+            reserve_cache.next_liquidity_index.clone(),
+            user_principal,
+            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            platform_principal,
+            true,
+        )
+        .await;
 
-            ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
+        match minted_result {
+            Ok(()) => {
+                ic_cdk::println!("Minting dtokens successfully");
+            }
+            Err(e) => {
+                return Err(e);
+            }
         }
-
         mutate_state(|state| {
             state
                 .user_profile

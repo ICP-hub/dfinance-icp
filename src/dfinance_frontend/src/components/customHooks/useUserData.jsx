@@ -64,7 +64,7 @@ const useUserData = () => {
 
       // Check if result exists and health factor is available
       if (result?.Ok && result.Ok[4]) {
-        const healthFactor = Number(result.Ok[4]) / 100000000;
+        const healthFactor = Number(result.Ok[4]) / 10000000000;
         if (healthFactor) {
           setHealthFactorBackend(healthFactor);
         } else {

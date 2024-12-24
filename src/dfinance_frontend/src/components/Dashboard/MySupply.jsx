@@ -70,7 +70,7 @@ const MySupply = () => {
     const hasCollateral = userData?.Ok?.reserves[0]?.some(
       (reserveGroup) => reserveGroup[1]?.is_collateral !== false
     );
-  
+
     if (hasCollateral) {
       if (
         userAccountData?.Ok &&
@@ -119,33 +119,41 @@ const MySupply = () => {
     }
   }, []);
 
-  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow, loading: filteredDataLoading  } =
-    useAssetData();
-    const [loadingUserData, setUserDataLoading] = useState(true)
-    useEffect(() => {
-      const fetchData = async () => {
-        if (assets.length === 0) return;
-    
-        setUserDataLoading(true); 
-        let completedRequests = 0;
-    
-        for (const asset of assets) {
-          try {
-            await fetchAssetSupply(asset);
-            await fetchAssetBorrow(asset);
-          } catch (error) {
-            console.error(`Error fetching data for asset ${asset}:`, error);
-          } finally {
-            completedRequests++;
-            if (completedRequests === assets.length) {
-              setUserDataLoading(false);
-            }
+  const {
+    assets,
+    reserveData,
+    filteredItems,
+    asset_supply,
+    asset_borrow,
+    fetchAssetSupply,
+    fetchAssetBorrow,
+    loading: filteredDataLoading,
+  } = useAssetData();
+  const [loadingUserData, setUserDataLoading] = useState(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (assets.length === 0) return;
+
+      setUserDataLoading(true);
+      let completedRequests = 0;
+
+      for (const asset of assets) {
+        try {
+          await fetchAssetSupply(asset);
+          await fetchAssetBorrow(asset);
+        } catch (error) {
+          console.error(`Error fetching data for asset ${asset}:`, error);
+        } finally {
+          completedRequests++;
+          if (completedRequests === assets.length) {
+            setUserDataLoading(false);
           }
         }
-      };
-    
-      fetchData();
-    }, [assets]);
+      }
+    };
+
+    fetchData();
+  }, [assets]);
 
   const visibleItems = filteredItems.filter((item) => {
     const balance =
@@ -571,7 +579,7 @@ const MySupply = () => {
     return noSupplyMessage;
   };
   const getAssetBorrowValue = (asset, principal) => {
-    if (asset_supply[asset] !== undefined) {
+    if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]) / 1e8;
       return borrowValue;
     }
@@ -582,8 +590,7 @@ const MySupply = () => {
     !userData?.Ok?.reserves[0] ||
     userData?.Ok?.reserves[0].every(
       (reserveGroup) =>
-        asset_supply === 0n ||
-        reserveGroup[1]?.is_collateral === false
+        asset_supply === 0n || reserveGroup[1]?.is_collateral === false
     );
 
   useEffect(() => {
@@ -644,11 +651,12 @@ const MySupply = () => {
       setCalculatedReserves(reservesWithCalculations);
     }
   }, [userData]);
-  
+
   let totalUsdValueSupply = 0;
   let totalUsdValueBorrow = 0;
   const [totalAssetSupply, setTotalAssetSupply] = useState(0);
   const [totalAssetBorrow, setTotalAssetBorrow] = useState(0);
+
   useEffect(() => {
     let totalSupply = 0;
     let totalBorrow = 0;
@@ -662,7 +670,8 @@ const MySupply = () => {
 
     setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
-  }, [userData]);
+  }, []);
+
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 md:-mt-[3rem]">
       <div className="flex justify-center -mb-30 lg:hidden">
@@ -695,7 +704,7 @@ const MySupply = () => {
           } lg:block`}
         >
           <div
-          id="your-supplies"
+            id="your-supplies"
             className={`w-full  lgx:overflow-none   ${
               isSupplyVisible ? "min-h-auto" : "min-h-[100px]"
             } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
@@ -753,15 +762,16 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
-                    {loadingUserData ? (
+                  {loadingUserData ? (
                     <div className="h-[100px] flex justify-center items-center">
-                        <MiniLoader isLoading={true} />
+                      <MiniLoader isLoading={true} />
                     </div>
                   ) : !userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].filter(
-                    (reserveGroup) => getAssetSupplyValue(reserveGroup[0]) > 0n
-                  ).length === 0 ? (
+                    !userData?.Ok?.reserves[0] ||
+                    userData?.Ok?.reserves[0].filter(
+                      (reserveGroup) =>
+                        getAssetSupplyValue(reserveGroup[0]) > 0n
+                    ).length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px] scrollbar-none">
@@ -1012,6 +1022,7 @@ const MySupply = () => {
                                       <Button
                                         title={"Supply"}
                                         onClickHandler={() => {
+                                          fetchAssetSupply(asset);
                                           if (ckBalance === 0) {
                                             toast.info(
                                               "You cannot supply because your balance is 0."
@@ -1065,6 +1076,7 @@ const MySupply = () => {
                                       <Button
                                         title={"Withdraw"}
                                         onClickHandler={() => {
+                                          fetchAssetSupply(asset);
                                           const reserveData =
                                             userData?.Ok?.reserves[0]?.find(
                                               (reserveGroup) =>
@@ -1109,10 +1121,10 @@ const MySupply = () => {
                                         className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
                                       />
                                     </div>
-                                   
+
                                     {index !== filteredReserves.length - 1 && (
-                                  <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
-                                )}
+                                      <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -1127,15 +1139,16 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                    {loadingUserData ? (
+                  {loadingUserData ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
-                        <MiniLoader isLoading={true} />
+                      <MiniLoader isLoading={true} />
                     </div>
                   ) : !userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].filter(
-                    (reserveGroup) => getAssetSupplyValue(reserveGroup[0]) > 0n
-                  ).length === 0 ? (
+                    !userData?.Ok?.reserves[0] ||
+                    userData?.Ok?.reserves[0].filter(
+                      (reserveGroup) =>
+                        getAssetSupplyValue(reserveGroup[0]) > 0n
+                    ).length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative">
@@ -1376,6 +1389,7 @@ const MySupply = () => {
                                       <Button
                                         title={"Supply"}
                                         onClickHandler={() => {
+                                          fetchAssetSupply(asset);
                                           if (ckBalance === 0) {
                                             toast.info(
                                               "You cannot supply because your balance is 0."
@@ -1431,6 +1445,7 @@ const MySupply = () => {
                                       <Button
                                         title={"Withdraw"}
                                         onClickHandler={() => {
+                                          fetchAssetSupply(asset);
                                           const reserveData =
                                             userData?.Ok?.reserves[0]?.find(
                                               (reserveGroup) =>
@@ -1488,14 +1503,13 @@ const MySupply = () => {
           </div>
 
           <div
-               id="dashboard-assets-to-supply"
+            id="dashboard-assets-to-supply"
             className={`w-full mt-6  lgx:overflow-none  ${
               isVisible ? "min-h-auto" : "min-h-[100px]"
             } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40  rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
-              <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText"
-         >
+              <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
                 Assets to supply
               </h1>
               <button
@@ -1557,7 +1571,7 @@ const MySupply = () => {
                 <>
                   {filteredDataLoading ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
-                        <MiniLoader isLoading={true} />
+                      <MiniLoader isLoading={true} />
                     </div>
                   ) : visibleItems.length === 0 ? (
                     noAssetsToSupplyMessage
@@ -1811,6 +1825,7 @@ const MySupply = () => {
                                   <Button
                                     title={"Supply"}
                                     onClickHandler={() => {
+                                      fetchAssetSupply(item[0]);
                                       const reserveData =
                                         userData?.Ok?.reserves[0]?.find(
                                           (reserveGroup) =>
@@ -1901,7 +1916,7 @@ const MySupply = () => {
                 <>
                   {filteredDataLoading ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
-                        <MiniLoader isLoading={true} />
+                      <MiniLoader isLoading={true} />
                     </div>
                   ) : visibleItems.length === 0 ? (
                     noAssetsToSupplyMessage
@@ -2159,6 +2174,7 @@ const MySupply = () => {
                                     <Button
                                       title={"Supply"}
                                       onClickHandler={() => {
+                                        fetchAssetSupply(item[0]);
                                         const reserveData =
                                           userData?.Ok?.reserves[0]?.find(
                                             (reserveGroup) =>
@@ -2252,7 +2268,7 @@ const MySupply = () => {
           } lg:block`}
         >
           <div
-               id="your-borrow"
+            id="your-borrow"
             className={`w-full  lgx:overflow-none  sxs3:-mt-6 md:-mt-0 ${
               isborrowVisible ? "min-h-auto" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
@@ -2313,20 +2329,21 @@ const MySupply = () => {
                 <>
                   {loadingUserData ? (
                     <div className="h-[100px] flex justify-center items-center">
-                        <MiniLoader isLoading={true} />
+                      <MiniLoader isLoading={true} />
                     </div>
-                  ) :!userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].filter(
-                    (reserveGroup) => getAssetBorrowValue(reserveGroup[0]) > 0n
-                  ).length === 0 ? (
+                  ) : !userData?.Ok?.reserves ||
+                    !userData?.Ok?.reserves[0] ||
+                    userData?.Ok?.reserves[0].filter(
+                      (reserveGroup) =>
+                        getAssetBorrowValue(reserveGroup[0]) > 0n
+                    ).length === 0 ? (
                     noBorrowMessage
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                       <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none">
                         <div className="w-full">
                           {}
-                         
+
                           {userData?.Ok?.reserves[0]?.length === 0
                             ? noBorrowMessage
                             : userData?.Ok?.reserves[0]
@@ -2522,6 +2539,7 @@ const MySupply = () => {
                                         <Button
                                           title={"Borrow"}
                                           onClickHandler={() => {
+                                            fetchAssetBorrow(asset);
                                             const reserveData =
                                               userData?.Ok?.reserves[0]?.find(
                                                 (reserveGroup) =>
@@ -2590,6 +2608,7 @@ const MySupply = () => {
                                         <Button
                                           title={"Repay"}
                                           onClickHandler={() => {
+                                            fetchAssetBorrow(asset);
                                             const reserveData =
                                               userData?.Ok?.reserves[0]?.find(
                                                 (reserveGroup) =>
@@ -2652,15 +2671,16 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                   {loadingUserData ? (
+                  {loadingUserData ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
-                        <MiniLoader isLoading={true} />
+                      <MiniLoader isLoading={true} />
                     </div>
                   ) : !userData?.Ok?.reserves ||
-                  !userData?.Ok?.reserves[0] ||
-                  userData?.Ok?.reserves[0].filter(
-                    (reserveGroup) => getAssetBorrowValue(reserveGroup[0]) > 0n
-                  ).length === 0 ? (
+                    !userData?.Ok?.reserves[0] ||
+                    userData?.Ok?.reserves[0].filter(
+                      (reserveGroup) =>
+                        getAssetBorrowValue(reserveGroup[0]) > 0n
+                    ).length === 0 ? (
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6">
@@ -2720,8 +2740,8 @@ const MySupply = () => {
                                 Number(item?.[1]?.Ok?.borrow_rate) /
                                   100000000 || 0;
                               const liquidationThreshold =
-                              Number(userAccountData?.Ok?.[3]) /
-                              100000000 || 0;
+                                Number(userAccountData?.Ok?.[3]) / 100000000 ||
+                                0;
                               const reserveliquidationThreshold =
                                 Number(
                                   item?.[1]?.Ok.configuration
@@ -2845,6 +2865,7 @@ const MySupply = () => {
                                     <Button
                                       title={"Borrow"}
                                       onClickHandler={() => {
+                                        fetchAssetBorrow(asset);
                                         const reserveData =
                                           userData?.Ok?.reserves[0]?.find(
                                             (reserveGroup) =>
@@ -2909,6 +2930,7 @@ const MySupply = () => {
                                     <Button
                                       title={"Repay"}
                                       onClickHandler={() => {
+                                        fetchAssetBorrow(asset);
                                         const reserveData =
                                           userData?.Ok?.reserves[0]?.find(
                                             (reserveGroup) =>
@@ -2962,7 +2984,7 @@ const MySupply = () => {
           </div>
 
           <div
-               id="dashboard-assets-to-borrow"
+            id="dashboard-assets-to-borrow"
             className={`w-full mt-6 scrollbar-none lgx:overflow-none hide-scrollbar ${
               isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
@@ -3031,7 +3053,7 @@ const MySupply = () => {
                 <>
                   {filteredDataLoading ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
-                        <MiniLoader isLoading={true} />
+                      <MiniLoader isLoading={true} />
                     </div>
                   ) : filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
@@ -3104,7 +3126,8 @@ const MySupply = () => {
                             const isEligible = total_supply - total_borrow != 0;
 
                             const itemClass =
-                              showAllAssets && !isEligible ||availableBorrow==0
+                              (showAllAssets && !isEligible) ||
+                              availableBorrow == 0
                                 ? "opacity-50 pointer-events-none"
                                 : "";
 
@@ -3178,7 +3201,7 @@ const MySupply = () => {
                                   </p>
 
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText">
-                                  {item[0] === "ckBTC" && (
+                                    {item[0] === "ckBTC" && (
                                       <>
                                         <p>
                                           {Number(availableBorrow)
@@ -3406,6 +3429,7 @@ const MySupply = () => {
                                   <Button
                                     title={"Borrow"}
                                     onClickHandler={() => {
+                                      fetchAssetBorrow(item[0]);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral;
                                       const assetSupply = getAssetSupplyValue(
@@ -3427,73 +3451,125 @@ const MySupply = () => {
                                       const Ltv =
                                         Number(userData?.Ok?.ltv) / 100000000 ||
                                         0;
-                                        const remainingBorrowable = Number(total_supply) - Number(total_borrow);
-                                        let borrowableValue = "0.00000000";
-                                        let borrowableAssetValue = "0.0000";
-                                    
-                                        if (Number(availableBorrow)) {
-                                          if (item[0] === "ckBTC") {
-                                            borrowableValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckBTCUsdRate / 1e8)
-                                                ? (remainingBorrowable)
-                                                : (Number(availableBorrow) / (ckBTCUsdRate / 1e8))
-                                              : "0.00000000";
-                                    
-                                            borrowableAssetValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckBTCUsdRate / 1e8)
-                                                ? (remainingBorrowable * (ckBTCUsdRate / 1e8))
-                                                : (Number(availableBorrow))
-                                              : "0.0000";
-                                          } else if (item[0] === "ckETH") {
-                                            borrowableValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckETHUsdRate / 1e8)
-                                                ? (remainingBorrowable)
-                                                : (Number(availableBorrow) / (ckETHUsdRate / 1e8))
-                                              : "0.00000000";
-                                    
-                                            borrowableAssetValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckETHUsdRate / 1e8)
-                                                ? (remainingBorrowable * (ckETHUsdRate / 1e8))
-                                                : (Number(availableBorrow))
-                                              : "0.0000";
-                                          } else if (item[0] === "ckUSDC") {
-                                            borrowableValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckUSDCUsdRate / 1e8)
-                                                ? (remainingBorrowable)
-                                                : (Number(availableBorrow) / (ckUSDCUsdRate / 1e8))
-                                              : "0.00000000";
-                                    
-                                            borrowableAssetValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckUSDCUsdRate / 1e8)
-                                                ? (remainingBorrowable * (ckUSDCUsdRate / 1e8))
-                                                : (Number(availableBorrow))
-                                              : "0.0000";
-                                          } else if (item[0] === "ICP") {
-                                            borrowableValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckICPUsdRate / 1e8)
-                                                ? (remainingBorrowable)
-                                                : (Number(availableBorrow) / (ckICPUsdRate / 1e8))
-                                              : "0.00000000";
-                                    
-                                            borrowableAssetValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckICPUsdRate / 1e8)
-                                                ? (remainingBorrowable * (ckICPUsdRate / 1e8))
-                                                : (Number(availableBorrow))
-                                              : "0.0000";
-                                          } else if (item[0] === "ckUSDT") {
-                                            borrowableValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckUSDTUsdRate / 1e8)
-                                                ? (remainingBorrowable)
-                                                : (Number(availableBorrow) / (ckUSDTUsdRate / 1e8))
-                                              : "0.00000000";
-                                    
-                                            borrowableAssetValue = Number(availableBorrow)
-                                              ? remainingBorrowable < Number(availableBorrow) / (ckUSDTUsdRate / 1e8)
-                                                ? (remainingBorrowable * (ckUSDTUsdRate / 1e8))
-                                                : (Number(availableBorrow))
-                                              : "0.0000";
-                                          }
+                                      const remainingBorrowable =
+                                        Number(total_supply) -
+                                        Number(total_borrow);
+                                      let borrowableValue = "0.00000000";
+                                      let borrowableAssetValue = "0.0000";
+
+                                      if (Number(availableBorrow)) {
+                                        if (item[0] === "ckBTC") {
+                                          borrowableValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckBTCUsdRate / 1e8)
+                                              ? remainingBorrowable
+                                              : Number(availableBorrow) /
+                                                (ckBTCUsdRate / 1e8)
+                                            : "0.00000000";
+
+                                          borrowableAssetValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckBTCUsdRate / 1e8)
+                                              ? remainingBorrowable *
+                                                (ckBTCUsdRate / 1e8)
+                                              : Number(availableBorrow)
+                                            : "0.0000";
+                                        } else if (item[0] === "ckETH") {
+                                          borrowableValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckETHUsdRate / 1e8)
+                                              ? remainingBorrowable
+                                              : Number(availableBorrow) /
+                                                (ckETHUsdRate / 1e8)
+                                            : "0.00000000";
+
+                                          borrowableAssetValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckETHUsdRate / 1e8)
+                                              ? remainingBorrowable *
+                                                (ckETHUsdRate / 1e8)
+                                              : Number(availableBorrow)
+                                            : "0.0000";
+                                        } else if (item[0] === "ckUSDC") {
+                                          borrowableValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckUSDCUsdRate / 1e8)
+                                              ? remainingBorrowable
+                                              : Number(availableBorrow) /
+                                                (ckUSDCUsdRate / 1e8)
+                                            : "0.00000000";
+
+                                          borrowableAssetValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckUSDCUsdRate / 1e8)
+                                              ? remainingBorrowable *
+                                                (ckUSDCUsdRate / 1e8)
+                                              : Number(availableBorrow)
+                                            : "0.0000";
+                                        } else if (item[0] === "ICP") {
+                                          borrowableValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckICPUsdRate / 1e8)
+                                              ? remainingBorrowable
+                                              : Number(availableBorrow) /
+                                                (ckICPUsdRate / 1e8)
+                                            : "0.00000000";
+
+                                          borrowableAssetValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckICPUsdRate / 1e8)
+                                              ? remainingBorrowable *
+                                                (ckICPUsdRate / 1e8)
+                                              : Number(availableBorrow)
+                                            : "0.0000";
+                                        } else if (item[0] === "ckUSDT") {
+                                          borrowableValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckUSDTUsdRate / 1e8)
+                                              ? remainingBorrowable
+                                              : Number(availableBorrow) /
+                                                (ckUSDTUsdRate / 1e8)
+                                            : "0.00000000";
+
+                                          borrowableAssetValue = Number(
+                                            availableBorrow
+                                          )
+                                            ? remainingBorrowable <
+                                              Number(availableBorrow) /
+                                                (ckUSDTUsdRate / 1e8)
+                                              ? remainingBorrowable *
+                                                (ckUSDTUsdRate / 1e8)
+                                              : Number(availableBorrow)
+                                            : "0.0000";
                                         }
+                                      }
 
                                       handleModalOpen(
                                         "borrow",
@@ -3516,7 +3592,7 @@ const MySupply = () => {
                                           : item[0] === "ckUSDT"
                                           ? ckUSDTBalance
                                           : null,
-                                          Number(userAccountData?.Ok?.[3]) /
+                                        Number(userAccountData?.Ok?.[3]) /
                                           100000000 || 0,
                                         Number(
                                           item?.[1]?.Ok?.configuration
@@ -3576,11 +3652,11 @@ const MySupply = () => {
                   )}
 
                   <div className="w-full h-auto mt-6">
-                  {filteredDataLoading ? (
-                    <div className="min-h-[100px] flex justify-center items-center ">
+                    {filteredDataLoading ? (
+                      <div className="min-h-[100px] flex justify-center items-center ">
                         <MiniLoader isLoading={true} />
-                    </div>
-                  ) : filteredItems.length === 0  ? (
+                      </div>
+                    ) : filteredItems.length === 0 ? (
                       noAssetsToBorrowMessage
                     ) : (
                       <div
@@ -3705,7 +3781,8 @@ const MySupply = () => {
                                 total_supply - total_borrow != 0;
 
                               const itemClass =
-                                showAllAssets && !isEligible ||availableBorrow==0
+                                (showAllAssets && !isEligible) ||
+                                availableBorrow == 0
                                   ? "opacity-50 pointer-events-none"
                                   : "";
                               return (
@@ -3972,6 +4049,7 @@ const MySupply = () => {
                                     <Button
                                       title={"Borrow"}
                                       onClickHandler={() => {
+                                        fetchAssetBorrow(item[0]);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral;
                                         const assetSupply = getAssetSupplyValue(
@@ -3994,75 +4072,125 @@ const MySupply = () => {
                                           Number(userData?.Ok?.ltv) /
                                             100000000 || 0;
 
-                                        
+                                        const remainingBorrowable =
+                                          Number(total_supply) -
+                                          Number(total_borrow);
+                                        let borrowableValue = "0.00000000";
+                                        let borrowableAssetValue = "0.0000";
 
-                                        const remainingBorrowable = Number(total_supply) - Number(total_borrow);
-    let borrowableValue = "0.00000000";
-    let borrowableAssetValue = "0.0000";
+                                        if (Number(availableBorrow)) {
+                                          if (item[0] === "ckBTC") {
+                                            borrowableValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckBTCUsdRate / 1e8)
+                                                ? remainingBorrowable
+                                                : Number(availableBorrow) /
+                                                  (ckBTCUsdRate / 1e8)
+                                              : "0.00000000";
 
-    if (Number(availableBorrow)) {
-      if (item[0] === "ckBTC") {
-        borrowableValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckBTCUsdRate / 1e8)
-            ? (remainingBorrowable)
-            : (Number(availableBorrow) / (ckBTCUsdRate / 1e8))
-          : "0.00000000";
+                                            borrowableAssetValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckBTCUsdRate / 1e8)
+                                                ? remainingBorrowable *
+                                                  (ckBTCUsdRate / 1e8)
+                                                : Number(availableBorrow)
+                                              : "0.0000";
+                                          } else if (item[0] === "ckETH") {
+                                            borrowableValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckETHUsdRate / 1e8)
+                                                ? remainingBorrowable
+                                                : Number(availableBorrow) /
+                                                  (ckETHUsdRate / 1e8)
+                                              : "0.00000000";
 
-        borrowableAssetValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckBTCUsdRate / 1e8)
-            ? (remainingBorrowable * (ckBTCUsdRate / 1e8))
-            : (Number(availableBorrow))
-          : "0.0000";
-      } else if (item[0] === "ckETH") {
-        borrowableValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckETHUsdRate / 1e8)
-            ? (remainingBorrowable)
-            : (Number(availableBorrow) / (ckETHUsdRate / 1e8))
-          : "0.00000000";
+                                            borrowableAssetValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckETHUsdRate / 1e8)
+                                                ? remainingBorrowable *
+                                                  (ckETHUsdRate / 1e8)
+                                                : Number(availableBorrow)
+                                              : "0.0000";
+                                          } else if (item[0] === "ckUSDC") {
+                                            borrowableValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckUSDCUsdRate / 1e8)
+                                                ? remainingBorrowable
+                                                : Number(availableBorrow) /
+                                                  (ckUSDCUsdRate / 1e8)
+                                              : "0.00000000";
 
-        borrowableAssetValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckETHUsdRate / 1e8)
-            ? (remainingBorrowable * (ckETHUsdRate / 1e8))
-            : (Number(availableBorrow))
-          : "0.0000";
-      } else if (item[0] === "ckUSDC") {
-        borrowableValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckUSDCUsdRate / 1e8)
-            ? (remainingBorrowable)
-            : (Number(availableBorrow) / (ckUSDCUsdRate / 1e8))
-          : "0.00000000";
+                                            borrowableAssetValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckUSDCUsdRate / 1e8)
+                                                ? remainingBorrowable *
+                                                  (ckUSDCUsdRate / 1e8)
+                                                : Number(availableBorrow)
+                                              : "0.0000";
+                                          } else if (item[0] === "ICP") {
+                                            borrowableValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckICPUsdRate / 1e8)
+                                                ? remainingBorrowable
+                                                : Number(availableBorrow) /
+                                                  (ckICPUsdRate / 1e8)
+                                              : "0.00000000";
 
-        borrowableAssetValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckUSDCUsdRate / 1e8)
-            ? (remainingBorrowable * (ckUSDCUsdRate / 1e8))
-            : (Number(availableBorrow))
-          : "0.0000";
-      } else if (item[0] === "ICP") {
-        borrowableValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckICPUsdRate / 1e8)
-            ? (remainingBorrowable)
-            : (Number(availableBorrow) / (ckICPUsdRate / 1e8))
-          : "0.00000000";
+                                            borrowableAssetValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckICPUsdRate / 1e8)
+                                                ? remainingBorrowable *
+                                                  (ckICPUsdRate / 1e8)
+                                                : Number(availableBorrow)
+                                              : "0.0000";
+                                          } else if (item[0] === "ckUSDT") {
+                                            borrowableValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckUSDTUsdRate / 1e8)
+                                                ? remainingBorrowable
+                                                : Number(availableBorrow) /
+                                                  (ckUSDTUsdRate / 1e8)
+                                              : "0.00000000";
 
-        borrowableAssetValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckICPUsdRate / 1e8)
-            ? (remainingBorrowable * (ckICPUsdRate / 1e8))
-            : (Number(availableBorrow))
-          : "0.0000";
-      } else if (item[0] === "ckUSDT") {
-        borrowableValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckUSDTUsdRate / 1e8)
-            ? (remainingBorrowable)
-            : (Number(availableBorrow) / (ckUSDTUsdRate / 1e8))
-          : "0.00000000";
-
-        borrowableAssetValue = Number(availableBorrow)
-          ? remainingBorrowable < Number(availableBorrow) / (ckUSDTUsdRate / 1e8)
-            ? (remainingBorrowable * (ckUSDTUsdRate / 1e8))
-            : (Number(availableBorrow))
-          : "0.0000";
-      }
-    }
+                                            borrowableAssetValue = Number(
+                                              availableBorrow
+                                            )
+                                              ? remainingBorrowable <
+                                                Number(availableBorrow) /
+                                                  (ckUSDTUsdRate / 1e8)
+                                                ? remainingBorrowable *
+                                                  (ckUSDTUsdRate / 1e8)
+                                                : Number(availableBorrow)
+                                              : "0.0000";
+                                          }
+                                        }
                                         handleModalOpen(
                                           "borrow",
                                           item[0],
@@ -4084,7 +4212,7 @@ const MySupply = () => {
                                             : item[0] === "ckUSDT"
                                             ? ckUSDTBalance
                                             : null,
-                                            Number(userAccountData?.Ok?.[3]) /
+                                          Number(userAccountData?.Ok?.[3]) /
                                             100000000 || 0,
                                           Number(
                                             item?.[1]?.Ok?.configuration

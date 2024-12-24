@@ -31,7 +31,6 @@ const UserInformationPopup = ({
   assetBorrow,
 }) => {
   const { backendActor, principal: currentUserPrincipal } = useAuth();
-
   const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
   const [isApproved, setIsApproved] = useState(false);
@@ -70,22 +69,14 @@ const UserInformationPopup = ({
 
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
-  const {
-    assets,
-    reserveData,
-    filteredItems,
-    
-    
-  } = useAssetData();
-
- 
+  const { assets, reserveData, filteredItems } = useAssetData();
 
   const getAssetSupplyValue = (principal, asset) => {
     if (assetSupply[principal]?.[asset] !== undefined) {
-        return Number(assetSupply[principal][asset]) / 1e8;
+      return Number(assetSupply[principal][asset]) / 1e8;
     }
     return 0; // Default value if no data exists
-};
+  };
   const getAssetBorrowValue = (asset) => {
     if (assetBorrow[asset] !== undefined) {
       const borrowValue = Number(assetBorrow[asset]) / 1e8;
@@ -264,7 +255,7 @@ const UserInformationPopup = ({
         throw new Error("Backend actor is not initialized");
       }
 
-      const result = await backendActor.liquidation_call(
+      const result = await backendActor.execute_liquidation(
         selectedDebtAsset,
         selectedAsset,
         supplyAmount,
@@ -537,7 +528,7 @@ const UserInformationPopup = ({
                 ckETH Price
               </p>
               <p className="text-sm font-medium">
-                {Number((collateralRate).toLocaleString()/1e8)}
+                {Number(collateralRate.toLocaleString() / 1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
@@ -568,7 +559,7 @@ const UserInformationPopup = ({
                 ckBTC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-              {Number((collateralRate).toLocaleString()/1e8)}
+                {Number(collateralRate.toLocaleString() / 1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
@@ -599,7 +590,7 @@ const UserInformationPopup = ({
                 ckUSDC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-              {Number((collateralRate).toLocaleString()/1e8)}
+                {Number(collateralRate.toLocaleString() / 1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -632,7 +623,7 @@ const UserInformationPopup = ({
                 ICP Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-              {Number((collateralRate).toLocaleString()/1e8)}
+                {Number(collateralRate.toLocaleString() / 1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -667,7 +658,7 @@ const UserInformationPopup = ({
                 ckUSDT Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-              {Number((collateralRate).toLocaleString()/1e8)}
+                {Number(collateralRate.toLocaleString() / 1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -886,9 +877,10 @@ const UserInformationPopup = ({
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[0];
-                    const assetSupply =
-                    Number(getAssetSupplyValue(mappedItem.principal,assetName))
-                    console.log("assetSupply",assetSupply)
+                    const assetSupply = Number(
+                      getAssetSupplyValue(mappedItem.principal, assetName)
+                    );
+                    console.log("assetSupply", assetSupply);
                     const assetBorrow =
                       Number(item?.[1]?.asset_borrow || 0n) / 100000000;
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
@@ -966,6 +958,19 @@ const UserInformationPopup = ({
                 {renderAssetDetails(selectedAsset)}
 
                 <div className="flex items-center mt-2"></div>
+                {(!isCollateralAssetSelected ||
+                  !(
+                    collateral + collateral * (liquidation_bonus / 100) <
+                    selectedAssetSupply
+                  )) && (
+                  <p className="text-red-500 mt-2 text-sm">
+                    {isLoading
+                      ? "Please wait while the process completes."
+                      : !isCollateralAssetSelected
+                      ? "No collateral asset selected."
+                      : "The collateral amount with liquidation bonus exceeds the available supply."}
+                  </p>
+                )}
               </div>
               <div className="flex justify-between mt-4">
                 <button
@@ -975,6 +980,7 @@ const UserInformationPopup = ({
                 >
                   Back
                 </button>
+
                 <button
                   className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${
                     isCollateralAssetSelected &&
@@ -1097,7 +1103,7 @@ const UserInformationPopup = ({
                   </p>
                 </div>
                 <div className="flex justify-end mt-3">
-                  {!amountToRepay && (
+                  {!selectedDebtAsset && (
                     <span className="text-red-500 text-[11px] text-normal mb-0">
                       Select a debt asset to see repayment
                     </span>

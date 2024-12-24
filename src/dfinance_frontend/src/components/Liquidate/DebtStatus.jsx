@@ -38,7 +38,7 @@ const DebtStatus = () => {
   };
 
   const navigate = useNavigate();
-  const { getAllUsers, principal, backendActor } = useAuth();
+  const { getAllUsers, user, backendActor } = useAuth();
   const [users, setUsers] = useState([]);
 
   const [userLoadingStates, setUserLoadingStates] = useState({});
@@ -241,7 +241,7 @@ const DebtStatus = () => {
       const filtered = users
         .map((item) => {
           if (!item || !item[0]) return null;
-          const principal = item[0].toText();
+          const principal = item[0];
           const accountData = userAccountData?.[principal];
 
           const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
@@ -260,14 +260,15 @@ const DebtStatus = () => {
         .filter(
           (mappedItem) =>
             mappedItem &&
-            mappedItem.healthFactor < 1 &&
-            mappedItem.principal !== principal &&
+            mappedItem.healthFactor > 1 &&
+            mappedItem.principal.toString() !== user.toString() &&
             mappedItem.totalDebt > 0
         );
 
       setFilteredUsers(filtered);
     }
-  }, [users, userAccountData, principal]);
+    console.log("user",user)
+  }, [users, userAccountData, user]);
 
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
@@ -372,7 +373,7 @@ const DebtStatus = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((mappedItem, index) => {
-                    const userLoading = userLoadingStates[mappedItem.principal];
+                    const userLoading = userLoadingStates[mappedItem.principal.toText()];
                     return (
                       <tr
                         key={index}
@@ -384,7 +385,7 @@ const DebtStatus = () => {
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
-                            <p>{truncateText(mappedItem.principal, 14)}</p>
+                            <p>{truncateText(mappedItem.principal.toText(), 14)}</p>
                           </div>
                         </td>
                         <td className="p-2 align-top py-8 ">
@@ -435,6 +436,7 @@ const DebtStatus = () => {
                             {Array.isArray(mappedItem?.reserves?.[0]) &&
                               mappedItem.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
+                                console.log("mapped item in asset supply", mappedItem.principal)
                                 const assetSupply = getAssetSupplyValue(
                                   mappedItem.principal,
                                   assetName

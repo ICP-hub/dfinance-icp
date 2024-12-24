@@ -406,7 +406,7 @@ const WithdrawPopup = ({
                     }}
                   >
                     {}
-                    {formatValue(assetBorrow)}{" "}
+                    {formatValue(assetSupply)}{" "}
                     Max {}
                   </p>
                 </div>

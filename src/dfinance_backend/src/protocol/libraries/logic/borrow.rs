@@ -137,7 +137,20 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     // let total_borrow = reserve_data.asset_borrow + params.amount;
     // let total_supplies = reserve_data.asset_supply;
     //TODO keep liq_taken = 0
-
+     // ----------- Update logic here -------------
+     if let Err(e) = UpdateLogic::update_user_data_borrow(
+        user_principal,
+        &reserve_cache,
+        params.clone(),
+        &mut reserve_data,
+    )
+    .await {
+        ic_cdk::println!("Failed to update user data: {:?}", e);
+        return Err(e);
+    }
+    ic_cdk::println!("User data updated successfully");
+    reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
+    ic_cdk::println!("Current debt: {:?}", reserve_cache.curr_debt);
     if let Err(e) = reserve::update_interest_rates(
         &mut reserve_data,
         &mut reserve_cache,
@@ -154,18 +167,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         reserve_data.total_borrowed
     );
 
-    // ----------- Update logic here -------------
-    if let Err(e) = UpdateLogic::update_user_data_borrow(
-        user_principal,
-        &reserve_cache,
-        params.clone(),
-        &mut reserve_data,
-    )
-    .await {
-        ic_cdk::println!("Failed to update user data: {:?}", e);
-        return Err(e);
-    }
-    ic_cdk::println!("User data updated successfully");
+   
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -317,6 +319,19 @@ pub async fn execute_repay(
     ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
     //TODO: call burn function here
+    if let Err(e) = UpdateLogic::update_user_data_repay(
+        user_principal,
+        &reserve_cache,
+        params.clone(),
+        &mut reserve_data,
+    )
+    .await {
+        ic_cdk::println!("Failed to update user data: {:?}", e);
+        return Err(e);
+    }
+    ic_cdk::println!("User data updated successfully");
+    reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
+    ic_cdk::println!("Current debt: {:?}", reserve_cache.curr_debt);
     if let Err(e) = reserve::update_interest_rates(
         &mut reserve_data,
         &mut reserve_cache,
@@ -329,17 +344,7 @@ pub async fn execute_repay(
     }
 
     // ----------- Update logic here -------------
-    if let Err(e) = UpdateLogic::update_user_data_repay(
-        user_principal,
-        &reserve_cache,
-        params.clone(),
-        &mut reserve_data,
-    )
-    .await {
-        ic_cdk::println!("Failed to update user data: {:?}", e);
-        return Err(e);
-    }
-    ic_cdk::println!("User data updated successfully");
+    
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;

@@ -162,7 +162,14 @@ pub async fn burn_scaled(
     );
     ic_cdk::println!("burn platform_principal value = {}", platform_principal);
 
-    let mut adjusted_amount = amount.clone().scaled_div(index.clone());
+    // let mut adjusted_amount = amount.clone().scaled_div(index.clone()); //TODO if 0.774 came then it will be 0, but it should be 1, should i scale it more
+    ic_cdk::println!("amount remainder = {}", amount.clone() % index.clone());
+    let mut adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128) {
+
+        amount.clone().scaled_div(index.clone()) + Nat::from(1u128) // Round up if there's a remainder
+    } else {
+        amount.clone().scaled_div(index.clone())
+    };
     ic_cdk::println!("adjusted_amount calculated = {}", adjusted_amount);
 
     if adjusted_amount == Nat::from(0u128) {

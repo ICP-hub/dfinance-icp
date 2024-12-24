@@ -314,7 +314,10 @@ if (onLoadingChange) {
     setAmount(formattedAmount);
     updateAmountAndUsdValue(maxAmount);
   };
-
+  const formatValue = (value) => {
+    if (!value) return '0';
+    return Number(value).toFixed(8).replace(/\.?0+$/, ''); // Ensure 8 decimals and remove trailing zeroes
+  };
   return (
     <>
       {isVisible && (
@@ -364,13 +367,7 @@ if (onLoadingChange) {
                       }
                     }}
                   >
-                    {parseFloat(borrowableValue)?.toLocaleString(
-                      undefined,
-                      {
-                        minimumFractionDigits: 7,
-                        maximumFractionDigits: 7,
-                      }
-                    ) || "0.00"}{" "}
+                    {formatValue(borrowableValue)}{" "}
                     Max
                   </p>
                 </div>

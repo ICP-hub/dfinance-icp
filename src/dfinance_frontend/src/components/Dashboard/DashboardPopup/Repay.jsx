@@ -408,7 +408,10 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
 
     updateAmountAndUsdValue(maxAmount);
   };
-
+  const formatValue = (value) => {
+    if (!value) return '0';
+    return Number(value).toFixed(8).replace(/\.?0+$/, ''); // Ensure 8 decimals and remove trailing zeroes
+  };
   return (
     <>
       {isVisible && (
@@ -461,7 +464,7 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
                     }}
                   >
                     {}
-                    {assetBorrow}{" "}
+                    {formatValue(assetBorrow)}{" "}
                     Max
                   </p>
                 </div>

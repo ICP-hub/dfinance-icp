@@ -104,6 +104,7 @@ if (onLoadingChange) {
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorMsg = borrowResult.Err;
+        console.log("error",errorMsg)
         toast.error(`Borrow failed: ${errorMsg}`, {
           className: "custom-toast",
           position: "top-center",
@@ -240,7 +241,7 @@ if (onLoadingChange) {
 
   const { healthFactorBackend } = useUserData();
 
-  
+  console.log("healthfactor backend",healthFactorBackend)
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value.replace(/,/g, "");

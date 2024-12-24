@@ -537,7 +537,7 @@ const UserInformationPopup = ({
                 ckETH Price
               </p>
               <p className="text-sm font-medium">
-                {Number(collateralRate).toLocaleString()}
+                {Number((collateralRate).toLocaleString()/1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
@@ -568,7 +568,7 @@ const UserInformationPopup = ({
                 ckBTC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-                {Number(collateralRate).toLocaleString()}
+              {Number((collateralRate).toLocaleString()/1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText rounded-md p-2 text-sm mt-4">
@@ -599,7 +599,7 @@ const UserInformationPopup = ({
                 ckUSDC Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-                {Number(collateralRate).toLocaleString()}
+              {Number((collateralRate).toLocaleString()/1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -632,7 +632,7 @@ const UserInformationPopup = ({
                 ICP Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-                {Number(collateralRate).toLocaleString()}
+              {Number((collateralRate).toLocaleString()/1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">
@@ -667,7 +667,7 @@ const UserInformationPopup = ({
                 ckUSDT Price
               </p>
               <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-                {Number(collateralRate).toLocaleString()}
+              {Number((collateralRate).toLocaleString()/1e8)}
               </p>
             </div>
             <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-4">

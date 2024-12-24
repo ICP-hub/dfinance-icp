@@ -31,15 +31,8 @@ const DebtStatus = () => {
   const [loading, setLoading] = useState(true);
   const [assetSupply, setAssetSupply] = useState({});
   const [assetBorrow, setAssetBorrow] = useState({});
-  const {
-    assets,
-    reserveData,
-    filteredItems,
-   
-   
-  } = useAssetData();
+  const { assets, reserveData, filteredItems } = useAssetData();
 
-  
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
@@ -126,126 +119,118 @@ const DebtStatus = () => {
 
   useEffect(() => {
     users.forEach((userData) => {
-      const principal = userData[0]?.toText ? userData[0].toText() : null;
+      const principal = userData[0] ? userData[0] : null;
       if (!principal) {
         console.warn("Invalid principal found in userData:", userData);
         return;
       }
 
       fetchUserAccountData({ ...userData, principal });
-      
     });
   }, [users]);
-  
-  
-  // Fetch Asset Supply
+
   const fetchAssetSupply = async (asset, userData) => {
-      const principal = userData?.principal;
-  
-      if (!principal) {
-          console.warn("Invalid principal for user:", userData);
+    const principal = userData?.principal;
+
+    if (!principal) {
+      console.warn("Invalid principal for user:", userData);
+      return;
+    }
+
+    if (backendActor) {
+      try {
+        const result = await backendActor.get_asset_supply(asset, [principal]);
+
+        if (result?.Err === "ERROR :: Pending") {
+          console.warn("Pending state detected. Retrying...");
+          setTimeout(() => fetchAssetSupply(asset, userData), 1000);
           return;
+        }
+
+        if (result?.Ok !== undefined) {
+          setAssetSupply((prev) => ({
+            ...prev,
+            [principal]: {
+              ...prev[principal],
+              [asset]: result.Ok,
+            },
+          }));
+        } else {
+          console.warn("No result returned for asset:", asset);
+        }
+      } catch (error) {
+        console.error("Error fetching asset supply:", error.message);
       }
-  
-      if (backendActor) {
-          try {
-              const result = await backendActor.get_asset_supply(asset, [principal]);
-  
-              if (result?.Err === "ERROR :: Pending") {
-                  console.warn("Pending state detected. Retrying...");
-                  setTimeout(() => fetchAssetSupply(asset, userData), 1000);
-                  return;
-              }
-  
-              if (result?.Ok !== undefined) {
-                  setAssetSupply((prev) => ({
-                      ...prev,
-                      [principal]: {
-                          ...prev[principal],
-                          [asset]: result.Ok,
-                      },
-                  }));
-              } else {
-                  console.warn("No result returned for asset:", asset);
-              }
-          } catch (error) {
-              console.error("Error fetching asset supply:", error.message);
-          }
-      } else {
-          console.warn("Backend actor not available");
-      }
+    } else {
+      console.warn("Backend actor not available");
+    }
   };
-  
-  // Fetch Asset Borrow
+
   const fetchAssetBorrow = async (asset, userData) => {
-      const principal = userData?.principal;
-  
-      if (!principal) {
-          console.warn("Invalid principal for user:", userData);
+    const principal = userData?.principal;
+
+    if (!principal) {
+      console.warn("Invalid principal for user:", userData);
+      return;
+    }
+
+    if (backendActor) {
+      try {
+        const result = await backendActor.get_asset_debt(asset, [principal]);
+
+        if (result?.Err === "ERROR :: Pending") {
+          console.warn("Pending state detected. Retrying...");
+          setTimeout(() => fetchAssetBorrow(asset, userData), 1000);
           return;
+        }
+
+        if (result?.Ok !== undefined) {
+          setAssetBorrow((prev) => ({
+            ...prev,
+            [principal]: {
+              ...prev[principal],
+              [asset]: result.Ok,
+            },
+          }));
+        } else {
+          console.warn("No result returned for asset:", asset);
+        }
+      } catch (error) {
+        console.error("Error fetching asset borrow:", error.message);
       }
-  
-      if (backendActor) {
-          try {
-              const result = await backendActor.get_asset_debt(asset, [principal]);
-  
-              if (result?.Err === "ERROR :: Pending") {
-                  console.warn("Pending state detected. Retrying...");
-                  setTimeout(() => fetchAssetBorrow(asset, userData), 1000);
-                  return;
-              }
-  
-              if (result?.Ok !== undefined) {
-                  setAssetBorrow((prev) => ({
-                      ...prev,
-                      [principal]: {
-                          ...prev[principal],
-                          [asset]: result.Ok,
-                      },
-                  }));
-              } else {
-                  console.warn("No result returned for asset:", asset);
-              }
-          } catch (error) {
-              console.error("Error fetching asset borrow:", error.message);
-          }
-      } else {
-          console.warn("Backend actor not available");
-      }
+    } else {
+      console.warn("Backend actor not available");
+    }
   };
-  
-  // Utility Functions to Get Values
+
   const getAssetSupplyValue = (principal, asset) => {
-      if (assetSupply[principal]?.[asset] !== undefined) {
-          return Number(assetSupply[principal][asset]) / 1e8;
-      }
-      return 0; // Default value if no data exists
+    if (assetSupply[principal]?.[asset] !== undefined) {
+      return Number(assetSupply[principal][asset]) / 1e8;
+    }
+    return 0;
   };
-  
+
   const getAssetBorrowValue = (principal, asset) => {
-      if (assetBorrow[principal]?.[asset] !== undefined) {
-          return Number(assetBorrow[principal][asset]) / 1e8;
-      }
-      return 0; // Default value if no data exists
+    if (assetBorrow[principal]?.[asset] !== undefined) {
+      return Number(assetBorrow[principal][asset]) / 1e8;
+    }
+    return 0;
   };
-  
-  // Effect to Fetch Data for Users
+
   useEffect(() => {
-      users.forEach((userData) => {
-          const principal = userData[0]?.toText ? userData[0].toText() : null;
-          if (!principal) {
-              console.warn("Invalid principal for user:", userData);
-              return;
-          }
-  
-          // Fetch Asset Supply and Borrow for each user and asset
-          assets.forEach((asset) => {
-              fetchAssetSupply(asset, { ...userData, principal });
-              fetchAssetBorrow(asset, { ...userData, principal });
-          });
+    users.forEach((userData) => {
+      const principal = userData[0] ? userData[0] : null;
+      if (!principal) {
+        console.warn("Invalid principal for user:", userData);
+        return;
+      }
+
+      assets.forEach((asset) => {
+        fetchAssetSupply(asset, { ...userData, principal });
+        fetchAssetBorrow(asset, { ...userData, principal });
       });
+    });
   }, [users, assets]);
-  
 
   useEffect(() => {
     if (
@@ -258,12 +243,12 @@ const DebtStatus = () => {
           if (!item || !item[0]) return null;
           const principal = item[0].toText();
           const accountData = userAccountData?.[principal];
-  
+
           const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
           const healthFactor = accountData
             ? Number(accountData?.Ok?.[4]) / 10000000000
             : 0;
-  
+
           return {
             reserves: item[1]?.reserves || [],
             principal: principal,
@@ -279,7 +264,7 @@ const DebtStatus = () => {
             mappedItem.principal !== principal &&
             mappedItem.totalDebt > 0
         );
-  
+
       setFilteredUsers(filtered);
     }
   }, [users, userAccountData, principal]);
@@ -337,7 +322,10 @@ const DebtStatus = () => {
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center mt-8">
-        <h1 id="liquidation1" className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">
+        <h1
+          id="liquidation1"
+          className="text-[#2A1F9D] font-bold text-lg dark:text-darkText"
+        >
           Debt users list
         </h1>
       </div>
@@ -447,9 +435,12 @@ const DebtStatus = () => {
                             {Array.isArray(mappedItem?.reserves?.[0]) &&
                               mappedItem.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
-                                const assetSupply = getAssetSupplyValue(mappedItem.principal,assetName);
+                                const assetSupply = getAssetSupplyValue(
+                                  mappedItem.principal,
+                                  assetName
+                                );
                                 const assetBorrow = item?.[1]?.asset_borrow;
-console.log("asset supply",assetSupply)
+                                console.log("asset supply", assetSupply);
                                 if (assetSupply > 0) {
                                   return (
                                     <img

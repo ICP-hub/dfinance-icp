@@ -294,7 +294,13 @@ pub async fn mint_scaled(
     ic_cdk::println!("current index value = {}", index);
     ic_cdk::println!("Platform principal value: {}", platform_principal);
 
-    let adjusted_amount = amount.clone().scaled_div(index.clone());
+    // let adjusted_amount = amount.clone().scaled_div(index.clone());
+    let mut adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128) {
+
+        amount.clone().scaled_div(index.clone()) + Nat::from(1u128) // Round up if there's a remainder
+    } else {
+        amount.clone().scaled_div(index.clone())
+    };
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
     if adjusted_amount == Nat::from(0u128) {
         ic_cdk::println!("Error: Invalid mint amount");

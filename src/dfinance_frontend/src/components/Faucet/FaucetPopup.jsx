@@ -178,8 +178,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     }
 
     const numericAmount = parseFloat(inputAmount);
-
-    if (exchangeRate && numericAmount > exchangeRate) {
+    const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset])/1e8;
+    
+           
+    if (numericAmount > availableAmount) {
       return; 
     }
 
@@ -227,9 +229,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
         const natAmount = Math.round(numericAmount * Math.pow(10, 8)); 
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
-
         if (numericAmount > availableAmount) {
-          toast.error(`Faucet limit exceeded! You can claim only up to $${availableAmount.toLocaleString()}`, {
+          toast.error(`Faucet limit exceeded! `, {
         className: "custom-toast",
         position: "top-center",
         autoClose: 3000,
@@ -425,10 +426,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       className="button1 cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md button1"
                       onClick={handleMaxAmountClick}
                     >
+                      {console.log("faucet in faucet button ",FaucetLimit[asset], FaucetUsage[asset] )}
                  $
                       {(
-                        FaucetLimit[asset] / 1e8 -
-                        FaucetUsage[asset] / 1e8
+                        (FaucetLimit[asset]  -
+                        FaucetUsage[asset] )/1e8
                       ).toLocaleString()}{" "}
                       Max
                     </p>

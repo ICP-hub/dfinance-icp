@@ -2,7 +2,7 @@ use crate::api::functions::{get_balance, get_fees, get_total_supply};
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveData;
-use crate::{get_asset_debt, get_cached_exchange_rate};
+use crate::{get_asset_debt,get_asset_supply, get_cached_exchange_rate};
 use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::GenericLogic;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
@@ -124,45 +124,20 @@ impl ValidationLogic {
     ) -> Result<(), Error> {
         ic_cdk::println!("withdraw amount for validation = {}", amount);
 
-        // validating amount
-        let transfer_fees_result = get_fees(ledger_canister).await;
-        ic_cdk::println!("transfer_fees : {:?}", transfer_fees_result);
-        let transfer_fees = match transfer_fees_result {
-            Ok(fees) => fees,
-            Err(e) => {
-                return Err(e);
-            }
-        };
-
-        let final_amount = amount.clone() + transfer_fees;
+        let final_amount = amount.clone();
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        // Fetching user data
-        let user_data_result = user_data(user);
+        let user_dtokens = get_asset_supply(reserve.asset_name.clone().unwrap(), Some(user)).await;
 
-        let user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
-                data
-            }
+        let user_current_supply = match user_dtokens {
+            Ok(supply) => supply,
             Err(e) => {
                 return Err(e);
             }
         };
 
-        let mut user_dtokens: Nat = Nat::from(0u128);
-
-        let d_token_canister = Principal::from_text(reserve.d_token_canister.clone().unwrap());
-        let d_token_canister_id = match d_token_canister {
-            Ok(id) => id,
-            Err(_) => return Err(Error::ConversionErrorFromTextToPrincipal),
-        };
-        user_dtokens = get_balance(d_token_canister_id, user).await?;
-
-        ic_cdk::println!("withdraw user dtokens = {}", user_dtokens);
-
-        // TODO: get balance dtoken call user , compare final amount.
-        if final_amount > user_dtokens {
+        // TODO: get balance dtoken call user , compare final amount. Done may be.
+        if final_amount > user_current_supply {
             ic_cdk::println!("Withdraw amount exceeds current supply.");
             return Err(Error::WithdrawMoreThanSupply);
         }
@@ -223,7 +198,7 @@ impl ValidationLogic {
             }
         }
 
-        //TODO: whether is should be none or zero.
+        //TODO: whether is sho++ld be none or zero.
         let mut rate: Option<Nat> = None;
 
         match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {

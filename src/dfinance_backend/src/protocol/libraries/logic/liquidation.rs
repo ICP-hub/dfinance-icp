@@ -443,22 +443,24 @@ pub async fn execute_liquidation(
         collateral_asset
     );
     ic_cdk::println!("liquidation amount = {}", amount.clone());
-
-    let mut debt_in_usd = amount.clone();
-    let debt_amount_to_usd = get_exchange_rates(debt_asset.clone(), None, amount.clone()).await;
-    match debt_amount_to_usd {
-        Ok((amount_in_usd, _timestamp)) => {
-            // Extracted the amount in USD
-            debt_in_usd = amount_in_usd;
-            ic_cdk::println!("debt amount in USD: {:?}", debt_in_usd.clone());
-        }
-        Err(e) => {
-            // Handling the error
-            ic_cdk::println!("Error getting exchange rate: {:?}", e);
-            return Err(e);
-        }
-    }
-
+    
+    // let mut debt_in_usd = amount.clone();
+    // let debt_amount_to_usd = get_exchange_rates(debt_asset.clone(), None, amount.clone()).await;
+    // match debt_amount_to_usd {
+    //     Ok((amount_in_usd, _timestamp)) => {
+    //         // Extracted the amount in USD
+    //         debt_in_usd = amount_in_usd;
+    //         ic_cdk::println!("debt amount in USD: {:?}", debt_in_usd.clone());
+    //     }
+    //     Err(e) => {
+    //         // Handling the error
+    //         ic_cdk::println!("Error getting exchange rate: {:?}", e);
+    //         return Err(e);
+    //     }
+    // }
+    //icp -> usd -> ckUSDC
+    //icp -> usd -> icp 
+    //avoid usd-> token conversion, 
     let reserve_data_result = get_reserve_data(debt_asset.clone());
 
     let repay_reserve_data = match reserve_data_result {
@@ -535,25 +537,41 @@ pub async fn execute_liquidation(
 
     let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
         .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
-
+    
     //TODO make constant name as base currency = "USD"
-    let collateral_amount = match get_exchange_rates(
-        "USD".to_string(),
-        Some(collateral_asset.clone()),
-        debt_in_usd.clone(),
-    )
-    .await
-    {
-        Ok((total_value, _time)) => {
-            // Store the total_value returned from the get_exchange_rates function
-            total_value
+    let mut collateral_amount = amount.clone();
+    if collateral_asset != debt_asset {
+        let debt_in_usd = get_exchange_rates(debt_asset.clone(), Some(collateral_asset.clone()), amount.clone()).await;
+        match debt_in_usd {
+            Ok((amount_in_usd, _timestamp)) => {
+                // Extracted the amount in USD
+                collateral_amount = amount_in_usd.clone();
+                ic_cdk::println!("debt amount in USD: {:?}", amount_in_usd);
+            }
+            Err(e) => {
+                // Handling the error
+                ic_cdk::println!("Error getting exchange rate: {:?}", e);
+                return Err(e);
+            }
         }
-        Err(e) => {
-            // Handle the error case
-            ic_cdk::println!("Error fetching exchange rate: {:?}", e);
-            Nat::from(0u128) // Or handle the error as appropriate for your logic
-        }
-    };
+    }
+    // let collateral_amount = match get_exchange_rates(
+    //     debt_asset.to_string(),
+    //     Some(collateral_asset.clone()),
+    //     debt_in_usd.clone(),
+    // )
+    // .await
+    // {
+    //     Ok((total_value, _time)) => {
+    //         // Store the total_value returned from the get_exchange_rates function
+    //         total_value
+    //     }
+    //     Err(e) => {
+    //         // Handle the error case
+    //         ic_cdk::println!("Error fetching exchange rate: {:?}", e);
+    //         Nat::from(0u128) // Or handle the error as appropriate for your logic
+    //     }
+    // };
     ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
 
     //TODO use scaled_mul
@@ -598,12 +616,12 @@ pub async fn execute_liquidation(
         return Err(e);
     };
 
-    let withdraw_param = ExecuteWithdrawParams {
-        asset: collateral_asset.to_string(),
-        is_collateral: true,
-        on_behalf_of: None, //TODO why none, user principal
-        amount: reward_amount.clone(),
-    };
+    // let withdraw_param = ExecuteWithdrawParams {
+    //     asset: collateral_asset.to_string(),
+    //     is_collateral: true,
+    //     on_behalf_of: None, //TODO why none, user principal
+    //     amount: reward_amount.clone(),
+    // };
     // let user_withdraw_result = UpdateLogic::update_user_data_withdraw(
     //     user_principal,
     //     &collateral_reserve_cache,

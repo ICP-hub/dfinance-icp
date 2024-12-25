@@ -467,15 +467,15 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         return Err(Error::InvalidAssetLength);
     }
 
-    if amount <= Nat::from(0u128) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+    // if amount <= Nat::from(0u128) {
+    //     ic_cdk::println!("Amount cannot be zero");
+    //     return Err(Error::InvalidAmount);
+    // }
 
-    if added_amount <= Nat::from(0u128) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+    // if added_amount <= Nat::from(0u128) {
+    //     ic_cdk::println!("Amount cannot be zero");
+    //     return Err(Error::InvalidAmount);
+    // }
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {
@@ -541,39 +541,39 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         }
     };
 
-    let user_thrs = cal_average_threshold(
-        added_usd_amount.clone(),
-        usd_amount.clone(),
-        reserve_data.configuration.liquidation_threshold,
-        user_data.total_collateral.clone().unwrap(),
-        user_data.liquidation_threshold.unwrap(),
-    );
+    // let user_thrs = cal_average_threshold(
+    //     added_usd_amount.clone(),
+    //     usd_amount.clone(),
+    //     reserve_data.configuration.liquidation_threshold,
+    //     user_data.total_collateral.clone().unwrap(),
+    //     user_data.liquidation_threshold.unwrap(),
+    // );
 
-    user_data.total_collateral = Some(
-        (user_data.total_collateral.unwrap() - usd_amount.clone() + added_usd_amount.clone())
-            .max(Nat::from(0u128)),
-    );
-    user_data.liquidation_threshold = Some(user_thrs.clone());
-    user_data.available_borrow = Some(
-        (user_data.available_borrow.unwrap() - usd_amount.clone() + added_usd_amount.clone())
-            .max(Nat::from(0u128)),
-    );
-    ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
+    // user_data.total_collateral = Some(
+    //     (user_data.total_collateral.unwrap() - usd_amount.clone() + added_usd_amount.clone())
+    //         .max(Nat::from(0u128)),
+    // );
+    // user_data.liquidation_threshold = Some(user_thrs.clone());
+    // user_data.available_borrow = Some(
+    //     (user_data.available_borrow.unwrap() - usd_amount.clone() + added_usd_amount.clone())
+    //         .max(Nat::from(0u128)),
+    // );
+    // ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
 
-    let user_position = UserPosition {
-        total_collateral_value: user_data
-            .total_collateral
-            .clone()
-            .unwrap_or(Nat::from(0u128)),
-        total_borrowed_value: user_data.total_debt.clone().unwrap_or(Nat::from(0u128)),
-        liquidation_threshold: user_thrs,
-    };
+    // let user_position = UserPosition {
+    //     total_collateral_value: user_data
+    //         .total_collateral
+    //         .clone()
+    //         .unwrap_or(Nat::from(0u128)),
+    //     total_borrowed_value: user_data.total_debt.clone().unwrap_or(Nat::from(0u128)),
+    //     liquidation_threshold: user_thrs,
+    // };
 
-    let user_ltv = calculate_ltv(&user_position);
-    user_data.ltv = Some(user_ltv);
+    // let user_ltv = calculate_ltv(&user_position);
+    // user_data.ltv = Some(user_ltv);
 
-    let user_health = calculate_health_factor(&user_position);
-    user_data.health_factor = Some(user_health);
+    // let user_health = calculate_health_factor(&user_position);
+    // user_data.health_factor = Some(user_health);
 
     // Function to check if the user has a reserve for the asset
     let user_reserve = user_reserve(&mut user_data, &asset);

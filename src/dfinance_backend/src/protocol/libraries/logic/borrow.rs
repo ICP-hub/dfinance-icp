@@ -100,7 +100,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     reserve::update_state(&mut reserve_data, &mut reserve_cache);
     ic_cdk::println!("Reserve state updated successfully");
 
-    if let Err(e) = ValidationLogic::validate_borrow(&reserve_data, params.amount.clone(), user_principal).await {
+    if let Err(e) = ValidationLogic::validate_borrow(
+        &reserve_data,
+        params.amount.clone(),
+        user_principal,
+        ledger_canister_id,
+    )
+    .await
+    {
         ic_cdk::println!("Borrow validation failed: {:?}", e);
         return Err(e);
     }
@@ -122,7 +129,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 
     reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
     ic_cdk::println!("Current debt: {:?}", reserve_cache.curr_debt);
-    
+
     if let Err(e) = reserve::update_interest_rates(
         &mut reserve_data,
         &mut reserve_cache,

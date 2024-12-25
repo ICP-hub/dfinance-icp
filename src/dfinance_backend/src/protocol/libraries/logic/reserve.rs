@@ -309,7 +309,7 @@ pub async fn mint_scaled(
   
     
     // let adjusted_amount = amount.clone().scaled_div(index.clone());
-    let mut adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128) {
+    let mut adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128) && amount.clone() < Nat::from(10u128) {
         amount.clone().scaled_div(index.clone()) + Nat::from(1u128) // Round up if there's a remainder
     } else {
         amount.clone().scaled_div(index.clone())

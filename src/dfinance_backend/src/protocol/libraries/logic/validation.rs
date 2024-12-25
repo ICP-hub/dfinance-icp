@@ -1,6 +1,7 @@
 use crate::api::functions::{get_balance, get_fees, get_total_supply};
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::assets::ReserveData;
 use crate::{get_asset_debt,get_asset_supply, get_cached_exchange_rate};
 use crate::protocol::libraries::logic::update::user_data;
@@ -124,6 +125,8 @@ impl ValidationLogic {
     ) -> Result<(), Error> {
         ic_cdk::println!("withdraw amount for validation = {}", amount);
 
+        ic_cdk::println!("withdraw amount for validation = {}", amount);
+
         let final_amount = amount.clone();
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
@@ -136,10 +139,27 @@ impl ValidationLogic {
             }
         };
 
-        // TODO: get balance dtoken call user , compare final amount. Done may be.
         if final_amount > user_current_supply {
             ic_cdk::println!("Withdraw amount exceeds current supply.");
             return Err(Error::WithdrawMoreThanSupply);
+        }
+
+        // TODO: platform balance check.
+        let platform_principal = ic_cdk::api::id();
+        ic_cdk::println!("Platform principal: {:?}", platform_principal);
+
+        let balance_result = get_balance(ledger_canister, platform_principal).await;
+
+        let platform_balance = match balance_result {
+            Ok(bal) => bal,
+            Err(e) => {
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("User balance: {:?}", platform_balance);
+
+        if amount > platform_balance {
+            return Err(Error::MaxAmountPlatform);    
         }
 
         // validating reserve states
@@ -257,11 +277,30 @@ impl ValidationLogic {
         reserve: &ReserveData,
         amount: Nat,
         user_principal: Principal,
+        ledger_canister: Principal,
     ) -> Result<(), Error> {
+
         if !reserve.configuration.borrowing_enabled {
             return Err(Error::BorrowingNotEnabled);
         }
+        
+        let platform_principal = ic_cdk::api::id();
+        ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
+        let balance_result = get_balance(ledger_canister, platform_principal).await;
+
+        let platform_balance = match balance_result {
+            Ok(bal) => bal,
+            Err(e) => {
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("User balance: {:?}", platform_balance);
+
+        if amount > platform_balance {
+            return Err(Error::MaxAmountPlatform);
+            
+        }
         // validating reserve states
         let (is_active, is_frozen, is_paused) = (
             reserve.configuration.active,
@@ -281,19 +320,6 @@ impl ValidationLogic {
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
-
-        // Fetch user data
-        let user_data_result = user_data(user_principal);
-
-        let user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
-                data
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        };
 
         let mut total_collateral = Nat::from(0u128);
         let mut total_debt = Nat::from(0u128);
@@ -371,7 +397,7 @@ impl ValidationLogic {
             return Err(Error::LTVGreaterThanThreshold);
         }
 
-        if health_factor < Nat::from(1u128) {
+        if health_factor < Nat::from(SCALING_FACTOR) {
             return Err(Error::HealthFactorLess);
         }
 
@@ -392,7 +418,7 @@ impl ValidationLogic {
         };
         Ok(())
     }
-    //     // --------------------------------------
+         // --------------------------------------
     //     // ---------------- REPAY ---------------
     //     // --------------------------------------
 
@@ -404,6 +430,18 @@ impl ValidationLogic {
     ) -> Result<(), Error> {
         // // Check if the caller is anonymous
        //TODO remove transfer fee
+       let balance_result = get_balance(ledger_canister, user).await;
+
+        let user_balance = match balance_result {
+            Ok(bal) => bal,
+            Err(e) => {
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("User balance: {:?}", user_balance);
+        if amount > user_balance {
+            return Err(Error::LowWalletBalance);
+        }
         let transfer_fees_result = get_fees(ledger_canister).await;
         let transfer_fees = match transfer_fees_result {
             Ok(fees) => fees,
@@ -437,10 +475,6 @@ impl ValidationLogic {
         };
 
         let mut user_current_debt = get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
-        //TODO get asset borrow
-        // if let Some((_, reserve_data)) = user_reserve {
-        //     user_current_debt = reserve_data.asset_borrow.clone();
-        // }
         
         if user_current_debt == Nat::from(0u128) {
             return Err(Error::NoDebtToRepay);
@@ -651,7 +685,7 @@ impl ValidationLogic {
            return Err(Error::LessRewardAmount);
         }
 
-        if health_factor < Nat::from(1u128) {
+        if health_factor/Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
             return Err(Error::HealthFactorLess);
         }
 

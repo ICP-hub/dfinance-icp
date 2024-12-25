@@ -254,7 +254,9 @@ const [error ,setError] =useState(null);
   const handleConfirmLiquidation = async () => {
     setIsLoading(true);
     try {
-      const supplyAmount = BigInt(amountToRepay.toFixed(8) * 100000000);
+      const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
+      console.log("supplyAmount", supplyAmount);
+      // const supplyAmount = BigInt(amountToRepay.toFixed(8) * 100000000);
 
       if (!backendActor) {
         throw new Error("Backend actor is not initialized");

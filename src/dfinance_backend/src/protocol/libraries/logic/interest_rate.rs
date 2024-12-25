@@ -1,4 +1,28 @@
-use crate::{constants::{errors::Error, interest_variables::{self, constants::{BASE_VARIABLE_BORROW_RATE, CKUSDC_MAX_EXCESS_USAGE_RATIO, CKUSDC_OPTIMAL_USAGE_RATIO, CKUSDC_VARIABLE_RATE_SLOPE2, CKUSDT_MAX_EXCESS_USAGE_RATIO, CKUSDT_OPTIMAL_USAGE_RATIO, CKUSDT_VARIABLE_RATE_SLOPE2, MAX_EXCESS_USAGE_RATIO, VARIABLE_RATE_SLOPE1, VARIABLE_RATE_SLOPE2}}}, get_reserve_data, protocol::libraries::math::math_utils::ScalingMath};
+use crate::{
+    constants::{
+        errors::Error,
+        interest_variables::{
+            self,
+            constants::{
+                BASE_VARIABLE_BORROW_RATE, CKBTC_BASE_VARIABLE_BORROW_RATE,
+                CKBTC_MAX_EXCESS_USAGE_RATIO, CKBTC_OPTIMAL_USAGE_RATIO,
+                CKBTC_VARIABLE_RATE_SLOPE1, CKBTC_VARIABLE_RATE_SLOPE2,
+                CKETH_BASE_VARIABLE_BORROW_RATE, CKETH_MAX_EXCESS_USAGE_RATIO,
+                CKETH_OPTIMAL_USAGE_RATIO, CKETH_VARIABLE_RATE_SLOPE1, CKETH_VARIABLE_RATE_SLOPE2,
+                CKUSDC_BASE_VARIABLE_BORROW_RATE, CKUSDC_MAX_EXCESS_USAGE_RATIO,
+                CKUSDC_OPTIMAL_USAGE_RATIO, CKUSDC_VARIABLE_RATE_SLOPE1,
+                CKUSDC_VARIABLE_RATE_SLOPE2, CKUSDT_BASE_VARIABLE_BORROW_RATE,
+                CKUSDT_MAX_EXCESS_USAGE_RATIO, CKUSDT_OPTIMAL_USAGE_RATIO,
+                CKUSDT_VARIABLE_RATE_SLOPE1, CKUSDT_VARIABLE_RATE_SLOPE2,
+                ICP_BASE_VARIABLE_BORROW_RATE, ICP_MAX_EXCESS_USAGE_RATIO, ICP_OPTIMAL_USAGE_RATIO,
+                ICP_VARIABLE_RATE_SLOPE1, ICP_VARIABLE_RATE_SLOPE2, MAX_EXCESS_USAGE_RATIO,
+                VARIABLE_RATE_SLOPE1, VARIABLE_RATE_SLOPE2,
+            },
+        },
+    },
+    get_reserve_data,
+    protocol::libraries::math::math_utils::ScalingMath,
+};
 use candid::{CandidType, Deserialize, Nat};
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
 use serde::Serialize;
@@ -15,48 +39,61 @@ pub struct InterestRateParams {
 pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     println!("asset name in initialize {:?}", asset.to_string());
     match asset {
-        // TODO: need to write the vaiables again as per the use case.
         "ckBTC" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(OPTIMAL_USAGE_RATIO)),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(MAX_EXCESS_USAGE_RATIO)),
-            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(BASE_VARIABLE_BORROW_RATE)),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE1)),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE2)),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKBTC_OPTIMAL_USAGE_RATIO)),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKBTC_MAX_EXCESS_USAGE_RATIO)),
+            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
+                CKBTC_BASE_VARIABLE_BORROW_RATE,
+            )),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKBTC_VARIABLE_RATE_SLOPE1)),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKBTC_VARIABLE_RATE_SLOPE2)),
         },
         "ckETH" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(OPTIMAL_USAGE_RATIO)),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(MAX_EXCESS_USAGE_RATIO)),
-            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(BASE_VARIABLE_BORROW_RATE)),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE1)),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE2)),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKETH_OPTIMAL_USAGE_RATIO)),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKETH_MAX_EXCESS_USAGE_RATIO)),
+            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
+                CKETH_BASE_VARIABLE_BORROW_RATE,
+            )),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKETH_VARIABLE_RATE_SLOPE1)),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKETH_VARIABLE_RATE_SLOPE2)),
         },
         "ICP" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(OPTIMAL_USAGE_RATIO)),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(MAX_EXCESS_USAGE_RATIO)),
-            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(BASE_VARIABLE_BORROW_RATE)),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE1)),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE2)),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(ICP_OPTIMAL_USAGE_RATIO)),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(ICP_MAX_EXCESS_USAGE_RATIO)),
+            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
+                ICP_BASE_VARIABLE_BORROW_RATE,
+            )),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(ICP_VARIABLE_RATE_SLOPE1)),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(ICP_VARIABLE_RATE_SLOPE2)),
         },
         "ckUSDC" => InterestRateParams {
             optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDC_OPTIMAL_USAGE_RATIO)),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDC_MAX_EXCESS_USAGE_RATIO)),
-            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(BASE_VARIABLE_BORROW_RATE)),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE1)),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(
+                CKUSDC_MAX_EXCESS_USAGE_RATIO,
+            )),
+            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
+                CKUSDC_BASE_VARIABLE_BORROW_RATE,
+            )),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKUSDC_VARIABLE_RATE_SLOPE1)),
             variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKUSDC_VARIABLE_RATE_SLOPE2)),
         },
         "ckUSDT" => InterestRateParams {
             optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDT_OPTIMAL_USAGE_RATIO)),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDT_MAX_EXCESS_USAGE_RATIO)),
-            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(BASE_VARIABLE_BORROW_RATE)),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE1)),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(
+                CKUSDT_MAX_EXCESS_USAGE_RATIO,
+            )),
+            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
+                CKUSDT_BASE_VARIABLE_BORROW_RATE,
+            )),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKUSDT_VARIABLE_RATE_SLOPE1)),
             variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKUSDT_VARIABLE_RATE_SLOPE2)),
         },
         _ => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDC_OPTIMAL_USAGE_RATIO)),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDC_MAX_EXCESS_USAGE_RATIO)),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(OPTIMAL_USAGE_RATIO)),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(MAX_EXCESS_USAGE_RATIO)),
             base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(BASE_VARIABLE_BORROW_RATE)),
             variable_rate_slope1: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE1)),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKUSDC_VARIABLE_RATE_SLOPE2)),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE2)),
         },
     }
 }

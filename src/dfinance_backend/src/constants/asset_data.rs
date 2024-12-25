@@ -246,7 +246,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                     liquidation_threshold: ScalingMath::to_scaled(Nat::from(
                         ICP_LIQUIDATION_THRESHOLD,
                     )),
-                    liquidation_bonus: Nat::from(ICP_LIQUIDATION_BONUS),
+                    liquidation_bonus: ScalingMath::to_scaled(Nat::from(ICP_LIQUIDATION_BONUS)),
                     borrowing_enabled: true,
                     frozen: false,
                     active: true,

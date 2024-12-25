@@ -41,7 +41,7 @@ pub mod constants {
     pub const ICP_LIQUIDITY_INDEX: u128 = 1;
     pub const ICP_LTV: u128 = 58;
     pub const ICP_LIQUIDATION_THRESHOLD: u128 = 63;
-    pub const ICP_LIQUIDATION_BONUS: u128 = 0;
+    pub const ICP_LIQUIDATION_BONUS: u128 = 1;
     pub const ICP_BORROW_CAP: u128 = 10_000_000_000;
     pub const ICP_SUPPLY_CAP: u128 = 10_000_000_000;
     pub const ICP_RESERVE_FACTOR: u128 = 15;
@@ -56,6 +56,6 @@ pub mod constants {
     pub const CKUSDT_RESERVE_FACTOR: u128 = 15;
 
     pub const  DEBT_INDEX : u128 = 100000000; //FIXME initial_debt_index
-    pub const  PERCENTAGE_SCALE : u128 = 100000000; //FIXME yeh kya hai
+    pub const  SCALING_FACTOR : u128 = 100000000; //FIXME yeh kya hai
 
 }

@@ -3,6 +3,7 @@ use candid::CandidType;
 #[derive(Debug ,CandidType)]
 #[derive(Clone)]
 pub enum Error {
+    MaxAmountPlatform,
     InvalidAmount,
     InvalidCanister,
     InvalidPrincipal,
@@ -59,6 +60,7 @@ pub enum Error {
 impl Error {
     pub fn message(&self) -> &str {
         match self {
+            Error::MaxAmountPlatform => "Platform is unable to pay right now! Try Again Later",
             Error::InvalidAmount => "Amount must be greater than 0",
             Error::InvalidCanister => "Invalid canister id",
             Error::InvalidPrincipal => "Invalid principal id",
@@ -95,7 +97,7 @@ impl Error {
             Error::NoPriceCache => "No price cache found",
             Error::ErrorPriceCache => "Error in fetching price cache",
             Error::EmptyAsset => "Asset cannot be an empty string",
-            Error::LowWalletBalance => "wallet balance is low, faucet not possible",
+            Error::LowWalletBalance => "wallet balance is low",
             Error::AmountTooMuch => "Amount is too much",
             Error::InvalidAssetLength => "Lenght of the asset is invalid",
             Error::InvalidBurnAmount => "Invalid burn amount",

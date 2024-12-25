@@ -402,8 +402,14 @@ const DebtStatus = () => {
                             {Array.isArray(mappedItem?.reserves?.[0]) &&
                               mappedItem.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
-                                const assetSupply = item?.[1]?.asset_supply;
-                                const assetBorrow = item?.[1]?.asset_borrow;
+                                const assetSupply = getAssetSupplyValue(
+                                  mappedItem.principal,
+                                  assetName
+                                );
+                                const assetBorrow = getAssetBorrowValue(
+                                  mappedItem.principal,
+                                  assetName
+                                );
 
                                 if (assetBorrow > 0) {
                                   return (
@@ -441,7 +447,10 @@ const DebtStatus = () => {
                                   mappedItem.principal,
                                   assetName
                                 );
-                                const assetBorrow = item?.[1]?.asset_borrow;
+                                const assetBorrow = getAssetBorrowValue(
+                                  mappedItem.principal,
+                                  assetName
+                                );
                                 console.log("asset supply", assetSupply);
                                 if (assetSupply > 0) {
                                   return (

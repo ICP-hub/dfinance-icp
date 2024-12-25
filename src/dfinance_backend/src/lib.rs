@@ -475,7 +475,7 @@ pub async fn get_asset_debt(
         normalized_debt_data
     );
 
-    Ok(normalized_debt_data.scaled_mul(get_balance_value))
+    Ok((normalized_debt_data.scaled_div(user_reserve.variable_borrow_index.clone())).scaled_mul(get_balance_value))
 }
 
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {

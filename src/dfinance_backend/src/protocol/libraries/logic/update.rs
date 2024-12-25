@@ -345,9 +345,7 @@ impl UpdateLogic {
         }
 
         let dtoken_balance = get_balance(Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(), user_principal).await?;
-        // if dtoken_balance == Nat::from(0u128) && let Some(ref mut reserves) = user_data.reserves {
-        //     reserves.pop((params.asset.clone(), new_reserve));
-        // } 
+       
         if dtoken_balance == Nat::from(0u128) &&  is_borrowed == false {
 
             if let Some(ref mut reserves) = user_data.reserves {
@@ -390,7 +388,7 @@ impl UpdateLogic {
         };
 
         ic_cdk::println!("Repay user update initial data = {:?}", user_data);
-
+        
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         let mut user_reserve_data = match user_reserve.as_mut() {
             Some((_, reserve_data)) => reserve_data,
@@ -400,6 +398,7 @@ impl UpdateLogic {
         ic_cdk::println!("Calling burn_scaled with params: amount={}, next_debt_index={:?}, user_principal={:?}, debt_token_canister={:?}, platform_principal={:?}",
                          params.amount, reserve_cache.next_debt_index, user_principal, reserve.debt_token_canister.clone().unwrap(), platform_principal);
         let debt_token = reserve.debt_token_canister.clone().unwrap();
+        let is_collateral = user_reserve_data.is_collateral.clone();
         let burn_scaled_result = burn_scaled(
             reserve,
             &mut user_reserve_data,
@@ -434,8 +433,17 @@ impl UpdateLogic {
         } else {
             return Err(Error::NoUserReserveDataFound);
         }
+        let debttoken_balance = get_balance(Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(), user_principal).await?;
+        
+        if debttoken_balance == Nat::from(0u128) &&  is_collateral == false {
 
+            if let Some(ref mut reserves) = user_data.reserves {
+                reserves.retain(|(name, _)| name != &params.asset);
+            }
+        }
         ic_cdk::println!("Saving updated user data to state");
+
+
         mutate_state(|state| {
             state
                 .user_profile

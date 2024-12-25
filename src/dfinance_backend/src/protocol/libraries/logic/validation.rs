@@ -219,6 +219,8 @@ impl ValidationLogic {
         }
 
         //TODO: whether is sho++ld be none or zero.
+        if total_debt != Nat::from(0u128) {
+       
         let mut rate: Option<Nat> = None;
 
         match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
@@ -249,7 +251,13 @@ impl ValidationLogic {
         ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
 
         // Calculate Adjusted Collateral
-        let adjusted_collateral = total_collateral - usd_withdrawl;
+        let mut adjusted_collateral = Nat::from(0u128);
+        if adjusted_collateral < usd_withdrawl.clone() {
+            adjusted_collateral = Nat::from(0u128);
+        }else{
+            adjusted_collateral = total_collateral.clone() -usd_withdrawl.clone();
+        }
+        // let adjusted_collateral = total_collateral - usd_withdrawl;
         ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
 
         let mut ltv = Nat::from(0u128);
@@ -263,6 +271,7 @@ impl ValidationLogic {
         if ltv >= liquidation_threshold_var {
             return Err(Error::LTVGreaterThanThreshold);
         }
+    }
         if health_factor < Nat::from(1u128) {
             return Err(Error::HealthFactorLess);
         }

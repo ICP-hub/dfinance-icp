@@ -435,7 +435,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     } else {
         let mut new_reserve = UserReserveData {
             reserve: asset.clone(),
-            is_collateral: false,
+            is_collateral: true,
             ..Default::default()
         };
 

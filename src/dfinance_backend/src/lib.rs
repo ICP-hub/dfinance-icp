@@ -59,10 +59,6 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
-    if user != ic_cdk::caller() {
-        ic_cdk::println!("Invalid user: Caller does not match the user.");
-        return Err(Error::InvalidUser);
-    }
 
     read_state(|state| {
         state
@@ -304,6 +300,11 @@ pub async fn get_asset_supply(
         Some(principal_str) => principal_str,
         None => ic_cdk::caller(),
     };
+
+    if user_principal ==  Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
     ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
     let user_data_result = user_data(user_principal);
@@ -411,6 +412,11 @@ pub async fn get_asset_debt(
         Some(principal_str) => principal_str,
         None => ic_cdk::caller(),
     };
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
 
     let user_data_result = user_data(user_principal);
 

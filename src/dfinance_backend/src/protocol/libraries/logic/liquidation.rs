@@ -537,7 +537,7 @@ pub async fn execute_liquidation(
 
     let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
         .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
-
+    
     //TODO make constant name as base currency = "USD"
     let mut collateral_amount = amount.clone();
     if collateral_asset != debt_asset {

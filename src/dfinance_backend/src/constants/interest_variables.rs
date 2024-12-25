@@ -1,19 +1,43 @@
 pub mod constants {
 
-    pub const OPTIMAL_USAGE_RATIO: u128 = 45;
-    pub const MAX_EXCESS_USAGE_RATIO: u128 = 55;
-    pub const BASE_VARIABLE_BORROW_RATE: u128 = 0;
-    pub const VARIABLE_RATE_SLOPE1: u128 = 4;
-    pub const VARIABLE_RATE_SLOPE2: u128 = 30;
+    // ------------------- Interest Rate Constants -------------------
+    pub const CKBTC_OPTIMAL_USAGE_RATIO: u128 = 45;
+    pub const CKBTC_MAX_EXCESS_USAGE_RATIO: u128 = 55;
+    pub const CKBTC_BASE_VARIABLE_BORROW_RATE: u128 = 0;
+    pub const CKBTC_VARIABLE_RATE_SLOPE1: u128 = 4;
+    pub const CKBTC_VARIABLE_RATE_SLOPE2: u128 = 30;
+
+    pub const CKETH_OPTIMAL_USAGE_RATIO: u128 = 45;
+    pub const CKETH_MAX_EXCESS_USAGE_RATIO: u128 = 55;
+    pub const CKETH_BASE_VARIABLE_BORROW_RATE: u128 = 0;
+    pub const CKETH_VARIABLE_RATE_SLOPE1: u128 = 4;
+    pub const CKETH_VARIABLE_RATE_SLOPE2: u128 = 30;
+
+    pub const ICP_OPTIMAL_USAGE_RATIO: u128 = 45;
+    pub const ICP_MAX_EXCESS_USAGE_RATIO: u128 = 55;
+    pub const ICP_BASE_VARIABLE_BORROW_RATE: u128 = 0;
+    pub const ICP_VARIABLE_RATE_SLOPE1: u128 = 4;
+    pub const ICP_VARIABLE_RATE_SLOPE2: u128 = 30;  // review
 
     pub const CKUSDC_OPTIMAL_USAGE_RATIO: u128 = 80;
     pub const CKUSDC_MAX_EXCESS_USAGE_RATIO: u128 = 20;
+    pub const CKUSDC_BASE_VARIABLE_BORROW_RATE: u128 = 0;
+    pub const CKUSDC_VARIABLE_RATE_SLOPE1: u128 = 4;
     pub const CKUSDC_VARIABLE_RATE_SLOPE2: u128 = 75;
 
     pub const CKUSDT_OPTIMAL_USAGE_RATIO: u128 = 92;
     pub const CKUSDT_MAX_EXCESS_USAGE_RATIO: u128 = 20;
+    pub const CKUSDT_BASE_VARIABLE_BORROW_RATE: u128 = 0;
+    pub const CKUSDT_VARIABLE_RATE_SLOPE1: u128 = 4;
     pub const CKUSDT_VARIABLE_RATE_SLOPE2: u128 = 75;
 
+    pub const OPTIMAL_USAGE_RATIO: u128 = 80;
+    pub const MAX_EXCESS_USAGE_RATIO: u128 = 20;
+    pub const BASE_VARIABLE_BORROW_RATE: u128 = 0;
+    pub const VARIABLE_RATE_SLOPE1: u128 = 4;
+    pub const VARIABLE_RATE_SLOPE2: u128 = 75;
+
+    // ------------------- Reserve Constants -------------------
     pub const CKBTC_LIQUIDITY_INDEX: u128 = 1;
     pub const CKBTC_LTV: u128 = 73;
     pub const CKBTC_LIQUIDATION_THRESHOLD: u128 = 78;
@@ -55,7 +79,7 @@ pub mod constants {
     pub const CKUSDT_SUPPLY_CAP: u128 = 10_000_000_000;
     pub const CKUSDT_RESERVE_FACTOR: u128 = 15;
 
-    pub const  DEBT_INDEX : u128 = 100000000; //FIXME initial_debt_index
-    pub const  SCALING_FACTOR : u128 = 100000000; //FIXME yeh kya hai
-
+    // ------------------- General Constants -------------------
+    pub const DEBT_INDEX: u128 = 100000000; //FIXME initial_debt_index
+    pub const SCALING_FACTOR: u128 = 100000000;
 }

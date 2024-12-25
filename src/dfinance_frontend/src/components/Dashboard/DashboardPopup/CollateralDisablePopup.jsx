@@ -22,6 +22,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, SetError] = useState(null);
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
 
@@ -39,13 +40,43 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
       const amount = currentCollateralStatus
         ? BigInt(Math.round(assetSupply * 100000000))
         : BigInt(0);
-
-      await backendActor.toggle_collateral(asset, Number(amount), addedAmount);
+  
+      const response = await backendActor.toggle_collateral(asset, Number(amount), addedAmount);
+  
+      // Check if the response contains an error
+      if (response?.Err) {
+        const errorMsg = response.Err;
+  
+        if (errorMsg?.ExchangeRateError === null) {
+          toast.error("Price fetch failed", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+  
+          // Optionally, set additional error state for UI
+          SetError("Price fetch failed: Your assets are safe, try again after some time.");
+          throw new Error("ExchangeRateError: Price fetch failed.");
+        }
+  
+        // Handle other errors if needed
+        throw new Error(JSON.stringify(errorMsg));
+      }
+  
+      // Update collateral status on success
       setIsCollateral(currentCollateralStatus);
     } catch (error) {
-      throw error;
+      console.error("Error in toggleCollateral:", error);
+      throw error; // Re-throw the error for the calling function to handle
     }
   }
+  
+  
   useEffect(() => {
     if (assetSupply && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -59,18 +90,22 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   const handleToggleCollateral = async () => {
     setIsLoading(true);
     try {
+      // Call toggleCollateral with the required parameters
       await toggleCollateral(asset, assetSupply);
-
+     
       toast.success("Collateral updated successfully!");
-
       setIsPaymentDone(true);
       setIsVisible(false);
     } catch (error) {
-      toast.error("Error updating collateral.");
+      
+      console.error("Error updating collateral:", error);
+      const errorMessage = error?.message || "An unexpected error occurred.";
+      toast.error(`Error updating collateral: ${errorMessage}`);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Reset loading state
     }
   };
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {

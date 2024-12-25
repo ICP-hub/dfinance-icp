@@ -563,11 +563,11 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
               <button
                 onClick={handleClick}
                 className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled || supplyBalance<=0
+                  isLoading || amount <= 0 || isButtonDisabled || supplyBalance<=0 ||amount>supplyBalance
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
-                disabled={isLoading || amount <= 0 || supplyBalance<=0}
+                disabled={isLoading || amount <= 0 || supplyBalance<=0 || amount>supplyBalance}
               >
                 {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
               </button>

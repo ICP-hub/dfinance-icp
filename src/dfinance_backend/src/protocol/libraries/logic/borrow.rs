@@ -105,37 +105,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         return Err(e);
     }
     ic_cdk::println!("Borrow validated successfully");
-    //TODO mint debt tokens here
-    // let mut user_reserve = user_reserve(&mut user_data, &params.asset);
-    //     ic_cdk::println!("User reserve: {:?}", user_reserve);
-
-    //     let mut user_reserve_data = match user_reserve.as_mut() {
-    //         Some((_, reserve_data)) => reserve_data,
-    //         None => return Err("No reserve found for the user".to_string()), // or handle appropriately
-    //     };
-
-    //     let minted_result = mint_scaled(
-    //         reserve,
-    //         &mut user_reserve_data,
-    //         params.amount,
-    //         reserve_cache.next_debt_index,
-    //         user_principal,
-    //         Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
-    //         platform_principal,
-    //         false
-    //     )
-    //     .await;
-
-    //     match minted_result {
-    //         Ok(()) => {
-    //             ic_cdk::println!("Minting dtokens successfully");
-    //         }
-    //         Err(e) => {
-    //             panic!("Get error in minting the dtokens {:?}", e);
-    //         }
-    //     }
-    // let total_borrow = reserve_data.asset_borrow + params.amount;
-    // let total_supplies = reserve_data.asset_supply;
+    
     //TODO keep liq_taken = 0
      // ----------- Update logic here -------------
      if let Err(e) = UpdateLogic::update_user_data_borrow(
@@ -149,8 +119,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         return Err(e);
     }
     ic_cdk::println!("User data updated successfully");
+
     reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
     ic_cdk::println!("Current debt: {:?}", reserve_cache.curr_debt);
+    
     if let Err(e) = reserve::update_interest_rates(
         &mut reserve_data,
         &mut reserve_cache,

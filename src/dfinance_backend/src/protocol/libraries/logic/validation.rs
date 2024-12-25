@@ -500,13 +500,127 @@ impl ValidationLogic {
     //     // ---------------LIQUIDATION---------------
     //     // --------------------------------------
 
+    // pub async fn validate_liquidation(
+    //     repay_asset: String,
+    //     repay_amount: u128,
+    //     reward_amount: u128,
+    //     liquidator: Principal,
+    //     user: Principal,
+    // ) -> Result<(), Error> {
+    //     let repay_ledger_canister_id = read_state(|state| {
+    //         let reserve_list = &state.reserve_list;
+    //         reserve_list
+    //             .get(&repay_asset.to_string().clone())
+    //             .map(|principal| principal.clone())
+    //             .ok_or_else(|| Error::NoCanisterIdFound)
+    //     })?;
+
+    //     // Checking liquidator is present in user list
+    //     // let _ = mutate_state(|state| {
+    //     //     let user_profile_data = &mut state.user_profile;
+    //     //     user_profile_data
+    //     //         .get(&liquidator)
+    //     //         .map(|user| user.0.clone())
+    //     //         .ok_or_else(|| panic!("Liquidator not found: {}", user.to_string()))
+    //     // });
+
+    //     let transfer_fees_result = get_fees(repay_ledger_canister_id).await;
+    //     let transfer_fees = match transfer_fees_result {
+    //         Ok(fees) => fees,
+    //         Err(e) => {
+    //             return Err(e);
+    //         }
+    //     };
+    //     ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
+
+    //     let final_amount = repay_amount + transfer_fees;
+    //     ic_cdk::println!("final_amount : {:?}", final_amount);
+
+    //     if repay_amount == 0 {
+    //         panic!("{:?}", Error::InvalidAmount);
+    //     }
+
+    //     // if final_amount > liquidator_balance {
+    //     //     panic!("{:?}", Error::MaxAmount);
+    //     // }
+
+    //     // Fetch user data
+    //     let user_data_result = user_data(user);
+    //     let user_data = match user_data_result {
+    //         Ok(data) => {
+    //             ic_cdk::println!("User found: {:?}", data);
+    //             data
+    //         }
+    //         Err(e) => return Err(e),
+    //     };
+
+    //     if user_data.total_collateral.unwrap_or(Nat::from(0u128)) < reward_amount {
+    //         panic!("{:?}", Error::LessRewardAmount);
+    //     }
+
+    //     let reserve_data_result = mutate_state(|state| {
+    //         let asset_index = &mut state.asset_index;
+    //         asset_index
+    //             .get(&repay_asset.to_string().clone())
+    //             .map(|reserve| reserve.0.clone())
+    //             .ok_or_else(|| Error::NoReserveDataFound)
+    //     });
+
+    //     let reserve_data = match reserve_data_result {
+    //         Ok(data) => {
+    //             ic_cdk::println!("Reserve data found for asset: {:?}", data);
+    //             data
+    //         }
+    //         Err(e) => return Err(e),
+    //     };
+
+    //     // validating reserve states
+    //     let (is_active, is_frozen, is_paused) = (
+    //         reserve_data.configuration.active,
+    //         reserve_data.configuration.frozen,
+    //         reserve_data.configuration.paused,
+    //     );
+
+    //     if !is_active {
+    //         return Err(Error::ReserveInactive);
+    //     }
+    //     if is_paused {
+    //         return Err(Error::ReservePaused);
+    //     }
+    //     if is_frozen {
+    //         return Err(Error::ReserveFrozen);
+    //     }
+    //     ic_cdk::println!("is_active : {:?}", is_active);
+    //     ic_cdk::println!("is_paused : {:?}", is_paused);
+    //     ic_cdk::println!("is_frozen : {:?}", is_frozen);
+    //     Ok(())
+    // }
     pub async fn validate_liquidation(
         repay_asset: String,
-        repay_amount: u128,
-        reward_amount: u128,
+        repay_amount: Nat,
+        reward_amount: Nat,
         liquidator: Principal,
         user: Principal,
+        repay_reserve_data: ReserveData,
     ) -> Result<(), Error> {
+
+        let repay_asset_principal = match Principal::from_text(repay_reserve_data.debt_token_canister.clone().unwrap()) {
+            Ok(principal) => principal,
+            Err(_) => return Err(Error::NoCanisterIdFound),
+        };
+        let balance_result = get_balance(repay_asset_principal, user.clone()).await;
+
+        let debt_amount = match balance_result {
+            Ok(bal) => bal,
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        if repay_amount > debt_amount{
+            return Err(Error::InvalidAmount);
+        }
+
         let repay_ledger_canister_id = read_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -515,70 +629,59 @@ impl ValidationLogic {
                 .ok_or_else(|| Error::NoCanisterIdFound)
         })?;
 
-        // Checking liquidator is present in user list
-        // let _ = mutate_state(|state| {
-        //     let user_profile_data = &mut state.user_profile;
-        //     user_profile_data
-        //         .get(&liquidator)
-        //         .map(|user| user.0.clone())
-        //         .ok_or_else(|| panic!("Liquidator not found: {}", user.to_string()))
-        // });
 
-        let transfer_fees_result = get_fees(repay_ledger_canister_id).await;
-        let transfer_fees = match transfer_fees_result {
-            Ok(fees) => fees,
+        let balance_result = get_balance(repay_ledger_canister_id, liquidator.clone()).await;
+        let liquidator_wallet_balance = match balance_result {
+            Ok(bal) => bal,
             Err(e) => {
                 return Err(e);
             }
         };
-        ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
-        let final_amount = repay_amount + transfer_fees;
-        ic_cdk::println!("final_amount : {:?}", final_amount);
-
-        if repay_amount == 0 {
-            panic!("{:?}", Error::InvalidAmount);
+        if liquidator_wallet_balance < repay_amount {
+            return Err(Error::MaxAmount);
         }
 
-        // if final_amount > liquidator_balance {
-        //     panic!("{:?}", Error::MaxAmount);
-        // }
+        let mut total_collateral = Nat::from(0u128);
+        let mut health_factor = Nat::from(0u128);
 
-        // Fetch user data
-        let user_data_result = user_data(user);
-        let user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
-                data
+        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
+            GenericLogic::calculate_user_account_data(Some(user)).await;
+
+        match user_data_result {
+            Ok((
+                t_collateral,
+                _t_debt,
+                _ltv,
+                _liquidation_threshold,
+                h_factor,
+                _a_borrow,
+                _zero_ltv_collateral,
+            )) => {
+                total_collateral = t_collateral;
+                health_factor = h_factor;
+
+                ic_cdk::println!("total collateral = {}", total_collateral);
+                ic_cdk::println!("Health Factor: {}", health_factor);
             }
-            Err(e) => return Err(e),
-        };
-
-        if user_data.total_collateral.unwrap_or(Nat::from(0u128)) < reward_amount {
-            panic!("{:?}", Error::LessRewardAmount);
+            Err(e) => {
+                return Err(e);
+            }
         }
 
-        let reserve_data_result = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&repay_asset.to_string().clone())
-                .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| Error::NoReserveDataFound)
-        });
+        if total_collateral < reward_amount {
+           return Err(Error::LessRewardAmount);
+        }
 
-        let reserve_data = match reserve_data_result {
-            Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset: {:?}", data);
-                data
-            }
-            Err(e) => return Err(e),
-        };
+        if health_factor < Nat::from(1u128) {
+            return Err(Error::HealthFactorLess);
+        }
 
         // validating reserve states
         let (is_active, is_frozen, is_paused) = (
-            reserve_data.configuration.active,
-            reserve_data.configuration.frozen,
-            reserve_data.configuration.paused,
+            repay_reserve_data.configuration.active,
+            repay_reserve_data.configuration.frozen,
+            repay_reserve_data.configuration.paused,
         );
 
         if !is_active {

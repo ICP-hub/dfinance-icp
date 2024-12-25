@@ -421,24 +421,30 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
         reserve_cache.curr_debt.clone(),
         reserve_cache.curr_debt_index.clone(),
     );
+    ic_cdk::println!("prev_total_variable_debt in accure: {:?}", vars.prev_total_variable_debt);
 
     vars.curr_total_variable_debt = ScalingMath::scaled_mul(
         reserve_cache.curr_debt.clone(),
         reserve_cache.next_debt_index.clone(),
     );
+    ic_cdk::println!("curr_total_variable_debt in accure: {:?}", vars.curr_total_variable_debt);
 
     vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
-
+    ic_cdk::println!("total_debt_accrued in accure: {:?}", vars.total_debt_accrued);
     vars.amount_to_mint = ScalingMath::scaled_mul(
         vars.total_debt_accrued.clone(),
         reserve_cache.reserve_factor.clone(),
     ); //percent
-
+    ic_cdk::println!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
     if vars.amount_to_mint != Nat::from(0u128) {
         reserve_data.accure_to_platform += (ScalingMath::scaled_mul(
             vars.amount_to_mint,
             reserve_cache.next_liquidity_index.clone(),
         )) / 100 as u128;
+        ic_cdk::println!(
+            "accure_to_platform in accure: {:?}",
+            reserve_data.accure_to_platform
+        );
     }
 }
 

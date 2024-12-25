@@ -82,7 +82,7 @@ pub async fn calculate_interest_rates(
     ic_cdk::println!("Getting reserve data for asset: {}", asset);
 
     let reserve_data_result = get_reserve_data(asset);
-    ic_cdk::println!("Reserve data fetched: {:?}", reserve_data_result);
+    
 
     let  reserve = match reserve_data_result {
         Ok(data) => {
@@ -98,8 +98,9 @@ pub async fn calculate_interest_rates(
         //TODO verify asset_supply is updated
         ic_cdk::println!("Asset supply: {:?}", reserve.asset_supply);
 
-        let total_supply = reserve.asset_supply;
+        let total_supply = reserve.asset_supply.scaled_mul(reserve.liquidity_index);
         let available_liq = total_supply + liq_added - liq_taken;
+        
         ic_cdk::println!("Available liquidity: {:?}", available_liq);
 
         let available_liq_plus_debt = available_liq + total_debt.clone();
@@ -145,8 +146,8 @@ pub async fn calculate_interest_rates(
         );
 
         curr_borrow_rate +=
-            params.variable_rate_slope1.clone() * borrow_usage_ratio * Nat::from(100u128)
-                / params.optimal_usage_ratio.clone();
+            (params.variable_rate_slope1.clone() * borrow_usage_ratio * Nat::from(100u128)
+                / params.optimal_usage_ratio.clone());
 
         ic_cdk::println!("Updated borrow rate: {:?}", curr_borrow_rate);
     }

@@ -46,7 +46,6 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
-    //TODO: check if need to add a check for the platoform principal.
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
@@ -143,7 +142,29 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
             Ok(new_balance)
         }
         Err(_) => {
-            //TODO add burn function here
+            
+            //Rollback user state
+            let withdraw_param = ExecuteWithdrawParams {
+                asset: params.asset.clone(),
+                is_collateral: params.is_collateral,
+                on_behalf_of: None, 
+                amount: params.amount.clone(),
+            };
+            if let Err(e) = UpdateLogic::update_user_data_withdraw(
+                user_principal,
+                &reserve_cache,
+                withdraw_param.clone(),
+                &mut reserve_data,
+            )
+            .await
+            {
+                ic_cdk::println!("Failed to rollback user state: {:?}", e);
+                return Err(e);
+            }
+            mutate_state(|state| {
+                let asset_index = &mut state.asset_index;
+                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            });
             return Err(Error::ErrorMintTokens);
         }
     }
@@ -308,6 +329,27 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         }
         Err(_) => {
             //TODO mint the dtoken back to user
+            let supply_param = ExecuteSupplyParams {
+                asset: params.asset.clone(),
+                amount: params.amount.clone(),
+                is_collateral: params.is_collateral,
+            };
+            if let Err(e) = UpdateLogic::update_user_data_supply(
+                user_principal,
+                &reserve_cache,
+                supply_param,
+                &mut reserve_data,
+            )
+            .await
+            {
+                ic_cdk::println!("Failed to update user data: {:?}", e);
+                return Err(e);
+            }
+        
+            mutate_state(|state| {
+                let asset_index = &mut state.asset_index;
+                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            });
             return Err(Error::ErrorBurnTokens);
         }
     }

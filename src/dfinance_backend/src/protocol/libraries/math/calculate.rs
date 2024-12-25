@@ -199,17 +199,17 @@ pub async fn get_exchange_rates(
             "ckUSDT" => "usdt".to_string(),
             _ => symbol,
         },
-        None => "USDT".to_string(),
+        None => "USD".to_string(),
     };
 
     let args = GetExchangeRateRequest {
         timestamp: None,
         quote_asset: Asset {
-            class: AssetClass::Cryptocurrency,
+            class: if quote_asset == "USD" { AssetClass::FiatCurrency } else { AssetClass::Cryptocurrency },
             symbol: quote_asset.clone(),
         },
         base_asset: Asset {
-            class: AssetClass::Cryptocurrency,
+            class: if base_asset == "USD" { AssetClass::FiatCurrency } else { AssetClass::Cryptocurrency },
             symbol: base_asset.clone(),
         },
     };

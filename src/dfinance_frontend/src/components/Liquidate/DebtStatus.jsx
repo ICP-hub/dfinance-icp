@@ -470,9 +470,9 @@ const DebtStatus = () => {
                           </div>
                         </td>
 
-                        <td className="p-3 align-top hidden md:table-cell pt-5 py-8">
+                        {/* <td className="p-3 align-top hidden md:table-cell pt-5 py-8">
                           {mappedItem.item.borrow_apy}
-                        </td>
+                        </td> */}
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button

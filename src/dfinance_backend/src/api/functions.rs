@@ -501,10 +501,6 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         return Err(Error::InvalidPrincipal);
     }
 
-    if user_principal != ic_cdk::caller() {
-        return Err(Error::InvalidUser);
-    }
-
     //Retrieve user data.
     let user_data_result = user_data(user_principal);
 

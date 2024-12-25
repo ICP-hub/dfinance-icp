@@ -8,6 +8,7 @@ use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
+use protocol::libraries::logic::user;
 use protocol::libraries::logic::user::GenericLogic;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
@@ -378,7 +379,8 @@ pub async fn get_asset_supply(
     };
 
     // Ask : if we send the token amount by multiplying the interest rate into the token value, is it a right approach.
-    let result = normalized_supply_data.scaled_mul(get_balance_value);
+    let result = (normalized_supply_data.scaled_div(user_reserve.liquidity_index.clone()))
+    .scaled_mul(get_balance_value);
     ic_cdk::println!("Final calculated asset supply: {}", result);
 
     Ok(result)

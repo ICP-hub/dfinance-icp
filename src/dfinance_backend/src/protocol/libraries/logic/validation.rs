@@ -614,7 +614,7 @@ impl ValidationLogic {
             }
         };
 
-        ic_cdk::println!("")
+    
 
         if liquidator_wallet_balance < repay_amount {
             return Err(Error::MaxAmount);

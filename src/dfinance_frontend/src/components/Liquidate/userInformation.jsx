@@ -741,7 +741,18 @@ const UserInformationPopup = ({
     ckICPBalance,
     ckUSDTBalance,
   ]);
-
+  const formatValue = (value) => {
+    const numericValue = parseFloat(value); 
+    if (isNaN(numericValue)) {
+      return "0.00"; 
+    }
+    if (numericValue === 0) {
+      return "0.00"; 
+    } else if (numericValue >= 1) {
+      return numericValue.toFixed(2); 
+    } else {
+      return numericValue.toFixed(7); 
+    }}
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       {transactionResult ? (
@@ -1035,8 +1046,8 @@ const UserInformationPopup = ({
                                   mappedItem.principal,
                                   assetName
                                 ));
-                      const assetBorrowAmount = Math.floor(assetBorrow / 2);
-
+                      const assetBorrowAmount = Number(assetBorrow / 2);
+console.log("asset borrow amount",assetBorrowAmount)
                       let assetBorrowAmountInUSD = 0;
                       if (assetName === "ckBTC" && ckBTCUsdRate) {
                         assetBorrowAmountInUSD =
@@ -1054,7 +1065,7 @@ const UserInformationPopup = ({
                         assetBorrowAmountInUSD =
                           assetBorrowAmount * ckUSDTUsdRate;
                       }
-console.log("asset borrow in popup ",assetBorrow)
+
                       if (assetBorrow > 0) {
                         return (
                           <label
@@ -1120,7 +1131,7 @@ console.log("asset borrow in popup ",assetBorrow)
                   </p>
                   <p className="text-base font-bold">
                     {amountToRepay ? (
-                      Number(amountToRepay).toLocaleString()
+                      formatValue(amountToRepay)
                     ) : (
                       <span className="text-gray-300 text-[11px] text-normal">
                         --

@@ -630,6 +630,7 @@ impl ValidationLogic {
             return Err(Error::InvalidAmount);
         }
 
+        // TODO:i think we need to check this again -- 
         let repay_ledger_canister_id = read_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -646,6 +647,8 @@ impl ValidationLogic {
                 return Err(e);
             }
         };
+
+    
 
         if liquidator_wallet_balance < repay_amount {
             return Err(Error::MaxAmount);

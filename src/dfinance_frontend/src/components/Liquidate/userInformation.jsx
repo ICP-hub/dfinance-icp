@@ -75,15 +75,16 @@ const UserInformationPopup = ({
     if (assetSupply[principal]?.[asset] !== undefined) {
       return Number(assetSupply[principal][asset]) / 1e8;
     }
-    return 0; // Default value if no data exists
+    return 0; 
   };
-  const getAssetBorrowValue = (asset) => {
-    if (assetBorrow[asset] !== undefined) {
-      const borrowValue = Number(assetBorrow[asset]) / 1e8;
-      return borrowValue; // Format as a number with 2 decimals
+  const getAssetBorrowValue = (principal, asset) => {
+    if (assetBorrow[principal]?.[asset] !== undefined) {
+      return Number(assetBorrow[principal][asset]) / 1e8;
     }
-    return `no assets borrowed`;
+    return 0; 
+  
   };
+
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   function roundToDecimal(value, decimalPlaces) {
@@ -881,8 +882,9 @@ const UserInformationPopup = ({
                       getAssetSupplyValue(mappedItem.principal, assetName)
                     );
                     console.log("assetSupply", assetSupply);
-                    const assetBorrow =
-                      Number(item?.[1]?.asset_borrow || 0n) / 100000000;
+                    const assetBorrow = Number(
+                      getAssetBorrowValue(mappedItem.principal, assetName)
+                    );
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                     let collateralRate = 0;
@@ -1027,10 +1029,12 @@ const UserInformationPopup = ({
                 <div className="flex items-center space-x-4 mb-4">
                   {Array.isArray(mappedItem?.reserves?.[0]) &&
                     mappedItem.reserves[0].map((item, index) => {
-                      const assetName = item?.[0];
+                      const assetName = item[0];
 
-                      const assetBorrow =
-                        Number(item?.[1]?.asset_borrow || 0n) / 100000000;
+                       const assetBorrow = Number(getAssetBorrowValue(
+                                  mappedItem.principal,
+                                  assetName
+                                ));
                       const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
                       let assetBorrowAmountInUSD = 0;
@@ -1050,7 +1054,7 @@ const UserInformationPopup = ({
                         assetBorrowAmountInUSD =
                           assetBorrowAmount * ckUSDTUsdRate;
                       }
-
+console.log("asset borrow in popup ",assetBorrow)
                       if (assetBorrow > 0) {
                         return (
                           <label

@@ -1,7 +1,9 @@
+use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::get_reserve_data;
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
+use crate::protocol::libraries::logic::user;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::state_handler::mutate_state,
@@ -60,7 +62,7 @@ impl UpdateLogic {
 
         let platform_principal = ic_cdk::api::id();
 
-        let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
+        let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve{
             reserve_data.reserve = params.asset.clone();
             reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
             reserve_data.borrow_rate = reserve.borrow_rate.clone();
@@ -111,6 +113,7 @@ impl UpdateLogic {
             };
             new_reserve_data
         };
+       
         let minted_result = mint_scaled(
             reserve,
             &mut user_reserve_data,
@@ -131,6 +134,12 @@ impl UpdateLogic {
                 return Err(e);
             }
         }
+        // if let Some((_, reserve_data)) = user_reserve_result {
+            
+        //     reserve_data.d_token_balance = user_reserve_data.d_token_balance.clone();
+        // } else {
+        //     return Err(Error::NoReserveDataFound);
+        // }
         mutate_state(|state| {
             state
                 .user_profile
@@ -292,7 +301,7 @@ impl UpdateLogic {
         };
 
         ic_cdk::println!("Update user state before burn: {:?}", user_reserve_data);
-
+        let is_borrowed = user_reserve_data.is_borrowed.clone();
         let burn_scaled_result = burn_scaled(
             reserve,
             &mut user_reserve_data,
@@ -335,6 +344,14 @@ impl UpdateLogic {
             return Err(Error::NoReserveDataFound);
         }
 
+        let dtoken_balance = get_balance(Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(), user_principal).await?;
+       
+        if dtoken_balance == Nat::from(0u128) &&  is_borrowed == false {
+
+            if let Some(ref mut reserves) = user_data.reserves {
+                reserves.retain(|(name, _)| name != &params.asset);
+            }
+        }
         // Save the updated user data back to state
         mutate_state(|state| {
             state
@@ -371,7 +388,7 @@ impl UpdateLogic {
         };
 
         ic_cdk::println!("Repay user update initial data = {:?}", user_data);
-
+        
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         let mut user_reserve_data = match user_reserve.as_mut() {
             Some((_, reserve_data)) => reserve_data,
@@ -381,6 +398,7 @@ impl UpdateLogic {
         ic_cdk::println!("Calling burn_scaled with params: amount={}, next_debt_index={:?}, user_principal={:?}, debt_token_canister={:?}, platform_principal={:?}",
                          params.amount, reserve_cache.next_debt_index, user_principal, reserve.debt_token_canister.clone().unwrap(), platform_principal);
         let debt_token = reserve.debt_token_canister.clone().unwrap();
+        let is_collateral = user_reserve_data.is_collateral.clone();
         let burn_scaled_result = burn_scaled(
             reserve,
             &mut user_reserve_data,
@@ -415,8 +433,17 @@ impl UpdateLogic {
         } else {
             return Err(Error::NoUserReserveDataFound);
         }
+        let debttoken_balance = get_balance(Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(), user_principal).await?;
+        
+        if debttoken_balance == Nat::from(0u128) &&  is_collateral == false {
 
+            if let Some(ref mut reserves) = user_data.reserves {
+                reserves.retain(|(name, _)| name != &params.asset);
+            }
+        }
         ic_cdk::println!("Saving updated user data to state");
+
+
         mutate_state(|state| {
             state
                 .user_profile
@@ -602,3 +629,17 @@ pub fn user_reserve<'a>(
     };
     user_reserve
 }
+
+// pub fn user_reserve_data(asset: &String, user_data: &mut UserData) -> Option<&mut UserReserveData> {
+//     let user_reserve = match user_data.reserves {
+//         Some(ref mut reserves) => reserves.iter_mut().find(|(name, _)| name == asset),
+//         None => None,
+//     };
+//     let user_reserve_data = user_reserve.and_then(|reserves| {
+//         reserves
+//             .1
+//             .as_mut()
+//             .map(|reserve_data| reserve_data as &mut UserReserveData)
+//     });
+//     user_reserve_data
+// }

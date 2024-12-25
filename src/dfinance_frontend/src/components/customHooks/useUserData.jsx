@@ -37,6 +37,7 @@ const useUserData = () => {
   };
   
   const fetchUserAccountData = async () => {
+    
   if (backendActor&& isAuthenticated) {
     try {
       console.log("principal in user account data = ", principal);
@@ -93,7 +94,7 @@ const useUserData = () => {
 
   useEffect(() => {
     fetchUserAccountData();
-  }, []);
+  }, [principal]);
 
   
 

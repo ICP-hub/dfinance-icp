@@ -145,6 +145,7 @@ const DashboardNav = () => {
           style: { visibility: net_worth[0] > 0 ? "visible" : "hidden" },
         };
       } else if (item.id === 2) {
+        
         const healthValue = !userAccountData?.Ok?.[4]
           ? "-"
           : Number(userAccountData?.Ok?.[4]) / 10000000000 > 100

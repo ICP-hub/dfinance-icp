@@ -50,7 +50,7 @@ const UserInformationPopup = ({
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-
+const [error ,setError] =useState(null);
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -197,10 +197,14 @@ const UserInformationPopup = ({
       ledgerActor = ledgerActors.ckUSDT;
     }
 
-    const transferfee = BigInt(100);
+    const transferFee = BigInt(100);
 
-    const supplyAmount = BigInt(amountToRepay.toFixed(8) * 100000000);
-    const totalAmount = supplyAmount + transferfee;
+    const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
+    const totalAmount = supplyAmount + transferFee;
+    
+    // Convert to Number
+    const totalAmountAsNumber = Number(totalAmount);
+    
 
     try {
       setIsLoading(true);
@@ -296,16 +300,32 @@ const UserInformationPopup = ({
         setTransactionResult("success");
       } else if ("Err" in result) {
         const errorMsg = result.Err;
-        toast.error(`Liquidation failed: ${errorMsg}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
+        console.error("errorMsg",errorMsg)
+        if (errorMsg?.ExchangeRateError === null) {
+          toast.error("Price fetch failed", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setError("Price fetch failed: Your assets are safe, try again after some time.")
+        } else {
+          toast.error(`Error: ${error.message || "An unexpected error occurred"}`, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+        
         setTransactionResult("failure");
       }
 
@@ -338,6 +358,7 @@ const UserInformationPopup = ({
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose();
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -780,9 +801,13 @@ const UserInformationPopup = ({
             ) : (
               <>
                 <img src={cross} alt="Failure" className="w-30 h-30" />
-                <h2 className="text-2xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">
-                  Liquidation Call Failed
-                </h2>
+                {error ? (
+    <p className="text-xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">{error}</p>
+  ) : (
+    <h2 className="text-2xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">
+      Liquidation Call Failed
+    </h2>
+  )}
 
                 <button
                   className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"

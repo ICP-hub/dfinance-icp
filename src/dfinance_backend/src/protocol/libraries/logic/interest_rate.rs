@@ -115,7 +115,6 @@ pub async fn calculate_interest_rates(
 
     let mut borrow_usage_ratio = Nat::from(0u128);
 
-    // Print before getting reserve data
     ic_cdk::println!("Getting reserve data for asset: {}", asset);
 
     let reserve_data_result = get_reserve_data(asset);
@@ -132,8 +131,6 @@ pub async fn calculate_interest_rates(
     };
 
     if total_debt != Nat::from(0u128) {
-        //TODO verify asset_supply is updated
-        ic_cdk::println!("Asset supply: {:?}", reserve.asset_supply);
 
         let total_supply = reserve.asset_supply.scaled_mul(reserve.liquidity_index);
         let available_liq = total_supply + liq_added - liq_taken;

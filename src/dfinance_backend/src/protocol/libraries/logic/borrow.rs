@@ -1,13 +1,12 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::state_handler::*;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::DEBT_INDEX;
+use crate::constants::interest_variables::constants::INITIAL_DEBT_INDEX;
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::update_reserves_price;
 use candid::{Nat, Principal};
 use ic_cdk::update;
 
@@ -39,7 +38,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         return Err(Error::InvalidPrincipal);
     }
 
-    // TODO: look this error propogation.
     let ledger_canister_id = read_state(|state| {
         let reserve_list = &state.reserve_list;
         reserve_list
@@ -48,11 +46,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
-    // TODO: bhanu ask.
     let platform_principal = ic_cdk::api::id();
-    ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-    // TODO: look this error propogation.
     let debttoken_canister = read_state(|state| {
         let asset_index = &state.asset_index;
         asset_index
@@ -62,6 +57,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     })?;
     ic_cdk::println!("Debt canister ID: {:?}", debttoken_canister);
 
+    // TODO: decide its place in the code.
     // if let Err(e) = update_reserves_price().await {
     //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
     //     return Err(e);
@@ -86,7 +82,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     };
 
     if reserve_data.asset_borrow == Nat::from(0u128) {
-        *&mut reserve_data.debt_index = Nat::from(DEBT_INDEX);
+        *&mut reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
     }
     ic_cdk::println!(
         "Updated debt index for reserve data: {:?}",
@@ -272,7 +268,7 @@ pub async fn execute_repay(
     };
 
     if reserve_data.debt_index == Nat::from(0u128) {
-        reserve_data.debt_index = Nat::from(DEBT_INDEX);
+        reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
     }
 
     // Fetches the reserve logic cache having the current values
@@ -299,6 +295,7 @@ pub async fn execute_repay(
     ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
     //TODO: call burn function here
+    // ----------- Update logic here -------------
     if let Err(e) = UpdateLogic::update_user_data_repay(
         user_principal,
         &reserve_cache,
@@ -322,9 +319,6 @@ pub async fn execute_repay(
         ic_cdk::println!("Failed to update interest rates: {:?}", e);
         return Err(e);
     }
-
-    // ----------- Update logic here -------------
-    
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;

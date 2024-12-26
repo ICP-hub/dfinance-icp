@@ -47,7 +47,6 @@ pub async fn update_reserves_price()-> Result<(), Error> {
 
     ic_cdk::println!("Keys (assets) = {:?}", keys);
 
-    // Iterate over all asset names and call `get_exchange_rates` for each
     for asset_name in keys {
         ic_cdk::println!("Updating price for asset: {}", asset_name);
 
@@ -90,7 +89,6 @@ pub struct UserPosition {
 }
 pub fn calculate_health_factor(position: &UserPosition) -> Nat {
     if position.total_borrowed_value == Nat::from(0u128) {
-        // TODO: ask bhanu for max value in nat.
         return get_max_value(); 
     }
 
@@ -179,10 +177,6 @@ pub async fn get_exchange_rates(
     }
     }
 
-    // if amount <= Nat::from(0u128) {
-    //     ic_cdk::println!("Amount cannot be zero");
-    //     return Err(Error::InvalidAmount);
-    // }
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc".to_string(),
         "ckETH" => "eth".to_string(),
@@ -216,7 +210,6 @@ pub async fn get_exchange_rates(
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
             Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-            // Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
             1_000_000_000,

@@ -169,7 +169,11 @@ const DashboardNav = () => {
       if (item.id === 1) {
         return {
           ...item,
-          count: netApy !== 0 ? `${netApy.toFixed(4)}%` : "-",
+          count: netApy !== 0
+            ? netApy < 0.01
+              ? "<0.01%"
+              : `${netApy.toFixed(4)}%`
+            : "-",
         };
       }
 
@@ -500,7 +504,7 @@ const DashboardNav = () => {
             className=" text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-5"
             onClick={() => navigate(-1)}
           >
-            <div className="flex -mt-2">
+            <div className="flex -mt-2 cursor-pointer">
               <ChevronLeft size={40} color={chevronColor} />
 
               {isAssetDetailsPage && (

@@ -317,7 +317,7 @@ const WalletDetails = () => {
       )}
 
       <div className="w-full mt-6">
-      {loading ? (
+      {loading &&isAuthenticated? (
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center ">
             <MiniLoader isLoading={true} />
           </div>

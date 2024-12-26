@@ -270,7 +270,7 @@ fn calculate_dynamic_balance(
 }
 
 // TODO: need to make a function by getting the asset name and then get user reserve data then call this below function and return the value of it. it will be a query function.
-#[query]
+#[update]
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -387,7 +387,7 @@ pub async fn get_asset_supply(
     Ok(result)
 }
 
-#[query]
+#[update]
 pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -455,7 +455,7 @@ pub async fn get_asset_debt(
                 return Err(Error::ErrorParsingPrincipal);
             }
         };
-
+    ic_cdk::println!("Entering into get_balance function");
     let balance_result = get_balance(debt_token_canister_principal, user_principal).await;
     let get_balance_value = match balance_result {
         Ok(bal) => bal,
@@ -536,7 +536,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
 }
 
 // this function is for check which i will remove later.
-#[query]
+#[update]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {

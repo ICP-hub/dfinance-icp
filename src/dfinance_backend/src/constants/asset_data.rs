@@ -6,7 +6,7 @@ use candid::{Nat, Principal};
 use ic_cdk::api::time;
 use ic_cdk::update;
 use std::collections::HashMap;
-
+use crate::constants::errors::Error;
 use super::interest_variables::constants::{
     CKBTC_BORROW_CAP, CKBTC_LIQUIDATION_BONUS, CKBTC_LIQUIDATION_THRESHOLD, CKBTC_LIQUIDITY_INDEX,
     CKBTC_LTV, CKBTC_RESERVE_FACTOR, CKBTC_SUPPLY_CAP, CKETH_BORROW_CAP, CKETH_LIQUIDATION_BONUS,
@@ -20,7 +20,15 @@ use super::interest_variables::constants::{
 };
 
 #[update]
-pub async fn initialize_canister() {
+pub async fn initialize_canister()-> Result<(), Error> {
+
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+        ic_cdk::println!("principal are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+    
     let tokens = vec![
         ("ckBTC", "ckBTC", true),
         ("dckBTC", "dckBTC", false),
@@ -57,6 +65,7 @@ pub async fn initialize_canister() {
             state.canister_list.insert(name, principal);
         }
     });
+    Ok(())
 }
 
 // TODO: error handling and validations, remove panic need to do.

@@ -287,7 +287,8 @@ pub async fn execute_repay(
     if let Err(e) = ValidationLogic::validate_repay(
         &reserve_data,
         params.amount.clone(),
-        user_principal, //TODO what if liq is repaying
+        user_principal,
+        liquidator_principal, //TODO what if liq is repaying
         ledger_canister_id,
     )
     .await {

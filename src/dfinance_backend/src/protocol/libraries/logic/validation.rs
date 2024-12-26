@@ -435,11 +435,15 @@ impl ValidationLogic {
         reserve: &ReserveData,
         amount: Nat,
         user: Principal,
+        liquidator: Option<Principal>,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
         // // Check if the caller is anonymous
        //TODO remove transfer fee
-       let balance_result = get_balance(ledger_canister, user).await;
+       let mut balance_result = get_balance(ledger_canister, user.clone()).await;
+       if !liquidator.is_none() {
+           balance_result = get_balance(ledger_canister, liquidator.unwrap().clone()).await;
+        }
 
         let user_balance = match balance_result {
             Ok(bal) => bal,

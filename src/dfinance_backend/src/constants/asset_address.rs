@@ -1,2 +1,3 @@
-pub const DEFAULT: &str = "gsyb3-neiyj-ybncb-5xjnt-nh2kf-u3h3b-bvtqm-4uyzh-uqkvk-yrvqd-oae";
+pub const DEFAULT: &str = "sbsfl-7capx-5vx4r-thc6m-si77l-mmfdc-gkrh3-6e4uk-ifxh7-gnijx-uae";
+//TODO get it from the init function
 

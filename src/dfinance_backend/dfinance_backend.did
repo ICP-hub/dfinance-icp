@@ -113,8 +113,8 @@ type Result_5 = variant {
   Err : Error;
 };
 type Result_6 = variant { Ok : UserData; Err : Error };
-type Result_7 = variant { Ok : text; Err : Error };
-type Result_8 = variant { Ok; Err : Error };
+type Result_7 = variant { Ok; Err : Error };
+type Result_8 = variant { Ok : text; Err : Error };
 type Result_9 = variant { Ok : record { nat; nat }; Err : Error };
 type UserData = record {
   ltv : opt nat;
@@ -160,21 +160,21 @@ service : () -> {
   faucet : (text, nat) -> (Result);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
-  get_asset_debt : (text, opt principal) -> (Result) query;
+  get_asset_debt : (text, opt principal) -> (Result);
   get_asset_principal : (text) -> (Result_1) query;
-  get_asset_supply : (text, opt principal) -> (Result) query;
+  get_asset_supply : (text, opt principal) -> (Result);
   get_balance : (principal, principal) -> (Result) query;
   get_cached_exchange_rate : (text) -> (Result_2) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_3);
   get_reserve_data : (text) -> (Result_4) query;
   get_total_supply : (principal) -> (Result) query;
-  get_user_account_data : (opt principal) -> (Result_5) query;
+  get_user_account_data : (opt principal) -> (Result_5);
   get_user_data : (principal) -> (Result_6) query;
-  initialize_canister : () -> ();
-  initialize_reserve : () -> ();
+  initialize_canister : () -> (Result_7);
+  initialize_reserve : () -> (Result_7);
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : () -> (Result_7);
-  toggle_collateral : (text, nat, nat) -> (Result_8);
-  update_reserves_price : () -> (Result_8);
+  register_user : () -> (Result_8);
+  toggle_collateral : (text, nat, nat) -> (Result_7);
+  update_reserves_price : () -> (Result_7);
   user_position : (text) -> (Result_9) query;
 }

@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# Set the deployer identity
-echo "Switching to 'deployer' identity..."
-dfx identity use deployer
+# Set the deployer identity 
+# echo "Switching to 'deployer' identity..."
+# dfx identity use deployer
+
+# for local
+echo "Switching to 'default' identity..."
+dfx identity use default
 
 # Call the empty function
 echo "Calling 'initialize_canister' on 'dfinance_backend' canister..."

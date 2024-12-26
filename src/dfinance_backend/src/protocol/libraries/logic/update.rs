@@ -59,8 +59,6 @@ impl UpdateLogic {
 
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.reserve = params.asset.clone();
-            reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
-            reserve_data.borrow_rate = reserve.borrow_rate.clone();
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
             reserve_data.is_collateral = true;
@@ -83,8 +81,6 @@ impl UpdateLogic {
         } else {
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                supply_rate: reserve.current_liquidity_rate.clone(),
-
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
                 last_update_timestamp: current_timestamp(),
@@ -188,9 +184,6 @@ impl UpdateLogic {
         //     None => return Err(Error::NoUserReserveDataFound),
         // };
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
-            reserve_data.supply_rate = asset_reserve_data.current_liquidity_rate;
-            reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
-            
             reserve_data.is_borrowed = true;
             reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.last_update_timestamp = current_timestamp();
@@ -204,7 +197,6 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                borrow_rate: asset_reserve_data.current_liquidity_rate,
                 asset_borrow: params.amount.clone(),
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
@@ -416,8 +408,6 @@ impl UpdateLogic {
         };
 
         if let Some((_, reserve_data)) = user_reserve {
-            reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
-            reserve_data.borrow_rate = reserve.borrow_rate.clone();
             reserve_data.last_update_timestamp = reserve.last_update_timestamp;
             if reserve_data.asset_borrow == Nat::from(0u128) {
                 reserve_data.is_borrowed = false;

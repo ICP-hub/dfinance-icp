@@ -6,7 +6,7 @@ use candid::{Nat, Principal};
 use ic_cdk::api::time;
 use ic_cdk::update;
 use std::collections::HashMap;
-
+use crate::constants::errors::Error;
 use super::interest_variables::constants::{
     CKBTC_BORROW_CAP, CKBTC_LIQUIDATION_BONUS, CKBTC_LIQUIDATION_THRESHOLD, CKBTC_LIQUIDITY_INDEX,
     CKBTC_LTV, CKBTC_RESERVE_FACTOR, CKBTC_SUPPLY_CAP, CKETH_BORROW_CAP, CKETH_LIQUIDATION_BONUS,
@@ -20,7 +20,15 @@ use super::interest_variables::constants::{
 };
 
 #[update]
-pub async fn initialize_canister() {
+pub async fn initialize_canister()-> Result<(), Error> {
+
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+        ic_cdk::println!("principal are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+    
     let tokens = vec![
         ("ckBTC", "ckBTC", true),
         ("dckBTC", "dckBTC", false),
@@ -57,10 +65,11 @@ pub async fn initialize_canister() {
             state.canister_list.insert(name, principal);
         }
     });
+    Ok(())
 }
 
 // TODO: error handling and validations, remove panic need to do.
-pub async fn query_token_type_id(asset: String) -> Principal {
+pub async fn query_token_type_id(asset: String) -> Option<Principal> {
     ic_cdk::println!("Querying canister ID for asset: {}", asset);
 
     // Fetch the canister id for the given asset and return only the Principal
@@ -73,11 +82,6 @@ pub async fn query_token_type_id(asset: String) -> Principal {
                 ic_cdk::println!("Found principal: {:?}", principal);
                 principal.clone() // Clone the principal if found
             })
-            .unwrap_or_else(|| {
-                // Print an error message if the asset is not found
-                ic_cdk::println!("Error: No canister ID found for asset: {}", asset);
-                panic!("No canister ID found for asset: {}", asset)
-            })
     })
 }
 
@@ -87,7 +91,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     assets.insert(
         "ckBTC",
         (
-            query_token_type_id("ckBTC".to_string()).await,
+            query_token_type_id("ckBTC".to_string()).await.unwrap(),
             ReserveData {
                 asset_name: Some("ckBTC".to_string()),
                 last_update_timestamp: time(),
@@ -96,10 +100,10 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 asset_supply: Nat::from(0u128),
                 asset_borrow: Nat::from(0u128),
                 //remove
-                d_token_canister: Some(query_token_type_id("dckBTC".to_string()).await.to_string()),
+                d_token_canister: Some(query_token_type_id("dckBTC".to_string()).await.unwrap().to_string()),
                 debt_token_canister: Some(
                     query_token_type_id("debtckBTC".to_string())
-                        .await
+                        .await.unwrap()
                         .to_string(),
                 ),
                 total_supply: Nat::from(0u128),
@@ -133,17 +137,17 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     assets.insert(
         "ckETH",
         (
-            query_token_type_id("ckETH".to_string()).await,
+            query_token_type_id("ckETH".to_string()).await.unwrap(),
             ReserveData {
                 asset_name: Some("ckETH".to_string()),
                 last_update_timestamp: time(),
                 current_liquidity_rate: Nat::from(0u128),
                 borrow_rate: Nat::from(0u128),
                 accure_to_platform: Nat::from(0u128),
-                d_token_canister: Some(query_token_type_id("dckETH".to_string()).await.to_string()),
+                d_token_canister: Some(query_token_type_id("dckETH".to_string()).await.unwrap().to_string()),
                 debt_token_canister: Some(
                     query_token_type_id("debtckETH".to_string())
-                        .await
+                        .await.unwrap()
                         .to_string(),
                 ),
                 total_supply: Nat::from(0u128),
@@ -177,7 +181,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     assets.insert(
         "ckUSDC",
         (
-            query_token_type_id("ckUSDC".to_string()).await,
+            query_token_type_id("ckUSDC".to_string()).await.unwrap(),
             ReserveData {
                 asset_name: Some("ckUSDC".to_string()),
                 last_update_timestamp: time(),
@@ -185,11 +189,11 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 borrow_rate: Nat::from(0u128),
                 accure_to_platform: Nat::from(0u128),
                 d_token_canister: Some(
-                    query_token_type_id("dckUSDC".to_string()).await.to_string(),
+                    query_token_type_id("dckUSDC".to_string()).await.unwrap().to_string(),
                 ),
                 debt_token_canister: Some(
                     query_token_type_id("debtckUSDC".to_string())
-                        .await
+                        .await.unwrap()
                         .to_string(),
                 ),
                 total_supply: Nat::from(0u128),
@@ -223,16 +227,16 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     assets.insert(
         "ICP",
         (
-            query_token_type_id("ICP".to_string()).await,
+            query_token_type_id("ICP".to_string()).await.unwrap(),
             ReserveData {
                 asset_name: Some("ICP".to_string()),
                 last_update_timestamp: time(),
                 current_liquidity_rate: Nat::from(0u128),
                 borrow_rate: Nat::from(0u128),
                 accure_to_platform: Nat::from(0u128),
-                d_token_canister: Some(query_token_type_id("dICP".to_string()).await.to_string()),
+                d_token_canister: Some(query_token_type_id("dICP".to_string()).await.unwrap().to_string()),
                 debt_token_canister: Some(
-                    query_token_type_id("debtICP".to_string()).await.to_string(),
+                    query_token_type_id("debtICP".to_string()).await.unwrap().to_string(),
                 ),
                 total_supply: Nat::from(0u128),
                 total_borrowed: Nat::from(0u128),
@@ -265,7 +269,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
     assets.insert(
         "ckUSDT",
         (
-            query_token_type_id("ckUSDT".to_string()).await,
+            query_token_type_id("ckUSDT".to_string()).await.unwrap(),
             ReserveData {
                 asset_name: Some("ckUSDT".to_string()),
                 last_update_timestamp: time(),
@@ -273,11 +277,11 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 borrow_rate: Nat::from(0u128),
                 accure_to_platform: Nat::from(0u128),
                 d_token_canister: Some(
-                    query_token_type_id("dckUSDT".to_string()).await.to_string(),
+                    query_token_type_id("dckUSDT".to_string()).await.unwrap().to_string(),
                 ),
                 debt_token_canister: Some(
                     query_token_type_id("debtckUSDT".to_string())
-                        .await
+                        .await.unwrap()
                         .to_string(),
                 ),
                 total_supply: Nat::from(0u128),

@@ -129,6 +129,7 @@ const MySupply = () => {
     fetchAssetBorrow,
     loading: filteredDataLoading,
   } = useAssetData();
+  console.log("asset supply and asset borrow", asset_supply, asset_borrow);
   const [loadingUserData, setUserDataLoading] = useState(true);
   useEffect(() => {
     const fetchData = async () => {

@@ -112,7 +112,7 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         cycles_for_archive_creation: Some(100000000000),
         node_max_memory_size_bytes: Some(2000),
         controller_id: ic_cdk::api::id(),
-        more_controller_ids: Some(vec![Principal::anonymous()]),
+        more_controller_ids: Some(vec![Principal::from_text(DEFAULT).unwrap()]),
     };
 
     let init_args = InitArgs {
@@ -137,11 +137,12 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         Ok(args) => args,
         Err(e) => {
             ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
+            //TODO remove this and change return type
             return Principal::anonymous();
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 300_000_000_000)
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 900_000_000_000)
         .await
         .unwrap()
         .0
@@ -245,7 +246,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 300_000_000_000)
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 900_000_000_000)
         .await
         .unwrap()
         .0

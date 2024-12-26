@@ -59,10 +59,6 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
-    if user != ic_cdk::caller() {
-        ic_cdk::println!("Invalid user: Caller does not match the user.");
-        return Err(Error::InvalidUser);
-    }
 
     read_state(|state| {
         state
@@ -274,7 +270,7 @@ fn calculate_dynamic_balance(
 }
 
 // TODO: need to make a function by getting the asset name and then get user reserve data then call this below function and return the value of it. it will be a query function.
-#[query]
+#[update]
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -304,6 +300,11 @@ pub async fn get_asset_supply(
         Some(principal_str) => principal_str,
         None => ic_cdk::caller(),
     };
+
+    if user_principal ==  Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
     ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
     let user_data_result = user_data(user_principal);
@@ -386,7 +387,7 @@ pub async fn get_asset_supply(
     Ok(result)
 }
 
-#[query]
+#[update]
 pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -411,6 +412,11 @@ pub async fn get_asset_debt(
         Some(principal_str) => principal_str,
         None => ic_cdk::caller(),
     };
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
 
     let user_data_result = user_data(user_principal);
 
@@ -449,7 +455,7 @@ pub async fn get_asset_debt(
                 return Err(Error::ErrorParsingPrincipal);
             }
         };
-
+    ic_cdk::println!("Entering into get_balance function");
     let balance_result = get_balance(debt_token_canister_principal, user_principal).await;
     let get_balance_value = match balance_result {
         Ok(bal) => bal,
@@ -530,7 +536,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
 }
 
 // this function is for check which i will remove later.
-#[query]
+#[update]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {

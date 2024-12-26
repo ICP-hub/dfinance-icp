@@ -433,9 +433,6 @@ pub async fn execute_liquidation(
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
-    if liquidator_principal != ic_cdk::caller() {
-        return Err(Error::InvalidUser);
-    }
 
     ic_cdk::println!(
         "params debt_asset and collateral_asset {:?} {:?}",
@@ -711,7 +708,15 @@ pub async fn execute_liquidation(
                 platform_principal,
                 true,
             )
-            .await?;
+            .await;
+            match rollback_dtoken_from_liquidator {
+                Ok(()) => {
+                    ic_cdk::println!("Rolling back dtoken from liquidator successfully");
+                }
+                Err(e) => {
+                    return Err(e);
+                }
+            };
             let rollback_dtoken_to_user = mint_scaled(
                 &mut collateral_reserve_data,
                 &mut user_reserve_data,
@@ -722,7 +727,15 @@ pub async fn execute_liquidation(
                 platform_principal,
                 true,
             )
-            .await?;
+            .await;
+            match rollback_dtoken_to_user {
+                Ok(()) => {
+                    ic_cdk::println!("Rolling back dtoken to user successfully");
+                }
+                Err(e) => {
+                    return Err(e);
+                }
+            };
             //TODO store state
             return Err(e);
         } //TODO burn liquidator dtoken //TODO mint back the dtoken to user

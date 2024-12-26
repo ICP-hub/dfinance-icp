@@ -38,6 +38,7 @@ type Error = variant {
   ErrorBurnDTokens;
   NoPriceCache;
   ConversionErrorFromTextToPrincipal;
+  MaxAmountPlatform;
   NotFoundAssetPrincipal;
   BorrowCapExceeded;
   ErrorEncoding;

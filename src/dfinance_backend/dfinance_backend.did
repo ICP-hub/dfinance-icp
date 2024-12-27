@@ -70,6 +70,7 @@ type ExecuteWithdrawParams = record {
   on_behalf_of : opt principal;
   amount : nat;
 };
+type InitArgs = record { controller_id : principal };
 type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
   ltv : nat;
@@ -105,53 +106,40 @@ type ReserveData = record {
 };
 type Result = variant { Ok : nat; Err : Error };
 type Result_1 = variant { Ok : principal; Err : Error };
+type Result_10 = variant { Ok : record { nat; nat }; Err : Error };
 type Result_2 = variant { Ok : PriceCache; Err : Error };
-type Result_3 = variant { Ok : record { nat; nat64 }; Err : Error };
-type Result_4 = variant { Ok : ReserveData; Err : Error };
-type Result_5 = variant {
+type Result_3 = variant { Ok : InitArgs; Err : text };
+type Result_4 = variant { Ok : record { nat; nat64 }; Err : Error };
+type Result_5 = variant { Ok : ReserveData; Err : Error };
+type Result_6 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
 };
-type Result_6 = variant { Ok : UserData; Err : Error };
-type Result_7 = variant { Ok; Err : Error };
-type Result_8 = variant { Ok : text; Err : Error };
-type Result_9 = variant { Ok : record { nat; nat }; Err : Error };
+type Result_7 = variant { Ok : UserData; Err : Error };
+type Result_8 = variant { Ok; Err : Error };
+type Result_9 = variant { Ok : text; Err : Error };
 type UserData = record {
-  ltv : opt nat;
-  available_borrow : opt nat;
-  net_apy : opt nat;
   reserves : opt vec record { text; UserReserveData };
-  health_factor : opt nat;
   total_collateral : opt nat;
   total_debt : opt nat;
   user_id : opt text;
-  liquidation_threshold : opt nat;
-  max_ltv : opt nat;
-  net_worth : opt nat;
 };
 type UserReserveData = record {
-  supply_rate : nat;
-  asset_price_when_supplied : nat;
-  principal_stable_debt : nat64;
   asset_borrow : nat;
   last_update_timestamp : nat64;
   d_token_balance : nat;
   is_collateral : bool;
-  asset_price_when_borrowed : nat;
   liquidity_index : nat;
   faucet_limit : nat;
   variable_borrow_index : nat;
   reserve : text;
   asset_supply : nat;
-  state : UserState;
   faucet_usage : nat;
-  borrow_rate : nat;
   debt_token_blance : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
-type UserState = record { adjusted_balance : nat; index : nat };
-service : () -> {
+service : (principal) -> {
   execute_borrow : (ExecuteBorrowParams) -> (Result);
   execute_liquidation : (text, text, nat, principal) -> (Result);
   execute_repay : (ExecuteRepayParams) -> (Result);
@@ -165,16 +153,19 @@ service : () -> {
   get_asset_supply : (text, opt principal) -> (Result);
   get_balance : (principal, principal) -> (Result) query;
   get_cached_exchange_rate : (text) -> (Result_2) query;
-  get_exchange_rates : (text, opt text, nat) -> (Result_3);
-  get_reserve_data : (text) -> (Result_4) query;
+  get_controller : () -> (Result_3) query;
+  get_exchange_rates : (text, opt text, nat) -> (Result_4);
+  get_reserve_data : (text) -> (Result_5) query;
   get_total_supply : (principal) -> (Result) query;
-  get_user_account_data : (opt principal) -> (Result_5);
-  get_user_data : (principal) -> (Result_6) query;
-  initialize_canister : () -> (Result_7);
-  initialize_reserve : () -> (Result_7);
+  get_user_account_data : (opt principal) -> (Result_6);
+  get_user_data : (principal) -> (Result_7) query;
+  initialize_canister : () -> (Result_8);
+  initialize_reserve : () -> (Result_8);
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : () -> (Result_8);
-  toggle_collateral : (text, nat, nat) -> (Result_7);
-  update_reserves_price : () -> (Result_7);
-  user_position : (text) -> (Result_9) query;
+  register_user : () -> (Result_9);
+  toggle_collateral : (text, nat, nat) -> (Result_8);
+  update_reserves_price : () -> (Result_8);
+  user_normalized_debt : (ReserveData) -> (Result) query;
+  user_normalized_supply : (ReserveData) -> (Result) query;
+  user_position : (text) -> (Result_10) query;
 }

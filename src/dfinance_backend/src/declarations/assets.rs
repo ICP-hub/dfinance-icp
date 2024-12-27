@@ -120,3 +120,9 @@ pub struct ExecuteWithdrawParams {
     pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct InitArgs {
+    pub controller_id: candid::Principal
+}
+

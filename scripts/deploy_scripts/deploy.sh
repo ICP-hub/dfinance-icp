@@ -213,4 +213,11 @@ export TOKEN_SYMBOL="debttoken"
 dfx canister create xrc
 dfx build xrc
 
+# for deploying with init args
+dfx deploy dfinance_backend --argument '(
+  record {
+    controller_id = principal "3hopn-qdoia-42key-bpb4f-kujhh-erai4-aq4xw-turvi-2gvwq-lek4b-pae";
+  }
+)'
+
 dfx deploy

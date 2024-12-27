@@ -7,7 +7,6 @@ use crate::{
     user_normalized_debt, user_normalized_supply,
 };
 use candid::{CandidType, Deserialize, Nat, Principal};
-use num_traits::cast::ToPrimitive;
 
 fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
@@ -19,6 +18,7 @@ pub struct UserConfig {
     pub borrowing: bool,
 }
 
+//TODO unwrap the function from this GenericLogic struct, no need of this struct
 pub struct GenericLogic;
 
 impl GenericLogic {
@@ -74,13 +74,11 @@ impl GenericLogic {
                 Nat::from(0u128),
                 Nat::from(0u128),
                 Nat::from(0u128),
-                // TODO: ask bhanu what is for the max for nat
                 max,
                 false,
             ));
         }
 
-        // Ensure reserves exist for the user
         let user_data_reserves = user_data
             .reserves
             .as_ref()
@@ -123,7 +121,6 @@ impl GenericLogic {
 
             match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
                 Ok(price_cache) => {
-                    // Fetch the specific CachedPrice for the asset from the PriceCache
                     if let Some(cached_price) =
                         price_cache.cache.get(&user_reserve_data.reserve.clone())
                     {
@@ -270,7 +267,6 @@ impl GenericLogic {
 
         let health_factor = if total_debt == Nat::from(0u128) {
             ic_cdk::println!("Health factor: No debt, setting to MAX.");
-            //TODO: ask bhanu what is for the max for nat
             max
         } else {
             (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
@@ -300,7 +296,7 @@ impl GenericLogic {
             has_zero_ltv_collateral,
         ))
     }
-
+   
     pub async fn get_user_balance_in_base_currency(
         user_principal: Principal,
         reserve: &UserReserveData,
@@ -419,6 +415,7 @@ impl GenericLogic {
         };
 
         if user_variable_debt != Nat::from(0u128) {
+            //TODO need to divide this by user_reserve.variable_borrow_index
             user_variable_debt = user_variable_debt.scaled_mul(user_normailzed_debt);
             ic_cdk::println!(
                 "User variable debt after normalization: {}",

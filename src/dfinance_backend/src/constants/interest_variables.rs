@@ -17,7 +17,7 @@ pub mod constants {
     pub const ICP_MAX_EXCESS_USAGE_RATIO: u128 = 55;
     pub const ICP_BASE_VARIABLE_BORROW_RATE: u128 = 0;
     pub const ICP_VARIABLE_RATE_SLOPE1: u128 = 4;
-    pub const ICP_VARIABLE_RATE_SLOPE2: u128 = 30;  // review
+    pub const ICP_VARIABLE_RATE_SLOPE2: u128 = 30;  //TODO: review
 
     pub const CKUSDC_OPTIMAL_USAGE_RATIO: u128 = 80;
     pub const CKUSDC_MAX_EXCESS_USAGE_RATIO: u128 = 20;
@@ -80,6 +80,6 @@ pub mod constants {
     pub const CKUSDT_RESERVE_FACTOR: u128 = 15;
 
     // ------------------- General Constants -------------------
-    pub const DEBT_INDEX: u128 = 100000000; //FIXME initial_debt_index
+    pub const INITIAL_DEBT_INDEX: u128 = 100000000;
     pub const SCALING_FACTOR: u128 = 100000000;
 }

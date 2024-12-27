@@ -3,7 +3,9 @@ use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::get_reserve_data;
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
-use crate::protocol::libraries::logic::user::{self, GenericLogic};
+use crate::protocol::libraries::logic::user::GenericLogic;
+use crate::protocol::libraries::math::calculate::get_exchange_rates;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::state_handler::mutate_state,
@@ -13,16 +15,9 @@ use crate::{
         },
         storable::Candid,
     },
-    protocol::libraries::{
-        math::{
-            calculate::{
-                cal_average_threshold, calculate_health_factor, calculate_ltv, get_exchange_rates,
-                UserPosition,
-            },
-            math_utils::ScalingMath,
-        },
+    protocol::libraries::
         types::datatypes::UserReserveData,
-    },
+    
 };
 use candid::{Nat, Principal};
 use ic_cdk::api::time;
@@ -64,8 +59,6 @@ impl UpdateLogic {
 
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.reserve = params.asset.clone();
-            reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
-            reserve_data.borrow_rate = reserve.borrow_rate.clone();
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
             reserve_data.is_collateral = true;
@@ -88,8 +81,6 @@ impl UpdateLogic {
         } else {
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                supply_rate: reserve.current_liquidity_rate.clone(),
-
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
                 last_update_timestamp: current_timestamp(),
@@ -110,7 +101,7 @@ impl UpdateLogic {
                 }) {
                 reserve_data
             } else {
-                return Err(Error::EmptyAsset); // TODO use an appropriate error
+                return Err(Error::NoUserReserveDataFound); 
             };
             new_reserve_data
         };
@@ -135,12 +126,7 @@ impl UpdateLogic {
                 return Err(e);
             }
         }
-        // if let Some((_, reserve_data)) = user_reserve_result {
 
-        //     reserve_data.d_token_balance = user_reserve_data.d_token_balance.clone();
-        // } else {
-        //     return Err(Error::NoReserveDataFound);
-        // }
         mutate_state(|state| {
             state
                 .user_profile
@@ -198,12 +184,8 @@ impl UpdateLogic {
         //     None => return Err(Error::NoUserReserveDataFound),
         // };
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
-            reserve_data.supply_rate = asset_reserve_data.current_liquidity_rate;
-            reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
-            
             reserve_data.is_borrowed = true;
             reserve_data.is_using_as_collateral_or_borrow = true;
-            // reserve_data.asset_borrow += params.amount.clone();
             reserve_data.last_update_timestamp = current_timestamp();
 
             ic_cdk::println!(
@@ -215,7 +197,6 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                borrow_rate: asset_reserve_data.current_liquidity_rate,
                 asset_borrow: params.amount.clone(),
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
@@ -239,7 +220,7 @@ impl UpdateLogic {
                 }) {
                 reserve_data
             } else {
-                return Err(Error::EmptyAsset); // TODO use an appropriate error
+                return Err(Error::NoUserReserveDataFound);
             };
             new_reserve_data
         };
@@ -427,8 +408,6 @@ impl UpdateLogic {
         };
 
         if let Some((_, reserve_data)) = user_reserve {
-            reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
-            reserve_data.borrow_rate = reserve.borrow_rate.clone();
             reserve_data.last_update_timestamp = reserve.last_update_timestamp;
             if reserve_data.asset_borrow == Nat::from(0u128) {
                 reserve_data.is_borrowed = false;
@@ -439,11 +418,18 @@ impl UpdateLogic {
         } else {
             return Err(Error::NoUserReserveDataFound);
         }
-        let debttoken_balance = get_balance(
+        let balance_result = get_balance(
             Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
             user_principal,
         )
-        .await?;
+        .await;
+
+        let debttoken_balance = match balance_result {
+            Ok(bal) => bal,
+            Err(e) => {
+                return Err(e);
+            }
+        };
 
         if debttoken_balance == Nat::from(0u128) && is_collateral == false {
             if let Some(ref mut reserves) = user_data.reserves {
@@ -673,17 +659,3 @@ pub fn user_reserve<'a>(
     };
     user_reserve
 }
-
-// pub fn user_reserve_data(asset: &String, user_data: &mut UserData) -> Option<&mut UserReserveData> {
-//     let user_reserve = match user_data.reserves {
-//         Some(ref mut reserves) => reserves.iter_mut().find(|(name, _)| name == asset),
-//         None => None,
-//     };
-//     let user_reserve_data = user_reserve.and_then(|reserves| {
-//         reserves
-//             .1
-//             .as_mut()
-//             .map(|reserve_data| reserve_data as &mut UserReserveData)
-//     });
-//     user_reserve_data
-// }

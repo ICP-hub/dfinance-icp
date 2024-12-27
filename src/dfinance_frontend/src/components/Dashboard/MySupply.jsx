@@ -131,6 +131,7 @@ const MySupply = () => {
   } = useAssetData();
   console.log("asset supply and asset borrow", asset_supply, asset_borrow);
   const [loadingUserData, setUserDataLoading] = useState(true);
+  
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0) return;
@@ -535,7 +536,7 @@ const MySupply = () => {
   const noBorrowMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
       <div className="w-20 h-15">
-        <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+        <img src="/Transaction/empty file.gif" alt="empty" className="w-30"  loading="lazy"/>
       </div>
       <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
         Nothing borrowed yet
@@ -545,7 +546,7 @@ const MySupply = () => {
   const noSupplyMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
       <div className="w-20 h-15">
-        <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+        <img src="/Transaction/empty file.gif" alt="empty" className="w-30" loading="lazy"/>
       </div>
       <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
         Nothing supplied yet
@@ -555,7 +556,7 @@ const MySupply = () => {
   const noAssetsToSupplyMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
       <div className="w-20 h-15">
-        <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+        <img src="/Transaction/empty file.gif" alt="empty" className="w-30" loading="lazy"/>
       </div>
       <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
         No assets to supply.
@@ -565,7 +566,7 @@ const MySupply = () => {
   const noAssetsToBorrowMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center pb-6 pt-2">
       <div className="w-20 h-15">
-        <img src="/Transaction/empty file.gif" alt="empty" className="w-30" />
+        <img src="/Transaction/empty file.gif" alt="empty" className="w-30" loading="lazy"/>
       </div>
       <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
         No assets to borrow.

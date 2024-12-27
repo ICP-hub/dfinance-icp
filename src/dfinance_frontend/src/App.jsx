@@ -113,7 +113,6 @@ export default function App() {
             </p>
             {isMobile2 ? (
               <img
-                loading="lazy"
                 src={
                   theme === "dark"
                     ? DfinanceHomeDarkSmall
@@ -124,7 +123,6 @@ export default function App() {
               />
             ) : (
               <img
-                loading="lazy"
                 src={
                   theme === "dark" ? dFinanceHomePage : dfinanceHomePageLight
                 }
@@ -148,14 +146,12 @@ export default function App() {
             </p>
             {isMobile2 ? (
               <img
-              loading="lazy"
               src={theme === "dark" ? FaucetSmall : FaucetSmallLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
                ) : (
                 <img
-              loading="lazy"
               src={theme === "dark" ? faucetPage : faucetPageLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -175,7 +171,6 @@ export default function App() {
               asset.
             </p>
             <img
-              loading="lazy"
               src={theme === "dark" ? faucetbutton : faucetbuttonLight}
               alt="Faucet Button"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -185,7 +180,6 @@ export default function App() {
               you wish to faucet.
             </p>
             <img
-              loading="lazy"
               src={theme === "dark" ? faucetPopup : faucetPopupLight}
               alt="Faucet Popup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -210,14 +204,12 @@ export default function App() {
             </p>
             {isMobile2 ? (
               <img
-              loading="lazy"
               src={theme === "dark" ? DashboardPageSmall : DashboardPageSmallLight}
               alt="dashboardPage"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
                ) : (
                 <img
-              loading="lazy"
               src={theme === "dark" ? dashboardPage : dashboardPageLight}
               alt="dashboardPage"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -237,7 +229,6 @@ export default function App() {
               supply.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? dashboardAssetsToSupplyButton
@@ -252,13 +243,11 @@ export default function App() {
               the process.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? assetsToSupplyPopup
                   : assetsToSupplyPopupLight
               }
-              alt="assetsToSupplyPopup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
           </div>
@@ -274,7 +263,6 @@ export default function App() {
               borrow.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? dashboardAssetsToBorrowButton
@@ -288,7 +276,6 @@ export default function App() {
               amount and click "Borrow" to complete the process.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? assetsToBorrowPopup
@@ -310,7 +297,6 @@ export default function App() {
               or additionaly you can borrow from here also.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? yourBorrowRepayButton
@@ -325,7 +311,6 @@ export default function App() {
               the process.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? yourBorrowRepayPopup
@@ -347,7 +332,6 @@ export default function App() {
               withdraw or additionaly you can supply from here also.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? yourSuppliesWithdrawButton
@@ -361,7 +345,6 @@ export default function App() {
               amount and click "Withdraw" to complete the process.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? yourSuppliesWithdrawPopup
@@ -386,7 +369,6 @@ export default function App() {
                   available).
                 </p>
                 <img
-                  loading="lazy"
                   src={
                     theme === "dark"
                       ? DashboarNavDetailsDarkSmall
@@ -401,7 +383,6 @@ export default function App() {
                   Liquidation Threshold.
                 </p>
                 <img
-                  loading="lazy"
                   src={theme === "dark" ? riskDetails : riskDetailsLight}
                   alt="Faucet Button"
                   className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -414,7 +395,6 @@ export default function App() {
                   available).
                 </p>
                 <img
-                  loading="lazy"
                   src={
                     theme === "dark"
                       ? dashboarNavDetails
@@ -429,7 +409,6 @@ export default function App() {
                   Liquidation Threshold.
                 </p>
                 <img
-                  loading="lazy"
                   src={theme === "dark" ? riskDetails : riskDetailsLight}
                   alt="Faucet Button"
                   className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -438,7 +417,7 @@ export default function App() {
             )}
           </>
         ),
-        placement: isMobile ? "center" : "right",
+        placement: isMobile ? "center" : "bottom",
       },
       {
         target: "#market-page1",
@@ -452,14 +431,12 @@ export default function App() {
             </p>
             {isMobile2 ? (
                <img
-               loading="lazy"
                src={theme === "dark" ? MarketPageSmall : MarketPageSmallLight}
                alt="Faucet Button"
                className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
              />
                ) : (
                 <img
-                loading="lazy"
                 src={theme === "dark" ? marketPage : marketPageLight}
                 alt="Faucet Button"
                 className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -482,14 +459,12 @@ export default function App() {
             </p>
             {isMobile2 ? (
                <img
-               loading="lazy"
                src={theme === "dark" ? MarketPageSmall : MarketPageSmallLight}
                alt="Faucet Button"
                className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
              />
                ) : (
                 <img
-                loading="lazy"
                 src={theme === "dark" ? marketPage : marketPageLight}
                 alt="Faucet Button"
                 className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -510,7 +485,6 @@ export default function App() {
             </p>
             {isMobile2 ? (
               <img
-                loading="lazy"
                 src={
                   theme === "dark"
                     ? marketNavDetailsDarkSmall
@@ -521,7 +495,6 @@ export default function App() {
               />
             ) : (
               <img
-                loading="lazy"
                 src={
                   theme === "dark"
                     ? marketeNavbarDetails
@@ -558,7 +531,6 @@ export default function App() {
               Button" to see the liquidation List (if available).
             </p>
             <img
-              loading="lazy"
               src={theme === "dark" ? debtStatusImage : debtStatusImageLight}
               alt="Faucet Button"
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -577,7 +549,6 @@ export default function App() {
               1
             </p>
             <img
-              loading="lazy"
               src={theme === "dark" ? liquidationTable : liquidationTableLight}
               alt="Faucet Popup"
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -586,7 +557,6 @@ export default function App() {
              Click the 'Liquidate' button in the 'Liquidation' list to view debt details and open the user information popup.
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark" ? liquidationButton : liquidationButtonLight
               }
@@ -608,7 +578,6 @@ export default function App() {
             </p>
 
             <img
-              loading="lazy"
               src={theme === "dark" ? userInformation : userInformationLight}
               alt="Faucet Popup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -626,7 +595,6 @@ export default function App() {
               Now select the debt asset to view the repayment details.
             </p>
             <img
-              loading="lazy"
               src={theme === "dark" ? DebtInformation : DebtInformationLight}
               alt="Faucet Button"
               className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -646,7 +614,6 @@ export default function App() {
               click on 'Approve Liquidation' to proceed with the call."
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? CollateralInformation
@@ -668,7 +635,6 @@ export default function App() {
               "Click on 'Call Liquidation' to proceed with the call."
             </p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? CollateralInformationCall
@@ -691,7 +657,6 @@ export default function App() {
               proceed, then click 'Call Liquidation' to complete the process."
             </p>
             <img
-              loading="lazy"
               src={theme === "dark" ? WarningPopup : WarningPopupLight}
               alt="Faucet Popup"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -707,7 +672,6 @@ export default function App() {
             <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
             <p className="mb-4">Liquidation successful. You’re done!</p>
             <img
-              loading="lazy"
               src={
                 theme === "dark"
                   ? LiquidationSuccessfull
@@ -890,15 +854,15 @@ export default function App() {
   const handleJoyrideCallback = (data) => {
     const { status } = data;
 
-    if (status === "finished" || status === "skipped") {
-      if (isAuthenticated && principal) {
-        const storedData = localStorage.getItem("userGuideData");
-        const parsedData = storedData ? JSON.parse(storedData) : {};
-        parsedData[principal] = true;
-        localStorage.setItem("userGuideData", JSON.stringify(parsedData));
-        setJoyrideState((prevState) => ({ ...prevState, run: false }));
-      }
-    }
+    // if (status === "finished" || status === "skipped") {
+    //   if (isAuthenticated && principal) {
+    //     const storedData = localStorage.getItem("userGuideData");
+    //     const parsedData = storedData ? JSON.parse(storedData) : {};
+    //     parsedData[principal] = true;
+    //     localStorage.setItem("userGuideData", JSON.stringify(parsedData));
+    //     setJoyrideState((prevState) => ({ ...prevState, run: false }));
+    //   }
+    // }
 
     if (data.action === "next" && data.index === 0) {
       navigate("/Faucet");

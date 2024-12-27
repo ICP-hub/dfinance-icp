@@ -606,9 +606,6 @@ const AssetDetails = () => {
                   <p className=" text-[12px] my-1 text-darkTextSecondary1">
                     Assets to Supply
                   </p>
-                  <span>
-                    <Info size={13} color="lightblue" />
-                  </span>
                 </div>
                 <div className="flex">
                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 ">
@@ -738,8 +735,8 @@ const AssetDetails = () => {
                         const assetSupply = getAssetSupplyValue(id);
                         const assetBorrow = getAssetBorrowValue(id);
                         const currentCollateralStatus =
-                          reserveData?.[1]?.is_collateral;
-
+                          reserveData?.[1]?.is_collateral||true;
+                          console.log("reserveDta",reserveData)
                         console.log(
                           "currentCollateralStatus",
                           currentCollateralStatus

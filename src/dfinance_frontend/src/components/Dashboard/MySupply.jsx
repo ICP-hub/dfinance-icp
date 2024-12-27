@@ -98,7 +98,9 @@ const MySupply = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
-
+  const [supplyDataLoading, setSupplyDataLoading] = useState(false);
+  const [borrowDataLoading, setBorrowDataLoading] = useState(false);
+  
   const [showZeroBalance, setShowZeroBalance] = useState(
     () => JSON.parse(localStorage.getItem("showZeroBalance")) || true
   );
@@ -127,35 +129,50 @@ const MySupply = () => {
     asset_borrow,
     fetchAssetSupply,
     fetchAssetBorrow,
+    DebttokenActor ,DtokenActor,
     loading: filteredDataLoading,
   } = useAssetData();
-  console.log("asset supply and asset borrow", asset_supply, asset_borrow);
+  console.log("DebttokenActor ,DtokenActor", DebttokenActor ,DtokenActor);
   const [loadingUserData, setUserDataLoading] = useState(true);
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSupplyData = async () => {
       if (assets.length === 0) return;
-
-      setUserDataLoading(true);
-      let completedRequests = 0;
-
-      for (const asset of assets) {
-        try {
-          await fetchAssetSupply(asset);
-          await fetchAssetBorrow(asset);
-        } catch (error) {
-          console.error(`Error fetching data for asset ${asset}:`, error);
-        } finally {
-          completedRequests++;
-          if (completedRequests === assets.length) {
-            setUserDataLoading(false);
-          }
+  
+      setSupplyDataLoading(true); // Set supply loading state
+  
+      try {
+        for (const asset of assets) {
+          await fetchAssetSupply(asset); // Fetch supply data
         }
+      } catch (error) {
+        setSupplyDataLoading(false);
+        console.error("Error fetching supply data:", error);
+      } finally {
+        setSupplyDataLoading(false); // Reset supply loading state
       }
     };
-
-    fetchData();
+  
+    const fetchBorrowData = async () => {
+      if (assets.length === 0) return;
+  
+      setBorrowDataLoading(true); // Set borrow loading state
+  
+      try {
+        for (const asset of assets) {
+          await fetchAssetBorrow(asset); // Fetch borrow data
+        }
+      } catch (error) {
+        setBorrowDataLoading(false);
+        console.error("Error fetching borrow data:", error);
+      } finally {
+        setBorrowDataLoading(false); // Reset borrow loading state
+      }
+    };
+  
+    fetchSupplyData(); // Fetch supply data
+    fetchBorrowData(); // Fetch borrow data
   }, [assets]);
-
+  
   const visibleItems = filteredItems.filter((item) => {
     const balance =
       item[0] === "ckBTC"
@@ -763,7 +780,7 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
-                  {loadingUserData ? (
+                  {supplyDataLoading ? (
                     <div className="h-[100px] flex justify-center items-center">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -1140,7 +1157,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
-                  {loadingUserData ? (
+                  {supplyDataLoading ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -1229,7 +1246,7 @@ const MySupply = () => {
                                 return (
                                   <div
                                     key={index}
-                                    className="grid grid-cols-[2.2fr_1.13fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs"
+                                    className="grid grid-cols-[2.2fr_1.13fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs"
                                   >
                                     <div className="p-3 pl-4 align-top flex items-center gap-2">
                                       {asset === "ckBTC" && (
@@ -1991,7 +2008,7 @@ const MySupply = () => {
                               return (
                                 <div
                                   key={index}
-                                  className={`grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs ${itemClass}`}
+                                  className={`grid grid-cols-[2.15fr_1.2fr_0.9fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs ${itemClass}`}
                                 >
                                   <div className="p-3 pl-4 align-top flex items-center gap-2">
                                     {item[0] === "ckBTC" && (
@@ -2328,7 +2345,7 @@ const MySupply = () => {
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
-                  {loadingUserData ? (
+                  {borrowDataLoading ? (
                     <div className="h-[100px] flex justify-center items-center">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -2672,7 +2689,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {loadingUserData ? (
+                  {borrowDataLoading ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -2752,7 +2769,7 @@ const MySupply = () => {
                               return (
                                 <div
                                   key={index}
-                                  className="grid grid-cols-[1.95fr_0.9fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs mt-2"
+                                  className="grid grid-cols-[1.95fr_0.9fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs mt-2"
                                 >
                                   <div className="p-3 pl-4 flex items-center gap-2">
                                     {asset === "ckBTC" && (
@@ -3076,7 +3093,7 @@ const MySupply = () => {
                               const total_borrow =
                                 Number(assetData.asset_borrow || 0) / 100000000;
 
-                              return total_supply - total_borrow != 0;
+                              return total_supply > total_borrow ;
                             }
                             return true;
                           })
@@ -3099,9 +3116,9 @@ const MySupply = () => {
                                 100000000;
 
                               const isEligibleA =
-                                total_supply_A - total_borrow_A !== 0;
+                                total_supply_A > total_borrow_A ;
                               const isEligibleB =
-                                total_supply_B - total_borrow_B !== 0;
+                                total_supply_B > total_borrow_B ;
 
                               if (isEligibleA && !isEligibleB) return -1;
                               if (!isEligibleA && isEligibleB) return 1;
@@ -3202,15 +3219,7 @@ const MySupply = () => {
                                   </p>
 
                                   <p
-                                    className={`text-right text-[#2A1F9D] dark:text-darkText ${
-                                      Math.max(
-                                        Number(total_supply) -
-                                          Number(total_borrow),
-                                        0
-                                      ) === 0
-                                        ? "opacity-50 pointer-events-none"
-                                        : ""
-                                    }`}
+                                    className={`text-right text-[#2A1F9D] dark:text-darkText `}
                                   >
                                     {item[0] === "ckBTC" && (
                                       <>
@@ -3800,7 +3809,7 @@ const MySupply = () => {
                                   Number(assetData.asset_borrow || 0) /
                                   100000000;
 
-                                return total_supply - total_borrow != 0;
+                                return total_supply > total_borrow ;
                               }
                               return true;
                             })
@@ -3861,7 +3870,7 @@ const MySupply = () => {
                               return (
                                 <div
                                   key={index}
-                                  className={`grid grid-cols-[3fr_2fr_2fr_1fr_2fr] items-center font-semibold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg text-xs ${itemClass} ${
+                                  className={`grid grid-cols-[3fr_2fr_2fr_1fr_2fr] items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs ${itemClass} ${
                                     isTableDisabled
                                       ? "opacity-50 pointer-events-none"
                                       : ""
@@ -3909,15 +3918,7 @@ const MySupply = () => {
 
                                   {}
                                   <div
-                                    className={`p-3 lgx:pl-4 align-top flex flex-col ${
-                                      Math.max(
-                                        Number(total_supply) -
-                                          Number(total_borrow),
-                                        0
-                                      ) === 0
-                                        ? "opacity-50 pointer-events-none"
-                                        : ""
-                                    }`}
+                                    className={`p-3 lgx:pl-4 align-top flex flex-col `}
                                   >
                                     {item[0] === "ckBTC" && (
                                       <>

@@ -248,7 +248,7 @@ const FaucetDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${
                         index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""

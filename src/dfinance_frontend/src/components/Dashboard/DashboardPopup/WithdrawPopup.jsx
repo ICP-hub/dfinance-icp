@@ -31,7 +31,7 @@ const WithdrawPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  const { createLedgerActor, backendActor, principal } = useAuth();
+  const {  backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);

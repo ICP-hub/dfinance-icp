@@ -108,7 +108,7 @@ const WalletModal = () => {
         <div className="flex flex-col gap-2 mt-3 text-sm">
           {connectedWallet !== "ii" && (
             <div
-              className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
+              className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30  dark:text-darkText"
               onClick={() => {
                 isSwitchingWallet
                   ? loginHandlerIsSwitch("ii")
@@ -128,7 +128,7 @@ const WalletModal = () => {
 
           {connectedWallet !== "nfid" && (
             <div
-              className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30 dark:hover:bg-[#8782d8] dark:text-darkText"
+              className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30  dark:text-darkText"
               onClick={() => {
                 isSwitchingWallet
                   ? loginHandlerIsSwitch("nfid")

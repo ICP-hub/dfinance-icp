@@ -377,7 +377,7 @@ const DebtStatus = () => {
                     return (
                       <tr
                         key={index}
-                        className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg ${
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
                           index !== users.length - 1
                             ? "gradient-line-bottom"
                             : ""

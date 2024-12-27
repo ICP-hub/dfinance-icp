@@ -169,10 +169,10 @@ const DashboardNav = () => {
       if (item.id === 1) {
         return {
           ...item,
-          count: netApy !== 0
-            ? netApy < 0.01
-              ? "<0.01%"
-              : `${netApy.toFixed(4)}%`
+          count: (netApy && netApy !== 0)
+            ? (netApy < 0.01
+                ? "<0.01%"
+                : `${netApy.toFixed(4)}%`)
             : "-",
         };
       }

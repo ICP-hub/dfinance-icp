@@ -222,7 +222,7 @@ const WithdrawPopup = ({
         setIsVisible(false);
       } else if ("Err" in withdrawResult) {
         const errorMsg = withdrawResult.Err;
-        console.log("error",errorMsg)
+        console.error("error",errorMsg)
         toast.error(`Withdraw failed: ${errorMsg}`, {
           className: "custom-toast",
           position: "top-center",
@@ -278,14 +278,11 @@ const WithdrawPopup = ({
     const totalCollateralValue =
       parseFloat(totalCollateral) - parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
-    console.log("totalCollateral",totalCollateral,"amountTaken", amountTaken, "totalCollateralValue", totalCollateralValue, "totalDeptValue", totalDeptValue)
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    console.log("ltv", ltv, "healthFactor", healthFactor)
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
-    console.log("liquidationThreshold", liquidationThreshold, "ltv", ltv)
     if (ltv * 100 >= liquidationThreshold && currentCollateralStatus) {
 
       toast.dismiss(); 

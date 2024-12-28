@@ -57,7 +57,6 @@ const useAssetData = (searchQuery = "") => {
     if (backendActor && isAuthenticated) {
       try {
         const reserveDataForAsset = await fetchReserveData(asset);
-        console.log("Fetched Reserve Data:", reserveDataForAsset);
 
         // Make sure the id is present in the object
         if (reserveDataForAsset.Ok?.id) {
@@ -77,11 +76,9 @@ const useAssetData = (searchQuery = "") => {
   };
 
   const fetchAssetBorrow = async (asset) => {
-    console.log("asset", asset);
     if (backendActor && isAuthenticated) {
       try {
         const reserveDataForAsset = await fetchReserveData(asset);
-        console.log("fetchReserveData(asset)", reserveDataForAsset);
 
         // Make sure the id is present in the object
         if (reserveDataForAsset.Ok?.id) {

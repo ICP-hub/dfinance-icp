@@ -72,12 +72,10 @@ const MySupply = () => {
     const hasCollateral = userData?.Ok?.reserves[0]?.some(
       (reserveGroup) => reserveGroup[1]?.is_collateral !== false
     );
-    console.log("user data in my supply", userData?.Ok);
     const currentLiquidity = userData?.Ok?.reserves[0]?.map(
       (reserveGroup) => reserveGroup[1]?.liquidity_index
     );
     setCurrentLiquidityIndex(currentLiquidity);
-    console.log("currentLiquidityIndex", currentLiquidity);
     if (hasCollateral) {
       if (
         userAccountData?.Ok &&
@@ -151,7 +149,6 @@ const MySupply = () => {
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
 
-      console.log(`${asset} dtokenId:`, dtokenId, "debtTokenId:", debtTokenId);
 
       const assetBalance = {
         asset,
@@ -161,14 +158,12 @@ const MySupply = () => {
 
       if (dtokenId) {
         const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        console.log("dtokenActor in my supply", dtokenActor);
         if (dtokenActor) {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
             assetBalance.dtokenBalance = formattedBalance;
-            console.log(`${asset} dtoken balance:`, formattedBalance);
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
           }
@@ -184,7 +179,6 @@ const MySupply = () => {
             const balance = await debtTokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
             assetBalance.debtTokenBalance = formattedBalance;
-            console.log(`${asset} debt token balance:`, formattedBalance);
           } catch (error) {
             console.error(
               `Error fetching debt token balance for ${asset}:`,
@@ -202,7 +196,6 @@ const MySupply = () => {
     fetchAssetData();
   }, [assets, principalObj]);
 
-  console.log("asset_supply,asset_borrow", asset_supply, asset_borrow);
 
   const [loadingUserData, setUserDataLoading] = useState(true);
   useEffect(() => {
@@ -692,7 +685,7 @@ const MySupply = () => {
   };
   const isTableDisabled =
     !userData?.Ok?.reserves ||
-    !userData?.Ok?.reserves[0] ||
+    !userData?.Ok?.reserves[0] || availableBorrow==0 ||
     userData?.Ok?.reserves[0].every(
       (reserveGroup) =>
         asset_supply === 0n || reserveGroup[1]?.is_collateral === false
@@ -776,7 +769,6 @@ const MySupply = () => {
     setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
   }, []);
-  console.log("asset balances", assetBalances);
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 md:-mt-[3rem]">
       <div className="flex justify-center -mb-30 lg:hidden">
@@ -829,13 +821,7 @@ const MySupply = () => {
                       const assetBalance =
                         assetBalances.find((balance) => balance.asset === asset)
                           ?.dtokenBalance || 0;
-                      console.log("asset balance", Number(assetBalance));
-                      console.log(
-                        "values in here",
-                        currentLiquidity,
-                        assetBalance,
-                        getAssetSupplyValue(asset)
-                      );
+                     
                       const assetSupply =
                         (Number(assetBalance) *
                           Number(getAssetSupplyValue(asset))) /
@@ -855,12 +841,11 @@ const MySupply = () => {
                         usdValue = assetSupply * (ckUSDTUsdRate / 1e8);
                       }
 
-                      console.log("usdValue", usdValue);
+                     
 
                       // Accumulate total USD value supply
                       if (assetSupply > 0) {
                         totalUsdValueSupply += usdValue;
-                        console.log("totalUsdValueSupply", totalUsdValueSupply);
                         dispatch(setTotalUsdValueSupply(totalUsdValueSupply));
                       }
 
@@ -940,16 +925,7 @@ const MySupply = () => {
                                   assetBalances.find(
                                     (balance) => balance.asset === asset
                                   )?.dtokenBalance || 0;
-                                console.log(
-                                  "asset balance",
-                                  Number(assetBalance)
-                                );
-                                console.log(
-                                  "values in here",
-                                  currentLiquidity,
-                                  assetBalance,
-                                  getAssetSupplyValue(asset)
-                                );
+                               
                                 const assetSupply =
                                   (Number(assetBalance) *
                                     Number(getAssetSupplyValue(asset))) /
@@ -1141,10 +1117,37 @@ const MySupply = () => {
                                                 (reserveGroup) =>
                                                   reserveGroup[0] === item[0]
                                               );
+                                              const currentLiquidity =
+                                              userData?.Ok?.reserves[0]?.find(
+                                                (reserveGroup) =>
+                                                  reserveGroup[0] === item[0] // Check if the asset matches
+                                              )?.[1]?.liquidity_index;
+                                            const assetBalance =
+                                              assetBalances.find(
+                                                (balance) => balance.asset === item[0]
+                                              )?.dtokenBalance || 0;
+      
                                             const assetSupply =
-                                              getAssetSupplyValue(asset);
+                                              (Number(assetBalance) *
+                                                Number(getAssetSupplyValue(item[0]))) /
+                                              Number(currentLiquidity);
+      
+                                            const DebtIndex =
+                                              userData?.Ok?.reserves[0]?.find(
+                                                (reserveGroup) =>
+                                                  reserveGroup[0] === item[0] // Check if the asset matches
+                                              )?.[1]?.variable_borrow_index;
+      
+                                            const assetBorrowBalance =
+                                              assetBalances.find(
+                                                (balance) => balance.asset === item[0]
+                                              )?.debtTokenBalance || 0;
+      
                                             const assetBorrow =
-                                              getAssetBorrowValue(asset);
+                                              (Number(assetBorrowBalance) *
+                                                Number(getAssetBorrowValue(item[0]))) /
+                                              Number(DebtIndex);
+      
                                             const currentCollateralStatus =
                                               reserveData?.[1]?.is_collateral;
 
@@ -1333,8 +1336,8 @@ const MySupply = () => {
                                             ckBalance,
                                             liquidationThreshold,
                                             reserveliquidationThreshold,
-                                            assetSupply,
-                                            assetBorrow,
+                                            formatConditional(assetSupply),
+                                           formatConditional(assetBorrow) ,
                                             totalCollateral,
                                             totalDebt,
                                             currentCollateralStatus
@@ -1441,16 +1444,7 @@ const MySupply = () => {
                                   assetBalances.find(
                                     (balance) => balance.asset === asset
                                   )?.dtokenBalance || 0;
-                                console.log(
-                                  "asset balance",
-                                  Number(assetBalance)
-                                );
-                                console.log(
-                                  "values in here",
-                                  currentLiquidity,
-                                  assetBalance,
-                                  getAssetSupplyValue(asset)
-                                );
+                              
                                 const assetSupply =
                                   (Number(assetBalance) *
                                     Number(getAssetSupplyValue(asset))) /
@@ -1619,16 +1613,7 @@ const MySupply = () => {
                                               (balance) =>
                                                 balance.asset === asset
                                             )?.dtokenBalance || 0;
-                                          console.log(
-                                            "asset balance",
-                                            Number(assetBalance)
-                                          );
-                                          console.log(
-                                            "values in here",
-                                            currentLiquidity,
-                                            assetBalance,
-                                            getAssetSupplyValue(asset)
-                                          );
+                                         
                                           const assetSupply =
                                             (Number(assetBalance) *
                                               Number(
@@ -1699,16 +1684,7 @@ const MySupply = () => {
                                               (balance) =>
                                                 balance.asset === asset
                                             )?.dtokenBalance || 0;
-                                          console.log(
-                                            "asset balance",
-                                            Number(assetBalance)
-                                          );
-                                          console.log(
-                                            "values in here",
-                                            currentLiquidity,
-                                            assetBalance,
-                                            getAssetSupplyValue(asset)
-                                          );
+                                          
                                           const assetSupply =
                                             (Number(assetBalance) *
                                               Number(
@@ -1772,16 +1748,7 @@ const MySupply = () => {
                                               (balance) =>
                                                 balance.asset === asset
                                             )?.dtokenBalance || 0;
-                                          console.log(
-                                            "asset balance",
-                                            Number(assetBalance)
-                                          );
-                                          console.log(
-                                            "values in here",
-                                            currentLiquidity,
-                                            assetBalance,
-                                            getAssetSupplyValue(asset)
-                                          );
+                                         
                                           const assetSupply =
                                             (Number(assetBalance) *
                                               Number(
@@ -1816,8 +1783,8 @@ const MySupply = () => {
                                             ckBalance,
                                             liquidationThreshold,
                                             reserveliquidationThreshold,
-                                            assetSupply,
-                                            assetBorrow,
+                                            formatConditional(assetSupply),
+                                            formatConditional(assetBorrow),
                                             totalCollateral,
                                             totalDebt,
                                             currentCollateralStatus
@@ -2644,12 +2611,12 @@ const MySupply = () => {
                         usdValue = assetBorrow * (ckUSDTUsdRate / 1e8);
                       }
 
-                      console.log("usdValue", usdValue);
+                      
 
                       // Accumulate total USD value supply
                       if (assetBorrow > 0) {
                         totalUsdValueBorrow += usdValue;
-                        console.log("totalUsdValueBorrow", totalUsdValueBorrow);
+                        
                         dispatch(setTotalUsdValueBorrow(totalUsdValueBorrow));
                       }
 
@@ -3108,8 +3075,8 @@ const MySupply = () => {
                                               totalDebt,
                                               currentCollateralStatus,
                                               Ltv,
-                                              borrowableValue,
-                                              borrowableAssetValue
+                                             formatConditional(borrowableValue) ,
+                                              formatConditional(borrowableAssetValue) 
                                             );
                                           }}
                                           disabled={isTableDisabled}
@@ -3150,8 +3117,8 @@ const MySupply = () => {
                                               ckBalance,
                                               liquidationThreshold,
                                               reserveliquidationThreshold,
-                                              assetSupply,
-                                              assetBorrow,
+                                              formatConditional(assetSupply) ,
+                                              formatConditional(assetBorrow),
                                               totalCollateral,
                                               totalDebt
                                             );
@@ -3576,8 +3543,8 @@ const MySupply = () => {
                                           totalDebt,
                                           currentCollateralStatus,
                                           Ltv,
-                                          borrowableValue,
-                                          borrowableAssetValue
+                                          formatConditional(borrowableValue) ,
+                                          formatConditional(borrowableAssetValue) 
                                         );
                                       }}
                                       disabled={isTableDisabled}
@@ -3615,8 +3582,8 @@ const MySupply = () => {
                                           ckBalance,
                                           liquidationThreshold,
                                           reserveliquidationThreshold,
-                                          assetSupply,
-                                          assetBorrow,
+                                          formatConditional(assetSupply),
+                                         formatConditional(assetBorrow) ,
                                           totalCollateral,
                                           totalDebt
                                         );

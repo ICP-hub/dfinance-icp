@@ -264,7 +264,7 @@ const DebtStatus = () => {
         .filter(
           (mappedItem) =>
             mappedItem &&
-            mappedItem.healthFactor > 1 &&
+            mappedItem.healthFactor < 1 &&
             mappedItem.principal.toString() !== user.toString() &&
             mappedItem.totalDebt > 0
         );
@@ -272,7 +272,6 @@ const DebtStatus = () => {
       setFilteredUsers(filtered);
       setLiquidationLoading(false);
     }
-    console.log("user", user);
   }, [users, userAccountData, user]);
 
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
@@ -453,10 +452,6 @@ const DebtStatus = () => {
                             {Array.isArray(mappedItem?.reserves?.[0]) &&
                               mappedItem.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
-                                console.log(
-                                  "mapped item in asset supply",
-                                  mappedItem.principal
-                                );
                                 const assetSupply = getAssetSupplyValue(
                                   mappedItem.principal,
                                   assetName
@@ -465,7 +460,6 @@ const DebtStatus = () => {
                                   mappedItem.principal,
                                   assetName
                                 );
-                                console.log("asset supply", assetSupply);
                                 if (assetSupply > 0) {
                                   return (
                                     <img

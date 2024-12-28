@@ -77,7 +77,6 @@ const AssetDetails = () => {
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
 
-      console.log(`${asset} dtokenId:`, dtokenId, "debtTokenId:", debtTokenId);
 
       const assetBalance = {
         asset,
@@ -87,14 +86,12 @@ const AssetDetails = () => {
 
       if (dtokenId) {
         const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        console.log("dtokenActor in my supply", dtokenActor);
         if (dtokenActor) {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
             assetBalance.dtokenBalance = formattedBalance;
-            console.log(`${asset} dtoken balance:`, formattedBalance);
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
           }
@@ -110,7 +107,6 @@ const AssetDetails = () => {
             const balance = await debtTokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
             assetBalance.debtTokenBalance = formattedBalance;
-            console.log(`${asset} debt token balance:`, formattedBalance);
           } catch (error) {
             console.error(
               `Error fetching debt token balance for ${asset}:`,
@@ -835,11 +831,7 @@ const AssetDetails = () => {
 
                         const currentCollateralStatus =
                           reserveData?.[1]?.is_collateral || true;
-                        console.log("reserveDta", reserveData);
-                        console.log(
-                          "currentCollateralStatus",
-                          currentCollateralStatus
-                        );
+                      
                         const totalCollateral =
                           parseFloat(
                             Number(userAccountData?.Ok?.[0]) / 100000000

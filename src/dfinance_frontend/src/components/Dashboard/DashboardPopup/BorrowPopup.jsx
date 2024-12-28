@@ -104,7 +104,7 @@ if (onLoadingChange) {
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorMsg = borrowResult.Err;
-        console.log("error",errorMsg)
+        console.error("error",errorMsg)
         toast.error(`Borrow failed: ${errorMsg}`, {
           className: "custom-toast",
           position: "top-center",

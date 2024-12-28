@@ -189,7 +189,7 @@ const FaucetDetails = () => {
     setShowPopup(false);
   };
 
-  const { filteredItems,loading } = useAssetData();
+  const { filteredItems, loading } = useAssetData();
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
@@ -201,7 +201,7 @@ const FaucetDetails = () => {
 
   return (
     <div className="w-full">
-      <div className="w-full flex items-center px-2">
+      <div className="w-full flex items-center px-1">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">
           Test Assets
         </h1>
@@ -234,12 +234,14 @@ const FaucetDetails = () => {
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td
                         key={index}
-                        className="p-1 pl-2 -pr-7 pb-3 whitespace-nowrap"
+                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${
+                          index === 1 ? "text-center" : ""
+                        }`}
                       >
                         {item.header}
                       </td>
                     ))}
-                    <td className="p-3 hidden md:table-cell">
+                    <td className="hidden md:table-cell pr-[6.3rem]">
                       {FAUCET_ASSETS_TABLE_COL[2]?.header}
                     </td>
                   </tr>
@@ -254,8 +256,8 @@ const FaucetDetails = () => {
                           : ""
                       }`}
                     >
-                      <td className="p-3 align-center py-7 px-2">
-                        <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
+                      <td className="py-[1.5rem]">
+                        <div className="w-full flex items-center justify-start whitespace-nowrap pl-3">
                           {item[0] === "ckBTC" && (
                             <img
                               src={ckBTC}
@@ -294,13 +296,13 @@ const FaucetDetails = () => {
                           {item[0]}
                         </div>
                       </td>
-                      <td className="p-3 align-center">
-                        <div className="flex flex-row ml-[30px]">
+                      <td className="">
+                        <div className="p-3">
                           <div>
                             <center>
                               {item[0] === "ckBTC" && (
                                 <>
-                                  <p className="text-left">
+                                  <p className="">
                                     {ckBTCBalance === 0
                                       ? "0"
                                       : ckBTCBalance >= 1
@@ -319,14 +321,14 @@ const FaucetDetails = () => {
                                           }
                                         )}
                                   </p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p className="font-light  text-[11px]">
                                     ${formatNumber(ckBTCUsdBalance)}
                                   </p>
                                 </>
                               )}
                               {item[0] === "ckETH" && (
                                 <>
-                                  <p className="text-left">
+                                  <p>
                                     {ckETHBalance === 0
                                       ? "0"
                                       : ckETHBalance >= 1
@@ -345,14 +347,14 @@ const FaucetDetails = () => {
                                           }
                                         )}
                                   </p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p className="font-light  text-[11px]">
                                     ${formatNumber(ckETHUsdBalance)}
                                   </p>
                                 </>
                               )}
                               {item[0] === "ckUSDC" && (
                                 <>
-                                  <p className="text-left">
+                                  <p>
                                     {ckUSDCBalance === 0
                                       ? "0"
                                       : ckUSDCBalance >= 1
@@ -371,14 +373,14 @@ const FaucetDetails = () => {
                                           }
                                         )}
                                   </p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p className="font-light text-[11px]">
                                     ${formatNumber(ckUSDCUsdBalance)}
                                   </p>
                                 </>
                               )}
                               {item[0] === "ICP" && (
                                 <>
-                                  <p className="text-left">
+                                  <p>
                                     {ckICPBalance === 0
                                       ? "0"
                                       : ckICPBalance >= 1
@@ -397,14 +399,14 @@ const FaucetDetails = () => {
                                           }
                                         )}
                                   </p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p className="font-light  text-[11px]">
                                     ${formatNumber(ckICPUsdBalance)}
                                   </p>
                                 </>
                               )}
                               {item[0] === "ckUSDT" && (
                                 <>
-                                  <p className="text-left">
+                                  <p>
                                     {ckUSDTBalance === 0
                                       ? "0"
                                       : ckUSDTBalance >= 1
@@ -423,7 +425,7 @@ const FaucetDetails = () => {
                                           }
                                         )}
                                   </p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p className="font-light  text-[11px]">
                                     ${formatNumber(ckUSDTUsdBalance)}
                                   </p>
                                 </>
@@ -432,7 +434,7 @@ const FaucetDetails = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 align-center -pb-5">
+                      <td className="pr-3">
                         <div className="w-full flex justify-end align-center">
                           <Button
                             title={

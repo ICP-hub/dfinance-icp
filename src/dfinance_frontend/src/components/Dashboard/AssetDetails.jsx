@@ -797,6 +797,12 @@ const AssetDetails = () => {
                     <Button
                       title={"Supply"}
                       onClickHandler={() => {
+                        if (ckBalance === 0) {
+                          toast.info(
+                            "You cannot supply because your balance is 0."
+                          );
+                          return;
+                        }
                         const reserveData = userData?.Ok?.reserves[0]?.find(
                           (reserveGroup) => reserveGroup[0] === id
                         );
@@ -891,6 +897,7 @@ const AssetDetails = () => {
                           currentCollateralStatus
                         );
                       }}
+                      disabled={ckBalance === 0}
                       className={
                         "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"
                       }

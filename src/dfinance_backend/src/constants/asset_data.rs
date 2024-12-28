@@ -68,19 +68,16 @@ pub async fn initialize_canister()-> Result<(), Error> {
     Ok(())
 }
 
-// TODO: error handling and validations, remove panic need to do.
 pub async fn query_token_type_id(asset: String) -> Option<Principal> {
     ic_cdk::println!("Querying canister ID for asset: {}", asset);
 
-    // Fetch the canister id for the given asset and return only the Principal
     read_state(|state| {
         state
             .canister_list
-            .get(&asset) // Fetch the principal for the asset
+            .get(&asset) 
             .map(|principal| {
-                // Print the principal value that was found
                 ic_cdk::println!("Found principal: {:?}", principal);
-                principal.clone() // Clone the principal if found
+                principal.clone() 
             })
     })
 }
@@ -99,7 +96,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 borrow_rate: Nat::from(0u128),
                 asset_supply: Nat::from(0u128),
                 asset_borrow: Nat::from(0u128),
-                //remove
+                //TODO: remove
                 d_token_canister: Some(query_token_type_id("dckBTC".to_string()).await.unwrap().to_string()),
                 debt_token_canister: Some(
                     query_token_type_id("debtckBTC".to_string())
@@ -112,7 +109,7 @@ pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)>
                 liquidity_index: ScalingMath::to_scaled(Nat::from(CKBTC_LIQUIDITY_INDEX)),
                 id: 1,
                 accure_to_platform: Nat::from(0u128),
-                //scale it
+                //TODO: scale it
                 configuration: ReserveConfiguration {
                     ltv: ScalingMath::to_scaled(Nat::from(CKBTC_LTV)),
                     liquidation_threshold: ScalingMath::to_scaled(Nat::from(

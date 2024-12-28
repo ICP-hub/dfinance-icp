@@ -5,7 +5,7 @@ import useFetchConversionRate from '../customHooks/useFetchConversionRate';
 import {  idlFactory } from "../../../../declarations/dtoken";
 import {  idlFactory  as idlFactory1} from "../../../../declarations/debttoken";
 import { useDispatch } from "react-redux";
-import { setDLedgerActor } from "../../redux/reducers/dledgerReducer";
+
 const useAssetData = (searchQuery = '') => {
   const dispatch = useDispatch();
   const {principal,
@@ -58,30 +58,49 @@ const useAssetData = (searchQuery = '') => {
 
     fetchAssets();
   }, [backendActor]);
-
   const fetchAssetSupply = async (asset) => {
-    if (backendActor&& isAuthenticated ) {
+    if (backendActor && isAuthenticated) {
       try {
-        const result = await backendActor.get_asset_supply(asset,[]);
-        setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
+        const reserveDataForAsset = await fetchReserveData(asset);
+        console.log("Fetched Reserve Data:", reserveDataForAsset);
+  
+        // Make sure the id is present in the object
+        if (reserveDataForAsset.Ok?.id) {
+          const result = await backendActor.user_normalized_supply(reserveDataForAsset.Ok); // Pass Ok which includes id
+          setAssetSupply(prev => ({ ...prev, [asset]: result.Ok }));
+        } else {
+          console.error("Missing id in reserveDataForAsset.");
+        }
       } catch (error) {
-        console.error(error.message)
+        console.error("Error fetching asset supply:", error.message);
       }
     } else {
+      console.warn("Backend actor or authentication missing.");
     }
   };
   
   const fetchAssetBorrow = async (asset) => {
-    if (backendActor&& isAuthenticated) {
+    console.log("asset", asset);
+    if (backendActor && isAuthenticated) {
       try {
-        const result = await backendActor.get_asset_debt(asset,[]);
-        setAssetBorrow(prev => ({ ...prev, [asset]: result.Ok }));
+        const reserveDataForAsset = await fetchReserveData(asset);
+        console.log("fetchReserveData(asset)", reserveDataForAsset);
+  
+        // Make sure the id is present in the object
+        if (reserveDataForAsset.Ok?.id) {
+          const result = await backendActor.user_normalized_debt(reserveDataForAsset.Ok); // Pass Ok which includes id
+          setAssetBorrow(prev => ({ ...prev, [asset]: result.Ok }));
+        } else {
+          console.error("Missing id in reserveDataForAsset.");
+        }
       } catch (error) {
-        console.error(error.message)
+        console.error("Error fetching asset borrow:", error.message);
       }
     } else {
+      console.warn("Backend actor or authentication missing.");
     }
   };
+  
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0 || !fetchReserveData) return;
@@ -148,41 +167,49 @@ const useAssetData = (searchQuery = '') => {
         setdtokenId(dtokenIds);
         setdebtTokenId(debtTokenIds);
   
-        // Set dtoken actors only once for each asset if the result is valid
-        dtokenIds.forEach((dtoken, index) => {
-          if (dtoken && !dispatchedAssets.has(assets[index])) {
-            // Create and set dtoken actor locally only if dtoken is valid
-            const dtokenActor = createLedgerActor(dtoken, idlFactory);
-            if (dtokenActor) {
-              console.log("Setting dtokenActor for asset:", assets[index], dtokenActor);
-              setDtokenActor((prevState) => ({
-                ...prevState,
-                ["d"+assets[index]]: dtokenActor,  // Set actor for the specific asset
-              }));
+        // Set dtoken actors only once for each asset if the result is valid and not dispatched yet
+        if (isAuthenticated) {
+          dtokenIds.forEach((dtoken, index) => {
+            if (dtoken && !dispatchedAssets.has(assets[index])) {
+              const dtokenActor = createLedgerActor(dtoken, idlFactory);
+              if (dtokenActor) {
+                console.log("Setting dtokenActor for asset:", assets[index], dtokenActor);
+                setDtokenActor((prevState) => ({
+                  ...prevState,
+                  ["d"+assets[index]]: dtokenActor,  // Set actor for the specific asset
+                }));
   
-              // Mark this asset as dispatched
-              setDispatchedAssets((prev) => new Set(prev.add(assets[index])));
+                // Mark this asset as dispatched
+                setDispatchedAssets((prev) => {
+                  const newSet = new Set(prev); // Create a copy of the current set
+                  newSet.add(assets[index]);  // Add the asset to the set
+                  return newSet;  // Return the new set
+                });
+              }
             }
-          }
-        });
+          });
   
-        // Set debtToken actors only once for each asset if the result is valid
-        debtTokenIds.forEach((debtToken, index) => {
-          if (debtToken && !dispatchedAssets.has(assets[index])) {
-            // Create and set debtToken actor locally only if debtToken is valid
-            const debtTokenActor = createLedgerActor(debtToken, idlFactory1);
-            if (debtTokenActor) {
-              console.log("Setting debtTokenActor for asset:", assets[index], debtTokenActor);
-              setDebtTokenActor((prevState) => ({
-                ...prevState,
-                ["debt"+assets[index]]: debtTokenActor,  // Set actor for the specific asset
-              }));
+          // Set debtToken actors only once for each asset if the result is valid and not dispatched yet
+          debtTokenIds.forEach((debtToken, index) => {
+            if (debtToken && !dispatchedAssets.has(assets[index])) {
+              const debtTokenActor = createLedgerActor(debtToken, idlFactory1);
+              if (debtTokenActor) {
+                console.log("Setting debtTokenActor for asset:", assets[index], debtTokenActor);
+                setDebtTokenActor((prevState) => ({
+                  ...prevState,
+                  ["debt"+assets[index]]: debtTokenActor,  // Set actor for the specific asset
+                }));
   
-              // Mark this asset as dispatched
-              setDispatchedAssets((prev) => new Set(prev.add(assets[index])));
+                // Mark this asset as dispatched
+                setDispatchedAssets((prev) => {
+                  const newSet = new Set(prev); // Create a copy of the current set
+                  newSet.add(assets[index]);  // Add the asset to the set
+                  return newSet;  // Return the new set
+                });
+              }
             }
-          }
-        });
+          });
+        }
   
         // Set other calculated values
         setReserveData(data);
@@ -200,7 +227,8 @@ const useAssetData = (searchQuery = '') => {
     };
   
     fetchData();
-  }, [assets, fetchReserveData, DebttokenActor ,DtokenActor , dispatchedAssets]);
+  }, [assets, fetchReserveData, dispatchedAssets, isAuthenticated]);
+  
   
   
   

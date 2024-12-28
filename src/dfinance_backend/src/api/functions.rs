@@ -1,5 +1,6 @@
 use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::get_cached_exchange_rate;
@@ -220,90 +221,6 @@ pub async fn asset_transfer(
     }
 }
 
-//#[update] //TODO need a update func or not (i think it was implemented for pocketic, if not then what is the need of this function) -- done
-// if dont use then comment it out. ---might be needed later.
-// pub async fn transfer(amount: u128, asset_name: String) -> Result<Nat, String> {
-//     let backend_canister_principal = ic_cdk::api::id();
-//     //let user_principal = ic_cdk::caller();
-//     let nat_convert_amount = Nat::from(amount);
-
-//     let asset_principal: Result<Principal, String> = get_asset_principal(asset_name);
-
-//     let asset_principal_id = match asset_principal {
-//         Ok(principal) => principal,
-//         Err(err_message) => {
-//             ic_cdk::println!("Error retrieving asset Principal: {}", err_message);
-
-//             return Err(format!("Error retrieving asset Principal: {}", err_message));
-//         }
-//     };
-
-//     let approve_args = ApproveArgs {
-//         from_subaccount: None,
-//         spender: TransferAccount {
-//             owner: backend_canister_principal,
-//             subaccount: None,
-//         },
-//         amount: nat_convert_amount.clone(),
-//         expected_allowance: None,
-//         expires_at: None,
-//         fee: None,
-//         memo: None,
-//         created_at_time: None,
-//     };
-
-//     let (approval_result,): (ApproveResult,) =
-//         call(asset_principal_id, "icrc2_approve", (approve_args, false))
-//             .await
-//             .map_err(|e| e.1)?;
-
-//     ic_cdk::println!(
-//         "approve_transfer executed successfully and the call result: {:?}",
-//         approval_result
-//     );
-
-//     match approval_result {
-//         ApproveResult::Ok(balance) => Ok(balance),
-//         ApproveResult::Err(err) => Err(format!("{:?}", err)),
-//     }
-// }
-
-// pub async fn approve_transfer(
-//     spender: Principal,
-//     from: Principal,
-//     ledger: Principal,
-//     amount: Nat,
-// ) -> Result<Nat, String> {
-//     let approve_args = ApproveArgs {
-//         from_subaccount: None,
-//         spender:  TransferAccount {
-//             owner: spender,
-//             subaccount: None,
-//         },
-//         amount: amount.clone(),
-//         expected_allowance: None,
-//         expires_at: None,
-//         fee: None,
-//         memo: None,
-//         created_at_time: None,
-//     };
-
-//     let (approval_result,): (ApproveResult,) =
-//         call(ledger, "icrc2_approve", (approve_args, false, Some(from)))
-//             .await
-//             .map_err(|e| e.1)?;
-
-//     ic_cdk::println!(
-//         "approve_transfer executed successfully and the call result: {:?}",
-//         approval_result
-//     );
-
-//     match approval_result {
-//         ApproveResult::Ok(balance) => Ok(balance),
-//         ApproveResult::Err(err) => Err(format!("{:?}", err)),
-//     }
-// }
-
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
@@ -352,7 +269,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
 
-    // TODO: ask bhanu what validation should i have here for the platform principal.
     let platform_principal = ic_cdk::api::id();
     ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
@@ -366,42 +282,40 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     ic_cdk::println!("balance of wallet = {}", balance);
 
-    // TODO: add what token to faucet by the admin.
     if amount > balance {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("initial").await;
+        send_admin_notifications("initial", asset.clone()).await;
         return Err(Error::LowWalletBalance);
     }
 
     if (balance.clone() - amount.clone()) == Nat::from(0u128) {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("mid").await;
+        send_admin_notifications("mid", asset.clone()).await;
     }
 
     if (balance.clone() - amount.clone())
-        <= Nat::from(1000u128).scaled_mul(Nat::from(100000000u128))
+        <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
     {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("final").await;
+        send_admin_notifications("final", asset.clone()).await;
     }
 
     let mut rate: Option<Nat> = None;
 
     match get_cached_exchange_rate(asset.clone()) {
         Ok(price_cache) => {
-            // Fetch the specific CachedPrice for the asset from the PriceCache
             if let Some(cached_price) = price_cache.cache.get(&asset) {
-                let amount = cached_price.price.clone(); // Access the `price` field
+                let amount = cached_price.price.clone(); 
                 rate = Some(amount);
                 ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
             } else {
                 ic_cdk::println!("No cached price found for {}", asset);
-                rate = None; // Explicitly set rate to None if the asset is not in the cache
+                rate = None; 
             }
         }
         Err(err) => {
             ic_cdk::println!("Error fetching exchange rate for {}: {:?}", asset, err);
-            rate = None; // Explicitly set rate to None in case of an error
+            rate = None; 
         }
     }
 
@@ -412,7 +326,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
 
-    ic_cdk::println!("outside the if statment");
     if let Some((_, user_reserve_data)) = user_reserve {
         ic_cdk::println!("inside if statement");
         ic_cdk::println!(
@@ -495,7 +408,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 }
 
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {
-    // let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
@@ -526,7 +438,6 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
 
     ic_cdk::println!("User data after faucet reset = {:?}", user_data);
 
-    // Save the updated user data back to state
     mutate_state(|state| {
         state
             .user_profile
@@ -537,11 +448,11 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     Ok(())
 }
 
-async fn send_admin_notifications(stage: &str) {
+async fn send_admin_notifications(stage: &str, asset: String) {
     let message = match stage {
-        "initial" => "Dear Admin,\n\nThe platform's faucet balance is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team".to_string(),
-        "mid" => "Dear Admin,\n\nUrgent: The platform's faucet balance is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team".to_string(),
-        "final" => "Dear Admin,\n\nReminder: The platform's faucet balance is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team".to_string(),
+        "initial" => format!("Dear Admin,\n\nThe platform's faucet balance for {} is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team", asset),
+        "mid" => format!("Dear Admin,\n\nUrgent: The platform's faucet balance for {} is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team", asset),
+        "final" => format!("Dear Admin,\n\nReminder: The platform's faucet balance for {} is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team", asset),
         _ => "".to_string(),
     };
     send_email_via_sendgrid(message).await;
@@ -582,7 +493,6 @@ pub async fn send_email_via_sendgrid(message: String) -> String {
 
     ic_cdk::println!("Email data prepared: {}", email_data);
 
-    // Convert the email data into bytes
     let request_body: Option<Vec<u8>> = Some(email_data.to_string().as_bytes().to_vec());
 
     let request = CanisterHttpRequestArgument {

@@ -6,7 +6,6 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::update_reserves_price;
 use candid::{Nat, Principal};
 use ic_cdk::update;
 
@@ -51,7 +50,6 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
 
     let amount_nat = params.amount.clone();
 
-    //TODO: create a comman func to get asset reserve data in mutate state
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
@@ -239,7 +237,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         user_principal
     };
 
-    // Reads the reserve data from the asset
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index

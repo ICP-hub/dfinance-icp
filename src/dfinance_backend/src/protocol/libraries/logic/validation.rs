@@ -1,5 +1,5 @@
 use crate::api::functions::{get_balance, get_fees, get_total_supply};
-use crate::api::state_handler::{mutate_state, read_state};
+use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::assets::ReserveData;
@@ -36,16 +36,7 @@ impl ValidationLogic {
         };
         ic_cdk::println!("User balance: {:?}", user_balance);
 
-        let transfer_fees_result = get_fees(ledger_canister).await;
-        let transfer_fees = match transfer_fees_result {
-            Ok(fees) => fees,
-            Err(e) => {
-                return Err(e);
-            }
-        };
-        ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
-
-        let final_amount = amount.clone() + transfer_fees;
+        let final_amount = amount.clone();
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
         if final_amount > user_balance {
@@ -96,10 +87,6 @@ impl ValidationLogic {
 
         ic_cdk::println!("validation reserve accure = {}", reserve.accure_to_platform);
 
-        // Ask: is it okk to comment these line (i think because supply cap is total number of tokens not amount in usd).
-        // let final_total_supply = final_amount + reserve.total_supply as u128; //usd
-        // ic_cdk::println!("final_total_supply : {:?}", final_total_supply);
-
         let total_supply_amount_accure = total_supply + reserve.accure_to_platform.clone() + amount;
         ic_cdk::println!(
             "total supply with amount and accrue = {}",
@@ -144,7 +131,6 @@ impl ValidationLogic {
             return Err(Error::WithdrawMoreThanSupply);
         }
 
-        // TODO: platform balance check.
         let platform_principal = ic_cdk::api::id();
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
@@ -236,11 +222,6 @@ impl ValidationLogic {
                 }
             }
             Err(err) => {
-                // ic_cdk::println!(
-                //     "Error fetching exchange rate for {}: {:?}",
-                //     user_reserve_data.reserve.clone(),
-                //     err
-                // );
                 rate = None;
             }
         }
@@ -257,7 +238,6 @@ impl ValidationLogic {
         }else{
             adjusted_collateral = total_collateral.clone() -usd_withdrawl.clone();
         }
-        // let adjusted_collateral = total_collateral - usd_withdrawl;
         ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
 
         let mut ltv = Nat::from(0u128);
@@ -379,12 +359,7 @@ impl ValidationLogic {
                     rate = None;
                 }
             }
-            Err(err) => {
-                // ic_cdk::println!(
-                //     "Error fetching exchange rate for {}: {:?}",
-                //     user_reserve_data.reserve.clone(),
-                //     err
-                // );
+            Err(_) => {
                 rate = None;
             }
         }
@@ -410,8 +385,6 @@ impl ValidationLogic {
             return Err(Error::HealthFactorLess);
         }
 
-        // Validating supply cap limit.
-        //Ask: am i need to do similar of the supply for borrow cap and need to make a get_total_borrow and we dont have any specfic icrc function for this.
         let borrow_cap = reserve.configuration.borrow_cap.clone();
         ic_cdk::println!("borrow_cap : {:?}", borrow_cap);
 
@@ -438,8 +411,7 @@ impl ValidationLogic {
         liquidator: Option<Principal>,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
-        // // Check if the caller is anonymous
-       //TODO remove transfer fee
+
        let mut balance_result = get_balance(ledger_canister, user.clone()).await;
        if !liquidator.is_none() {
            balance_result = get_balance(ledger_canister, liquidator.unwrap().clone()).await;
@@ -455,16 +427,8 @@ impl ValidationLogic {
         if amount > user_balance {
             return Err(Error::LowWalletBalance);
         }
-        let transfer_fees_result = get_fees(ledger_canister).await;
-        let transfer_fees = match transfer_fees_result {
-            Ok(fees) => fees,
-            Err(e) => {
-                return Err(e);
-            }
-        };
-        ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
 
-        let final_amount = amount + transfer_fees;
+        let final_amount = amount;
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
         // Fetch user data
@@ -522,101 +486,6 @@ impl ValidationLogic {
     //     // ---------------LIQUIDATION---------------
     //     // --------------------------------------
 
-    // pub async fn validate_liquidation(
-    //     repay_asset: String,
-    //     repay_amount: u128,
-    //     reward_amount: u128,
-    //     liquidator: Principal,
-    //     user: Principal,
-    // ) -> Result<(), Error> {
-    //     let repay_ledger_canister_id = read_state(|state| {
-    //         let reserve_list = &state.reserve_list;
-    //         reserve_list
-    //             .get(&repay_asset.to_string().clone())
-    //             .map(|principal| principal.clone())
-    //             .ok_or_else(|| Error::NoCanisterIdFound)
-    //     })?;
-
-    //     // Checking liquidator is present in user list
-    //     // let _ = mutate_state(|state| {
-    //     //     let user_profile_data = &mut state.user_profile;
-    //     //     user_profile_data
-    //     //         .get(&liquidator)
-    //     //         .map(|user| user.0.clone())
-    //     //         .ok_or_else(|| panic!("Liquidator not found: {}", user.to_string()))
-    //     // });
-
-    //     let transfer_fees_result = get_fees(repay_ledger_canister_id).await;
-    //     let transfer_fees = match transfer_fees_result {
-    //         Ok(fees) => fees,
-    //         Err(e) => {
-    //             return Err(e);
-    //         }
-    //     };
-    //     ic_cdk::println!("transfer_fees : {:?}", transfer_fees);
-
-    //     let final_amount = repay_amount + transfer_fees;
-    //     ic_cdk::println!("final_amount : {:?}", final_amount);
-
-    //     if repay_amount == 0 {
-    //         panic!("{:?}", Error::InvalidAmount);
-    //     }
-
-    //     // if final_amount > liquidator_balance {
-    //     //     panic!("{:?}", Error::MaxAmount);
-    //     // }
-
-    //     // Fetch user data
-    //     let user_data_result = user_data(user);
-    //     let user_data = match user_data_result {
-    //         Ok(data) => {
-    //             ic_cdk::println!("User found: {:?}", data);
-    //             data
-    //         }
-    //         Err(e) => return Err(e),
-    //     };
-
-    //     if user_data.total_collateral.unwrap_or(Nat::from(0u128)) < reward_amount {
-    //         panic!("{:?}", Error::LessRewardAmount);
-    //     }
-
-    //     let reserve_data_result = mutate_state(|state| {
-    //         let asset_index = &mut state.asset_index;
-    //         asset_index
-    //             .get(&repay_asset.to_string().clone())
-    //             .map(|reserve| reserve.0.clone())
-    //             .ok_or_else(|| Error::NoReserveDataFound)
-    //     });
-
-    //     let reserve_data = match reserve_data_result {
-    //         Ok(data) => {
-    //             ic_cdk::println!("Reserve data found for asset: {:?}", data);
-    //             data
-    //         }
-    //         Err(e) => return Err(e),
-    //     };
-
-    //     // validating reserve states
-    //     let (is_active, is_frozen, is_paused) = (
-    //         reserve_data.configuration.active,
-    //         reserve_data.configuration.frozen,
-    //         reserve_data.configuration.paused,
-    //     );
-
-    //     if !is_active {
-    //         return Err(Error::ReserveInactive);
-    //     }
-    //     if is_paused {
-    //         return Err(Error::ReservePaused);
-    //     }
-    //     if is_frozen {
-    //         return Err(Error::ReserveFrozen);
-    //     }
-    //     ic_cdk::println!("is_active : {:?}", is_active);
-    //     ic_cdk::println!("is_paused : {:?}", is_paused);
-    //     ic_cdk::println!("is_frozen : {:?}", is_frozen);
-    //     Ok(())
-    // }
     pub async fn validate_liquidation(
         repay_asset: String,
         repay_amount: Nat,
@@ -643,7 +512,6 @@ impl ValidationLogic {
             return Err(Error::InvalidAmount);
         }
 
-        // TODO:i think we need to check this again -- 
         let repay_ledger_canister_id = read_state(|state| {
             let reserve_list = &state.reserve_list;
             reserve_list
@@ -660,9 +528,7 @@ impl ValidationLogic {
                 return Err(e);
             }
         };
-
-    
-
+        
         if liquidator_wallet_balance < repay_amount {
             return Err(Error::MaxAmount);
         }

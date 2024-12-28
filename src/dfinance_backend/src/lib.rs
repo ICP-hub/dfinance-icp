@@ -269,7 +269,6 @@ fn calculate_dynamic_balance(
     initial_deposit * (new_liquidity_index / prev_liquidity_index)
 }
 
-// TODO: need to make a function by getting the asset name and then get user reserve data then call this below function and return the value of it. it will be a query function.
 #[update]
 pub async fn get_asset_supply(
     asset_name: String,
@@ -293,7 +292,6 @@ pub async fn get_asset_supply(
     }
     ic_cdk::println!("Entering get_asset_supply function");
 
-    // Log the asset name being passed
     ic_cdk::println!("Asset name received: {}", asset_name);
 
     let user_principal = match on_behalf {
@@ -379,7 +377,6 @@ pub async fn get_asset_supply(
         }
     };
 
-    // Ask : if we send the token amount by multiplying the interest rate into the token value, is it a right approach.
     let result = (normalized_supply_data.scaled_div(user_reserve.liquidity_index.clone()))
     .scaled_mul(get_balance_value);
     ic_cdk::println!("Final calculated asset supply: {}", result);
@@ -484,6 +481,9 @@ pub async fn get_asset_debt(
     Ok((normalized_debt_data.scaled_div(user_reserve.variable_borrow_index.clone())).scaled_mul(get_balance_value))
 }
 
+
+//TODO add validation for this function
+#[query]
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
@@ -505,6 +505,9 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
+//FRONTEND - userbalance(debttoken)*usernormalizedebt/userreserve.debtindex -> to get asset_debt of user for perticular asset
+//TODO add validation for this function
+#[query]
 pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
@@ -551,9 +554,7 @@ pub async fn schedule_midnight_task() {
             let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
 
             for (user_principal, _) in vector_user_data {
-                // Reset the faucet usage for the user
                 if let Err(_) = reset_faucet_usage(user_principal).await {
-                    // Optionally handle the error
                 }
             }
         });
@@ -572,8 +573,6 @@ pub async fn post_upgrade() {
 }
 
 export_candid!();
-
-//TODO validation on toggle collateral and faucet
 
 //BUG 1. Total collateral and total debt -> updated according to  price of asset
 //2. Available borrow in real time

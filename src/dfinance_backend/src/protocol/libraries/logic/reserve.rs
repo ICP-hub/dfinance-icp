@@ -94,18 +94,13 @@ pub async fn update_interest_rates(
         .curr_debt
         .clone()
         .scaled_mul(reserve_cache.next_debt_index.clone());
-    // let total_supply= total_supplies.scaled_mul(reserve_cache.curr_liquidity_index);
     let asset = reserve_data
         .asset_name
         .clone()
         .unwrap_or("no token".to_string());
-    //let user = caller();
-    //let dtoken = reserve_data.d_token_canister.clone().unwrap();
-    //let dtoken_principal = Principal::from_text(dtoken).unwrap();
     let interest_rate_params = initialize_interest_rate_params(&asset);
     ic_cdk::println!("interest rate params {:?}", interest_rate_params);
     ic_cdk::println!("total debt: {:?}", total_debt);
-    // Ask: did some changes here. Check if it is correct
     let calculated_interest_rates = calculate_interest_rates(
         liq_added,
         liq_taken,
@@ -113,8 +108,6 @@ pub async fn update_interest_rates(
         &interest_rate_params,
         reserve_cache.reserve_factor.clone(),
         reserve_data.asset_name.clone().expect("no name"),
-        // dtoken_principal,
-        // user,
     )
     .await;
 
@@ -139,7 +132,6 @@ pub async fn update_interest_rates(
     Ok(())
 }
 
-//TODO change the param of burn function according to mint.
 pub async fn burn_scaled(
     reserve: &mut ReserveData,
     user_state: &mut UserReserveData,
@@ -162,7 +154,6 @@ pub async fn burn_scaled(
     );
     ic_cdk::println!("burn platform_principal value = {}", platform_principal);
 
-    // let mut adjusted_amount = amount.clone().scaled_div(index.clone()); //TODO if 0.774 came then it will be 0, but it should be 1, should i scale it more
     ic_cdk::println!("amount remainder = {}", amount.clone() % index.clone());
     let mut adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128) && amount.clone() < Nat::from(10u128) {
         amount.clone().scaled_div(index.clone()) + Nat::from(1u128) // Round up if there's a remainder
@@ -217,7 +208,6 @@ pub async fn burn_scaled(
                 .clone()
                 .scaled_mul(user_state.variable_borrow_index.clone()));
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
-        // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
         if user_state.debt_token_blance == adjusted_amount {
             user_state.debt_token_blance = Nat::from(0u128);
         } else {
@@ -307,8 +297,6 @@ pub async fn mint_scaled(
     ic_cdk::println!("Amount value: {}", amount);
     ic_cdk::println!("current index value = {}", index);
   
-    
-    // let adjusted_amount = amount.clone().scaled_div(index.clone());
     let mut adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128) && amount.clone() < Nat::from(10u128) {
         amount.clone().scaled_div(index.clone()) + Nat::from(1u128) // Round up if there's a remainder
     } else {
@@ -334,8 +322,6 @@ pub async fn mint_scaled(
         }
     };
     ic_cdk::println!("Fetched balance in Nat: {:?}", balance);
-
-    //let balance = nat_to_u128(balance_nat).unwrap();
     ic_cdk::println!("mint balance = {}", balance);
     
     let mut balance_increase = Nat::from(0u128);
@@ -346,7 +332,6 @@ pub async fn mint_scaled(
                 .clone()
                 .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
         println!("balance incr dtoken{}", balance_increase);
-        // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
         if user_state.liquidity_index == Nat::from(0u128) {
             user_state.d_token_balance = amount.clone();
         }else {
@@ -366,7 +351,6 @@ pub async fn mint_scaled(
                 .clone()
                 .scaled_mul(user_state.variable_borrow_index.clone())); //fetch from user
         println!("balance incr debttoken{}", balance_increase);
-        // user_state.adjusted_balance += adjusted_amount + balance_increase; //not sure with this line
         if user_state.variable_borrow_index == Nat::from(0u128) {
             user_state.debt_token_blance = amount.clone();
         } else {

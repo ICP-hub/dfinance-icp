@@ -23,12 +23,12 @@ use std::collections::HashMap;
 pub async fn initialize_canister() -> Result<(), Error> {
     let user_principal = ic_cdk::caller();
 
-    // if user_principal == Principal::anonymous()
-    //     || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
-    // {
-    //     ic_cdk::println!("principal are not allowed");
-    //     return Err(Error::InvalidPrincipal);
-    // }
+    if user_principal == Principal::anonymous()
+        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+    {
+        ic_cdk::println!("principal are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
 
     let tokens = vec![
         ("ckBTC", "ckBTC", true),

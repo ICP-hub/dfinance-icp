@@ -3,6 +3,7 @@ use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
 use candid::Nat;
 use candid::Principal;
+use declarations::assets::InitArgs;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
@@ -35,9 +36,35 @@ use std::time::Duration;
 const ONE_DAY: Duration = Duration::from_secs(86400);
 
 #[init]
-pub async fn init() {
+pub async fn init(args: Principal) {
+
+    ic_cdk::println!("init function = {:?}", args);
+
+
+    mutate_state(|state| {
+        state.meta_data.insert(0, Candid(InitArgs { controller_id: args }));
+    });
+
     ic_cdk::println!("function called");
     schedule_midnight_task().await;
+}
+
+#[query]
+pub fn get_controller() -> Result<InitArgs, String> {
+
+    ic_cdk::println!("get_controller function");
+
+    match read_state(|state| {
+        state
+            .meta_data
+            .get(&0)
+            .ok_or_else(|| Error::UserNotFound)
+    }) {
+        Ok(va) => {
+            Ok(va.0)
+        },
+        Err(_) => return Err(String::from("lol"))
+    }
 }
 
 // Function to fetch the reserve-data based on the asset

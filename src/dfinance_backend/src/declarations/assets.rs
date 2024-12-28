@@ -115,9 +115,15 @@ pub struct ExecuteWithdrawParams {
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct InitArgs {
+    pub controller_id: Principal
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteLiquidationParams {
     pub debt_asset: String,
     pub collateral_asset: String,
     pub amount: Nat,
     pub on_behalf_of: Principal,
 }
+

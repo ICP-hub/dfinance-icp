@@ -19,16 +19,11 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
-import { useMemo } from "react";
-import { Principal } from "@dfinity/principal";
-import { idlFactory } from "../../../../declarations/dtoken";
-import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 
 const DashboardNav = () => {
-  const { isAuthenticated, principal, fetchReserveData } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const [netWorth, setNetWorth] = useState();
-  const [assetBalances, setAssetBalances] = useState([]);
 
   const totalUsdValueBorrow = useSelector(
     (state) => state.borrowSupply.totalUsdValueBorrow
@@ -56,70 +51,6 @@ const DashboardNav = () => {
     reserveData,
   } = useAssetData();
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-
-  const fetchAssetData = async () => {
-    const balances = [];
-
-    for (const asset of assets) {
-      const reserveDataForAsset = await fetchReserveData(asset);
-      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-
-      console.log(`${asset} dtokenId:`, dtokenId, "debtTokenId:", debtTokenId);
-
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
-
-      if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        console.log("dtokenActor in my supply", dtokenActor);
-        if (dtokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.dtokenBalance = formattedBalance;
-            console.log(`${asset} dtoken balance:`, formattedBalance);
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
-          }
-        }
-      }
-
-      if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-
-        if (debtTokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.debtTokenBalance = formattedBalance;
-            console.log(`${asset} debt token balance:`, formattedBalance);
-          } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
-          }
-        }
-      }
-      balances.push(assetBalance);
-    }
-    setAssetBalances(balances);
-  };
-
-  useEffect(() => {
-    fetchAssetData();
-  }, [assets, principalObj]);
-
   useEffect(() => {
     const fetchData = async () => {
       for (const asset of assets) {
@@ -135,17 +66,16 @@ const DashboardNav = () => {
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      const supplyValue = Number(asset_supply[asset]);
       return supplyValue;
     }
     return `noSupply`;
   };
   const getAssetBorrowValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      const borrowValue = Number(asset_borrow[asset]);
       return borrowValue;
     }
     return `noBorrow`;
@@ -212,8 +142,10 @@ const DashboardNav = () => {
           count: calculatedNetWorth
             ? `$${formatNumber(calculatedNetWorth)}`
             : "-",
+
         };
       } else if (item.id === 2) {
+        
         const healthValue = !userAccountData?.Ok?.[4]
           ? "-"
           : Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
@@ -237,12 +169,11 @@ const DashboardNav = () => {
       if (item.id === 1) {
         return {
           ...item,
-          count:
-            netApy && netApy !== 0
-              ? netApy < 0.01
-                ? "<0.01%"
-                : `${netApy.toFixed(4)}%`
-              : "-",
+          count: netApy !== 0
+            ? netApy < 0.01
+              ? "<0.01%"
+              : `${netApy.toFixed(4)}%`
+            : "-",
         };
       }
 
@@ -324,29 +255,8 @@ const DashboardNav = () => {
         const debtApy =
           Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
 
-        const currentLiquidity = userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === assetKey // Check if the asset matches
-        )?.[1]?.liquidity_index;
-        const assetBalance =
-          assetBalances.find((balance) => balance.asset === assetKey)
-            ?.dtokenBalance || 0;
-
-        const assetSupply =
-          (Number(assetBalance) * Number(getAssetSupplyValue(assetKey))) /
-          Number(currentLiquidity);
-
-        const DebtIndex = userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === assetKey // Check if the asset matches
-        )?.[1]?.variable_borrow_index;
-
-        const assetBorrowBalance =
-          assetBalances.find((balance) => balance.asset === assetKey)
-            ?.debtTokenBalance || 0;
-
-        const assetBorrow =
-          (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetKey))) /
-          Number(DebtIndex);
-
+        const assetSupply = getAssetSupplyValue(assetKey);
+        const assetBorrowed = getAssetBorrowValue(assetKey);
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
         totalBorrowedInUSD = assetBorrowedInUSD;
         weightedDebtApySum = assetBorrowedInUSD * debtApy;
@@ -594,7 +504,7 @@ const DashboardNav = () => {
             className=" text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-5"
             onClick={() => navigate(-1)}
           >
-            <div className="flex -mt-2 cursor-pointer">
+            <div className="flex -mt-2">
               <ChevronLeft size={40} color={chevronColor} />
 
               {isAssetDetailsPage && (
@@ -697,7 +607,7 @@ const DashboardNav = () => {
                             <span
                               className={`font-bold text-[20px] ${
                                 data.title === "Health Factor"
-                                  ? data.count === 0
+                                  ? data.count === 0 
                                     ? "text-red-500"
                                     : data.count > 3
                                     ? "text-green-500"

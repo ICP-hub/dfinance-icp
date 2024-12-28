@@ -19,6 +19,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useAssetData from "../Common/useAssets";
 import useUserData from "../customHooks/useUserData";
+import MiniLoader from "../Common/MiniLoader";
 const DebtStatus = () => {
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -232,7 +233,10 @@ const DebtStatus = () => {
     });
   }, [users, assets]);
 
+  const [liquidationLoading, setLiquidationLoading] = useState(true);
+
   useEffect(() => {
+    setLiquidationLoading(true);
     if (
       users &&
       Array.isArray(users) &&
@@ -266,8 +270,9 @@ const DebtStatus = () => {
         );
 
       setFilteredUsers(filtered);
+      setLiquidationLoading(false);
     }
-    console.log("user",user)
+    console.log("user", user);
   }, [users, userAccountData, user]);
 
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
@@ -332,8 +337,11 @@ const DebtStatus = () => {
       </div>
 
       <div className="w-full mt-6">
-        {}
-        {filteredUsers.length === 0 ? (
+        {liquidationLoading ? (
+          <div className="h-[400px] flex justify-center items-center">
+            <MiniLoader isLoading={true} />
+          </div>
+        ) : filteredUsers.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
             <div className="w-20 h-15">
               <img
@@ -373,7 +381,8 @@ const DebtStatus = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((mappedItem, index) => {
-                    const userLoading = userLoadingStates[mappedItem.principal.toText()];
+                    const userLoading =
+                      userLoadingStates[mappedItem.principal.toText()];
                     return (
                       <tr
                         key={index}
@@ -385,7 +394,9 @@ const DebtStatus = () => {
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
-                            <p>{truncateText(mappedItem.principal.toText(), 14)}</p>
+                            <p>
+                              {truncateText(mappedItem.principal.toText(), 14)}
+                            </p>
                           </div>
                         </td>
                         <td className="p-2 align-top py-8 ">
@@ -442,7 +453,10 @@ const DebtStatus = () => {
                             {Array.isArray(mappedItem?.reserves?.[0]) &&
                               mappedItem.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
-                                console.log("mapped item in asset supply", mappedItem.principal)
+                                console.log(
+                                  "mapped item in asset supply",
+                                  mappedItem.principal
+                                );
                                 const assetSupply = getAssetSupplyValue(
                                   mappedItem.principal,
                                   assetName

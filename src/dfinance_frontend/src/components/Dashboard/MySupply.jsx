@@ -109,8 +109,8 @@ const MySupply = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
-  const [supplyDataLoading, setSupplyDataLoading] = useState(false);
-  const [borrowDataLoading, setBorrowDataLoading] = useState(false);
+  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
+  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [assetBalances, setAssetBalances] = useState([]);
   const [showZeroBalance, setShowZeroBalance] = useState(
     () => JSON.parse(localStorage.getItem("showZeroBalance")) || true

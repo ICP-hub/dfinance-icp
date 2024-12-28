@@ -8,7 +8,7 @@ use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use candid::{Nat, Principal};
 use ic_cdk::update;
-
+use crate::api::resource_manager::{acquire_lock, release_lock};
 // -------------------------------------
 // ----------- SUPPLY LOGIC ------------
 // -------------------------------------
@@ -37,135 +37,156 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         return Err(Error::InvalidPrincipal);
     }
 
-    let ledger_canister_id = read_state(|state| {
-        let reserve_list = &state.reserve_list;
-        reserve_list
-            .get(&params.asset.to_string().clone())
-            .map(|principal| principal.clone())
-            .ok_or_else(|| Error::NoCanisterIdFound)
+    let operation_key = format!("supply_{}", user_principal.to_text());
+
+    // Acquire the lock
+    acquire_lock(&operation_key).map_err(|e| {
+        ic_cdk::println!("Lock acquisition failed: {:?}", e);
+        Error::LockAcquisitionFailed
     })?;
 
-    let platform_principal = ic_cdk::api::id();
-    ic_cdk::println!("Platform principal: {:?}", platform_principal);
+    // Ensure the lock is released at the end of the operation
+    let release_operation_lock = || release_lock(&operation_key);
+    let result = async {
+        let ledger_canister_id = read_state(|state| {
+            let reserve_list = &state.reserve_list;
+            reserve_list
+                .get(&params.asset.to_string().clone())
+                .map(|principal| principal.clone())
+                .ok_or_else(|| Error::NoCanisterIdFound)
+        })?;
 
-    let amount_nat = params.amount.clone();
+        let platform_principal = ic_cdk::api::id();
+        ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-    let reserve_data_result = mutate_state(|state| {
-        let asset_index = &mut state.asset_index;
-        asset_index
-            .get(&params.asset.to_string().clone())
-            .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| Error::NoReserveDataFound)
-    });
+        let amount_nat = params.amount.clone();
 
-    let mut reserve_data = match reserve_data_result {
-        Ok(data) => {
-            ic_cdk::println!("Reserve data found for asset");
-            data
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    };
+        let reserve_data_result = mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index
+                .get(&params.asset.to_string().clone())
+                .map(|reserve| reserve.0.clone())
+                .ok_or_else(|| Error::NoReserveDataFound)
+        });
 
-    // TODO: decide postion of this code.
-    // if let Err(e) = update_reserves_price().await {
-    //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
-    //     return Err(e);
-    // }
-
-    let mut reserve_cache = reserve::cache(&reserve_data);
-    ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
-
-    reserve::update_state(&mut reserve_data, &mut reserve_cache);
-    ic_cdk::println!("Reserve state updated successfully");
-
-    // Validates supply using the reserve_data
-    if let Err(e) = ValidationLogic::validate_supply(
-        &reserve_data,
-        params.amount.clone(),
-        user_principal,
-        ledger_canister_id,
-    )
-    .await
-    {
-        ic_cdk::println!("supply validation failed: {:?}", e);
-        return Err(e);
-    }
-    ic_cdk::println!("Supply validated successfully");
-
-    //TODO call mint function here
-
-    let liq_added = params.amount.clone();
-    let liq_taken = Nat::from(0u128);
-
-    if let Err(e) =
-        reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, liq_taken, liq_added)
-            .await
-    {
-        ic_cdk::println!("Failed to update interest rates: {:?}", e);
-        return Err(e);
-    }
-    ic_cdk::println!("Interest rates updated successfully");
-
-    if let Err(e) = UpdateLogic::update_user_data_supply(
-        user_principal,
-        &reserve_cache,
-        params.clone(),
-        &mut reserve_data,
-    )
-    .await
-    {
-        ic_cdk::println!("Failed to update user data: {:?}", e);
-        return Err(e);
-    }
-    ic_cdk::println!("User data supply updated");
-
-    mutate_state(|state| {
-        let asset_index = &mut state.asset_index;
-        asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-    });
-
-    // Transfers the asset from the user to our backend cansiter
-    match asset_transfer_from(
-        ledger_canister_id,
-        user_principal,
-        platform_principal,
-        amount_nat.clone(),
-    )
-    .await
-    {
-        Ok(new_balance) => {
-            println!("Asset transfer from user to backend canister executed successfully");
-            Ok(new_balance)
-        }
-        Err(_) => {
-            
-            //Rollback user state
-            let withdraw_param = ExecuteWithdrawParams {
-                asset: params.asset.clone(),
-                is_collateral: params.is_collateral,
-                on_behalf_of: None, 
-                amount: params.amount.clone(),
-            };
-            if let Err(e) = UpdateLogic::update_user_data_withdraw(
-                user_principal,
-                &reserve_cache,
-                withdraw_param.clone(),
-                &mut reserve_data,
-            )
-            .await
-            {
-                ic_cdk::println!("Failed to rollback user state: {:?}", e);
+        let mut reserve_data = match reserve_data_result {
+            Ok(data) => {
+                ic_cdk::println!("Reserve data found for asset");
+                data
+            }
+            Err(e) => {
                 return Err(e);
             }
-            mutate_state(|state| {
-                let asset_index = &mut state.asset_index;
-                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            });
-            return Err(Error::ErrorMintTokens);
+        };
+
+        // TODO: decide postion of this code.
+        // if let Err(e) = update_reserves_price().await {
+        //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
+        //     return Err(e);
+        // }
+
+        let mut reserve_cache = reserve::cache(&reserve_data);
+        ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
+
+        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        ic_cdk::println!("Reserve state updated successfully");
+
+        // Validates supply using the reserve_data
+        if let Err(e) = ValidationLogic::validate_supply(
+            &reserve_data,
+            params.amount.clone(),
+            user_principal,
+            ledger_canister_id,
+        )
+        .await
+        {
+            ic_cdk::println!("supply validation failed: {:?}", e);
+            return Err(e);
+        }
+        ic_cdk::println!("Supply validated successfully");
+
+        //TODO call mint function here
+
+        let liq_added = params.amount.clone();
+        let liq_taken = Nat::from(0u128);
+
+        if let Err(e) = reserve::update_interest_rates(
+            &mut reserve_data,
+            &mut reserve_cache,
+            liq_taken,
+            liq_added,
+        )
+        .await
+        {
+            ic_cdk::println!("Failed to update interest rates: {:?}", e);
+            return Err(e);
+        }
+        ic_cdk::println!("Interest rates updated successfully");
+
+        if let Err(e) = UpdateLogic::update_user_data_supply(
+            user_principal,
+            &reserve_cache,
+            params.clone(),
+            &mut reserve_data,
+        )
+        .await
+        {
+            ic_cdk::println!("Failed to update user data: {:?}", e);
+            return Err(e);
+        }
+        ic_cdk::println!("User data supply updated");
+
+        mutate_state(|state| {
+            let asset_index = &mut state.asset_index;
+            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+        });
+
+        // Transfers the asset from the user to our backend cansiter
+        match asset_transfer_from(
+            ledger_canister_id,
+            user_principal,
+            platform_principal,
+            amount_nat.clone(),
+        )
+        .await
+        {
+            Ok(new_balance) => {
+                println!("Asset transfer from user to backend canister executed successfully");
+                Ok(new_balance)
+            }
+            Err(_) => {
+                //Rollback user state
+                let withdraw_param = ExecuteWithdrawParams {
+                    asset: params.asset.clone(),
+                    is_collateral: params.is_collateral,
+                    on_behalf_of: None,
+                    amount: params.amount.clone(),
+                };
+                if let Err(e) = UpdateLogic::update_user_data_withdraw(
+                    user_principal,
+                    &reserve_cache,
+                    withdraw_param.clone(),
+                    &mut reserve_data,
+                )
+                .await
+                {
+                    ic_cdk::println!("Failed to rollback user state: {:?}", e);
+                    return Err(e);
+                }
+                mutate_state(|state| {
+                    let asset_index = &mut state.asset_index;
+                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                });
+                return Err(Error::ErrorMintTokens);
+            }
         }
     }
+    .await;
+
+    // Release the lock
+    release_operation_lock();
+
+    result
 }
 
 // -------------------------------------
@@ -342,7 +363,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                 ic_cdk::println!("Failed to update user data: {:?}", e);
                 return Err(e);
             }
-        
+
             mutate_state(|state| {
                 let asset_index = &mut state.asset_index;
                 asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));

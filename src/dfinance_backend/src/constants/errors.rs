@@ -55,6 +55,8 @@ pub enum Error {
     ErrorEncoding,
     ErrorRawResponse,
     ErrorDecoding,
+    LockAcquisitionFailed,
+    InsufficientLiquidity,
 }
 
 impl Error {
@@ -112,6 +114,8 @@ impl Error {
             Error::ErrorEncoding => "Error encoding arguments",
             Error::ErrorRawResponse => "Error in raw response",
             Error::ErrorDecoding => "Error decoding response",
+            Error::LockAcquisitionFailed => "Failed to acquire lock",
+            Error::InsufficientLiquidity => "Insufficient liquidity",
         }
     }
 }

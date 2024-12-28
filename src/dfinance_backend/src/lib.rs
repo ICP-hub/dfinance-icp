@@ -1,6 +1,8 @@
 use crate::constants::errors::Error;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
+use api::resource_manager::LOCKS;
+use api::resource_manager::{release_lock, acquire_lock};
 use candid::Nat;
 use candid::Principal;
 use ic_cdk::{init, query};
@@ -524,7 +526,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
             reserve_data.borrow_rate
         );
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
-            reserve_data.borrow_rate.clone(), //TODO check if this dividing by 100 is necessary or not
+            reserve_data.borrow_rate.clone(), 
             reserve_data.last_update_timestamp,
             current_time,
         );
@@ -538,6 +540,36 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
+
+#[update]
+async fn check_lock() -> Result<String, Error> {
+    let user_principal = ic_cdk::api::caller();
+    ic_cdk::println!("user principal = {} ", user_principal);
+
+    let result = acquire_lock(&user_principal.to_string());
+
+   
+    match result {
+        Ok(_) => Ok("Lock acquired".to_string()),
+        Err(e) => Err(Error::LockAcquisitionFailed),
+    }
+}
+#[query]
+async fn get_lock() -> Result<bool, Error> {
+    let user_principal = ic_cdk::api::caller();
+    ic_cdk::println!("user principal = {} ", user_principal);
+
+    let result = LOCKS
+    .lock()
+    .map(|locks| locks.get(&user_principal.to_string()).cloned().unwrap_or_else(|| false));
+    
+
+   
+    match result {
+        Ok(_) => Ok(result.unwrap()),
+        Err(e) => Err(Error::LockAcquisitionFailed),
+    }
+}
 // this function is for check which i will remove later.
 #[update]
 async fn get_user_account_data(

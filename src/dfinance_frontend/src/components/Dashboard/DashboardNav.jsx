@@ -68,14 +68,14 @@ const DashboardNav = () => {
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      const supplyValue = Number(asset_supply[asset]);
       return supplyValue;
     }
     return `noSupply`;
   };
   const getAssetBorrowValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      const borrowValue = Number(asset_borrow[asset]);
       return borrowValue;
     }
     return `noBorrow`;

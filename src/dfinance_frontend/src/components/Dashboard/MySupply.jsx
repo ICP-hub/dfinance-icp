@@ -3075,8 +3075,8 @@ const MySupply = () => {
                                               totalDebt,
                                               currentCollateralStatus,
                                               Ltv,
-                                             formatConditional(borrowableValue) ,
-                                              formatConditional(borrowableAssetValue) 
+                                             borrowableValue ,
+                                              borrowableAssetValue 
                                             );
                                           }}
                                           disabled={isTableDisabled}
@@ -3117,8 +3117,8 @@ const MySupply = () => {
                                               ckBalance,
                                               liquidationThreshold,
                                               reserveliquidationThreshold,
-                                              formatConditional(assetSupply) ,
-                                              formatConditional(assetBorrow),
+                                             assetSupply ,
+                                             assetBorrow,
                                               totalCollateral,
                                               totalDebt
                                             );
@@ -3543,8 +3543,8 @@ const MySupply = () => {
                                           totalDebt,
                                           currentCollateralStatus,
                                           Ltv,
-                                          formatConditional(borrowableValue) ,
-                                          formatConditional(borrowableAssetValue) 
+                                          borrowableValue ,
+                                          borrowableAssetValue
                                         );
                                       }}
                                       disabled={isTableDisabled}
@@ -3582,8 +3582,8 @@ const MySupply = () => {
                                           ckBalance,
                                           liquidationThreshold,
                                           reserveliquidationThreshold,
-                                          formatConditional(assetSupply),
-                                         formatConditional(assetBorrow) ,
+                                          assetSupply,
+                                         assetBorrow ,
                                           totalCollateral,
                                           totalDebt
                                         );

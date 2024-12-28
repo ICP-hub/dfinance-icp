@@ -395,23 +395,26 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
-
-  const handleMaxClick = () => {
-    let asset_borrow = assetBorrow
-      ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
-        ? Number(assetBorrow).toFixed(8)
-        : assetBorrow >= 1e-7 && assetBorrow < 1e-6
-        ? Number(assetBorrow).toFixed(7)
-        : assetBorrow
-      : "0";
-    const maxAmount = asset_borrow.toString();
-
-    updateAmountAndUsdValue(maxAmount);
-  };
   const formatValue = (value) => {
     if (!value) return '0';
-    return Number(value).toFixed(8).replace(/\.?0+$/, ''); // Ensure 8 decimals and remove trailing zeroes
+    return Number(value).toFixed(7).replace(/\.?0+$/, ''); // Ensure 7 decimals and remove trailing zeroes
   };
+  
+  const handleMaxClick = () => {
+    let asset_borrow = assetBorrow;
+    // Ensure the formatting for 7 decimals
+    asset_borrow = assetBorrow >= 1e-8 && assetBorrow < 1e-7
+      ? Number(assetBorrow).toFixed(7)
+      : assetBorrow >= 1e-7 && assetBorrow < 1e-6
+      ? Number(assetBorrow).toFixed(7)
+      : Number(assetBorrow).toFixed(7); // Always format to 7 decimals
+  
+    const maxAmount = asset_borrow.toString();
+  
+    updateAmountAndUsdValue(maxAmount);
+  };
+  
+  
   return (
     <>
       {isVisible && (

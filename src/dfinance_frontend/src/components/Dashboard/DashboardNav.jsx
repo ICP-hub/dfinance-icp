@@ -142,7 +142,7 @@ const DashboardNav = () => {
           count: calculatedNetWorth
             ? `$${formatNumber(calculatedNetWorth)}`
             : "-",
-        
+         
         };
       } else if (item.id === 2) {
         

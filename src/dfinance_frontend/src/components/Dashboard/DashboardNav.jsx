@@ -142,7 +142,6 @@ const DashboardNav = () => {
           count: calculatedNetWorth
             ? `$${formatNumber(calculatedNetWorth)}`
             : "-",
-          style: { visibility: net_worth[0] > 0 ? "visible" : "hidden" },
         };
       } else if (item.id === 2) {
         

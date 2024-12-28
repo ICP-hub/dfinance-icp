@@ -1,6 +1,7 @@
 use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
-use crate::declarations::assets::ExecuteRepayParams;
+use crate::constants::interest_variables::constants::SCALING_FACTOR;
+use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::get_reserve_data;
 use crate::protocol::libraries::logic::borrow::execute_repay;
@@ -18,34 +19,29 @@ use candid::{Nat, Principal};
 use ic_cdk::{api, update};
 
 #[update]
-pub async fn execute_liquidation(
-    debt_asset: String,
-    collateral_asset: String,
-    amount: Nat,
-    on_behalf_of: Principal,
-) -> Result<Nat, Error> {
-    if debt_asset.trim().is_empty() && collateral_asset.trim().is_empty() {
+pub async fn execute_liquidation(params : ExecuteLiquidationParams) -> Result<Nat, Error> {
+    if params.debt_asset.trim().is_empty() && params.collateral_asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
     }
 
-    if debt_asset.len() > 7 && collateral_asset.len() > 7 {
+    if params.debt_asset.len() > 7 && params.collateral_asset.len() > 7 {
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
 
-    if amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
 
-    if on_behalf_of == Principal::anonymous() {
+    if params.on_behalf_of == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
     let platform_principal = ic_cdk::api::id();
 
-    let user_principal = on_behalf_of;
+    let user_principal = params.on_behalf_of;
     ic_cdk::println!("User Principal (Debt User): {}", user_principal);
 
     let liquidator_principal = api::caller();
@@ -53,17 +49,17 @@ pub async fn execute_liquidation(
 
     if liquidator_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     ic_cdk::println!(
         "params debt_asset and collateral_asset {:?} {:?}",
-        debt_asset,
-        collateral_asset
+        params.debt_asset,
+        params.collateral_asset
     );
-    ic_cdk::println!("liquidation amount = {}", amount.clone());
+    ic_cdk::println!("liquidation amount = {}", params.amount.clone());
 
-    let reserve_data_result = get_reserve_data(debt_asset.clone());
+    let reserve_data_result = get_reserve_data(params.debt_asset.clone());
 
     let repay_reserve_data = match reserve_data_result {
         Ok(data) => {
@@ -79,7 +75,7 @@ pub async fn execute_liquidation(
     let collateral_reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
-            .get(&collateral_asset.to_string().clone())
+            .get(&params.collateral_asset.to_string().clone())
             .map(|reserve| reserve.0.clone())
             .ok_or_else(|| Error::NoReserveDataFound)
     });
@@ -108,7 +104,7 @@ pub async fn execute_liquidation(
     };
 
     // Check if the user has a reserve for the asset
-    let mut user_reserve_result = user_reserve(&mut user_account_data, &collateral_asset);
+    let mut user_reserve_result = user_reserve(&mut user_account_data, &params.collateral_asset);
     let mut user_reserve_data = match user_reserve_result.as_mut() {
         Some((_, reserve_data)) => reserve_data,
         None => {
@@ -131,7 +127,7 @@ pub async fn execute_liquidation(
     let dtoken_canister = read_state(|state| {
         let asset_index = &state.asset_index;
         asset_index
-            .get(&collateral_asset.to_string().clone())
+            .get(&params.collateral_asset.to_string().clone())
             .and_then(|reserve_data| reserve_data.d_token_canister.clone())
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
@@ -139,10 +135,9 @@ pub async fn execute_liquidation(
     let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
         .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
     
-    //TODO make constant name as base currency = "USD"
-    let mut collateral_amount = amount.clone();
-    if collateral_asset != debt_asset {
-        let debt_in_usd = get_exchange_rates(debt_asset.clone(), Some(collateral_asset.clone()), amount.clone()).await;
+    let mut collateral_amount = params.amount.clone();
+    if params.collateral_asset != params.debt_asset {
+        let debt_in_usd = get_exchange_rates(params.debt_asset.clone(), Some(params.collateral_asset.clone()), params.amount.clone()).await;
         match debt_in_usd {
             Ok((amount_in_usd, _timestamp)) => {
                 // Extracted the amount in USD
@@ -163,13 +158,13 @@ pub async fn execute_liquidation(
             .liquidation_bonus
             .clone()
             / Nat::from(100u128)))
-        / Nat::from(100000000u128);
+        / Nat::from(SCALING_FACTOR);
     ic_cdk::println!("bonus: {}", bonus);
     let reward_amount: Nat = collateral_amount.clone() + bonus.clone();
     ic_cdk::println!("reward_amount: {}", reward_amount);
 
     let supply_param = ExecuteSupplyParams {
-        asset: collateral_asset.to_string(),
+        asset: params.collateral_asset.to_string(),
         amount: reward_amount.clone(),
         is_collateral: true,
     };
@@ -189,8 +184,8 @@ pub async fn execute_liquidation(
     ic_cdk::println!("Reserve cache fetched successfully: {:?}", collateral_reserve_cache);
 
     if let Err(e) =   ValidationLogic::validate_liquidation(
-        debt_asset.clone(),
-        amount.clone(),
+        params.debt_asset.clone(),
+        params.amount.clone(),
         reward_amount.clone(),
         liquidator_principal,
         user_principal,
@@ -233,18 +228,36 @@ pub async fn execute_liquidation(
         }
         Err(e) => {
             ic_cdk::println!("{:?}", e);
+            let rollback_dtoken_to_user = mint_scaled(
+                &mut collateral_reserve_data,
+                &mut user_reserve_data,
+                reward_amount,
+                collateral_reserve_cache.next_liquidity_index,
+                user_principal,
+                collateral_dtoken_principal,
+                platform_principal,
+                true,
+            )
+            .await;
+            match rollback_dtoken_to_user {
+                Ok(()) => {
+                    ic_cdk::println!("Rolling back dtoken to user successfully");
+                }
+                Err(_) => {
+                    return Err(Error::ErrorRollBack);
+                }
+            };
             return Err(e);
-            //TODO: mint back dtoken to user
         }
     }
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
-        asset_index.insert(collateral_asset.clone(), Candid(collateral_reserve_data.clone()));
+        asset_index.insert(params.collateral_asset.clone(), Candid(collateral_reserve_data.clone()));
     });
 
     let params_repay = ExecuteRepayParams {
-        asset: debt_asset.clone(),
-        amount: amount.clone(),
+        asset: params.debt_asset.clone(),
+        amount: params.amount.clone(),
         on_behalf_of: Some(user_principal),
     };
 
@@ -253,25 +266,25 @@ pub async fn execute_liquidation(
     match repay_response {
         Ok(_) => {
             ic_cdk::println!("Repayment successful");
-            Ok(amount)
+            Ok(params.amount)
         },
         Err(e) => {
             let mut liquidator_collateral_reserve =
-                user_reserve(&mut liquidator_data, &collateral_asset);
+                user_reserve(&mut liquidator_data, &params.collateral_asset);
             let mut liquidator_reserve_data = match liquidator_collateral_reserve.as_mut() {
                 Some((_, reserve_data)) => reserve_data,
                 None => {
                     let new_reserve = UserReserveData {
-                        reserve: collateral_asset.clone(),
+                        reserve: params.collateral_asset.clone(),
                         ..Default::default()
                     };
         
                     if let Some(ref mut reserves) = liquidator_data.reserves {
-                        reserves.push((collateral_asset.clone(), new_reserve));
+                        reserves.push((params.collateral_asset.clone(), new_reserve));
                     } else {
-                        liquidator_data.reserves = Some(vec![(collateral_asset.clone(), new_reserve)]);
+                        liquidator_data.reserves = Some(vec![(params.collateral_asset.clone(), new_reserve)]);
                     }
-                    &mut liquidator_data.reserves.as_mut().unwrap().iter_mut().find(|(asset, _)| asset == &collateral_asset).unwrap().1
+                    &mut liquidator_data.reserves.as_mut().unwrap().iter_mut().find(|(asset, _)| asset == &params.collateral_asset).unwrap().1
                 }
             };
             let rollback_dtoken_from_liquidator = burn_scaled(
@@ -289,8 +302,8 @@ pub async fn execute_liquidation(
                 Ok(()) => {
                     ic_cdk::println!("Rolling back dtoken from liquidator successfully");
                 }
-                Err(e) => {
-                    return Err(e);
+                Err(_) => {
+                    return Err(Error::ErrorRollBack);
                 }
             };
             let rollback_dtoken_to_user = mint_scaled(
@@ -308,12 +321,15 @@ pub async fn execute_liquidation(
                 Ok(()) => {
                     ic_cdk::println!("Rolling back dtoken to user successfully");
                 }
-                Err(e) => {
-                    return Err(e);
+                Err(_) => {
+                    return Err(Error::ErrorRollBack);
                 }
             };
-            //TODO store state
+            mutate_state(|state| {
+                let asset_index = &mut state.asset_index;
+                asset_index.insert(params.collateral_asset.clone(), Candid(collateral_reserve_data.clone()));
+            });
             return Err(e);
-        } //TODO burn liquidator dtoken //TODO mint back the dtoken to user
+        } 
     }
 }

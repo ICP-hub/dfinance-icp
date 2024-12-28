@@ -56,15 +56,14 @@ struct Account {
 }
 
 // Icrc1_balance inter canister call.
-#[query]
 pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Nat, Error> {
     if canister == Principal::anonymous() {
-        return Err(Error::InvalidCanister);
+        return Err(Error::AnonymousPrincipal);
     }
 
     // Validate the principal
     if principal == Principal::anonymous() {
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
     let account = Account {
         owner: principal,
@@ -107,7 +106,7 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
 #[query]
 pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     if canister_id == Principal::anonymous() {
-        return Err(Error::InvalidCanister);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let raw_response: Result<(Nat,), _> =
@@ -153,7 +152,7 @@ pub async fn update_balance(
 pub async fn get_fees(canister: Principal) -> Result<Nat,Error> {
 
      if canister == Principal::anonymous() {
-        return Err(Error::InvalidCanister);
+        return Err(Error::AnonymousPrincipal);
     }
     let empty_arg_result = candid::encode_one(());
     let empty_arg = match empty_arg_result {
@@ -244,7 +243,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
@@ -284,20 +283,29 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     if amount > balance {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("initial", asset.clone()).await;
+        if let Err(e) = send_admin_notifications("initial", asset.clone()).await {
+            ic_cdk::println!("Failed to send admin notification: {:?}", e);
+            return Err(e);
+        }
         return Err(Error::LowWalletBalance);
     }
 
     if (balance.clone() - amount.clone()) == Nat::from(0u128) {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("mid", asset.clone()).await;
+        if let Err(e) = send_admin_notifications("mid", asset.clone()).await {
+            ic_cdk::println!("Failed to send admin notification: {:?}", e);
+            return Err(e);
+        };
     }
 
     if (balance.clone() - amount.clone())
         <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
     {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("final", asset.clone()).await;
+        if let Err(e) = send_admin_notifications("final", asset.clone()).await {
+            ic_cdk::println!("Failed to send admin notification: {:?}", e);
+            return Err(e);
+        };
     }
 
     let mut rate: Option<Nat> = None;
@@ -411,7 +419,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     //Retrieve user data.
@@ -448,17 +456,21 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     Ok(())
 }
 
-async fn send_admin_notifications(stage: &str, asset: String) {
+async fn send_admin_notifications(stage: &str, asset: String)-> Result<(), Error> {
     let message = match stage {
         "initial" => format!("Dear Admin,\n\nThe platform's faucet balance for {} is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team", asset),
         "mid" => format!("Dear Admin,\n\nUrgent: The platform's faucet balance for {} is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team", asset),
         "final" => format!("Dear Admin,\n\nReminder: The platform's faucet balance for {} is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team", asset),
         _ => "".to_string(),
     };
-    send_email_via_sendgrid(message).await;
+    if let Err(e) = send_email_via_sendgrid(message).await {
+        ic_cdk::println!("Failed to send email: {:?}", e);
+        return Err(e)
+    }
+    Ok(())
 }
 
-pub async fn send_email_via_sendgrid(message: String) -> String {
+pub async fn send_email_via_sendgrid(message: String) -> Result<String,Error> {
     let url = "https://api.sendgrid.com/v3/mail/send";
     let api_key = "";
 
@@ -515,11 +527,11 @@ pub async fn send_email_via_sendgrid(message: String) -> String {
             let response_body =
                 String::from_utf8(response.body).expect("Response body is not UTF-8 encoded.");
             ic_cdk::println!("Email sent successfully. Response body: {}", response_body);
-            format!("Email sent successfully. Response: {}", response_body)
+            Ok("Email sent successfully".to_string())
         }
         Err((r, m)) => {
             ic_cdk::println!("Error sending email. RejectionCode: {:?}, Error: {}", r, m);
-            format!("Error sending email. RejectionCode: {:?}, Error: {}", r, m)
+            Err(Error::EmailError)
         }
     }
 }

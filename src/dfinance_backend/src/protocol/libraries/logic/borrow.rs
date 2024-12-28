@@ -7,6 +7,7 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
+use crate::protocol::libraries::math::calculate::update_reserves_price;
 use candid::{Nat, Principal};
 use ic_cdk::update;
 
@@ -35,7 +36,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let ledger_canister_id = read_state(|state| {
@@ -56,12 +57,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
     ic_cdk::println!("Debt canister ID: {:?}", debttoken_canister);
-
-    // TODO: decide its place in the code.
-    // if let Err(e) = update_reserves_price().await {
-    //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
-    //     return Err(e);
-    // }
 
     let reserve_data_result = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -109,7 +104,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     }
     ic_cdk::println!("Borrow validated successfully");
     
-    //TODO keep liq_taken = 0
      // ----------- Update logic here -------------
      if let Err(e) = UpdateLogic::update_user_data_borrow(
         user_principal,
@@ -135,14 +129,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     .await {
         ic_cdk::println!("Failed to update interest rates: {:?}", e);
         return Err(e);
-    }
-
-    ic_cdk::println!(
-        "Interest rates updated successfully. Total borrowed: {:?}",
-        reserve_data.total_borrowed
-    );
-
-   
+    } 
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -166,7 +153,27 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
             Ok(new_balance)
         }
         Err(e) => {
-            //TODO burn debttoken back to platform
+             //Rollback user state
+             let repay_param = ExecuteRepayParams {
+                asset: params.asset.clone(),
+                amount: params.amount,
+                on_behalf_of: None, 
+            };
+            if let Err(e) = UpdateLogic::update_user_data_repay(
+                user_principal,
+                &reserve_cache,
+                repay_param,
+                &mut reserve_data,
+            )
+            .await
+            {
+                ic_cdk::println!("Failed to rollback user state: {:?}", e);
+                return Err(Error::ErrorRollBack);
+            };
+            mutate_state(|state| {
+                let asset_index = &mut state.asset_index;
+                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            });
             ic_cdk::println!("Asset transfer failed, mint debt token. Error: {:?}", e);
             return Err(Error::ErrorMintDebtTokens);
         }
@@ -198,7 +205,7 @@ pub async fn execute_repay(
     if let Some(principal) = params.on_behalf_of {
         if principal == Principal::anonymous() {
             ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::InvalidPrincipal);
+            return Err(Error::AnonymousPrincipal);
         }
     }
 
@@ -208,20 +215,19 @@ pub async fn execute_repay(
             let liquidator_principal = ic_cdk::caller();
             if liquidator_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
-                return Err(Error::InvalidPrincipal);
+                return Err(Error::AnonymousPrincipal);
             }
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();
             if user_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
-                return Err(Error::InvalidPrincipal);
+                return Err(Error::AnonymousPrincipal);
             }
             ic_cdk::println!("Caller is: {:?}", user_principal.to_string());
             (user_principal, None)
         };
 
-        //TODO: look this error propogation.
     let ledger_canister_id = read_state(|state| {
         let reserve_list = &state.reserve_list;
         reserve_list
@@ -229,11 +235,6 @@ pub async fn execute_repay(
             .map(|principal| principal.clone())
             .ok_or_else(|| Error::NoCanisterIdFound)
     })?;
-
-    // if let Err(e) = update_reserves_price().await {
-    //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
-    //     return Err(e);
-    // }
 
     let platform_principal = ic_cdk::api::id();
 
@@ -284,7 +285,7 @@ pub async fn execute_repay(
         &reserve_data,
         params.amount.clone(),
         user_principal,
-        liquidator_principal, //TODO what if liq is repaying
+        liquidator_principal,
         ledger_canister_id,
     )
     .await {
@@ -292,9 +293,14 @@ pub async fn execute_repay(
         return Err(e);
     }
     ic_cdk::println!("Repay validated successfully");
+
+    if let Err(e) = update_reserves_price().await {
+        ic_cdk::println!("Failed to update reserves price: {:?}", e);
+        return Err(e);
+    }
+    
     ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
-    //TODO: call burn function here
     // ----------- Update logic here -------------
     if let Err(e) = UpdateLogic::update_user_data_repay(
         user_principal,
@@ -342,7 +348,26 @@ pub async fn execute_repay(
             Ok(new_balance)
         }
         Err(e) => {
-            //TODO: mint debttoken back to user
+             //Rollback user state
+             let borrow_param = ExecuteBorrowParams {
+                asset: params.asset.clone(),
+                amount: params.amount, 
+            };
+            if let Err(e) = UpdateLogic::update_user_data_borrow(
+                user_principal,
+                &reserve_cache,
+                borrow_param,
+                &mut reserve_data,
+            )
+            .await
+            {
+                ic_cdk::println!("Failed to rollback user state: {:?}", e);
+                return Err(Error::ErrorRollBack);
+            };
+            mutate_state(|state| {
+                let asset_index = &mut state.asset_index;
+                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            });
             ic_cdk::println!("Asset transfer failed, error: {:?}", e);
             return Err(Error::ErrorBurnDebtTokens);
         }

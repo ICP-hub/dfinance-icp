@@ -1,13 +1,12 @@
 use candid::{CandidType, Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{CanisterInstallMode, CanisterSettings};
-use ic_cdk_macros::update;
-
 use serde::Deserialize;
 use std::borrow::Cow;
-
+use crate::constants::asset_address::DEFAULT;
+use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::{ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES, MAX_MEMO_LENGTH, MAX_MESSAGE_SIZE_BYTES, MAX_NUMBER_OF_ACCOUNTS, MAX_TRANSACTIONS_PER_RESPONSE, NODE_MAX_MEMORY_SIZE_BYTES, NUM_BLOCKS_TO_ARCHIVE, TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY, TEST_CYCLES_FOR_ARCHIVE_CREATION, TEST_DECIMALS, TEST_DEFAULT_CYCLES, TEST_MAX_MEMO_LENGTH, TEST_MAX_MESSAGE_SIZE_BYTES, TEST_MAX_NUMBER_OF_ACCOUNTS, TEST_MAX_TRANSACTIONS_PER_RESPONSE, TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE, TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD};
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
-use crate::constants::asset_address::DEFAULT;
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct InitArgs {
@@ -68,9 +67,10 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
     ))
 }
 
-
-
-pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Principal {
+pub async fn create_token_canister(
+    token_name: &str,
+    token_symbol: &str,
+) -> Result<Principal, Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
@@ -93,24 +93,27 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         subaccount: None,
     });
 
-    let transfer_fee = Nat::from(0u64);
-    let decimals = Some(8);
-    let max_memo_length = Some(256);
-    let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];
+    let transfer_fee = Nat::from(TRANSFER_FEE);
+    let decimals = Some(DECIMALS);
+    let max_memo_length = Some(MAX_MEMO_LENGTH);
+    let metadata = vec![(
+        "icrc1_name".to_string(),
+        Value::Text(token_name.to_string()),
+    )];
 
     let initial_balances = vec![];
 
     let feature_flags = Some(FeatureFlags { icrc2: true });
-    let maximum_number_of_accounts = Some(1000);
-    let accounts_overflow_trim_quantity = Some(100);
+    let maximum_number_of_accounts = Some(MAX_NUMBER_OF_ACCOUNTS);
+    let accounts_overflow_trim_quantity = Some(ACCOUNTS_OVERFLOW_TRIM_QUANTITY);
 
     let archive_options = ArchiveOptions {
-        num_blocks_to_archive: 1000,
-        max_transactions_per_response: Some(200),
-        trigger_threshold: 2000,
-        max_message_size_bytes: Some(1024),
-        cycles_for_archive_creation: Some(100000000000),
-        node_max_memory_size_bytes: Some(2000),
+        num_blocks_to_archive: NUM_BLOCKS_TO_ARCHIVE,
+        max_transactions_per_response: Some(MAX_TRANSACTIONS_PER_RESPONSE),
+        trigger_threshold: TRIGGER_THRESHOLD,
+        max_message_size_bytes: Some(MAX_MESSAGE_SIZE_BYTES),
+        cycles_for_archive_creation: Some(CYCLES_FOR_ARCHIVE_CREATION),
+        node_max_memory_size_bytes: Some(NODE_MAX_MEMORY_SIZE_BYTES),
         controller_id: ic_cdk::api::id(),
         more_controller_ids: Some(vec![Principal::from_text(DEFAULT).unwrap()]),
     };
@@ -138,11 +141,11 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         Err(e) => {
             ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
             //TODO remove this and change return type
-            return Principal::anonymous();
+            return Err(Error::ErrorEncoding);
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 900_000_000_000)
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, DEFAULT_CYCLES)
         .await
         .unwrap()
         .0
@@ -162,10 +165,10 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         "Created canister for token '{}' with canister ID: {}",
         token_name, canister_id
     ));
-    canister_id
+    Ok(canister_id)
 }
 
-pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> Principal {
+pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> Result<Principal,Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
@@ -189,13 +192,15 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         subaccount: None,
     });
 
-    let transfer_fee = Nat::from(0u64);
-    let decimals = Some(8);
-    let max_memo_length = Some(256);
-    let metadata = vec![("icrc1_name".to_string(), Value::Text(token_name.to_string()))];
+    let transfer_fee = Nat::from(TEST_TRANSFER_FEE);
+    let decimals = Some(TEST_DECIMALS);
+    let max_memo_length = Some(TEST_MAX_MEMO_LENGTH);
+    let metadata = vec![(
+        "icrc1_name".to_string(),
+        Value::Text(token_name.to_string()),
+    )];
 
-    let initial_balances = 
-    vec![(
+    let initial_balances = vec![(
         Account {
             owner: ic_cdk::api::id(),
 
@@ -205,16 +210,16 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
     )];
 
     let feature_flags = Some(FeatureFlags { icrc2: true });
-    let maximum_number_of_accounts = Some(1000);
-    let accounts_overflow_trim_quantity = Some(100);
+    let maximum_number_of_accounts = Some(TEST_MAX_NUMBER_OF_ACCOUNTS);
+    let accounts_overflow_trim_quantity = Some(TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY);
 
     let archive_options = ArchiveOptions {
-        num_blocks_to_archive: 1000,
-        max_transactions_per_response: Some(200),
-        trigger_threshold: 2000,
-        max_message_size_bytes: Some(1024),
-        cycles_for_archive_creation: Some(100000000000),
-        node_max_memory_size_bytes: Some(2000),
+        num_blocks_to_archive: TEST_NUM_BLOCKS_TO_ARCHIVE,
+        max_transactions_per_response: Some(TEST_MAX_TRANSACTIONS_PER_RESPONSE),
+        trigger_threshold: TEST_TRIGGER_THRESHOLD,
+        max_message_size_bytes: Some(TEST_MAX_MESSAGE_SIZE_BYTES),
+        cycles_for_archive_creation: Some(TEST_CYCLES_FOR_ARCHIVE_CREATION),
+        node_max_memory_size_bytes: Some(TEST_NODE_MAX_MEMORY_SIZE_BYTES),
         controller_id: ic_cdk::api::id(),
 
         more_controller_ids: Some(vec![Principal::from_text(DEFAULT).unwrap()]),
@@ -242,11 +247,11 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         Ok(args) => args,
         Err(e) => {
             ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
-            return Principal::anonymous();
+            return Err(Error::ErrorEncoding);
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 900_000_000_000)
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, TEST_DEFAULT_CYCLES)
         .await
         .unwrap()
         .0
@@ -266,5 +271,5 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         "Created canister for token '{}' with canister ID: {}",
         token_name, canister_id
     ));
-    canister_id
+    Ok(canister_id)
 }

@@ -10,12 +10,12 @@ use ic_cdk::update;
 #[update]
 pub async fn initialize_reserve()-> Result<(),Error>{
 
-    let user_principal = ic_cdk::caller();
+    // let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous()  || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
+    // if user_principal == Principal::anonymous()  || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::InvalidPrincipal);
+    // }
 
     let asset_data_map = get_asset_data().await;
 

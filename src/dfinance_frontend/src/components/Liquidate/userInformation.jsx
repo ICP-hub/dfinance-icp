@@ -50,7 +50,7 @@ const UserInformationPopup = ({
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-const [error ,setError] =useState(null);
+  const [error, setError] = useState(null);
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -75,14 +75,14 @@ const [error ,setError] =useState(null);
     if (assetSupply[principal]?.[asset] !== undefined) {
       return Number(assetSupply[principal][asset]) / 1e8;
     }
-    return 0; 
+    return 0;
   };
   const getAssetBorrowValue = (principal, asset) => {
     if (assetBorrow[principal]?.[asset] !== undefined) {
       return Number(assetBorrow[principal][asset]) / 1e8;
     }
-    return 0; 
-  
+    return 0;
+
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
@@ -201,10 +201,10 @@ const [error ,setError] =useState(null);
 
     const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
     const totalAmount = supplyAmount + transferFee;
-    
+
     // Convert to Number
     const totalAmountAsNumber = Number(totalAmount);
-    
+
 
     try {
       setIsLoading(true);
@@ -262,32 +262,35 @@ const [error ,setError] =useState(null);
         throw new Error("Backend actor is not initialized");
       }
 
+      const liquidationParams = {
+        debt_asset: selectedDebtAsset,
+        collateral_asset: selectedAsset,
+        amount: supplyAmount,
+        on_behalf_of: mappedItem.principal
+      };
       const result = await backendActor.execute_liquidation(
-        selectedDebtAsset,
-        selectedAsset,
-        supplyAmount,
-        mappedItem.principal
+        liquidationParams
       );
 
       if ("Ok" in result) {
         trackEvent(
           "Liq:" +
-            selectedDebtAsset +
-            "," +
-            selectedAsset +
-            "," +
-            Number(amountToRepay).toLocaleString() +
-            "," +
-            mappedItem.principal.toString(),
+          selectedDebtAsset +
+          "," +
+          selectedAsset +
+          "," +
+          Number(amountToRepay).toLocaleString() +
+          "," +
+          mappedItem.principal.toString(),
           "Assets",
           "Liq:" +
-            selectedDebtAsset +
-            "," +
-            selectedAsset +
-            "," +
-            Number(amountToRepay).toLocaleString() +
-            "," +
-            mappedItem.principal.toString()
+          selectedDebtAsset +
+          "," +
+          selectedAsset +
+          "," +
+          Number(amountToRepay).toLocaleString() +
+          "," +
+          mappedItem.principal.toString()
         );
         toast.success(`Liquidation successful!`, {
           className: "custom-toast",
@@ -302,7 +305,7 @@ const [error ,setError] =useState(null);
         setTransactionResult("success");
       } else if ("Err" in result) {
         const errorMsg = result.Err;
-        console.error("errorMsg",errorMsg)
+        console.error("errorMsg", errorMsg)
         if (errorMsg?.ExchangeRateError === null) {
           toast.error("Price fetch failed", {
             className: "custom-toast",
@@ -327,7 +330,7 @@ const [error ,setError] =useState(null);
             progress: undefined,
           });
         }
-        
+
         setTransactionResult("failure");
       }
 
@@ -530,7 +533,7 @@ const [error ,setError] =useState(null);
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckUSDTBalance?.toLocaleString() || "0.00"} {}
+                    {ckUSDTBalance?.toLocaleString() || "0.00"} { }
                   </p>
                 </div>
               </div>
@@ -765,17 +768,18 @@ const [error ,setError] =useState(null);
     ckUSDTBalance,
   ]);
   const formatValue = (value) => {
-    const numericValue = parseFloat(value); 
+    const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
-      return "0.00"; 
+      return "0.00";
     }
     if (numericValue === 0) {
-      return "0.00"; 
+      return "0.00";
     } else if (numericValue >= 1) {
-      return numericValue.toFixed(2); 
+      return numericValue.toFixed(2);
     } else {
-      return numericValue.toFixed(7); 
-    }}
+      return numericValue.toFixed(7);
+    }
+  }
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       {transactionResult ? (
@@ -804,12 +808,12 @@ const [error ,setError] =useState(null);
               <>
                 <img src={cross} alt="Failure" className="w-30 h-30" />
                 {error ? (
-    <p className="text-xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">{error}</p>
-  ) : (
-    <h2 className="text-2xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">
-      Liquidation Call Failed
-    </h2>
-  )}
+                  <p className="text-xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">{error}</p>
+                ) : (
+                  <h2 className="text-2xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">
+                    Liquidation Call Failed
+                  </h2>
+                )}
 
                 <button
                   className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
@@ -853,9 +857,8 @@ const [error ,setError] =useState(null);
           <div className="flex justify-center mt-6 ">
             {isCheckboxChecked ? (
               <button
-                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 onClick={handleConfirmLiquidation}
                 disabled={isLoading}
               >
@@ -894,8 +897,8 @@ const [error ,setError] =useState(null);
               {isCollateralOverlay
                 ? "Collateral Information"
                 : isDebtInfo
-                ? "Debt Information"
-                : "User Information"}
+                  ? "Debt Information"
+                  : "User Information"}
             </h2>
             <button
               onClick={onClose}
@@ -911,7 +914,7 @@ const [error ,setError] =useState(null);
                 <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
                   Collateral Asset
                 </h3>
-                {}
+                { }
 
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
@@ -943,14 +946,14 @@ const [error ,setError] =useState(null);
                       assetName === "ckBTC"
                         ? ckBTCBalance
                         : assetName === "ckETH"
-                        ? ckETHBalance
-                        : assetName === "ckUSDC"
-                        ? ckUSDCBalance
-                        : assetName === "ICP"
-                        ? ckICPBalance
-                        : assetName === "ckUSDT"
-                        ? ckUSDTBalance
-                        : 0;
+                          ? ckETHBalance
+                          : assetName === "ckUSDC"
+                            ? ckUSDCBalance
+                            : assetName === "ICP"
+                              ? ckICPBalance
+                              : assetName === "ckUSDT"
+                                ? ckUSDTBalance
+                                : 0;
 
                     if (assetSupply > 0) {
                       return (
@@ -975,14 +978,14 @@ const [error ,setError] =useState(null);
                               assetName === "ckBTC"
                                 ? ckBTC
                                 : assetName === "ckETH"
-                                ? ckETH
-                                : assetName === "ckUSDC"
-                                ? ckUSDC
-                                : assetName === "ICP"
-                                ? icp
-                                : assetName === "ckUSDT"
-                                ? ckUSDT
-                                : undefined
+                                  ? ckETH
+                                  : assetName === "ckUSDC"
+                                    ? ckUSDC
+                                    : assetName === "ICP"
+                                      ? icp
+                                      : assetName === "ckUSDT"
+                                        ? ckUSDT
+                                        : undefined
                             }
                             alt={assetName}
                             className="rounded-[50%] w-7"
@@ -994,7 +997,7 @@ const [error ,setError] =useState(null);
                   })}
                 </div>
 
-                {}
+                { }
                 {renderAssetDetails(selectedAsset)}
 
                 <div className="flex items-center mt-2"></div>
@@ -1003,14 +1006,14 @@ const [error ,setError] =useState(null);
                     collateral + collateral * (liquidation_bonus / 100) <
                     selectedAssetSupply
                   )) && (
-                  <p className="text-red-500 mt-2 text-sm">
-                    {isLoading
-                      ? "Please wait while the process completes."
-                      : !isCollateralAssetSelected
-                      ? "No collateral asset selected."
-                      : "The collateral amount with liquidation bonus exceeds the available supply."}
-                  </p>
-                )}
+                    <p className="text-red-500 mt-2 text-sm">
+                      {isLoading
+                        ? "Please wait while the process completes."
+                        : !isCollateralAssetSelected
+                          ? "No collateral asset selected."
+                          : "The collateral amount with liquidation bonus exceeds the available supply."}
+                    </p>
+                  )}
               </div>
               <div className="flex justify-between mt-4">
                 <button
@@ -1022,13 +1025,12 @@ const [error ,setError] =useState(null);
                 </button>
 
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${
-                    isCollateralAssetSelected &&
-                    collateral + collateral * (liquidation_bonus / 100) <
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${isCollateralAssetSelected &&
+                      collateral + collateral * (liquidation_bonus / 100) <
                       selectedAssetSupply
                       ? "opacity-100 cursor-pointer"
                       : "opacity-50 cursor-not-allowed"
-                  }`}
+                    }`}
                   onClick={() => {
                     isApproved ? handleCallLiquidation() : handleApprove();
                   }}
@@ -1069,12 +1071,12 @@ const [error ,setError] =useState(null);
                     mappedItem.reserves[0].map((item, index) => {
                       const assetName = item[0];
 
-                       const assetBorrow = Number(getAssetBorrowValue(
-                                  mappedItem.principal,
-                                  assetName
-                                ));
+                      const assetBorrow = Number(getAssetBorrowValue(
+                        mappedItem.principal,
+                        assetName
+                      ));
                       const assetBorrowAmount = Number(assetBorrow / 2);
-console.log("asset borrow amount",assetBorrowAmount)
+                      console.log("asset borrow amount", assetBorrowAmount)
                       let assetBorrowAmountInUSD = 0;
                       if (assetName === "ckBTC" && ckBTCUsdRate) {
                         assetBorrowAmountInUSD =
@@ -1117,14 +1119,14 @@ console.log("asset borrow amount",assetBorrowAmount)
                                 assetName === "ckBTC"
                                   ? ckBTC
                                   : assetName === "ckETH"
-                                  ? ckETH
-                                  : assetName === "ckUSDC"
-                                  ? ckUSDC
-                                  : assetName === "ICP"
-                                  ? icp
-                                  : assetName === "ckUSDT"
-                                  ? ckUSDT
-                                  : undefined
+                                    ? ckETH
+                                    : assetName === "ckUSDC"
+                                      ? ckUSDC
+                                      : assetName === "ICP"
+                                        ? icp
+                                        : assetName === "ckUSDT"
+                                          ? ckUSDT
+                                          : undefined
                               }
                               alt={assetName}
                               className="rounded-[50%] w-7"
@@ -1178,11 +1180,10 @@ console.log("asset borrow amount",assetBorrowAmount)
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm px-6 py-2 relative ${
-                    isDebtAssetSelected && amountToRepay <= selectedAssetBalance
+                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
                       ? "opacity-100"
                       : "opacity-50 cursor-not-allowed"
-                  }`}
+                    }`}
                   onClick={handleNextClick}
                   disabled={
                     !isDebtAssetSelected ||
@@ -1218,8 +1219,8 @@ console.log("asset borrow amount",assetBorrowAmount)
                       {Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
                         ? "Infinity"
                         : parseFloat(
-                            Number(userAccountData?.Ok?.[4]) / 10000000000
-                          ).toFixed(2)}
+                          Number(userAccountData?.Ok?.[4]) / 10000000000
+                        ).toFixed(2)}
                     </p>
                   </div>
                 </div>

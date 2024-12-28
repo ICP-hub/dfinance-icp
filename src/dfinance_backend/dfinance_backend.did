@@ -27,7 +27,9 @@ type Error = variant {
   NoReserveDataFound;
   LowWalletBalance;
   InvalidBurnAmount;
+  AnonymousPrincipal;
   InvalidUserId;
+  EmailError;
   ErrorPriceCache;
   InvalidUser;
   EmptyAsset;
@@ -35,6 +37,7 @@ type Error = variant {
   ErrorParsingPrincipal;
   ReserveFrozen;
   LessRewardAmount;
+  ErrorRollBack;
   ErrorBurnDTokens;
   NoPriceCache;
   ConversionErrorFromTextToPrincipal;
@@ -54,6 +57,12 @@ type Error = variant {
   NormalizedDebt;
 };
 type ExecuteBorrowParams = record { asset : text; amount : nat };
+type ExecuteLiquidationParams = record {
+  debt_asset : text;
+  collateral_asset : text;
+  on_behalf_of : principal;
+  amount : nat;
+};
 type ExecuteRepayParams = record {
   asset : text;
   on_behalf_of : opt principal;
@@ -87,7 +96,6 @@ type ReserveConfiguration = record {
 type ReserveData = record {
   id : nat16;
   asset_name : opt text;
-  userlist : opt vec record { text; bool };
   asset_borrow : nat;
   can_be_collateral : opt bool;
   debt_token_canister : opt text;
@@ -100,8 +108,6 @@ type ReserveData = record {
   configuration : ReserveConfiguration;
   accure_to_platform : nat;
   debt_index : nat;
-  total_borrowed : nat;
-  total_supply : nat;
 };
 type Result = variant { Ok : nat; Err : Error };
 type Result_1 = variant { Ok : principal; Err : Error };
@@ -117,43 +123,29 @@ type Result_7 = variant { Ok; Err : Error };
 type Result_8 = variant { Ok : text; Err : Error };
 type Result_9 = variant { Ok : record { nat; nat }; Err : Error };
 type UserData = record {
-  ltv : opt nat;
-  available_borrow : opt nat;
-  net_apy : opt nat;
   reserves : opt vec record { text; UserReserveData };
-  health_factor : opt nat;
   total_collateral : opt nat;
   total_debt : opt nat;
   user_id : opt text;
-  liquidation_threshold : opt nat;
-  max_ltv : opt nat;
-  net_worth : opt nat;
 };
 type UserReserveData = record {
-  supply_rate : nat;
-  asset_price_when_supplied : nat;
-  principal_stable_debt : nat64;
   asset_borrow : nat;
   last_update_timestamp : nat64;
   d_token_balance : nat;
   is_collateral : bool;
-  asset_price_when_borrowed : nat;
   liquidity_index : nat;
   faucet_limit : nat;
   variable_borrow_index : nat;
   reserve : text;
   asset_supply : nat;
-  state : UserState;
   faucet_usage : nat;
-  borrow_rate : nat;
   debt_token_blance : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
-type UserState = record { adjusted_balance : nat; index : nat };
 service : () -> {
   execute_borrow : (ExecuteBorrowParams) -> (Result);
-  execute_liquidation : (text, text, nat, principal) -> (Result);
+  execute_liquidation : (ExecuteLiquidationParams) -> (Result);
   execute_repay : (ExecuteRepayParams) -> (Result);
   execute_supply : (ExecuteSupplyParams) -> (Result);
   execute_withdraw : (ExecuteWithdrawParams) -> (Result);
@@ -163,7 +155,6 @@ service : () -> {
   get_asset_debt : (text, opt principal) -> (Result);
   get_asset_principal : (text) -> (Result_1) query;
   get_asset_supply : (text, opt principal) -> (Result);
-  get_balance : (principal, principal) -> (Result) query;
   get_cached_exchange_rate : (text) -> (Result_2) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_3);
   get_reserve_data : (text) -> (Result_4) query;
@@ -176,5 +167,7 @@ service : () -> {
   register_user : () -> (Result_8);
   toggle_collateral : (text, nat, nat) -> (Result_7);
   update_reserves_price : () -> (Result_7);
+  user_normalized_debt : (ReserveData) -> (Result) query;
+  user_normalized_supply : (ReserveData) -> (Result) query;
   user_position : (text) -> (Result_9) query;
 }

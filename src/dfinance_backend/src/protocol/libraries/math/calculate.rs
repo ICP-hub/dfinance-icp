@@ -193,7 +193,7 @@ pub async fn get_exchange_rates(
             "ckUSDT" => "usdt".to_string(),
             _ => symbol,
         },
-        None => "USD".to_string(),
+        None => "USDT".to_string(),
     };
 
     let args = GetExchangeRateRequest {
@@ -209,7 +209,7 @@ pub async fn get_exchange_rates(
     };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
-            Principal::from_text("eng72-u4aaa-aaaaa-qaa5q-cai").unwrap(),
+            Principal::from_text("fsomn-xeaaa-aaaaa-qaaza-cai").unwrap(),
             // Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
             "get_exchange_rate",
             (args,),

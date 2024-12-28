@@ -446,7 +446,7 @@ const [error ,setError] =useState(null);
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckETHBalance.toLocaleString()}
+                    {ckETHBalance}
                   </p>
                 </div>
               </div>
@@ -467,7 +467,7 @@ const [error ,setError] =useState(null);
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckBTCBalance.toLocaleString()}
+                    {ckBTCBalance}
                   </p>
                 </div>
               </div>
@@ -488,7 +488,7 @@ const [error ,setError] =useState(null);
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckUSDCBalance.toLocaleString()}
+                    {ckUSDCBalance}
                   </p>
                 </div>
               </div>
@@ -509,7 +509,7 @@ const [error ,setError] =useState(null);
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckICPBalance.toLocaleString()}
+                    {ckICPBalance}
                   </p>
                 </div>
               </div>
@@ -530,7 +530,7 @@ const [error ,setError] =useState(null);
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckUSDTBalance?.toLocaleString() || "0.00"} {}
+                    {ckUSDTBalance || "0.00"} {}
                   </p>
                 </div>
               </div>

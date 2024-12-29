@@ -202,11 +202,13 @@ const principalObj = useMemo(
       if (item.id === 0) {
         return {
           ...item,
-          count: calculatedNetWorth
-            ? `$${formatNumber(calculatedNetWorth)}`
+          count: calculatedNetWorth && calculatedNetWorth < 0.01
+            ? "<0.01"  
+            : calculatedNetWorth
+            ? `$${formatNumber(calculatedNetWorth)}`  
             : "-",
         };
-      } else if (item.id === 2) {
+      }else if (item.id === 2) {
         const healthValue = !userAccountData?.Ok?.[4]
           ? "-"
           : Number(userAccountData?.Ok?.[4]) / 10000000000 > 100

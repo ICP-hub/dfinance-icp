@@ -3118,7 +3118,7 @@ const MySupply = () => {
                                               liquidationThreshold,
                                               reserveliquidationThreshold,
                                              assetSupply ,
-                                             assetBorrow,
+                                             formatConditional(assetBorrow),
                                               totalCollateral,
                                               totalDebt
                                             );
@@ -3583,7 +3583,7 @@ const MySupply = () => {
                                           liquidationThreshold,
                                           reserveliquidationThreshold,
                                           assetSupply,
-                                         assetBorrow ,
+                                          formatConditional(assetBorrow),
                                           totalCollateral,
                                           totalDebt
                                         );

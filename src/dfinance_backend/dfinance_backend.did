@@ -110,8 +110,8 @@ type ReserveData = record {
   accure_to_platform : nat;
   debt_index : nat;
 };
-type Result = variant { Ok : nat; Err : Error };
-type Result_1 = variant { Ok : principal; Err : Error };
+type Result = variant { Ok : principal; Err : Error };
+type Result_1 = variant { Ok : nat; Err : Error };
 type Result_10 = variant { Ok : record { nat; nat }; Err : Error };
 type Result_2 = variant { Ok : PriceCache; Err : Error };
 type Result_3 = variant { Ok : InitArgs; Err : text };
@@ -146,22 +146,24 @@ type UserReserveData = record {
   is_borrowed : bool;
 };
 service : (principal) -> {
-  execute_borrow : (ExecuteBorrowParams) -> (Result);
-  execute_liquidation : (ExecuteLiquidationParams) -> (Result);
-  execute_repay : (ExecuteRepayParams) -> (Result);
-  execute_supply : (ExecuteSupplyParams) -> (Result);
-  execute_withdraw : (ExecuteWithdrawParams) -> (Result);
-  faucet : (text, nat) -> (Result);
+  create_testtoken_canister : (text, text) -> (Result);
+  create_token_canister : (text, text) -> (Result);
+  execute_borrow : (ExecuteBorrowParams) -> (Result_1);
+  execute_liquidation : (ExecuteLiquidationParams) -> (Result_1);
+  execute_repay : (ExecuteRepayParams) -> (Result_1);
+  execute_supply : (ExecuteSupplyParams) -> (Result_1);
+  execute_withdraw : (ExecuteWithdrawParams) -> (Result_1);
+  faucet : (text, nat) -> (Result_1);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
-  get_asset_debt : (text, opt principal) -> (Result);
-  get_asset_principal : (text) -> (Result_1) query;
-  get_asset_supply : (text, opt principal) -> (Result);
+  get_asset_debt : (text, opt principal) -> (Result_1);
+  get_asset_principal : (text) -> (Result) query;
+  get_asset_supply : (text, opt principal) -> (Result_1);
   get_cached_exchange_rate : (text) -> (Result_2) query;
   get_controller : () -> (Result_3) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_4);
   get_reserve_data : (text) -> (Result_5) query;
-  get_total_supply : (principal) -> (Result) query;
+  get_total_supply : (principal) -> (Result_1) query;
   get_user_account_data : (opt principal) -> (Result_6);
   get_user_data : (principal) -> (Result_7) query;
   initialize_canister : () -> (Result_8);
@@ -170,7 +172,7 @@ service : (principal) -> {
   register_user : () -> (Result_9);
   toggle_collateral : (text, nat, nat) -> (Result_8);
   update_reserves_price : () -> (Result_8);
-  user_normalized_debt : (ReserveData) -> (Result) query;
-  user_normalized_supply : (ReserveData) -> (Result) query;
+  user_normalized_debt : (ReserveData) -> (Result_1) query;
+  user_normalized_supply : (ReserveData) -> (Result_1) query;
   user_position : (text) -> (Result_10) query;
 }

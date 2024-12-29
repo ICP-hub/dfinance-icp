@@ -58,6 +58,7 @@ pub enum Error {
     ErrorDecoding,
     ErrorRollBack,
     EmailError,
+    ErrorNotController
 }
 
 impl Error {
@@ -118,6 +119,7 @@ impl Error {
             Error::ErrorDecoding => "Error decoding response",
             Error::ErrorRollBack => "Error while rollback",
             Error::EmailError => "Error in sending email to the admin",
+            Error::ErrorNotController => "you are not a controller"
         }
     }
 }

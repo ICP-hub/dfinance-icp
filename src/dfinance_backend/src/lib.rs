@@ -9,7 +9,6 @@ use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
-use protocol::libraries::logic::user;
 use protocol::libraries::logic::user::calculate_user_account_data;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
@@ -50,9 +49,7 @@ pub async fn init(args: Principal) {
 }
 
 #[query]
-pub fn get_controller() -> Result<InitArgs, String> {
-
-    ic_cdk::println!("get_controller function");
+pub fn get_controller() -> Result<InitArgs, Error> {
 
     match read_state(|state| {
         state
@@ -63,7 +60,7 @@ pub fn get_controller() -> Result<InitArgs, String> {
         Ok(va) => {
             Ok(va.0)
         },
-        Err(_) => return Err(String::from("lol"))
+        Err(_) => return Err(Error::ErrorNotController)
     }
 }
 

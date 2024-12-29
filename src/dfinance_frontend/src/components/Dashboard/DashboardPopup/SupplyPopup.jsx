@@ -58,39 +58,43 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
   }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value.replace(/,/g, "");
+    let inputAmount = e.target.value;
 
-    if (!/^\d*\.?\d*$/.test(inputAmount)) {
-      return;
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+
+    if (inputAmount.indexOf('.') !== inputAmount.lastIndexOf('.')) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf('.'));
+    }
+
+    if (inputAmount === "") {
+      setAmount(""); 
+      updateAmountAndUsdValue(""); 
+      return; 
     }
 
     const numericAmount = parseFloat(inputAmount);
 
     if (numericAmount > supplyBalance) {
       setError(
-        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
-          "en-US"
-        )}`
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString("en-US")}`
       );
-      return;
+      return; 
     } else {
-      setError("");
+      setError(""); 
     }
 
     let formattedAmount;
+
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart).toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+      formattedAmount = parseInt(inputAmount).toLocaleString("en-US"); 
     }
 
     setAmount(formattedAmount);
-
-    updateAmountAndUsdValue(inputAmount);
+    updateAmountAndUsdValue(inputAmount); 
   };
 
   const updateAmountAndUsdValue = (inputAmount) => {
@@ -200,7 +204,6 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
 
-
   const scaledAmount = amountAsNat64;
 
   const handleSupplyETH = async () => {
@@ -224,7 +227,7 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
         amount: scaledAmount,
       };
       const sup = await backendActor.execute_supply(supplyParams
-        
+
       );
 
       trackEvent(
@@ -347,7 +350,7 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     asset,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,amount,usdValue,]);
 
   const calculateHealthFactor = ( totalCollateral, totalDebt, liquidationThreshold) => {
-    
+
     const amountAdded = collateral ? usdValue || 0 : 0;
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
@@ -386,7 +389,7 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
   };
   const formatValue = (value) => {
     if (!value) return '0';
-    return Number(value).toFixed(8).replace(/\.?0+$/, ''); // Ensure 8 decimals and remove trailing zeroes
+    return Number(value).toFixed(8).replace(/\.?0+$/, ''); 
   };
   return (
     <>

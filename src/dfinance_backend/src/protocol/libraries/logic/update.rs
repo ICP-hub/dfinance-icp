@@ -61,7 +61,7 @@ impl UpdateLogic {
             reserve_data.reserve = params.asset.clone();
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
-            reserve_data.is_collateral = true;
+           
 
             if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
                 if reserve_data.is_borrowed {
@@ -328,16 +328,16 @@ impl UpdateLogic {
             return Err(Error::NoReserveDataFound);
         }
 
-        let dtoken_balance = get_balance(
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
-            user_principal,
-        )
-        .await?;
-    if params.is_collateral && dtoken_balance == Nat::from(0u128) {
-        if let Some((_, reserve_data)) = user_reserve {
-        reserve_data.is_collateral = !params.is_collateral;
-    }
-  }
+        // let dtoken_balance = get_balance(
+        //     Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+        //     user_principal,
+        // )
+        // .await?;
+//     if params.is_collateral && dtoken_balance == Nat::from(0u128) {
+//         if let Some((_, reserve_data)) = user_reserve {
+//         reserve_data.is_collateral = !params.is_collateral;
+//     }
+//   }
         // if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
         //     if let Some(ref mut reserves) = user_data.reserves {
         //         reserves.retain(|(name, _)| name != &params.asset);

@@ -38,21 +38,54 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
 
   const value = 5.23;
-
+  const truncateToSevenDecimals = (value) => {
+    const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
+    const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
+    return truncated.toFixed(8); // Convert to string with exactly 7 decimals
+  };
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value.replace(/,/g, ""); 
-
+    let inputAmount = e.target.value;
+  
+    // If the input is cleared, reset it to an empty string
+    if (inputAmount === "") {
+      setAmount(""); // Set the amount state to empty
+      updateAmountAndUsdValue(""); // Ensure that the raw value is also empty
+      return; // Exit early if the input is cleared
+    }
+  
+    // Remove any non-numeric characters except for the decimal point
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    // Ensure only one decimal point can be used
+    if (inputAmount.indexOf('.') !== inputAmount.lastIndexOf('.')) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf('.'));
+    }
+  
+    // Ensure the input value is a valid number
+    const numericAmount = parseFloat(inputAmount);
+  
+    // Prevent input if it exceeds the asset supply
+    if (numericAmount > assetBorrow) {
+      inputAmount = truncateToSevenDecimals(assetBorrow).toString();
+    }
+  
+    let formattedAmount;
+    // If the input contains a decimal point, format it
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-
-      if (decimalPart.length > 8) {
-        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`;
-        e.target.value = inputAmount; 
-      }
+  
+      // Format the integer part with commas
+      formattedAmount = `${parseInt(integerPart).toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
+    } else {
+      // Format the integer part with commas
+      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
     }
-
+  
+    // Update the state with the formatted amount and pass the raw value to update the amount and USD value
+    setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   const updateAmountAndUsdValue = (inputAmount) => {
 
@@ -395,13 +428,19 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  
   const handleMaxClick = () => {
+    const truncateToSevenDecimals = (value) => {
+      const multiplier = Math.pow(10, 7); // To shift the decimal 7 places
+      const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
+      return truncated.toFixed(7); // Convert to string with exactly 7 decimals
+    };
     let asset_borrow = assetBorrow
       ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
         ? Number(assetBorrow).toFixed(8)
         : assetBorrow >= 1e-7 && assetBorrow < 1e-6
         ? Number(assetBorrow).toFixed(7)
-        : assetBorrow
+        : truncateToSevenDecimals(assetBorrow)
       : "0";
     const maxAmount = asset_borrow.toString();
 
@@ -411,8 +450,6 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
     if (!value) return '0';
     return Number(value).toFixed(8).replace(/\.?0+$/, ''); // Ensure 8 decimals and remove trailing zeroes
   };
-  
-  
   return (
     <>
       {isVisible && (
@@ -465,7 +502,7 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
                     }}
                   >
                     {}
-                    {formatValue(assetBorrow)}{" "}
+                    {truncateToSevenDecimals(assetBorrow)}{" "}
                     Max
                   </p>
                 </div>

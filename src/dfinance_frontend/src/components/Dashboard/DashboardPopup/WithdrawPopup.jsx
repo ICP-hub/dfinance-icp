@@ -31,6 +31,7 @@ const WithdrawPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  console.log("assetSupply,assetBorrow");
   const {  backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -71,7 +72,11 @@ const WithdrawPopup = ({
       onLoadingChange(isLoading);
     }
   }, [isLoading, onLoadingChange]);
-
+  const truncateToSevenDecimals = (value) => {
+    const multiplier = Math.pow(10, 7); // To shift the decimal 7 places
+    const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
+    return truncated.toFixed(7); // Convert to string with exactly 7 decimals
+  };
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
   
@@ -98,7 +103,7 @@ const WithdrawPopup = ({
     // Prevent the amount from exceeding the asset supply
     const numericAmount = parseFloat(inputAmount);
     if (numericAmount > assetSupply) {
-      inputAmount = assetSupply.toString();
+      inputAmount = truncateToSevenDecimals(assetSupply).toString();
     }
   
     let formattedAmount;
@@ -120,31 +125,42 @@ const WithdrawPopup = ({
   
 
   const updateAmountAndUsdValue = (inputAmount) => {
-    const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
-
+    // Remove commas and convert input to a float
+    const numeric = parseFloat(inputAmount);
+    const numericAmount = numeric.toString().replace(/,/g, "");
     if (!isNaN(numericAmount) && numericAmount >= 0) {
+      // Ensure the numeric amount does not exceed the asset supply
       if (numericAmount <= assetSupply) {
+        // Adjust the conversion rate to the correct decimal places
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = numericAmount * adjustedConversionRate;
-
-        setUsdValue(parseFloat(convertedValue.toFixed(2))); 
-        setAmount(formattedAmount); 
-        setError("");
+        // Calculate the USD value based on the numeric amount and conversion rate
+        const convertedValue = numericAmount * adjustedConversionRate;
+  
+        // Format the amount with commas for readability
+        const formattedAmount = numericAmount.toLocaleString(); // Adds commas for thousands
+  
+        // Set the USD value and the formatted amount
+        setUsdValue(parseFloat(convertedValue.toFixed(2)));
+        setAmount(formattedAmount);
+        setError(""); // Clear any existing error
       } else {
+        // Display error if the amount exceeds the supply balance
         setError("Amount exceeds the supply balance");
       }
     } else if (inputAmount === "") {
-      setAmount(""); 
+      // Clear fields when the input is empty
+      setAmount("");
       setError("");
     } else {
+      // Display error for invalid input
       setError("Amount must be a positive number");
     }
   };
-
+  
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = Number(amount.replace(/,/g, '')) * adjustedConversionRate;
+      const convertedValue = Number(amount.toString().replace(/,/g, '')) * adjustedConversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
@@ -162,7 +178,7 @@ const WithdrawPopup = ({
 
   const ledgerActors = useSelector((state) => state.ledger);
 
-  const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+  const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
 
   const scaledAmount = amountAsNat64; 
@@ -184,7 +200,7 @@ const WithdrawPopup = ({
     }
 
     try {
-      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
       const scaledAmount = amountAsNat64;
 
@@ -360,9 +376,9 @@ const WithdrawPopup = ({
 
   const handleMaxClick = () => {
     const truncateToSevenDecimals = (value) => {
-      const multiplier = Math.pow(10, 7); // To shift the decimal 7 places
+      const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
-      return truncated.toFixed(7); // Convert to string with exactly 7 decimals
+      return truncated.toFixed(8); // Convert to string with exactly 7 decimals
     };
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
@@ -371,8 +387,8 @@ const WithdrawPopup = ({
         ? Number(assetSupply).toFixed(7)
         : truncateToSevenDecimals(assetSupply)
       : "0";
-    const maxAmount = asset_supply.toString();
-    setAmount(maxAmount.toString());
+    const maxAmount = asset_supply;
+    setAmount(maxAmount);
     updateAmountAndUsdValue(maxAmount);
   };
   const formatValue = (value) => {
@@ -423,7 +439,7 @@ const WithdrawPopup = ({
                     }}
                   >
                     {}
-                    {assetSupply}{" "}
+                    {truncateToSevenDecimals(assetSupply)}{" "}
                     Max {}
                   </p>
                 </div>
@@ -439,7 +455,7 @@ const WithdrawPopup = ({
                 </div>
                 <div className="w-4/12 flex flex-col items-end">
                   <p className="text-xs mt-2">
-                    {(assetSupply - amount.replace(/,/g, "")).toLocaleString(
+                    {(assetSupply - amount.toString().replace(/,/g, "")).toLocaleString(
                       undefined,
                       {
                         minimumFractionDigits: 2,
@@ -577,7 +593,7 @@ const WithdrawPopup = ({
               <p className="mt-2">
                 Your Supply was{" "}
                 <strong>
-                  {assetSupply} {asset}{" "}
+                {truncateToSevenDecimals(assetSupply)} {asset}{" "}
                 </strong>{" "}
                 and you have withdrawn{" "}
                 <strong>

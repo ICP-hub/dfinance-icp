@@ -167,8 +167,8 @@ const MySupply = () => {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.dtokenBalance = formattedBalance;
+            const formattedBalance = Number(balance) / 100000000
+            assetBalance.dtokenBalance = balance;
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
           }
@@ -183,7 +183,7 @@ const MySupply = () => {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await debtTokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
-            assetBalance.debtTokenBalance = formattedBalance;
+            assetBalance.debtTokenBalance = balance;
           } catch (error) {
             console.error(
               `Error fetching debt token balance for ${asset}:`,
@@ -838,7 +838,7 @@ const MySupply = () => {
                       const assetSupply =
                         (Number(assetBalance) *
                           Number(getAssetSupplyValue(asset))) /
-                        Number(currentLiquidity);
+                        (Number(currentLiquidity)*1e8);
                       let usdValue = 0;
 
                       // Determine USD value based on asset type
@@ -936,11 +936,13 @@ const MySupply = () => {
                                   assetBalances.find(
                                     (balance) => balance.asset === asset
                                   )?.dtokenBalance || 0;
+console.log("asset balance",(Number(assetBalance) *
+Number(getAssetSupplyValue(asset))) /
+(Number(currentLiquidity)))
+                               const assetSupply =
+  (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / 
+  (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
 
-                                const assetSupply =
-                                  (Number(assetBalance) *
-                                    Number(getAssetSupplyValue(asset))) /
-                                  Number(currentLiquidity);
                                 const item = filteredItems.find(
                                   (item) => item[0] === asset
                                 );
@@ -1139,12 +1141,10 @@ const MySupply = () => {
                                                   balance.asset === item[0]
                                               )?.dtokenBalance || 0;
 
-                                            const assetSupply =
-                                              (Number(assetBalance) *
-                                                Number(
-                                                  getAssetSupplyValue(item[0])
-                                                )) /
-                                              Number(currentLiquidity);
+                                              const assetSupply =
+                                              (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / 
+                                              (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
+                                            
 
                                             const DebtIndex =
                                               userData?.Ok?.reserves[0]?.find(
@@ -1163,7 +1163,7 @@ const MySupply = () => {
                                                 Number(
                                                   getAssetBorrowValue(item[0])
                                                 )) /
-                                              Number(DebtIndex);
+                                              ((Number(DebtIndex)*1e8));
 
                                             const currentCollateralStatus =
                                               reserveData?.[1]?.is_collateral;
@@ -1233,11 +1233,9 @@ const MySupply = () => {
                                             )?.dtokenBalance || 0;
 
                                           const assetSupply =
-                                            (Number(assetBalance) *
-                                              Number(
-                                                getAssetSupplyValue(item[0])
-                                              )) /
-                                            Number(currentLiquidity);
+  (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / 
+  (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
+
 
                                           const DebtIndex =
                                             userData?.Ok?.reserves[0]?.find(
@@ -1256,7 +1254,7 @@ const MySupply = () => {
                                               Number(
                                                 getAssetBorrowValue(item[0])
                                               )) /
-                                            Number(DebtIndex);
+                                            (Number(DebtIndex)*1e8);
 
                                           const currentCollateralStatus =
                                             reserveData?.[1]?.is_collateral ??
@@ -1315,11 +1313,9 @@ const MySupply = () => {
                                             )?.dtokenBalance || 0;
 
                                           const assetSupply =
-                                            (Number(assetBalance) *
-                                              Number(
-                                                getAssetSupplyValue(item[0])
-                                              )) /
-                                            Number(currentLiquidity);
+  (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / 
+  (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
+
 
                                           const DebtIndex =
                                             userData?.Ok?.reserves[0]?.find(
@@ -1338,7 +1334,7 @@ const MySupply = () => {
                                               Number(
                                                 getAssetBorrowValue(item[0])
                                               )) /
-                                            Number(DebtIndex);
+                                            (Number(DebtIndex)*1e8);
 
                                           const currentCollateralStatus =
                                             reserveData?.[1]?.is_collateral ??
@@ -1474,10 +1470,10 @@ const MySupply = () => {
                                     (balance) => balance.asset === asset
                                   )?.dtokenBalance || 0;
 
-                                const assetSupply =
-                                  (Number(assetBalance) *
-                                    Number(getAssetSupplyValue(asset))) /
-                                  Number(currentLiquidity);
+                               const assetSupply =
+  (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / 
+  (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
+
                                 const item = filteredItems.find(
                                   (item) => item[0] === asset
                                 );
@@ -1647,9 +1643,25 @@ const MySupply = () => {
                                               Number(
                                                 getAssetSupplyValue(asset)
                                               )) /
-                                            Number(currentLiquidity);
+                                            (Number(currentLiquidity)*1e8);
+                                            const DebtIndex =
+                                            userData?.Ok?.reserves[0]?.find(
+                                              (reserveGroup) =>
+                                                reserveGroup[0] === asset // Check if the asset matches
+                                            )?.[1]?.variable_borrow_index;
+
+                                          const assetBorrowBalance =
+                                            assetBalances.find(
+                                              (balance) =>
+                                                balance.asset === asset
+                                            )?.debtTokenBalance || 0;
+
                                           const assetBorrow =
-                                            getAssetBorrowValue(asset);
+                                            (Number(assetBorrowBalance) *
+                                              Number(
+                                                getAssetBorrowValue(asset)
+                                              )) /
+                                            (Number(DebtIndex)*1e8);
                                           const currentCollateralStatus =
                                             reserveData?.[1]?.is_collateral;
                                           const totalCollateral =
@@ -1718,9 +1730,25 @@ const MySupply = () => {
                                               Number(
                                                 getAssetSupplyValue(asset)
                                               )) /
-                                            Number(currentLiquidity);
+                                            (Number(currentLiquidity)*1e8);
+                                            const DebtIndex =
+                                            userData?.Ok?.reserves[0]?.find(
+                                              (reserveGroup) =>
+                                                reserveGroup[0] === asset // Check if the asset matches
+                                            )?.[1]?.variable_borrow_index;
+
+                                          const assetBorrowBalance =
+                                            assetBalances.find(
+                                              (balance) =>
+                                                balance.asset === asset
+                                            )?.debtTokenBalance || 0;
+
                                           const assetBorrow =
-                                            getAssetBorrowValue(asset);
+                                            (Number(assetBorrowBalance) *
+                                              Number(
+                                                getAssetBorrowValue(asset)
+                                              )) /
+                                            (Number(DebtIndex)*1e8);
                                           const totalCollateral =
                                             parseFloat(
                                               Number(userAccountData?.Ok?.[0]) /
@@ -1782,9 +1810,25 @@ const MySupply = () => {
                                               Number(
                                                 getAssetSupplyValue(asset)
                                               )) /
-                                            Number(currentLiquidity);
+                                            (Number(currentLiquidity)*1e8);
+                                            const DebtIndex =
+                                            userData?.Ok?.reserves[0]?.find(
+                                              (reserveGroup) =>
+                                                reserveGroup[0] === asset // Check if the asset matches
+                                            )?.[1]?.variable_borrow_index;
+
+                                          const assetBorrowBalance =
+                                            assetBalances.find(
+                                              (balance) =>
+                                                balance.asset === asset
+                                            )?.debtTokenBalance || 0;
+
                                           const assetBorrow =
-                                            getAssetBorrowValue(asset);
+                                            (Number(assetBorrowBalance) *
+                                              Number(
+                                                getAssetBorrowValue(asset)
+                                              )) /
+                                            (Number(DebtIndex)*1e8);
                                           const currentCollateralStatus =
                                             reserveData?.[1]?.is_collateral ??
                                             true;
@@ -2161,12 +2205,41 @@ const MySupply = () => {
                                           (reserveGroup) =>
                                             reserveGroup[0] === item[0]
                                         );
-                                      const assetSupply = getAssetSupplyValue(
-                                        item[0]
-                                      );
-                                      const assetBorrow = getAssetBorrowValue(
-                                        item[0]
-                                      );
+                                        const currentLiquidity =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0] // Check if the asset matches
+                                        )?.[1]?.liquidity_index;
+                                      const assetBalance =
+                                        assetBalances.find(
+                                          (balance) =>
+                                            balance.asset === item[0]
+                                        )?.dtokenBalance || 0;
+                                      const assetSupply =
+                                        (Number(assetBalance) *
+                                          Number(
+                                            getAssetSupplyValue(item[0])
+                                          )) /
+                                        (Number(currentLiquidity)*1e8);
+                                     
+                                        const DebtIndex =
+                                        userData?.Ok?.reserves[0]?.find(
+                                          (reserveGroup) =>
+                                            reserveGroup[0] === item[0] // Check if the asset matches
+                                        )?.[1]?.variable_borrow_index;
+
+                                      const assetBorrowBalance =
+                                        assetBalances.find(
+                                          (balance) =>
+                                            balance.asset === item[0]
+                                        )?.debtTokenBalance || 0;
+
+                                      const assetBorrow =
+                                        (Number(assetBorrowBalance) *
+                                          Number(
+                                            getAssetBorrowValue(item[0])
+                                          )) /
+                                        (Number(DebtIndex)*1e8);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral ?? true;
                                       const totalCollateral =
@@ -2511,12 +2584,42 @@ const MySupply = () => {
                                               reserveGroup[0] === item[0]
                                           );
 
-                                        const assetSupply = getAssetSupplyValue(
-                                          item[0]
-                                        );
-                                        const assetBorrow = getAssetBorrowValue(
-                                          item[0]
-                                        );
+                                          const currentLiquidity =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] ===item[0] // Check if the asset matches
+                                          )?.[1]?.liquidity_index;
+                                        const assetBalance =
+                                          assetBalances.find(
+                                            (balance) =>
+                                              balance.asset === item[0]
+                                          )?.dtokenBalance || 0;
+
+                                        const assetSupply =
+                                          (Number(assetBalance) *
+                                            Number(
+                                              getAssetSupplyValue(item[0])
+                                            )) /
+                                          Number(currentLiquidity);
+                                       
+                                          const DebtIndex =
+                                          userData?.Ok?.reserves[0]?.find(
+                                            (reserveGroup) =>
+                                              reserveGroup[0] === item[0] // Check if the asset matches
+                                          )?.[1]?.variable_borrow_index;
+
+                                        const assetBorrowBalance =
+                                          assetBalances.find(
+                                            (balance) =>
+                                              balance.asset === item[0]
+                                          )?.debtTokenBalance || 0;
+
+                                        const assetBorrow =
+                                          (Number(assetBorrowBalance) *
+                                            Number(
+                                              getAssetBorrowValue(item[0])
+                                            )) /
+                                          (Number(DebtIndex)*1e8);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral ??
                                           true;
@@ -2622,7 +2725,7 @@ const MySupply = () => {
                       const assetBorrow =
                         (Number(assetBorrowBalance) *
                           Number(getAssetBorrowValue(asset))) /
-                        Number(DebtIndex);
+                        (Number(DebtIndex)*1e8);
 
                       let usdValue = 0;
 
@@ -2740,12 +2843,12 @@ const MySupply = () => {
                                   const assetSupply =
                                     (Number(assetBalance) *
                                       Number(getAssetSupplyValue(asset))) /
-                                    Number(currentLiquidity);
+                                    (Number(currentLiquidity)*1e8);
 
                                   const assetBorrow =
                                     (Number(assetBorrowBalance) *
                                       Number(getAssetBorrowValue(asset))) /
-                                    Number(DebtIndex);
+                                    (Number(DebtIndex)*1e8);
 
                                   const item = filteredItems.find(
                                     (item) => item[0] === asset
@@ -3256,12 +3359,12 @@ const MySupply = () => {
                               const assetSupply =
                                 (Number(assetBalance) *
                                   Number(getAssetSupplyValue(asset))) /
-                                Number(currentLiquidity);
+                                (Number(currentLiquidity)*1e8);
 
                               const assetBorrow =
                                 (Number(assetBorrowBalance) *
                                   Number(getAssetBorrowValue(asset))) /
-                                Number(DebtIndex);
+                                (Number(DebtIndex)*1e8);
                               const assetData = item[1].Ok;
                               const total_supply =
                                 Number(assetData?.asset_supply || 0) /
@@ -4166,7 +4269,7 @@ const MySupply = () => {
                                           Number(
                                             getAssetSupplyValue(item[0])
                                           )) /
-                                        Number(currentLiquidity);
+                                        (Number(currentLiquidity)*1e8);
 
                                       const DebtIndex =
                                         userData?.Ok?.reserves[0]?.find(
@@ -4184,7 +4287,7 @@ const MySupply = () => {
                                           Number(
                                             getAssetBorrowValue(item[0])
                                           )) /
-                                        Number(DebtIndex);
+                                        (Number(DebtIndex)*1e8);
 
                                       const totalCollateral =
                                         parseFloat(
@@ -4870,7 +4973,7 @@ const MySupply = () => {
                                             Number(
                                               getAssetSupplyValue(item[0])
                                             )) /
-                                          Number(currentLiquidity);
+                                          (Number(currentLiquidity)*1e8);
 
                                         const DebtIndex =
                                           userData?.Ok?.reserves[0]?.find(
@@ -4889,7 +4992,7 @@ const MySupply = () => {
                                             Number(
                                               getAssetBorrowValue(item[0])
                                             )) /
-                                          Number(DebtIndex);
+                                          (Number(DebtIndex)*1e8);
 
                                         const totalCollateral =
                                           parseFloat(

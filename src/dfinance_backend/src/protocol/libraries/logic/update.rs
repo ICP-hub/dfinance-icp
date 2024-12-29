@@ -320,24 +320,21 @@ impl UpdateLogic {
                 reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
             }
 
-            if reserve_data.asset_supply == Nat::from(0u128) {
-                reserve_data.is_collateral = true;
-            }
         } else {
             ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
             return Err(Error::NoReserveDataFound);
         }
 
-        // let dtoken_balance = get_balance(
-        //     Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
-        //     user_principal,
-        // )
-        // .await?;
-//     if params.is_collateral && dtoken_balance == Nat::from(0u128) {
-//         if let Some((_, reserve_data)) = user_reserve {
-//         reserve_data.is_collateral = !params.is_collateral;
-//     }
-//   }
+        let dtoken_balance = get_balance(
+            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            user_principal,
+        )
+        .await?;
+    if params.is_collateral==false && dtoken_balance == Nat::from(0u128) {
+        if let Some((_, reserve_data)) = user_reserve {
+        reserve_data.is_collateral = true;
+    }
+  }
         // if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
         //     if let Some(ref mut reserves) = user_data.reserves {
         //         reserves.retain(|(name, _)| name != &params.asset);

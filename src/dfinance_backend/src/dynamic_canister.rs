@@ -7,6 +7,7 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES, MAX_MEMO_LENGTH, MAX_MESSAGE_SIZE_BYTES, MAX_NUMBER_OF_ACCOUNTS, MAX_TRANSACTIONS_PER_RESPONSE, NODE_MAX_MEMORY_SIZE_BYTES, NUM_BLOCKS_TO_ARCHIVE, TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY, TEST_CYCLES_FOR_ARCHIVE_CREATION, TEST_DECIMALS, TEST_DEFAULT_CYCLES, TEST_MAX_MEMO_LENGTH, TEST_MAX_MESSAGE_SIZE_BYTES, TEST_MAX_NUMBER_OF_ACCOUNTS, TEST_MAX_TRANSACTIONS_PER_RESPONSE, TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE, TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD};
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
+use ic_cdk_macros::update;
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct InitArgs {
@@ -67,9 +68,10 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
     ))
 }
 
+#[update]
 pub async fn create_token_canister(
-    token_name: &str,
-    token_symbol: &str,
+    token_name: String,
+    token_symbol: String,
 ) -> Result<Principal, Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
@@ -168,7 +170,8 @@ pub async fn create_token_canister(
     Ok(canister_id)
 }
 
-pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> Result<Principal,Error> {
+#[update]
+pub async fn create_testtoken_canister(token_name: String, token_symbol: String) -> Result<Principal,Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,

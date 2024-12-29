@@ -24,6 +24,7 @@ type Error = variant {
   ErrorMintTokens;
   BorrowingNotEnabled;
   InvalidPrincipal;
+  ErrorNotController;
   NoReserveDataFound;
   LowWalletBalance;
   InvalidBurnAmount;
@@ -114,7 +115,7 @@ type Result = variant { Ok : principal; Err : Error };
 type Result_1 = variant { Ok : nat; Err : Error };
 type Result_10 = variant { Ok : record { nat; nat }; Err : Error };
 type Result_2 = variant { Ok : PriceCache; Err : Error };
-type Result_3 = variant { Ok : InitArgs; Err : text };
+type Result_3 = variant { Ok : InitArgs; Err : Error };
 type Result_4 = variant { Ok : record { nat; nat64 }; Err : Error };
 type Result_5 = variant { Ok : ReserveData; Err : Error };
 type Result_6 = variant {
@@ -166,6 +167,7 @@ service : (principal) -> {
   get_total_supply : (principal) -> (Result_1) query;
   get_user_account_data : (opt principal) -> (Result_6);
   get_user_data : (principal) -> (Result_7) query;
+  initialize : (text, ReserveData) -> (Result_8);
   initialize_canister : () -> (Result_8);
   initialize_reserve : () -> (Result_8);
   queary_reserve_price : () -> (vec PriceCache) query;

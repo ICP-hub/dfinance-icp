@@ -12,12 +12,51 @@ use super::interest_variables::constants::{
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveConfiguration, ReserveData};
+use crate::declarations::storable::Candid;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use candid::{Nat, Principal};
 use ic_cdk::api::time;
 use ic_cdk::update;
 use std::collections::HashMap;
+
+#[update]
+pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
+    let token_canister_id = match create_testtoken_canister(token_name.clone(), token_name.clone()).await {
+        Ok(principal) => principal,
+        Err(e) => return Err(e),
+    };
+    let d_token_name = format!("d{}", token_name.clone()); 
+    let debt_token_name = format!("debt{}", token_name.clone()); 
+
+    // Modify the reserve_data here
+    reserve_data.asset_name = Some(token_name.clone());
+    reserve_data.d_token_canister = match create_token_canister(d_token_name.clone(), d_token_name).await {
+        Ok(principal) => Some(principal.to_string()),
+        Err(e) => return Err(e),
+    };
+    reserve_data.debt_token_canister = match create_token_canister(debt_token_name.clone(), debt_token_name).await {
+        Ok(principal) => Some(principal.to_string()),
+        Err(e) => return Err(e),
+    };
+
+    mutate_state(|state| {
+        state.reserve_list.insert(token_name.clone(), token_canister_id);
+        let reserve_data_e = &mut state.asset_index;
+
+        reserve_data_e.insert(token_name.clone(), Candid(reserve_data));
+        ic_cdk::println!("Reserve for {} initialized successfully", token_name);
+    });
+
+    Ok(())
+}
 
 #[update]
 pub async fn initialize_canister() -> Result<(), Error> {
@@ -53,7 +92,7 @@ pub async fn initialize_canister() -> Result<(), Error> {
     for (name, symbol, is_testtoken) in tokens {
         let principal = if is_testtoken {
            
-            let principal =  create_testtoken_canister(name, symbol).await;
+            let principal =  create_testtoken_canister(name.to_string(), symbol.to_string()).await;
             let testtoken_canister_principal = match principal {
                 Ok(principal) => principal,
                 Err(e) => {
@@ -62,7 +101,7 @@ pub async fn initialize_canister() -> Result<(), Error> {
             };
             testtoken_canister_principal
         } else {
-            let principal = create_token_canister(name, symbol).await;
+            let principal = create_token_canister(name.to_string(), symbol.to_string()).await;
             let token_canister_principal = match principal {
                 Ok(principal) => principal,
                 Err(e) => {
@@ -98,7 +137,7 @@ pub async fn query_token_type_id(asset: String) -> Option<Principal> {
 pub async fn get_asset_data() -> HashMap<&'static str, (Principal, ReserveData)> {
     let mut assets = HashMap::new();
 
-    assets.insert(
+    assets.insert( 
         "ckBTC",
         (
             query_token_type_id("ckBTC".to_string()).await.unwrap(),

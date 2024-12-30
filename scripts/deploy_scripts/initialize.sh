@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set the default identity
+echo "Switching to 'default' identity..."
+dfx identity use default
 # Set the deployer identity 
 # echo "Switching to 'deployer' identity..."
 # dfx identity use deployer

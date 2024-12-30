@@ -40,7 +40,7 @@ const WalletDetails = () => {
     isSwitchingWallet,
     connectedWallet,
   } = useSelector((state) => state.utility);
-  const { isAuthenticated, login, logout, principal, createLedgerActor } =
+  const { isAuthenticated, principal} =
     useAuth();
   const {
     totalMarketSize,
@@ -317,7 +317,7 @@ const WalletDetails = () => {
       )}
 
       <div className="w-full mt-6">
-      {loading ? (
+      {loading &&isAuthenticated? (
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center ">
             <MiniLoader isLoading={true} />
           </div>
@@ -345,7 +345,7 @@ const WalletDetails = () => {
                         <div
                           className={`flex ${
                             index === 0
-                              ? "justify-start sxs3:pl-2 md:pl-0"
+                              ? "justify-start sxs3:pl-2 md:pl-2"
                               : "justify-center"
                           }`}
                         >
@@ -379,13 +379,13 @@ const WalletDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] dark:hover:bg-[#8782d8] rounded-lg  ${
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${
                         index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""
                       }`}
                     >
-                      <td className=" align-center py-6 sxs3:pl-2 md:pl-0">
+                      <td className=" align-center py-6 sxs3:pl-2 md:pl-2">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
                           {item[0] === "ckBTC" && (
                             <img

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef ,useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { TAB_CARD_DATA } from "../../utils/constants";
 import { useSelector } from "react-redux";
@@ -7,7 +7,10 @@ import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
+import { Principal } from "@dfinity/principal";
 import useAssetData from "../Common/useAssets";
+import { idlFactory } from "../../../../declarations/dtoken";
+import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { useCallback } from "react";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
@@ -21,8 +24,9 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
 
 const DashboardNav = () => {
-  const { isAuthenticated } = useAuth();
 
+   const {isAuthenticated, principal, fetchReserveData, createLedgerActor, user } = useAuth();
+const [assetBalances, setAssetBalances] = useState([]);
   const [netWorth, setNetWorth] = useState();
 
   const totalUsdValueBorrow = useSelector(
@@ -38,7 +42,10 @@ const DashboardNav = () => {
     const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
     setNetWorth(calculatedNetWorth);
   }, [totalUsdValueBorrow, totalUsdValueSupply]);
-
+const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
   const {
     assets,
     totalMarketSize,
@@ -50,6 +57,62 @@ const DashboardNav = () => {
     fetchAssetSupply,
     reserveData,
   } = useAssetData();
+
+  const fetchAssetData = async () => {
+    const balances = [];
+
+    for (const asset of assets) {
+      const reserveDataForAsset = await fetchReserveData(asset);
+      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+
+      const assetBalance = {
+        asset,
+        dtokenBalance: null,
+        debtTokenBalance: null,
+      };
+
+      if (dtokenId) {
+        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+        if (dtokenActor) {
+          try {
+            const account = { owner: principalObj, subaccount: [] };
+            const balance = await dtokenActor.icrc1_balance_of(account);
+            const formattedBalance = Number(balance) / 100000000;
+            assetBalance.dtokenBalance = formattedBalance;
+          } catch (error) {
+            console.error(`Error fetching dtoken balance for ${asset}:`, error);
+          }
+        }
+      }
+
+      if (debtTokenId) {
+        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+
+        if (debtTokenActor) {
+          try {
+            const account = { owner: principalObj, subaccount: [] };
+            const balance = await debtTokenActor.icrc1_balance_of(account);
+            const formattedBalance = Number(balance) / 100000000;
+            assetBalance.debtTokenBalance = formattedBalance;
+          } catch (error) {
+            console.error(`Error fetching debt token balance for ${asset}:`, error);
+          }
+        }
+      }
+
+      balances.push(assetBalance);
+    }
+
+    setAssetBalances(balances);
+  };
+
+  useEffect(() => {
+    fetchAssetData();
+  }, [assets, principalObj]);
+
+  useEffect(() => {
+  }, [assetBalances]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,14 +131,14 @@ const DashboardNav = () => {
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      const supplyValue = Number(asset_supply[asset]);
       return supplyValue;
     }
     return `noSupply`;
   };
   const getAssetBorrowValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      const borrowValue = Number(asset_borrow[asset]);
       return borrowValue;
     }
     return `noBorrow`;
@@ -139,12 +202,13 @@ const DashboardNav = () => {
       if (item.id === 0) {
         return {
           ...item,
-          count: calculatedNetWorth
-            ? `$${formatNumber(calculatedNetWorth)}`
+          count: calculatedNetWorth && calculatedNetWorth < 0.01
+            ? "<0.01"  
+            : calculatedNetWorth
+            ? `$${formatNumber(calculatedNetWorth)}`  
             : "-",
         };
-      } else if (item.id === 2) {
-        
+      }else if (item.id === 2) {
         const healthValue = !userAccountData?.Ok?.[4]
           ? "-"
           : Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
@@ -168,11 +232,12 @@ const DashboardNav = () => {
       if (item.id === 1) {
         return {
           ...item,
-          count: netApy !== 0
-            ? netApy < 0.01
-              ? "<0.01%"
-              : `${netApy.toFixed(4)}%`
-            : "-",
+          count:
+            netApy !== 0
+              ? netApy < 0.01
+                ? "<0.01%"
+                : `${netApy.toFixed(4)}%`
+              : "-",
         };
       }
 
@@ -201,7 +266,6 @@ const DashboardNav = () => {
   }, [netApy]);
 
   const [error, setError] = useState(null);
-
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -244,33 +308,51 @@ const DashboardNav = () => {
       reserves.forEach((reserve) => {
         const assetKey = reserve[0];
 
-        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok)
-          return;
+        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok) return;
 
         const conversionRate = getConversionRate(assetKey);
-        const supplyApy =
-          Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) /
-          100000000;
-        const debtApy =
-          Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
 
-        const assetSupply = getAssetSupplyValue(assetKey);
-        const assetBorrowed = getAssetBorrowValue(assetKey);
+        const supplyApy = Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) / 100000000;
+
+        const debtApy = Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
+
+        const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+          (reserveGroup) => reserveGroup[0] === assetKey
+        )?.[1]?.liquidity_index;
+
+        const assetBalance = assetBalances?.find((balance) => balance.asset === assetKey)?.dtokenBalance || 0;
+
+        const assetSupply = (Number(assetBalance) * Number(getAssetSupplyValue(assetKey))) / Number(currentLiquidity) || 0;
+
+        const DebtIndex = userData?.Ok?.reserves[0]?.find(
+          (reserveGroup) => reserveGroup[0] === assetKey
+        )?.[1]?.variable_borrow_index;
+
+        const assetBorrowBalance = assetBalances.find((balance) => balance.asset === assetKey)?.debtTokenBalance || 0;
+
+        const assetBorrowed = (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetKey))) / Number(DebtIndex) || 0;
+
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
-        totalBorrowedInUSD = assetBorrowedInUSD;
-        weightedDebtApySum = assetBorrowedInUSD * debtApy;
+
+        totalBorrowedInUSD += assetBorrowedInUSD; 
+
+        weightedDebtApySum += assetBorrowedInUSD * debtApy; 
 
         const assetSupplyInUSD = assetSupply * conversionRate;
-        totalSuppliedInUSD = assetSupplyInUSD;
-        weightedApySum = assetSupplyInUSD * supplyApy;
-        numerator = numerator + weightedApySum - weightedDebtApySum;
-        denominator = denominator + totalSuppliedInUSD;
+
+        totalSuppliedInUSD += assetSupplyInUSD; 
+
+        weightedApySum += assetSupplyInUSD * supplyApy; 
+
+        numerator += weightedApySum - weightedDebtApySum;
+        denominator += totalSuppliedInUSD;
       });
 
       return denominator > 0 ? numerator / denominator : 0;
     },
-    [reserveData]
+    [reserveData, assetBalances]
   );
+
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
@@ -286,13 +368,24 @@ const DashboardNav = () => {
           const asset = reserveGroup[0];
           const reserve = reserveGroup[1];
 
-          const supply = getAssetSupplyValue(asset);
+          const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+            (reserveGroup) => reserveGroup[0] === asset
+          )?.[1]?.liquidity_index;
 
+          const assetBalance = assetBalances?.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
+
+          const supply = (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / Number(currentLiquidity) || 0;
           if (supply > 0) {
             setAssetSupply(supply);
           }
 
-          const borrow = getAssetBorrowValue(asset);
+          const DebtIndex = userData?.Ok?.reserves[0]?.find(
+            (reserveGroup) => reserveGroup[0] === asset
+          )?.[1]?.variable_borrow_index;
+
+          const assetBorrowBalance = assetBalances.find((balance) => balance.asset === asset)?.debtTokenBalance || 0;
+
+          const borrow = (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) / Number(DebtIndex) || 0;
 
           if (borrow > 0) {
             setAssetBorrow(borrow);
@@ -302,7 +395,7 @@ const DashboardNav = () => {
 
       updateState();
     }
-  }, [userData, reserveData, calculateNetSupplyApy]);
+  }, [userData, reserveData, calculateNetSupplyApy,assetBalances]);
 
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
@@ -606,7 +699,7 @@ const DashboardNav = () => {
                             <span
                               className={`font-bold text-[20px] ${
                                 data.title === "Health Factor"
-                                  ? data.count === 0 
+                                  ? data.count === 0
                                     ? "text-red-500"
                                     : data.count > 3
                                     ? "text-green-500"

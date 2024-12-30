@@ -31,7 +31,8 @@ const WithdrawPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  const { createLedgerActor, backendActor, principal } = useAuth();
+  console.log("assetSupply,assetBorrow");
+  const {  backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -71,65 +72,95 @@ const WithdrawPopup = ({
       onLoadingChange(isLoading);
     }
   }, [isLoading, onLoadingChange]);
-
+  const truncateToSevenDecimals = (value) => {
+    const multiplier = Math.pow(10, 7); // To shift the decimal 7 places
+    const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
+    return truncated.toFixed(7); // Convert to string with exactly 7 decimals
+  };
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value.replace(/,/g, ""); 
-
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-      if (decimalPart.length > 8) {
-        inputAmount = `${integerPart}.${decimalPart.slice(0, 8)}`; 
-      }
+    let inputAmount = e.target.value;
+  
+    // If the input is cleared, reset it to an empty string
+    if (inputAmount === "") {
+      setAmount(""); // Set the amount state to empty
+      updateAmountAndUsdValue(""); // Ensure that the raw value is also empty
+      return; // Exit early if the input is cleared
     }
-
+  
+    // Remove any characters that are not digits or a single decimal point
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    // Ensure only one decimal point can be used
+    if (inputAmount.indexOf('.') !== inputAmount.lastIndexOf('.')) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf('.'));
+    }
+  
+    // If inputAmount is empty or NaN, reset to an empty string
+    if (inputAmount === "" || isNaN(inputAmount)) {
+      inputAmount = "";
+    }
+  
+    // Prevent the amount from exceeding the asset supply
     const numericAmount = parseFloat(inputAmount);
-
     if (numericAmount > assetSupply) {
-      inputAmount = assetSupply.toString(); 
+      inputAmount = truncateToSevenDecimals(assetSupply).toString();
     }
-
+  
     let formattedAmount;
     if (inputAmount.includes(".")) {
+      // Split integer and decimal parts
       const [integerPart, decimalPart] = inputAmount.split(".");
-
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      // Format integer part with commas
+      formattedAmount = `${parseInt(integerPart).toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-
+      // Format integer part with commas (if no decimal point)
       formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
     }
-
+  
+    // Update the state with the formatted amount and pass the raw value to update the amount and USD value
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
+  
 
   const updateAmountAndUsdValue = (inputAmount) => {
-    const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
-
+    // Remove commas and convert input to a float
+    const numeric = parseFloat(inputAmount);
+    const numericAmount = numeric.toString().replace(/,/g, "");
     if (!isNaN(numericAmount) && numericAmount >= 0) {
+      // Ensure the numeric amount does not exceed the asset supply
       if (numericAmount <= assetSupply) {
+        // Adjust the conversion rate to the correct decimal places
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = numericAmount * adjustedConversionRate;
-
-        setUsdValue(parseFloat(convertedValue.toFixed(2))); 
-        setAmount(formattedAmount); 
-        setError("");
+        // Calculate the USD value based on the numeric amount and conversion rate
+        const convertedValue = numericAmount * adjustedConversionRate;
+  
+        // Format the amount with commas for readability
+        const formattedAmount = numericAmount.toLocaleString(); // Adds commas for thousands
+  
+        // Set the USD value and the formatted amount
+        setUsdValue(parseFloat(convertedValue.toFixed(2)));
+        setAmount(formattedAmount);
+        setError(""); // Clear any existing error
       } else {
+        // Display error if the amount exceeds the supply balance
         setError("Amount exceeds the supply balance");
       }
     } else if (inputAmount === "") {
-      setAmount(""); 
+      // Clear fields when the input is empty
+      setAmount("");
       setError("");
     } else {
+      // Display error for invalid input
       setError("Amount must be a positive number");
     }
   };
-
+  
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = Number(amount.replace(/,/g, '')) * adjustedConversionRate;
+      const convertedValue = Number(amount.toString().replace(/,/g, '')) * adjustedConversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
@@ -147,7 +178,7 @@ const WithdrawPopup = ({
 
   const ledgerActors = useSelector((state) => state.ledger);
 
-  const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+  const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
 
   const scaledAmount = amountAsNat64; 
@@ -169,7 +200,7 @@ const WithdrawPopup = ({
     }
 
     try {
-      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
       const scaledAmount = amountAsNat64;
 
@@ -222,7 +253,7 @@ const WithdrawPopup = ({
         setIsVisible(false);
       } else if ("Err" in withdrawResult) {
         const errorMsg = withdrawResult.Err;
-        console.log("error",errorMsg)
+        console.error("error",errorMsg)
         toast.error(`Withdraw failed: ${errorMsg}`, {
           className: "custom-toast",
           position: "top-center",
@@ -278,14 +309,11 @@ const WithdrawPopup = ({
     const totalCollateralValue =
       parseFloat(totalCollateral) - parseFloat(amountTaken);
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
-    console.log("totalCollateral",totalCollateral,"amountTaken", amountTaken, "totalCollateralValue", totalCollateralValue, "totalDeptValue", totalDeptValue)
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    console.log("ltv", ltv, "healthFactor", healthFactor)
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
-    console.log("liquidationThreshold", liquidationThreshold, "ltv", ltv)
     if (ltv * 100 >= liquidationThreshold && currentCollateralStatus) {
 
       toast.dismiss(); 
@@ -347,15 +375,20 @@ const WithdrawPopup = ({
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleMaxClick = () => {
+    const truncateToSevenDecimals = (value) => {
+      const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
+      const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
+      return truncated.toFixed(8); // Convert to string with exactly 7 decimals
+    };
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
         ? Number(assetSupply).toFixed(8)
         : assetSupply >= 1e-7 && assetSupply < 1e-6
         ? Number(assetSupply).toFixed(7)
-        : assetSupply
+        : truncateToSevenDecimals(assetSupply)
       : "0";
-    const maxAmount = asset_supply.toString();
-    setAmount(maxAmount.toString());
+    const maxAmount = asset_supply;
+    setAmount(maxAmount);
     updateAmountAndUsdValue(maxAmount);
   };
   const formatValue = (value) => {
@@ -406,7 +439,7 @@ const WithdrawPopup = ({
                     }}
                   >
                     {}
-                    {formatValue(assetSupply)}{" "}
+                    {truncateToSevenDecimals(assetSupply)}{" "}
                     Max {}
                   </p>
                 </div>
@@ -422,7 +455,7 @@ const WithdrawPopup = ({
                 </div>
                 <div className="w-4/12 flex flex-col items-end">
                   <p className="text-xs mt-2">
-                    {(assetSupply - amount.replace(/,/g, "")).toLocaleString(
+                    {(assetSupply - amount.toString().replace(/,/g, "")).toLocaleString(
                       undefined,
                       {
                         minimumFractionDigits: 2,
@@ -560,7 +593,7 @@ const WithdrawPopup = ({
               <p className="mt-2">
                 Your Supply was{" "}
                 <strong>
-                  {assetSupply} {asset}{" "}
+                {truncateToSevenDecimals(assetSupply)} {asset}{" "}
                 </strong>{" "}
                 and you have withdrawn{" "}
                 <strong>

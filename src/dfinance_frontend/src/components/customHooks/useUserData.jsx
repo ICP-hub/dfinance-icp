@@ -16,7 +16,6 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
-      console.log("user in useUserData", user)
       return result;
     } catch (error) {
       setError(error.message);
@@ -40,7 +39,6 @@ const useUserData = () => {
     
   if (backendActor&& isAuthenticated) {
     try {
-      console.log("principal in user account data = ", principal);
 
       // Ensure principal is a string before converting
       if (!principal || typeof principal !== 'string') {
@@ -54,7 +52,6 @@ const useUserData = () => {
       // Pass the Principal object directly to the backend
       const result = await backendActor.get_user_account_data([]);
 
-      console.log("result get user account data = ", result);
 
       // Handle pending state
       if (result?.Err === "ERROR :: Pending") {

@@ -14,6 +14,8 @@ import { useEffect, useState } from "react";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import { WalletMinimal } from "lucide-react";
 import { Info } from "lucide-react";
+import { idlFactory } from "../../../../declarations/dtoken";
+import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 
 import icplogo from "../../../public/wallet/icp.png";
 import bifinity from "../../../public/wallet/bifinity.png";
@@ -34,7 +36,17 @@ import useUserData from "../customHooks/useUserData";
 import WalletModal from "./WalletModal";
 
 const AssetDetails = () => {
-  const { isAuthenticated, principal, backendActor } = useAuth();
+  const {
+    assets,
+    filteredItems,
+    asset_supply,
+    asset_borrow,
+    fetchAssetBorrow,
+    fetchAssetSupply,
+  } = useAssetData();
+
+  const { isAuthenticated, principal, backendActor, fetchReserveData } =
+    useAuth();
 
   const location = useLocation();
   const { assetData } = location.state || {};
@@ -43,6 +55,7 @@ const AssetDetails = () => {
   const [supplyRateAPR, setSupplyRateAPR] = useState(null);
   const [totalBorrowed, setTotalBorrowed] = useState(null);
   const [totalSupplied, setTotalSupplied] = useState(null);
+  const [assetBalances, setAssetBalances] = useState([]);
   const [borrowCap, setBorrowCap] = useState(null);
   const [supplyCap, setSupplyCap] = useState(null);
   const [ltv, setLtv] = useState(null);
@@ -50,6 +63,67 @@ const AssetDetails = () => {
   const [liquidationThreshold, setLiquidationThreshold] = useState(null);
   const [canBeCollateral, setCanBeCollateral] = useState(null);
   const { userData, userAccountData } = useUserData();
+
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
+
+  const fetchAssetData = async () => {
+    const balances = [];
+
+    for (const asset of assets) {
+      const reserveDataForAsset = await fetchReserveData(asset);
+      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+
+
+      const assetBalance = {
+        asset,
+        dtokenBalance: null,
+        debtTokenBalance: null,
+      };
+
+      if (dtokenId) {
+        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+        if (dtokenActor) {
+          try {
+            const account = { owner: principalObj, subaccount: [] };
+            const balance = await dtokenActor.icrc1_balance_of(account);
+            const formattedBalance = Number(balance) / 100000000;
+            assetBalance.dtokenBalance = formattedBalance;
+          } catch (error) {
+            console.error(`Error fetching dtoken balance for ${asset}:`, error);
+          }
+        }
+      }
+
+      if (debtTokenId) {
+        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+
+        if (debtTokenActor) {
+          try {
+            const account = { owner: principalObj, subaccount: [] };
+            const balance = await debtTokenActor.icrc1_balance_of(account);
+            const formattedBalance = Number(balance) / 100000000;
+            assetBalance.debtTokenBalance = formattedBalance;
+          } catch (error) {
+            console.error(
+              `Error fetching debt token balance for ${asset}:`,
+              error
+            );
+          }
+        }
+      }
+      balances.push(assetBalance);
+    }
+    setAssetBalances(balances);
+  };
+
+  useEffect(() => {
+    fetchAssetData();
+  }, [assets, principalObj]);
+
   useEffect(() => {
     if (userData && userAccountData) {
       setLoading(false);
@@ -107,14 +181,6 @@ const AssetDetails = () => {
   };
 
   const { id } = useParams();
-  const {
-    assets,
-    filteredItems,
-    asset_supply,
-    asset_borrow,
-    fetchAssetBorrow,
-    fetchAssetSupply,
-  } = useAssetData();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,7 +193,6 @@ const AssetDetails = () => {
     fetchData();
   }, [assets]);
 
-  
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]) / 1e8;
@@ -606,9 +671,6 @@ const AssetDetails = () => {
                   <p className=" text-[12px] my-1 text-darkTextSecondary1">
                     Assets to Supply
                   </p>
-                  <span>
-                    <Info size={13} color="lightblue" />
-                  </span>
                 </div>
                 <div className="flex">
                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 ">
@@ -731,19 +793,45 @@ const AssetDetails = () => {
                     <Button
                       title={"Supply"}
                       onClickHandler={() => {
+                        if (ckBalance === 0) {
+                          toast.info(
+                            "You cannot supply because your balance is 0."
+                          );
+                          return;
+                        }
                         const reserveData = userData?.Ok?.reserves[0]?.find(
                           (reserveGroup) => reserveGroup[0] === id
                         );
 
-                        const assetSupply = getAssetSupplyValue(id);
-                        const assetBorrow = getAssetBorrowValue(id);
-                        const currentCollateralStatus =
-                          reserveData?.[1]?.is_collateral;
+                        const currentLiquidity =
+                          userData?.Ok?.reserves[0]?.find(
+                            (reserveGroup) => reserveGroup[0] === id // Check if the asset matches
+                          )?.[1]?.liquidity_index;
+                        const assetBalance =
+                          assetBalances.find((balance) => balance.asset === id)
+                            ?.dtokenBalance || 0;
 
-                        console.log(
-                          "currentCollateralStatus",
-                          currentCollateralStatus
-                        );
+                        const assetSupply =
+                          (Number(assetBalance) *
+                            Number(getAssetSupplyValue(id))) /
+                          Number(currentLiquidity);
+
+                        const DebtIndex = userData?.Ok?.reserves[0]?.find(
+                          (reserveGroup) => reserveGroup[0] === id // Check if the asset matches
+                        )?.[1]?.variable_borrow_index;
+
+                        const assetBorrowBalance =
+                          assetBalances.find((balance) => balance.asset === id)
+                            ?.debtTokenBalance || 0;
+
+                        const assetBorrow =
+                          (Number(assetBorrowBalance) *
+                            Number(getAssetBorrowValue(id))) /
+                          Number(DebtIndex);
+
+                        const currentCollateralStatus =
+                          reserveData?.[1]?.is_collateral || true;
+                      
                         const totalCollateral =
                           parseFloat(
                             Number(userAccountData?.Ok?.[0]) / 100000000
@@ -801,6 +889,7 @@ const AssetDetails = () => {
                           currentCollateralStatus
                         );
                       }}
+                      disabled={ckBalance === 0}
                       className={
                         "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"
                       }

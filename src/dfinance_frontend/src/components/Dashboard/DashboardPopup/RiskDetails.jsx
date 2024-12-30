@@ -17,7 +17,6 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
       ? Infinity
       : parseFloat((Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2));
 
-      console.log("totalCollateral", totalCollateral, "totalDebt", totalDebt)
       
   const Ltv_Value = (totalDebt / totalCollateral)*100;
 

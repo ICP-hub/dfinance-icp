@@ -255,7 +255,6 @@ const UserInformationPopup = ({
     setIsLoading(true);
     try {
       const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
-      console.log("supplyAmount", supplyAmount);
       // const supplyAmount = BigInt(amountToRepay.toFixed(8) * 100000000);
 
       if (!backendActor) {
@@ -449,7 +448,7 @@ const UserInformationPopup = ({
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckETHBalance.toLocaleString()}
+                    {ckETHBalance}
                   </p>
                 </div>
               </div>
@@ -470,7 +469,7 @@ const UserInformationPopup = ({
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckBTCBalance.toLocaleString()}
+                    {ckBTCBalance}
                   </p>
                 </div>
               </div>
@@ -491,7 +490,7 @@ const UserInformationPopup = ({
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckUSDCBalance.toLocaleString()}
+                    {ckUSDCBalance}
                   </p>
                 </div>
               </div>
@@ -512,7 +511,7 @@ const UserInformationPopup = ({
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckICPBalance.toLocaleString()}
+                    {ckICPBalance}
                   </p>
                 </div>
               </div>
@@ -533,7 +532,7 @@ const UserInformationPopup = ({
                     My Wallet Balance
                   </p>
                   <p className="text-xs font-medium text-[#2A1F9D] dark:text-darkText ">
-                    {ckUSDTBalance?.toLocaleString() || "0.00"} { }
+                    {ckUSDTBalance || "0.00"} {}
                   </p>
                 </div>
               </div>
@@ -922,7 +921,6 @@ const UserInformationPopup = ({
                     const assetSupply = Number(
                       getAssetSupplyValue(mappedItem.principal, assetName)
                     );
-                    console.log("assetSupply", assetSupply);
                     const assetBorrow = Number(
                       getAssetBorrowValue(mappedItem.principal, assetName)
                     );
@@ -1076,7 +1074,6 @@ const UserInformationPopup = ({
                         assetName
                       ));
                       const assetBorrowAmount = Number(assetBorrow / 2);
-                      console.log("asset borrow amount", assetBorrowAmount)
                       let assetBorrowAmountInUSD = 0;
                       if (assetName === "ckBTC" && ckBTCUsdRate) {
                         assetBorrowAmountInUSD =

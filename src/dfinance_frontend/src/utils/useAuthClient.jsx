@@ -177,7 +177,6 @@ export const useAuthClient = (options = defaultOptions) => {
         { agent }
       );
       setBackendActor(backendActor);
-      console.log("is authenticated",isAuthenticated)
       
     } catch (error) {}
   };
@@ -209,18 +208,14 @@ export const useAuthClient = (options = defaultOptions) => {
     try {
       const identity = authClient.getIdentity();
       if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
-        console.log("User principal =",principal.toString() );
   
         
         const result = await backendActor.register_user();
-        console.log("Result from register_user =", result);
   
         if (result.Ok) {
           if (result.Ok === "User available") {
-            console.log("User is already registered.");
             
           } else if (result.Ok === "User added") {
-            console.log("User successfully added to the system.");
           }
         } else if (result.Err) {
           console.error("Error from backend:", result.Err);

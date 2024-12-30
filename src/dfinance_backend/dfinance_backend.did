@@ -146,15 +146,13 @@ type UserReserveData = record {
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
-service : (principal) -> {
-  create_testtoken_canister : (text, text) -> (Result);
-  create_token_canister : (text, text) -> (Result);
-  execute_borrow : (ExecuteBorrowParams) -> (Result_1);
-  execute_liquidation : (ExecuteLiquidationParams) -> (Result_1);
-  execute_repay : (ExecuteRepayParams) -> (Result_1);
-  execute_supply : (ExecuteSupplyParams) -> (Result_1);
-  execute_withdraw : (ExecuteWithdrawParams) -> (Result_1);
-  faucet : (text, nat) -> (Result_1);
+service : () -> {
+  execute_borrow : (ExecuteBorrowParams) -> (Result);
+  execute_liquidation : (text, text, nat, principal) -> (Result);
+  execute_repay : (ExecuteRepayParams) -> (Result);
+  execute_supply : (ExecuteSupplyParams) -> (Result);
+  execute_withdraw : (ExecuteWithdrawParams) -> (Result);
+  faucet : (text, nat) -> (Result);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_debt : (text, opt principal) -> (Result_1);
@@ -171,10 +169,10 @@ service : (principal) -> {
   initialize_canister : () -> (Result_8);
   initialize_reserve : () -> (Result_8);
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : () -> (Result_9);
-  toggle_collateral : (text, nat, nat) -> (Result_8);
-  update_reserves_price : () -> (Result_8);
-  user_normalized_debt : (ReserveData) -> (Result_1) query;
-  user_normalized_supply : (ReserveData) -> (Result_1) query;
-  user_position : (text) -> (Result_10) query;
+  register_user : () -> (Result_8);
+  toggle_collateral : (text, nat, nat) -> (Result_7);
+  update_reserves_price : () -> (Result_7);
+  user_normalized_debt : (ReserveData) -> (Result) query;
+  user_normalized_supply : (ReserveData) -> (Result) query;
+  user_position : (text) -> (Result_9) query;
 }

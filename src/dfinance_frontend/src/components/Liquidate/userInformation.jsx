@@ -29,7 +29,9 @@ const UserInformationPopup = ({
   userAccountData,
   assetSupply,
   assetBorrow,
+  assetBalance,
 }) => {
+ 
   const { backendActor, principal: currentUserPrincipal } = useAuth();
   const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
@@ -50,7 +52,7 @@ const UserInformationPopup = ({
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-const [error ,setError] =useState(null);
+  const [error, setError] = useState(null);
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -69,20 +71,63 @@ const [error ,setError] =useState(null);
 
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
-  const { assets, reserveData, filteredItems } = useAssetData();
 
-  const getAssetSupplyValue = (principal, asset) => {
-    if (assetSupply[principal]?.[asset] !== undefined) {
-      return Number(assetSupply[principal][asset]) / 1e8;
+  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
+  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
+  const {
+    assets,
+    reserveData,
+    filteredItems,
+    fetchAssetSupply,
+    fetchAssetBorrow,
+  } = useAssetData();
+  useEffect(() => {
+    const fetchSupplyData = async () => {
+      if (assets.length === 0) return;
+      setSupplyDataLoading(true);
+      try {
+        for (const asset of assets) {
+          await fetchAssetSupply(asset);
+        }
+      } catch (error) {
+        setSupplyDataLoading(false);
+        console.error("Error fetching supply data:", error);
+      } finally {
+        setSupplyDataLoading(false);
+      }
+    };
+
+    const fetchBorrowData = async () => {
+      if (assets.length === 0) return;
+      setBorrowDataLoading(true);
+      try {
+        for (const asset of assets) {
+          await fetchAssetBorrow(asset);
+        }
+      } catch (error) {
+        setBorrowDataLoading(false);
+        console.error("Error fetching borrow data:", error);
+      } finally {
+        setBorrowDataLoading(false);
+      }
+    };
+
+    fetchSupplyData();
+    fetchBorrowData();
+  }, [assets]);
+  const getAssetSupplyValue = (asset, principal) => {
+    if (assetSupply[asset] !== undefined) {
+      const supplyValue = Number(assetSupply[asset]);
+      return supplyValue;
     }
-    return 0; 
+    return;
   };
-  const getAssetBorrowValue = (principal, asset) => {
-    if (assetBorrow[principal]?.[asset] !== undefined) {
-      return Number(assetBorrow[principal][asset]) / 1e8;
+  const getAssetBorrowValue = (asset, principal) => {
+    if (assetBorrow[asset] !== undefined) {
+      const borrowValue = Number(assetBorrow[asset]);
+      return borrowValue;
     }
-    return 0; 
-  
+    return;
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
@@ -91,9 +136,52 @@ const [error ,setError] =useState(null);
     const factor = Math.pow(10, decimalPlaces);
     return Math.round(value * factor) / factor;
   }
+  const getBalanceForPrincipalAndAsset = (
+    principal,
+    assetName,
+    balanceType
+  ) => {
+    const userBalances = assetBalance[principal] || {};
+
+    const assetBalances = userBalances[assetName];
+
+    return assetBalances ? assetBalances[balanceType] || 0 : 0;
+  };
 
   const defaultAsset = "cketh";
+  const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
+    const reserve = reserveData?.[assetName];
+    const currentLiquidity = reserve?.Ok?.liquidity_index;
+    const assetBalance =
+      getBalanceForPrincipalAndAsset(
+        mappedItem.principal,
+        assetName,
+        "dtokenBalance"
+      ) || 0;
 
+    // Calculate asset supply
+    return (
+      (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
+      (Number(currentLiquidity) * 1e8)
+    );
+  };
+
+  const calculateAssetBorrow = (assetName, mappedItem, reserveData) => {
+    const reserve = reserveData?.[assetName];
+    const DebtIndex = reserve?.Ok?.debt_index;
+    const assetBorrowBalance =
+      getBalanceForPrincipalAndAsset(
+        mappedItem.principal,
+        assetName,
+        "debtTokenBalance"
+      ) || 0;
+
+    // Calculate asset borrow
+    return (
+      (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
+      (Number(DebtIndex) * 1e8)
+    );
+  };
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -201,10 +289,9 @@ const [error ,setError] =useState(null);
 
     const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
     const totalAmount = supplyAmount + transferFee;
-    
+
     // Convert to Number
     const totalAmountAsNumber = Number(totalAmount);
-    
 
     try {
       setIsLoading(true);
@@ -301,7 +388,7 @@ const [error ,setError] =useState(null);
         setTransactionResult("success");
       } else if ("Err" in result) {
         const errorMsg = result.Err;
-        console.error("errorMsg",errorMsg)
+        console.error("errorMsg", errorMsg);
         if (errorMsg?.ExchangeRateError === null) {
           toast.error("Price fetch failed", {
             className: "custom-toast",
@@ -313,20 +400,25 @@ const [error ,setError] =useState(null);
             draggable: true,
             progress: undefined,
           });
-          setError("Price fetch failed: Your assets are safe, try again after some time.")
+          setError(
+            "Price fetch failed: Your assets are safe, try again after some time."
+          );
         } else {
-          toast.error(`Error: ${error.message || "An unexpected error occurred"}`, {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
+          toast.error(
+            `Error: ${error.message || "An unexpected error occurred"}`,
+            {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            }
+          );
         }
-        
+
         setTransactionResult("failure");
       }
 
@@ -764,17 +856,38 @@ const [error ,setError] =useState(null);
     ckUSDTBalance,
   ]);
   const formatValue = (value) => {
-    const numericValue = parseFloat(value); 
+    const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
-      return "0.00"; 
+      return "0.00";
     }
     if (numericValue === 0) {
-      return "0.00"; 
+      return "0.00";
     } else if (numericValue >= 1) {
-      return numericValue.toFixed(2); 
+      return numericValue.toFixed(2);
     } else {
-      return numericValue.toFixed(7); 
-    }}
+      return numericValue.toFixed(7);
+    }
+  };
+  const truncateToSevenDecimals = (value) => {
+    const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
+    const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
+    return truncated.toFixed(8); // Convert to string with exactly 7 decimals
+  };
+
+  const [factor, setFactor] = useState('');
+
+  // Calculate the factor based on the userAccountData and set it in state
+  useEffect(() => {
+    const value = Number(userAccountData?.Ok?.[4]) / 10000000000;
+
+    if (value > 100) {
+      setFactor("50");
+    } else if (value < 0.95) {
+      setFactor("100");
+    } else {
+      setFactor("50");
+    }
+  }, [userAccountData]); 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       {transactionResult ? (
@@ -803,12 +916,14 @@ const [error ,setError] =useState(null);
               <>
                 <img src={cross} alt="Failure" className="w-30 h-30" />
                 {error ? (
-    <p className="text-xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">{error}</p>
-  ) : (
-    <h2 className="text-2xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">
-      Liquidation Call Failed
-    </h2>
-  )}
+                  <p className="text-xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">
+                    {error}
+                  </p>
+                ) : (
+                  <h2 className="text-2xl font-bold text-[#2A1F9D] dark:text-darkText mb-4 -mt-6">
+                    Liquidation Call Failed
+                  </h2>
+                )}
 
                 <button
                   className="bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative"
@@ -828,7 +943,9 @@ const [error ,setError] =useState(null);
           <p className="text-md text-[#989898] text-center dark:text-darkText mt-4 font-light">
             Are you sure you want to liquidate on behalf of "
             <strong className="font-bold">{principal.toString()}</strong>"?{" "}
-            <strong className="font-bold text-red-500">{amountToRepay} </strong>{" "}
+            <strong className="font-bold text-red-500">
+              {truncateToSevenDecimals(amountToRepay)}{" "}
+            </strong>{" "}
             <span className="font-bold">{selectedDebtAsset}</span> will be{" "}
             <strong className="underline">deducted</strong> from your account &{" "}
             <strong className="font-bold text-green-500">
@@ -915,11 +1032,16 @@ const [error ,setError] =useState(null);
                 <div className="flex items-center space-x-4 mb-4">
                   {mappedItem.reserves[0].map((item, index) => {
                     const assetName = item[0];
-                    const assetSupply = Number(
-                      getAssetSupplyValue(mappedItem.principal, assetName)
+
+                    const assetSupply = calculateAssetSupply(
+                      assetName,
+                      mappedItem,
+                      reserveData
                     );
-                    const assetBorrow = Number(
-                      getAssetBorrowValue(mappedItem.principal, assetName)
+                    const assetBorrow = calculateAssetBorrow(
+                      assetName,
+                      mappedItem,
+                      reserveData
                     );
                     const assetBorrowAmount = Math.floor(assetBorrow / 2);
 
@@ -1067,11 +1189,18 @@ const [error ,setError] =useState(null);
                     mappedItem.reserves[0].map((item, index) => {
                       const assetName = item[0];
 
-                       const assetBorrow = Number(getAssetBorrowValue(
-                                  mappedItem.principal,
-                                  assetName
-                                ));
-                      const assetBorrowAmount = Number(assetBorrow / 2);
+                      const assetSupply = calculateAssetSupply(
+                        assetName,
+                        mappedItem,
+                        reserveData
+                      );
+                      const assetBorrow = calculateAssetBorrow(
+                        assetName,
+                        mappedItem,
+                        reserveData
+                      );
+                     
+                      const assetBorrowAmount = Number(assetBorrow *(factor/100) );
                       let assetBorrowAmountInUSD = 0;
                       if (assetName === "ckBTC" && ckBTCUsdRate) {
                         assetBorrowAmountInUSD =
@@ -1138,7 +1267,7 @@ const [error ,setError] =useState(null);
                     Close Factor
                   </p>
                   <p className="text-lg font-bold text-[#2A1F9D] dark:text-darkText ">
-                    50%
+                 {factor}%
                   </p>
                 </div>
                 <div className="flex justify-end mt-3">

@@ -109,27 +109,10 @@ const useAssetData = (searchQuery = "") => {
         let reserveFactors = 0;
         let totalAccruedValue = 0;
 
-        // Fetch data for each asset
+        
         for (const asset of assets) {
           const reserveDataForAsset = await fetchReserveData(asset);
           data[asset] = reserveDataForAsset;
-
-          const supplyCap = parseFloat(
-            Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000
-          );
-          const totalSupply = parseFloat(
-            Number(reserveDataForAsset.Ok.asset_supply) / 100000000
-          );
-          const totalBorrow = parseFloat(
-            Number(reserveDataForAsset.Ok.asset_borrow) / 100000000
-          );
-          const reserveFactor = parseFloat(
-            Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
-              100000000
-          );
-          const interestAccure = parseFloat(
-            Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
-          );
           const assetName = reserveDataForAsset.Ok.asset_name.toString();
 
           let assetRate = 0;
@@ -152,17 +135,39 @@ const useAssetData = (searchQuery = "") => {
             default:
               assetRate = 0;
           }
+          const supplyCap = parseFloat(
+            Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000
+          );
 
+          const totalSupply = parseFloat(
+            (Number(reserveDataForAsset.Ok.asset_supply) * (assetRate / 1e8)) /
+              100000000
+          );
+
+          const totalBorrow = parseFloat(
+            (Number(reserveDataForAsset.Ok.asset_borrow) * (assetRate / 1e8)) /
+              100000000
+          );
+
+          const reserveFactor = parseFloat(
+            Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
+              100000000
+          );
+          const interestAccure = parseFloat(
+            Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
+          );
           const accruedValue = interestAccure * (assetRate / 1e8);
           totalAccruedValue += accruedValue;
 
           totalMarketSizeTemp += supplyCap;
-          totalSupplies += totalSupply;
-          totalBorrowes += totalBorrow;
+          totalSupplies += parseInt(totalSupply);
+
+          totalBorrowes += parseInt(totalBorrow);
+
           reserveFactors = reserveFactor;
         }
 
-        // Set other calculated values
+        
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies));
@@ -178,8 +183,11 @@ const useAssetData = (searchQuery = "") => {
     };
 
     fetchData();
-  }, [assets, fetchReserveData]);
+  }, [assets, fetchReserveData ,principal]);
 
+  useEffect(() => {
+  
+  }, [reserveData]);
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(

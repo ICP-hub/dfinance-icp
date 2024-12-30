@@ -31,8 +31,7 @@ const WithdrawPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  console.log("assetSupply,assetBorrow");
-  const { backendActor, principal } = useAuth();
+  const {  backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);

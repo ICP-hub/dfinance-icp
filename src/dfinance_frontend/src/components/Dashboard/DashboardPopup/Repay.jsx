@@ -693,7 +693,7 @@ const Repay = ({
                       ? Number(assetBorrow).toFixed(8)
                       : assetBorrow >= 1e-7 && assetBorrow < 1e-6
                       ? Number(assetBorrow).toFixed(7)
-                      : assetBorrow
+                      : truncateToSevenDecimals(assetBorrow)
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}

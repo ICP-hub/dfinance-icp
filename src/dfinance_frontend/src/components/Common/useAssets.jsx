@@ -185,6 +185,10 @@ const useAssetData = (searchQuery = "") => {
     fetchData();
   }, [assets, fetchReserveData]);
 
+  useEffect(() => {
+    // console.log("Updated reserveData state:", reserveData);
+    // console.log("Total market size", totalMarketSize);
+  }, [reserveData]);
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(

@@ -48,6 +48,14 @@ if (onLoadingChange) {
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const scaledAmount = amountAsNat64;
+
+  const borrowErrorMessages = {
+    NoReserveDataFound: "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
+    NoCanisterIdFound: "The canister ID for the selected asset is missing. Please contact support.",
+    ErrorMintDebtTokens: "Borrow failed due to a debt token error. Your account state has been rolled back. Try again later.",
+    Default: "An unexpected error occurred during the borrow process. Please try again later.",
+  };
+
   const handleBorrowETH = async () => {
     setIsLoading(true);
     let ledgerActor;
@@ -103,9 +111,10 @@ if (onLoadingChange) {
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
-        const errorMsg = borrowResult.Err;
-        console.error("error",errorMsg)
-        toast.error(`Borrow failed: ${errorMsg}`, {
+        const errorKey = borrowResult.Err;
+        const userFriendlyMessage = borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
+        console.log("error",errorKey);
+        toast.error(userFriendlyMessage, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,

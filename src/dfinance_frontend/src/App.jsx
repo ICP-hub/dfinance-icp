@@ -158,15 +158,15 @@ export default function App() {
   const handleJoyrideCallback = (data) => {
     const { status } = data;
 
-    if (status === "finished" || status === "skipped") {
-      if (isAuthenticated && principal) {
-        const storedData = localStorage.getItem("userGuideData");
-        const parsedData = storedData ? JSON.parse(storedData) : {};
-        parsedData[principal] = true;
-        localStorage.setItem("userGuideData", JSON.stringify(parsedData));
-        setJoyrideState((prevState) => ({ ...prevState, run: false }));
-      }
-    }
+    // if (status === "finished" || status === "skipped") {
+    //   if (isAuthenticated && principal) {
+    //     const storedData = localStorage.getItem("userGuideData");
+    //     const parsedData = storedData ? JSON.parse(storedData) : {};
+    //     parsedData[principal] = true;
+    //     localStorage.setItem("userGuideData", JSON.stringify(parsedData));
+    //     setJoyrideState((prevState) => ({ ...prevState, run: false }));
+    //   }
+    // }
 
     if (data.action === "next" && data.index === 0) {
       navigate("/Faucet");

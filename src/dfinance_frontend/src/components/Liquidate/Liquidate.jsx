@@ -51,7 +51,6 @@ const Liquidate = () => {
       <div className="full">
         <div className="flex h-[60px] justify-start align-center place-content-center -ml-2">
           <h1  id="liquidation-guide" className="text-[#2A1F9D] text-[19px] md:text-2xl lg:text-2xl font-bold inline-flex items-center dark:text-darkText">
-            <ChevronLeft size={30} color={chevronColor} className="mr-2" />
             Liquidation
           </h1>
         </div>

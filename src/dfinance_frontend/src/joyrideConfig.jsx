@@ -63,6 +63,9 @@ import DashboardPageSmallLight from "../public/Helpers/DashboardPageSmallLight.p
 import MarketPageSmall from "../public/Helpers/MarketPageSmall.png";
 import MarketPageSmallLight from "../public/Helpers/MarketPageSmallLight.png";
 
+import lightImages from "./components/Common/lightImages";
+import darkImages from "./components/Common/darkImages";
+
 export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "body",
@@ -78,14 +81,14 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         {isMobile2 ? (
           <img
             src={
-              theme === "dark" ? DfinanceHomeDarkSmall : DfinanceHomeLightSmall
+              theme === "dark" ? darkImages .dfinanceHomeDarkSmall : lightImages.DfinanceHomeLightSmall
             }
             alt="dFinanceHomePage"
             className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
           />
         ) : (
           <img
-            src={theme === "dark" ? dFinanceHomePage : dfinanceHomePageLight}
+            src={theme === "dark" ? darkImages.dfinanceHomepage : lightImages.dfinanceHomepageLight}
             alt="dFinanceHomePage"
             className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
           />
@@ -105,13 +108,13 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         {isMobile2 ? (
           <img
-            src={theme === "dark" ? FaucetSmall : FaucetSmallLight}
+            src={theme === "dark" ? darkImages.faucetSmall : lightImages.FaucetSmallLight}
             alt="Faucet Button"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
         ) : (
           <img
-            src={theme === "dark" ? faucetPage : faucetPageLight}
+            src={theme === "dark" ? darkImages.faucetPage : lightImages.faucetPageLight}
             alt="Faucet Button"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
@@ -128,7 +131,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           On this page, you can click the faucet button for the desired asset.
         </p>
         <img
-          src={theme === "dark" ? faucetbutton : faucetbuttonLight}
+          src={theme === "dark" ? darkImages.faucetButton : lightImages.faucetButtonLight}
           alt="Faucet Button"
           className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -137,7 +140,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           wish to faucet.
         </p>
         <img
-          src={theme === "dark" ? faucetPopup : faucetPopupLight}
+          src={theme === "dark" ? darkImages.faucetPopup : lightImages.faucetPopupLight}
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -160,14 +163,14 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         {isMobile2 ? (
           <img
             src={
-              theme === "dark" ? DashboardPageSmall : DashboardPageSmallLight
+              theme === "dark" ? darkImages.dashboardPageSmall : lightImages.DashboardPageSmallLight
             }
             alt="dashboardPage"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
         ) : (
           <img
-            src={theme === "dark" ? dashboardPage : dashboardPageLight}
+            src={theme === "dark" ? darkImages.dashboardPage : lightImages.DashboardPageLight}
             alt="dashboardPage"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
@@ -187,8 +190,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? dashboardAssetsToSupplyButton
-              : dashboardAssetsToSupplyButtonLight
+              ? darkImages.assetsToSupply
+              : lightImages.assetsToSupplyLight
           }
           alt="dashboardAssetsToSupplyButton"
           className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -200,7 +203,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         <img
           src={
-            theme === "dark" ? assetsToSupplyPopup : assetsToSupplyPopupLight
+            theme === "dark" ? darkImages.assetsToSupplyPopup : lightImages.assetsToSupplyPopupLight
           }
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -219,8 +222,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? dashboardAssetsToBorrowButton
-              : dashboardAssetsToBorrowButtonLight
+              ? darkImages.assetsToBorrow
+              : lightImages.assetsToBorrowLight
           }
           alt="dashboardAssetsToBorrowButton"
           className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -231,7 +234,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         <img
           src={
-            theme === "dark" ? assetsToBorrowPopup : assetsToBorrowPopupLight
+            theme === "dark" ? darkImages.assetsToBorrowPopup : lightImages.assetsToBorrowPopupLight
           }
           alt="assetsToBorrowPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -251,8 +254,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? yourBorrowRepayButton
-              : yourBorrowRepayButtonLight
+              ? darkImages.yourBorrow
+              : lightImages.yourBorrowLight
           }
           alt="yourBorrowRepayButton"
           className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -263,7 +266,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         <img
           src={
-            theme === "dark" ? yourBorrowRepayPopup : yourBorrowRepayPopupLight
+            theme === "dark" ? darkImages.yourBorrowRepayPopup : lightImages.yourBorrowRepayPopupLight
           }
           alt="yourBorrowRepayPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -283,8 +286,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? yourSuppliesWithdrawButton
-              : yourSuppliesWithdrawButtonLight
+              ? darkImages.youSupplies
+              : lightImages.youSuppliesLight
           }
           alt="yourSuppliesWithdrawButton"
           className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -296,8 +299,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? yourSuppliesWithdrawPopup
-              : yourSuppliesWithdrawPopupLight
+              ? darkImages.yourSuppliesWithdrawPopup
+              : lightImages.yourSuppliesWithdrawPopupLight
           }
           alt="yourSuppliesWithdrawPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -320,8 +323,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
             <img
               src={
                 theme === "dark"
-                  ? DashboarNavDetailsDarkSmall
-                  : DashboarNavDetailsLightSmall
+                  ? darkImages.dashboardNavDetailsDarkSmall
+                  : lightImages.DashboarNavDetailsLightSmall
               }
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30 mb-4"
@@ -332,7 +335,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
               Threshold.
             </p>
             <img
-              src={theme === "dark" ? riskDetails : riskDetailsLight}
+              src={theme === "dark" ? darkImages.riskDetails : lightImages.riskDetailsLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -345,7 +348,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
             </p>
             <img
               src={
-                theme === "dark" ? dashboarNavDetails : dashboarNavDetailsLight
+                theme === "dark" ? darkImages.dashboardNavDetails : lightImages.dashboardNavDetailsLight
               }
               alt="dashboarNavDetails"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -356,7 +359,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
               Threshold.
             </p>
             <img
-              src={theme === "dark" ? riskDetails : riskDetailsLight}
+              src={theme === "dark" ? darkImages.riskDetails : lightImages.riskDetailsLight}
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -378,13 +381,13 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         {isMobile2 ? (
           <img
-            src={theme === "dark" ? MarketPageSmall : MarketPageSmallLight}
+            src={theme === "dark" ? darkImages.marketPageSmall : lightImages.MarketPageSmallLight}
             alt="Faucet Button"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
         ) : (
           <img
-            src={theme === "dark" ? marketPage : marketPageLight}
+            src={theme === "dark" ? darkImages.marketPage : lightImages.marketPageLight}
             alt="Faucet Button"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
@@ -405,13 +408,13 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         {isMobile2 ? (
           <img
-            src={theme === "dark" ? MarketPageSmall : MarketPageSmallLight}
+            src={theme === "dark" ? darkImages.marketPageSmall : lightImages.MarketPageSmallLight}
             alt="Faucet Button"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
         ) : (
           <img
-            src={theme === "dark" ? marketPage : marketPageLight}
+            src={theme === "dark" ? darkImages.marketPage : lightImages.marketPageLight}
             alt="Faucet Button"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
@@ -433,8 +436,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           <img
             src={
               theme === "dark"
-                ? marketNavDetailsDarkSmall
-                : marketNavDetailsLightSmall
+                ? darkImages.marketNavDetailsDarkSmall
+                : lightImages.marketNavDetailsLightSmall
             }
             alt="marketeNavbarDetails"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -443,8 +446,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           <img
             src={
               theme === "dark"
-                ? marketeNavbarDetails
-                : marketeNavbarDetailsLight
+                ? darkImages.marketPageDetails
+                : lightImages.marketPageDetailsLight
             }
             alt="marketeNavbarDetails"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -477,7 +480,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           see the liquidation List (if available).
         </p>
         <img
-          src={theme === "dark" ? debtStatusImage : debtStatusImageLight}
+          src={theme === "dark" ? darkImages.debtStatusImage : lightImages.debtStatusImageLight}
           alt="Faucet Button"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -494,7 +497,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           Here it will show the list of users with a health factor less than 1
         </p>
         <img
-          src={theme === "dark" ? liquidationTable : liquidationTableLight}
+          src={theme === "dark" ? darkImages.liquidationTable : lightImages.liquidationTableLight}
           alt="Faucet Popup"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -503,7 +506,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           details and open the user information popup.
         </p>
         <img
-          src={theme === "dark" ? liquidationButton : liquidationButtonLight}
+          src={theme === "dark" ? darkImages.liquidateButton : lightImages.LiquidatebuttonLight}
           alt="Faucet Button"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -522,7 +525,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
 
         <img
-          src={theme === "dark" ? userInformation : userInformationLight}
+          src={theme === "dark" ? darkImages.userInformation : lightImages.userInformationLight}
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -539,7 +542,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           Now select the debt asset to view the repayment details.
         </p>
         <img
-          src={theme === "dark" ? DebtInformation : DebtInformationLight}
+          src={theme === "dark" ? darkImages.debtInformation : lightImages.DebtInformationLight}
           alt="Faucet Button"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -560,8 +563,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? CollateralInformation
-              : CollateralInformationLight
+              ? darkImages.collateralInformation
+              : lightImages.CollateralInformationLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -581,8 +584,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? CollateralInformationCall
-              : CollateralInformationCallLight
+              ? darkImages.collateralInformationCall
+              : lightImages.colateralInformationCallLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -601,7 +604,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           then click 'Call Liquidation' to complete the process."
         </p>
         <img
-          src={theme === "dark" ? WarningPopup : WarningPopupLight}
+          src={theme === "dark" ? darkImages.warningPopup : lightImages.WarningPopupLight}
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -618,8 +621,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? LiquidationSuccessfull
-              : LiquidationSuccessfullLight
+              ? darkImages.liquidationSuccessful
+              : lightImages.LiquidationSuccessfullLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"

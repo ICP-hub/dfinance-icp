@@ -31,7 +31,6 @@ const WithdrawPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  console.log("assetSupply,assetBorrow");
   const {  backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -73,9 +72,9 @@ const WithdrawPopup = ({
     }
   }, [isLoading, onLoadingChange]);
   const truncateToSevenDecimals = (value) => {
-    const multiplier = Math.pow(10, 7); // To shift the decimal 7 places
+    const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
     const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
-    return truncated.toFixed(7); // Convert to string with exactly 7 decimals
+    return truncated.toFixed(8); // Convert to string with exactly 7 decimals
   };
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;

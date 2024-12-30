@@ -431,9 +431,9 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
   
   const handleMaxClick = () => {
     const truncateToSevenDecimals = (value) => {
-      const multiplier = Math.pow(10, 7); // To shift the decimal 7 places
+      const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
-      return truncated.toFixed(7); // Convert to string with exactly 7 decimals
+      return truncated.toFixed(8); // Convert to string with exactly 7 decimals
     };
     let asset_borrow = assetBorrow
       ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
@@ -648,7 +648,7 @@ const Repay = ({asset, image, supplyRateAPR, balance, liquidationThreshold, rese
                       ? Number(assetBorrow).toFixed(8)
                       : assetBorrow >= 1e-7 && assetBorrow < 1e-6
                       ? Number(assetBorrow).toFixed(7)
-                      : assetBorrow
+                      : truncateToSevenDecimals(assetBorrow)
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}

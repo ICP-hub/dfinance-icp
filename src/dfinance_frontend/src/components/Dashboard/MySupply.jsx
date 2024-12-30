@@ -782,6 +782,11 @@ const MySupply = () => {
     setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
   }, []);
+  const hasValidAssets = userData?.Ok?.reserves?.[0].some((reserveGroup) => {
+    const asset = reserveGroup[0];
+    const assetBalance = assetBalances.find((balance) => balance.asset === asset)?.debtTokenBalance;
+    return assetBalance > 0; // Check if any asset has a debtTokenBalance > 0
+  });
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 md:-mt-[3rem]">
       <div className="flex justify-center -mb-30 lg:hidden">
@@ -3298,6 +3303,7 @@ const MySupply = () => {
                   ) : (
                     <div className="w-full h-auto mt-6">
                       <div className="w-full z-10">
+                      {hasValidAssets && (
                         <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-3 pl-4">Asset</div>
                           <div className="p-3 -ml-[4px]">Debt</div>
@@ -3317,6 +3323,7 @@ const MySupply = () => {
                           <div className="p-3">Apy type</div>
                           <div className="p-3"></div>
                         </div>
+                      )}
                       </div>
 
                       <div

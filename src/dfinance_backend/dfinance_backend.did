@@ -146,9 +146,7 @@ service : () -> {
   faucet : (text, nat) -> (Result);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
-  get_asset_debt : (text, opt principal) -> (Result);
   get_asset_principal : (text) -> (Result_1) query;
-  get_asset_supply : (text, opt principal) -> (Result);
   get_balance : (principal, principal) -> (Result) query;
   get_cached_exchange_rate : (text) -> (Result_2) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_3);

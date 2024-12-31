@@ -782,7 +782,7 @@ const MySupply = () => {
     setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
   }, []);
-  const hasValidAssets = userData?.Ok?.reserves?.[0].some((reserveGroup) => {
+  const hasValidAssets = userData?.Ok?.reserves?.[0]?.some((reserveGroup) => {
     const asset = reserveGroup[0];
     const assetBalance = assetBalances.find((balance) => balance.asset === asset)?.debtTokenBalance;
     return assetBalance > 0; // Check if any asset has a debtTokenBalance > 0

@@ -79,82 +79,61 @@ const WithdrawPopup = ({
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
   
-    // If the input is cleared, reset it to an empty string
+    // Allow clearing the input
     if (inputAmount === "") {
-      setAmount(""); // Set the amount state to empty
-      updateAmountAndUsdValue(""); // Ensure that the raw value is also empty
-      return; // Exit early if the input is cleared
+      setAmount("");
+      updateAmountAndUsdValue("");
+      return;
     }
   
-    // Remove any characters that are not digits or a single decimal point
+    // Allow only digits and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
   
-    // Ensure only one decimal point can be used
-    if (inputAmount.indexOf('.') !== inputAmount.lastIndexOf('.')) {
-      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf('.'));
+    // Ensure only one decimal point exists
+    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
   
-    // If inputAmount is empty or NaN, reset to an empty string
-    if (inputAmount === "" || isNaN(inputAmount)) {
-      inputAmount = "";
-    }
-  
-    // Prevent the amount from exceeding the asset supply
+    // Prevent amount from exceeding asset supply
     const numericAmount = parseFloat(inputAmount);
     if (numericAmount > assetSupply) {
       inputAmount = truncateToSevenDecimals(assetSupply).toString();
     }
   
-    let formattedAmount;
-    if (inputAmount.includes(".")) {
-      // Split integer and decimal parts
-      const [integerPart, decimalPart] = inputAmount.split(".");
-      // Format integer part with commas
-      formattedAmount = `${parseInt(integerPart).toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
-    } else {
-      // Format integer part with commas (if no decimal point)
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
-    }
-  
-    // Update the state with the formatted amount and pass the raw value to update the amount and USD value
-    setAmount(formattedAmount);
+    // Update state with raw value (no formatting applied yet)
+    setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
   
-  
-
   const updateAmountAndUsdValue = (inputAmount) => {
-    // Remove commas and convert input to a float
-    const numeric = parseFloat(inputAmount);
-    const numericAmount = numeric.toString().replace(/,/g, "");
+    // Parse input and remove commas if present
+    const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
+  
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       // Ensure the numeric amount does not exceed the asset supply
       if (numericAmount <= assetSupply) {
-        // Adjust the conversion rate to the correct decimal places
+        // Adjust conversion rate and calculate USD value
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-        // Calculate the USD value based on the numeric amount and conversion rate
         const convertedValue = numericAmount * adjustedConversionRate;
   
-        // Format the amount with commas for readability
-        const formattedAmount = numericAmount.toLocaleString(); // Adds commas for thousands
-  
-        // Set the USD value and the formatted amount
+        // Update state with formatted values
         setUsdValue(parseFloat(convertedValue.toFixed(2)));
-        setAmount(formattedAmount);
-        setError(""); // Clear any existing error
+        setError(""); // Clear errors
       } else {
-        // Display error if the amount exceeds the supply balance
+        // Set error for exceeding supply balance
         setError("Amount exceeds the supply balance");
       }
     } else if (inputAmount === "") {
-      // Clear fields when the input is empty
+      // Clear state when input is empty
       setAmount("");
+      setUsdValue(0);
       setError("");
     } else {
-      // Display error for invalid input
+      // Set error for invalid input
       setError("Amount must be a positive number");
     }
   };
+  
   
   useEffect(() => {
     if (amount && conversionRate) {

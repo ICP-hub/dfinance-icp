@@ -11,6 +11,7 @@ import Modclub from '../../public/assests-icon/Modclub.png';
 import BooMDao from '../../public/assests-icon/BooMDao.png';
 import catalyze from '../../public/assests-icon/catalyze.png';
 import ckusdc from '../../public/assests-icon/ckusdc.svg';
+import ckusdt from '../../public/assests-icon/ckUSDT.svg';
 
 import trailofbits from '../../public/assests-icon/trail-Of-Bits-svg-fill.png'
 import certora from '../../public/assests-icon/certora-svg-fill.png'
@@ -197,6 +198,13 @@ export const TAB_CARD_DATA = [
     image: ckusdc,
     description:
       "ckUSDC is an ICRC-1-compliant token on the Internet Computer, backed 1:1 by USDC. It allows seamless minting and redemption of ckUSDC for USDC through the ckETH minter canister.",
+  },
+  {
+    id: 5,
+    title: "ckUSDT",
+    image: ckusdt,
+    description:
+      "ckUSDT is a canister smart contract on the Internet Computer (ICP) enabling fast, gas-free USDT transfers while remaining fully backed 1:1 by USDT on Ethereum. It supports ICRC-1 and ICRC-2 standards, ensuring seamless integration with ICP wallets.",
   },
 
 ]

@@ -183,8 +183,11 @@ const useAssetData = (searchQuery = "") => {
     };
 
     fetchData();
-  }, [assets, fetchReserveData]);
+  }, [assets, fetchReserveData ,principal]);
 
+  useEffect(() => {
+  
+  }, [reserveData]);
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(

@@ -16,7 +16,8 @@ import { WalletMinimal } from "lucide-react";
 import { Info } from "lucide-react";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import icplogo from "../../../public/wallet/icp.png";
 import bifinity from "../../../public/wallet/bifinity.png";
 import nfid from "../../../public/wallet/nfid.png";
@@ -45,7 +46,7 @@ const AssetDetails = () => {
     fetchAssetSupply,
   } = useAssetData();
 
-  const { isAuthenticated, principal, backendActor, fetchReserveData } =
+  const { isAuthenticated, principal, backendActor, fetchReserveData ,createLedgerActor} =
     useAuth();
 
   const location = useLocation();
@@ -793,12 +794,8 @@ const AssetDetails = () => {
                     <Button
                       title={"Supply"}
                       onClickHandler={() => {
-                        if (ckBalance === 0) {
-                          toast.info(
-                            "You cannot supply because your balance is 0."
-                          );
-                          return;
-                        }
+                        
+                        
                         const reserveData = userData?.Ok?.reserves[0]?.find(
                           (reserveGroup) => reserveGroup[0] === id
                         );
@@ -869,7 +866,12 @@ const AssetDetails = () => {
                             : id === "ckUSDT"
                             ? ckUSDTBalance
                             : null;
-
+                            if (ckBalance === 0) {
+                              toast.info(
+                                "You cannot supply because your balance is 0."
+                              );
+                              return;
+                            }
                         handleModalOpen(
                           "supply",
                           id,

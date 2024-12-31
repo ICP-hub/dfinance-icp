@@ -58,7 +58,9 @@ pub enum Error {
     ErrorDecoding,
     ErrorRollBack,
     EmailError,
-    ErrorNotController
+    ErrorNotController,
+    InvalidVariableName,
+    TokenAlreadyExist,
 }
 
 impl Error {
@@ -119,7 +121,9 @@ impl Error {
             Error::ErrorDecoding => "Error decoding response",
             Error::ErrorRollBack => "Error while rollback",
             Error::EmailError => "Error in sending email to the admin",
-            Error::ErrorNotController => "you are not a controller"
+            Error::ErrorNotController => "you are not a controller",
+            Error::InvalidVariableName => "name of the variable is invalid - please enter it again",
+            Error::TokenAlreadyExist => "Token already exist - try again with different token"
         }
     }
 }

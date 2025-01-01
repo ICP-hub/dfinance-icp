@@ -182,7 +182,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
     .await;
 
     // Release the lock
-    release_operation_lock();
+    release_lock(&operation_key);
 
     result
 }

@@ -212,6 +212,7 @@ export TOKEN_SYMBOL="debttoken"
 
 dfx canister create xrc
 dfx build xrc
+dfx deploy xrc
 dfx identity use default
 
 # Get the admin principal and export it

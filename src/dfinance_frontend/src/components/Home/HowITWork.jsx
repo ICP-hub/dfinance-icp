@@ -35,7 +35,7 @@ const HowITWork = () => {
             className="w-full hidden lg:block mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
             <div className="flex items-center justify-center gap-4 mt-[35px]">
-              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+              <p className="text-[#233D63] text-[56px] font-[700] font-poppins dark:text-darkText">
                 1
               </p>
               <img
@@ -56,8 +56,8 @@ const HowITWork = () => {
             data-aos-duration="2000"
             className="w-full mx-auto md:block lg:hidden max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
-            <div className="flex items-center justify-center gap-4 mt-[35px]">
-              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+            <div className="flex items-center justify-center gap-2 mt-[35px]">
+              <p className="text-[#233D63] text-[56px] font-[700] font-poppins dark:text-darkText">
                 1
               </p>
               <img
@@ -78,8 +78,8 @@ const HowITWork = () => {
             data-aos-duration="2000"
             className="w-full mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
-            <div className="flex items-center justify-center gap-4 mt-[35px]">
-              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+            <div className="flex items-center justify-center gap-2 mt-[35px]">
+              <p className="text-[#233D63] text-[56px] font-[700] font-poppins dark:text-darkText">
                 2
               </p>
               <img
@@ -101,8 +101,8 @@ const HowITWork = () => {
             data-aos-duration="2000"
             className="w-full hidden lg:block mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
-            <div className="flex items-center justify-center gap-4 mt-[35px]">
-              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+            <div className="flex items-center justify-center gap-2 mt-[35px]">
+              <p className="text-[#233D63] text-[56px] font-[700] font-poppins dark:text-darkText">
                 3
               </p>
               <img
@@ -124,8 +124,8 @@ const HowITWork = () => {
             data-aos-duration="2000"
             className="w-full mx-auto md:block lg:hidden max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)]"
           >
-            <div className="flex items-center justify-center gap-4 mt-[35px]">
-              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+            <div className="flex items-center justify-center gap-2 mt-[35px]">
+              <p className="text-[#233D63] text-[56px] font-[700] font-poppins dark:text-darkText">
                 3
               </p>
               <img
@@ -148,8 +148,8 @@ const HowITWork = () => {
             data-aos-duration="2000"
             className="w-full mx-auto max-w-[309px] rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)] lg:col-span-2 lg:row-start-2 lg:transform lg:translate-x-12 lg:translate-y-5"
           >
-            <div className="flex items-center justify-center gap-4 mt-[35px]">
-              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+            <div className="flex items-center justify-center gap-2 mt-[35px]">
+              <p className="text-[#233D63] text-[56px] font-[700] font-poppins dark:text-darkText">
                 4
               </p>
               <img
@@ -174,7 +174,7 @@ const HowITWork = () => {
             className="w-full mx-auto max-w-[309px] lg:-ml-44 rounded-3xl border p-[24px] border-[#233D6324] bg-gradient-to-b from-[#FFDEFC] to-[#F7DAD0] dark:bg-[linear-gradient(to_bottom_right,#29283B,#29283B)] lg:col-span-1 lg:row-start-2 lg:transform lg:translate-x-20 lg:translate-y-10"
           >
             <div className="flex items-center justify-center gap-2 mt-[35px]">
-              <p className="text-[#233D63] text-[64px] font-[700] font-poppins dark:text-darkText">
+              <p className="text-[#233D63] text-[56px] font-[700] font-poppins dark:text-darkText">
                 5
               </p>
               <img
@@ -187,9 +187,7 @@ const HowITWork = () => {
               <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
                 Earn points on the actions you take
               </p>
-              <div className="w-full flex justify-center mt-3">
-                <Button title="LEARN MORE" />
-              </div>
+              
             </div>
           </div>
         </div>

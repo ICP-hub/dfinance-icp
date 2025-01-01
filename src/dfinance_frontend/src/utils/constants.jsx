@@ -66,13 +66,6 @@ export const FOOTER_LINK_2 = [
     icon: "",
     target: "_blank",
   },
-  {
-    id: 2,
-    title: "Blogs",
-    route: "/#",
-    icon: "",
-    target: "_blank",
-  },
 ];
 
 export const HOME_TOP_NAV_LINK = [

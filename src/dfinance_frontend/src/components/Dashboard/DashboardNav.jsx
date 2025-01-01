@@ -469,7 +469,7 @@ const principalObj = useMemo(
     if (totalSupplySize !== null && totalBorrowSize !== null) {
       updateWalletDetailTabs();
     }
-  }, [totalSupplySize, totalBorrowSize]);
+  }, [assets,totalSupplySize, totalBorrowSize]);
   
   
 
@@ -484,30 +484,42 @@ const principalObj = useMemo(
   const dropdownRef = useRef(null);
   const theme = useSelector((state) => state.theme.theme);
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
-
+  const menuRef = useRef(null);
   const handleClickOutside = (event) => {
+    // Close dropdown if clicked outside
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
       setIsDrop(false);
-      document.removeEventListener("mousedown", handleClickOutside);
     }
+  
+    // Close menu if clicked outside
     if (menuRef.current && !menuRef.current.contains(event.target)) {
       setIsMenuOpen(false);
-      document.removeEventListener("mousedown", handleClickOutside);
     }
   };
-  const menuRef = useRef(null);
-
+  
+  // Prevent scrolling when the menu is open
   useEffect(() => {
+    const handleBodyOverflow = () => {
+      if (isMenuOpen) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = ""; // Reset to default
+      }
+    };
+  
+    handleBodyOverflow();
+  
+    // Add click listener when the menu opens
     if (isMenuOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
+      document.addEventListener("mousedown", handleClickOutside);
     }
-
+  
     return () => {
-      document.body.classList.remove("overflow-hidden");
+      document.body.style.overflow = ""; // Ensure reset on unmount
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
+  
 
   const toggleDropdown = () => {
     if (!isDrop) {
@@ -581,7 +593,8 @@ const principalObj = useMemo(
   };
 
   const assetImage = assetImages[id] || null;
-
+  const isDashboardRoute = location.pathname === "/dashboard";
+  const isMarketRoute = location.pathname === "/market";
   return (
     <div className="w-full ">
       {["/dashboard", "/market", "/governance"].includes(pathname) && (
@@ -620,9 +633,11 @@ const principalObj = useMemo(
             isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
           }`}
         >
-          <button onClick={toggleMenu} className="rounded-md button1 z-10">
-            <EllipsisVertical color={checkColor} size={30} />
-          </button>
+          {(isMarketRoute || (isDashboardRoute && isAuthenticated)) && (
+        <button onClick={toggleMenu} className="rounded-md button1 z-10">
+          <EllipsisVertical color={checkColor} size={30} />
+        </button>
+      )}
         </div>
       </div>
 
@@ -647,96 +662,91 @@ const principalObj = useMemo(
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 mt-2">
-                    {(isDashboardSupplyOrMain
-                      ? walletDetailTab
-                      : walletDetailTabs
-                    ).map((data, index) => {
-                      if (data.title === "Health Factor" && assetBorrow === 0) {
-                        return null;
-                      }
+  {(isDashboardRoute
+    ? isAuthenticated // Check if it's the dashboard page and if authenticated
+      ? walletDetailTab
+      : []
+    : walletDetailTabs // Show walletDetailTabs everywhere else, including non-authenticated
+  ).map((data, index) => {
+    if (data.title === "Health Factor" && assetBorrow === 0) {
+      return null;
+    }
 
-                      return (
-                        <div
-                          key={index}
-                          className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
-                          style={{ minWidth: "220px", flex: "1 0 220px" }}
-                        >
-                          <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                            <div className="flex items-center">
-                              {data.title}
-                              {data.title === "Net APY" && (
-                                <span className="relative inline-block ml-1">
-                                  <Info
-                                    size={15}
-                                    className="ml-1 align-middle "
-                                    onClick={toggleTooltip}
-                                  />
+    return (
+      <div
+        key={index}
+        className="relative group text-[#2A1F9D] p-3 font-light dark:text-darkTextSecondary rounded-lg shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out"
+        style={{ minWidth: "220px", flex: "1 0 220px" }}
+      >
+        <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
+          <div className="flex items-center">
+            {data.title}
+            {data.title === "Net APY" && (
+              <span className="relative inline-block ml-1">
+                <Info
+                  size={15}
+                  className="ml-1 align-middle"
+                  onClick={toggleTooltip}
+                />
 
-                                  {isTooltipVisible && (
-                                    <>
-                                      <div
-                                        ref={tooltipRef}
-                                        className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
-                                      >
-                                        <span className="text-gray-700 dark:text-darkText">
-                                          Net APY represents the overall
-                                          annualized yield, calculated as the
-                                          difference between your supply APY and
-                                          debt APY.
-                                          <br />A positive Net APY indicates a
-                                          net gain, while a negative value
-                                          suggests more is borrowed than
-                                          supplied.
-                                        </span>
-                                      </div>
-                                    </>
-                                  )}
-                                </span>
-                              )}
-                            </div>
-
-                            <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-                            <span
-                              className={`font-bold text-[20px] ${
-                                data.title === "Health Factor"
-                                  ? data.count === 0
-                                    ? "text-red-500"
-                                    : data.count > 3
-                                    ? "text-green-500"
-                                    : data.count <= 1
-                                    ? "text-red-500"
-                                    : data.count <= 1.5
-                                    ? "text-orange-600"
-                                    : data.count <= 2
-                                    ? "text-orange-400"
-                                    : "text-orange-300"
-                                  : data.title === "Total Borrows"
-                                  ? "text-[#2A1F9D] dark:text-darkBlue"
-                                  : "text-[#2A1F9D] dark:text-darkBlue"
-                              }`}
-                            >
-                              {data.count !== null ? data.count : "\u00A0"}
-                            </span>
-                          </button>
-                        </div>
-                      );
-                    })}
+                {isTooltipVisible && (
+                  <div
+                    ref={tooltipRef}
+                    className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
+                  >
+                    <span className="text-gray-700 dark:text-darkText">
+                      Net APY represents the overall annualized yield, calculated as the difference between your supply APY and debt APY.
+                      <br />A positive Net APY indicates a net gain, while a negative value suggests more is borrowed than supplied.
+                    </span>
                   </div>
+                )}
+              </span>
+            )}
+          </div>
 
-                  {assetBorrow !== 0 && (
-                    <div className="flex justify-end mt-10 md:mt-0">
-                      <button
-                        className="w-full py-3 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
-                        onClick={handleOpenPopup}
-                        style={{
-                          minWidth: "220px",
-                          transition: " 400ms ease !important",
-                        }}
-                      >
-                        Risk Details
-                      </button>
-                    </div>
-                  )}
+          <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+          <span
+            className={`font-bold text-[20px] ${
+              data.title === "Health Factor"
+                ? data.count === 0
+                  ? "text-red-500"
+                  : data.count > 3
+                  ? "text-green-500"
+                  : data.count <= 1
+                  ? "text-red-500"
+                  : data.count <= 1.5
+                  ? "text-orange-600"
+                  : data.count <= 2
+                  ? "text-orange-400"
+                  : "text-orange-300"
+                : data.title === "Total Borrows"
+                ? "text-[#2A1F9D] dark:text-darkBlue"
+                : "text-[#2A1F9D] dark:text-darkBlue"
+            }`}
+          >
+            {data.count !== null ? data.count : "\u00A0"}
+          </span>
+        </button>
+      </div>
+    );
+  })}
+</div>
+
+{assetBorrow !== 0 && isAuthenticated && (
+  <div className="flex justify-end mt-10 md:mt-0">
+    <button
+      className="w-full py-1 px-3 bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% text-white text-xl rounded-md dark:bg-[#BA5858] dark:text-darkText"
+      onClick={handleOpenPopup}
+      style={{
+        minWidth: "220px",
+        transition: " 400ms ease !important",
+      }}
+    >
+      Risk Details
+    </button>
+  </div>
+)}
+
                 </div>
               </div>
             </div>

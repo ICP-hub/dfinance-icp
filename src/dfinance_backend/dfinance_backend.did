@@ -164,9 +164,7 @@ service : (principal) -> {
   faucet : (text, nat) -> (Result_3);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
-  get_asset_debt : (text, opt principal) -> (Result_3);
   get_asset_principal : (text) -> (Result_1) query;
-  get_asset_supply : (text, opt principal) -> (Result_3);
   get_cached_exchange_rate : (text) -> (Result_4) query;
   get_controller : () -> (Result_5) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_6);

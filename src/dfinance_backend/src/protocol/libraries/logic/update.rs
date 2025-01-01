@@ -407,18 +407,6 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-
-        if let Some((_, reserve_data)) = user_reserve {
-            reserve_data.last_update_timestamp = reserve.last_update_timestamp;
-            if reserve_data.asset_borrow == Nat::from(0u128) {
-                reserve_data.is_borrowed = false;
-                if !reserve_data.is_collateral {
-                    reserve_data.is_using_as_collateral_or_borrow = false;
-                }
-            }
-        } else {
-            return Err(Error::NoUserReserveDataFound);
-        }
         let balance_result = get_balance(
             Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
             user_principal,
@@ -431,12 +419,24 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-
-        if debttoken_balance == Nat::from(0u128) && is_collateral == false {
-            if let Some(ref mut reserves) = user_data.reserves {
-                reserves.retain(|(name, _)| name != &params.asset);
+        if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.last_update_timestamp = reserve.last_update_timestamp;
+            if debttoken_balance == Nat::from(0u128) {
+                reserve_data.is_borrowed = false;
+                if !reserve_data.is_collateral {
+                    reserve_data.is_using_as_collateral_or_borrow = false;
+                }
             }
+        } else {
+            return Err(Error::NoUserReserveDataFound);
         }
+        
+
+        // if debttoken_balance == Nat::from(0u128) && is_collateral == false {
+        //     if let Some(ref mut reserves) = user_data.reserves {
+        //         reserves.retain(|(name, _)| name != &params.asset);
+        //     }
+        // }
         ic_cdk::println!("Saving updated user data to state");
 
         mutate_state(|state| {
@@ -575,7 +575,7 @@ if total_debt != Nat::from(0u128) {
     let mut ltv = Nat::from(0u128);
     if amount != Nat::from(0u128) {
         let mut adjusted_collateral = Nat::from(0u128);
-        if adjusted_collateral < usd_amount.clone() {
+        if total_collateral < usd_amount.clone() {
             adjusted_collateral = Nat::from(0u128);
         }else{
             adjusted_collateral = total_collateral.clone() - usd_amount.clone();

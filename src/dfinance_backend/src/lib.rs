@@ -295,7 +295,7 @@ fn calculate_dynamic_balance(
     initial_deposit * (new_liquidity_index / prev_liquidity_index)
 }
 
-#[update]
+
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -410,7 +410,7 @@ pub async fn get_asset_supply(
     Ok(result)
 }
 
-#[update]
+
 pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -450,15 +450,20 @@ pub async fn get_asset_debt(
             return Err(e);
         }
     };
-
+    ic_cdk::println!("user data = {:?}", user_data);
     let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
         Some(data) => data,
         None => {
+            ic_cdk::println!(
+                "Error: User reserve data not found for asset while get asset debt returing 0: {}",
+                asset_name
+            );
             return Ok(Nat::from(0u128));
         }
     };
     let (_, user_reserve) = user_reserve_data;
     if !user_reserve.is_borrowed {
+        ic_cdk::println!("User has no debt for asset: {}", asset_name);
         return Ok(Nat::from(0u128));
     }
 

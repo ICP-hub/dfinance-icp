@@ -456,9 +456,16 @@ impl ValidationLogic {
             None => None,
         };
 
-        let mut user_current_debt =
-            get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
-
+        // let user_current_debt = get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
+        let user_current_debt = match get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await {
+            Ok(debt) => debt,
+            Err(e) => {
+                // Log the error or perform a fallback action
+                ic_cdk::println!("Error getting asset debt: {:?}", e);
+                return Err(e.into()); // Or handle the error accordingly
+            }
+        };
+        ic_cdk::println!("User current debt: {:?}", user_current_debt);
         if user_current_debt == Nat::from(0u128) {
             return Err(Error::NoDebtToRepay);
         }

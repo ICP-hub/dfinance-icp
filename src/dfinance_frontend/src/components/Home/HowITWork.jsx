@@ -3,6 +3,11 @@ import { GoArrowRight } from "react-icons/go";
 import Aos from "aos";
 import "aos/dist/aos.css";
 import ICPRequest from "../../../public/howitworks/ICP-request.png";
+import supply from "../../../public/Helpers/supply.png";
+import borrow from "../../../public/Helpers/borrow.png";
+import Max from "../../../public/Helpers/max.png";
+import Ltv from "../../../public/Helpers/Ltv.png";
+import Points from "../../../public/Helpers/points.png";
 import Calculator from "../../../public/howitworks/calculator.png";
 import Button from "../../components/Common/Button";
 import SubmitICPRequest from "../../../public/howitworks/Submit-ICPRequest.png";
@@ -35,7 +40,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={ICPRequest}
+                src={supply}
                 draggable="false"
               />
             </div>
@@ -57,7 +62,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={ICPRequest}
+                src={supply}
                 draggable="false"
               />
             </div>
@@ -79,7 +84,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={ICPRequest}
+                src={borrow}
                 draggable="false"
               />
             </div>
@@ -102,7 +107,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={ICPRequest}
+                src={Max}
                 draggable="false"
               />
             </div>
@@ -125,7 +130,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={ICPRequest}
+                src={Max}
                 draggable="false"
               />
             </div>
@@ -149,7 +154,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={ICPRequest}
+                src={Ltv}
                 draggable="false"
               />
             </div>
@@ -174,7 +179,7 @@ const HowITWork = () => {
               </p>
               <img
                 className="w-[120px] h-[120px] object-contain"
-                src={ICPRequest}
+                src={Points}
                 draggable="false"
               />
             </div>

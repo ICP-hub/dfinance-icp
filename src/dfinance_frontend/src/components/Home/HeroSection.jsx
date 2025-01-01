@@ -1,10 +1,17 @@
-import React, { useState } from "react";
-import { useEffect } from "react";
-import { TEMP_HERO_COUNTER_NUMBER } from "../../utils/constants";
+import React from "react";
+import { useEffect, useState } from "react";
 import useAssetData from "../Common/useAssets";
-const HeroSection = () => {
 
+const HeroSection = () => {
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Set loading to false when data is fetched
+    if (totalSupplySize !== null && totalSupplySize !== undefined) {
+      setLoading(false);
+    }
+  }, [totalSupplySize]);
 
   return (
     <div
@@ -30,11 +37,10 @@ const HeroSection = () => {
           Revolutionizing DeFi on the Internet Computer Protocol
         </p>
 
-        <div className="w-full mt-10 h-32 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl text-center  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd flex flex-col justify-center items-center px-4 lg:gap-3 gap-4">
+        <div className="w-full mt-10 h-32 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl text-center dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd flex flex-col justify-center items-center px-4 lg:gap-3 gap-4">
           <h1 className="text-[#2A1F9D] font-bold  dark:text-darkText">
-            $ {totalSupplySize}
+            { `$ ${totalSupplySize}`}
           </h1>
-          {}
           <p className="text-sm font-normal text-[#585454] dark:text-darkText lg:-mb-1 md:-mb-0">
             Total supply side positions on the platform
           </p>

@@ -461,15 +461,16 @@ const principalObj = useMemo(
         }
       });
   
+      // Update the state only once after calculation
       setWalletDetailTabs(updatedTabs);
     };
   
-    // Debug values before updating tabs
-  
+    // Ensure the values are valid before updating
     if (totalSupplySize !== null && totalBorrowSize !== null) {
       updateWalletDetailTabs();
     }
-  }, [fetchReserveData, assets, principal, totalSupplySize, totalBorrowSize, walletDetailTabs]);
+  }, [totalSupplySize, totalBorrowSize]);
+  
   
 
   const { state, pathname } = useLocation();

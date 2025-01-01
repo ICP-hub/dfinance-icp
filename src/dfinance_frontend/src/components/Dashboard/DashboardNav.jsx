@@ -57,7 +57,7 @@ const principalObj = useMemo(
     fetchAssetSupply,
     reserveData,
   } = useAssetData();
-
+  
   const fetchAssetData = async () => {
     const balances = [];
 
@@ -406,72 +406,71 @@ const principalObj = useMemo(
 
   useEffect(() => {}, [netApy]);
 
-  const updateWalletDetailTabs = () => {
-    const updatedTabs = walletDetailTabs.map((item) => {
-      switch (item.id) {
-        case 0:
-          return {
-            ...item,
-            count: (
-              <>
-                <span className="font-light">$</span>
-                {totalSupplySize}
-              </>
-            ),
-          };
-        case 1:
-          const convertToNumber = (value) => {
-            if (typeof value === "string") {
-              const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
-              if (value.includes("K")) {
-                return numberValue * 1e3;
-              }
-              if (value.includes("M")) {
-                return numberValue * 1e6;
-              }
-
-              return numberValue;
-            }
-            return 0;
-          };
-
-          const supply = convertToNumber(totalSupplySize);
-          const borrow = convertToNumber(totalBorrowSize);
-
-          const result = !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
-
-          const formattedResult = formatNumber(
-            result === "0.00" ? "0" : result
-          );
-          return {
-            ...item,
-            count: (
-              <>
-                <span className="font-light">$</span>
-                {formattedResult}
-              </>
-            ),
-          };
-        case 2:
-          return {
-            ...item,
-            count: (
-              <>
-                <span className="font-light">$</span>
-                {totalBorrowSize}
-              </>
-            ),
-          };
-        default:
-          return item;
-      }
-    });
-
-    setWalletDetailTabs(updatedTabs);
-  };
   useEffect(() => {
-    updateWalletDetailTabs();
-  }, [totalMarketSize]);
+    const updateWalletDetailTabs = () => {
+      const updatedTabs = walletDetailTabs.map((item) => {
+        switch (item.id) {
+          case 0:
+            return {
+              ...item,
+              count: (
+                <>
+                  <span className="font-light">$</span>
+                  {totalSupplySize}
+                </>
+              ),
+            };
+          case 1: {
+            const convertToNumber = (value) => {
+              if (typeof value === "string") {
+                const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
+                if (value.includes("K")) return numberValue * 1e3;
+                if (value.includes("M")) return numberValue * 1e6;
+                return numberValue;
+              }
+              return 0;
+            };
+  
+            const supply = convertToNumber(totalSupplySize);
+            const borrow = convertToNumber(totalBorrowSize);
+            const result = !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
+            const formattedResult = formatNumber(result === "0.00" ? "0" : result);
+  
+            return {
+              ...item,
+              count: (
+                <>
+                  <span className="font-light">$</span>
+                  {formattedResult}
+                </>
+              ),
+            };
+          }
+          case 2:
+            return {
+              ...item,
+              count: (
+                <>
+                  <span className="font-light">$</span>
+                  {totalBorrowSize}
+                </>
+              ),
+            };
+          default:
+            return item;
+        }
+      });
+  
+      setWalletDetailTabs(updatedTabs);
+    };
+  
+    // Debug values before updating tabs
+  
+    if (totalSupplySize !== null && totalBorrowSize !== null) {
+      updateWalletDetailTabs();
+    }
+  }, [fetchReserveData, assets, principal, totalSupplySize, totalBorrowSize, walletDetailTabs]);
+  
 
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
@@ -742,104 +741,136 @@ const principalObj = useMemo(
             </div>
           </div>
 
-          {isAuthenticated && (
-            <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText lg:mb-0 mb-8 mt-8">
-              {pathname !== "/dashboard/transaction-history" &&
-                (isDashboardSupplyOrMain
-                  ? walletDetailTab
-                  : walletDetailTabs
-                ).map((data, index) => {
-                  if (data.title === "Health Factor" && assetBorrow === 0) {
-                    return null;
-                  }
+          <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText lg:mb-0 mb-8 mt-8">
+  {/* Render walletDetailTabs unless on any dashboard page */}
+  {!pathname.startsWith("/dashboard") &&
+    walletDetailTabs.map((data, index) => {
+      if (data.title === "Health Factor" && assetBorrow === 0) {
+        return null;
+      }
 
-                  return (
-                    <div key={index} className="relative group">
-                      <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                        <div className="flex items-center">
-                          {data.title}
-                          {data.title === "Net APY" && (
-                            <span
-                              className="relative inline-block ml-1"
-                              onMouseEnter={() => setIsTooltipVisible(true)}
-                              onMouseLeave={() => setIsTooltipVisible(false)}
-                            >
-                              <Info
-                                size={15}
-                                className="ml-1 align-middle cursor-pointer"
-                                onClick={toggleTooltip}
-                              />
+      return (
+        <div key={index} className="relative group">
+          <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
+            <div className="flex items-center">
+              {data.title}
+              {data.title === "Net APY" && (
+                <span
+                  className="relative inline-block ml-1"
+                  onMouseEnter={() => setIsTooltipVisible(true)}
+                  onMouseLeave={() => setIsTooltipVisible(false)}
+                >
+                  <Info
+                    size={15}
+                    className="ml-1 align-middle cursor-pointer"
+                    onClick={toggleTooltip}
+                  />
 
-                              {isTooltipVisible && (
-                                <>
-                                  <div
-                                    ref={tooltipRef}
-                                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
-                                  >
-                                    <span className="text-gray-700 dark:text-darkText">
-                                      Net APY represents the overall annualized
-                                      yield, calculated as the difference
-                                      between your supply APY and debt APY.
-                                      <br />A positive Net APY indicates a net
-                                      gain, while a negative value suggests more
-                                      is borrowed than supplied.
-                                    </span>
-
-                                    <span
-                                      className={`tooltip-arrow ${
-                                        theme === "dark"
-                                          ? "tooltip-arrow-dark"
-                                          : ""
-                                      }`}
-                                    ></span>
-                                  </div>
-                                </>
-                              )}
-                            </span>
-                          )}
-                        </div>
-
-                        <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-
-                        <span
-                          className={`font-bold text-[20px] ${
-                            data.title === "Health Factor"
-                              ? data.count === 0 && assetSupply === 0
-                                ? "text-[#2A1F9D] dark:text-darkBlue"
-                                : data.count > 3
-                                ? "text-green-500"
-                                : data.count <= 1
-                                ? "text-red-500"
-                                : data.count <= 1.5
-                                ? "text-orange-600"
-                                : data.count <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                              : data.title === "Total Borrows"
-                              ? "text-[#2A1F9D] dark:text-darkBlue"
-                              : "text-[#2A1F9D] dark:text-darkBlue"
-                          }`}
-                        >
-                          {data.count !== null ? data.count : "\u00A0"}
-                        </span>
-                      </button>
+                  {isTooltipVisible && (
+                    <div
+                      ref={tooltipRef}
+                      className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
+                    >
+                      <span className="text-gray-700 dark:text-darkText">
+                        Net APY represents the overall annualized yield,
+                        calculated as the difference between your supply APY
+                        and debt APY.
+                        <br />
+                        A positive Net APY indicates a net gain, while a
+                        negative value suggests more is borrowed than supplied.
+                      </span>
                     </div>
-                  );
-                })}
-
-              {isAuthenticated &&
-                shouldRenderRiskDetailsButton &&
-                assetBorrow !== 0 && (
-                  <button
-                    id="risk-details"
-                    className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md dark:text-darkTextSecondary button1"
-                    onClick={handleOpenPopup}
-                  >
-                    Risk Details
-                  </button>
-                )}
+                  )}
+                </span>
+              )}
             </div>
-          )}
+
+            <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+
+            <span
+              className={`font-bold text-[20px] ${
+                data.title === "Health Factor"
+                  ? data.count === 0 && assetSupply === 0
+                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                    : data.count > 3
+                    ? "text-green-500"
+                    : data.count <= 1
+                    ? "text-red-500"
+                    : data.count <= 1.5
+                    ? "text-orange-600"
+                    : data.count <= 2
+                    ? "text-orange-400"
+                    : "text-orange-300"
+                  : data.title === "Total Borrows"
+                  ? "text-[#2A1F9D] dark:text-darkBlue"
+                  : "text-[#2A1F9D] dark:text-darkBlue"
+              }`}
+            >
+              {data.count !== null ? data.count : "\u00A0"}
+            </span>
+          </button>
+        </div>
+      );
+    })}
+
+  {/* Render walletDetailTab only if authenticated */}
+  {isAuthenticated &&
+    pathname !== "/dashboard/transaction-history" &&
+    isDashboardSupplyOrMain &&
+    walletDetailTab.map((data, index) => {
+      if (data.title === "Health Factor" && assetBorrow === 0) {
+        return null;
+      }
+
+      return (
+        <div key={index} className="relative group">
+          <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
+            <div className="flex items-center">
+              {data.title}
+            </div>
+
+            <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
+
+            <span
+              className={`font-bold text-[20px] ${
+                data.title === "Health Factor"
+                  ? data.count === 0 && assetSupply === 0
+                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                    : data.count > 3
+                    ? "text-green-500"
+                    : data.count <= 1
+                    ? "text-red-500"
+                    : data.count <= 1.5
+                    ? "text-orange-600"
+                    : data.count <= 2
+                    ? "text-orange-400"
+                    : "text-orange-300"
+                  : data.title === "Total Borrows"
+                  ? "text-[#2A1F9D] dark:text-darkBlue"
+                  : "text-[#2A1F9D] dark:text-darkBlue"
+              }`}
+            >
+              {data.count !== null ? data.count : "\u00A0"}
+            </span>
+          </button>
+        </div>
+      );
+    })}
+
+  {/* Risk Details button rendered only if authenticated */}
+  {isAuthenticated &&
+    shouldRenderRiskDetailsButton &&
+    assetBorrow !== 0 && (
+      <button
+        id="risk-details"
+        className="-mt-2 py-1 px-2 border dark:border-white border-blue-500 text-[#2A1F9D] text-[11px] rounded-md dark:text-darkTextSecondary button1"
+        onClick={handleOpenPopup}
+      >
+        Risk Details
+      </button>
+    )}
+</div>
+
           {isPopupOpen && (
             <RiskPopup
               onClose={handleClosePopup}

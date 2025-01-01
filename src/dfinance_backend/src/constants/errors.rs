@@ -7,6 +7,7 @@ pub enum Error {
     InvalidAmount,
     InvalidCanister,
     InvalidPrincipal,
+    AnonymousPrincipal,
     MaxAmount,
     ReserveInactive,
     ReservePaused,
@@ -57,6 +58,11 @@ pub enum Error {
     ErrorDecoding,
     LockAcquisitionFailed,
     InsufficientLiquidity,
+    ErrorRollBack,
+    EmailError,
+    ErrorNotController,
+    InvalidVariableName,
+    TokenAlreadyExist,
 }
 
 impl Error {
@@ -66,6 +72,7 @@ impl Error {
             Error::InvalidAmount => "Amount must be greater than 0",
             Error::InvalidCanister => "Invalid canister id",
             Error::InvalidPrincipal => "Invalid principal id",
+            Error::AnonymousPrincipal => "Anonymous principals are not allowed",
             Error::MaxAmount => "Amount must be less than user balance",
             Error::ReserveInactive => "Action requires an active reserve",
             Error::ReservePaused => "Action cannot be performed because the reserve is paused",
@@ -116,6 +123,11 @@ impl Error {
             Error::ErrorDecoding => "Error decoding response",
             Error::LockAcquisitionFailed => "Failed to acquire lock",
             Error::InsufficientLiquidity => "Insufficient liquidity",
+            Error::ErrorRollBack => "Error while rollback",
+            Error::EmailError => "Error in sending email to the admin",
+            Error::ErrorNotController => "you are not a controller",
+            Error::InvalidVariableName => "name of the variable is invalid - please enter it again",
+            Error::TokenAlreadyExist => "Token already exist - try again with different token"
         }
     }
 }

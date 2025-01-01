@@ -6,6 +6,7 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
+use crate::protocol::libraries::math::calculate::update_reserves_price;
 use candid::{Nat, Principal};
 use ic_cdk::update;
 use crate::api::resource_manager::{acquire_lock, release_lock};
@@ -34,7 +35,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let operation_key = format!("supply_{}", user_principal.to_text());
@@ -69,21 +70,15 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
                 .ok_or_else(|| Error::NoReserveDataFound)
         });
 
-        let mut reserve_data = match reserve_data_result {
-            Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset");
-                data
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        };
-
-        // TODO: decide postion of this code.
-        // if let Err(e) = update_reserves_price().await {
-        //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
-        //     return Err(e);
-        // }
+    let mut reserve_data = match reserve_data_result {
+        Ok(data) => {
+            ic_cdk::println!("Reserve data found for asset");
+            data
+        }
+        Err(e) => {
+            return Err(e);
+        }
+    };
 
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
@@ -105,7 +100,10 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         }
         ic_cdk::println!("Supply validated successfully");
 
-        //TODO call mint function here
+    if let Err(e) = update_reserves_price().await {
+        ic_cdk::println!("Failed to update reserves price: {:?}", e);
+        return Err(e);
+    }
 
         let liq_added = params.amount.clone();
         let liq_taken = Nat::from(0u128);
@@ -213,7 +211,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     if let Some(principal) = params.on_behalf_of {
         if principal == Principal::anonymous() {
             ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::InvalidPrincipal);
+            return Err(Error::AnonymousPrincipal);
         }
     }
 
@@ -223,14 +221,14 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             let liquidator_principal = ic_cdk::caller();
             if liquidator_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
-                return Err(Error::InvalidPrincipal);
+                return Err(Error::AnonymousPrincipal);
             }
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();
             if user_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
-                return Err(Error::InvalidPrincipal);
+                return Err(Error::AnonymousPrincipal);
             }
             (user_principal, None)
         };
@@ -275,11 +273,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             return Err(e);
         }
     };
-
-    // if let Err(e) = update_reserves_price().await {
-    //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
-    //     return Err(e);
-    // }
 
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
@@ -346,7 +339,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             Ok(new_balance)
         }
         Err(_) => {
-            //TODO mint the dtoken back to user
             let supply_param = ExecuteSupplyParams {
                 asset: params.asset.clone(),
                 amount: params.amount.clone(),
@@ -361,7 +353,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             .await
             {
                 ic_cdk::println!("Failed to update user data: {:?}", e);
-                return Err(e);
+                return Err(Error::ErrorRollBack);
             }
 
             mutate_state(|state| {

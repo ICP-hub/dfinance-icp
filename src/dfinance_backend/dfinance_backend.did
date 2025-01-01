@@ -21,21 +21,27 @@ type Error = variant {
   InvalidCanister;
   LTVGreaterThanThreshold;
   ReserveInactive;
+  InvalidVariableName;
   WithdrawMoreThanSupply;
   ErrorMintTokens;
   BorrowingNotEnabled;
   InvalidPrincipal;
+  ErrorNotController;
   NoReserveDataFound;
   LowWalletBalance;
   InvalidBurnAmount;
+  AnonymousPrincipal;
   InvalidUserId;
+  EmailError;
   ErrorPriceCache;
   InvalidUser;
   EmptyAsset;
+  TokenAlreadyExist;
   MaxAmount;
   ErrorParsingPrincipal;
   ReserveFrozen;
   LessRewardAmount;
+  ErrorRollBack;
   ErrorBurnDTokens;
   NoPriceCache;
   ConversionErrorFromTextToPrincipal;
@@ -56,6 +62,12 @@ type Error = variant {
   NormalizedDebt;
 };
 type ExecuteBorrowParams = record { asset : text; amount : nat };
+type ExecuteLiquidationParams = record {
+  debt_asset : text;
+  collateral_asset : text;
+  on_behalf_of : principal;
+  amount : nat;
+};
 type ExecuteRepayParams = record {
   asset : text;
   on_behalf_of : opt principal;
@@ -72,6 +84,7 @@ type ExecuteWithdrawParams = record {
   on_behalf_of : opt principal;
   amount : nat;
 };
+type InitArgs = record { controller_id : principal };
 type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
   ltv : nat;
@@ -89,7 +102,6 @@ type ReserveConfiguration = record {
 type ReserveData = record {
   id : nat16;
   asset_name : opt text;
-  userlist : opt vec record { text; bool };
   asset_borrow : nat;
   can_be_collateral : opt bool;
   debt_token_canister : opt text;
@@ -102,23 +114,22 @@ type ReserveData = record {
   configuration : ReserveConfiguration;
   accure_to_platform : nat;
   debt_index : nat;
-  total_borrowed : nat;
-  total_supply : nat;
 };
 type Result = variant { Ok : text; Err : Error };
-type Result_1 = variant { Ok : nat; Err : Error };
-type Result_10 = variant { Ok : record { nat; nat }; Err : Error };
-type Result_2 = variant { Ok : principal; Err : Error };
-type Result_3 = variant { Ok : PriceCache; Err : Error };
-type Result_4 = variant { Ok : record { nat; nat64 }; Err : Error };
-type Result_5 = variant { Ok : bool; Err : Error };
-type Result_6 = variant { Ok : ReserveData; Err : Error };
-type Result_7 = variant {
+type Result_1 = variant { Ok : principal; Err : Error };
+type Result_10 = variant { Ok : UserData; Err : Error };
+type Result_11 = variant { Ok : record { nat; nat }; Err : Error };
+type Result_2 = variant { Ok; Err : Error };
+type Result_3 = variant { Ok : nat; Err : Error };
+type Result_4 = variant { Ok : PriceCache; Err : Error };
+type Result_5 = variant { Ok : InitArgs; Err : Error };
+type Result_6 = variant { Ok : record { nat; nat64 }; Err : Error };
+type Result_7 = variant { Ok : bool; Err : Error };
+type Result_8 = variant { Ok : ReserveData; Err : Error };
+type Result_9 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
 };
-type Result_8 = variant { Ok : UserData; Err : Error };
-type Result_9 = variant { Ok; Err : Error };
 type UserData = record {
   reserves : opt vec record { text; UserReserveData };
   total_collateral : opt nat;
@@ -140,34 +151,39 @@ type UserReserveData = record {
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
-service : () -> {
+service : (principal) -> {
   check_lock : () -> (Result);
-  execute_borrow : (ExecuteBorrowParams) -> (Result_1);
-  execute_liquidation : (text, text, nat, principal) -> (Result_1);
-  execute_repay : (ExecuteRepayParams) -> (Result_1);
-  execute_supply : (ExecuteSupplyParams) -> (Result_1);
-  execute_withdraw : (ExecuteWithdrawParams) -> (Result_1);
-  faucet : (text, nat) -> (Result_1);
+  create_testtoken_canister : (text, text) -> (Result_1);
+  create_token_canister : (text, text) -> (Result_1);
+  cycle_checker : () -> (Result_2);
+  execute_borrow : (ExecuteBorrowParams) -> (Result_3);
+  execute_liquidation : (ExecuteLiquidationParams) -> (Result_3);
+  execute_repay : (ExecuteRepayParams) -> (Result_3);
+  execute_supply : (ExecuteSupplyParams) -> (Result_3);
+  execute_withdraw : (ExecuteWithdrawParams) -> (Result_3);
+  faucet : (text, nat) -> (Result_3);
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
-  get_asset_debt : (text, opt principal) -> (Result_1);
-  get_asset_principal : (text) -> (Result_2) query;
-  get_asset_supply : (text, opt principal) -> (Result_1);
-  get_balance : (principal, principal) -> (Result_1) query;
-  get_cached_exchange_rate : (text) -> (Result_3) query;
-  get_exchange_rates : (text, opt text, nat) -> (Result_4);
-  get_lock : () -> (Result_5) query;
-  get_reserve_data : (text) -> (Result_6) query;
-  get_total_supply : (principal) -> (Result_1) query;
-  get_user_account_data : (opt principal) -> (Result_7);
-  get_user_data : (principal) -> (Result_8) query;
-  initialize_canister : () -> (Result_9);
-  initialize_reserve : () -> (Result_9);
+  get_asset_debt : (text, opt principal) -> (Result_3);
+  get_asset_principal : (text) -> (Result_1) query;
+  get_asset_supply : (text, opt principal) -> (Result_3);
+  get_cached_exchange_rate : (text) -> (Result_4) query;
+  get_controller : () -> (Result_5) query;
+  get_exchange_rates : (text, opt text, nat) -> (Result_6);
+  get_lock : () -> (Result_7) query;
+  get_reserve_data : (text) -> (Result_8) query;
+  get_total_supply : (principal) -> (Result_3) query;
+  get_user_account_data : (opt principal) -> (Result_9);
+  get_user_data : (principal) -> (Result_10) query;
+  initialize : (text, ReserveData) -> (Result_2);
+  initialize_canister : () -> (Result_2);
+  initialize_reserve : () -> (Result_2);
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result);
-  toggle_collateral : (text, nat, nat) -> (Result_9);
-  update_reserves_price : () -> (Result_9);
-  user_normalized_debt : (ReserveData) -> (Result_1) query;
-  user_normalized_supply : (ReserveData) -> (Result_1) query;
-  user_position : (text) -> (Result_10) query;
+  reset_reserve_value : (text, text, nat) -> (Result_2);
+  toggle_collateral : (text, nat, nat) -> (Result_2);
+  update_reserves_price : () -> (Result_2);
+  user_normalized_debt : (ReserveData) -> (Result_3) query;
+  user_normalized_supply : (ReserveData) -> (Result_3) query;
+  user_position : (text) -> (Result_11) query;
 }

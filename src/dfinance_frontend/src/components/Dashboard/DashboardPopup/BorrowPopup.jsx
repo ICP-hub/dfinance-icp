@@ -48,6 +48,14 @@ if (onLoadingChange) {
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const scaledAmount = amountAsNat64;
+
+  const borrowErrorMessages = {
+    NoReserveDataFound: "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
+    NoCanisterIdFound: "The canister ID for the selected asset is missing. Please contact support.",
+    ErrorMintDebtTokens: "Borrow failed due to a debt token error. Your account state has been rolled back. Try again later.",
+    Default: "An unexpected error occurred during the borrow process. Please try again later.",
+  };
+
   const handleBorrowETH = async () => {
     setIsLoading(true);
     let ledgerActor;
@@ -103,9 +111,10 @@ if (onLoadingChange) {
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
-        const errorMsg = borrowResult.Err;
-        console.log("error",errorMsg)
-        toast.error(`Borrow failed: ${errorMsg}`, {
+        const errorKey = borrowResult.Err;
+        const userFriendlyMessage = borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
+        console.log("error",errorKey);
+        toast.error(userFriendlyMessage, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -244,32 +253,36 @@ if (onLoadingChange) {
   console.log("healthfactor backend",healthFactorBackend)
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value.replace(/,/g, "");
-
-    if (!/^\d*\.?\d*$/.test(inputAmount)) {
-      return;
+    let inputAmount = e.target.value;
+  
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    if (inputAmount.indexOf('.') !== inputAmount.lastIndexOf('.')) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf('.'));
     }
-
+  
+    if (inputAmount === "") {
+      setAmount(""); 
+      updateAmountAndUsdValue(""); 
+      return; 
+    }
+  
     const numericAmount = parseFloat(inputAmount);
-
+  
     if (numericAmount > parseFloat(borrowableAssetValue)) {
-      return;
+      return; 
     }
-
+  
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart).toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+      formattedAmount = parseInt(inputAmount).toLocaleString("en-US"); 
     }
-
+  
     setAmount(formattedAmount);
-
-    updateAmountAndUsdValue(inputAmount);
+    updateAmountAndUsdValue(inputAmount); 
   };
 
   const updateAmountAndUsdValue = (inputAmount) => {

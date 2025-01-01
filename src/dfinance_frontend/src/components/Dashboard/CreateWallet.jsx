@@ -30,40 +30,6 @@ const CreateWallet = () => {
 
   const principalObj = Principal.fromText(principal);
 
-  const [balance, setBalance] = useState(null);
-
-  const ledgerActorckBTC = useMemo(
-    () =>
-      createLedgerActor(
-        process.env.CANISTER_ID_CKBTC_LEDGER,
-        ledgerIdlFactoryckBTC
-      ),
-    [createLedgerActor]
-  );
-
-  const ledgerActorckETH = useMemo(
-    () =>
-      createLedgerActor(
-        process.env.CANISTER_ID_CKETH_LEDGER,
-        ledgerIdlFactoryckETH
-      ),
-    [createLedgerActor]
-  );
-
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (isAuthenticated && ledgerActorckBTC && principalObj) {
-        try {
-          const account = { owner: principalObj, subaccount: [] };
-          const balance = await ledgerActorckBTC.icrc1_balance_of(account);
-          setBalance(balance.toString());
-        } catch (error) {
-        }
-      }
-    };
-
-    fetchBalance();
-  }, [isAuthenticated, ledgerActorckBTC, principalObj]);
 
   return (
     <>

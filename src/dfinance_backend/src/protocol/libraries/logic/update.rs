@@ -3,7 +3,7 @@ use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::get_reserve_data;
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
-use crate::protocol::libraries::logic::user::GenericLogic;
+use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserData;
@@ -61,7 +61,7 @@ impl UpdateLogic {
             reserve_data.reserve = params.asset.clone();
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
-            reserve_data.is_collateral = true;
+           
 
             if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
                 if reserve_data.is_borrowed {
@@ -201,7 +201,7 @@ impl UpdateLogic {
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 last_update_timestamp: current_timestamp(),
-                is_collateral: false,
+               
                 ..Default::default()
             };
 
@@ -320,9 +320,6 @@ impl UpdateLogic {
                 reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
             }
 
-            if reserve_data.asset_supply == Nat::from(0u128) {
-                reserve_data.is_collateral = true;
-            }
         } else {
             ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
             return Err(Error::NoReserveDataFound);
@@ -333,12 +330,16 @@ impl UpdateLogic {
             user_principal,
         )
         .await?;
-
-        if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
-            if let Some(ref mut reserves) = user_data.reserves {
-                reserves.retain(|(name, _)| name != &params.asset);
-            }
-        }
+    if params.is_collateral==false && dtoken_balance == Nat::from(0u128) {
+        if let Some((_, reserve_data)) = user_reserve {
+        reserve_data.is_collateral = true;
+    }
+  }
+        // if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
+        //     if let Some(ref mut reserves) = user_data.reserves {
+        //         reserves.retain(|(name, _)| name != &params.asset);
+        //     }
+        // }
         // Save the updated user data back to state
         mutate_state(|state| {
             state
@@ -474,7 +475,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let user_data_result = user_data(user_principal);
@@ -542,7 +543,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     let mut liquidation_threshold_var = Nat::from(0u128);
 
     let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-        GenericLogic::calculate_user_account_data(None).await;
+        calculate_user_account_data(None).await;
 
     match user_data_result {
         Ok((
@@ -572,7 +573,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     }
 if total_debt != Nat::from(0u128) {
     let mut ltv = Nat::from(0u128);
-    //TODO if total_debt ==0 , so no need to cal ltv
     if amount != Nat::from(0u128) {
         let mut adjusted_collateral = Nat::from(0u128);
         if adjusted_collateral < usd_amount.clone() {

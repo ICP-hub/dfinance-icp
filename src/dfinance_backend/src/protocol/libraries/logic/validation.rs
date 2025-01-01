@@ -3,10 +3,11 @@ use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::assets::ReserveData;
-use crate::{get_asset_debt,get_asset_supply, get_cached_exchange_rate};
 use crate::protocol::libraries::logic::update::user_data;
-use crate::protocol::libraries::logic::user::GenericLogic;
+use crate::protocol::libraries::logic::user::calculate_user_account_data;
+use crate::protocol::libraries::math::calculate::update_reserves_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::{get_asset_debt, get_asset_supply, get_cached_exchange_rate};
 use candid::{Nat, Principal};
 
 pub struct ValidationLogic;
@@ -15,7 +16,6 @@ impl ValidationLogic {
     //     // -------------------------------------
     //     // -------------- SUPPLY ---------------
     //     // -------------------------------------
-
     pub async fn validate_supply(
         reserve: &ReserveData,
         amount: Nat,
@@ -145,7 +145,7 @@ impl ValidationLogic {
         ic_cdk::println!("User balance: {:?}", platform_balance);
 
         if amount > platform_balance {
-            return Err(Error::MaxAmountPlatform);    
+            return Err(Error::MaxAmountPlatform);
         }
 
         // validating reserve states
@@ -168,6 +168,11 @@ impl ValidationLogic {
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
+        if let Err(e) = update_reserves_price().await {
+            ic_cdk::println!("Failed to update reserves price: {:?}", e);
+            return Err(e);
+        }
+
         let mut total_collateral = Nat::from(0u128);
         let mut total_debt = Nat::from(0u128);
         let mut avg_ltv = Nat::from(0u128);
@@ -175,7 +180,7 @@ impl ValidationLogic {
         let mut liquidation_threshold_var = Nat::from(0u128);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            GenericLogic::calculate_user_account_data(None).await;
+            calculate_user_account_data(None).await;
 
         match user_data_result {
             Ok((
@@ -204,54 +209,52 @@ impl ValidationLogic {
             }
         }
 
-        //TODO: whether is sho++ld be none or zero.
         if total_debt != Nat::from(0u128) {
-       
-        let mut rate: Option<Nat> = None;
+            let mut rate: Option<Nat> = None;
 
-        match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
-            Ok(price_cache) => {
-                // Fetch the specific CachedPrice for the asset from the PriceCache
-                if let Some(cached_price) =
-                    price_cache.cache.get(&reserve.asset_name.clone().unwrap())
-                {
-                    let amount = cached_price.price.clone();
-                    rate = Some(amount);
-                } else {
+            match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
+                Ok(price_cache) => {
+                    // Fetch the specific CachedPrice for the asset from the PriceCache
+                    if let Some(cached_price) =
+                        price_cache.cache.get(&reserve.asset_name.clone().unwrap())
+                    {
+                        let amount = cached_price.price.clone();
+                        rate = Some(amount);
+                    } else {
+                        rate = None;
+                    }
+                }
+                Err(err) => {
                     rate = None;
                 }
             }
-            Err(err) => {
-                rate = None;
+
+            ic_cdk::println!("rate = {:?}", rate);
+
+            let usd_withdrawl = amount.clone().scaled_mul(rate.unwrap());
+            ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
+
+            // Calculate Adjusted Collateral
+            let mut adjusted_collateral = Nat::from(0u128);
+            if adjusted_collateral < usd_withdrawl.clone() {
+                adjusted_collateral = Nat::from(0u128);
+            } else {
+                adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();
+            }
+            ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
+
+            let mut ltv = Nat::from(0u128);
+            // Calculate new ratio (Adjusted Collateral / Total Debt)
+            if adjusted_collateral != Nat::from(0u128) {
+                ltv = total_debt.scaled_div(adjusted_collateral);
+                ltv = ltv * Nat::from(100u128);
+                println!("New ltv: {}", ltv);
+            }
+
+            if ltv >= liquidation_threshold_var {
+                return Err(Error::LTVGreaterThanThreshold);
             }
         }
-
-        ic_cdk::println!("rate = {:?}", rate);
-
-        let usd_withdrawl = amount.clone().scaled_mul(rate.unwrap());
-        ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
-
-        // Calculate Adjusted Collateral
-        let mut adjusted_collateral = Nat::from(0u128);
-        if adjusted_collateral < usd_withdrawl.clone() {
-            adjusted_collateral = Nat::from(0u128);
-        }else{
-            adjusted_collateral = total_collateral.clone() -usd_withdrawl.clone();
-        }
-        ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
-
-        let mut ltv = Nat::from(0u128);
-        // Calculate new ratio (Adjusted Collateral / Total Debt)
-        if adjusted_collateral != Nat::from(0u128) {
-            ltv = total_debt.scaled_div(adjusted_collateral);
-            ltv = ltv * Nat::from(100u128);
-            println!("New ltv: {}", ltv);
-        }
-
-        if ltv >= liquidation_threshold_var {
-            return Err(Error::LTVGreaterThanThreshold);
-        }
-    }
         if health_factor < Nat::from(1u128) {
             return Err(Error::HealthFactorLess);
         }
@@ -268,11 +271,10 @@ impl ValidationLogic {
         user_principal: Principal,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
-
         if !reserve.configuration.borrowing_enabled {
             return Err(Error::BorrowingNotEnabled);
         }
-        
+
         let platform_principal = ic_cdk::api::id();
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
@@ -288,7 +290,6 @@ impl ValidationLogic {
 
         if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
-            
         }
         // validating reserve states
         let (is_active, is_frozen, is_paused) = (
@@ -310,6 +311,11 @@ impl ValidationLogic {
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
+        if let Err(e) = update_reserves_price().await {
+            ic_cdk::println!("Failed to update reserves price: {:?}", e);
+            return Err(e);
+        }
+
         let mut total_collateral = Nat::from(0u128);
         let mut total_debt = Nat::from(0u128);
         let mut avg_ltv = Nat::from(0u128);
@@ -317,7 +323,7 @@ impl ValidationLogic {
         let mut liquidation_threshold_var = Nat::from(0u128);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            GenericLogic::calculate_user_account_data(None).await;
+            calculate_user_account_data(None).await;
 
         match user_data_result {
             Ok((
@@ -400,7 +406,7 @@ impl ValidationLogic {
         };
         Ok(())
     }
-         // --------------------------------------
+    // --------------------------------------
     //     // ---------------- REPAY ---------------
     //     // --------------------------------------
 
@@ -411,10 +417,9 @@ impl ValidationLogic {
         liquidator: Option<Principal>,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
-
-       let mut balance_result = get_balance(ledger_canister, user.clone()).await;
-       if !liquidator.is_none() {
-           balance_result = get_balance(ledger_canister, liquidator.unwrap().clone()).await;
+        let mut balance_result = get_balance(ledger_canister, user.clone()).await;
+        if !liquidator.is_none() {
+            balance_result = get_balance(ledger_canister, liquidator.unwrap().clone()).await;
         }
 
         let user_balance = match balance_result {
@@ -451,8 +456,9 @@ impl ValidationLogic {
             None => None,
         };
 
-        let mut user_current_debt = get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
-        
+        let mut user_current_debt =
+            get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
+
         if user_current_debt == Nat::from(0u128) {
             return Err(Error::NoDebtToRepay);
         }
@@ -494,11 +500,11 @@ impl ValidationLogic {
         user: Principal,
         repay_reserve_data: ReserveData,
     ) -> Result<(), Error> {
-
-        let repay_asset_principal = match Principal::from_text(repay_reserve_data.debt_token_canister.clone().unwrap()) {
-            Ok(principal) => principal,
-            Err(_) => return Err(Error::NoCanisterIdFound),
-        };
+        let repay_asset_principal =
+            match Principal::from_text(repay_reserve_data.debt_token_canister.clone().unwrap()) {
+                Ok(principal) => principal,
+                Err(_) => return Err(Error::NoCanisterIdFound),
+            };
         let balance_result = get_balance(repay_asset_principal, user.clone()).await;
 
         let debt_amount = match balance_result {
@@ -508,7 +514,7 @@ impl ValidationLogic {
             }
         };
 
-        if repay_amount > debt_amount{
+        if repay_amount > debt_amount {
             return Err(Error::InvalidAmount);
         }
 
@@ -520,7 +526,6 @@ impl ValidationLogic {
                 .ok_or_else(|| Error::NoCanisterIdFound)
         })?;
 
-
         let balance_result = get_balance(repay_ledger_canister_id, liquidator.clone()).await;
         let liquidator_wallet_balance = match balance_result {
             Ok(bal) => bal,
@@ -528,7 +533,7 @@ impl ValidationLogic {
                 return Err(e);
             }
         };
-        
+
         if liquidator_wallet_balance < repay_amount {
             return Err(Error::MaxAmount);
         }
@@ -537,7 +542,7 @@ impl ValidationLogic {
         let mut health_factor = Nat::from(0u128);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            GenericLogic::calculate_user_account_data(Some(user)).await;
+            calculate_user_account_data(Some(user)).await;
 
         match user_data_result {
             Ok((
@@ -561,10 +566,10 @@ impl ValidationLogic {
         }
 
         if total_collateral < reward_amount {
-           return Err(Error::LessRewardAmount);
+            return Err(Error::LessRewardAmount);
         }
 
-        if health_factor/Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
+        if health_factor / Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
             return Err(Error::HealthFactorLess);
         }
 

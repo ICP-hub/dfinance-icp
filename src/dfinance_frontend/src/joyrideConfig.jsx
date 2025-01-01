@@ -1,0 +1,623 @@
+import lightImages from "./components/Common/lightImages";
+import darkImages from "./components/Common/darkImages";
+
+export const getSteps = (theme, isMobile2, isMobile) => [
+  {
+    target: "body",
+    content: (
+      <div className="text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Dfinance</h1>
+        <h2>
+          Welcome to the <strong>Dfinance App!</strong>
+        </h2>
+        <p className="mb-4">
+          This guide will walk you through the key features.
+        </p>
+        {isMobile2 ? (
+          <img
+            src={
+              theme === "dark" ? darkImages .dfinanceHomeDarkSmall : lightImages.DfinanceHomeLightSmall
+            }
+            alt="dFinanceHomePage"
+            className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={theme === "dark" ? darkImages.dfinanceHomepage : lightImages.dfinanceHomepageLight}
+            alt="dFinanceHomePage"
+            className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
+          />
+        )}
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "body",
+    content: (
+      <div className="text-justify relative flex flex-col justify-center">
+        <h1 className="text-[22px] font-bold mb-3">Faucet</h1>
+        <p className="mb-4">
+          This is the Faucet page. Here, you can view a list of assets available
+          to faucet. Simply choose an asset from the list to proceed.
+        </p>
+        {isMobile2 ? (
+          <img
+            src={theme === "dark" ? darkImages.faucetSmall : lightImages.FaucetSmallLight}
+            alt="Faucet Button"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={theme === "dark" ? darkImages.faucetPage : lightImages.faucetPageLight}
+            alt="Faucet Button"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        )}
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "body",
+    content: (
+      <div className="text-justify relative flex flex-col">
+        <p className="mb-4">
+          On this page, you can click the faucet button for the desired asset.
+        </p>
+        <img
+          src={theme === "dark" ? darkImages.faucetButton : lightImages.faucetButtonLight}
+          alt="Faucet Button"
+          className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+        <p className="mb-4">
+          This will open a popup where you can enter the amount of the asset you
+          wish to faucet.
+        </p>
+        <img
+          src={theme === "dark" ? darkImages.faucetPopup : lightImages.faucetPopupLight}
+          alt="Faucet Popup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "body",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Dashboard</h1>
+        <p className="mb-4">
+          Welcome to the dashboard! Here, you can manage your assets seamlessly.
+          Use this page to <span className="font-semibold">supply</span> assets,{" "}
+          <span className="font-semibold">borrow</span> against collateral,{" "}
+          <span className="font-semibold">withdraw</span> your supplied assets,
+          or <span className="font-semibold">repay</span> your borrowed amounts.
+        </p>
+        {isMobile2 ? (
+          <img
+            src={
+              theme === "dark" ? darkImages.dashboardPageSmall : lightImages.DashboardPageSmallLight
+            }
+            alt="dashboardPage"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={theme === "dark" ? darkImages.dashboardPage : lightImages.DashboardPageLight}
+            alt="dashboardPage"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        )}
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#dashboard-assets-to-supply",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <p className="mb-4">
+          In the "Assets to Supply" section, select the asset you wish to
+          supply.
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.assetsToSupply
+              : lightImages.assetsToSupplyLight
+          }
+          alt="dashboardAssetsToSupplyButton"
+          className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+        <p className="mb-4">
+          After clicking the supply button, a popup will appear. Enter the
+          amount, approve the transaction, and click "Supply" to complete the
+          process.
+        </p>
+        <img
+          src={
+            theme === "dark" ? darkImages.assetsToSupplyPopup : lightImages.assetsToSupplyPopupLight
+          }
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: isMobile ? "center" : "right",
+  },
+  {
+    target: "#dashboard-assets-to-borrow",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <p className="mb-4">
+          In the "Assets to Borrow" section, select the asset you wish to
+          borrow.
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.assetsToBorrow
+              : lightImages.assetsToBorrowLight
+          }
+          alt="dashboardAssetsToBorrowButton"
+          className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+        <p className="mb-4">
+          After clicking the borrow button, a popup will appear. Enter the
+          amount and click "Borrow" to complete the process.
+        </p>
+        <img
+          src={
+            theme === "dark" ? darkImages.assetsToBorrowPopup : lightImages.assetsToBorrowPopupLight
+          }
+          alt="assetsToBorrowPopup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: isMobile ? "center" : "left",
+  },
+  {
+    target: "#your-borrow",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <p className="mb-4">
+          In the "Your Borrow" section, select the asset you wish to repay or
+          additionaly you can borrow from here also.
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.yourBorrow
+              : lightImages.yourBorrowLight
+          }
+          alt="yourBorrowRepayButton"
+          className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+        <p className="mb-4">
+          After clicking the repay button, a popup will appear. Enter the amount
+          , approve the transaction, and click "Repay" to complete the process.
+        </p>
+        <img
+          src={
+            theme === "dark" ? darkImages.yourBorrowRepayPopup : lightImages.yourBorrowRepayPopupLight
+          }
+          alt="yourBorrowRepayPopup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: isMobile ? "center" : "left",
+  },
+  {
+    target: "#your-supplies",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <p className="mb-4">
+          In the "Your Supplies" section, select the asset you wish to withdraw
+          or additionaly you can supply from here also.
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.youSupplies
+              : lightImages.youSuppliesLight
+          }
+          alt="yourSuppliesWithdrawButton"
+          className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+        <p className="mb-4">
+          After clicking the withdraw button, a popup will appear. Enter the
+          amount and click "Withdraw" to complete the process.
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.yourSuppliesWithdrawPopup
+              : lightImages.yourSuppliesWithdrawPopupLight
+          }
+          alt="yourSuppliesWithdrawPopup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: isMobile ? "center" : "right",
+  },
+  {
+    target: "#dashboard-nav-details",
+    content: (
+      <>
+        {isMobile2 ? (
+          <div className="relative flex flex-col text-justify">
+            <p className="mb-4">Here Click on the menu button</p>
+            <p className="mb-4">
+              Here we can see Net Worth, Net APY, and Health Factor (when
+              available).
+            </p>
+            <img
+              src={
+                theme === "dark"
+                  ? darkImages.dashboardNavDetailsDarkSmall
+                  : lightImages.DashboarNavDetailsLightSmall
+              }
+              alt="Faucet Button"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30 mb-4"
+            />
+            <p className="mb-4">
+              On clicking the "Risk Details" button, a popup will appear showing
+              the Health Factor, Current LTV, Max LTV, and Liquidation
+              Threshold.
+            </p>
+            <img
+              src={theme === "dark" ? darkImages.riskDetails : lightImages.riskDetailsLight}
+              alt="Faucet Button"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        ) : (
+          <div className="relative flex flex-col text-justify">
+            <p className="mb-4">
+              In here we can see Net Worth, Net APY, and Health Factor (when
+              available).
+            </p>
+            <img
+              src={
+                theme === "dark" ? darkImages.dashboardNavDetails : lightImages.dashboardNavDetailsLight
+              }
+              alt="dashboarNavDetails"
+              className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+            <p className="mb-4">
+              On clicking the "Risk Details" button, a popup will appear showing
+              the Health Factor, Current LTV, Max LTV, and Liquidation
+              Threshold.
+            </p>
+            <img
+              src={theme === "dark" ? darkImages.riskDetails : lightImages.riskDetailsLight}
+              alt="Faucet Button"
+              className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+            />
+          </div>
+        )}
+      </>
+    ),
+    placement: isMobile ? "center" : "bottom",
+  },
+  {
+    target: "#market-page1",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Market</h1>
+        <p className="mb-4">
+          The Market page shows all assets on the platform with details like
+          Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
+          to evaluate assets for supply or borrowing.
+        </p>
+        {isMobile2 ? (
+          <img
+            src={theme === "dark" ? darkImages.marketPageSmall : lightImages.MarketPageSmallLight}
+            alt="Faucet Button"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={theme === "dark" ? darkImages.marketPage : lightImages.marketPageLight}
+            alt="Faucet Button"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        )}
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#market-page1",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Market</h1>
+        <p className="mb-4">
+          The Market page shows all assets on the platform with details like
+          Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
+          to evaluate assets for supply or borrowing.
+        </p>
+        {isMobile2 ? (
+          <img
+            src={theme === "dark" ? darkImages.marketPageSmall : lightImages.MarketPageSmallLight}
+            alt="Faucet Button"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={theme === "dark" ? darkImages.marketPage : lightImages.marketPageLight}
+            alt="Faucet Button"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        )}
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: ".market-nav-details",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <p className="mb-4">Click on the menu button</p>
+        <p className="mb-4">
+          In here we can see Total Market Size, Total Available, and Total
+          Borrows.
+        </p>
+        {isMobile2 ? (
+          <img
+            src={
+              theme === "dark"
+                ? darkImages.marketNavDetailsDarkSmall
+                : lightImages.marketNavDetailsLightSmall
+            }
+            alt="marketeNavbarDetails"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={
+              theme === "dark"
+                ? darkImages.marketPageDetails
+                : lightImages.marketPageDetailsLight
+            }
+            alt="marketeNavbarDetails"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        )}
+      </div>
+    ),
+    placement: isMobile ? "center" : "bottom",
+  },
+  {
+    target: "#footer-liquidation",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">
+          Click on the 'Liquidation' button at the bottom of the page to
+          navigate to the liquidation page.
+        </p>
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">
+          In the "Liquidation" section, click on the "Get Debt Status Button" to
+          see the liquidation List (if available).
+        </p>
+        <img
+          src={theme === "dark" ? darkImages.debtStatusImage : lightImages.debtStatusImageLight}
+          alt="Faucet Button"
+          className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation1",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">
+          Here it will show the list of users with a health factor less than 1
+        </p>
+        <img
+          src={theme === "dark" ? darkImages.liquidationTable : lightImages.liquidationTableLight}
+          alt="Faucet Popup"
+          className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+        <p className="mb-4">
+          Click the 'Liquidate' button in the 'Liquidation' list to view debt
+          details and open the user information popup.
+        </p>
+        <img
+          src={theme === "dark" ? darkImages.liquidateButton : lightImages.LiquidatebuttonLight}
+          alt="Faucet Button"
+          className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation1",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">
+          This will now open the 'User Information' popup, displaying the user's
+          principal and health factor.
+        </p>
+
+        <img
+          src={theme === "dark" ? darkImages.userInformation : lightImages.userInformationLight}
+          alt="Faucet Popup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation2",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">
+          Now select the debt asset to view the repayment details.
+        </p>
+        <img
+          src={theme === "dark" ? darkImages.debtInformation : lightImages.DebtInformationLight}
+          alt="Faucet Button"
+          className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation-guide",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">
+          "Now, select the collateral asset to view the details and rewards
+          given to the liquidator based on the selected asset, and then click on
+          'Approve Liquidation' to proceed with the call."
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.collateralInformation
+              : lightImages.CollateralInformationLight
+          }
+          alt="Faucet Popup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation-guide",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">
+          "Click on 'Call Liquidation' to proceed with the call."
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.collateralInformationCall
+              : lightImages.colateralInformationCallLight
+          }
+          alt="Faucet Popup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation-guide",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">
+          A warning popup will appear—click 'YES, Call Liquidation' to proceed,
+          then click 'Call Liquidation' to complete the process."
+        </p>
+        <img
+          src={theme === "dark" ? darkImages.warningPopup : lightImages.WarningPopupLight}
+          alt="Faucet Popup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation-guide",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">Liquidation</h1>
+        <p className="mb-4">Liquidation successful. You’re done!</p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.liquidationSuccessful
+              : lightImages.LiquidationSuccessfullLight
+          }
+          alt="Faucet Popup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: "center",
+  },
+  {
+    target: "#liquidation-guide",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-3">End of Tour</h1>
+        <p className="mb-4">
+          This is the end of your tour. You're all set to explore the site and
+          start using all the features!
+        </p>
+        <div className="text-center mb-4">
+          <span className="text-green-500 text-[40px]">&#10003;</span>{" "}
+          {/* Checkmark symbol */}
+        </div>
+      </div>
+    ),
+    placement: "center",
+  },
+];
+
+export const getStyles = (joyRideBackground, joyTextColor) => ({
+  options: {
+    arrowColor: joyRideBackground,
+    zIndex: 10000000,
+    primaryColor: "#00bfff",
+    position: "absolute",
+  },
+  tooltip: {
+    backgroundColor: joyRideBackground,
+    color: joyTextColor,
+    borderRadius: "12px",
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: "13px",
+    border: "2px solid #525355",
+  },
+  buttonNext: {
+    backgroundImage: "linear-gradient(to right, #4659CF, #2A1F9D)",
+    color: "#fff",
+    border: "none",
+    padding: "9px 20px",
+    borderRadius: "7px",
+    cursor: "pointer",
+    fontSize: "12px",
+  },
+  buttonBack: {
+    color: joyTextColor,
+    fontSize: "12px",
+  },
+  buttonSkip: {
+    color: joyTextColor,
+    fontSize: "12px",
+  },
+  buttonClose: {
+    color: "#f25c54",
+  },
+});

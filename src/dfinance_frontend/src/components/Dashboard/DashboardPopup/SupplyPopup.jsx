@@ -13,9 +13,27 @@ import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 
-const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange 
+const SupplyPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
 }) => {
-  const {  backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -24,6 +42,20 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
   const transactionFee = 0;
   const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
+
+  const errorMessages = {
+    NoReserveDataFound:
+      "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
+    FailedToUpdatePrice:
+      "Failed to update the reserve prices. Please try again later.",
+    ValidationError:
+      "The supply validation failed. Ensure your inputs are correct.",
+    InterestRateUpdateFailed:
+      "Unable to update interest rates. Please retry the operation.",
+    ErrorMintTokens:
+      "Minting of tokens failed. Your account state has been rolled back. Try again later.",
+    Default: "An unexpected error occurred. Please try again later.",
+  };
 
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
@@ -58,9 +90,17 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
   }, [isLoading, onLoadingChange]);
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value.replace(/,/g, "");
+    let inputAmount = e.target.value;
 
-    if (!/^\d*\.?\d*$/.test(inputAmount)) {
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+
+    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+    }
+
+    if (inputAmount === "") {
+      setAmount("");
+      updateAmountAndUsdValue("");
       return;
     }
 
@@ -78,6 +118,7 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     }
 
     let formattedAmount;
+
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
@@ -89,7 +130,6 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     }
 
     setAmount(formattedAmount);
-
     updateAmountAndUsdValue(inputAmount);
   };
 
@@ -200,12 +240,10 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
 
-
   const scaledAmount = amountAsNat64;
 
   const handleSupplyETH = async () => {
     try {
-
       let ledgerActor;
       if (asset === "ckBTC") {
         ledgerActor = ledgerActors.ckBTC;
@@ -218,56 +256,59 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
       } else if (asset === "ckUSDT") {
         ledgerActor = ledgerActors.ckUSDT;
       }
+  
       const supplyParams = {
         asset: asset,
         is_collateral: currentCollateralStatus,
         amount: scaledAmount,
       };
-      const sup = await backendActor.execute_supply(supplyParams
-        
-      );
+  
+      const response = await backendActor.execute_supply(supplyParams);
 
-      trackEvent(
-        "Supply," +
-          asset +
-          "," +
-          scaledAmount / 100000000 +
-          "," +
-          currentCollateralStatus +
-          "," +
-          principalObj.toString(),
-        "Assets",
-        "Supply," +
-          asset +
-          "," +
-          scaledAmount / 100000000 +
-          "," +
-          currentCollateralStatus +
-          "," +
-          principalObj.toString(),
-        "Assets"
-      );
-
-      setIsPaymentDone(true);
-      setIsVisible(false);
-
-      if (isSoundOn) {
-        const sound = new Audio(coinSound);
-        sound.play();
+      if ("Ok" in response) {
+        trackEvent(
+          `Supply,${asset},${scaledAmount / 100000000},${currentCollateralStatus},${principalObj.toString()}`,
+          "Assets",
+          `Supply,${asset},${scaledAmount / 100000000},${currentCollateralStatus},${principalObj.toString()}`,
+          "Assets"
+        );
+  
+        setIsPaymentDone(true);
+        setIsVisible(false);
+  
+        if (isSoundOn) {
+          const sound = new Audio(coinSound);
+          sound.play();
+        }
+  
+        toast.success(`Supply successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if ("Err" in response) {
+        const errorKey = response.Err;
+        const userFriendlyMessage = errorMessages[errorKey] || errorMessages.Default;
+        console.log(userFriendlyMessage)
+        toast.error(userFriendlyMessage, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       }
-
-      toast.success(`Supply successful!`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
     } catch (error) {
-      toast.error(`Error: ${error.message || "Supply action failed!"}`, {
+      console.error(error.message);
+      toast.error("An unexpected error occurred. Please try again later.", {
         className: "custom-toast",
         position: "top-center",
         autoClose: 3000,
@@ -329,13 +370,13 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     const amountAdded = collateral ? usdValue || 0 : 0;
 
     let totalCollateralValue =
-    parseFloat(totalCollateral) + parseFloat(amountTaken);
+      parseFloat(totalCollateral) + parseFloat(amountTaken);
     if (totalCollateralValue < 0) {
-      totalCollateralValue = 0;  
+      totalCollateralValue = 0;
     }
-    let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);  
+    let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
     if (totalDeptValue < 0) {
-      totalDeptValue = 0;  
+      totalDeptValue = 0;
     }
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
@@ -344,20 +385,30 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
   }, [
-    asset,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,amount,usdValue,]);
+    asset,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+  ]);
 
-  const calculateHealthFactor = ( totalCollateral, totalDebt, liquidationThreshold) => {
-    
+  const calculateHealthFactor = (
+    totalCollateral,
+    totalDebt,
+    liquidationThreshold
+  ) => {
     const amountAdded = collateral ? usdValue || 0 : 0;
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
-      if (totalCollateralValue < 0) {
-        totalCollateralValue = 0;  
-      }
-      let totalDeptValue = parseFloat(totalDebt);  
-      if (totalDeptValue < 0) {
-        totalDeptValue = 0;  
-      }
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+    let totalDeptValue = parseFloat(totalDebt);
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;
+    }
     if (totalDeptValue === 0) {
       return Infinity;
     }
@@ -373,7 +424,7 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     return (totalDeptValue / totalCollateralValue) * 100;
   };
 
-  const {  healthFactorBackend } = useUserData();
+  const { healthFactorBackend } = useUserData();
 
   const handleMaxClick = () => {
     const maxAmount = supplyBalance.toFixed(8);
@@ -385,8 +436,10 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
     updateAmountAndUsdValue(maxAmount);
   };
   const formatValue = (value) => {
-    if (!value) return '0';
-    return Number(value).toFixed(8).replace(/\.?0+$/, ''); // Ensure 8 decimals and remove trailing zeroes
+    if (!value) return "0";
+    return Number(value)
+      .toFixed(8)
+      .replace(/\.?0+$/, "");
   };
   return (
     <>
@@ -439,8 +492,7 @@ const SupplyPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold
                       }
                     }}
                   >
-                    {formatValue(balance)}{" "}
-                    Max
+                    {formatValue(balance)} Max
                   </p>
                 </div>
               </div>

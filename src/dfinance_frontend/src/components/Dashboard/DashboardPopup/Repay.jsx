@@ -684,7 +684,7 @@ const Repay = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <center>
-              <p className="mt-2">
+              <p className="mt-2 ">
                 Your Debt was{" "}
                 <strong>
                   {" "}

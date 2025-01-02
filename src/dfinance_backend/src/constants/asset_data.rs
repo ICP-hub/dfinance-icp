@@ -45,24 +45,24 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
         return Err(e); 
     }
 
-    let scaled_liquidity_index = ScalingMath::to_scaled(reserve_data.liquidity_index.clone());
-    let scaled_ltv = ScalingMath::to_scaled(reserve_data.configuration.ltv.clone());
-    let scaled_liquidation_threshold =
-        ScalingMath::to_scaled(reserve_data.configuration.liquidation_threshold.clone());
-        if token_name == "ckUSDT".to_string() {
-            reserve_data.configuration.liquidation_bonus = ScalingMath::to_scaled(
-                Nat::from(CKUSDT_LIQUIDATION_BONUS_1) / Nat::from(CKUSDT_LIQUIDATION_BONUS_2),
-            );
-        } else {
-            reserve_data.configuration.liquidation_bonus =
-                ScalingMath::to_scaled(reserve_data.configuration.liquidation_bonus.clone());
-        }
-    let scaled_liquidation_bonus =
-        ScalingMath::to_scaled(reserve_data.configuration.liquidation_bonus.clone());
-    let scaled_borrow_cap = ScalingMath::to_scaled(reserve_data.configuration.borrow_cap.clone());
-    let scaled_supply_cap = ScalingMath::to_scaled(reserve_data.configuration.supply_cap.clone());
-    let scaled_reserve_factor =
-        ScalingMath::to_scaled(reserve_data.configuration.reserve_factor.clone());
+    // let scaled_liquidity_index = ScalingMath::to_scaled(reserve_data.liquidity_index.clone());
+    // let scaled_ltv = ScalingMath::to_scaled(reserve_data.configuration.ltv.clone());
+    // let scaled_liquidation_threshold =
+    //     ScalingMath::to_scaled(reserve_data.configuration.liquidation_threshold.clone());
+        // if token_name == "ckUSDT".to_string() {
+        //     reserve_data.configuration.liquidation_bonus = ScalingMath::to_scaled(
+        //         Nat::from(CKUSDT_LIQUIDATION_BONUS_1) / Nat::from(CKUSDT_LIQUIDATION_BONUS_2),
+        //     );
+        // } else {
+        //     reserve_data.configuration.liquidation_bonus =
+        //         ScalingMath::to_scaled(reserve_data.configuration.liquidation_bonus.clone());
+        // }
+    // let scaled_liquidation_bonus =
+    //     ScalingMath::to_scaled(reserve_data.configuration.liquidation_bonus.clone());
+    // let scaled_borrow_cap = ScalingMath::to_scaled(reserve_data.configuration.borrow_cap.clone());
+    // let scaled_supply_cap = ScalingMath::to_scaled(reserve_data.configuration.supply_cap.clone());
+    // let scaled_reserve_factor =
+    //     ScalingMath::to_scaled(reserve_data.configuration.reserve_factor.clone());
 
     let token_canister_id =
         match create_testtoken_canister(token_name.clone(), token_name.clone()).await {
@@ -84,13 +84,15 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
             Ok(principal) => Some(principal.to_string()),
             Err(e) => return Err(e),
         };
-    reserve_data.liquidity_index = scaled_liquidity_index;
-    reserve_data.configuration.ltv = scaled_ltv;
-    reserve_data.configuration.liquidation_threshold = scaled_liquidation_threshold;
-    reserve_data.configuration.liquidation_bonus = scaled_liquidation_bonus;
-    reserve_data.configuration.borrow_cap = scaled_borrow_cap;
-    reserve_data.configuration.supply_cap = scaled_supply_cap;
-    reserve_data.configuration.reserve_factor = scaled_reserve_factor;
+
+    reserve_data.last_update_timestamp = time();    
+    // reserve_data.liquidity_index = scaled_liquidity_index;
+    // reserve_data.configuration.ltv = scaled_ltv;
+    // reserve_data.configuration.liquidation_threshold = scaled_liquidation_threshold;
+    //reserve_data.configuration.liquidation_bonus = scaled_liquidation_bonus;
+    // reserve_data.configuration.borrow_cap = scaled_borrow_cap;
+    // reserve_data.configuration.supply_cap = scaled_supply_cap;
+    // reserve_data.configuration.reserve_factor = scaled_reserve_factor;
 
     mutate_state(|state| {
         state
@@ -139,18 +141,18 @@ pub async fn reset_reserve_value(
     };
 
     match variable_name.as_str() {
-        "liquidity_index" => reserve_data.liquidity_index = ScalingMath::to_scaled(reset_value),
-        "ltv" => reserve_data.configuration.ltv = ScalingMath::to_scaled(reset_value),
+        "liquidity_index" => reserve_data.liquidity_index = reset_value,
+        "ltv" => reserve_data.configuration.ltv =reset_value,
         "liquidation_threshold" => {
-            reserve_data.configuration.liquidation_threshold = ScalingMath::to_scaled(reset_value)
+            reserve_data.configuration.liquidation_threshold = reset_value
         }
         "liquidation_bonus" => {
-            reserve_data.configuration.liquidation_bonus = ScalingMath::to_scaled(reset_value)
+            reserve_data.configuration.liquidation_bonus = reset_value
         }
-        "borrow_cap" => reserve_data.configuration.borrow_cap = ScalingMath::to_scaled(reset_value),
-        "supply_cap" => reserve_data.configuration.supply_cap = ScalingMath::to_scaled(reset_value),
+        "borrow_cap" => reserve_data.configuration.borrow_cap = reset_value,
+        "supply_cap" => reserve_data.configuration.supply_cap =reset_value,
         "reserve_factor" => {
-            reserve_data.configuration.reserve_factor = ScalingMath::to_scaled(reset_value)
+            reserve_data.configuration.reserve_factor = reset_value
         }
         _ => return Err(Error::InvalidVariableName),
     }
@@ -162,69 +164,69 @@ pub async fn reset_reserve_value(
     Ok(())
 }
 
-#[update]
-pub async fn initialize_canister() -> Result<(), Error> {
-    let user_principal = ic_cdk::caller();
+// #[update]
+// pub async fn initialize_canister() -> Result<(), Error> {
+//     let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
-    {
-        ic_cdk::println!("principal are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
+//     if user_principal == Principal::anonymous()
+//         || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+//     {
+//         ic_cdk::println!("principal are not allowed");
+//         return Err(Error::InvalidPrincipal);
+//     }
 
-    let tokens = vec![
-        ("ckBTC", "ckBTC", true),
-        ("dckBTC", "dckBTC", false),
-        ("debtckBTC", "debtckBTC", false),
-        ("ckETH", "ckETH", true),
-        ("dckETH", "dckETH", false),
-        ("debtckETH", "debtckETH", false),
-        ("ckUSDC", "ckUSDC", true),
-        ("dckUSDC", "dckUSDC", false),
-        ("debtckUSDC", "debtckUSDC", false),
-        ("ICP", "ICP", true),
-        ("dICP", "dICP", false),
-        ("debtICP", "debtICP", false),
-        ("ckUSDT", "ckUSDT", true),
-        ("dckUSDT", "dckUSDT", false),
-        ("debtckUSDT", "debtckUSDT", false),
-    ];
+//     let tokens = vec![
+//         ("ckBTC", "ckBTC", true),
+//         ("dckBTC", "dckBTC", false),
+//         ("debtckBTC", "debtckBTC", false),
+//         ("ckETH", "ckETH", true),
+//         ("dckETH", "dckETH", false),
+//         ("debtckETH", "debtckETH", false),
+//         ("ckUSDC", "ckUSDC", true),
+//         ("dckUSDC", "dckUSDC", false),
+//         ("debtckUSDC", "debtckUSDC", false),
+//         ("ICP", "ICP", true),
+//         ("dICP", "dICP", false),
+//         ("debtICP", "debtICP", false),
+//         ("ckUSDT", "ckUSDT", true),
+//         ("dckUSDT", "dckUSDT", false),
+//         ("debtckUSDT", "debtckUSDT", false),
+//     ];
 
-    let mut canister_list = vec![];
+//     let mut canister_list = vec![];
 
-    for (name, symbol, is_testtoken) in tokens {
-        let principal = if is_testtoken {
-            let principal = create_testtoken_canister(name.to_string(), symbol.to_string()).await;
-            let testtoken_canister_principal = match principal {
-                Ok(principal) => principal,
-                Err(e) => {
-                    return Err(e);
-                }
-            };
-            testtoken_canister_principal
-        } else {
-            let principal = create_token_canister(name.to_string(), symbol.to_string()).await;
-            let token_canister_principal = match principal {
-                Ok(principal) => principal,
-                Err(e) => {
-                    return Err(e);
-                }
-            };
-            token_canister_principal
-        };
-        canister_list.push((name.to_string(), principal));
-    }
+//     for (name, symbol, is_testtoken) in tokens {
+//         let principal = if is_testtoken {
+//             let principal = create_testtoken_canister(name.to_string(), symbol.to_string()).await;
+//             let testtoken_canister_principal = match principal {
+//                 Ok(principal) => principal,
+//                 Err(e) => {
+//                     return Err(e);
+//                 }
+//             };
+//             testtoken_canister_principal
+//         } else {
+//             let principal = create_token_canister(name.to_string(), symbol.to_string()).await;
+//             let token_canister_principal = match principal {
+//                 Ok(principal) => principal,
+//                 Err(e) => {
+//                     return Err(e);
+//                 }
+//             };
+//             token_canister_principal
+//         };
+//         canister_list.push((name.to_string(), principal));
+//     }
 
-    ic_cdk::println!("canister list = {:?}", canister_list);
+//     ic_cdk::println!("canister list = {:?}", canister_list);
 
-    mutate_state(|state| {
-        for (name, principal) in canister_list {
-            state.canister_list.insert(name, principal);
-        }
-    });
-    Ok(())
-}
+//     mutate_state(|state| {
+//         for (name, principal) in canister_list {
+//             state.canister_list.insert(name, principal);
+//         }
+//     });
+//     Ok(())
+// }
 
 pub async fn query_token_type_id(asset: String) -> Option<Principal> {
     ic_cdk::println!("Querying canister ID for asset: {}", asset);

@@ -614,7 +614,7 @@ const MySupply = () => {
   };
 
   const noBorrowMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
+    <div className="mt-2 mb-3 flex flex-col justify-center align-center place-items-center ">
       <div className="w-20 h-15">
         <img
           src="/Transaction/empty file.gif"
@@ -629,7 +629,7 @@ const MySupply = () => {
     </div>
   );
   const noSupplyMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
+    <div className="mt-2 mb-3 flex flex-col justify-center align-center place-items-center ">
       <div className="w-20 h-15">
         <img
           src="/Transaction/empty file.gif"
@@ -644,7 +644,7 @@ const MySupply = () => {
     </div>
   );
   const noAssetsToSupplyMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center ">
+    <div className="mt-2 mb-3 flex flex-col justify-center align-center place-items-center ">
       <div className="w-20 h-15">
         <img
           src="/Transaction/empty file.gif"
@@ -659,7 +659,7 @@ const MySupply = () => {
     </div>
   );
   const noAssetsToBorrowMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center pb-6 pt-2">
+    <div className="mt-2 mb-3 flex flex-col justify-center align-center place-items-center pb-6 pt-2">
       <div className="w-20 h-15">
         <img
           src="/Transaction/empty file.gif"
@@ -784,7 +784,9 @@ const MySupply = () => {
   }, []);
   const hasValidAssets = userData?.Ok?.reserves?.[0]?.some((reserveGroup) => {
     const asset = reserveGroup[0];
-    const assetBalance = assetBalances.find((balance) => balance.asset === asset)?.debtTokenBalance;
+    const assetBalance = assetBalances.find(
+      (balance) => balance.asset === asset
+    )?.debtTokenBalance;
     return assetBalance > 0; // Check if any asset has a debtTokenBalance > 0
   });
   return (
@@ -869,7 +871,7 @@ const MySupply = () => {
                     })}
 
                     {/* Display total USD value of supply */}
-                    <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                    <div className="hidden md:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
                       <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
                         Total
                       </span>{" "}
@@ -891,7 +893,12 @@ const MySupply = () => {
                 )}
               </button>
             </div>
-
+            <div className="inline-block md:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+              <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
+                Total
+              </span>{" "}
+              ${formatNumber(totalUsdValueSupply)}
+            </div>
             {}
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
@@ -2762,7 +2769,7 @@ const MySupply = () => {
                     })}
 
                     {/* Display total USD value of supply */}
-                    <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                    <div className="hidden md:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
                       <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
                         Total
                       </span>{" "}
@@ -2783,6 +2790,13 @@ const MySupply = () => {
                   <Eye size={16} className="ml-2" />
                 )}
               </button>
+            </div>
+
+            <div className="inline-block lg:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+              <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
+                Total
+              </span>{" "}
+              ${formatNumber(totalUsdValueBorrow)}
             </div>
 
             {}
@@ -3303,27 +3317,27 @@ const MySupply = () => {
                   ) : (
                     <div className="w-full h-auto mt-6">
                       <div className="w-full z-10">
-                      {hasValidAssets && (
-                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
-                          <div className="p-3 pl-4">Asset</div>
-                          <div className="p-3 -ml-[4px]">Debt</div>
-                          <div className="p-3 inline-flex relative gap-1">
-                            <span>APY</span>
-                            <span className="relative cursor-pointer">
-                              <span className="group inline-flex">
-                                <Info size={14} />
-                                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none">
-                                  The variable borrow interest rate may change
-                                  over time, influenced by market trends and
-                                  conditions.
-                                </div>
+                        {hasValidAssets && (
+                          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-1 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
+                            <div className="p-3 pl-4">Asset</div>
+                            <div className="p-3 -ml-[4px]">Debt</div>
+                            <div className="p-3 inline-flex relative gap-1">
+                              <span>APY</span>
+                              <span className="relative cursor-pointer">
+                                <span className="group inline-flex">
+                                  <Info size={14} />
+                                  <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none">
+                                    The variable borrow interest rate may change
+                                    over time, influenced by market trends and
+                                    conditions.
+                                  </div>
+                                </span>
                               </span>
-                            </span>
+                            </div>
+                            <div className="p-3">Apy type</div>
+                            <div className="p-3"></div>
                           </div>
-                          <div className="p-3">Apy type</div>
-                          <div className="p-3"></div>
-                        </div>
-                      )}
+                        )}
                       </div>
 
                       <div

@@ -406,7 +406,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               <h1 className="font-semibold text-xl">Faucet {asset}</h1>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                className="text-gray-400 focus:outline-none"
               >
                 <X size={24} />
               </button>
@@ -416,7 +416,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                 <div className="w-full flex justify-between my-2">
                   <h1>Transaction overview</h1>
                 </div>
-                <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+                <div className="w-full flex items-center justify-between bg-gray-100 p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                   <div className="w-[60%]">
                     <input
                       type="text"
@@ -438,7 +438,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                     </div>
 
                     <p
-                      className="button1 cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md button1"
+                      className="cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md"
                       onClick={handleMaxAmountClick}
                     >
                       $

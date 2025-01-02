@@ -9,6 +9,7 @@ import assetReducer from "./reducers/assetReducer";
 import toggleReducer from "./reducers/toggleReducer";
 import soundReducer from "./reducers/soundReducer";
 import borrowSupplyReducer from './reducers/borrowSupplyReducer';
+import joyRideReducer from './reducers/joyRideReducer';
 
 export const store = configureStore({
     reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
         toggle: toggleReducer,
         sound: soundReducer,
         borrowSupply: borrowSupplyReducer,
+        joyride: joyRideReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

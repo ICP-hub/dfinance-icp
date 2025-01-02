@@ -6,11 +6,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     target: "body",
     content: (
       <div className="text-justify">
-        <h1 className="text-[22px] font-bold mb-3">Dfinance</h1>
-        <h2>
+        <h1 className="text-[22px] font-bold mb-2">Dfinance</h1>
+        <h2 className="text-[12px]">
           Welcome to the <strong>Dfinance App!</strong>
         </h2>
-        <p className="mb-4">
+        <p className="mb-4 text-[12px]">
           This guide will walk you through the key features.
         </p>
         {isMobile2 ? (
@@ -36,8 +36,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     target: "body",
     content: (
       <div className="text-justify relative flex flex-col justify-center">
-        <h1 className="text-[22px] font-bold mb-3">Faucet</h1>
-        <p className="mb-4">
+        <h1 className="text-[22px] font-bold mb-2">Faucet</h1>
+        <p className="mb-4 text-[12px]">
           This is the Faucet page. Here, you can view a list of assets available
           to faucet. Simply choose an asset from the list to proceed.
         </p>
@@ -61,7 +61,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "body",
     content: (
-      <div className="text-justify relative flex flex-col">
+      <div className="text-justify relative flex flex-col text-[12px]">
         <p className="mb-4">
           On this page, you can click the faucet button for the desired asset.
         </p>
@@ -87,8 +87,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     target: "body",
     content: (
       <div className="relative flex flex-col text-justify">
-        <h1 className="text-[22px] font-bold mb-3">Dashboard</h1>
-        <p className="mb-4">
+        <h1 className="text-[22px] font-bold mb-2">Dashboard</h1>
+        <p className="mb-4 text-[12px]">
           Welcome to the dashboard! Here, you can manage your assets seamlessly.
           Use this page to <span className="font-semibold">supply</span> assets,{" "}
           <span className="font-semibold">borrow</span> against collateral,{" "}
@@ -117,7 +117,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "#dashboard-assets-to-supply",
     content: (
-      <div className="relative flex flex-col text-justify">
+      <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
           In the "Assets to Supply" section, select the asset you wish to
           supply.
@@ -149,7 +149,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "#dashboard-assets-to-borrow",
     content: (
-      <div className="relative flex flex-col text-justify">
+      <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
           In the "Assets to Borrow" section, select the asset you wish to
           borrow.
@@ -181,7 +181,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "#your-borrow",
     content: (
-      <div className="relative flex flex-col text-justify">
+      <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
           In the "Your Borrow" section, select the asset you wish to repay or
           additionaly you can borrow from here also.
@@ -213,7 +213,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "#your-supplies",
     content: (
-      <div className="relative flex flex-col text-justify">
+      <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
           In the "Your Supplies" section, select the asset you wish to withdraw
           or additionaly you can supply from here also.
@@ -249,7 +249,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     content: (
       <>
         {isMobile2 ? (
-          <div className="relative flex flex-col text-justify">
+          <div className="relative flex flex-col text-justify text-[12px]">
             <p className="mb-4">Here Click on the menu button</p>
             <p className="mb-4">
               Here we can see Net Worth, Net APY, and Health Factor (when
@@ -276,7 +276,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
             />
           </div>
         ) : (
-          <div className="relative flex flex-col text-justify">
+          <div className="relative flex flex-col text-justify text-[12px]">
             <p className="mb-4">
               In here we can see Net Worth, Net APY, and Health Factor (when
               available).

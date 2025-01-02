@@ -11,8 +11,10 @@ import { Principal } from "@dfinity/principal";
 import useAssetData from "./components/Common/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "./joyrideConfig";
+import { selectJoyrideState } from "./redux/reducers/joyRideReducer";
 
 export default function App() {
+  const isTourRunning = useSelector(selectJoyrideState);
   const theme = useSelector((state) => state.theme.theme);
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";

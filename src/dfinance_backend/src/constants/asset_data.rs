@@ -49,6 +49,14 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
     let scaled_ltv = ScalingMath::to_scaled(reserve_data.configuration.ltv.clone());
     let scaled_liquidation_threshold =
         ScalingMath::to_scaled(reserve_data.configuration.liquidation_threshold.clone());
+        if token_name == "ckUSDT".to_string() {
+            reserve_data.configuration.liquidation_bonus = ScalingMath::to_scaled(
+                Nat::from(CKUSDT_LIQUIDATION_BONUS_1) / Nat::from(CKUSDT_LIQUIDATION_BONUS_2),
+            );
+        } else {
+            reserve_data.configuration.liquidation_bonus =
+                ScalingMath::to_scaled(reserve_data.configuration.liquidation_bonus.clone());
+        }
     let scaled_liquidation_bonus =
         ScalingMath::to_scaled(reserve_data.configuration.liquidation_bonus.clone());
     let scaled_borrow_cap = ScalingMath::to_scaled(reserve_data.configuration.borrow_cap.clone());

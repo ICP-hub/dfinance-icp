@@ -184,23 +184,7 @@ const Home = () => {
         </section>
 
         {}
-        <section className="mt-2 md:mt-8">
-          <div className="w-full flex justify-center">
-            <div className="w-full xl:w-5/5 p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl flex items-center text-white flex-wrap dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-              <div className="w-full xl:w-9/12">
-                <h1 className="font-semibold text-lg">Much more to come....</h1>
-                <p className="mt-4 text-sm font-medium">
-                See our roadmap to understand how we plan to explode borrowing and lending on ICP
-                </p>
-              </div>
-              <div className="w-full xl:w-3/12 flex justify-start mt-3 lg:mt-0 md:justify-end">
-                {" "}
-                {}
-                <Button title="DFinance Roadmap" />
-              </div>
-            </div>
-          </div>
-        </section>
+        
 
         {}
         <section className="mt-[44px] md:mt-24 " id="gov">

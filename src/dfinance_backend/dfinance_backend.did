@@ -174,8 +174,6 @@ service : (principal) -> {
   get_user_account_data : (opt principal) -> (Result_9);
   get_user_data : (principal) -> (Result_10) query;
   initialize : (text, ReserveData) -> (Result_2);
-  initialize_canister : () -> (Result_2);
-  initialize_reserve : () -> (Result_2);
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result);
   reset_reserve_value : (text, text, nat) -> (Result_2);

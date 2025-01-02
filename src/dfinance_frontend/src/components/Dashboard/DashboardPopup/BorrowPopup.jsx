@@ -543,7 +543,7 @@ if (onLoadingChange) {
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p>
+            <p className="text-sm  lgx:text-lg whitespace-nowrap">
               You have borrowed{" "}
               {scaledAmount / 100000000
                 ? scaledAmount / 100000000 >= 1e-8 &&
@@ -556,7 +556,7 @@ if (onLoadingChange) {
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
-            <p className="md:text-sm text-nowrap">
+            <p className="text-sm  lgx:text-lg whitespace-nowrap">
               You have received{" "}
               {scaledAmount / 100000000
                 ? scaledAmount / 100000000 >= 1e-8 &&

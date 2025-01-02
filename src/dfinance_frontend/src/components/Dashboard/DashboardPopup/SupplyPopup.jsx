@@ -643,7 +643,7 @@ const SupplyPopup = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p>
+            <p className=" text-sm  lgx:text-lg whitespace-nowrap">
               You have supplied{" "}
               <strong>
                 {scaledAmount / 100000000
@@ -658,21 +658,22 @@ const SupplyPopup = ({
                 {asset}
               </strong>
             </p>
-            <p>
-              You have received{" "}
-              <strong>
-                {scaledAmount / 100000000
-                  ? scaledAmount / 100000000 >= 1e-8 &&
-                    scaledAmount / 100000000 < 1e-7
-                    ? Number(scaledAmount / 100000000).toFixed(8)
-                    : scaledAmount / 100000000 >= 1e-7 &&
-                      scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
-                  : "0"}{" "}
-                d{asset}
-              </strong>
-            </p>
+            <p className="text-sm  lgx:text-lg whitespace-nowrap">
+  You have received{" "}
+  <strong>
+    {scaledAmount / 100000000
+      ? scaledAmount / 100000000 >= 1e-8 &&
+        scaledAmount / 100000000 < 1e-7
+        ? Number(scaledAmount / 100000000).toFixed(8)
+        : scaledAmount / 100000000 >= 1e-7 &&
+          scaledAmount / 100000000 < 1e-6
+        ? Number(scaledAmount / 100000000).toFixed(7)
+        : scaledAmount / 100000000
+      : "0"}{" "}
+    d{asset}
+  </strong>
+</p>
+
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"

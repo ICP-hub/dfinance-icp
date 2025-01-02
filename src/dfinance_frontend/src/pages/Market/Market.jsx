@@ -353,23 +353,23 @@ const WalletDetails = () => {
                         </div>
                       </td>
                     ))}
-                    <td className="p-3 hidden md:table-cell">
+                    <td className="p-3 hidden md:table-cell text-nowrap">
                       <div className="flex justify-center">
                         {WALLET_ASSETS_TABLE_COL[2]?.header}
                       </div>
                     </td>
                     <td className="p-3 hidden md:table-cell">
-                      <div className="flex justify-center">
+                      <div className="flex justify-center text-nowrap">
                         {WALLET_ASSETS_TABLE_COL[3]?.header}
                       </div>
                     </td>
-                    <td className="p-3 hidden md:table-cell">
+                    <td className="p-3 hidden md:table-cell text-nowrap">
                       <div className="flex justify-center">
                         {WALLET_ASSETS_TABLE_COL[4]?.header}
                       </div>
                     </td>
-                    <td className="p-3 ">
-                      <div className="flex justify-center">
+                    <td className="p-3 hidden md:table-cell text-nowrap ">
+                      <div className="flex justify-center  ">
                         {WALLET_ASSETS_TABLE_COL[5]?.header}
                       </div>
                     </td>

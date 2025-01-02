@@ -99,8 +99,13 @@ const useAssetData = (searchQuery = "") => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (assets.length === 0 || !fetchReserveData) return;
+      if (assets.length === 0 || !fetchReserveData) {
+        return;
+      }
+  
+      
       setLoading(true);
+  
       try {
         const data = {};
         let totalMarketSizeTemp = 0;
@@ -108,14 +113,29 @@ const useAssetData = (searchQuery = "") => {
         let totalBorrowes = 0;
         let reserveFactors = 0;
         let totalAccruedValue = 0;
-
-        
-        for (const asset of assets) {
-          const reserveDataForAsset = await fetchReserveData(asset);
+  
+        // Concurrent data fetching
+        const results = await Promise.all(
+          assets.map(async (asset) => {
+            try {
+              const reserveDataForAsset = await fetchReserveData(asset);
+              return { asset, reserveDataForAsset };
+            } catch (err) {
+              console.warn(`Error fetching data for asset ${asset}:`, err.message);
+              return null;
+            }
+          })
+        );
+  
+        results.forEach((result) => {
+          if (!result || !result.reserveDataForAsset) return;
+  
+          const { asset, reserveDataForAsset } = result;
           data[asset] = reserveDataForAsset;
+  
           const assetName = reserveDataForAsset.Ok.asset_name.toString();
-
           let assetRate = 0;
+  
           switch (assetName) {
             case "ckBTC":
               assetRate = ckBTCUsdRate;
@@ -135,59 +155,56 @@ const useAssetData = (searchQuery = "") => {
             default:
               assetRate = 0;
           }
+  
           const supplyCap = parseFloat(
             Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000
           );
-
           const totalSupply = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_supply) * (assetRate / 1e8)) /
-              100000000
+            100000000
           );
-
           const totalBorrow = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_borrow) * (assetRate / 1e8)) /
-              100000000
+            100000000
           );
-
           const reserveFactor = parseFloat(
             Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
-              100000000
+            100000000
           );
           const interestAccure = parseFloat(
             Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
           );
           const accruedValue = interestAccure * (assetRate / 1e8);
+  
           totalAccruedValue += accruedValue;
-
           totalMarketSizeTemp += supplyCap;
           totalSupplies += parseInt(totalSupply);
-
           totalBorrowes += parseInt(totalBorrow);
-
           reserveFactors = reserveFactor;
-        }
-
-        
+        });
+  
+        // Single state update for performance
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies));
         setTotalBorrowSize(formatNumber(totalBorrowes));
         setTotalReserveFactor(formatNumber(reserveFactors));
         setInterestAccure(formatNumber(totalAccruedValue));
+  
+        console.log("Data successfully fetched and state updated.");
       } catch (err) {
+        console.error("Error during fetch:", err.message);
         setError(err.message);
-        console.error(err.message);
       } finally {
+        console.log("Fetch completed.");
         setLoading(false);
       }
     };
-
-    fetchData();
-  }, [assets, fetchReserveData ,principal]);
-
-  useEffect(() => {
   
-  }, [reserveData]);
+    console.log("useEffect triggered with dependencies:", { assets, fetchReserveData});
+    fetchData();
+  }, [assets, fetchReserveData, principal]);
+  
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(

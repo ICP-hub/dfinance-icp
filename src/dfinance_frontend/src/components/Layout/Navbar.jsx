@@ -783,11 +783,11 @@ export default function Navbar({ isHomeNav }) {
               <div className="flex gap-3">
                <button
                   className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
-                  onClick={handleButtonClick}
+                  onClick={handleWalletConnect}
                 >
                   <div className="flex items-center justify-center">
                     <p className="hidden md:flex">Connect Wallet</p>
-                    <FaWallet  size={15} className=" ml-0 md:ml-1 -mt-[1px]" />
+                    <FaWallet  size={25}className=" ml-0 md:hidden ]" />
                   </div>
                 </button>
                 <div className="flex items-center justify-center">

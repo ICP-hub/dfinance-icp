@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { Check, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
@@ -1123,13 +1123,22 @@ const UserInformationPopup = ({
                     collateral + collateral * (liquidation_bonus / 100) <
                     selectedAssetSupply
                   )) && (
-                  <p className="text-red-500 mt-2 text-sm">
-                    {isLoading
+                    <div className="w-full flex flex-col my-3 space-y-2">
+                    <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                      <div className="w-1/12 flex items-center justify-center">
+                        <div className="warning-icon-container">
+                          <TriangleAlert />
+                        </div>
+                      </div>
+                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                      {isLoading
                       ? "Please wait while the process completes."
                       : !isCollateralAssetSelected
                       ? "No collateral asset selected."
                       : "The collateral amount with liquidation bonus exceeds the available supply."}
-                  </p>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
               <div className="flex justify-between mt-4">

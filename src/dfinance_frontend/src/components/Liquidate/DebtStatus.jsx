@@ -74,7 +74,73 @@ const DebtStatus = () => {
     };
     fetchUsers();
   }, [getAllUsers]);
+  const [liquidationLoading, setLiquidationLoading] = useState(true);
+ const stableUserAccountData = useMemo(() => userAccountData, [userAccountData]);
+const stableUsers = useMemo(() => users, [users]);
 
+useEffect(() => {
+  console.log("Effect triggered in users");
+  console.log("Users:", stableUsers);
+  console.log("UserAccountData:", stableUserAccountData);
+  console.log("User:", user);
+
+  setLiquidationLoading(true);
+
+  if (
+    stableUsers &&
+    Array.isArray(stableUsers) &&
+    Object.keys(stableUserAccountData || {}).length === stableUsers.length
+  ) {
+    const filtered = stableUsers
+      .map((item) => {
+        if (!item || !item[0]) return null;
+        const principal = item[0];
+        const accountData = stableUserAccountData?.[principal];
+
+        const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
+        const healthFactor = accountData
+          ? Number(accountData?.Ok?.[4]) / 10000000000
+          : 0;
+
+        return {
+          reserves: item[1]?.reserves || [],
+          principal,
+          healthFactor,
+          item,
+          totalDebt,
+        };
+      })
+      .filter(
+        (mappedItem) =>
+          mappedItem &&
+          mappedItem.healthFactor <1 &&
+          mappedItem.principal.toString() !== user.toString() &&
+          mappedItem.totalDebt > 0
+      );
+
+    if (filtered && filtered.length > 0) {
+      console.log("Updating filteredUsers:", filtered);
+      setFilteredUsers(filtered);
+      setLiquidationLoading(false); // Stop loading only when filteredUsers is valid
+    } else {
+      console.log("No valid filtered users found yet.");
+      setFilteredUsers([]); // Ensure filteredUsers is reset to an empty array
+    }
+  }
+}, [stableUsers, stableUserAccountData]);
+
+// Ensure loading stops when all users and account data are processed
+useEffect(() => {
+  if (
+    stableUsers &&
+    stableUsers.length > 0 &&
+    Object.keys(stableUserAccountData || {}).length === stableUsers.length
+  ) {
+    setLiquidationLoading(false); // Stop loading only when processing is complete
+  }
+}, [stableUsers, stableUserAccountData]);
+
+  
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
@@ -95,59 +161,42 @@ const DebtStatus = () => {
   const ITEMS_PER_PAGE = 8;
   const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchUserAccountData = async (userData) => {
-    const principal = userData?.principal;
+  const cachedData = useRef({});
 
-    if (!principal) {
-      console.warn("Invalid principal for user:", userData);
-      return;
+const fetchUserAccountDataWithCache = async (userData) => {
+  const principal = userData?.principal;
+  if (!principal || cachedData.current[principal]) return; // Skip if already cached
+
+  try {
+    const result = await backendActor.get_user_account_data([principal]);
+    if (result) {
+      cachedData.current[principal] = result; // Cache the result
+      setUserAccountData((prev) => ({ ...prev, [principal]: result }));
     }
+  } catch (error) {
+    console.error(`Error fetching data for principal: ${principal}`, error);
+  }
+};
 
-    setUserLoadingStates((prevState) => ({
-      ...prevState,
-      [principal]: true,
-    }));
+useEffect(() => {
+  if (!users || users.length === 0) return;
 
-    if (backendActor) {
-      try {
-        const result = await backendActor.get_user_account_data([principal]);
+  console.log(`Fetching account data for ${users.length} users...`);
 
-        if (result?.Err === "ERROR :: Pending") {
-          console.warn("Pending state detected. Retrying...");
-          setTimeout(() => fetchUserAccountData(userData), 1000);
-          return;
-        }
+  // Parallelize fetching with Promise.all
+  Promise.all(
+    users.map((userData) => {
+      const principal = userData[0];
+      if (principal) return fetchUserAccountDataWithCache({ ...userData, principal });
+      return null; // Skip invalid users
+    })
+  )
+    .then(() => console.log("All user account data fetched"))
+    .catch((error) => console.error("Error fetching user account data in batch:", error));
+}, [users]);
 
-        if (result) {
-          setUserAccountData((prevState) => ({
-            ...prevState,
-            [principal]: result,
-          }));
-
-          setUserLoadingStates((prevState) => ({
-            ...prevState,
-            [principal]: false,
-          }));
-        } else {
-          console.warn("No result returned for principal:", principal);
-        }
-      } catch (error) {
-        console.error("Error fetching user account data:", error.message);
-      }
-    }
-  };
-
-  useEffect(() => {
-    users.forEach((userData) => {
-      const principal = userData[0] ? userData[0] : null;
-      if (!principal) {
-        console.warn("Invalid principal found in userData:", userData);
-        return;
-      }
-
-      fetchUserAccountData({ ...userData, principal });
-    });
-  }, [users]);
+  
+  
   const fetchAssetData = async () => {
     const balances = {};
 
@@ -285,56 +334,8 @@ const DebtStatus = () => {
     return;
   };
 
-  const [liquidationLoading, setLiquidationLoading] = useState(true);
-  const stableUserAccountData = useMemo(
-    () => userAccountData,
-    [userAccountData]
-  );
-  const stableUsers = useMemo(() => users, [users]);
-  useEffect(() => {
-    console.log("Effect triggered in users");
-    console.log("Users:", stableUsers);
-    console.log("UserAccountData:", stableUserAccountData);
-    console.log("User:", user);
-
-    setLiquidationLoading(true);
-
-    if (
-      users &&
-      Array.isArray(users) &&
-      Object.keys(userAccountData || {}).length === users.length
-    ) {
-      const filtered = users
-        .map((item) => {
-          if (!item || !item[0]) return null;
-          const principal = item[0];
-          const accountData = userAccountData?.[principal];
-
-          const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
-          const healthFactor = accountData
-            ? Number(accountData?.Ok?.[4]) / 10000000000
-            : 0;
-
-          return {
-            reserves: item[1]?.reserves || [],
-            principal: principal,
-            healthFactor: healthFactor,
-            item,
-            totalDebt,
-          };
-        })
-        .filter(
-          (mappedItem) =>
-            mappedItem &&
-            mappedItem.healthFactor < 1 &&
-            mappedItem.principal.toString() !== user.toString() &&
-            mappedItem.totalDebt > 0
-        );
-
-      setFilteredUsers(filtered);
-      setLiquidationLoading(false);
-    }
-  }, [stableUsers, stableUserAccountData]);
+  
+  
 
   const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
     const reserve = reserveData?.[assetName];

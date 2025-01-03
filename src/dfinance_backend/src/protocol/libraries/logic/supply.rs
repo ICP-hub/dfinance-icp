@@ -41,13 +41,15 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
     let operation_key = format!("supply_{}", user_principal.to_text());
 
     // Acquire the lock
+    {
     acquire_lock(&operation_key).map_err(|e| {
         ic_cdk::println!("Lock acquisition failed: {:?}", e);
         Error::LockAcquisitionFailed
     })?;
+    }
 
     // Ensure the lock is released at the end of the operation
-    let release_operation_lock = || release_lock(&operation_key);
+    // let release_operation_lock = || release_lock(&operation_key);
     let result = async {
         let ledger_canister_id = read_state(|state| {
             let reserve_list = &state.reserve_list;

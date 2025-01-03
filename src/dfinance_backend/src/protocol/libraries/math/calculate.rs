@@ -199,7 +199,7 @@ pub async fn get_exchange_rates(
             "ckUSDT" => "usdt".to_string(),
             _ => symbol,
         },
-        None => "USDT".to_string(),
+        None => "USD".to_string(),
     };
 
     let args = GetExchangeRateRequest {

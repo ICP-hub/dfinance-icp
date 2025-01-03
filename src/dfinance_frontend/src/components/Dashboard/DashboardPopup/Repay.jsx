@@ -624,8 +624,8 @@ const Repay = ({
                 supplyBalance <= 0 ||
                 amount > supplyBalance) && (
                 <>
-                  <div className="bg-red-800 p-3 rounded-md">
-                    <div className="text-white text-[12px] mb-2">
+                  <div className="bg-red-800 p-2 rounded-lg my-2">
+                    <div className="text-white text-[12px]">
                       {isLoading
                         ? "Action is in progress, please wait."
                         : supplyBalance <= 0

@@ -218,11 +218,10 @@ dfx identity use default
 # Get the admin principal and export it
 export admin_principal=$(dfx identity get-principal)
 
+dfx deploy
 # Deploy the canister with the principal as an argument
 dfx deploy dfinance_backend --argument "(
     principal \"$admin_principal\"
 )"
-
-
 
 

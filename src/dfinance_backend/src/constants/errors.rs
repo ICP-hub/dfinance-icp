@@ -63,6 +63,7 @@ pub enum Error {
     ErrorNotController,
     InvalidVariableName,
     TokenAlreadyExist,
+    FailedToReleaseLock
 }
 
 impl Error {
@@ -127,7 +128,8 @@ impl Error {
             Error::EmailError => "Error in sending email to the admin",
             Error::ErrorNotController => "you are not a controller",
             Error::InvalidVariableName => "name of the variable is invalid - please enter it again",
-            Error::TokenAlreadyExist => "Token already exist - try again with different token"
+            Error::TokenAlreadyExist => "Token already exist - try again with different token",
+            Error::FailedToReleaseLock => "Failed to release lock"
         }
     }
 }

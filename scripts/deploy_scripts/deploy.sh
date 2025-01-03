@@ -224,4 +224,5 @@ dfx deploy dfinance_backend --argument "(
     principal \"$admin_principal\"
 )"
 
+dfx deploy
 

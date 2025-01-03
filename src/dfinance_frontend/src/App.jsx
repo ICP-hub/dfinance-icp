@@ -211,6 +211,9 @@ export default function App() {
         top: 0,
         behavior: "smooth",
       });
+      if (data.action === "next" && data.index === 20) {
+        navigate("/dashboard");
+      }
     }
   };
 

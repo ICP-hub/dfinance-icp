@@ -353,22 +353,22 @@ const WalletDetails = () => {
                         </div>
                       </td>
                     ))}
-                    <td className="p-3 hidden md:table-cell text-nowrap">
+                    <td className="p-3 hidden lg:table-cell text-nowrap">
                       <div className="flex justify-center">
                         {WALLET_ASSETS_TABLE_COL[2]?.header}
                       </div>
                     </td>
-                    <td className="p-3 hidden md:table-cell">
+                    <td className="p-3 hidden lg:table-cell">
                       <div className="flex justify-center text-nowrap">
                         {WALLET_ASSETS_TABLE_COL[3]?.header}
                       </div>
                     </td>
-                    <td className="p-3 hidden md:table-cell text-nowrap">
+                    <td className="p-3 hidden lg:table-cell text-nowrap">
                       <div className="flex justify-center">
                         {WALLET_ASSETS_TABLE_COL[4]?.header}
                       </div>
                     </td>
-                    <td className="p-3 hidden md:table-cell text-nowrap ">
+                    <td className="p-3 hidden lg:table-cell text-nowrap ">
                       <div className="flex justify-center  ">
                         {WALLET_ASSETS_TABLE_COL[5]?.header}
                       </div>
@@ -385,7 +385,7 @@ const WalletDetails = () => {
                           : ""
                       }`}
                     >
-                      <td className=" align-center py-6 sxs3:pl-2 md:pl-2">
+                      <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
                           {item[0] === "ckBTC" && (
                             <img
@@ -545,7 +545,7 @@ const WalletDetails = () => {
                             {}
                           </div>
                           <div
-                            className="md:hidden justify-center ml-6"
+                            className="lg:hidden justify-center ml-6"
                             onClick={() => handleChevronClick(item[0])}
                           >
                             <ChevronRight size={22} color={chevronColor} />
@@ -553,7 +553,7 @@ const WalletDetails = () => {
                         </div>
                       </td>
 
-                      <td className="p-3 align-center hidden md:table-cell">
+                      <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
                           {Number(item?.[1]?.Ok?.current_liquidity_rate) /
                             100000000 <
@@ -565,7 +565,7 @@ const WalletDetails = () => {
                               ).toFixed(2)}%`}
                         </div>
                       </td>
-                      <td className="p-2 align-center hidden md:table-cell">
+                      <td className="p-2 align-center hidden lg:table-cell">
                         <div className="flex justify-center flex-row">
                           <div>
                             <p className="min-w-[150px] text-center">
@@ -684,7 +684,7 @@ const WalletDetails = () => {
                         </div>
                       </td>
 
-                      <td className="p-3 align-center hidden md:table-cell">
+                      <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
                           {" "}
                           {Number(item?.[1]?.Ok?.borrow_rate) / 100000000 < 0.01
@@ -699,7 +699,7 @@ const WalletDetails = () => {
                           <Button
                             title={"Details"}
                             className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-1 shadow-md shadow-[#00000040] font-semibold text-[12px]
-                               lg:px-4 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
+                               lg:px-4 lg:py-[3px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px] dxs:px-2 dxs:py-[2px] ss4:px-1 ss4:py-[1px] "
                             onClickHandler={() =>
                               handleDetailsClick(item[0], item[1])
                             }

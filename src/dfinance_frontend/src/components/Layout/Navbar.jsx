@@ -12,7 +12,7 @@ import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
 import { useRef } from "react";
-
+import { FaWallet } from "react-icons/fa";
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -781,13 +781,15 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : (
               <div className="flex gap-3">
-                <Button
-                  title={"Connect Wallet"}
-                  onClickHandler={handleWalletConnect}
-                  className={
-                    "broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"
-                  }
-                />
+               <button
+                  className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
+                  onClick={handleWalletConnect}
+                >
+                  <div className="flex items-center justify-center">
+                    <p className="hidden md:flex">Connect Wallet</p>
+                    <FaWallet  size={25}className=" ml-0 md:hidden ]" />
+                  </div>
+                </button>
                 <div className="flex items-center justify-center">
                   <div className="relative">
                     {!isMobile ? (

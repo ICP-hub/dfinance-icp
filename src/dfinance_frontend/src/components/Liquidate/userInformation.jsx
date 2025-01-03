@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { Check, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
@@ -1125,14 +1125,23 @@ const UserInformationPopup = ({
                     collateral + collateral * (liquidation_bonus / 100) <
                     selectedAssetSupply
                   )) && (
-                    <p className="text-red-500 mt-2 text-sm">
+                    <div className="w-full flex flex-col my-3 space-y-2">
+                    <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                      <div className="w-1/12 flex items-center justify-center">
+                        <div className="warning-icon-container">
+                          <TriangleAlert />
+                        </div>
+                      </div>
+                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
                       {isLoading
-                        ? "Please wait while the process completes."
-                        : !isCollateralAssetSelected
-                          ? "No collateral asset selected."
-                          : "The collateral amount with liquidation bonus exceeds the available supply."}
-                    </p>
-                  )}
+                      ? "Please wait while the process completes."
+                      : !isCollateralAssetSelected
+                      ? "No collateral asset selected."
+                      : "The collateral amount with liquidation bonus exceeds the available supply."}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex justify-between mt-4">
                 <button
@@ -1144,8 +1153,10 @@ const UserInformationPopup = ({
                 </button>
 
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${isCollateralAssetSelected &&
-                      collateral + collateral * (liquidation_bonus / 100) <
+                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E]  text-white  rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm  px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${ 
+                  
+                    isCollateralAssetSelected &&
+                    collateral + collateral * (liquidation_bonus / 100) <
                       selectedAssetSupply
                       ? "opacity-100 cursor-pointer"
                       : "opacity-50 cursor-not-allowed"
@@ -1305,7 +1316,9 @@ const UserInformationPopup = ({
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm px-6 py-2 relative ${isDebtAssetSelected && amountToRepay <= selectedAssetBalance
+                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E]  text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm px-6 py-2 relative ${ 
+                  
+                    isDebtAssetSelected && amountToRepay <= selectedAssetBalance
                       ? "opacity-100"
                       : "opacity-50 cursor-not-allowed"
                     }`}
@@ -1354,9 +1367,8 @@ const UserInformationPopup = ({
               <div className="flex justify-end mt-4">
                 <button
                   onClick={handleNextClick}
-                  className="my-2 bg-gradient-to-tr from-[#EB8863] to-[#81198E] dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm cursor-pointer px-6 py-2 relative"
-                >
-                  NEXT
+                  className="my-2 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E]  text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040]  sxs3:text-[12px] md:text-sm cursor-pointer px-6 py-2 relative"
+                >NEXT
                 </button>
               </div>
             </div>

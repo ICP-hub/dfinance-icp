@@ -74,7 +74,73 @@ const DebtStatus = () => {
     };
     fetchUsers();
   }, [getAllUsers]);
+  const [liquidationLoading, setLiquidationLoading] = useState(true);
+ const stableUserAccountData = useMemo(() => userAccountData, [userAccountData]);
+const stableUsers = useMemo(() => users, [users]);
 
+useEffect(() => {
+  console.log("Effect triggered in users");
+  console.log("Users:", stableUsers);
+  console.log("UserAccountData:", stableUserAccountData);
+  console.log("User:", user);
+
+  setLiquidationLoading(true);
+
+  if (
+    stableUsers &&
+    Array.isArray(stableUsers) &&
+    Object.keys(stableUserAccountData || {}).length === stableUsers.length
+  ) {
+    const filtered = stableUsers
+      .map((item) => {
+        if (!item || !item[0]) return null;
+        const principal = item[0];
+        const accountData = stableUserAccountData?.[principal];
+
+        const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
+        const healthFactor = accountData
+          ? Number(accountData?.Ok?.[4]) / 10000000000
+          : 0;
+
+        return {
+          reserves: item[1]?.reserves || [],
+          principal,
+          healthFactor,
+          item,
+          totalDebt,
+        };
+      })
+      .filter(
+        (mappedItem) =>
+          mappedItem &&
+          mappedItem.healthFactor <1 &&
+          mappedItem.principal.toString() !== user.toString() &&
+          mappedItem.totalDebt > 0
+      );
+
+    if (filtered && filtered.length > 0) {
+      console.log("Updating filteredUsers:", filtered);
+      setFilteredUsers(filtered);
+      setLiquidationLoading(false); // Stop loading only when filteredUsers is valid
+    } else {
+      console.log("No valid filtered users found yet.");
+      setFilteredUsers([]); // Ensure filteredUsers is reset to an empty array
+    }
+  }
+}, [stableUsers, stableUserAccountData]);
+
+// Ensure loading stops when all users and account data are processed
+useEffect(() => {
+  if (
+    stableUsers &&
+    stableUsers.length > 0 &&
+    Object.keys(stableUserAccountData || {}).length === stableUsers.length
+  ) {
+    setLiquidationLoading(false); // Stop loading only when processing is complete
+  }
+}, [stableUsers, stableUserAccountData]);
+
+  
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
@@ -95,72 +161,56 @@ const DebtStatus = () => {
   const ITEMS_PER_PAGE = 8;
   const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchUserAccountData = async (userData) => {
-    const principal = userData?.principal;
+  const cachedData = useRef({});
 
-    if (!principal) {
-      console.warn("Invalid principal for user:", userData);
-      return;
+const fetchUserAccountDataWithCache = async (userData) => {
+  const principal = userData?.principal;
+  if (!principal || cachedData.current[principal]) return; // Skip if already cached
+
+  try {
+    const result = await backendActor.get_user_account_data([principal]);
+    if (result) {
+      cachedData.current[principal] = result; // Cache the result
+      setUserAccountData((prev) => ({ ...prev, [principal]: result }));
     }
+  } catch (error) {
+    console.error(`Error fetching data for principal: ${principal}`, error);
+  }
+};
 
-    setUserLoadingStates((prevState) => ({
-      ...prevState,
-      [principal]: true,
-    }));
+useEffect(() => {
+  if (!users || users.length === 0) return;
 
-    if (backendActor) {
-      try {
-        const result = await backendActor.get_user_account_data([principal]);
+  console.log(`Fetching account data for ${users.length} users...`);
 
-        if (result?.Err === "ERROR :: Pending") {
-          console.warn("Pending state detected. Retrying...");
-          setTimeout(() => fetchUserAccountData(userData), 1000);
-          return;
-        }
+  // Parallelize fetching with Promise.all
+  Promise.all(
+    users.map((userData) => {
+      const principal = userData[0];
+      if (principal) return fetchUserAccountDataWithCache({ ...userData, principal });
+      return null; // Skip invalid users
+    })
+  )
+    .then(() => console.log("All user account data fetched"))
+    .catch((error) => console.error("Error fetching user account data in batch:", error));
+}, [users]);
 
-        if (result) {
-          setUserAccountData((prevState) => ({
-            ...prevState,
-            [principal]: result,
-          }));
-
-          setUserLoadingStates((prevState) => ({
-            ...prevState,
-            [principal]: false,
-          }));
-        } else {
-          console.warn("No result returned for principal:", principal);
-        }
-      } catch (error) {
-        console.error("Error fetching user account data:", error.message);
-      }
-    }
-  };
-
-  useEffect(() => {
-    users.forEach((userData) => {
-      const principal = userData[0] ? userData[0] : null;
-      if (!principal) {
-        console.warn("Invalid principal found in userData:", userData);
-        return;
-      }
-
-      fetchUserAccountData({ ...userData, principal });
-    });
-  }, [users]);
+  
+  
   const fetchAssetData = async () => {
-    const balances = {};  
+    const balances = {};
 
     await Promise.all(
       filteredUsers.map(async (mappedItem) => {
-        const principal = mappedItem.principal; 
-        const userBalances = {};  
+        const principal = mappedItem.principal;
+        const userBalances = {};
 
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = await fetchReserveData(asset);
             const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-            const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+            const debtTokenId =
+              reserveDataForAsset?.Ok?.debt_token_canister?.[0];
 
             const assetBalance = {
               dtokenBalance: null,
@@ -174,23 +224,34 @@ const DebtStatus = () => {
               if (dtokenActor) {
                 try {
                   const balance = await dtokenActor.icrc1_balance_of(account);
-                  const formattedBalance = Number(balance) ; 
+                  const formattedBalance = Number(balance);
                   assetBalance.dtokenBalance = formattedBalance;
                 } catch (error) {
-                  console.error(`Error fetching dtoken balance for ${asset}:`, error);
+                  console.error(
+                    `Error fetching dtoken balance for ${asset}:`,
+                    error
+                  );
                 }
               }
             }
 
             if (debtTokenId) {
-              const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+              const debtTokenActor = createLedgerActor(
+                debtTokenId,
+                idlFactory1
+              );
               if (debtTokenActor) {
                 try {
-                  const balance = await debtTokenActor.icrc1_balance_of(account);
-                  const formattedBalance = Number(balance) ; 
+                  const balance = await debtTokenActor.icrc1_balance_of(
+                    account
+                  );
+                  const formattedBalance = Number(balance);
                   assetBalance.debtTokenBalance = formattedBalance;
                 } catch (error) {
-                  console.error(`Error fetching debt token balance for ${asset}:`, error);
+                  console.error(
+                    `Error fetching debt token balance for ${asset}:`,
+                    error
+                  );
                 }
               }
             }
@@ -208,16 +269,15 @@ const DebtStatus = () => {
 
   useEffect(() => {
     if (filteredUsers.length > 0) {
-      fetchAssetData(); 
+      fetchAssetData();
     }
-  }, [filteredUsers, assets ,users]); 
+  }, [filteredUsers, assets, users]);
 
   const getBalanceForPrincipalAndAsset = (
     principal,
     assetName,
     balanceType
   ) => {
-
     const userBalances = assetBalances[principal] || {};
 
     const assetBalance = userBalances[assetName];
@@ -274,66 +334,43 @@ const DebtStatus = () => {
     return;
   };
 
-  const [liquidationLoading, setLiquidationLoading] = useState(true);
+  
+  
 
-  useEffect(() => {
-    setLiquidationLoading(true);
-    if (
-      users &&
-      Array.isArray(users) &&
-      Object.keys(userAccountData || {}).length === users.length
-    ) {
-      const filtered = users
-        .map((item) => {
-          if (!item || !item[0]) return null;
-          const principal = item[0];
-          const accountData = userAccountData?.[principal];
-
-          const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
-          const healthFactor = accountData
-            ? Number(accountData?.Ok?.[4]) / 10000000000
-            : 0;
-
-          return {
-            reserves: item[1]?.reserves || [],
-            principal: principal,
-            healthFactor: healthFactor,
-            item,
-            totalDebt,
-          };
-        })
-        .filter(
-          (mappedItem) =>
-            mappedItem &&
-            mappedItem.healthFactor < 1 &&
-            mappedItem.principal.toString() !== user.toString() &&
-            mappedItem.totalDebt > 0
-        );
-
-      setFilteredUsers(filtered);
-      setLiquidationLoading(false);
-    }
-  }, [users, userAccountData, user]);
   const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
     const reserve = reserveData?.[assetName];
     const currentLiquidity = reserve?.Ok?.liquidity_index;
     const assetBalance =
-      getBalanceForPrincipalAndAsset(mappedItem.principal, assetName, "dtokenBalance") || 0;
-  
+      getBalanceForPrincipalAndAsset(
+        mappedItem.principal,
+        assetName,
+        "dtokenBalance"
+      ) || 0;
+
     // Calculate asset supply
-    return (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) / (Number(currentLiquidity) * 1e8);
+    return (
+      (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
+      (Number(currentLiquidity) * 1e8)
+    );
   };
-  
+
   const calculateAssetBorrow = (assetName, mappedItem, reserveData) => {
     const reserve = reserveData?.[assetName];
     const DebtIndex = reserve?.Ok?.debt_index;
     const assetBorrowBalance =
-      getBalanceForPrincipalAndAsset(mappedItem.principal, assetName, "debtTokenBalance") || 0;
-  
+      getBalanceForPrincipalAndAsset(
+        mappedItem.principal,
+        assetName,
+        "debtTokenBalance"
+      ) || 0;
+
     // Calculate asset borrow
-    return (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) / (Number(DebtIndex) * 1e8);
+    return (
+      (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
+      (Number(DebtIndex) * 1e8)
+    );
   };
-  
+
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
@@ -383,7 +420,7 @@ const DebtStatus = () => {
       return numericValue.toFixed(7);
     }
   };
-  
+
   return (
     <div className="w-full">
       <div className="w-full md:h-[40px] flex items-center mt-8">
@@ -394,13 +431,17 @@ const DebtStatus = () => {
           Debt users list
         </h1>
       </div>
-
+      {console.log("filteredUsers", filteredUsers)}
       <div className="w-full mt-6">
         {liquidationLoading ? (
+          // Show loader while loading
           <div className="h-[400px] flex justify-center items-center">
             <MiniLoader isLoading={true} />
           </div>
-        ) : !liquidationLoading && filteredUsers.length === 0 ? (
+        ) : !liquidationLoading &&
+          filteredUsers &&
+          filteredUsers.length === 0 ? (
+          // Show "No users found" only when loading is complete and filteredUsers is processed
           <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
             <div className="w-20 h-15">
               <img
@@ -472,11 +513,17 @@ const DebtStatus = () => {
                             {Array.isArray(mappedItem?.reserves?.[0]) &&
                               mappedItem.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
-                               
-                               
-                                const assetSupply = calculateAssetSupply(assetName, mappedItem, reserveData);
-              const assetBorrow = calculateAssetBorrow(assetName, mappedItem, reserveData);
-             
+
+                                const assetSupply = calculateAssetSupply(
+                                  assetName,
+                                  mappedItem,
+                                  reserveData
+                                );
+                                const assetBorrow = calculateAssetBorrow(
+                                  assetName,
+                                  mappedItem,
+                                  reserveData
+                                );
 
                                 if (assetBorrow > 0) {
                                   return (
@@ -510,8 +557,16 @@ const DebtStatus = () => {
                               mappedItem.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
                                 const reserve = reserveData?.[assetName];
-                                const assetSupply = calculateAssetSupply(assetName, mappedItem, reserveData);
-              const assetBorrow = calculateAssetBorrow(assetName, mappedItem, reserveData);
+                                const assetSupply = calculateAssetSupply(
+                                  assetName,
+                                  mappedItem,
+                                  reserveData
+                                );
+                                const assetBorrow = calculateAssetBorrow(
+                                  assetName,
+                                  mappedItem,
+                                  reserveData
+                                );
 
                                 if (assetSupply > 0) {
                                   return (

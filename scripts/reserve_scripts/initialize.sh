@@ -3,6 +3,9 @@
 # Set the default identity
 echo "Switching to 'default' identity..."
 dfx identity use default
+
+dfx ledger fabricate-cycles --canister dfinance_backend
+dfx ledger fabricate-cycles --canister dfinance_backend
 # Set the deployer identity 
 # echo "Switching to 'deployer' identity..."
 # dfx identity use deployer

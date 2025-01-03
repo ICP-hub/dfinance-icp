@@ -12,6 +12,7 @@ import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
 import { useRef } from "react";
+import { startTour } from "../../redux/reducers/joyRideReducer";
 
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
@@ -58,6 +59,11 @@ export default function Navbar({ isHomeNav }) {
 
   const handleSoundToggle = () => {
     dispatch(toggleSound());
+  };
+  const handleTour = () => {
+    console.log("button triggered");
+    dispatch(startTour()); 
+    // localStorage.removeItem("userGuideData");
   };
   const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
@@ -761,6 +767,16 @@ export default function Navbar({ isHomeNav }) {
                                 onChange={handleSoundToggle}
                               />
                             </div>
+                          </div>
+                          <div className="flex align-center justify-center w-[93%] border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
+                          <div className="flex w-full align-center justify-center mb-2">
+                            <button
+                              type="button"
+                              className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
+                              onClick={handleTour} 
+                            >
+                              Start Guide Tour
+                            </button>
                           </div>
                         </div>
                       </>

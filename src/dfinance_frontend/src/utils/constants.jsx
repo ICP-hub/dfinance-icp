@@ -282,7 +282,7 @@ export const FAQ_QUESTION = [
     id: 4,
     question: "Why are you launching on ICP?",
     answer:
-      "ICP is long overdue for a robust DeFi ecosystem. DFinance will be the first borrow lend protocol on ICP and will be a key player in unlocking new opportunities for yield as well as attracting liquidity from outside ICP through innovative incentive structures that take the best from other successful borrow and lend protocols and improve upon them with ICP infrastructure. For a full understanding of the DFinance economy, click here.",
+      "ICP is long overdue for a robust DeFi ecosystem. DFinance will be the first borrow lend protocol on ICP and will be a key player in unlocking new opportunities for yield as well as attracting liquidity from outside ICP through innovative incentive structures that take the best from other successful borrow and lend protocols and improve upon them with ICP infrastructure. For a full understanding of the DFinance economy.",
   },
 ];
 

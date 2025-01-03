@@ -44,7 +44,14 @@ export default function App() {
       steps: getSteps(theme, isMobile2, isMobile),
       styles: getStyles(joyRideBackground, joyTextColor),
     }));
-  }, [theme, isMobile2, isMobile, joyRideBackground, joyTextColor]);
+  }, [
+    theme,
+    isMobile2,
+    isMobile,
+    joyRideBackground,
+    joyTextColor,
+    isTourRunning,
+  ]);
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const dispatch = useDispatch();
@@ -152,10 +159,14 @@ export default function App() {
       const parsedData = storedData ? JSON.parse(storedData) : {};
 
       if (parsedData[principal]) {
+        if (isTourRunning) {
+          setJoyrideState((prevState) => ({ ...prevState, run: true }));
+          return;
+        }
         setJoyrideState((prevState) => ({ ...prevState, run: false }));
       }
     }
-  }, [isAuthenticated, principal]);
+  }, [isAuthenticated, principal, isTourRunning]);
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
@@ -165,6 +176,10 @@ export default function App() {
         const storedData = localStorage.getItem("userGuideData");
         const parsedData = storedData ? JSON.parse(storedData) : {};
         parsedData[principal] = true;
+        if (isTourRunning) {
+          setJoyrideState((prevState) => ({ ...prevState, run: true }));
+          return;
+        }
         localStorage.setItem("userGuideData", JSON.stringify(parsedData));
         setJoyrideState((prevState) => ({ ...prevState, run: false }));
       }

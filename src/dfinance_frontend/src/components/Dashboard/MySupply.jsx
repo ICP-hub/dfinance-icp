@@ -614,8 +614,8 @@ const MySupply = () => {
   };
 
   const noBorrowMessage = (
-    <div className="mt-2 mb-3 flex flex-col justify-center align-center place-items-center ">
-      <div className="w-20 h-15">
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
+      <div className="w-[55px] md:w-20 h-15">
         <img
           src="/Transaction/empty file.gif"
           alt="empty"
@@ -623,14 +623,14 @@ const MySupply = () => {
           loading="lazy"
         />
       </div>
-      <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
         Nothing borrowed yet
       </p>
     </div>
   );
   const noSupplyMessage = (
-    <div className="mt-2 mb-3 flex flex-col justify-center align-center place-items-center ">
-      <div className="w-20 h-15">
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
+      <div className="w-[55px] md:w-20 h-15">
         <img
           src="/Transaction/empty file.gif"
           alt="empty"
@@ -638,14 +638,14 @@ const MySupply = () => {
           loading="lazy"
         />
       </div>
-      <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
         Nothing supplied yet
       </p>
     </div>
   );
   const noAssetsToSupplyMessage = (
-    <div className="mt-2 mb-3 flex flex-col justify-center align-center place-items-center ">
-      <div className="w-20 h-15">
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
+      <div className="w-[55px] md:w-20 h-15">
         <img
           src="/Transaction/empty file.gif"
           alt="empty"
@@ -653,14 +653,14 @@ const MySupply = () => {
           loading="lazy"
         />
       </div>
-      <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
         No assets to supply.
       </p>
     </div>
   );
   const noAssetsToBorrowMessage = (
-    <div className="mt-2 mb-3 flex flex-col justify-center align-center place-items-center pb-6 pt-2">
-      <div className="w-20 h-15">
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center pb-6 pt-2 opacity-60">
+      <div className="w-[55px] md:w-20 h-15">
         <img
           src="/Transaction/empty file.gif"
           alt="empty"
@@ -668,11 +668,12 @@ const MySupply = () => {
           loading="lazy"
         />
       </div>
-      <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
+      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
         No assets to borrow.
       </p>
     </div>
   );
+
   const getAssetSupplyValue = (asset, principal) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);

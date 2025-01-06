@@ -18,7 +18,7 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
       : parseFloat((Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2));
 
       
-  const Ltv_Value = (totalDebt / totalCollateral)*100;
+   const Ltv_Value = (totalDebt / totalCollateral)*100;
 
   const liquidationThreshold_Value =
     Number(userAccountData?.Ok?.[3]) / 100000000 || 0
@@ -380,7 +380,7 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
                     fontSize="12"
                     textAnchor={currentLTVPosition > 50 ? "left" : "right"}
                     dy="1em"
-                    dx={currentLTVPosition > 50 ? "-1em" : "-0.01em"}
+                    dx={currentLTVPosition > 50 ? "-2.5em" : "-0.01em"}
                   >
                     {parseFloat(Ltv_Value)?.toFixed(2) || "0"}
                   </text>

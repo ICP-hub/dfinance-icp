@@ -98,22 +98,29 @@ useEffect(() => {
         const accountData = stableUserAccountData?.[principal];
 
         const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
+        const totalCollateral = Number(accountData?.Ok?.[0]) / 1e8 || 0;
         const healthFactor = accountData
           ? Number(accountData?.Ok?.[4]) / 10000000000
           : 0;
-
+          const liquidationThreshold =
+          Number(accountData?.Ok?.[3]) / 100000000 ||
+          0;
+          console.log("liquidationThreshold",accountData?.Ok?.[3])
         return {
           reserves: item[1]?.reserves || [],
           principal,
           healthFactor,
           item,
           totalDebt,
+          totalCollateral,
+          liquidationThreshold,
+          
         };
       })
       .filter(
         (mappedItem) =>
           mappedItem &&
-          mappedItem.healthFactor <1 &&
+          mappedItem.healthFactor >1 &&
           mappedItem.principal.toString() !== user.toString() &&
           mappedItem.totalDebt > 0
       );

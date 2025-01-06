@@ -120,7 +120,7 @@ useEffect(() => {
       .filter(
         (mappedItem) =>
           mappedItem &&
-          mappedItem.healthFactor >1 &&
+          mappedItem.healthFactor <1 &&
           mappedItem.principal.toString() !== user.toString() &&
           mappedItem.totalDebt > 0
       );

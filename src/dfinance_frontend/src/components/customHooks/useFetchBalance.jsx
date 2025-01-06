@@ -1,8 +1,10 @@
 import { useCallback, useState } from "react";
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
+import { useSelector } from "react-redux";
 
 const useFetchBalance = (ledgerActors, principal) => {
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
   const [ckBTCBalance, setCkBTCBalance] = useState(null);
   const [ckETHBalance, setCkETHBalance] = useState(null);
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
@@ -57,7 +59,7 @@ const useFetchBalance = (ledgerActors, principal) => {
       } else {
       }
     },
-    [ledgerActors, principalObj]
+    [ledgerActors, principalObj, dashboardRefreshTrigger]
   );
 
   return {

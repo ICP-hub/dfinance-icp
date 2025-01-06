@@ -40,6 +40,8 @@ import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 
 const MySupply = () => {
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  console.log("dashboardRefreshTrigger", dashboardRefreshTrigger);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state, pathname } = useLocation();
@@ -72,7 +74,7 @@ const MySupply = () => {
     if (userData && userAccountData) {
       setLoading(false);
     }
-  }, [userData, userAccountData]);
+  }, [userData, userAccountData, dashboardRefreshTrigger]);
 
   useEffect(() => {
     const hasCollateral = userData?.Ok?.reserves[0]?.some(
@@ -94,7 +96,7 @@ const MySupply = () => {
     } else {
       setAvailableBorrow(0);
     }
-  }, [userAccountData, userData]);
+  }, [userAccountData, userData, dashboardRefreshTrigger]);
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -113,6 +115,7 @@ const MySupply = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
+  
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [assetBalances, setAssetBalances] = useState([]);
@@ -199,7 +202,7 @@ const MySupply = () => {
 
   useEffect(() => {
     fetchAssetData();
-  }, [assets, principalObj]);
+  }, [assets, principalObj, dashboardRefreshTrigger]);
 
   const [loadingUserData, setUserDataLoading] = useState(true);
   useEffect(() => {
@@ -235,7 +238,7 @@ const MySupply = () => {
 
     fetchSupplyData();
     fetchBorrowData();
-  }, [assets]);
+  }, [assets, dashboardRefreshTrigger]);
 
   const visibleItems = filteredItems.filter((item) => {
     const balance =
@@ -329,6 +332,7 @@ const MySupply = () => {
     ckUSDTUsdRate,
     ckICPBalance,
     ckICPUsdRate,
+    dashboardRefreshTrigger
   ]);
 
   useEffect(() => {
@@ -351,7 +355,7 @@ const MySupply = () => {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
+  }, [fetchBalance, fetchConversionRate, dashboardRefreshTrigger]);
 
   const filteredReserveData = Object.fromEntries(filteredItems);
 
@@ -702,7 +706,7 @@ const MySupply = () => {
       const item = filteredItems[0][1].Ok;
       setCollateral(item.can_be_collateral);
     }
-  }, [filteredItems]);
+  }, [filteredItems, dashboardRefreshTrigger]);
 
   let current_liquidity_rate = "0";
   let borrow_rate_apr = "0";
@@ -754,7 +758,7 @@ const MySupply = () => {
 
       setCalculatedReserves(reservesWithCalculations);
     }
-  }, [userData]);
+  }, [userData, dashboardRefreshTrigger]);
 
   let totalUsdValueSupply = 0;
   let totalUsdValueBorrow = 0;
@@ -782,7 +786,7 @@ const MySupply = () => {
 
     setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
-  }, []);
+  }, [dashboardRefreshTrigger]);
   const hasValidAssets = userData?.Ok?.reserves?.[0]?.some((reserveGroup) => {
     const asset = reserveGroup[0];
     const assetBalance = assetBalances.find(
@@ -2069,7 +2073,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckBTCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckBTCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2093,7 +2097,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckETHUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckETHUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2117,7 +2121,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2141,7 +2145,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckICPUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckICPBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2165,7 +2169,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDTUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2472,7 +2476,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckBTCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckBTCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2496,7 +2500,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckETHUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckETHUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2520,7 +2524,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2544,7 +2548,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckICPUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckICPUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2568,7 +2572,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDTUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTUsdBalance)}
                                         </p>
                                       </>
                                     )}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { TAB_CARD_DATA } from "../../utils/constants";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
@@ -24,6 +24,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
 
 const DashboardNav = () => {
+ const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
   const {
     isAuthenticated,
     principal,
@@ -46,7 +47,7 @@ const DashboardNav = () => {
   useEffect(() => {
     const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
     setNetWorth(calculatedNetWorth);
-  }, [totalUsdValueBorrow, totalUsdValueSupply]);
+  }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -117,7 +118,7 @@ const DashboardNav = () => {
 
   useEffect(() => {
     fetchAssetData();
-  }, [assets, principalObj]);
+  }, [assets, principalObj, dashboardRefreshTrigger]);
 
   useEffect(() => {}, [assetBalances]);
 
@@ -130,7 +131,7 @@ const DashboardNav = () => {
     };
 
     fetchData();
-  }, [assets]);
+  }, [assets, dashboardRefreshTrigger]);
 
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
@@ -265,13 +266,14 @@ const DashboardNav = () => {
     totalUsdValueSupply,
     totalUsdValueBorrow,
     userAccountData,
+    dashboardRefreshTrigger
   ]);
 
   useEffect(() => {
     if (netApy !== undefined) {
       updateNetApy();
     }
-  }, [netApy]);
+  }, [netApy, dashboardRefreshTrigger]);
 
   const [error, setError] = useState(null);
   const {
@@ -302,7 +304,7 @@ const DashboardNav = () => {
 
   useEffect(() => {
     fetchConversionRate();
-  }, [fetchConversionRate]);
+  }, [fetchConversionRate, dashboardRefreshTrigger]);
 
   const calculateNetSupplyApy = useCallback(
     (reserves, reserveData) => {
@@ -423,14 +425,14 @@ const DashboardNav = () => {
 
       updateState();
     }
-  }, [userData, reserveData, calculateNetSupplyApy, assetBalances]);
+  }, [userData, reserveData, calculateNetSupplyApy, assetBalances, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
       const borrow = Number(userData.Ok.total_debt) / 100000000;
       setAssetBorrow(borrow);
     }
-  }, [userData]);
+  }, [userData, dashboardRefreshTrigger]);
 
   useEffect(() => {}, [netApy]);
 
@@ -500,7 +502,7 @@ const DashboardNav = () => {
     if (totalSupplySize !== null && totalBorrowSize !== null) {
       updateWalletDetailTabs();
     }
-  }, [assets, totalSupplySize, totalBorrowSize,userAccountData]);
+  }, [assets, totalSupplySize, totalBorrowSize,userAccountData, dashboardRefreshTrigger]);
 
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
@@ -570,13 +572,13 @@ const DashboardNav = () => {
   useEffect(() => {
     const asset = TAB_CARD_DATA.find((item) => item.id === currentValueIndex);
     setCurrentValueData(asset);
-  }, [currentValueIndex]);
+  }, [currentValueIndex, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (state && state.id !== undefined) {
       setCurrentValueIndex(state.id);
     }
-  }, [state]);
+  }, [state, dashboardRefreshTrigger]);
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 

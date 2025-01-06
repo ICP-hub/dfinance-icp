@@ -462,3 +462,9 @@ button:active {
     width: 85vw !important; 
   }
 }
+
+@media (min-width: 800px) {
+  .react-joyride__tooltip {
+    width: 30vw !important;
+  }
+}

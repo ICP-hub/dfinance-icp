@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 
 const useFetchConversionRate = (pollInterval = 2000) => {
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
   const ledgerActors = useSelector((state) => state.ledger);
   const { principal, backendActor } = useAuth();
   const {
@@ -95,6 +96,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     ckUSDCUsdRate,
     ckICPUsdRate,
     ckUSDTUsdRate,
+    dashboardRefreshTrigger
   ]);
 
   useEffect(() => {
@@ -103,7 +105,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     }, pollInterval);
 
     return () => clearInterval(intervalIdRef.current);
-  }, [fetchConversionRate, pollInterval]);
+  }, [fetchConversionRate, pollInterval, dashboardRefreshTrigger]);
 
   useEffect(() => {
     fetchBalance("ckBTC");
@@ -111,7 +113,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     fetchBalance("ckUSDC");
     fetchBalance("ICP");
     fetchBalance("ckUSDT");
-  }, [fetchBalance]);
+  }, [fetchBalance, dashboardRefreshTrigger]);
 
   return {
     ckBTCUsdRate,

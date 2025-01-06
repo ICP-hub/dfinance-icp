@@ -4,10 +4,11 @@ import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const useAssetData = (searchQuery = "") => {
   const dispatch = useDispatch();
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
   const {
     principal,
     fetchReserveData,
@@ -37,7 +38,7 @@ const useAssetData = (searchQuery = "") => {
   } = useFetchConversionRate();
   useEffect(() => {
     fetchConversionRate();
-  }, [fetchConversionRate]);
+  }, [fetchConversionRate, dashboardRefreshTrigger]);
 
   useEffect(() => {
     const fetchAssets = async () => {
@@ -52,7 +53,7 @@ const useAssetData = (searchQuery = "") => {
     };
 
     fetchAssets();
-  }, [backendActor]);
+  }, [backendActor, dashboardRefreshTrigger]);
   const fetchAssetSupply = async (asset) => {
     if (backendActor && isAuthenticated) {
       try {

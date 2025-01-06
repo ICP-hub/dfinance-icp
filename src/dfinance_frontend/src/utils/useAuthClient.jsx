@@ -244,7 +244,7 @@ export const useAuthClient = (options = defaultOptions) => {
 
     try {
       const reserveData = await backendActor.get_reserve_data(asset);
-
+      
       return reserveData;
     } catch (error) {
       throw error;

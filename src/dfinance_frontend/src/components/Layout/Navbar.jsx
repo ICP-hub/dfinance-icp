@@ -12,7 +12,7 @@ import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
 import { useRef } from "react";
-import { startTour } from "../../redux/reducers/joyRideReducer";
+import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
@@ -61,9 +61,8 @@ export default function Navbar({ isHomeNav }) {
     dispatch(toggleSound());
   };
   const handleTour = () => {
-    console.log("button triggered");
-    dispatch(startTour()); 
-    // localStorage.removeItem("userGuideData");
+    dispatch(joyRideTrigger());
+    navigate("/dashboard");
   };
   const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
@@ -773,7 +772,7 @@ export default function Navbar({ isHomeNav }) {
                             <button
                               type="button"
                               className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
-                              onClick={handleTour} 
+                              onClick={handleTour}
                             >
                               Start Guide Tour
                             </button>

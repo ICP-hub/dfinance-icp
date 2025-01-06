@@ -27,6 +27,8 @@ import MiniLoader from "../Common/MiniLoader";
 const ITEMS_PER_PAGE = 8;
 
 const FaucetDetails = () => {
+  const refreshTrigger = useSelector((state) => state.faucetUpdate.refreshTrigger);
+  console.log("refreshTrigger", refreshTrigger);
   const { isAuthenticated, principal, backendActor, createLedgerActor } =
     useAuth();
 
@@ -116,6 +118,7 @@ const FaucetDetails = () => {
     ckICPUsdRate,
     ckUSDTBalance,
     ckUSDTUsdRate,
+    refreshTrigger
   ]);
 
   useEffect(() => {
@@ -145,6 +148,7 @@ const FaucetDetails = () => {
     ckUSDCBalance,
     ckICPBalance,
     ckUSDTBalance,
+    refreshTrigger
   ]);
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -241,7 +245,7 @@ const FaucetDetails = () => {
                         {item.header}
                       </td>
                     ))}
-                    <td className="hidden md:table-cell pr-[6.3rem]">
+                    <td className="hidden md:table-cell pr-[6.6rem]">
                       {FAUCET_ASSETS_TABLE_COL[2]?.header}
                     </td>
                   </tr>

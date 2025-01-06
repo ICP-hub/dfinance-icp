@@ -202,9 +202,9 @@ const useAssetData = (searchQuery = "") => {
       }
     };
   
-    console.log("useEffect triggered with dependencies:", { assets, fetchReserveData});
+    console.log("useEffect triggered with dependencies:", { assets, fetchReserveData, principal, ckUSDTUsdRate, ckICPUsdRate,ckUSDCUsdRate,ckETHUsdRate,ckBTCUsdRate});
     fetchData();
-  }, [assets, fetchReserveData, principal]);
+  }, [assets, fetchReserveData, principal, ckUSDTUsdRate, ckICPUsdRate,ckUSDCUsdRate,ckETHUsdRate,ckBTCUsdRate]);
   
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0

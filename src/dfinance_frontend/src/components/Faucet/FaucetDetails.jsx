@@ -23,7 +23,7 @@ import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
-
+import WalletModal from "../../components/Dashboard/WalletModal";
 const ITEMS_PER_PAGE = 8;
 
 const FaucetDetails = () => {
@@ -51,7 +51,12 @@ const FaucetDetails = () => {
   const [conversionRate, setConversionRate] = useState(null);
   // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const {
+    isWalletCreated,
+    isWalletModalOpen,
+    isSwitchingWallet,
+    connectedWallet,
+  } = useSelector((state) => state.utility);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -202,7 +207,14 @@ const FaucetDetails = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
   const filteredReserveData = Object.fromEntries(filteredItems);
   const formatNumber = useFormatNumber();
+  const [hasLoaded, setHasLoaded] = useState(false);
 
+  useEffect(() => {
+    // If loading is finished, mark as loaded
+    if (!loading) {
+      setHasLoaded(true);
+    }
+  }, [loading]);
   return (
     <div className="w-full">
       <div className="w-full flex items-center px-1">
@@ -212,7 +224,7 @@ const FaucetDetails = () => {
       </div>
 
       <div className="w-full mt-9 p-0 lg:px-1">
-        {loading ? (
+        {loading  && !isSwitchingWallet  && !hasLoaded ? (
           <div className="w-full mt-[180px] mb-[300px] flex justify-center items-center ">
             <MiniLoader isLoading={true} />
           </div>
@@ -493,6 +505,7 @@ const FaucetDetails = () => {
             />
           </div>
         )}
+         {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
       </div>
     </div>
   );

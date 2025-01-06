@@ -435,7 +435,7 @@ const DashboardNav = () => {
   }, [userData, dashboardRefreshTrigger]);
 
   useEffect(() => {}, [netApy]);
-
+console.log("totalSupply,totalBorrow",totalSupplySize,totalBorrowSize)
   useEffect(() => {
     const updateWalletDetailTabs = () => {
       const updatedTabs = walletDetailTabs.map((item) => {
@@ -640,7 +640,7 @@ const DashboardNav = () => {
             onClick={() => navigate(-1)}
           >
             <div className="flex -mt-2">
-              <ChevronLeft size={40} color={chevronColor} />
+              <ChevronLeft size={40} color={chevronColor} className="cursor-pointer" />
 
               {isAssetDetailsPage && (
                 <h1 className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-1 ml-3">

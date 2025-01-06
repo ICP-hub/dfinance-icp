@@ -115,7 +115,12 @@ const MySupply = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
-  
+  const {
+    isWalletCreated,
+    isWalletModalOpen,
+    isSwitchingWallet,
+    connectedWallet,
+  } = useSelector((state) => state.utility);
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [assetBalances, setAssetBalances] = useState([]);
@@ -239,7 +244,14 @@ const MySupply = () => {
     fetchSupplyData();
     fetchBorrowData();
   }, [assets, dashboardRefreshTrigger]);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
+  useEffect(() => {
+    // If loading is finished, mark as loaded
+    if (!filteredDataLoading) {
+      setHasLoaded(true);
+    }
+  }, [filteredDataLoading]);
   const visibleItems = filteredItems.filter((item) => {
     const balance =
       item[0] === "ckBTC"
@@ -1966,7 +1978,8 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
-                  {filteredDataLoading ? (
+                {console.log("isSwitchingWallet", isSwitchingWallet)}
+                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -2338,7 +2351,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isVisible && (
                 <>
-                  {filteredDataLoading ? (
+                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -2808,7 +2821,7 @@ const MySupply = () => {
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
-                  {borrowDataLoading ? (
+                  {borrowDataLoading  && !isSwitchingWallet? (
                     <div className="h-[100px] flex justify-center items-center">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -3302,7 +3315,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {borrowDataLoading ? (
+                  {borrowDataLoading  && !isSwitchingWallet? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -3830,7 +3843,7 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isBorrowVisible && (
                 <>
-                  {filteredDataLoading ? (
+                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -4533,7 +4546,7 @@ const MySupply = () => {
                   )}
 
                   <div className="w-full h-auto mt-6">
-                    {filteredDataLoading ? (
+                    {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
                       <div className="min-h-[100px] flex justify-center items-center ">
                         <MiniLoader isLoading={true} />
                       </div>

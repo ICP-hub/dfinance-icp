@@ -11,8 +11,10 @@ import { Principal } from "@dfinity/principal";
 import useAssetData from "./components/Common/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "./joyrideConfig";
+import { selectJoyrideState } from "./redux/reducers/joyRideReducer";
 
 export default function App() {
+  const isTourRunning = useSelector(selectJoyrideState);
   const theme = useSelector((state) => state.theme.theme);
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
@@ -42,7 +44,14 @@ export default function App() {
       steps: getSteps(theme, isMobile2, isMobile),
       styles: getStyles(joyRideBackground, joyTextColor),
     }));
-  }, [theme, isMobile2, isMobile, joyRideBackground, joyTextColor]);
+  }, [
+    theme,
+    isMobile2,
+    isMobile,
+    joyRideBackground,
+    joyTextColor,
+    isTourRunning,
+  ]);
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const dispatch = useDispatch();
@@ -150,10 +159,14 @@ export default function App() {
       const parsedData = storedData ? JSON.parse(storedData) : {};
 
       if (parsedData[principal]) {
+        if (isTourRunning) {
+          setJoyrideState((prevState) => ({ ...prevState, run: true }));
+          return;
+        }
         setJoyrideState((prevState) => ({ ...prevState, run: false }));
       }
     }
-  }, [isAuthenticated, principal]);
+  }, [isAuthenticated, principal, isTourRunning]);
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
@@ -163,6 +176,10 @@ export default function App() {
         const storedData = localStorage.getItem("userGuideData");
         const parsedData = storedData ? JSON.parse(storedData) : {};
         parsedData[principal] = true;
+        if (isTourRunning) {
+          setJoyrideState((prevState) => ({ ...prevState, run: true }));
+          return;
+        }
         localStorage.setItem("userGuideData", JSON.stringify(parsedData));
         setJoyrideState((prevState) => ({ ...prevState, run: false }));
       }
@@ -194,6 +211,9 @@ export default function App() {
         top: 0,
         behavior: "smooth",
       });
+      if (data.action === "next" && data.index === 20) {
+        navigate("/dashboard");
+      }
     }
   };
 

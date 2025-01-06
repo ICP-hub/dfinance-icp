@@ -456,3 +456,9 @@ button:active {
     transform: translateX(0);
   }
 }
+
+@media (max-width: 600px) {
+  .react-joyride__tooltip {
+    width: 85vw !important; 
+  }
+}

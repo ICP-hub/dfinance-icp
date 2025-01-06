@@ -623,15 +623,19 @@ const Repay = ({
                 isButtonDisabled ||
                 supplyBalance <= 0 ||
                 amount > supplyBalance) && (
-                <div className="text-red-500 text-[12px] mb-2">
-                  {isLoading
-                    ? "Action is in progress, please wait."
-                    : supplyBalance <= 0
-                    ? "Insufficient balance to perform this action."
-                    : amount > supplyBalance
-                    ? "Amount exceeds your wallet balance."
-                    : ""}
-                </div>
+                <>
+                  <div className="bg-red-800 p-2 rounded-lg my-2">
+                    <div className="text-white text-[12px]">
+                      {isLoading
+                        ? "Action is in progress, please wait."
+                        : supplyBalance <= 0
+                        ? "Insufficient balance to perform this action."
+                        : amount > supplyBalance
+                        ? "Amount exceeds your wallet balance."
+                        : ""}
+                    </div>
+                  </div>
+                </>
               )}
 
               <button

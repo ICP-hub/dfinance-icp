@@ -2086,7 +2086,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckBTCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckBTCUsdBalance *(ckBTCUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}
@@ -2110,7 +2110,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckETHUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckETHUsdBalance*(ckETHUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}
@@ -2134,7 +2134,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCBalance*(ckUSDCUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}
@@ -2158,7 +2158,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckICPBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckICPBalance*(ckICPUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}
@@ -2182,7 +2182,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTBalance*(ckUSDTUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}

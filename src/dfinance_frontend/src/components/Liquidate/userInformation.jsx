@@ -327,8 +327,15 @@ const UserInformationPopup = ({
     setSelectedDebtAsset(asset);
     setAmountToRepay(assetBorrowAmount ? assetBorrowAmount : 0);
     setAmountToRepayUSD(assetBorrowAmountInUSD ? assetBorrowAmountInUSD : 0);
+  
+    // Reset collateral asset selection
+    setIsCollateralAssetSelected(false);
+    setSelectedAsset(null);
+    setCollateralRate(0);
+    setSelectedAssetSupply(0);
+    setCollateralRateAmount(0);
   };
-
+  
   const handleAssetSelection = (
     asset,
     collateralRate,
@@ -341,6 +348,7 @@ const UserInformationPopup = ({
     setSelectedAssetSupply(assetSupply);
     setCollateralRateAmount(collateralAmount ? collateralAmount : 0);
   };
+  
 
   const handleCheckboxClick = (e) => {
     setIsCheckboxChecked(e.target.checked);
@@ -1109,7 +1117,7 @@ const UserInformationPopup = ({
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-[#2A1F9D] dark:text-darkText">
-              {isDebtInfo ? "Debt Information" : "User Information"}
+              {isDebtInfo ? "Reward Information" : "User Information"}
             </h2>
             <button
               onClick={onClose}
@@ -1360,17 +1368,17 @@ const UserInformationPopup = ({
               {}
               {renderAssetDetails(selectedAsset)}
 
-              {/* {(!isCollateralAssetSelected ||
+              {(!isCollateralAssetSelected ||
                 !(amountToRepay <= selectedAssetBalance)) && (
                 <div className="w-full flex flex-col my-3 space-y-2">
                   <div
-                    className={`w-full flex p-3 rounded-lg text-white ${
+                    className={`w-full flex p-2 rounded-lg text-white ${
                       !isCollateralAssetSelected
                         ? "bg-[#6e3d17]"
                         : "bg-[#BA5858]"
                     }`}
                   >
-                    <div className="w-1/12 flex items-center justify-center">
+                    <div className=" flex items-center justify-center">
                       <div className="warning-icon-container">
                         {isCollateralAssetSelected ? (
                           <div className="warning-icon-container">
@@ -1378,20 +1386,20 @@ const UserInformationPopup = ({
                           </div>
                         ) : (
                           <div className="info-icon-container">
-                            <Info className="text-[#f6ba43]  size={14}" />
+                            <Info className="text-[#f6ba43]   w-3 h-4 mb-0.2" />
                           </div>
                         )}
                       </div>
                     </div>
-                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                    <div className="w-11/12 text-[12px] flex items-center text-white ml-1">
                       {!isCollateralAssetSelected
                         ? "Select a collateral asset to see reward"
                         : "Amount to repay exceeds available balance of the selected asset"}
                     </div>
                   </div>
                 </div>
-              )} */}
-              <div className="flex justify-start mt-1">
+              )}
+              {/* <div className="flex justify-start mt-1">
                 {!isCollateralAssetSelected && (
                   <div className="w-full flex flex-col my-3 space-y-2">
                     <div className="w-full flex bg-[#6e3d17] p-2 rounded-lg text-white">
@@ -1406,7 +1414,7 @@ const UserInformationPopup = ({
                     </div>
                   </div>
                 )}
-              </div>
+              </div> */}
               <div className="flex justify-between mt-4">
                 <button
                   title="Back"

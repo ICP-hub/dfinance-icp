@@ -15,12 +15,13 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useAssetData from "../Common/useAssets";
 import { Fuel } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import { trackEvent } from "../../utils/googleAnalytics";
+import { toggleRefreshLiquidate } from "../../redux/reducers/liquidateUpdateReducer";
 
 const UserInformationPopup = ({
   onClose,
@@ -31,6 +32,8 @@ const UserInformationPopup = ({
   assetBorrow,
   assetBalance,
 }) => {
+  const liquidateTrigger = useSelector((state) => state.liquidateUpdate.LiquidateTrigger);
+  console.log("liquidateTrigger in userinfo", liquidateTrigger);
   const { backendActor, principal: currentUserPrincipal } = useAuth();
   const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
@@ -58,6 +61,7 @@ const UserInformationPopup = ({
       document.body.style.overflow = "auto";
     };
   }, []);
+  const dispatch = useDispatch()
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -127,7 +131,7 @@ const UserInformationPopup = ({
 
     fetchSupplyData();
     fetchBorrowData();
-  }, [assets]);
+  }, [assets, liquidateTrigger]);
   const getAssetSupplyValue = (asset, principal) => {
     if (assetSupply[asset] !== undefined) {
       const supplyValue = Number(assetSupply[asset]);
@@ -194,6 +198,7 @@ const UserInformationPopup = ({
     mappedItem.totalDebt,
     calculatedData?.maxCollateral,
     calculatedData?.maxDebtToLiq,
+    liquidateTrigger
   ]);
 
   const calculateHealthFactor = (
@@ -443,7 +448,7 @@ const UserInformationPopup = ({
     };
 
     fetchData();
-  }, [amountToRepay, selectedDebtAsset, selectedAsset]);
+  }, [amountToRepay, selectedDebtAsset, selectedAsset, liquidateTrigger]);
 
   function cal_max_collateral_to_liq(
     supplyAmount,
@@ -552,6 +557,8 @@ const UserInformationPopup = ({
         supplyAmount,
         mappedItem.principal
       );
+
+       dispatch(toggleRefreshLiquidate());
 
       if ("Ok" in result) {
         trackEvent(
@@ -663,7 +670,6 @@ const UserInformationPopup = ({
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose();
-    // window.location.reload();
   };
 
   useEffect(() => {
@@ -671,14 +677,14 @@ const UserInformationPopup = ({
       const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
     }
-  }, [ckBTCBalance, ckBTCUsdRate]);
+  }, [ckBTCBalance, ckBTCUsdRate,liquidateTrigger]);
 
   useEffect(() => {
     if (ckETHBalance && ckETHUsdRate) {
       const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
     }
-  }, [ckETHBalance, ckETHUsdRate]);
+  }, [ckETHBalance, ckETHUsdRate,liquidateTrigger]);
 
   useEffect(() => {
     if (ckUSDCBalance && ckUSDCUsdRate) {
@@ -687,14 +693,14 @@ const UserInformationPopup = ({
       );
       setCkUSDCUsdBalance(balanceInUsd);
     }
-  }, [ckUSDCBalance, ckUSDCUsdRate]);
+  }, [ckUSDCBalance, ckUSDCUsdRate,liquidateTrigger]);
 
   useEffect(() => {
     if (ckICPBalance && ckICPUsdRate) {
       const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
-  }, [ckICPBalance, ckICPUsdRate]);
+  }, [ckICPBalance, ckICPUsdRate,liquidateTrigger]);
 
   useEffect(() => {
     if (ckUSDTBalance && ckUSDTUsdRate) {
@@ -703,7 +709,7 @@ const UserInformationPopup = ({
       );
       setCkUSDTUsdBalance(balanceInUsd);
     }
-  }, [ckUSDTBalance, ckUSDTUsdRate]);
+  }, [ckUSDTBalance, ckUSDTUsdRate,liquidateTrigger]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -731,6 +737,7 @@ const UserInformationPopup = ({
     ckBTCBalance,
     ckETHBalance,
     ckUSDCBalance,
+    liquidateTrigger
   ]);
 
   const renderDebtAssetDetails = (asset) => {
@@ -916,7 +923,12 @@ const UserInformationPopup = ({
     );
   };
 
-  const value = Number(userAccountData?.Ok?.[4]) / 10000000000;
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const newValue = Number(userAccountData?.Ok?.[4]) / 10000000000;
+    setValue(newValue);
+  }, [liquidateTrigger]);
   // const currentHealthFactor = 1;
   const formatNumber = useFormatNumber();
   let liquidation_bonus = "";

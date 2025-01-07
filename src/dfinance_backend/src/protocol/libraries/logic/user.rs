@@ -1,5 +1,7 @@
 use super::update::user_data;
 use crate::constants::errors::Error;
+use crate::get_all_users;
+use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::{functions::get_balance, state_handler::mutate_state},
     get_cached_exchange_rate, get_reserve_data,
@@ -7,6 +9,11 @@ use crate::{
     user_normalized_debt, user_normalized_supply,
 };
 use candid::{CandidType, Deserialize, Nat, Principal};
+use futures::stream::{FuturesUnordered, StreamExt};
+use ic_cdk::{query, update};
+
+use std::collections::HashSet;
+
 
 fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
@@ -19,9 +26,7 @@ pub struct UserConfig {
 }
 
 //TODO unwrap the function from this GenericLogic struct, no need of this struct
-pub struct GenericLogic;
 
-impl GenericLogic {
     pub async fn calculate_user_account_data(
         on_behalf: Option<Principal>,
     ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
@@ -152,7 +157,7 @@ impl GenericLogic {
             if user_reserve_data.is_collateral {
                 ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
-                let user_balance_in_base_currency = Self::get_user_balance_in_base_currency(
+                let user_balance_in_base_currency = get_user_balance_in_base_currency(
                     user_principal,
                     &user_reserve_data,
                     asset_price.clone(),
@@ -211,7 +216,7 @@ impl GenericLogic {
             if user_reserve_data.is_borrowed {
                 ic_cdk::println!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
 
-                let user_debt_in_base_currency = Self::get_user_debt_in_base_currency(
+                let user_debt_in_base_currency = get_user_debt_in_base_currency(
                     user_principal,
                     &user_reserve_data,
                     asset_price.clone(),
@@ -238,10 +243,9 @@ impl GenericLogic {
         }
         if available_borrow < total_debt.clone() {
             available_borrow = Nat::from(0u128);
-            }
-            else {
-             available_borrow -= total_debt.clone();
-            }
+        } else {
+            available_borrow -= total_debt.clone();
+        }
 
         ic_cdk::println!(
             "avaible borrow after subtracting debt = {}",
@@ -296,7 +300,7 @@ impl GenericLogic {
             has_zero_ltv_collateral,
         ))
     }
-   
+
     pub async fn get_user_balance_in_base_currency(
         user_principal: Principal,
         reserve: &UserReserveData,
@@ -322,21 +326,21 @@ impl GenericLogic {
         let d_token_canister_principal: Principal =
             Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
 
-        let balance_result = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
-        let user_scaled_balance = match balance_result {
-            Ok(data) => {
-                ic_cdk::println!("get balance data : {:?}", data);
-                data
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        };
-        ic_cdk::println!(
-            "Fetched balance from DToken canister: {:?}",
-            user_scaled_balance
-        );
-
+        // let balance_result = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
+        // let user_scaled_balance = match balance_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("get balance data : {:?}", data);
+        //         data
+        //     }
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+        // ic_cdk::println!(
+        //     "Fetched balance from DToken canister: {:?}",
+        //     user_scaled_balance
+        // );
+        let user_scaled_balance = reserve.d_token_balance.clone();
         let normalized_supply_result = user_normalized_supply(asset_reserve);
         let normalized_supply = match normalized_supply_result {
             Ok(data) => {
@@ -390,19 +394,19 @@ impl GenericLogic {
         let debt_token_canister_principal =
             Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
 
-        ic_cdk::println!("Fetching balance of user...");
-        let balance_result = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
+        // ic_cdk::println!("Fetching balance of user...");
+        // let balance_result = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
 
-        let mut user_variable_debt = match balance_result {
-            Ok(data) => {
-                ic_cdk::println!("get balance data : {:?}", data);
-                data
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        };
-
+        // let mut user_variable_debt = match balance_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("get balance data : {:?}", data);
+        //         data
+        //     }
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+        let mut user_variable_debt = reserve.debt_token_blance.clone();
         let user_normailzed_debt_result = user_normalized_debt(asset_reserve);
         let user_normailzed_debt = match user_normailzed_debt_result {
             Ok(data) => {
@@ -427,4 +431,409 @@ impl GenericLogic {
         ic_cdk::println!("Final user debt in base currency: {}", result);
         Ok(result)
     }
+    // #[update]
+    // pub async fn get_liquidation_users(page: usize, page_size: usize) -> Vec<Principal> {
+    //     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+    //     let mut liq_list = HashSet::new();
+
+    //     // Pagination Logic
+    //     let start = page * page_size;
+    //     let end = std::cmp::min(start + page_size, vector_user_data.len());
+    //     let users_to_process = &vector_user_data[start..end];
+
+    //     // Parallel Processing using FuturesUnordered
+    //     let mut tasks = users_to_process
+    //         .iter()
+    //         .map(|(user_principal, _)| {
+    //             let user_principal = *user_principal;
+    //             async move {
+    //                 if let Ok((_, _, _, _, health_factor, _, _)) =
+    //                     calculate_user_account_data(Some(user_principal)).await
+    //                 {
+    //                     if health_factor > Nat::from(100000000u128) {
+    //                         Some(user_principal)
+    //                     } else {
+    //                         None
+    //                     }
+    //                 } else {
+    //                     None
+    //                 }
+    //             }
+    //         })
+    //         .collect::<FuturesUnordered<_>>();
+
+    //     // Collect Results
+    //     while let Some(result) = tasks.next().await {
+    //         if let Some(user_principal) = result {
+    //             liq_list.insert(user_principal);
+    //         }
+    //     }
+
+    //     liq_list.into_iter().collect()
+    // }
+    #[derive(Debug, Clone, CandidType, Deserialize)]
+pub struct UserAccountData {
+    pub collateral: Nat,
+    pub debt: Nat,
+    pub ltv: Nat,
+    pub liquidation_threshold: Nat,
+    pub health_factor: Nat,
+    pub available_borrow: Nat,
+    pub has_zero_ltv_collateral: bool,
 }
+//     #[update]
+//     pub async fn get_liquidation_users(page: usize, page_size: usize) -> Vec<(Principal, UserAccountData)> {
+//         let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+//         let mut liq_list = Vec::new();
+    
+//         // Pagination Logic
+//         let start = page * page_size;
+//         let end = std::cmp::min(start + page_size, vector_user_data.len());
+//         let users_to_process = &vector_user_data[start..end];
+    
+//         // Parallel Processing using FuturesUnordered
+//         let mut tasks = users_to_process
+//             .iter()
+//             .map(|(user_principal, _)| {
+//                 let user_principal = *user_principal;
+//                 async move {
+//                     if let Ok(user_account_data) = calculate_user_account_data(Some(user_principal)).await {
+//                         Some((user_principal, user_account_data))
+//                     } else {
+//                         None
+//                     }
+//                 }
+//             })
+//             .collect::<FuturesUnordered<_>>();
+    
+//         // Collect Results
+//         while let Some(result) = tasks.next().await {
+//             if let Some((user_principal, user_account_data_tuple)) = result {
+//                 let user_account_data = UserAccountData {
+//                     collateral: user_account_data_tuple.0,
+//                     debt: user_account_data_tuple.1,
+//                     ltv: user_account_data_tuple.2,
+//                     liquidation_threshold: user_account_data_tuple.3,
+//                     health_factor: user_account_data_tuple.4,
+//                     available_borrow: user_account_data_tuple.5,
+//                     has_zero_ltv_collateral: user_account_data_tuple.6,
+//                 };
+//                 liq_list.push((user_principal, user_account_data));
+//             }
+//         }
+    
+//         liq_list
+//     }
+#[query]
+pub async fn get_liquidation_users_concurrent(total_pages: usize, page_size: usize) -> Vec<(Principal, UserAccountData)> {
+    let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+    let total_users = vector_user_data.len();
+
+    let mut liq_list = Vec::new();
+
+    // Create a vector of futures to process each page concurrently
+    let page_futures = (0..total_pages)
+        .map(|page| {
+            let users_to_process = vector_user_data
+                .iter()
+                .skip(page * page_size)
+                .take(page_size)
+                .cloned()
+                .collect::<Vec<_>>();
+
+            async move {
+                let mut page_liq_list = Vec::new();
+
+                let mut tasks = users_to_process
+                    .into_iter()
+                    .map(|(user_principal, _)| {
+                        async move {
+                            if let Ok(user_account_data) = calculate_user_account_data(Some(user_principal)).await {
+                                Some((user_principal, user_account_data))
+                            } else {
+                                None
+                            }
+                        }
+                    })
+                    .collect::<FuturesUnordered<_>>();
+
+                while let Some(result) = tasks.next().await {
+                    if let Some((user_principal, user_account_data_tuple)) = result {
+                        let user_account_data = UserAccountData {
+                            collateral: user_account_data_tuple.0,
+                            debt: user_account_data_tuple.1,
+                            ltv: user_account_data_tuple.2,
+                            liquidation_threshold: user_account_data_tuple.3,
+                            health_factor: user_account_data_tuple.4,
+                            available_borrow: user_account_data_tuple.5,
+                            has_zero_ltv_collateral: user_account_data_tuple.6,
+                        };
+                        page_liq_list.push((user_principal, user_account_data));
+                    }
+                }
+                page_liq_list
+            }
+        });
+
+    // Run all page futures in parallel
+    let results = futures::future::join_all(page_futures).await;
+
+    // Flatten the results and collect them into a single list
+    for result in results {
+        liq_list.extend(result);
+    }
+
+    liq_list
+}
+   
+
+
+
+
+
+// pub fn calculate_user_account_data_with_balances(
+//     on_behalf: Option<Principal>,
+//     collateral_balances_in_usd: Vec<(String, Nat)>,
+// ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
+//     if let Some(principal) = on_behalf {
+//         if principal == Principal::anonymous() {
+//             ic_cdk::println!("Anonymous principals are not allowed");
+//             return Err(Error::InvalidPrincipal);
+//         }
+//     }
+
+//     ic_cdk::println!("To check the on behalf = {:?}", on_behalf);
+
+//     let user_principal = match on_behalf {
+//         Some(principal_str) => principal_str,
+//         None => {
+//             let user_principal = ic_cdk::caller();
+//             if user_principal == Principal::anonymous() {
+//                 ic_cdk::println!("Anonymous principals are not allowed");
+//                 return Err(Error::InvalidPrincipal);
+//             }
+//             if user_principal != ic_cdk::caller() {
+//                 return Err(Error::InvalidUser);
+//             }
+//             user_principal
+//         }
+//     };
+//     ic_cdk::println!("Principal of the user: {:?}", user_principal);
+
+//     let max = get_max_value();
+
+//     let user_data_result = user_data(user_principal);
+//     ic_cdk::println!("Fetching user data...");
+
+//     let user_data = match user_data_result {
+//         Ok(data) => {
+//             ic_cdk::println!("User data found");
+//             data
+//         }
+//         Err(e) => {
+//             ic_cdk::println!("Error fetching user data: {:?}", e);
+//             return Err(e);
+//         }
+//     };
+
+//     if user_data.reserves.is_none() {
+//         ic_cdk::println!("No reserves found for the user.");
+//         return Ok((
+//             Nat::from(0u128),
+//             Nat::from(0u128),
+//             Nat::from(0u128),
+//             Nat::from(0u128),
+//             Nat::from(0u128),
+//             max,
+//             false,
+//         ));
+//     }
+
+//     let user_data_reserves = user_data
+//         .reserves
+//         .as_ref()
+//         .ok_or_else(|| Error::NoUserReserveDataFound)?;
+//     ic_cdk::println!("User reserves found");
+
+//     let mut total_collateral = Nat::from(0u128);
+//     let mut total_debt = Nat::from(0u128);
+//     let mut avg_ltv = Nat::from(0u128);
+//     let mut avg_liquidation_threshold = Nat::from(0u128);
+//     let mut has_zero_ltv_collateral = false;
+//     let mut available_borrow = Nat::from(0u128);
+
+//     for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
+//         ic_cdk::println!("Processing reserve: {:?}", reserve_name);
+
+//         if !user_reserve_data.is_using_as_collateral_or_borrow {
+//             ic_cdk::println!("No supply, no borrow. Skipping reserve: {:?}", reserve_name);
+//             continue;
+//         }
+
+//         let reserve_data_result = mutate_state(|state| {
+//             let asset_index = &mut state.asset_index;
+//             asset_index
+//                 .get(&reserve_name.to_string().clone())
+//                 .map(|reserve| reserve.0.clone())
+//                 .ok_or_else(|| Error::NoReserveDataFound)
+//         });
+
+//         let reserve_data = match reserve_data_result {
+//             Ok(data) => {
+//                 ic_cdk::println!("Reserve data found for asset");
+//                 data
+//             }
+//             Err(e) => {
+//                 ic_cdk::println!("Error: {:?}", e);
+//                 return Err(e);
+//             }
+//         };
+
+//         let mut rate: Option<Nat> = None;
+
+//         match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+//             Ok(price_cache) => {
+//                 if let Some(cached_price) =
+//                     price_cache.cache.get(&user_reserve_data.reserve.clone())
+//                 {
+//                     let amount = cached_price.price.clone();
+//                     rate = Some(amount);
+//                     ic_cdk::println!(
+//                         "Fetched exchange rate for {}: {:?}",
+//                         user_reserve_data.reserve.clone(),
+//                         rate
+//                     );
+//                 } else {
+//                     ic_cdk::println!(
+//                         "No cached price found for {}",
+//                         user_reserve_data.reserve.clone()
+//                     );
+//                     rate = None;
+//                 }
+//             }
+//             Err(err) => {
+//                 ic_cdk::println!(
+//                     "Error fetching exchange rate for {}: {:?}",
+//                     user_reserve_data.reserve.clone(),
+//                     err
+//                 );
+//                 rate = None;
+//             }
+//         }
+
+//         let asset_price = rate.unwrap();
+
+//         if user_reserve_data.is_collateral {
+//             ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
+
+//             // Find the balance from collateral_balances_in_usd
+//             let user_balance = collateral_balances_in_usd
+//                 .iter()
+//                 .find(|(asset, _)| asset == &user_reserve_data.reserve)
+//                 .map(|(_, balance)| balance.clone())
+//                 .unwrap_or_else(|| {
+//                     ic_cdk::println!(
+//                         "No balance found in collateral_balances_in_usd for asset: {}",
+//                         user_reserve_data.reserve
+//                     );
+//                     Nat::from(0u128)
+//                 });
+
+//             ic_cdk::println!(
+//                 "User balance in USD for collateral reserve '{}': {}",
+//                 user_reserve_data.reserve,
+//                 user_balance
+//             );
+
+//             total_collateral += user_balance.clone();
+//             ic_cdk::println!("Total collateral so far: {}", total_collateral);
+
+//             if reserve_data.configuration.ltv != Nat::from(0u128) {
+//                 avg_ltv += user_balance
+//                     .clone()
+//                     .scaled_mul(reserve_data.configuration.ltv.clone());
+//                 ic_cdk::println!("Average LTV updated to: {}", avg_ltv);
+//             } else {
+//                 has_zero_ltv_collateral = true;
+//                 ic_cdk::println!(
+//                     "Reserve '{}' has zero LTV collateral.",
+//                     user_reserve_data.reserve
+//                 );
+//             }
+
+//             avg_liquidation_threshold += user_balance
+//                 .clone()
+//                 .scaled_mul(reserve_data.configuration.liquidation_threshold);
+//             ic_cdk::println!(
+//                 "Average liquidation threshold updated to: {}",
+//                 avg_liquidation_threshold
+//             );
+
+//             available_borrow +=
+//                 user_balance.scaled_mul(reserve_data.configuration.ltv) / Nat::from(100u128);
+//             ic_cdk::println!(
+//                 "Available borrow after adding collateral of {} = {}",
+//                 reserve_name,
+//                 available_borrow
+//             );
+//         }
+
+//         if user_reserve_data.is_borrowed {
+//             ic_cdk::println!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
+
+//             let user_debt = collateral_balances_in_usd
+//                 .iter()
+//                 .find(|(asset, _)| asset == &user_reserve_data.reserve)
+//                 .map(|(_, balance)| balance.clone())
+//                 .unwrap_or(Nat::from(0u128));
+
+//             total_debt += user_debt.clone();
+//             ic_cdk::println!("Total debt for borrowed reserves: {}", total_debt);
+//         }
+//     }
+
+//     if available_borrow < total_debt.clone() {
+//         available_borrow = Nat::from(0u128);
+//     } else {
+//         available_borrow -= total_debt.clone();
+//     }
+
+//     avg_ltv = if total_collateral != Nat::from(0u128) {
+//         avg_ltv.scaled_div(total_collateral.clone())
+//     } else {
+//         Nat::from(0u128)
+//     };
+
+//     avg_liquidation_threshold = if total_collateral != Nat::from(0u128) {
+//         avg_liquidation_threshold.scaled_div(total_collateral.clone())
+//     } else {
+//         Nat::from(0u128)
+//     };
+
+//     let health_factor = if total_debt == Nat::from(0u128) {
+//         max
+//     } else {
+//         (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
+//     };
+
+//     ic_cdk::println!(
+//         "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
+//         total_collateral,
+//         total_debt,
+//         avg_ltv,
+//         avg_liquidation_threshold,
+//         health_factor,
+//         has_zero_ltv_collateral,
+//         available_borrow
+//     );
+
+//     Ok((
+//         total_collateral,
+//         total_debt,
+//         avg_ltv,
+//         avg_liquidation_threshold,
+//         health_factor,
+//         available_borrow,
+//         has_zero_ltv_collateral,
+//     ))
+// }

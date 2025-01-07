@@ -203,7 +203,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <p className="mb-4">And click "Repay" to complete the process.</p>
         <img
           src={
-            theme === "dark" ? darkImages.repayRepay : lightImages.repayRepayLight
+            theme === "dark" ? darkImages.repayRepay : lightImages.yourBorrowRepayLight
           }
           alt="yourBorrowRepayPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -471,37 +471,18 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: "center",
   },
   {
-    target: "#liquidation2",
-    content: (
-      <div className="relative flex flex-col text-justify">
-        <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
-        <p className="mb-4 text-[12px]">
-          Now select the debt asset to view the repayment details.
-        </p>
-        <img
-          src={theme === "dark" ? darkImages.debtInformation : lightImages.DebtInformationLight}
-          alt="Faucet Button"
-          className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-        />
-      </div>
-    ),
-    placement: "center",
-  },
-  {
     target: "#liquidation-guide",
     content: (
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
         <p className="mb-4 text-[12px]">
-          "Now, select the collateral asset to view the details and rewards
-          given to the liquidator based on the selected asset, and then click on
-          'Approve Liquidation' to proceed with the call."
+        Select the debt asset to view repayments, then choose the collateral asset to see details and rewards. Click 'Approve' to proceed.
         </p>
         <img
           src={
             theme === "dark"
-              ? darkImages.collateralInformation
-              : lightImages.CollateralInformationLight
+              ? darkImages.liquidationApproveDark
+              : lightImages.liquidationApproveLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -521,8 +502,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.collateralInformationCall
-              : lightImages.colateralInformationCallLight
+              ? darkImages.liquidationCallDark
+              : lightImages.liquidationCallLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"

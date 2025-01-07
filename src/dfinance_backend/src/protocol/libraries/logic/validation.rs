@@ -5,7 +5,7 @@ use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::assets::ReserveData;
 use crate::{get_asset_debt,get_asset_supply, get_cached_exchange_rate};
 use crate::protocol::libraries::logic::update::user_data;
-use crate::protocol::libraries::logic::user::GenericLogic;
+use crate::protocol::libraries::logic::user::{calculate_user_account_data};
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use candid::{Nat, Principal};
 
@@ -175,7 +175,7 @@ impl ValidationLogic {
         let mut liquidation_threshold_var = Nat::from(0u128);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            GenericLogic::calculate_user_account_data(None).await;
+            calculate_user_account_data(None).await;
 
         match user_data_result {
             Ok((
@@ -317,7 +317,7 @@ impl ValidationLogic {
         let mut liquidation_threshold_var = Nat::from(0u128);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            GenericLogic::calculate_user_account_data(None).await;
+            calculate_user_account_data(None).await;
 
         match user_data_result {
             Ok((
@@ -545,7 +545,7 @@ impl ValidationLogic {
         let mut health_factor = Nat::from(0u128);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            GenericLogic::calculate_user_account_data(Some(user)).await;
+            calculate_user_account_data(Some(user)).await;
 
         match user_data_result {
             Ok((

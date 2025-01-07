@@ -36,6 +36,8 @@ const darkImages = {
     supplyApprove: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883120/supply_approve_wde4rp.webp",
     repayRepay: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883597/repay_repay_dqnsrg.webp",
     repayApprove: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883597/repay_approve_p2cjfw.webp",
+    liquidationApproveDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736249726/liquidationApproveDark_ohlahv.webp",
+    liquidationCallDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736249726/liquidationCallDark_s2ryei.webp",
   };
   
   export default darkImages;

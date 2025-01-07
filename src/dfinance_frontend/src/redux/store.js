@@ -12,6 +12,7 @@ import borrowSupplyReducer from './reducers/borrowSupplyReducer';
 import joyRideReducer from './reducers/joyRideReducer';
 import faucetUpdateReducer from "./reducers/faucetUpdateReducer"
 import dashboardDataUpdateReducer from "./reducers/dashboardDataUpdateReducer"
+import liquidateUpdateReducer from "./reducers/liquidateUpdateReducer"
 
 export const store = configureStore({
     reducer: {
@@ -28,6 +29,7 @@ export const store = configureStore({
         joyride: joyRideReducer,
         faucetUpdate:faucetUpdateReducer,
         dashboardUpdate: dashboardDataUpdateReducer,
+        liquidateUpdate: liquidateUpdateReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

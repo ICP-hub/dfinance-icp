@@ -1627,6 +1627,7 @@ dependencies = [
  "ciborium 0.2.0",
  "dotenv",
  "env_logger",
+ "futures",
  "ic-cdk 0.15.0",
  "ic-cdk-macros 0.15.0",
  "ic-cdk-timers",

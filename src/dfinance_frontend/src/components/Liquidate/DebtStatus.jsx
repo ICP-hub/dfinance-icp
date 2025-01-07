@@ -22,7 +22,10 @@ import useUserData from "../customHooks/useUserData";
 import MiniLoader from "../Common/MiniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
+
 const DebtStatus = () => {
+   const liquidateTrigger = useSelector((state) => state.liquidateUpdate.LiquidateTrigger);
+   console.log("liquidateTrigger", liquidateTrigger)
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
@@ -73,7 +76,7 @@ const DebtStatus = () => {
       }
     };
     fetchUsers();
-  }, [getAllUsers]);
+  }, [getAllUsers, liquidateTrigger]);
   const [liquidationLoading, setLiquidationLoading] = useState(true);
  const stableUserAccountData = useMemo(() => userAccountData, [userAccountData]);
 const stableUsers = useMemo(() => users, [users]);
@@ -120,7 +123,7 @@ useEffect(() => {
       .filter(
         (mappedItem) =>
           mappedItem &&
-          mappedItem.healthFactor > 1 &&
+          mappedItem.healthFactor < 1 &&
           mappedItem.principal.toString() !== user.toString() &&
           mappedItem.totalDebt > 0
       );
@@ -134,7 +137,7 @@ useEffect(() => {
       setFilteredUsers([]); // Ensure filteredUsers is reset to an empty array
     }
   }
-}, [stableUsers, stableUserAccountData]);
+}, [stableUsers, stableUserAccountData, liquidateTrigger]);
 
 // Ensure loading stops when all users and account data are processed
 useEffect(() => {
@@ -145,7 +148,7 @@ useEffect(() => {
   ) {
     setLiquidationLoading(false); // Stop loading only when processing is complete
   }
-}, [stableUsers, stableUserAccountData]);
+}, [stableUsers, stableUserAccountData, liquidateTrigger]);
 
   
   const handleDetailsClick = (item) => {
@@ -186,6 +189,7 @@ const fetchUserAccountDataWithCache = async (userData) => {
 };
 
 useEffect(() => {
+  cachedData.current = {};
   if (!users || users.length === 0) return;
 
   console.log(`Fetching account data for ${users.length} users...`);
@@ -200,7 +204,7 @@ useEffect(() => {
   )
     .then(() => console.log("All user account data fetched"))
     .catch((error) => console.error("Error fetching user account data in batch:", error));
-}, [users]);
+}, [users, liquidateTrigger]);
 
   
   
@@ -278,7 +282,7 @@ useEffect(() => {
     if (filteredUsers.length > 0) {
       fetchAssetData();
     }
-  }, [filteredUsers, assets, users]);
+  }, [filteredUsers, assets, users, liquidateTrigger]);
 
   const getBalanceForPrincipalAndAsset = (
     principal,
@@ -325,7 +329,8 @@ useEffect(() => {
 
     fetchSupplyData();
     fetchBorrowData();
-  }, [assets]);
+  }, [assets, liquidateTrigger]);
+
   const getAssetSupplyValue = (asset, principal) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
@@ -341,9 +346,6 @@ useEffect(() => {
     return;
   };
 
-  
-  
-
   const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
     const reserve = reserveData?.[assetName];
     const currentLiquidity = reserve?.Ok?.liquidity_index;
@@ -354,7 +356,6 @@ useEffect(() => {
         "dtokenBalance"
       ) || 0;
 
-    // Calculate asset supply
     return (
       (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
       (Number(currentLiquidity) * 1e8)
@@ -371,7 +372,6 @@ useEffect(() => {
         "debtTokenBalance"
       ) || 0;
 
-    // Calculate asset borrow
     return (
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
       (Number(DebtIndex) * 1e8)

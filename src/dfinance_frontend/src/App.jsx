@@ -14,9 +14,9 @@ import { getSteps, getStyles } from "./joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
 
 export default function App() {
-
   const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
-  const theme = useSelector((state) => state.theme.theme);0
+  const theme = useSelector((state) => state.theme.theme);
+  0;
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
   const isMobile = window.innerWidth <= 1115;
@@ -175,12 +175,12 @@ export default function App() {
 
   const [triggerDispatch, setTriggerDispatch] = useState(false);
 
-useEffect(() => {
-  if (triggerDispatch) {
-    dispatch(joyRideTrigger());
-    setTriggerDispatch(false); 
-  }
-}, [triggerDispatch, dispatch]);
+  useEffect(() => {
+    if (triggerDispatch) {
+      dispatch(joyRideTrigger());
+      setTriggerDispatch(false);
+    }
+  }, [triggerDispatch, dispatch]);
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
@@ -191,7 +191,7 @@ useEffect(() => {
         const parsedData = storedData ? JSON.parse(storedData) : {};
         parsedData[principal] = true;
         if (isTourRunning) {
-          setTriggerDispatch(true); 
+          setTriggerDispatch(true);
           setJoyrideState((prevState) => ({ ...prevState, run: true }));
           return;
         }
@@ -226,9 +226,9 @@ useEffect(() => {
         top: 0,
         behavior: "smooth",
       });
-      if (data.action === "next" && data.index === 20) {
-        navigate("/dashboard");
-      }
+    }
+    if (data.index === 21) {
+      navigate("/dashboard");
     }
   };
 

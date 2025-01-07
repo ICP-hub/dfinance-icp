@@ -24,7 +24,9 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
 
 const DashboardNav = () => {
- const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const {
     isAuthenticated,
     principal,
@@ -266,7 +268,7 @@ const DashboardNav = () => {
     totalUsdValueSupply,
     totalUsdValueBorrow,
     userAccountData,
-    dashboardRefreshTrigger
+    dashboardRefreshTrigger,
   ]);
 
   useEffect(() => {
@@ -425,7 +427,13 @@ const DashboardNav = () => {
 
       updateState();
     }
-  }, [userData, reserveData, calculateNetSupplyApy, assetBalances, dashboardRefreshTrigger]);
+  }, [
+    userData,
+    reserveData,
+    calculateNetSupplyApy,
+    assetBalances,
+    dashboardRefreshTrigger,
+  ]);
 
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
@@ -435,7 +443,7 @@ const DashboardNav = () => {
   }, [userData, dashboardRefreshTrigger]);
 
   useEffect(() => {}, [netApy]);
-console.log("totalSupply,totalBorrow",totalSupplySize,totalBorrowSize)
+  console.log("totalSupply,totalBorrow", totalSupplySize, totalBorrowSize);
   useEffect(() => {
     const updateWalletDetailTabs = () => {
       const updatedTabs = walletDetailTabs.map((item) => {
@@ -502,7 +510,13 @@ console.log("totalSupply,totalBorrow",totalSupplySize,totalBorrowSize)
     if (totalSupplySize !== null && totalBorrowSize !== null) {
       updateWalletDetailTabs();
     }
-  }, [assets, totalSupplySize, totalBorrowSize,userAccountData, dashboardRefreshTrigger]);
+  }, [
+    assets,
+    totalSupplySize,
+    totalBorrowSize,
+    userAccountData,
+    dashboardRefreshTrigger,
+  ]);
 
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
@@ -640,7 +654,11 @@ console.log("totalSupply,totalBorrow",totalSupplySize,totalBorrowSize)
             onClick={() => navigate(-1)}
           >
             <div className="flex -mt-2">
-              <ChevronLeft size={40} color={chevronColor} className="cursor-pointer" />
+              <ChevronLeft
+                size={40}
+                color={chevronColor}
+                className="cursor-pointer"
+              />
 
               {isAssetDetailsPage && (
                 <h1 className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-1 ml-3">
@@ -715,6 +733,7 @@ console.log("totalSupply,totalBorrow",totalSupplySize,totalBorrowSize)
                             <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
                               <div className="flex items-center">
                                 {data.title}
+
                                 {data.title === "Net APY" && (
                                   <span className="relative inline-block ml-1">
                                     <Info
@@ -726,7 +745,7 @@ console.log("totalSupply,totalBorrow",totalSupplySize,totalBorrowSize)
                                     {isTooltipVisible && (
                                       <div
                                         ref={tooltipRef}
-                                        className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
+                                        className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[60vw] mt-1 "
                                       >
                                         <span className="text-gray-700 dark:text-darkText">
                                           Net APY represents the overall
@@ -792,118 +811,75 @@ console.log("totalSupply,totalBorrow",totalSupplySize,totalBorrowSize)
           </div>
 
           <div className="hidden md:flex items-center flex-wrap text-[#4659CF] font-semibold gap-8 dark:text-darkText lg:mb-0 mb-8 mt-8">
-            {/* Render walletDetailTabs unless on any dashboard page */}
-            {!pathname.startsWith("/dashboard") &&
-              walletDetailTabs.map((data, index) => {
-                if (data.title === "Health Factor" && assetBorrow === 0) {
-                  return null;
-                }
+            {(isDashboardRoute
+              ? isAuthenticated
+                ? walletDetailTab
+                : []
+              : walletDetailTabs
+            )
+              .filter(
+                (data) => !(data.title === "Health Factor" && assetBorrow === 0)
+              ) // Filter out "Health Factor" with no borrow
+              .map((data, index) => (
+                <div key={index} className="relative group">
+                  <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
+                    <div className="flex items-center">
+                      {data.title}
+                      {data.title === "Net APY" && (
+                        <span
+                          className="relative inline-block ml-1"
+                          onMouseEnter={() => setIsTooltipVisible(true)}
+                          onMouseLeave={() => setIsTooltipVisible(false)}
+                        >
+                          <Info
+                            size={15}
+                            className="ml-1 align-middle cursor-pointer"
+                            onClick={toggleTooltip}
+                          />
 
-                return (
-                  <div key={index} className="relative group">
-                    <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                      <div className="flex items-center">
-                        {data.title}
-                        {data.title === "Net APY" && (
-                          <span
-                            className="relative inline-block ml-1"
-                            onMouseEnter={() => setIsTooltipVisible(true)}
-                            onMouseLeave={() => setIsTooltipVisible(false)}
-                          >
-                            <Info
-                              size={15}
-                              className="ml-1 align-middle cursor-pointer"
-                              onClick={toggleTooltip}
-                            />
+                          {isTooltipVisible && (
+                            <div
+                              ref={tooltipRef}
+                              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
+                            >
+                              <span className="text-gray-700 dark:text-darkText">
+                                Net APY represents the overall annualized yield,
+                                calculated as the difference between your supply
+                                APY and debt APY.
+                                <br />A positive Net APY indicates a net gain,
+                                while a negative value suggests more is borrowed
+                                than supplied.
+                              </span>
+                            </div>
+                          )}
+                        </span>
+                      )}
+                    </div>
 
-                            {isTooltipVisible && (
-                              <div
-                                ref={tooltipRef}
-                                className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[390px]"
-                              >
-                                <span className="text-gray-700 dark:text-darkText">
-                                  Net APY represents the overall annualized
-                                  yield, calculated as the difference between
-                                  your supply APY and debt APY.
-                                  <br />A positive Net APY indicates a net gain,
-                                  while a negative value suggests more is
-                                  borrowed than supplied.
-                                </span>
-                              </div>
-                            )}
-                          </span>
-                        )}
-                      </div>
+                    <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
-                      <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-
-                      <span
-                        className={`font-bold text-[20px] ${
-                          data.title === "Health Factor"
-                            ? data.count === 0 && assetSupply === 0
-                              ? "text-[#2A1F9D] dark:text-darkBlue"
-                              : data.count > 3
-                              ? "text-green-500"
-                              : data.count <= 1
-                              ? "text-red-500"
-                              : data.count <= 1.5
-                              ? "text-orange-600"
-                              : data.count <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                            : data.title === "Total Borrows"
+                    <span
+                      className={`font-bold text-[20px] ${
+                        data.title === "Health Factor"
+                          ? data.count === 0 && assetSupply === 0
                             ? "text-[#2A1F9D] dark:text-darkBlue"
-                            : "text-[#2A1F9D] dark:text-darkBlue"
-                        }`}
-                      >
-                        {data.count !== null ? data.count : "\u00A0"}
-                      </span>
-                    </button>
-                  </div>
-                );
-              })}
-
-            {/* Render walletDetailTab only if authenticated */}
-            {isAuthenticated &&
-              pathname !== "/dashboard/transaction-history" &&
-              isDashboardSupplyOrMain &&
-              walletDetailTab.map((data, index) => {
-                if (data.title === "Health Factor" && assetBorrow === 0) {
-                  return null;
-                }
-
-                return (
-                  <div key={index} className="relative group">
-                    <button className="relative font-light text-[13px] text-left min-w-[80px] button1">
-                      <div className="flex items-center">{data.title}</div>
-
-                      <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
-
-                      <span
-                        className={`font-bold text-[20px] ${
-                          data.title === "Health Factor"
-                            ? data.count === 0 && assetSupply === 0
-                              ? "text-[#2A1F9D] dark:text-darkBlue"
-                              : data.count > 3
-                              ? "text-green-500"
-                              : data.count <= 1
-                              ? "text-red-500"
-                              : data.count <= 1.5
-                              ? "text-orange-600"
-                              : data.count <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                            : data.title === "Total Borrows"
-                            ? "text-[#2A1F9D] dark:text-darkBlue"
-                            : "text-[#2A1F9D] dark:text-darkBlue"
-                        }`}
-                      >
-                        {data.count !== null ? data.count : "\u00A0"}
-                      </span>
-                    </button>
-                  </div>
-                );
-              })}
+                            : data.count > 3
+                            ? "text-green-500"
+                            : data.count <= 1
+                            ? "text-red-500"
+                            : data.count <= 1.5
+                            ? "text-orange-600"
+                            : data.count <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                          : "text-[#2A1F9D] dark:text-darkBlue"
+                      }`}
+                    >
+                      {data.count !== null ? data.count : "\u00A0"}
+                    </span>
+                  </button>
+                </div>
+              ))}
 
             {/* Risk Details button rendered only if authenticated */}
             {isAuthenticated &&

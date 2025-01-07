@@ -1,6 +1,6 @@
 import { Check, X, TriangleAlert } from "lucide-react";
 import React, { useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { useEffect } from "react";
@@ -11,9 +11,10 @@ import useUserData from "../../customHooks/useUserData";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { Principal } from "@dfinity/principal";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
 const Borrow = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange }) => {
- 
+  const dispatch = useDispatch();
   const { backendActor, principal } = useAuth();
   const principalObj = useMemo(() => Principal.fromText(principal),[principal]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -76,7 +77,7 @@ if (onLoadingChange) {
     };
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
-      
+       dispatch(toggleDashboardRefresh());
 
       if ("Ok" in borrowResult) {
         trackEvent(
@@ -148,7 +149,6 @@ if (onLoadingChange) {
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    window.location.reload();
   };
   
   const numericBalance = parseFloat(balance);

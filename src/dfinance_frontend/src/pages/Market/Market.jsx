@@ -230,6 +230,14 @@ const WalletDetails = () => {
       return numericValue.toFixed(7);
     }
   };
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  useEffect(() => {
+    // If loading is finished, mark as loaded
+    if (!loading) {
+      setHasLoaded(true);
+    }
+  }, [loading]);
   return (
     <div id="market-page1" className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8">
@@ -317,7 +325,7 @@ const WalletDetails = () => {
       )}
 
       <div className="w-full mt-6">
-      {loading &&isAuthenticated? (
+      {loading &&isAuthenticated && !isSwitchingWallet  && !hasLoaded? (
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center ">
             <MiniLoader isLoading={true} />
           </div>
@@ -548,7 +556,7 @@ const WalletDetails = () => {
                             className="lg:hidden justify-center ml-6"
                             onClick={() => handleChevronClick(item[0])}
                           >
-                            <ChevronRight size={22} color={chevronColor} />
+                            <ChevronRight size={22} color={chevronColor} className="cursor-pointer" />
                           </div>
                         </div>
                       </td>

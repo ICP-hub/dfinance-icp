@@ -1,6 +1,6 @@
 import { Info, Check, X } from "lucide-react";
 import React, { useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
@@ -11,6 +11,7 @@ import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
 const Repay = ({
   asset,
@@ -33,7 +34,7 @@ const Repay = ({
   onLoadingChange,
 }) => {
   const { backendActor, principal } = useAuth();
-
+  const dispatch = useDispatch();
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -287,7 +288,7 @@ const Repay = ({
       };
 
       const repayResult = await backendActor.execute_repay(repayParams);
-
+      dispatch(toggleDashboardRefresh());
       if ("Ok" in repayResult) {
         trackEvent(
           "Repay," +
@@ -354,7 +355,6 @@ const Repay = ({
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    window.location.reload();
   };
   const handleClick = async () => {
     setIsLoading(true);
@@ -488,7 +488,7 @@ const Repay = ({
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0}
+                    disabled={supplyBalance === 0 || isApproved}
                     className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter Amount ${asset}`}
                   />
@@ -512,12 +512,12 @@ const Repay = ({
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      assetBorrow === 0
+                      assetBorrow === 0 || isApproved
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                     }`}
                     onClick={() => {
-                      if (assetBorrow > 0) {
+                      if (assetBorrow > 0 && !isApproved) {
                         handleMaxClick();
                       }
                     }}
@@ -598,66 +598,73 @@ const Repay = ({
             </div>
 
             <div className="w-full mt-3">
-              <div className="w-full">
-                {}
-                {balance <= 0 && (
-                  <div className="w-full flex flex-col my-3 space-y-2">
-                    <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">
-                      <div className="w-1/12 flex items-center justify-center">
-                        <div className="warning-icon-container">
-                          <Info className=" text-[#f6ba43]" />
-                        </div>
-                      </div>
-                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                        You do not have enough {asset} in your account to pay
-                        for transaction fees on Ethereum Sepolia network. Please
-                        deposit {asset} from another account.
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {(isLoading ||
-                amount <= 0 ||
-                isButtonDisabled ||
-                supplyBalance <= 0 ||
-                amount > supplyBalance) && (
-                <>
-                  <div className="bg-red-800 p-2 rounded-lg my-2">
+              <>
+                {amount > 0 && amount > supplyBalance ? (
+                  <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                     <div className="text-white text-[12px]">
-                      {isLoading
-                        ? "Action is in progress, please wait."
-                        : supplyBalance <= 0
-                        ? "Insufficient balance to perform this action."
-                        : amount > supplyBalance
-                        ? "Amount exceeds your wallet balance."
-                        : ""}
+                      Amount exceeds your wallet balance.
                     </div>
                   </div>
-                </>
-              )}
+                ) : supplyBalance <= 0 ? (
+                  <div className="bg-[#BA5858] p-2 rounded-lg my-2">
+                    <div className="text-white text-[12px]">
+                      You do not have enough {asset} in your account to pay for
+                      transaction fees. Please deposit {asset} from another
+                      account.
+                    </div>
+                  </div>
+                ) : null}
+              </>
 
-              <button
-                onClick={handleClick}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading ||
-                  amount <= 0 ||
-                  isButtonDisabled ||
-                  supplyBalance <= 0 ||
-                  amount > supplyBalance
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-                disabled={
-                  isLoading ||
-                  amount <= 0 ||
-                  supplyBalance <= 0 ||
-                  amount > supplyBalance
-                }
-              >
-                {isApproved ? `Repay ${asset}` : `Approve ${asset} to continue`}
-              </button>
+              <div className="flex flex-col gap-4 mt-4">
+                {/* Approve Button */}
+                <button
+                  onClick={() => !isApproved && handleClick()}
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                    isApproved ||
+                    isLoading ||
+                    isButtonDisabled ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    amount > supplyBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={
+                    isApproved ||
+                    isLoading ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    amount > supplyBalance
+                  }
+                >
+                  Approve {asset} to continue
+                </button>
+
+                {/* Repay Button */}
+                <button
+                  onClick={() => isApproved && handleClick()}
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                    !isApproved ||
+                    isButtonDisabled ||
+                    isLoading ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    amount > supplyBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={
+                    !isApproved ||
+                    isLoading ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    amount > supplyBalance
+                  }
+                >
+                  Repay {asset}
+                </button>
+              </div>
 
               {isLoading && (
                 <div

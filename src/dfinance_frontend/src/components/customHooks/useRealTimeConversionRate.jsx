@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
+import { useSelector } from "react-redux";
 
 const useRealTimeConversionRate = (asset) => {
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
   const [conversionRate, setConversionRate] = useState(0);
   const [error, setError] = useState(null);
   const { backendActor } = useAuth();
@@ -34,7 +36,7 @@ const useRealTimeConversionRate = (asset) => {
     if (asset) {
       fetchConversionRate();
     }
-  }, [asset, backendActor]);
+  }, [asset, backendActor, dashboardRefreshTrigger]);
 
   return { conversionRate, error };
 };

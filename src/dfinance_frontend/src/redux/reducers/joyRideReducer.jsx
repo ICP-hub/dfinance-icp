@@ -1,24 +1,16 @@
-import { createSlice } from '@reduxjs/toolkit';
-
-const initialState = {
-  run: false, // Initial state of the tour
-};
+import { createSlice } from "@reduxjs/toolkit";
 
 const joyrideSlice = createSlice({
-  name: 'joyride',
-  initialState,
+  name: "joyride",
+  initialState: {
+    joyRideTrigger: false,
+  },
   reducers: {
-    startTour: (state) => {
-      state.run = true; // Set run to true when the tour starts
-    },
-    stopTour: (state) => {
-      state.run = false; // Stop the tour
+    joyRideTrigger: (state) => {
+      state.joyRideTrigger = !state.joyRideTrigger; 
     },
   },
 });
 
-export const { startTour, stopTour } = joyrideSlice.actions;
-
-export const selectJoyrideState = (state) => state.joyride.run;
-
+export const { joyRideTrigger } = joyrideSlice.actions;
 export default joyrideSlice.reducer;

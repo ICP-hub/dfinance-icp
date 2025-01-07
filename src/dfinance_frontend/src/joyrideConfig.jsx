@@ -131,17 +131,10 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           alt="dashboardAssetsToSupplyButton"
           className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
-        <p >
-          After clicking the supply button, a popup will appear.
+        <p className="mb-2">
+          After clicking the supply button, a popup will appear. Enter the
+          amount and approve the transaction.
         </p>
-        <p className="mb-4">Enter the
-        amount, approve the transaction.</p>
-        <img
-          src={
-            theme === "dark" ? darkImages.supplyApprove : lightImages.supplyApproveLight
-          }
-          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30 mb-4"
-        />
         <p className="mb-4">And click "Supply" to complete the
         process.</p>
         <img
@@ -155,7 +148,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: isMobile ? "center" : "right",
   },
   {
-    target: "#dashboard-assets-to-borrow",
+    target: isMobile? "body":"#dashboard-assets-to-borrow",
     content: (
       <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
@@ -187,7 +180,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: isMobile ? "center" : "left",
   },
   {
-    target: "#your-borrow",
+    target: isMobile? "body":"#your-borrow",
     content: (
       <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
@@ -203,21 +196,14 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           alt="yourBorrowRepayButton"
           className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
-        <p className="mb-4">
+        <p className="mb-2">
           After clicking the repay button, a popup will appear. Enter the amount
           , approve the transaction.
         </p>
-        <img
-          src={
-            theme === "dark" ? darkImages.repayApprove : lightImages.repayApproveLight
-          }
-          alt="yourBorrowRepayPopup"
-          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30 mb-4"
-        />
         <p className="mb-4">And click "Repay" to complete the process.</p>
         <img
           src={
-            theme === "dark" ? darkImages.repayRepay : lightImages.repayRepayLight
+            theme === "dark" ? darkImages.repayRepay : lightImages.yourBorrowRepayLight
           }
           alt="yourBorrowRepayPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -227,7 +213,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: isMobile ? "center" : "left",
   },
   {
-    target: "#your-supplies",
+    target: isMobile? "body":"#your-supplies",
     content: (
       <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
@@ -485,37 +471,18 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: "center",
   },
   {
-    target: "#liquidation2",
-    content: (
-      <div className="relative flex flex-col text-justify">
-        <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
-        <p className="mb-4 text-[12px]">
-          Now select the debt asset to view the repayment details.
-        </p>
-        <img
-          src={theme === "dark" ? darkImages.debtInformation : lightImages.DebtInformationLight}
-          alt="Faucet Button"
-          className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-        />
-      </div>
-    ),
-    placement: "center",
-  },
-  {
     target: "#liquidation-guide",
     content: (
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
         <p className="mb-4 text-[12px]">
-          "Now, select the collateral asset to view the details and rewards
-          given to the liquidator based on the selected asset, and then click on
-          'Approve Liquidation' to proceed with the call."
+        Select the debt asset to view repayments, then choose the collateral asset to see details and rewards. Click 'Approve' to proceed.
         </p>
         <img
           src={
             theme === "dark"
-              ? darkImages.collateralInformation
-              : lightImages.CollateralInformationLight
+              ? darkImages.liquidationApproveDark
+              : lightImages.liquidationApproveLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -535,8 +502,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.collateralInformationCall
-              : lightImages.colateralInformationCallLight
+              ? darkImages.liquidationCallDark
+              : lightImages.liquidationCallLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"

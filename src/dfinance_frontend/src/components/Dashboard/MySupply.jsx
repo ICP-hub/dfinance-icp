@@ -40,6 +40,8 @@ import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 
 const MySupply = () => {
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  console.log("dashboardRefreshTrigger", dashboardRefreshTrigger);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state, pathname } = useLocation();
@@ -72,7 +74,7 @@ const MySupply = () => {
     if (userData && userAccountData) {
       setLoading(false);
     }
-  }, [userData, userAccountData]);
+  }, [userData, userAccountData, dashboardRefreshTrigger]);
 
   useEffect(() => {
     const hasCollateral = userData?.Ok?.reserves[0]?.some(
@@ -94,7 +96,7 @@ const MySupply = () => {
     } else {
       setAvailableBorrow(0);
     }
-  }, [userAccountData, userData]);
+  }, [userAccountData, userData, dashboardRefreshTrigger]);
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -113,6 +115,12 @@ const MySupply = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
+  const {
+    isWalletCreated,
+    isWalletModalOpen,
+    isSwitchingWallet,
+    connectedWallet,
+  } = useSelector((state) => state.utility);
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [assetBalances, setAssetBalances] = useState([]);
@@ -199,7 +207,7 @@ const MySupply = () => {
 
   useEffect(() => {
     fetchAssetData();
-  }, [assets, principalObj]);
+  }, [assets, principalObj, dashboardRefreshTrigger]);
 
   const [loadingUserData, setUserDataLoading] = useState(true);
   useEffect(() => {
@@ -235,8 +243,15 @@ const MySupply = () => {
 
     fetchSupplyData();
     fetchBorrowData();
-  }, [assets]);
+  }, [assets, dashboardRefreshTrigger]);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
+  useEffect(() => {
+    // If loading is finished, mark as loaded
+    if (!filteredDataLoading) {
+      setHasLoaded(true);
+    }
+  }, [filteredDataLoading]);
   const visibleItems = filteredItems.filter((item) => {
     const balance =
       item[0] === "ckBTC"
@@ -329,6 +344,7 @@ const MySupply = () => {
     ckUSDTUsdRate,
     ckICPBalance,
     ckICPUsdRate,
+    dashboardRefreshTrigger
   ]);
 
   useEffect(() => {
@@ -351,7 +367,7 @@ const MySupply = () => {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
+  }, [fetchBalance, fetchConversionRate, dashboardRefreshTrigger]);
 
   const filteredReserveData = Object.fromEntries(filteredItems);
 
@@ -702,7 +718,7 @@ const MySupply = () => {
       const item = filteredItems[0][1].Ok;
       setCollateral(item.can_be_collateral);
     }
-  }, [filteredItems]);
+  }, [filteredItems, dashboardRefreshTrigger]);
 
   let current_liquidity_rate = "0";
   let borrow_rate_apr = "0";
@@ -754,7 +770,7 @@ const MySupply = () => {
 
       setCalculatedReserves(reservesWithCalculations);
     }
-  }, [userData]);
+  }, [userData, dashboardRefreshTrigger]);
 
   let totalUsdValueSupply = 0;
   let totalUsdValueBorrow = 0;
@@ -782,7 +798,7 @@ const MySupply = () => {
 
     setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
-  }, []);
+  }, [dashboardRefreshTrigger]);
   const hasValidAssets = userData?.Ok?.reserves?.[0]?.some((reserveGroup) => {
     const asset = reserveGroup[0];
     const assetBalance = assetBalances.find(
@@ -1962,7 +1978,8 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
-                  {filteredDataLoading ? (
+                {console.log("isSwitchingWallet", isSwitchingWallet)}
+                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -2069,7 +2086,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckBTCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckBTCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2093,7 +2110,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckETHUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckETHUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2117,7 +2134,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2141,7 +2158,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckICPUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckICPBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2165,7 +2182,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDTUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2334,7 +2351,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isVisible && (
                 <>
-                  {filteredDataLoading ? (
+                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -2472,7 +2489,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckBTCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckBTCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2496,7 +2513,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckETHUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckETHUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2520,7 +2537,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2544,7 +2561,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckICPUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckICPUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2568,7 +2585,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                          ${formatNumber(ckUSDTUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2793,7 +2810,7 @@ const MySupply = () => {
               </button>
             </div>
 
-            <div className="inline-block lg:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+            <div className="inline-block md:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
               <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
                 Total
               </span>{" "}
@@ -2804,7 +2821,7 @@ const MySupply = () => {
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
-                  {borrowDataLoading ? (
+                  {borrowDataLoading  && !isSwitchingWallet? (
                     <div className="h-[100px] flex justify-center items-center">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -3298,7 +3315,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {borrowDataLoading ? (
+                  {borrowDataLoading  && !isSwitchingWallet? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -3826,7 +3843,7 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isBorrowVisible && (
                 <>
-                  {filteredDataLoading ? (
+                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -4529,7 +4546,7 @@ const MySupply = () => {
                   )}
 
                   <div className="w-full h-auto mt-6">
-                    {filteredDataLoading ? (
+                    {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
                       <div className="min-h-[100px] flex justify-center items-center ">
                         <MiniLoader isLoading={true} />
                       </div>

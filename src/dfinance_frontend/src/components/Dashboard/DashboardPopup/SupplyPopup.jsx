@@ -3,7 +3,7 @@ import { Info, Check, Wallet, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,6 +12,7 @@ import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRa
 import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
 const SupplyPopup = ({
   asset,
@@ -33,6 +34,7 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  const dispatch = useDispatch();
   const { backendActor, principal } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -256,31 +258,36 @@ const SupplyPopup = ({
       } else if (asset === "ckUSDT") {
         ledgerActor = ledgerActors.ckUSDT;
       }
-  
+
       const supplyParams = {
         asset: asset,
         is_collateral: currentCollateralStatus,
         amount: scaledAmount,
       };
-  
+
       const response = await backendActor.execute_supply(supplyParams);
+      dispatch(toggleDashboardRefresh());
 
       if ("Ok" in response) {
         trackEvent(
-          `Supply,${asset},${scaledAmount / 100000000},${currentCollateralStatus},${principalObj.toString()}`,
+          `Supply,${asset},${
+            scaledAmount / 100000000
+          },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets",
-          `Supply,${asset},${scaledAmount / 100000000},${currentCollateralStatus},${principalObj.toString()}`,
+          `Supply,${asset},${
+            scaledAmount / 100000000
+          },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
-  
+
         setIsPaymentDone(true);
         setIsVisible(false);
-  
+
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
         }
-  
+
         toast.success(`Supply successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -293,8 +300,9 @@ const SupplyPopup = ({
         });
       } else if ("Err" in response) {
         const errorKey = response.Err;
-        const userFriendlyMessage = errorMessages[errorKey] || errorMessages.Default;
-        console.log(userFriendlyMessage)
+        const userFriendlyMessage =
+          errorMessages[errorKey] || errorMessages.Default;
+        console.log(userFriendlyMessage);
         toast.error(userFriendlyMessage, {
           className: "custom-toast",
           position: "top-center",
@@ -343,7 +351,6 @@ const SupplyPopup = ({
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    window.location.reload();
   };
 
   const handleClick = async () => {
@@ -457,7 +464,7 @@ const SupplyPopup = ({
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0}
+                    disabled={supplyBalance === 0 || isApproved}
                     className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter ${asset} Amount`}
                   />
@@ -482,12 +489,12 @@ const SupplyPopup = ({
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      supplyBalance === 0
+                      supplyBalance === 0 || isApproved
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                     }`}
                     onClick={() => {
-                      if (supplyBalance > 0) {
+                      if (supplyBalance > 0 && !isApproved) {
                         handleMaxClick();
                       }
                     }}
@@ -603,17 +610,45 @@ const SupplyPopup = ({
             </div>
           </div>
 
-          <button
-            onClick={handleClick}
-            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
-              isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
-            disabled={isLoading || amount <= 0 || null}
-          >
-            {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
-          </button>
+          <div className="flex flex-col gap-4 mt-4">
+            {/* Approve Button */}
+            <button
+              onClick={() => !isApproved && handleClick()}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                isApproved ||
+                isLoading ||
+                !hasEnoughBalance ||
+                amount <= 0 ||
+                isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+              disabled={
+                isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+              }
+            >
+              Approve {asset} to continue
+            </button>
+
+            {/* Supply Button */}
+            <button
+              onClick={() => isApproved && handleClick()}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                !isApproved ||
+                isLoading ||
+                amount <= 0 ||
+                !hasEnoughBalance ||
+                isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+              disabled={
+                !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+              }
+            >
+              Supply {asset}
+            </button>
+          </div>
 
           {}
           {isLoading && (
@@ -659,20 +694,20 @@ const SupplyPopup = ({
               </strong>
             </p>
             <p className="text-sm  lgx:text-lg whitespace-nowrap">
-  You have received{" "}
-  <strong>
-    {scaledAmount / 100000000
-      ? scaledAmount / 100000000 >= 1e-8 &&
-        scaledAmount / 100000000 < 1e-7
-        ? Number(scaledAmount / 100000000).toFixed(8)
-        : scaledAmount / 100000000 >= 1e-7 &&
-          scaledAmount / 100000000 < 1e-6
-        ? Number(scaledAmount / 100000000).toFixed(7)
-        : scaledAmount / 100000000
-      : "0"}{" "}
-    d{asset}
-  </strong>
-</p>
+              You have received{" "}
+              <strong>
+                {scaledAmount / 100000000
+                  ? scaledAmount / 100000000 >= 1e-8 &&
+                    scaledAmount / 100000000 < 1e-7
+                    ? Number(scaledAmount / 100000000).toFixed(8)
+                    : scaledAmount / 100000000 >= 1e-7 &&
+                      scaledAmount / 100000000 < 1e-6
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
+                  : "0"}{" "}
+                d{asset}
+              </strong>
+            </p>
 
             <button
               onClick={handleClosePaymentPopup}

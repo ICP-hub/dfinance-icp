@@ -28,7 +28,7 @@ import icplogo from "../../../public/wallet/icp.png";
 import { ArrowUpDown } from "lucide-react";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
-import { startTour } from "../../redux/reducers/joyRideReducer";
+import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 
 const MobileTopNav = ({
   isMobileNav,
@@ -192,7 +192,9 @@ const MobileTopNav = ({
 
   const handleTour = () => {
       console.log("button triggered");
-      dispatch(startTour()); 
+       dispatch(joyRideTrigger());
+      handleClose()
+      navigate("/dashboard");
       // localStorage.removeItem("userGuideData");
     };
 

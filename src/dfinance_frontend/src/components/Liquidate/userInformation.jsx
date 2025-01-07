@@ -655,7 +655,7 @@ const UserInformationPopup = ({
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose();
-    window.location.reload();
+    // window.location.reload();
   };
 
   useEffect(() => {

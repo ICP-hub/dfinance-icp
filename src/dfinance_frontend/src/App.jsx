@@ -249,7 +249,6 @@ export default function App() {
           steps={joyrideState.steps}
           run={joyrideState.run || isTourVisible}
           continuous={true}
-          showProgress
           showSkipButton={true}
           styles={joyrideState.styles}
           locale={{

@@ -726,7 +726,7 @@ console.log("totalSupply,totalBorrow",totalSupplySize,totalBorrowSize)
                                     {isTooltipVisible && (
                                       <div
                                         ref={tooltipRef}
-                                        className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[70vw]"
+                                        className="absolute bottom-full left-[30vw] transform -translate-x-[40%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 w-[60vw] mt-1 "
                                       >
                                         <span className="text-gray-700 dark:text-darkText">
                                           Net APY represents the overall

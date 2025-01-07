@@ -2810,7 +2810,7 @@ const MySupply = () => {
               </button>
             </div>
 
-            <div className="inline-block lg:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+            <div className="inline-block md:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
               <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
                 Total
               </span>{" "}

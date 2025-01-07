@@ -317,7 +317,7 @@ const UserInformationPopup = ({
     useState(false);
   const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
   const [amountToRepayUSD, setAmountToRepayUSD] = useState(null);
-  
+
   const handleDebtAssetSelection = (
     asset,
     assetBorrowAmount,
@@ -592,6 +592,20 @@ const UserInformationPopup = ({
           });
           setError(
             "Price fetch failed: Your assets are safe, try again after some time."
+          );
+        }else if (errorMsg?.HealthFactorLess === null) {
+          toast.error("health factor too high ", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setError(
+            "Health Factor too high to proceed for liquidation."
           );
         } else {
           toast.error(
@@ -1310,7 +1324,6 @@ const UserInformationPopup = ({
                           checked={selectedAsset === assetName} // Ensure it matches exactly
                           disabled={!selectedDebtAsset} // Disabled if no debt asset is selected
                           onChange={() => {
-                           
                             handleAssetSelection(
                               assetName,
                               collateralRate,

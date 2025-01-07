@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import CircularProgress from "../../Common/CircularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
+import { Info } from "lucide-react";
 
 const BorrowInfo = ({
   formatNumber,
@@ -59,6 +60,12 @@ const BorrowInfo = ({
       return numericValue.toFixed(7);
     }
   };
+  const tooltipRef = useRef(null);
+  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] =
+    useState(false);
+
+  const toggleReserveFactorTooltip = () =>
+    setIsReserveFactorTooltipVis((prev) => !prev);
 
   return (
     <div className="w-full lg:w-10/12 ">
@@ -113,6 +120,24 @@ const BorrowInfo = ({
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Reserve factor
+              <span className="relative inline-block ml-1">
+                <Info
+                  size={15}
+                  className="ml-1 align-middle cursor-pointer button1"
+                  onClick={toggleReserveFactorTooltip}
+                />
+
+                {isReserveFactorTooltipVis && (
+                  <div
+                    ref={tooltipRef}
+                    className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
+                  >
+                    <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
+                    The Reserve Factor is a portion of interest directed to a collector contract, managed by governance, to support ecosystem growth.
+                    </span>
+                  </div>
+                )}
+              </span>
             </h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}

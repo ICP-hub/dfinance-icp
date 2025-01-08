@@ -14,6 +14,7 @@ import { Principal } from "@dfinity/principal";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
 const Borrow = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange }) => {
+  console.log("borroable value ",borrowableValue)
   const dispatch = useDispatch();
   const { backendActor, principal } = useAuth();
   const principalObj = useMemo(() => Principal.fromText(principal),[principal]);

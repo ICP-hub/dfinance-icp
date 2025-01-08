@@ -75,28 +75,27 @@ const MySupply = () => {
       setLoading(false);
     }
   }, [userData, userAccountData, dashboardRefreshTrigger]);
-
   useEffect(() => {
-    const hasCollateral = userData?.Ok?.reserves[0]?.some(
-      (reserveGroup) => reserveGroup[1]?.is_collateral !== false
-    );
+    // Extract liquidity indices from userData
     const currentLiquidity = userData?.Ok?.reserves[0]?.map(
       (reserveGroup) => reserveGroup[1]?.liquidity_index
     );
     setCurrentLiquidityIndex(currentLiquidity);
-    if (hasCollateral) {
-      if (
-        userAccountData?.Ok &&
-        userAccountData.Ok.length > 5 &&
-        userAccountData.Ok[5]
-      ) {
-        const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
-        setAvailableBorrow(borrowValue);
-      }
+  
+    // Check if the user has collateral
+    const hasCollateral = userData?.Ok?.reserves[0]?.some(
+      (reserveGroup) => reserveGroup[1]?.is_collateral !== false
+    );
+  
+    // Update availableBorrow regardless of collateral status
+    if (userAccountData?.Ok?.length > 5) {
+      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
+      setAvailableBorrow(hasCollateral ? borrowValue : 0);
     } else {
       setAvailableBorrow(0);
     }
   }, [userAccountData, userData, dashboardRefreshTrigger]);
+  
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -115,6 +114,7 @@ const MySupply = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
+  console.log("availableBorrow",availableBorrow)
   const {
     isWalletCreated,
     isWalletModalOpen,
@@ -2086,7 +2086,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckBTCUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckBTCBalance *(ckBTCUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}
@@ -2110,7 +2110,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckETHUsdBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckETHBalance*(ckETHUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}
@@ -2134,7 +2134,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCBalance*(ckUSDCUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}
@@ -2158,7 +2158,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckICPBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckICPBalance*(ckICPUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}
@@ -2182,7 +2182,7 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTBalance)}
+                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTBalance*(ckUSDTUsdRate / 1e8))}
                                         </p>
                                       </>
                                     )}

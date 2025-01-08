@@ -12,7 +12,12 @@ import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
 import Loading from "../../components/Common/Loading";
-import { MAIN_NAV_LINK, FAQ_QUESTION, TAB_CARD_DATA, SECURITY_CONTRIBUTORS_DATA,} from "../../utils/constants"; 
+import {
+  MAIN_NAV_LINK,
+  FAQ_QUESTION,
+  TAB_CARD_DATA,
+  SECURITY_CONTRIBUTORS_DATA,
+} from "../../utils/constants";
 import { usePageLoading } from "../../components/Common/useLoading";
 
 const Home = () => {
@@ -38,7 +43,6 @@ const Home = () => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset;
       if (scrollTop > 600) {
-
         setIsVisible(true);
       } else {
         setIsVisible(false);
@@ -55,36 +59,34 @@ const Home = () => {
       behavior: "smooth",
     });
   };
-  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id); 
+  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
 
   const intervalRef = useRef();
 
   useEffect(() => {
-
     const startInterval = () => {
       const id = setInterval(() => {
         const nextIndex = (currentIndex + 1) % MAIN_NAV_LINK.length;
         setCurrentIndex(nextIndex);
         setCurrentTab(MAIN_NAV_LINK[nextIndex].id);
-      }, 3000); 
+      }, 3000);
       intervalRef.current = id;
     };
 
-    startInterval(); 
+    startInterval();
 
     return () => {
-      clearInterval(intervalRef.current); 
+      clearInterval(intervalRef.current);
     };
   }, [currentIndex]);
 
   const handleMouseEnter = () => {
-    clearInterval(intervalRef.current); 
+    clearInterval(intervalRef.current);
   };
 
   const handleMouseLeave = () => {
-
     const id = setInterval(() => {
       const nextIndex = (currentIndex + 1) % MAIN_NAV_LINK.length;
       setCurrentIndex(nextIndex);
@@ -125,7 +127,11 @@ const Home = () => {
 
         {}
         <section className="mt-16">
-          <div className="w-full" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+          <div
+            className="w-full"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
             <nav className="flex justify-center not-italic">
               <Tabs
                 value={currentTab}
@@ -167,10 +173,9 @@ const Home = () => {
             {MAIN_NAV_LINK.map((item) => (
               <React.Fragment key={item.id}>
                 {currentTab === item.id && (
-                <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
-                {item.content}
-              </p>
-
+                  <p className="text-sm font-normal text-[#737373] text-center mt-6 dark:text-darkTextSecondary">
+                    {item.content}
+                  </p>
                 )}
               </React.Fragment>
             ))}
@@ -184,25 +189,28 @@ const Home = () => {
         </section>
 
         {}
-        
 
         {}
         <section className="mt-[44px] md:mt-24 " id="gov">
           <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
             <h1 className="text-lg text-[28px] md:text-[45px] font-light">
-             A Better Way To <span className="font-semibold">DeFi</span>
+              A Better Way To <span className="font-semibold">DeFi</span>
             </h1>
             <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6 dark:text-darkText">
-            Phase 1 Includes simple borrowing and lending with our points system for a $DFIN airdrop
+              Phase 1 Includes simple borrowing and lending with our points
+              system for a $DFIN airdrop
             </p>
 
             <div className="w-full flex justify-center mt-3">
               {" "}
               {}
-              <Button
-                title="LEARN MORE"
-              />
-
+              <a
+                href="https://dfinance.notion.site/DFinance-Points-System-17544afe836e80ffae46f31b676a7ce7"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button title="LEARN MORE" />
+              </a>
             </div>
           </div>
         </section>
@@ -231,34 +239,38 @@ const Home = () => {
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full dark:text-darkText">
                       <div
-                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${currentFAQ === index
+                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${
+                          currentFAQ === index
                             ? "bg-[#eef0f5] dark:bg-currentFAQBackground"
                             : ""
-                          } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
+                        } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
                         onClick={() => setCurrentFAQ(index)}
                       >
                         <div className="w-1/12">
                           <div
-                            className={`w-4 h-4 rounded-full ${currentFAQ === index
+                            className={`w-4 h-4 rounded-full ${
+                              currentFAQ === index
                                 ? "bg-[#517687] dark:bg-darkText"
                                 : "bg-[#DBE8EE] dark:bg-[#192C35]"
-                              }`}
+                            }`}
                           ></div>
                         </div>
                         <div className="w-10/12">{item.question}</div>
                         <div
-                          className={`w-1/12 ${currentFAQ === index
+                          className={`w-1/12 ${
+                            currentFAQ === index
                               ? "text-[#517687] dark:text-darkText rotate-90 md:rotate-0"
                               : "text-[#DBE8EE] dark:text-[#192C35]"
-                            } flex justify-end`}
+                          } flex justify-end`}
                         >
                           <ChevronRight />
                         </div>
                       </div>
                       {currentFAQ === index && (
                         <div
-                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${currentFAQ === index ? "opacity-100" : "opacity-0"
-                            }`}
+                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
+                            currentFAQ === index ? "opacity-100" : "opacity-0"
+                          }`}
                         >
                           <p>{item.answer}</p>
                         </div>
@@ -292,8 +304,9 @@ const Home = () => {
       </div>
       {}
       <button
-        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
-          }`}
+        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
         onClick={scrollToTop}
       >
         <LuMoveUp className="text-[30px] mx-auto hover:text-white transition-colors" />

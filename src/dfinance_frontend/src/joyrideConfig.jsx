@@ -602,6 +602,6 @@ export const getStyles = (joyRideBackground, joyTextColor) => ({
     fontSize: "12px",
   },
   buttonClose: {
-    color: "#f25c54",
+     display: "none",
   },
 });

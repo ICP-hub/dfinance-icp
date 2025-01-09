@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useRoutes } from "react-router-dom";
 import { useAuth } from "./utils/useAuthClient";
 import routesList from "./routes/routes";
@@ -184,7 +184,7 @@ export default function App() {
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
-
+    console.log("status", status);
     if (status === "finished" || status === "skipped") {
       if (isAuthenticated && principal) {
         const storedData = localStorage.getItem("userGuideData");
@@ -259,6 +259,7 @@ export default function App() {
             skip: "Skip",
           }}
           callback={handleJoyrideCallback}
+          disableOverlayClose={true}
         />
       )}
 

@@ -439,9 +439,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       />
                       <span className="text-lg">{asset}</span>
                     </div>
-
-                    <p
-                      className="cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md"
+                    <div
+                      className="cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md"
                       onClick={handleMaxAmountClick}
                     >
                       $
@@ -450,7 +449,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                         1e8
                       ).toLocaleString()}{" "}
                       Max
-                    </p>
+                    </div>
                   </div>
                 </div>
               </div>

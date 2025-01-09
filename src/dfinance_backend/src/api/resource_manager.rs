@@ -1,5 +1,7 @@
 use crate::constants::errors::Error;
+use crate::protocol::libraries::logic::user;
 use candid::{Nat, Principal};
+use futures::future::ok;
 use ic_cdk::{query, update};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -8,6 +10,9 @@ use std::sync::Mutex;
 pub static LOCKS: Lazy<Mutex<HashMap<Principal, bool>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 pub static AMOUNT_LOCKS: Lazy<Mutex<HashMap<String, Nat>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
+pub static TO_CHECK_AMOUNT: Lazy<Mutex<HashMap<Principal, ()>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+
 pub fn acquire_lock(key: &Principal) -> Result<(), Error> {
     ic_cdk::println!("Attempting to acquire lock for key: {}", key);
 
@@ -129,17 +134,72 @@ pub fn get_all_principals() -> Result<Vec<Principal>, Error> {
 }
 
 /// on amount
-pub fn lock_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
-    let mut locks = match AMOUNT_LOCKS.lock() {
+pub fn lock_amount(asset: &str, amount: &Nat, user_principal: &Principal) -> Result<(), Error> {
+    ic_cdk::println!("Attempting to lock amount: {} for asset: {}", amount, asset);
+
+    // Lock for `AMOUNT_LOCKS`
+    let mut amount_locks = match AMOUNT_LOCKS.lock() {
         Ok(lock) => lock,
-        Err(_) => return Err(Error::LockAcquisitionFailed),
+        Err(_) => {
+            ic_cdk::println!("Failed to acquire lock for AMOUNT_LOCKS.");
+            return Err(Error::LockAcquisitionFailed);
+        }
     };
-    let current_locked = locks
+
+    // Lock for `TO_CHECK_AMOUNT`
+    let mut to_check_amount = match TO_CHECK_AMOUNT.lock() {
+        Ok(lock) => lock,
+        Err(_) => {
+            ic_cdk::println!("Failed to acquire lock for TO_CHECK_AMOUNT.");
+            return Err(Error::LockAcquisitionFailed);
+        }
+    };
+
+    // Get current locked amount for the asset
+    let current_locked = amount_locks
         .get(asset)
         .cloned()
         .unwrap_or_else(|| Nat::from(0u128));
-    locks.insert(asset.to_string(), current_locked + amount.clone());
+
+    ic_cdk::println!(
+        "Current locked amount for asset '{}': {}",
+        asset,
+        current_locked
+    );
+
+    // Calculate new locked amount
+    let new_locked_amount = current_locked + amount.clone();
+    amount_locks.insert(asset.to_string(), new_locked_amount.clone());
+
+    ic_cdk::println!(
+        "New locked amount for asset '{}': {}",
+        asset,
+        new_locked_amount
+    );
+
+    // Store the user principal in `TO_CHECK_AMOUNT`
+    to_check_amount.insert(*user_principal, ());
+    ic_cdk::println!("Stored user principal: {}", user_principal);
+
     Ok(())
+}
+
+#[query]
+pub fn to_check_amount(asset: String) -> Result<Nat, Error> {
+    let locks = match AMOUNT_LOCKS.lock() {
+        Ok(lock) => lock,
+        Err(_) => {
+            ic_cdk::println!("Failed to acquire lock for AMOUNT_LOCKS.");
+            return Err(Error::LockAcquisitionFailed);
+        }
+    };
+
+    let current_locked = locks
+        .get(&asset)
+        .cloned()
+        .unwrap_or_else(|| Nat::from(0u128));
+
+    Ok(current_locked)
 }
 
 pub fn release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
@@ -150,10 +210,6 @@ pub fn release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
     if let Some(current_locked) = locks.get_mut(asset) {
         ic_cdk::println!("Amount to release: {}", amount);
         ic_cdk::println!("Current locked amount: {}", current_locked);
-
-        // if *amount > *current_locked {
-        //     return Err(Error::AmountTooMuch);
-        // }
 
         *current_locked -= amount.clone();
 
@@ -182,3 +238,30 @@ pub fn get_locked_amount(asset: &str) -> Nat {
         })
         .unwrap_or_else(|_| Nat::from(0u128))
 }
+
+pub fn is_amount_locked(user_principal: &Principal) -> bool {
+    ic_cdk::println!("Checking principal existence: {:?}", user_principal);
+
+    // Acquire the lock for TO_CHECK_AMOUNT
+    let mut to_check_amount = match TO_CHECK_AMOUNT.lock() {
+        Ok(lock) => lock,
+        Err(_) => {
+            ic_cdk::println!("Failed to acquire lock for TO_CHECK_AMOUNT.");
+            return false; // If the lock cannot be acquired, assume the principal is not locked
+        }
+    };
+
+    // Check if the principal exists in the HashMap
+    if to_check_amount.contains_key(user_principal) {
+        ic_cdk::println!("Principal '{}' found. Clearing from TO_CHECK_AMOUNT.", user_principal);
+
+        // Remove the principal from the HashMap
+        to_check_amount.remove(user_principal);
+
+        true
+    } else {
+        ic_cdk::println!("Principal '{}' not found in TO_CHECK_AMOUNT.", user_principal);
+        false
+    }
+}
+

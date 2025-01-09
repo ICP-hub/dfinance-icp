@@ -1,5 +1,5 @@
 use crate::api::functions::{get_balance, get_fees, get_total_supply};
-use crate::api::resource_manager::{get_locked_amount, lock_amount};
+use crate::api::resource_manager::{get_locked_amount, lock_amount, release_amount};
 use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
@@ -171,7 +171,6 @@ impl ValidationLogic {
 
         if let Err(e) = update_reserves_price().await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
-            return Err(e);
         }
 
         let mut total_collateral = Nat::from(0u128);
@@ -287,7 +286,7 @@ impl ValidationLogic {
         ic_cdk::println!("subtract amount = {}",reserve.asset_supply.clone() - current_locked.clone());
 
         if amount <= (reserve.asset_supply.clone() - current_locked){
-            if let Err(e) = lock_amount(&reserve.asset_name.clone().unwrap(), &amount) {
+            if let Err(e) = lock_amount(&reserve.asset_name.clone().unwrap(), &amount, &user_principal) {
                 return Err(e);
             }
         }else {
@@ -330,7 +329,6 @@ impl ValidationLogic {
 
         if let Err(e) = update_reserves_price().await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
-            return Err(e);
         }
 
         let mut total_collateral = Nat::from(0u128);

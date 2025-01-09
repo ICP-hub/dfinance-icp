@@ -109,13 +109,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         }
         ic_cdk::println!("Supply validated successfully");
 
-        if let Err(e) = update_reserves_price().await {
-            ic_cdk::println!("Failed to update reserves price: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
+        if let Err(_) = update_reserves_price().await {}
 
         let liq_added = params.amount.clone();
         let liq_taken = Nat::from(0u128);
@@ -270,7 +264,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     }
 
     let result = async {
-        let ledger_canister_id =  match reserve_ledger_canister_id(params.asset.clone()) {
+        let ledger_canister_id = match reserve_ledger_canister_id(params.asset.clone()) {
             Ok(principal) => principal,
             Err(e) => {
                 if let Err(e) = release_lock(&operation_key) {

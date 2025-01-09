@@ -524,8 +524,70 @@ pub struct UserAccountData {
     
 //         liq_list
 //     }
+// #[query]
+// pub async fn get_liquidation_users_concurrent(total_pages: usize, page_size: usize) -> Vec<(Principal, UserAccountData, UserData)> {
+//     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+//     let total_users = vector_user_data.len();
+
+//     let mut liq_list = Vec::new();
+
+//     // Create a vector of futures to process each page concurrently
+//     let page_futures = (0..total_pages)
+//         .map(|page| {
+//             let users_to_process = vector_user_data
+//                 .iter()
+//                 .skip(page * page_size)
+//                 .take(page_size)
+//                 .cloned()
+//                 .collect::<Vec<_>>();
+
+//             async move {
+//                 let mut page_liq_list = Vec::new();
+
+//                 let mut tasks = users_to_process
+//                     .into_iter()
+//                     .map(|(user_principal, _)| {
+//                         async move {
+//                             if let Ok(user_account_data) = calculate_user_account_data(Some(user_principal)).await {
+//                                 Some((user_principal, user_account_data))
+//                             } else {
+//                                 None
+//                             }
+//                         }
+//                     })
+//                     .collect::<FuturesUnordered<_>>();
+
+//                 while let Some(result) = tasks.next().await {
+//                     if let Some((user_principal, user_account_data_tuple)) = result {
+//                         let user_account_data = UserAccountData {
+//                             collateral: user_account_data_tuple.0,
+//                             debt: user_account_data_tuple.1,
+//                             ltv: user_account_data_tuple.2,
+//                             liquidation_threshold: user_account_data_tuple.3,
+//                             health_factor: user_account_data_tuple.4,
+//                             available_borrow: user_account_data_tuple.5,
+//                             has_zero_ltv_collateral: user_account_data_tuple.6,
+//                         };
+//                         page_liq_list.push((user_principal, user_account_data));
+//                     }
+//                 }
+//                 page_liq_list
+//             }
+//         });
+
+//     // Run all page futures in parallel
+//     let results = futures::future::join_all(page_futures).await;
+
+//     // Flatten the results and collect them into a single list
+//     for result in results {
+//         liq_list.extend(result);
+//     }
+
+//     liq_list
+// }
+   
 #[query]
-pub async fn get_liquidation_users_concurrent(total_pages: usize, page_size: usize) -> Vec<(Principal, UserAccountData)> {
+pub async fn get_liquidation_users_concurrent(total_pages: usize, page_size: usize) -> Vec<(Principal, UserAccountData, UserData)> {
     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
     let total_users = vector_user_data.len();
 
@@ -546,10 +608,10 @@ pub async fn get_liquidation_users_concurrent(total_pages: usize, page_size: usi
 
                 let mut tasks = users_to_process
                     .into_iter()
-                    .map(|(user_principal, _)| {
+                    .map(|(user_principal, user_data)| {
                         async move {
                             if let Ok(user_account_data) = calculate_user_account_data(Some(user_principal)).await {
-                                Some((user_principal, user_account_data))
+                                Some((user_principal, user_account_data, user_data))
                             } else {
                                 None
                             }
@@ -558,7 +620,7 @@ pub async fn get_liquidation_users_concurrent(total_pages: usize, page_size: usi
                     .collect::<FuturesUnordered<_>>();
 
                 while let Some(result) = tasks.next().await {
-                    if let Some((user_principal, user_account_data_tuple)) = result {
+                    if let Some((user_principal, user_account_data_tuple, user_data)) = result {
                         let user_account_data = UserAccountData {
                             collateral: user_account_data_tuple.0,
                             debt: user_account_data_tuple.1,
@@ -568,7 +630,7 @@ pub async fn get_liquidation_users_concurrent(total_pages: usize, page_size: usi
                             available_borrow: user_account_data_tuple.5,
                             has_zero_ltv_collateral: user_account_data_tuple.6,
                         };
-                        page_liq_list.push((user_principal, user_account_data));
+                        page_liq_list.push((user_principal, user_account_data, user_data));
                     }
                 }
                 page_liq_list
@@ -585,7 +647,6 @@ pub async fn get_liquidation_users_concurrent(total_pages: usize, page_size: usi
 
     liq_list
 }
-   
 
 
 

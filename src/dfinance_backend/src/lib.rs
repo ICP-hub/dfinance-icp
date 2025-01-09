@@ -545,6 +545,11 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
+#[query]
+pub fn get_total_users() -> usize {
+    read_state(|state| state.user_profile.len().try_into().unwrap())
+}
+
 // this function is for check which i will remove later.
 #[query]
 async fn get_user_account_data(

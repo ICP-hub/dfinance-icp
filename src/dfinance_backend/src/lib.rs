@@ -108,6 +108,17 @@ pub fn get_all_assets() -> Vec<String> {
     })
 }
 
+pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
+    read_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&asset) // No need for `to_string` or `clone` here
+            .map(|principal| principal.clone())   // Copy the `Principal` directly
+            .ok_or(Error::NoCanisterIdFound) // Return the error if the key is not found
+    })
+}
+
+
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
     if asset_name.trim().is_empty() {
@@ -589,7 +600,7 @@ async fn check_lock() -> Result<String, Error> {
     let user_principal = ic_cdk::api::caller();
     ic_cdk::println!("user principal = {} ", user_principal);
 
-    let result = acquire_lock(&user_principal.to_string());
+    let result = acquire_lock(&user_principal);
 
    
     match result {
@@ -604,7 +615,7 @@ async fn get_lock() -> Result<bool, Error> {
 
     let result = LOCKS
     .lock()
-    .map(|locks| locks.get(&user_principal.to_string()).cloned().unwrap_or_else(|| false));
+    .map(|locks| locks.get(&user_principal).cloned().unwrap_or_else(|| false));
     
 
    

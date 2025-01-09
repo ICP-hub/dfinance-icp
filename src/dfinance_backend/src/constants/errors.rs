@@ -63,7 +63,8 @@ pub enum Error {
     ErrorNotController,
     InvalidVariableName,
     TokenAlreadyExist,
-    FailedToReleaseLock
+    FailedToReleaseLock,
+    LockOperationInProgess
 }
 
 impl Error {
@@ -74,7 +75,7 @@ impl Error {
             Error::InvalidCanister => "Invalid canister id",
             Error::InvalidPrincipal => "Invalid principal id",
             Error::AnonymousPrincipal => "Anonymous principals are not allowed",
-            Error::MaxAmount => "Amount must be less than user balance",
+            Error::MaxAmount => "Amount must be less than user available balance",
             Error::ReserveInactive => "Action requires an active reserve",
             Error::ReservePaused => "Action cannot be performed because the reserve is paused",
             Error::ReserveFrozen => "Action cannot be performed because the reserve is frozen",
@@ -129,7 +130,8 @@ impl Error {
             Error::ErrorNotController => "you are not a controller",
             Error::InvalidVariableName => "name of the variable is invalid - please enter it again",
             Error::TokenAlreadyExist => "Token already exist - try again with different token",
-            Error::FailedToReleaseLock => "Failed to release lock"
+            Error::FailedToReleaseLock => "Failed to release lock",
+            Error::LockOperationInProgess => "Another operation is already in progress for user"
         }
     }
 }

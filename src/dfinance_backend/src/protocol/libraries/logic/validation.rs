@@ -1,4 +1,5 @@
 use crate::api::functions::{get_balance, get_fees, get_total_supply};
+use crate::api::resource_manager::{get_locked_amount, lock_amount};
 use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
@@ -278,6 +279,21 @@ impl ValidationLogic {
         let platform_principal = ic_cdk::api::id();
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
+        ic_cdk::println!("amount in borrow ={}",amount);
+
+        let current_locked = get_locked_amount(&reserve.asset_name.clone().unwrap());
+        ic_cdk::println!("current locked amouunt = {}",current_locked);
+        ic_cdk::println!("asset supply = {}",reserve.asset_supply);
+        ic_cdk::println!("subtract amount = {}",reserve.asset_supply.clone() - current_locked.clone());
+
+        if amount <= (reserve.asset_supply.clone() - current_locked){
+            if let Err(e) = lock_amount(&reserve.asset_name.clone().unwrap(), &amount) {
+                return Err(e);
+            }
+        }else {
+            return Err(Error::AmountTooMuch);
+        }
+
         let balance_result = get_balance(ledger_canister, platform_principal).await;
 
         let platform_balance = match balance_result {
@@ -307,6 +323,7 @@ impl ValidationLogic {
         if is_frozen {
             return Err(Error::ReserveFrozen);
         }
+
         ic_cdk::println!("is_active : {:?}", is_active);
         ic_cdk::println!("is_paused : {:?}", is_paused);
         ic_cdk::println!("is_frozen : {:?}", is_frozen);
@@ -318,6 +335,7 @@ impl ValidationLogic {
 
         let mut total_collateral = Nat::from(0u128);
         let mut total_debt = Nat::from(0u128);
+        // let mut available_borrow = Nat::from(0u128);
         let mut avg_ltv = Nat::from(0u128);
         let mut health_factor = Nat::from(0u128);
         let mut liquidation_threshold_var = Nat::from(0u128);
@@ -337,11 +355,13 @@ impl ValidationLogic {
             )) => {
                 total_collateral = t_collateral;
                 total_debt = t_debt;
+                // available_borrow = a_borrow;
                 avg_ltv = ltv;
                 health_factor = h_factor;
                 liquidation_threshold_var = liquidation_threshold;
                 ic_cdk::println!("total collateral = {}", total_collateral);
                 ic_cdk::println!("total debt = {}", total_debt);
+                // ic_cdk::println!("borrow available_borrow = {}",available_borrow);
                 ic_cdk::println!("Average LTV: {}", avg_ltv);
                 ic_cdk::println!("Health Factor: {}", health_factor);
                 ic_cdk::println!("threshold: {}", liquidation_threshold_var);

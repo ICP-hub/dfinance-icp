@@ -239,7 +239,7 @@ impl UpdateLogic {
 
         match minted_result {
             Ok(()) => {
-                ic_cdk::println!("Minting dtokens successfully");
+                ic_cdk::println!("Minting debttokens successfully");
             }
             Err(e) => {
                 return Err(e);

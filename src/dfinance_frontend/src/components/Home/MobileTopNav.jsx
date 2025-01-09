@@ -440,7 +440,7 @@ const MobileTopNav = ({
                   <div className="-mr-4">
                     <CustomizedSwitches
                       checked={isTestnetMode}
-                      onChange={handleTestnetModeToggle}
+                      // onChange={handleTestnetModeToggle}
                     />
                   </div>
                 </div>

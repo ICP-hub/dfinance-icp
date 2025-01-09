@@ -37,7 +37,7 @@ const WalletModal = () => {
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
     dispatch(setIsWalletConnected(true));
-    navigate("/dashboard/my-supply");
+    navigate("/dashboard");
   };
 
   useEffect(() => {
@@ -82,6 +82,8 @@ const WalletModal = () => {
         return "Unknown Wallet";
     }
   };
+
+  console.log("connectedWallet", connectedWallet)
 
   return (
     <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>

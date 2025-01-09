@@ -1,6 +1,7 @@
 import lightImages from "./components/Common/lightImages";
 import darkImages from "./components/Common/darkImages";
-
+import debtStatusImage from "../public/Helpers/debtStatusImage.png"
+import debtStatusImageLight from "../public/Helpers/debtStatusImageLight.png"
 export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "body",
@@ -417,7 +418,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           see the liquidation List (if available).
         </p>
         <img
-          src={theme === "dark" ? darkImages.debtStatusImage : lightImages.debtStatusImageLight}
+          src={theme === "dark" ? debtStatusImage : debtStatusImageLight}
           alt="Faucet Button"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />

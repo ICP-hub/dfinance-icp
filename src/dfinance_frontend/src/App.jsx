@@ -227,7 +227,7 @@ export default function App() {
         behavior: "smooth",
       });
     }
-    if (data.index === 21) {
+    if (status === "paused") {
       navigate("/dashboard");
     }
   };

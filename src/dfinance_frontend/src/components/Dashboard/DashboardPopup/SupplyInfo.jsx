@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Check, Info } from "lucide-react";
 import { X } from "lucide-react";
 import CircularProgress from "../../Common/CircularProgressbar";
@@ -70,7 +70,6 @@ const SupplyInfo = ({
     }
   };
 
-  
   const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
   const [
     isLiquidationThresholdTooltipVisible,
@@ -87,10 +86,20 @@ const SupplyInfo = ({
   const toggleLiquidationPenaltyTooltip = () =>
     setLiquidationPenaltyTooltipVisible((prev) => !prev);
 
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-  const toggleTooltip = () => {
-    setIsTooltipVisible((prev) => !prev);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setLTVTooltipVisible(false);
+        setLiquidationThresholdTooltipVisible(false);
+        setLiquidationPenaltyTooltipVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="w-full lg:w-10/12 ">
@@ -150,7 +159,11 @@ const SupplyInfo = ({
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Max LTV
-              <span className="relative inline-block ml-1">
+              <span
+                className="relative inline-block ml-1"
+                onMouseEnter={() => setLTVTooltipVisible(true)}
+                onMouseLeave={() => setLTVTooltipVisible(false)}
+              >
                 <Info
                   size={15}
                   className="ml-1 align-middle cursor-pointer button1"
@@ -163,7 +176,10 @@ const SupplyInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                    The Maximum LTV ratio signifies the highest amount of borrowing capacity that a specific collateral can provide, indicating the extent to which an asset can be leveraged for borrowing purposes.
+                      The Maximum LTV ratio signifies the highest amount of
+                      borrowing capacity that a specific collateral can provide,
+                      indicating the extent to which an asset can be leveraged
+                      for borrowing purposes.
                     </span>
                   </div>
                 )}
@@ -177,7 +193,13 @@ const SupplyInfo = ({
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Liquidation threshold
-              <span className="relative inline-block ml-1">
+              <span
+                className="relative inline-block ml-1"
+                onMouseEnter={() => setLiquidationThresholdTooltipVisible(true)}
+                onMouseLeave={() =>
+                  setLiquidationThresholdTooltipVisible(false)
+                }
+              >
                 <Info
                   size={15}
                   className="ml-1 align-middle cursor-pointer button1"
@@ -190,7 +212,9 @@ const SupplyInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[75%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                    The Liquidation Threshold represents the point at which a borrowing position is considered undercollateralized and may be subject to liquidation for a given collateral.
+                      The Liquidation Threshold represents the point at which a
+                      borrowing position is considered undercollateralized and
+                      may be subject to liquidation for a given collateral.
                     </span>
                   </div>
                 )}
@@ -204,7 +228,11 @@ const SupplyInfo = ({
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Liquidation Penalty
-              <span className="relative inline-block ml-1">
+              <span
+                className="relative inline-block ml-1"
+                onMouseEnter={() => setLiquidationPenaltyTooltipVisible(true)}
+                onMouseLeave={() => setLiquidationPenaltyTooltipVisible(false)}
+              >
                 <Info
                   size={15}
                   className="ml-1 align-middle cursor-pointer button1"
@@ -217,7 +245,10 @@ const SupplyInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[70%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                    Liquidation occurs when liquidators repay up to 50% of the borrower's debt and, in return, purchase the collateral at a discount, keeping difference (liquidation penalty) as a bonus.
+                      Liquidation occurs when liquidators repay up to 50% of the
+                      borrower's debt and, in return, purchase the collateral at
+                      a discount, keeping difference (liquidation penalty) as a
+                      bonus.
                     </span>
                   </div>
                 )}

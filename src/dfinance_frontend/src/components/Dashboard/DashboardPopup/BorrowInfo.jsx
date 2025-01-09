@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import CircularProgress from "../../Common/CircularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
@@ -67,6 +67,21 @@ const BorrowInfo = ({
   const toggleReserveFactorTooltip = () =>
     setIsReserveFactorTooltipVis((prev) => !prev);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setLTVTooltipVisible(false);
+        setLiquidationThresholdTooltipVisible(false);
+        setLiquidationPenaltyTooltipVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="w-full lg:w-10/12 ">
       <div className="w-full flex flex-col lg:flex-row items-start sxs3:flex-row sxs3:mb-7 lg:gap-0 md:gap-3">
@@ -120,7 +135,11 @@ const BorrowInfo = ({
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Reserve factor
-              <span className="relative inline-block ml-1">
+              <span
+                className="relative inline-block ml-1"
+                onMouseEnter={() => setIsReserveFactorTooltipVis(true)}
+                onMouseLeave={() => setIsReserveFactorTooltipVis(false)}
+              >
                 <Info
                   size={15}
                   className="ml-1 align-middle cursor-pointer button1"
@@ -133,7 +152,9 @@ const BorrowInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                    The Reserve Factor is a portion of interest directed to a collector contract, managed by governance, to support ecosystem growth.
+                      The Reserve Factor is a portion of interest directed to a
+                      collector contract, managed by governance, to support
+                      ecosystem growth.
                     </span>
                   </div>
                 )}

@@ -731,7 +731,7 @@ export default function Navbar({ isHomeNav }) {
                               </span>
                               <CustomizedSwitches
                                 checked={isTestnetMode}
-                                onChange={handleTestnetModeToggle}
+                                // onChange={handleTestnetModeToggle}
                               />
                             </div>
                           </div>

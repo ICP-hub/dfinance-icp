@@ -42,8 +42,11 @@ const Footer = () => {
                   imageRendering: "crisp-edges",
                 }}
               />
-            <p className="mt-6 font-light text-[13px]">
+            <p className="mt-6 text-sm">
               DFinance is a decentralized lending and borrowing protocol on ICP.
+            </p>
+            <p className="mt-6 text-[12px]">
+            Copyright <span className='font-bold'>©</span> {new Date().getFullYear()} <span className='font-semibold'>DFinance.</span>
             </p>
           </div>
           <div className="w-full sxs3:w-6/12 md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-[8px]">
@@ -57,7 +60,7 @@ const Footer = () => {
                       ? "footer-liquidation"
                       : undefined
                   } 
-                  key={index} to={link.route} className={`pb-2 mt-2 font-light`}>{link.title}</NavLink>
+                  key={index} to={link.route} className={`pb-2 `}>{link.title}</NavLink>
                 ))
               }
             </div>
@@ -67,7 +70,7 @@ const Footer = () => {
             <div className="w-full flex flex-col mt-5">
               {
                 FOOTER_LINK_2 && FOOTER_LINK_2.map((link, index) => (
-                  <NavLink key={index} target={link.target} to={link.route} className={`pb-2 font-light`}>{link.title}</NavLink>
+                  <NavLink key={index} target={link.target} to={link.route} className={`pb-2 `}>{link.title}</NavLink>
                 ))
               }
             </div>

@@ -9,6 +9,10 @@ import assetReducer from "./reducers/assetReducer";
 import toggleReducer from "./reducers/toggleReducer";
 import soundReducer from "./reducers/soundReducer";
 import borrowSupplyReducer from './reducers/borrowSupplyReducer';
+import joyRideReducer from './reducers/joyRideReducer';
+import faucetUpdateReducer from "./reducers/faucetUpdateReducer"
+import dashboardDataUpdateReducer from "./reducers/dashboardDataUpdateReducer"
+import liquidateUpdateReducer from "./reducers/liquidateUpdateReducer"
 
 export const store = configureStore({
     reducer: {
@@ -22,6 +26,10 @@ export const store = configureStore({
         toggle: toggleReducer,
         sound: soundReducer,
         borrowSupply: borrowSupplyReducer,
+        joyride: joyRideReducer,
+        faucetUpdate:faucetUpdateReducer,
+        dashboardUpdate: dashboardDataUpdateReducer,
+        liquidateUpdate: liquidateUpdateReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

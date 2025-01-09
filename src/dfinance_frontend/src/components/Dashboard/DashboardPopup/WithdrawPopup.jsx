@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Button from "../../Common/Button";
 import { Info } from "lucide-react";
 import { Fuel } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Check, Wallet, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
@@ -13,6 +13,7 @@ import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
 const WithdrawPopup = ({
   asset,
@@ -32,6 +33,7 @@ const WithdrawPopup = ({
   onLoadingChange,
 }) => {
   const {  backendActor, principal } = useAuth();
+  const dispatch = useDispatch();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -210,6 +212,7 @@ const WithdrawPopup = ({
       const withdrawResult = await backendActor.execute_withdraw(
         withdrawParams
       );
+      dispatch(toggleDashboardRefresh());
 
       if ("Ok" in withdrawResult) {
         trackEvent(
@@ -292,7 +295,6 @@ const WithdrawPopup = ({
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    window.location.reload();
   };
 
   useEffect(() => {

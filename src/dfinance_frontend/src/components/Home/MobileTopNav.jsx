@@ -28,6 +28,7 @@ import icplogo from "../../../public/wallet/icp.png";
 import { ArrowUpDown } from "lucide-react";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
+import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 
 const MobileTopNav = ({
   isMobileNav,
@@ -188,6 +189,14 @@ const MobileTopNav = ({
   const switchWallet = () => {
     dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
   };
+
+  const handleTour = () => {
+      console.log("button triggered");
+       dispatch(joyRideTrigger());
+      handleClose()
+      navigate("/dashboard");
+      // localStorage.removeItem("userGuideData");
+    };
 
   return (
     <Drawer
@@ -470,6 +479,17 @@ const MobileTopNav = ({
             </div>
           </div>
         </div>
+
+        <div className="flex align-center justify-center w-[93%] border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
+                          <div className="flex w-full align-center justify-center mb-2">
+                            <button
+                              type="button"
+                              className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
+                              onClick={handleTour} 
+                            >
+                              Start Guide Tour
+                            </button>
+                          </div>
       </div>
       {isAuthenticated && (
         <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">

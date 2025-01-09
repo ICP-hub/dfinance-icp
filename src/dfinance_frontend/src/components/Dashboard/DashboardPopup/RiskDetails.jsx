@@ -18,7 +18,7 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
       : parseFloat((Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2));
 
       
-  const Ltv_Value = (totalDebt / totalCollateral)*100;
+   const Ltv_Value = (totalDebt / totalCollateral)*100;
 
   const liquidationThreshold_Value =
     Number(userAccountData?.Ok?.[3]) / 100000000 || 0
@@ -168,9 +168,9 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
     <div className="fixed inset-0 flex items-center justify-center z-50 transition-bar">
       <div className="absolute inset-0 bg-black opacity-50"></div>
       <div
-        ref={popupRef}
-        className="bg-white rounded-lg overflow-hidden shadow-lg w-[380px] lg:w-[780px] mx-4 sm:mx-auto z-10 p-4 relative dark:bg-darkOverlayBackground"
-      >
+  ref={popupRef}
+  className="bg-white rounded-lg overflow-y-auto shadow-lg w-full max-w-[400px] lg:max-w-[780px] max-h-[95vh] mx-4 sm:mx-auto z-10 lg:p-4 p-1 relative dark:bg-darkOverlayBackground"
+>
         <div
           className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer button1"
           onClick={onClose}
@@ -179,21 +179,21 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
         </div>
         <div className="px-6 py-4">
           <div className="flex justify-between items-center pb-3">
-            <h3 className="text-lg font-semibold text-center w-full text-[#4659CF] dark:text-darkText">
+            <h3 className="lg:text-lg text-sm font-semibold text-center w-full text-[#4659CF] dark:text-darkText">
               Liquidation Risk Parameters
             </h3>
           </div>
-          <div className="mt-2 text-sm text-gray-500 dark:text-darkText">
+          <div className="mt-2 lg:text-sm text-xs text-gray-500 dark:text-darkText">
             Your health factor and loan to value determine the assurance of your
             collateral. To avoid liquidations, you can supply more collateral or
             repay borrow positions.
           </div>
           <div className="mt-4 space-y-6">
             <div className="border border-gray-600 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-blue-700 dark:text-darkText">
+              <h4 className="lg:text-sm text-xsfont-semibold text-blue-700 dark:text-darkText">
                 Health Factor
               </h4>
-              <p className="text-sm text-gray-500 mb-2 dark:text-darkTextSecondary">
+              <p className="lg:text-sm text-xs text-gray-500 mb-2 dark:text-darkTextSecondary">
                 Safety of your deposited collateral against the borrowed assets
                 and its underlying value.
               </p>
@@ -297,10 +297,10 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
               </p>
             </div>
             <div className="border border-gray-600 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-blue-700 dark:text-darkText">
+              <h4 className="lg:text-sm text-xs font-semibold text-blue-700 dark:text-darkText">
                 Current LTV
               </h4>
-              <p className="text-sm text-gray-500 dark:text-darkTextSecondary">
+              <p className="lg:text-sm text-xs text-gray-500 dark:text-darkTextSecondary">
                 Your current loan to value based on your collateral supplied.
               </p>
               <div className="flex items-center mt-4">
@@ -380,7 +380,7 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
                     fontSize="12"
                     textAnchor={currentLTVPosition > 50 ? "left" : "right"}
                     dy="1em"
-                    dx={currentLTVPosition > 50 ? "-1em" : "-0.01em"}
+                    dx={currentLTVPosition > 50 ? "-2.5em" : "-0.01em"}
                   >
                     {parseFloat(Ltv_Value)?.toFixed(2) || "0"}
                   </text>

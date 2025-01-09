@@ -32,6 +32,13 @@ const lightImages = {
     DebtInformationLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556479/DebtInformationLight_ommun1.webp",
     assetsToBorrowLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556478/assets-to-borrowLight_nv6qsv.webp",
     LiquidatebuttonLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556482/Liquidate-buttonLight_izsknx.webp",
+    supplySupplyLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883165/supply_supply_light_xitd0t.webp",
+    supplyApproveLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883165/supply_approve_light_adoxz2.webp",
+    repayRepayLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883280/repay_repay_light_j39ibe.webp",
+    repayApproveLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883280/repay_approve_light_ayllt6.webp",
+    liquidationApproveLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736249700/liquidationApproveLight_fqrxns.webp",
+    liquidationCallLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736249699/liquidationCallLight_rdv2c8.webp",
+    yourBorrowRepayLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736151505/repayLight_gdqeyp.webp"
   };
   
   export default lightImages;

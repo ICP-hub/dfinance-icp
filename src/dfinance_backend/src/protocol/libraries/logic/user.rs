@@ -1,12 +1,17 @@
 use super::update::user_data;
 use crate::constants::errors::Error;
+use crate::get_all_users;
+use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
-    api::{functions::get_balance, state_handler::mutate_state},
+    api::state_handler::mutate_state,
     get_cached_exchange_rate, get_reserve_data,
     protocol::libraries::{math::math_utils::ScalingMath, types::datatypes::UserReserveData},
     user_normalized_debt, user_normalized_supply,
 };
 use candid::{CandidType, Deserialize, Nat, Principal};
+use futures::stream::{FuturesUnordered, StreamExt};
+use ic_cdk::query;
+
 
 fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
@@ -28,6 +33,7 @@ pub async fn calculate_user_account_data(
         }
     }
 
+    ic_cdk::println!("to check the on behalf = {:?}", on_behalf);
     ic_cdk::println!("to check the on behalf = {:?}", on_behalf);
 
     let user_principal = match on_behalf {
@@ -309,25 +315,24 @@ pub async fn get_user_balance_in_base_currency(
         }
     };
 
-    // Simulate fetching user bto_i128(scaled balance multiplied by normalized income)
-    let d_token_canister_principal: Principal =
-        Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
+    // let d_token_canister_principal: Principal =
+    //     Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
 
-    let balance_result = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
-    let user_scaled_balance = match balance_result {
-        Ok(data) => {
-            ic_cdk::println!("get balance data : {:?}", data);
-            data
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    };
-    ic_cdk::println!(
-        "Fetched balance from DToken canister: {:?}",
-        user_scaled_balance
-    );
-
+    // let balance_result = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
+    // let user_scaled_balance = match balance_result {
+    //     Ok(data) => {
+    //         ic_cdk::println!("get balance data : {:?}", data);
+    //         data
+    //     }
+    //     Err(e) => {
+    //         return Err(e);
+    //     }
+    // };
+    // ic_cdk::println!(
+    //     "Fetched balance from DToken canister: {:?}",
+    //     user_scaled_balance
+    // );
+    let user_scaled_balance = reserve.d_token_balance.clone();
     let normalized_supply_result = user_normalized_supply(asset_reserve);
     let normalized_supply = match normalized_supply_result {
         Ok(data) => {
@@ -378,22 +383,22 @@ pub async fn get_user_debt_in_base_currency(
     };
 
     ic_cdk::println!("Fetching debt token canister principal from reserve...");
-    let debt_token_canister_principal =
-        Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
+    // let debt_token_canister_principal =
+    //     Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
 
-    ic_cdk::println!("Fetching balance of user...");
-    let balance_result = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
+    // ic_cdk::println!("Fetching balance of user...");
+    // let balance_result = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
 
-    let mut user_variable_debt = match balance_result {
-        Ok(data) => {
-            ic_cdk::println!("get balance data : {:?}", data);
-            data
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    };
-
+    // let mut user_variable_debt = match balance_result {
+    //     Ok(data) => {
+    //         ic_cdk::println!("get balance data : {:?}", data);
+    //         data
+    //     }
+    //     Err(e) => {
+    //         return Err(e);
+    //     }
+    // };
+    let mut user_variable_debt = reserve.debt_token_blance.clone();
     let user_normailzed_debt_result = user_normalized_debt(asset_reserve);
     let user_normailzed_debt = match user_normailzed_debt_result {
         Ok(data) => {
@@ -417,4 +422,76 @@ pub async fn get_user_debt_in_base_currency(
     let result = user_variable_debt.scaled_mul(asset_price);
     ic_cdk::println!("Final user debt in base currency: {}", result);
     Ok(result)
+}
+
+#[derive(Debug, Clone, CandidType, Deserialize)]
+pub struct UserAccountData {
+    pub collateral: Nat,
+    pub debt: Nat,
+    pub ltv: Nat,
+    pub liquidation_threshold: Nat,
+    pub health_factor: Nat,
+    pub available_borrow: Nat,
+    pub has_zero_ltv_collateral: bool,
+}
+
+#[query]
+pub async fn get_liquidation_users_concurrent(
+    total_pages: usize,
+    page_size: usize,
+) -> Vec<(Principal, UserAccountData, UserData)> {
+    let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+    let total_users = vector_user_data.len();
+
+    let mut liq_list = Vec::new();
+
+    let page_futures = (0..total_pages).map(|page| {
+        let users_to_process = vector_user_data
+            .iter()
+            .skip(page * page_size)
+            .take(page_size)
+            .cloned()
+            .collect::<Vec<_>>();
+
+        async move {
+            let mut page_liq_list = Vec::new();
+
+            let mut tasks = users_to_process
+                .into_iter()
+                .map(|(user_principal, user_data)| async move {
+                    if let Ok(user_account_data) =
+                        calculate_user_account_data(Some(user_principal)).await
+                    {
+                        Some((user_principal, user_account_data, user_data))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<FuturesUnordered<_>>();
+
+            while let Some(result) = tasks.next().await {
+                if let Some((user_principal, user_account_data_tuple, user_data)) = result {
+                    let user_account_data = UserAccountData {
+                        collateral: user_account_data_tuple.0,
+                        debt: user_account_data_tuple.1,
+                        ltv: user_account_data_tuple.2,
+                        liquidation_threshold: user_account_data_tuple.3,
+                        health_factor: user_account_data_tuple.4,
+                        available_borrow: user_account_data_tuple.5,
+                        has_zero_ltv_collateral: user_account_data_tuple.6,
+                    };
+                    page_liq_list.push((user_principal, user_account_data, user_data));
+                }
+            }
+            page_liq_list
+        }
+    });
+
+    let results = futures::future::join_all(page_futures).await;
+
+    for result in results {
+        liq_list.extend(result);
+    }
+
+    liq_list
 }

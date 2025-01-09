@@ -11,16 +11,23 @@ import { Principal } from "@dfinity/principal";
 import useAssetData from "./components/Common/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "./joyrideConfig";
+import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
 
 export default function App() {
+  const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
   const theme = useSelector((state) => state.theme.theme);
+  0;
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
   const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
-  const targetElement = isMobile ? "body" : "#dashboard-assets-to-supply";
   let TRACKING_ID = "G-EVCJPRHQYX";
   const { filteredItems, loading } = useAssetData();
+  const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
+
+  useEffect(() => {
+    setIsTourVisible(isTourRunning);
+  }, [isTourRunning]);
 
   const {
     isAuthenticated,
@@ -42,7 +49,14 @@ export default function App() {
       steps: getSteps(theme, isMobile2, isMobile),
       styles: getStyles(joyRideBackground, joyTextColor),
     }));
-  }, [theme, isMobile2, isMobile, joyRideBackground, joyTextColor]);
+  }, [
+    theme,
+    isMobile2,
+    isMobile,
+    joyRideBackground,
+    joyTextColor,
+    isTourRunning,
+  ]);
 
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const dispatch = useDispatch();
@@ -150,10 +164,23 @@ export default function App() {
       const parsedData = storedData ? JSON.parse(storedData) : {};
 
       if (parsedData[principal]) {
+        if (isTourVisible) {
+          setJoyrideState((prevState) => ({ ...prevState, run: true }));
+          return;
+        }
         setJoyrideState((prevState) => ({ ...prevState, run: false }));
       }
     }
-  }, [isAuthenticated, principal]);
+  }, [isAuthenticated, principal, isTourVisible]);
+
+  const [triggerDispatch, setTriggerDispatch] = useState(false);
+
+  useEffect(() => {
+    if (triggerDispatch) {
+      dispatch(joyRideTrigger());
+      setTriggerDispatch(false);
+    }
+  }, [triggerDispatch, dispatch]);
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
@@ -163,6 +190,11 @@ export default function App() {
         const storedData = localStorage.getItem("userGuideData");
         const parsedData = storedData ? JSON.parse(storedData) : {};
         parsedData[principal] = true;
+        if (isTourRunning) {
+          setTriggerDispatch(true);
+          setJoyrideState((prevState) => ({ ...prevState, run: true }));
+          return;
+        }
         localStorage.setItem("userGuideData", JSON.stringify(parsedData));
         setJoyrideState((prevState) => ({ ...prevState, run: false }));
       }
@@ -195,6 +227,9 @@ export default function App() {
         behavior: "smooth",
       });
     }
+    if (data.index === 21) {
+      navigate("/dashboard");
+    }
   };
 
   useEffect(() => {
@@ -212,7 +247,7 @@ export default function App() {
       {isAuthenticated && !isLoadingPage && (
         <Joyride
           steps={joyrideState.steps}
-          run={joyrideState.run}
+          run={joyrideState.run || isTourVisible}
           continuous={true}
           showSkipButton={true}
           styles={joyrideState.styles}

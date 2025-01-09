@@ -12,6 +12,8 @@ use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_account_data;
+use protocol::libraries::logic::user;
+
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -29,6 +31,7 @@ use crate::declarations::assets::ReserveData;
 use crate::declarations::assets::{
     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,ExecuteLiquidationParams
 };
+use crate::protocol::libraries::logic::user::UserAccountData;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
@@ -624,8 +627,13 @@ async fn get_lock() -> Result<bool, Error> {
         Err(e) => Err(Error::LockAcquisitionFailed),
     }
 }
+
+#[query]
+pub fn get_total_users() -> usize {
+    read_state(|state| state.user_profile.len().try_into().unwrap())
+}
 // this function is for check which i will remove later.
-#[update]
+#[query]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
@@ -668,3 +676,5 @@ export_candid!();
 //6. accuare_to_treasury for fees
 //7. liq_bot -> discuss about node or timer
 //8. frontend -> cal h.f , dont show negative apy, remove tofix
+
+

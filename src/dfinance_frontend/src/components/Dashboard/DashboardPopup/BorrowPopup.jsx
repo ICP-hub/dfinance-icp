@@ -1,6 +1,6 @@
 import { Check, X, TriangleAlert } from "lucide-react";
 import React, { useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { useEffect } from "react";
@@ -11,9 +11,11 @@ import useUserData from "../../customHooks/useUserData";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { Principal } from "@dfinity/principal";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
 const Borrow = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange }) => {
- 
+  console.log("borroable value ",borrowableValue)
+  const dispatch = useDispatch();
   const { backendActor, principal } = useAuth();
   const principalObj = useMemo(() => Principal.fromText(principal),[principal]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -76,7 +78,7 @@ if (onLoadingChange) {
     };
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
-      
+       dispatch(toggleDashboardRefresh());
 
       if ("Ok" in borrowResult) {
         trackEvent(
@@ -148,7 +150,6 @@ if (onLoadingChange) {
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    window.location.reload();
   };
   
   const numericBalance = parseFloat(balance);
@@ -255,66 +256,74 @@ if (onLoadingChange) {
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
   
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
   
+    // Prevent multiple decimal points
     if (inputAmount.indexOf('.') !== inputAmount.lastIndexOf('.')) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf('.'));
     }
   
     if (inputAmount === "") {
-      setAmount(""); 
-      updateAmountAndUsdValue(""); 
-      return; 
+      setAmount("");
+      updateAmountAndUsdValue("");
+      return;
     }
   
     const numericAmount = parseFloat(inputAmount);
   
+    // Ensure the entered amount does not exceed the maximum borrowable value
     if (numericAmount > parseFloat(borrowableAssetValue)) {
-      return; 
+      return;
     }
   
+    // Format the amount with commas and up to 8 decimal places
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
       formattedAmount = `${parseInt(integerPart).toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US"); 
+      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
     }
   
     setAmount(formattedAmount);
-    updateAmountAndUsdValue(inputAmount); 
+    updateAmountAndUsdValue(inputAmount);
   };
-
+  
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
-
+  
     if (inputAmount === "") {
       setAmount("");
       setUsdValue(0);
       return;
     }
-
+  
     if (numericAmount <= supplyBalance) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
       setUsdValue(convertedValue.toFixed(2));
       setError("");
+    } else if (inputAmount.length > 8) {
+      setError("Amount exceeds the maximum allowed digits.");
+      // Do not reset the usdValue; retain the last valid conversion
     } else {
-      setError("Amount must be a positive number");
+      setError("Amount must be a positive number.");
       setUsdValue(0);
     }
   };
-
+  
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue =
         Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue);
+      setUsdValue(convertedValue.toFixed(2));
     } else {
-      setUsdValue(0);
+      setUsdValue("");
     }
   }, [amount, conversionRate]);
+  
 
   const handleMaxClick = () => {
     const maxAmount = parseFloat(borrowableValue).toFixed(8);

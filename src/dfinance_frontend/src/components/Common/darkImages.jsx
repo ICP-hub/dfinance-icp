@@ -32,6 +32,12 @@ const darkImages = {
     assetsToBorrowPopup: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556639/assets-to-borrow-popup_eckdea.webp",
     assetsToSupply: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556639/assets-to-supply_t1xlku.webp",
     assetsToBorrow: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556638/assets-to-borrow_hza6an.webp",
+    supplySupply: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883121/supply_supply_br1a43.webp",
+    supplyApprove: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883120/supply_approve_wde4rp.webp",
+    repayRepay: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883597/repay_repay_dqnsrg.webp",
+    repayApprove: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883597/repay_approve_p2cjfw.webp",
+    liquidationApproveDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736249726/liquidationApproveDark_ohlahv.webp",
+    liquidationCallDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736249726/liquidationCallDark_s2ryei.webp",
   };
   
   export default darkImages;

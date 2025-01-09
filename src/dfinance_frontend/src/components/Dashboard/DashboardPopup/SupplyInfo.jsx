@@ -214,7 +214,7 @@ const SupplyInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[75%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                      1m ago A liquidation threshold is the point at which a
+                      A liquidation threshold is the point at which a
                       borrowed position becomes too risky and will be
                       liquidated.
                       <hr className="my-2 opacity-50" />

@@ -21,7 +21,7 @@ export default function App() {
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
   const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
-  let TRACKING_ID = "G-EVCJPRHQYX";
+  let TRACKING_ID = "G-HP2ELMSQCW";
   const { filteredItems, loading } = useAssetData();
   const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
 

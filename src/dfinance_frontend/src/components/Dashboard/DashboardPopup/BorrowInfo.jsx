@@ -152,9 +152,10 @@ const BorrowInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                      The Reserve Factor is a portion of interest directed to a
-                      collector contract, managed by governance, to support
-                      ecosystem growth.
+                      The reserve factor is a specified percentage of the
+                      interest generated, which is redirected to the Dfinance
+                      protocol's treasury to support the growth of the
+                      ecosystem.
                     </span>
                   </div>
                 )}

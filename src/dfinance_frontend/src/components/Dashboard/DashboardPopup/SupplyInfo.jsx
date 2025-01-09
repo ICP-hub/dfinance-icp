@@ -176,10 +176,12 @@ const SupplyInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                      The Maximum LTV ratio signifies the highest amount of
-                      borrowing capacity that a specific collateral can provide,
-                      indicating the extent to which an asset can be leveraged
-                      for borrowing purposes.
+                      The Maximum LTV ratio shows how much you can borrow
+                      against collateral.
+                      <hr className="my-2 opacity-50" />
+                      For example, with an LTV of 75%, you can borrow up to 75%
+                      of the value of your collateral, like 0.75 USD for every 1
+                      USD worth of collateral.
                     </span>
                   </div>
                 )}
@@ -212,9 +214,13 @@ const SupplyInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[75%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                      The Liquidation Threshold represents the point at which a
-                      borrowing position is considered undercollateralized and
-                      may be subject to liquidation for a given collateral.
+                      1m ago A liquidation threshold is the point at which a
+                      borrowed position becomes too risky and will be
+                      liquidated.
+                      <hr className="my-2 opacity-50" />
+                      For example, if the threshold is 80%, the position will be
+                      liquidated when the debt reaches 80% of the collateral's
+                      value.
                     </span>
                   </div>
                 )}

@@ -2,12 +2,9 @@ import { AuthClient } from "@dfinity/auth-client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { HttpAgent, Actor } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
-import { createActor, idlFactory } from "../../../declarations/dfinance_backend/index";
-import { idlFactory as ledgerIdlFactory } from "../../../declarations/ckbtc_ledger";
-import useAssetData from "../components/Common/useAssets";
+import { createActor } from "../../../declarations/dfinance_backend/index";
 import { useSelector } from "react-redux";
-
-// Create a React context for authentication state
+import { initGA, setUserId } from "./googleAnalytics";
 const AuthContext = createContext();
 
 const defaultOptions = {
@@ -16,8 +13,8 @@ const defaultOptions = {
    */
   createOptions: {
     idleOptions: {
-      idleTimeout: 1000 * 60 * 30, // set to 30 minutes
-      disableDefaultIdleCallback: true, // disable the default reload behavior
+      idleTimeout: 1000 * 60 * 30, 
+      disableDefaultIdleCallback: true, 
     },
   },
   /**
@@ -33,28 +30,30 @@ const defaultOptions = {
     identityProvider:
       process.env.DFX_NETWORK === "ic"
         ? `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
-        : `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`
+        : `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`,
   },
 
-  loginOptionsbifinity: {
-    // identityProvider: `https://bifinity.com/authenticate/?applicationName=my-ic-app#authorize`,
-  },
+  loginOptionsbifinity: {},
 };
 
-// Custom hook to manage authentication with Internet Identity
 export const useAuthClient = (options = defaultOptions) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accountIdString, setAccountIdString] = useState("");
   const [authClient, setAuthClient] = useState(null);
   const [identity, setIdentity] = useState(null);
   const [principal, setPrincipal] = useState(null);
+  const [user,setUser]=useState(null);
   const [backendActor, setBackendActor] = useState(null);
   const [accountId, setAccountId] = useState(null);
 
-  const { isWalletCreated, isWalletModalOpen, isSwitchingWallet, connectedWallet } = useSelector(state => state.utility)
+  const {
+    isWalletCreated,
+    isWalletModalOpen,
+    isSwitchingWallet,
+    connectedWallet,
+  } = useSelector((state) => state.utility);
 
   useEffect(() => {
-    // On component mount, create an authentication client
     AuthClient.create(options.createOptions).then((client) => {
       setAuthClient(client);
     });
@@ -66,15 +65,20 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   }, [authClient]);
 
-  // Helper function to convert binary data to a hex string
   const toHexString = (byteArray) => {
-    return Array.from(byteArray, (byte) => ("0" + (byte & 0xff).toString(16)).slice(-2)).join("");
+    return Array.from(byteArray, (byte) =>
+      ("0" + (byte & 0xff).toString(16)).slice(-2)
+    ).join("");
   };
+  let logoutTimeout;
 
   const login = async (provider) => {
     return new Promise(async (resolve, reject) => {
       try {
-        if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
+        if (
+          authClient.isAuthenticated() &&
+          !(await authClient.getIdentity().getPrincipal().isAnonymous())
+        ) {
           updateClient(authClient);
           resolve(authClient);
         } else {
@@ -84,15 +88,24 @@ export const useAuthClient = (options = defaultOptions) => {
             onError: (error) => reject(error),
             onSuccess: () => {
               updateClient(authClient);
+              setSessionTimeout();
               resolve(authClient);
             },
           });
         }
       } catch (error) {
-        console.error('Login error:', error);
         reject(error);
       }
     });
+  };
+
+  const setSessionTimeout = () => {
+    clearTimeout(logoutTimeout);
+
+    logoutTimeout = setTimeout(() => {
+      logout();
+    }, 24 * 60 * 60 * 1000);
+    localStorage.setItem("sessionStart", Date.now());
   };
 
   const getLoginOptions = (provider) => {
@@ -108,25 +121,37 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
-  // Function to handle logout
   const logout = async () => {
     try {
       await authClient.logout();
+      clearTimeout(logoutTimeout);
       setIsAuthenticated(false);
       setIdentity(null);
       setPrincipal(null);
       setBackendActor(null);
       setAccountId(null);
-      if(isSwitchingWallet == false){
+      localStorage.removeItem("sessionStart");
+      if (isSwitchingWallet == false) {
         window.location.reload();
       }
-      
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch (error) 
+    {console.error(error.message)}
+  };
+
+  const checkSession = () => {
+    const sessionStart = localStorage.getItem("sessionStart");
+    if (sessionStart) {
+      const elapsedTime = Date.now() - parseInt(sessionStart, 10);
+      if (elapsedTime > 24 * 60 * 60 * 1000) {
+        logout();
+      } else if (elapsedTime > 24 * 60 * 60 * 1000) {
+        setSessionTimeout();
+      }
     }
   };
 
-  // Update client state after authentication
+  checkSession();
+
   const updateClient = async (client) => {
     try {
       const isAuthenticated = await client.isAuthenticated();
@@ -136,8 +161,10 @@ export const useAuthClient = (options = defaultOptions) => {
       setIdentity(identity);
 
       const principal = identity.getPrincipal();
+      setUser(principal)
       setPrincipal(principal.toString());
-      // console.log('principal', principal.toString());
+      initGA("G-EVCJPRHQYX");
+      if(isAuthenticated){setUserId(principal.toString());}
 
       const accountId = AccountIdentifier.fromPrincipal({ principal });
       setAccountId(toHexString(accountId.bytes));
@@ -145,88 +172,97 @@ export const useAuthClient = (options = defaultOptions) => {
 
       const agent = new HttpAgent({ identity });
 
-      const backendActor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, { agent });
+      const backendActor = createActor(
+        process.env.CANISTER_ID_DFINANCE_BACKEND,
+        { agent }
+      );
       setBackendActor(backendActor);
-
-      // Ensure backendActor is initialized before making calls
-    if (backendActor) {
-      await checkUser(principal.toString());
-    } else {
-      console.error('Backend actor initialization failed.');
-    }
-
-    } catch (error) {
-      console.error("Authentication update error:", error);
-    }
+      
+    } catch (error) {}
   };
-
-  // Function to create an actor for interacting with the ledger
+  
   const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
-    if (process.env.DFX_NETWORK !== 'production') {
-      agent.fetchRootKey().catch(err => {
-        console.warn('Unable to fetch root key. Check to ensure that your local replica is running');
-        console.error(err);
-      });
+    if (process.env.DFX_NETWORK !== "production") {
+      agent.fetchRootKey().catch((err) => {});
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
-
-  // Function to refresh login without user interaction
   const reloadLogin = async () => {
     try {
-      if (authClient.isAuthenticated() && !(await authClient.getIdentity().getPrincipal().isAnonymous())) {
+      if (
+        authClient.isAuthenticated() &&
+        !(await authClient.getIdentity().getPrincipal().isAnonymous())
+      ) {
         updateClient(authClient);
       }
-    } catch (error) {
-      console.error("Reload login error:", error);
-    }
+    } catch (error) {}
   };
 
-  const checkUser = async (user) => {
+  const checkUser = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+  
     try {
-      const result = await backendActor.check_user(user);
-      return result;
+      const identity = authClient.getIdentity();
+      if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
+  
+        
+        const result = await backendActor.register_user();
+  
+        if (result.Ok) {
+          if (result.Ok === "User available") {
+            
+          } else if (result.Ok === "User added") {
+          }
+        } else if (result.Err) {
+          console.error("Error from backend:", result.Err);
+          throw new Error(result.Err);
+        }
+  
+        return result;
+      } else {
+        console.error("Anonymous principals are not allowed.");
+        throw new Error("Anonymous principals are not allowed.");
+      }
     } catch (error) {
-      console.error('Error checking user:', error);
+      console.error("Error in checkUser:", error.message);
       throw error;
     }
   };
+  
+  if (backendActor && isAuthenticated) {
+    checkUser();
+ }
 
   const fetchReserveData = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-  
+
     try {
       const reserveData = await backendActor.get_reserve_data(asset);
-      // console.log('Reserve Data:', reserveData);
+      
       return reserveData;
     } catch (error) {
-      console.error('Error fetching reserve data:', error);
       throw error;
     }
   };
-  
-  // Function to fetch all users
-const getAllUsers = async () => {
-  if (!backendActor) {
-    throw new Error("Backend actor not initialized");
-  }
 
-  try {
-    const allUsers = await backendActor.get_all_users();
-    console.log('get_all_users:', allUsers);
-    return allUsers;
-  } catch (error) {
-    console.error('Error fetching all users:', error);
-    throw error;
-  }
-};
+  const getAllUsers = async () => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+
+    try {
+      const allUsers = await backendActor.get_all_users();
+      return allUsers;
+    } catch (error) {
+      throw error;
+    }
+  };
 
   return {
     isAuthenticated,
@@ -236,27 +272,26 @@ const getAllUsers = async () => {
     authClient,
     identity,
     principal,
+    user,
     backendActor,
     accountId,
     createLedgerActor,
     reloadLogin,
     accountIdString,
-    fetchReserveData, 
+    fetchReserveData,
     checkUser,
     getAllUsers,
   };
 };
 
-// Authentication provider component
 export const AuthProvider = ({ children }) => {
   const auth = useAuthClient();
 
   if (!auth.authClient || !auth.backendActor) {
-    return null; // Or render a loading indicator
+    return null;
   }
 
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
-// Hook to access authentication context
 export const useAuth = () => useContext(AuthContext);

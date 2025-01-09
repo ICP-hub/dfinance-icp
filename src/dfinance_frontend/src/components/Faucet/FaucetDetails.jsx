@@ -12,7 +12,7 @@ import useAssetData from "../Common/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
@@ -22,11 +22,13 @@ import useFetchBalance from "../customHooks/useFetchBalance";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import Loading from "../Common/Loading";
-
+import MiniLoader from "../Common/MiniLoader";
+import WalletModal from "../../components/Dashboard/WalletModal";
 const ITEMS_PER_PAGE = 8;
 
 const FaucetDetails = () => {
-
+  const refreshTrigger = useSelector((state) => state.faucetUpdate.refreshTrigger);
+  console.log("refreshTrigger", refreshTrigger);
   const { isAuthenticated, principal, backendActor, createLedgerActor } =
     useAuth();
 
@@ -47,9 +49,14 @@ const FaucetDetails = () => {
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const {
+    isWalletCreated,
+    isWalletModalOpen,
+    isSwitchingWallet,
+    connectedWallet,
+  } = useSelector((state) => state.utility);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -67,36 +74,60 @@ const FaucetDetails = () => {
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckBTCBalance) *
+        (ckBTCUsdRate / 1e8)
+      ).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
     }
 
     if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckETHBalance) *
+        (ckETHUsdRate / 1e8)
+      ).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
     }
 
     if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckUSDCBalance) *
+        (ckUSDCUsdRate / 1e8)
+      ).toFixed(2);
       setCkUSDCUsdBalance(balanceInUsd);
     }
 
     if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckICPBalance) *
+        (ckICPUsdRate / 1e8)
+      ).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
 
     if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(2);
+      const balanceInUsd = (
+        parseFloat(ckUSDTBalance) *
+        (ckUSDTUsdRate / 1e8)
+      ).toFixed(2);
       setCkUSDTUsdBalance(balanceInUsd);
     }
-
-  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate, ckUSDTBalance,
-    ckUSDTUsdRate]);
+  }, [
+    ckBTCBalance,
+    ckBTCUsdRate,
+    ckETHBalance,
+    ckETHUsdRate,
+    ckUSDCBalance,
+    ckUSDCUsdRate,
+    ckICPBalance,
+    ckICPUsdRate,
+    ckUSDTBalance,
+    ckUSDTUsdRate,
+    refreshTrigger
+  ]);
 
   useEffect(() => {
     const fetchAllData = async () => {
-      setLoading(true);
       try {
         await Promise.all([
           fetchBalance("ckBTC"),
@@ -110,10 +141,6 @@ const FaucetDetails = () => {
         setAssets(allAssets);
       } catch (error) {
         setError(error);
-      } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1500);
       }
     };
 
@@ -125,9 +152,9 @@ const FaucetDetails = () => {
     ckETHBalance,
     ckUSDCBalance,
     ckICPBalance,
-    ckUSDTBalance
+    ckUSDTBalance,
+    refreshTrigger
   ]);
-
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -157,8 +184,8 @@ const FaucetDetails = () => {
       case "ICP":
         assetImage = icp;
         break;
-      case "ckUSDT": // Added case for ckUSDT
-        assetImage = ckUSDT; // Ensure ckUSDT is defined or imported
+      case "ckUSDT":
+        assetImage = ckUSDT;
         break;
       default:
         assetImage = null;
@@ -171,7 +198,8 @@ const FaucetDetails = () => {
     setShowPopup(false);
   };
 
-  const { filteredItems } = useAssetData();
+  const { filteredItems, loading } = useAssetData();
+
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
@@ -179,20 +207,26 @@ const FaucetDetails = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
   const filteredReserveData = Object.fromEntries(filteredItems);
   const formatNumber = useFormatNumber();
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-
+  useEffect(() => {
+    // If loading is finished, mark as loaded
+    if (!loading) {
+      setHasLoaded(true);
+    }
+  }, [loading]);
   return (
     <div className="w-full">
-      <div className="w-full flex items-center px-2">
+      <div className="w-full flex items-center px-1">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">
           Test Assets
         </h1>
       </div>
 
       <div className="w-full mt-9 p-0 lg:px-1">
-        {loading ? (
+        {loading  && !isSwitchingWallet  && !hasLoaded ? (
           <div className="w-full mt-[180px] mb-[300px] flex justify-center items-center ">
-            <Loading isLoading={true} />
+            <MiniLoader isLoading={true} />
           </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
@@ -216,12 +250,14 @@ const FaucetDetails = () => {
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td
                         key={index}
-                        className="p-1 pl-2 -pr-7 pb-3 whitespace-nowrap"
+                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${
+                          index === 1 ? "text-center" : ""
+                        }`}
                       >
                         {item.header}
                       </td>
                     ))}
-                    <td className="p-3 hidden md:table-cell">
+                    <td className="hidden md:table-cell pr-[6.6rem]">
                       {FAUCET_ASSETS_TABLE_COL[2]?.header}
                     </td>
                   </tr>
@@ -230,13 +266,14 @@ const FaucetDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${index !== currentItems.length - 1
-                        ? "gradient-line-bottom"
-                        : ""
-                        }`}
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${
+                        index !== currentItems.length - 1
+                          ? "gradient-line-bottom"
+                          : ""
+                      }`}
                     >
-                      <td className="p-3 align-center py-7 px-2">
-                        <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
+                      <td className="py-[1.5rem]">
+                        <div className="w-full flex items-center justify-start whitespace-nowrap pl-3">
                           {item[0] === "ckBTC" && (
                             <img
                               src={ckBTC}
@@ -265,9 +302,9 @@ const FaucetDetails = () => {
                               className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
-                          {item[0] === "ckUSDT" && (  // Added for ckUSDT
+                          {item[0] === "ckUSDT" && (
                             <img
-                              src={ckUSDT} // Ensure ckUSDT is defined or imported
+                              src={ckUSDT}
                               alt="ckusdt logo"
                               className="w-8 h-8 rounded-full mr-2"
                             />
@@ -275,46 +312,136 @@ const FaucetDetails = () => {
                           {item[0]}
                         </div>
                       </td>
-                      <td className="p-3 align-center">
-                        <div className="flex flex-row ml-[30px]">
+                      <td className="">
+                        <div className="p-3">
                           <div>
                             <center>
                               {item[0] === "ckBTC" && (
                                 <>
-                                  <p className="text-left">{Number(ckBTCBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p className="">
+                                    {ckBTCBalance === 0
+                                      ? "0"
+                                      : ckBTCBalance >= 1
+                                      ? Number(ckBTCBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckBTCBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
+                                  <p className="font-light  text-[11px]">
                                     ${formatNumber(ckBTCUsdBalance)}
                                   </p>
                                 </>
                               )}
                               {item[0] === "ckETH" && (
                                 <>
-                                  <p className="text-left">{Number(ckETHBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p>
+                                    {ckETHBalance === 0
+                                      ? "0"
+                                      : ckETHBalance >= 1
+                                      ? Number(ckETHBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckETHBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
+                                  <p className="font-light  text-[11px]">
                                     ${formatNumber(ckETHUsdBalance)}
                                   </p>
                                 </>
                               )}
                               {item[0] === "ckUSDC" && (
                                 <>
-                                  <p className="text-left">{Number(ckUSDCBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p>
+                                    {ckUSDCBalance === 0
+                                      ? "0"
+                                      : ckUSDCBalance >= 1
+                                      ? Number(ckUSDCBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckUSDCBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
+                                  <p className="font-light text-[11px]">
                                     ${formatNumber(ckUSDCUsdBalance)}
                                   </p>
                                 </>
                               )}
                               {item[0] === "ICP" && (
                                 <>
-                                  <p className="text-left">{Number(ckICPBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p>
+                                    {ckICPBalance === 0
+                                      ? "0"
+                                      : ckICPBalance >= 1
+                                      ? Number(ckICPBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckICPBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
+                                  <p className="font-light  text-[11px]">
                                     ${formatNumber(ckICPUsdBalance)}
                                   </p>
                                 </>
                               )}
-                              {item[0] === "ckUSDT" && (  // Added for ckUSDT
+                              {item[0] === "ckUSDT" && (
                                 <>
-                                  <p className="text-left">{Number(ckUSDTBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
+                                  <p>
+                                    {ckUSDTBalance === 0
+                                      ? "0"
+                                      : ckUSDTBalance >= 1
+                                      ? Number(ckUSDTBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : Number(ckUSDTBalance).toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 7,
+                                            maximumFractionDigits: 7,
+                                          }
+                                        )}
+                                  </p>
+                                  <p className="font-light  text-[11px]">
                                     ${formatNumber(ckUSDTUsdBalance)}
                                   </p>
                                 </>
@@ -323,12 +450,17 @@ const FaucetDetails = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 align-center -pb-5">
+                      <td className="pr-3">
                         <div className="w-full flex justify-end align-center">
                           <Button
                             title={
                               <>
-                                <span className="hidden lg:inline">Faucet</span>
+                                <span
+                                  className="hidden lg:inline"
+                                  id="faucet-button"
+                                >
+                                  Faucet
+                                </span>
                                 <span className="inline lg:hidden">
                                   <svg
                                     width="42"
@@ -358,17 +490,7 @@ const FaucetDetails = () => {
                 </tbody>
               </table>
             </div>
-            {/* <div className="w-full flex justify-center mt-10">
-              <div id="pagination" className="flex gap-2">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(
-                    FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE
-                  )}
-                  onPageChange={(page) => setCurrentPage(page)}
-                />
-              </div>
-            </div> */}
+            {}
           </>
         )}
 
@@ -383,6 +505,7 @@ const FaucetDetails = () => {
             />
           </div>
         )}
+         {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
       </div>
     </div>
   );

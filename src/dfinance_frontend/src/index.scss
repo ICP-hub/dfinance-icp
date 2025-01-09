@@ -2,39 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Vampiro+One&display=swap');
-
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Vampiro+One&display=swap");
 
 html {
   scroll-behavior: smooth;
 }
-body{
-    background: rgba(255, 255, 255, 1);
+body {
+  background: rgba(255, 255, 255, 1);
 }
 
-.d_color{
-    color: #517688 !important;
-    font-style: normal !important;
+.d_color {
+  color: #517688 !important;
+  font-style: normal !important;
 }
 
-.navlink{
+.navlink {
   transition: color 0.3s ease;
 }
 
-.navlink:hover{
-  color: transparent; /* Hide the actual text color on hover */
-  background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
+.navlink:hover {
+  color: transparent;
+  background-image: linear-gradient(
+    to right,
+    rgb(70 89 207 / 1),
+    #d379ab,
+    rgb(197 98 189 / 0.7)
+  );
   background-clip: text;
-  -webkit-background-clip: text; /* For Safari/older browsers */
-  -webkit-text-fill-color: transparent; /* Hide the actual text color */
-  transition: none; /* Disable transition for the gradient effect */
-  font-weight: 800;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: none;
+  font-weight: 700;
 }
 
 @keyframes subtle-bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
     animation-timing-function: ease-in-out;
   }
@@ -45,72 +50,79 @@ body{
 }
 
 .subtle-bounce {
-  animation: subtle-bounce 4s infinite; 
+  animation: subtle-bounce 4s infinite;
 }
 
-  .box {
-    border-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='none'%3e%3cpath stroke='url(%23a)' stroke-width='2' d='M8 1h84a7 7 0 0 1 7 7v84a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7Z'/%3e%3cdefs%3e%3clinearGradient id='a' x1='20.27' x2='120.715' y1='125' y2='113.589' gradientUnits='userSpaceOnUse'%3e%3cstop stop-color='%23EFAF68'/%3e%3cstop offset='.367' stop-color='%23CC69A0'/%3e%3cstop offset='.682' stop-color='%23C15CB9'/%3e%3cstop offset='1' stop-color='%235B6BCC'/%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e") 8 / 10px stretch;
-  }
-  
+.box {
+  border-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='none'%3e%3cpath stroke='url(%23a)' stroke-width='2' d='M8 1h84a7 7 0 0 1 7 7v84a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7Z'/%3e%3cdefs%3e%3clinearGradient id='a' x1='20.27' x2='120.715' y1='125' y2='113.589' gradientUnits='userSpaceOnUse'%3e%3cstop stop-color='%23EFAF68'/%3e%3cstop offset='.367' stop-color='%23CC69A0'/%3e%3cstop offset='.682' stop-color='%23C15CB9'/%3e%3cstop offset='1' stop-color='%235B6BCC'/%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e")
+    8 / 10px stretch;
+}
 
-  .nav-link {
-    position: relative;
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    text-decoration: none;
-    transition: color 0.3s ease;
-    font-weight: 800;
-  }
-  .nav-link:active,
+.nav-link {
+  position: relative;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  font-weight: 600;
+}
+.nav-link:active,
 .nav-link.active {
-  color: transparent; /* Hide the actual text color on hover */
-    background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
-    background-clip: text;
-    -webkit-background-clip: text; /* For Safari/older browsers */
-    -webkit-text-fill-color: transparent; /* Hide the actual text color */
-    transition: none; /* Disable transition for the gradient effect */
-    font-weight: 800;
+  color: transparent;
+  background-image: linear-gradient(
+    to right,
+    rgb(70 89 207 / 1),
+    #d379ab,
+    rgb(197 98 189 / 0.7)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: none;
+  font-weight: 700;
 }
-  .nav-link:hover {
-    color: transparent; /* Hide the actual text color on hover */
-    background-image: linear-gradient(to right, rgb(70 89 207 / 1), #D379AB, rgb(197 98 189 / 0.7));
-    background-clip: text;
-    -webkit-background-clip: text; /* For Safari/older browsers */
-    -webkit-text-fill-color: transparent; /* Hide the actual text color */
-    transition: none; /* Disable transition for the gradient effect */
-    font-weight: 800;
-  }
-  
-  /* Add this in your CSS file */
-/* Add this in your CSS file */
+.nav-link:hover {
+  color: transparent;
+  background-image: linear-gradient(
+    to right,
+    rgb(70 89 207 / 1),
+    #d379ab,
+    rgb(197 98 189 / 0.7)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: none;
+  font-weight: 700;
+}
+
 .gradient-line-bottom {
-    position: relative;
-  }
-  
-  .gradient-line-bottom::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    margin-left: 0.5rem; /* Adjust margin as needed */
-    width: calc(100% - 1.5rem); /* Adjust padding if needed */
-    height: 1.5px;
-    background: linear-gradient(to right, #4659CF, #FCBD78);
-    transition: background 0.3s ease-in-out;
-    z-index: 4; /* Ensure the line is on top of other content */
-  }
-  
-  .gradient-line-bottom:hover::after {
-    background: #5B62FE; /* Light blue color */
-  }
-  
-  /* This rule removes any other border styles */
-  .gradient-line-bottom > * {
-    border: none !important;
-  }
-  
-.stack_card_single{
-    @apply w-fit bg-[#DBE8EE] border-[3px] border-[#233D6324] rounded-[40px] flex justify-center items-center p-4 ease-in-out duration-500
+  position: relative;
+}
+
+.gradient-line-bottom::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin-left: 0.5rem;
+  width: calc(100% - 1.5rem);
+  height: 1.5px;
+  background: linear-gradient(to right, #4659cf, #fcbd78);
+  transition: background 0.3s ease-in-out;
+  z-index: 4;
+}
+
+.gradient-line-bottom:hover::after {
+  background: #5b62fe;
+}
+
+.gradient-line-bottom > * {
+  border: none !important;
+}
+
+.stack_card_single {
+  @apply w-fit bg-[#DBE8EE] border-[3px] border-[#233D6324] rounded-[40px] flex justify-center items-center p-4 ease-in-out duration-500;
 }
 .no-scroll {
   overflow: hidden;
@@ -122,12 +134,10 @@ body{
   align-items: center;
   width: 100%;
   height: 100%;
-  background: transparent; /* Dim background */
-  backdrop-filter: blur(5px); /* Blur effect */
   z-index: 1000;
 }
 
-.bouncing-div{
+.bouncing-div {
   position: absolute;
   display: flex;
   justify-content: center;
@@ -145,7 +155,7 @@ body{
   animation: bouncing-loader 0.6s infinite alternate;
 }
 
-.bouncing-div  div {
+.bouncing-div div {
   width: 4px;
   height: 4px;
   margin: 3px 1px;
@@ -176,11 +186,9 @@ body{
   animation-delay: 0.6s;
 }
 
-
 .bouncing-div > div:nth-child(2) {
   animation-delay: 0.1s;
 }
-
 
 .bouncing-div > div:nth-child(3) {
   animation-delay: 0.3s;
@@ -189,17 +197,17 @@ body{
 @keyframes fadeInLeft {
   0% {
     opacity: 0;
-    transform: translateX(-20px); 
+    transform: translateX(-20px);
   }
   100% {
     opacity: 1;
-    transform: translateX(0); 
+    transform: translateX(0);
   }
 }
 
 .animate-fade-in-left {
   transition: all 400ms ease !important;
-  animation: fadeInLeft 0.5s ease forwards; 
+  animation: fadeInLeft 0.5s ease forwards;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -207,102 +215,99 @@ body{
 }
 
 .hide-scrollbar {
-  -ms-overflow-style: none; 
-  scrollbar-width: none; 
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 /* App.css */
 .custom-toast {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
-  max-width: 90%; 
-  margin: 0 auto; 
+  max-width: 90%;
+  margin: 0 auto;
 }
 
 @media (max-width: 600px) {
   .custom-toast {
-    max-width: 80%; 
+    max-width: 80%;
     font-size: 12px;
-    border-radius: 5px; 
+    border-radius: 5px;
   }
 }
 
 :root {
-  --scrollbar-track-light: rgba(252, 189, 120, 0.1); 
-  --scrollbar-thumb-light: rgba(95, 91, 91, 0.6); 
-  --scrollbar-track-dark: rgba(3, 2, 48, 0.4); 
+  --scrollbar-track-light: rgba(252, 189, 120, 0.1);
+  --scrollbar-thumb-light: rgba(95, 91, 91, 0.6);
+  --scrollbar-track-dark: rgba(3, 2, 48, 0.4);
   --scrollbar-thumb-dark: rgba(104, 101, 101, 0.6);
 }
 
 .scrollbar-custom {
-  scrollbar-width: thin; /* For Firefox */
-  scrollbar-color: var(--scrollbar-thumb-light) var(--scrollbar-track-light); /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-light) var(--scrollbar-track-light);
 }
 
 .scrollbar-custom::-webkit-scrollbar {
-  width: 8px; 
-  height: 8px; 
+  width: 8px;
+  height: 8px;
 }
 
 .scrollbar-custom::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-light); 
+  background: var(--scrollbar-track-light);
 }
 
 .scrollbar-custom::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb-light);
-  border-radius: var(--scrollbar-thumb-radius); 
+  border-radius: var(--scrollbar-thumb-radius);
 }
 
-
 .scrollbar-custom::-webkit-scrollbar-button {
-  display: none; 
+  display: none;
 }
 
 .scrollbar-custom::-webkit-scrollbar-corner {
-  background: transparent; 
+  background: transparent;
 }
 
 .dark .scrollbar-custom {
-  scrollbar-color: var(--scrollbar-thumb-dark) var(--scrollbar-track-dark); /* Firefox */
+  scrollbar-color: var(--scrollbar-thumb-dark) var(--scrollbar-track-dark);
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-dark); 
+  background: var(--scrollbar-track-dark);
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb-dark);
-  border-radius: var(--scrollbar-thumb-radius); 
+  border-radius: var(--scrollbar-thumb-radius);
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-button {
-  display: none; 
+  display: none;
 }
-
 
 .scrollbar-custom::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb-light); 
-  border-radius: var(--scrollbar-thumb-radius); 
+  background: var(--scrollbar-thumb-light);
+  border-radius: var(--scrollbar-thumb-radius);
 }
 .scrollbar-custom::-webkit-scrollbar-button {
-  display: none; 
+  display: none;
 }
 
-/* Dark mode */
 .dark .scrollbar-custom {
-  scrollbar-color: var(--scrollbar-thumb-dark) var(--scrollbar-track-dark); /* Firefox */
+  scrollbar-color: var(--scrollbar-thumb-dark) var(--scrollbar-track-dark);
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-dark); 
+  background: var(--scrollbar-track-dark);
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb-dark); 
-  border-radius: var(--scrollbar-thumb-radius); 
+  background: var(--scrollbar-thumb-dark);
+  border-radius: var(--scrollbar-thumb-radius);
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-button {
-  display: none; 
+  display: none;
 }
 
 .transition-bar {
@@ -311,19 +316,18 @@ body{
 .transition-text {
   transition: transform 0.8s ease-in-out;
 }
-input[type='number']::-webkit-outer-spin-button,
-input[type='number']::-webkit-inner-spin-button {
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* For Firefox */
-input[type='number'] {
+input[type="number"] {
   -moz-appearance: textfield;
 }
 .loader {
-  border: 4px solid rgba(143, 142, 142, 0.3); /* Light border */
-  border-top: 4px solid #fff; /* White spinning part */
+  border: 4px solid rgba(143, 142, 142, 0.3);
+  border-top: 4px solid #fff;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -339,57 +343,128 @@ input[type='number'] {
   }
 }
 
-a, input, button, .button1,.button2, input{
+a,
+input,
+button,
+.button1,
+.button2,
+input {
   transition: all 400ms !important;
 }
-a, button, .button1, img, svg{
+a,
+button,
+.button1,
+img,
+svg {
   user-select: none;
 }
 
-input:active{
+input:active {
   transform: scale(0.8);
 }
 
-a:hover{
+a:hover {
   transform: scale(0.95);
 }
 
-button:hover{
+button:hover {
   transform: scale(0.96);
-  
 }
 
-.button1:hover{
+.button1:hover {
   transform: scale(0.96);
 }
-.button2:hover{
+.button2:hover {
   transform: scale(0.96);
 }
-a:active{
+a:active {
   transform: scale(0.9);
 }
-button:active{
-  transform: scale(0.9);
-}
-
-.button1:active{
+button:active {
   transform: scale(0.9);
 }
 
-/* Add this to your CSS file or a <style> block */
+.button1:active {
+  transform: scale(0.9);
+}
+
 .tooltip-arrow {
   position: absolute;
-  bottom: -8px; /* Position below the tooltip box */
+  bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 8px solid white; /* Light mode arrow color */
+  border-top: 8px solid white;
 }
 
 .tooltip-arrow-dark {
-  border-top-color: #252347; /* Dark mode arrow color */
+  border-top-color: #252347;
 }
-/* Tooltip box */
+
+#dashboard-guide {
+  position: relative; 
+  display: inline-block;
+  margin: 0; 
+  padding: 0; 
+  z-index: 10;
+}
+
+.__floater__arrow{
+  width: 500px !important;
+  height: 500px !important;
+}
+
+.react-joyride-portal{
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.react-joyride__tooltip {
+  position: fixed;
+  z-index: 9999;   
+}
+
+.animate-fade-left {
+  animation: fadeLeft 0.1s ease-in-out; 
+}
+
+.animate-fade-right {
+  animation: fadeRight 0.1s ease-in-out; 
+}
+
+@keyframes fadeLeft {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .react-joyride__tooltip {
+    width: 85vw !important; 
+  }
+}
+
+@media (min-width: 800px) {
+  .react-joyride__tooltip {
+    width: 30vw !important;
+  }
+}

@@ -1,10 +1,9 @@
-import React from "react";
-import LineGraph from "../../Common/LineGraph";
-import { Check } from "lucide-react";
-import { useState } from "react";
-import { useEffect } from "react";
+import React, { useRef, useState } from "react";
+import { Check, Info } from "lucide-react";
 import { X } from "lucide-react";
 import CircularProgress from "../../Common/CircularProgressbar";
+import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
+import { useParams } from "react-router-dom";
 
 const SupplyInfo = ({
   formatNumber,
@@ -22,6 +21,77 @@ const SupplyInfo = ({
       ? (totalSupplied / supplyCapNumber) * 100
       : 0;
 
+  const { id } = useParams();
+  const tooltipRef = useRef(null);
+
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
+
+  const getAssetRate = (assetName) => {
+    switch (assetName) {
+      case "ckBTC":
+        return ckBTCUsdRate / 1e8;
+      case "ckETH":
+        return ckETHUsdRate / 1e8;
+      case "ckUSDC":
+        return ckUSDCUsdRate / 1e8;
+      case "ICP":
+        return ckICPUsdRate / 1e8;
+      case "ckUSDT":
+        return ckUSDTUsdRate / 1e8;
+      default:
+        return 0;
+    }
+  };
+
+  const assetRate = getAssetRate(id);
+  const totalSuppliedAsset =
+    assetRate && totalSupplied ? Number(totalSupplied) * assetRate : 0;
+  const totalSuppliedCap =
+    assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
+  const formatValue = (value) => {
+    const numericValue = parseFloat(value);
+
+    if (isNaN(numericValue)) {
+      return "0";
+    }
+
+    if (numericValue === 0) {
+      return "0";
+    } else if (numericValue >= 1) {
+      return numericValue.toFixed(2);
+    } else {
+      return numericValue.toFixed(7);
+    }
+  };
+
+  
+  const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
+  const [
+    isLiquidationThresholdTooltipVisible,
+    setLiquidationThresholdTooltipVisible,
+  ] = useState(false);
+  const [
+    isLiquidationPenaltyTooltipVisible,
+    setLiquidationPenaltyTooltipVisible,
+  ] = useState(false);
+
+  const toggleLTVTooltip = () => setLTVTooltipVisible((prev) => !prev);
+  const toggleLiquidationThresholdTooltip = () =>
+    setLiquidationThresholdTooltipVisible((prev) => !prev);
+  const toggleLiquidationPenaltyTooltip = () =>
+    setLiquidationPenaltyTooltipVisible((prev) => !prev);
+
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const toggleTooltip = () => {
+    setIsTooltipVisible((prev) => !prev);
+  };
+
   return (
     <div className="w-full lg:w-10/12 ">
       <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7 lg:gap-0 md:gap-3">
@@ -38,9 +108,17 @@ const SupplyInfo = ({
             />
             <p>
               {" "}
-              <span>${ formatNumber(Number(totalSupplied))}</span> of{" "}
+              <span>{formatValue(totalSupplied)}</span> of{" "}
               <span>
-                ${supplyCap ? formatNumber(Number(supplyCap.toString())) : "N/A"}
+                {supplyCap ? formatNumber(Number(totalSuppliedCap)) : "N/A"}
+              </span>
+            </p>
+            <p className="text-[12px] -mt-3">
+              {" "}
+              <span>${formatNumber(Number(totalSuppliedAsset))}</span> of{" "}
+              <span>
+                $
+                {supplyCap ? formatNumber(Number(supplyCap.toString())) : "N/A"}
               </span>
             </p>
           </div>
@@ -57,9 +135,7 @@ const SupplyInfo = ({
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
             <p>
-              {supplyRateAPR  < 0.1
-                ? "<0.1%"
-                : `${(supplyRateAPR ).toFixed(2)}%`}
+              {supplyRateAPR < 0.1 ? "<0.01%" : `${supplyRateAPR.toFixed(2)}%`}
             </p>
           </div>
         </div>
@@ -74,6 +150,24 @@ const SupplyInfo = ({
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Max LTV
+              <span className="relative inline-block ml-1">
+                <Info
+                  size={15}
+                  className="ml-1 align-middle cursor-pointer button1"
+                  onClick={toggleLTVTooltip}
+                />
+
+                {isLTVTooltipVisible && (
+                  <div
+                    ref={tooltipRef}
+                    className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
+                  >
+                    <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
+                    The Maximum LTV ratio signifies the highest amount of borrowing capacity that a specific collateral can provide, indicating the extent to which an asset can be leveraged for borrowing purposes.
+                    </span>
+                  </div>
+                )}
+              </span>
             </h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
@@ -83,6 +177,24 @@ const SupplyInfo = ({
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Liquidation threshold
+              <span className="relative inline-block ml-1">
+                <Info
+                  size={15}
+                  className="ml-1 align-middle cursor-pointer button1"
+                  onClick={toggleLiquidationThresholdTooltip}
+                />
+
+                {isLiquidationThresholdTooltipVisible && (
+                  <div
+                    ref={tooltipRef}
+                    className="absolute w-[300px] bottom-full transform -translate-x-[75%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
+                  >
+                    <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
+                    The Liquidation Threshold represents the point at which a borrowing position is considered undercollateralized and may be subject to liquidation for a given collateral.
+                    </span>
+                  </div>
+                )}
+              </span>
             </h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
@@ -92,6 +204,24 @@ const SupplyInfo = ({
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 rounded-xl dark:text-darkText">
             <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
               Liquidation Penalty
+              <span className="relative inline-block ml-1">
+                <Info
+                  size={15}
+                  className="ml-1 align-middle cursor-pointer button1"
+                  onClick={toggleLiquidationPenaltyTooltip}
+                />
+
+                {isLiquidationPenaltyTooltipVisible && (
+                  <div
+                    ref={tooltipRef}
+                    className="absolute w-[300px] bottom-full transform -translate-x-[70%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
+                  >
+                    <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
+                    Liquidation occurs when liquidators repay up to 50% of the borrower's debt and, in return, purchase the collateral at a discount, keeping difference (liquidation penalty) as a bonus.
+                    </span>
+                  </div>
+                )}
+              </span>
             </h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}

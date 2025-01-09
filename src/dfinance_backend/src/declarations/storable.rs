@@ -1,50 +1,9 @@
-// use candid::{CandidType, Deserialize, Principal};
-// use core::ops::Deref;
-// use ic_stable_structures::storable::{Blob, Bound, Storable};
-// use std::borrow::Cow;
-
-// The Candid struct is a wrapper around the data that needs to be stored in the canister. It proivdes the implementation of the Storable trait.
-// #[derive(Default, Clone)]
-// pub struct Candid<T>(pub T)
-// where
-//     T: CandidType + for<'de> Deserialize<'de>;
-
-// impl<T> Storable for Candid<T>
-// where
-//     T: CandidType + for<'de> Deserialize<'de>,
-// {
-//     const BOUND: Bound = Bound::Unbounded;
-
-//     fn to_bytes(&self) -> Cow<'_, [u8]> {
-//         Cow::Owned(candid::encode_one(&self.0).expect("encoding should always succeed"))
-//     }
-
-//     fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
-//         Self(candid::decode_one(bytes.as_ref()).expect("decoding should succeed"))
-//     }
-// }
-
-// impl<T> Deref for Candid<T>
-// where
-//     T: CandidType + for<'de> Deserialize<'de>,
-// {
-//     type Target = T;
-
-//     fn deref(&self) -> &T {
-//         &self.0
-//     }
-// }
 use candid::{CandidType, Decode, Encode, Principal};
 use serde::Deserialize;
 use std::borrow::Cow;
 use ic_stable_structures::storable::{Blob, Bound, Storable};
 
-// #[derive(Default, Clone, CandidType, Deserialize, Serialize)]
-// pub struct MyStruct {
-//     pub value: f64,
-// }
-
-#[derive(Default, Clone)]
+#[derive(Default, Clone,Debug)]
 pub struct Candid<T>(pub T)
 where
     T: CandidType + for<'de> Deserialize<'de>;
@@ -75,8 +34,6 @@ where
     }
 }
 
-
-// The StoredPrincipal struct is a wrapper around the Principal struct. It provides the implementation of the Storable trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct StoredPrincipal(pub Principal);
 

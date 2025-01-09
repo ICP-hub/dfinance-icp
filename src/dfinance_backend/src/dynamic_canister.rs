@@ -28,21 +28,15 @@ pub struct InitArgs {
 
 #[derive(Debug, CandidType, Deserialize)]
 pub struct ArchiveOptions {
-    /// The number of blocks which, when exceeded, will trigger an archiving
-    /// operation.
     pub trigger_threshold: usize,
-    /// The number of blocks to archive when trigger threshold is exceeded.
     pub num_blocks_to_archive: usize,
     pub node_max_memory_size_bytes: Option<u64>,
     pub max_message_size_bytes: Option<u64>,
     pub controller_id: Principal,
-    // More principals to add as controller of the archive.
     #[serde(default)]
     pub more_controller_ids: Option<Vec<Principal>>,
-    // cycles to use for the call to create a new archive canister.
     #[serde(default)]
     pub cycles_for_archive_creation: Option<u64>,
-    // Max transactions returned by the [get_transactions] endpoint.
     #[serde(default)]
     pub max_transactions_per_response: Option<u64>,
 }
@@ -74,24 +68,7 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
     ))
 }
 
-#[update]
-async fn create_multiple_canisters() -> Vec<Principal> {
-    let mut canister_ids = Vec::new();
 
-    // Define different token names and symbols
-    let tokens = vec![
-        // ("ckBTC", "ckBTC"),
-        ("dckBTC", "dckBTC"),
-        ("debtckBTC", "debtckBTC"),
-    ];
-
-    for (token_name, token_symbol) in tokens {
-        let canister_id = create_token_canister(token_name, token_symbol).await;
-        canister_ids.push(canister_id);
-    }
-
-    canister_ids
-}
 
 pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Principal {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
@@ -135,7 +112,7 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         cycles_for_archive_creation: Some(100000000000),
         node_max_memory_size_bytes: Some(2000),
         controller_id: ic_cdk::api::id(),
-        more_controller_ids: Some(vec![Principal::anonymous()]),
+        more_controller_ids: Some(vec![Principal::from_text(DEFAULT).unwrap()]),
     };
 
     let init_args = InitArgs {
@@ -160,11 +137,12 @@ pub async fn create_token_canister(token_name: &str, token_symbol: &str) -> Prin
         Ok(args) => args,
         Err(e) => {
             ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
+            //TODO remove this and change return type
             return Principal::anonymous();
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 300_000_000_000)
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 900_000_000_000)
         .await
         .unwrap()
         .0
@@ -237,7 +215,6 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         max_message_size_bytes: Some(1024),
         cycles_for_archive_creation: Some(100000000000),
         node_max_memory_size_bytes: Some(2000),
-        // controller_id: Principal::from_text("eka6r-djcrm-fekzn-p3zd3-aalh4-hei4m-qthvc-objto-gfqnj-azjvq-hqe").unwrap(),
         controller_id: ic_cdk::api::id(),
 
         more_controller_ids: Some(vec![Principal::from_text(DEFAULT).unwrap()]),
@@ -269,7 +246,7 @@ pub async fn create_testtoken_canister(token_name: &str, token_symbol: &str) -> 
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 300_000_000_000)
+    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, 900_000_000_000)
         .await
         .unwrap()
         .0

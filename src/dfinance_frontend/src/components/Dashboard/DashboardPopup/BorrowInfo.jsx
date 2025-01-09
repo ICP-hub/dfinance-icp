@@ -1,13 +1,71 @@
-import React from "react"
-import LineGraph from "../../Common/LineGraph"
-import CircularProgress from "../../Common/CircularProgressbar"
+import React, { useRef, useState } from "react";
+import CircularProgress from "../../Common/CircularProgressbar";
+import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
+import { useParams } from "react-router-dom";
+import { Info } from "lucide-react";
 
-const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) => {
-
+const BorrowInfo = ({
+  formatNumber,
+  borrowCap,
+  totalBorrowed,
+  borrowRateAPR,
+}) => {
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
-  const totalBorrowPercentage = borrowCapNumber && totalBorrowed 
-    ? (totalBorrowed / borrowCapNumber)  
-    : 0; 
+  const totalBorrowPercentage =
+    borrowCapNumber && totalBorrowed ? totalBorrowed / borrowCapNumber : 0;
+  const { id } = useParams();
+
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
+
+  const getAssetRate = (assetName) => {
+    switch (assetName) {
+      case "ckBTC":
+        return ckBTCUsdRate / 1e8;
+      case "ckETH":
+        return ckETHUsdRate / 1e8;
+      case "ckUSDC":
+        return ckUSDCUsdRate / 1e8;
+      case "ICP":
+        return ckICPUsdRate / 1e8;
+      case "ckUSDT":
+        return ckUSDTUsdRate / 1e8;
+      default:
+        return 0;
+    }
+  };
+
+  const assetRate = getAssetRate(id);
+  const totalBorrowedAsset =
+    assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
+  const totalBorrowedCap =
+    assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
+  const formatValue = (value) => {
+    const numericValue = parseFloat(value);
+
+    if (isNaN(numericValue)) {
+      return "0";
+    }
+
+    if (numericValue === 0) {
+      return "0";
+    } else if (numericValue >= 1) {
+      return numericValue.toFixed(2);
+    } else {
+      return numericValue.toFixed(7);
+    }
+  };
+  const tooltipRef = useRef(null);
+  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] =
+    useState(false);
+
+  const toggleReserveFactorTooltip = () =>
+    setIsReserveFactorTooltipVis((prev) => !prev);
 
   return (
     <div className="w-full lg:w-10/12 ">
@@ -16,39 +74,71 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
           <CircularProgress progessValue={totalBorrowPercentage.toFixed(2)} />
         </div>
         <div className="w-full lg:w-9/12 md:w-[55%] flex gap-8 lg:px-3 overflow-auto whitespace-nowrap text-xs  lg:text-base mt-3 lg:mt-0 sxs3:flex-col lg:flex-row md:flex-row sxs3:text-base sxs3:overflow-hidden md:gap-10 md:justify-center lg:justify-start sxs3:gap-4">
-          {/* Total Borrowed */}
           <div className="relative text-[#5B62FE] dark:text-darkText flex flex-col gap-2">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Total Borrowed</h1>
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
+              Total Borrowed
+            </h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-             <p> <span >${formatNumber(Number(totalBorrowed))}</span> of <span>${borrowCap ? formatNumber(Number(borrowCap.toString())) : 'N/A'}</span></p>
+            <p>
+              {" "}
+              <span>{formatValue(totalBorrowed)}</span> of{" "}
+              <span>
+                {borrowCap ? formatNumber(Number(totalBorrowedCap)) : "N/A"}
+              </span>
+            </p>
+            <p className="text-[12px] -mt-3">
+              {" "}
+              <span>${formatNumber(Number(totalBorrowedAsset))}</span> of{" "}
+              <span>
+                $
+                {borrowCap ? formatNumber(Number(borrowCap.toString())) : "N/A"}
+              </span>
+            </p>
           </div>
 
           <hr
             className={`ease-in-out duration-500 bg-[#8CC0D7] md:h-[40px] md:w-[1px] sxs3:w-[120px] sxs3:h-[2px]`}
           />
 
-          {/* APY, variable */}
           <div className="relative text-[#5B62FE] dark:text-darkText flex flex-col gap-2">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">APY, variable</h1>
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
+              APY, variable
+            </h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-            <p>{(borrowRateAPR ) < 0.1 ? '<0.1%' : `${(borrowRateAPR ).toFixed(2)}%`}</p>
+            <p>
+              {borrowRateAPR < 0.1 ? "<0.01%" : `${borrowRateAPR.toFixed(2)}%`}
+            </p>
           </div>
-
         </div>
       </div>
       <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
-        {/* <div className="w-full flex gap-5 text-[#2A1F9D] mb-6 dark:text-darkText">
-          <button className='cursor-pointer hover:text-[#7369df]'>Borrow APR, variable</button>
-        </div> */}
-        {/* <LineGraph /> */}
-
         <div className="w-full flex flex-wrap gap-8 mt-4 whitespace-nowrap">
           <div className="relative text-[#5B62FE] p-3 border border-[#FFFFFF] flex-1 basis-[190px] lg:grow-0 rounded-xl dark:text-darkText">
-            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">Reserve factor</h1>
+            <h1 className="text-[#2A1F9D] font-bold dark:text-darkText">
+              Reserve factor
+              <span className="relative inline-block ml-1">
+                <Info
+                  size={15}
+                  className="ml-1 align-middle cursor-pointer button1"
+                  onClick={toggleReserveFactorTooltip}
+                />
+
+                {isReserveFactorTooltipVis && (
+                  <div
+                    ref={tooltipRef}
+                    className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
+                  >
+                    <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
+                    The Reserve Factor is a portion of interest directed to a collector contract, managed by governance, to support ecosystem growth.
+                    </span>
+                  </div>
+                )}
+              </span>
+            </h1>
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
@@ -57,7 +147,7 @@ const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR }) =
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default BorrowInfo
+export default BorrowInfo;

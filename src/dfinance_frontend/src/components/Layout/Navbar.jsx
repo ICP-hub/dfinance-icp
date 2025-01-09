@@ -12,6 +12,8 @@ import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
 import { useRef } from "react";
+import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
+import { FaWallet } from "react-icons/fa";
 
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
@@ -42,7 +44,7 @@ import ThemeToggle from "../Common/ThemeToggle";
 import settingsIcon from "../../../public/Helpers/Settings.svg";
 import Vector from "../../../public/Helpers/Vector.svg";
 import Group216 from "../../../public/navbar/Group216.svg";
-// import SwitchTokensPopup from './Dashboard/SwitchToken';
+
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
@@ -51,9 +53,19 @@ import { IoIosRocket } from "react-icons/io";
 import { ArrowUpDown } from "lucide-react";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
 import DFinanceLight from "../../../public/logo/DFinance-Light.svg";
+import { toggleSound } from "../../redux/reducers/soundReducer";
 
 export default function Navbar({ isHomeNav }) {
-  const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+
+  const handleSoundToggle = () => {
+    dispatch(toggleSound());
+  };
+  const handleTour = () => {
+    dispatch(joyRideTrigger());
+    navigate("/dashboard");
+  };
+  const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -71,14 +83,11 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
-    // You can add similar logic for other dropdowns if needed
   };
 
   useEffect(() => {
-    // Add event listener for scroll to window or container
     window.addEventListener("scroll", handleCloseDropdownOnScroll);
 
-    // Clean up the event listener on unmount
     return () => {
       window.removeEventListener("scroll", handleCloseDropdownOnScroll);
     };
@@ -88,7 +97,6 @@ export default function Navbar({ isHomeNav }) {
   const location = useLocation();
 
   useEffect(() => {
-    // Close the switchWalletDrop dropdown when location changes
     setSwitchWalletDrop(false);
     setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
@@ -100,7 +108,7 @@ export default function Navbar({ isHomeNav }) {
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [selectedToken, setSelectedToken] = useState("ETH");
-  const [balance, setBalance] = useState(0); // Example balance, replace with actual balance
+  const [balance, setBalance] = useState(0);
   const [insufficientBalance, setInsufficientBalance] = useState(false);
   const [showTestnetPopup, setShowTestnetPopup] = useState(false);
   const handleEthChange = (e) => {
@@ -128,16 +136,9 @@ export default function Navbar({ isHomeNav }) {
     setSelectedToken(selectedToken === "ETH" ? "1INCH" : "ETH");
   };
   const handleTransaction = () => {
-    // Perform transaction logic here
     if (selectedToken === "ETH" && Number(ethValue) > balance) {
       setInsufficientBalance(true);
     } else {
-      // Perform transaction
-      console.log(
-        `Transaction initiated with ${selectedToken} and amount ${
-          selectedToken === "ETH" ? ethValue : oneInchValue
-        }`
-      );
     }
   };
   const handleInputFocus = () => {
@@ -145,7 +146,6 @@ export default function Navbar({ isHomeNav }) {
     setIsInputFocused(true);
   };
 
-  // Function to handle input blur
   const handleInputBlur = () => {
     setShowTransactionOverlay(false);
     setIsInputFocused(false);
@@ -170,7 +170,6 @@ export default function Navbar({ isHomeNav }) {
 
   const handleButtonClick = () => {
     setShowTestnetPopup(true);
-    console.log("kjfsh");
     setDropdownVisible(false);
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
@@ -191,9 +190,8 @@ export default function Navbar({ isHomeNav }) {
 
   const handleSwitchWallet = () => {
     if (switchWalletDrop) {
-      logout(); // Logout when disconnecting
+      logout();
     } else {
-      // dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
       setSwitchWalletDrop(!switchWalletDrop);
       setSwitchTokenDrop(false);
       setDropdownVisible(false);
@@ -215,8 +213,8 @@ export default function Navbar({ isHomeNav }) {
       navigator.clipboard
         .writeText(principal)
         .then(() => {
-          toast.success(`Principal copied to clipboard`,  {
-            className: 'custom-toast',
+          toast.success(`Principal copied to clipboard`, {
+            className: "custom-toast",
             position: "top-center",
             autoClose: 3000,
             hideProgressBar: false,
@@ -228,7 +226,7 @@ export default function Navbar({ isHomeNav }) {
         })
         .catch((err) => {
           toast.error(`Failed to copy: ` + err, {
-            className: 'custom-toast',
+            className: "custom-toast",
             position: "top-center",
             autoClose: 3000,
             hideProgressBar: false,
@@ -241,22 +239,18 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-  const handleViewOnExplorerClick = () => {
-    // console.log("View on Explorer clicked");
-  };
+  const handleViewOnExplorerClick = () => {};
 
   const handleLaunchApp = () => {
-    navigate("/dashboard"); // Directly navigate to /dashboard/main
+    navigate("/dashboard");
   };
   const handleClose = () => {
     setSwitchTokenDrop(false);
   };
   const handleWalletConnect = () => {
-    // console.log("connrcterd");
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
-    // dispatch(setIsWalletCreated(true))
   };
 
   const [showTransactionOverlay, setShowTransactionOverlay] = useState(false);
@@ -293,12 +287,12 @@ export default function Navbar({ isHomeNav }) {
   useEffect(() => {
     if (previousIsTestnetMode.current !== isTestnetMode) {
       if (previousIsTestnetMode.current !== undefined) {
-        toast.dismiss(); // Dismiss any existing toasts
+        toast.dismiss();
       }
       toast.success(
         `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`,
         {
-          className: "custom-toast", // Add custom CSS class
+          className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
         }
@@ -324,7 +318,6 @@ export default function Navbar({ isHomeNav }) {
         ele.scrollIntoView({ behavior: "smooth" });
       }
     }
-    console.log(hash);
   }, [hash]);
 
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -338,7 +331,6 @@ export default function Navbar({ isHomeNav }) {
   useEffect(() => {
     window.addEventListener("resize", handleResize);
 
-    // Cleanup: remove event listener on component unmount
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -385,16 +377,15 @@ export default function Navbar({ isHomeNav }) {
 
   const handleLogoClick = () => {
     if (location.pathname === "/") {
-      // Scroll to top if on the home page
       window.scrollTo(0, 0);
     } else {
-      // Navigate to '/dashboard' if not on the home page
       navigate("/dashboard");
       setTimeout(() => {
         window.scrollTo(0, 0);
       }, 100);
     }
   };
+
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
@@ -503,6 +494,7 @@ export default function Navbar({ isHomeNav }) {
                     : HOME_TOP_NAV_LINK.map((link, index) => (
                         <NavLink
                           key={index}
+                          target={link.target}
                           to={link.route}
                           className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                         >
@@ -541,263 +533,14 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                      {/* Toggle between Menu and X icons */}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
               </div>
             ) : isAuthenticated ? (
               <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-                {/* <div className="my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer relative">
-                  <div
-                    className="flex items-center gap-1 py-[11px] px-3 md:py-[10px] button1"
-                    onClick={handleSwitchToken}
-                  >
-                    <span className="hidden lg1:flex">Switch Token</span>
-                    <ArrowUpDown size={17} strokeWidth={1.4} />
-                  </div>
-
-                  <div className="relative">
-                    {switchTokenDrop && (
-                      <>
-                        <div
-                          className="fixed inset-0 bg-black opacity-40 z-40 cursor-default"
-                          onClick={() => setSwitchTokenDrop(false)}
-                          style={{ pointerEvents: 'none' }} 
-                        ></div>
-                        <div
-                          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[200px] lg1:transform lg1:-translate-x-1/2 lg1:w-[380px] w-[320px] lg1:left-[85px] mt-8 lg1:mt-6 rounded-xl bg-white shadow-xl border p-6 z-50 dark:bg-darkOverlayBackground dark:border-none dark:shadow-2xl max-h-[80vh] overflow-y-auto"
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ pointerEvents: 'auto' }} 
-                        >
-                          <h1 className="font-bold text-xl text-[#2A1F9D] dark:text-darkText text-nowrap">
-                            Switch Tokens
-                          </h1>
-
-                          <div className="w-full mb-5 my-2 bg-gradient-to-r from-[#e9ebfa] to-[#e5ddd4] text-center py-2 rounded-md dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd">
-                            <p className="text-[12px] text-[#EB8863] text-left px-4">
-                              Please switch to Ethereum.
-                              <span className="text-xs text-[#EB8863] underline cursor-pointer ml-2 italic">
-                                Switch Network
-                              </span>
-                            </p>
-                          </div>
-
-                          <div className="flex justify-between items-center my-2 mt-4 mb-3">
-                            <div className="flex justify-center items-center gap-x-1">
-                              <img
-                                src={loader}
-                                alt="Connect Wallet"
-                                className="w-4 h-4"
-                              />
-                              <label className="text-sm font-light text-[#2A1F9D] justify-start dark:text-darkText">
-                                Token
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <label className="text-[12px] text-[#2A1F9D] dark:text-darkText">
-                                Slippage <b>0.10%</b>
-                              </label>
-
-                              <img
-                                src={settingsicon}
-                                alt="settings_icon"
-                                className="object-contain w-[20px] h-[20px]"
-                              />
-                            </div>
-                          </div>
-                          <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 px-4 py-1 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                            <div className="w-3/12">
-                              <input
-                                value={
-                                  selectedToken === "ETH"
-                                    ? ethValue
-                                    : oneInchValue
-                                }
-                                onChange={
-                                  selectedToken === "ETH"
-                                    ? handleEthChange
-                                    : handleOneInchChange
-                                }
-                                onFocus={handleInputFocus}
-                                onBlur={handleInputBlur}
-                                className="focus:outline-none bg-transparent w-full placeholder:text-sm text-gray-500 dark:bg-darkBackground/5 dark:text-darkText text-center cursor-pointer"
-                                placeholder="0.00"
-                              />
-                              <p className="text-sm text-gray-500 ml-6">$0</p>
-                            </div>
-                            <div className="w-9/12 flex flex-col items-end">
-                              <div className="w-auto flex items-center gap-2">
-                                <img
-                                  src={loader}
-                                  alt="connect_wallet_icon"
-                                  className="w-6 h-6"
-                                />
-                                <span className="text-lg text-[#2A1F9D] dark:text-darkText">
-                                  ETH
-                                </span>
-                                <svg
-                                  className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              </div>
-                              <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
-                                Balance: {balance} Max
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex justify-center my-1">
-                            <img
-                              src={ARROW}
-                              alt="Switch Icon"
-                              className="w-6 h-6 cursor-pointer dark:text-darkText"
-                              onClick={handleSwitchClick}
-                            />
-                          </div>
-
-                          <div>
-                            <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-300 px-4 py-1 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                              <div className="w-3/12">
-                                <input
-                                  value={
-                                    selectedToken === "ETH"
-                                      ? ethValue
-                                      : oneInchValue
-                                  }
-                                  onChange={
-                                    selectedToken === "ETH"
-                                      ? handleEthChange
-                                      : handleOneInchChange
-                                  }
-                                  onFocus={handleInputFocus}
-                                  onBlur={handleInputBlur}
-                                  className="text-center text-sm focus:outline-none bg-transparent w-full placeholder:text-sm text-gray-500 dark:bg-darkBackground/5 dark:text-darkText cursor-pointer"
-                                  placeholder="0.00"
-                                />
-                                <p className="text-sm text-gray-500 ml-6">$0</p>
-                              </div>
-                              <div className="w-9/12 flex flex-col items-end">
-                                <div className="w-auto flex items-center gap-2">
-                                  <img
-                                    src={loader}
-                                    alt="connect_wallet_icon"
-                                    className="w-6 h-6"
-                                  />
-                                  <span className="text-lg text-[#2A1F9D] dark:text-darkText">
-                                    ckETH
-                                  </span>
-                                  <svg
-                                    className="w-4 h-4 text-[#2A1F9D] dark:text-darkText"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.67l3.71-3.44a.75.75 0 011.04 1.08l-4.25 4a.75.75 0 01-1.04 0l-4.25-4a.75.75 0 01-.02-1.06z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                </div>
-                                <p className="text-xs mt-2 text-[#2A1F9D] dark:text-darkText">
-                                  Balance: {balance} Max
-                                </p>
-                              </div>
-                            </div>
-                            {isInputFocused && (
-                              <div className="border-b border-gray-500 text-[#2A1F9D] p-4 mt-2 flex items-center justify-between text-nowrap dark:text-darkText">
-                                <p>1 ETH = 32.569 1INCH</p>
-                                <p>
-                                  <img
-                                    src={Vector}
-                                    alt=""
-                                    className="inline w-4 h-4 mr-1 text-[#2A1F9D] ml-[40px] dark:text-darkText"
-                                  />
-                                  $18.75
-                                </p>
-                                <img
-                                  src={Group216}
-                                  alt=""
-                                  className="inline w-4 h-4 ml-6 text-[#2A1F9D]"
-                                />
-                              </div>
-                            )}
-
-                            {showTransactionOverlay && (
-                              <div className="top-full left-0 mt-2 p-4 bg-white text-[#2A1F9D] dark:bg-darkBackground/5 dark:text-darkText">
-                                <h2 className="text-2xl text-[#2A1F9D] font-bold mb-4 dark:text-darkText text-nowrap">
-                                  Transaction Overlay
-                                </h2>
-                                <div className="border border-gray-300 rounded-xl shadow-md top-full left-0 mt-2 p-6">
-                                  <p>
-                                    Min 1INCH Received:{" "}
-                                    {selectedToken === "ETH"
-                                      ? (ethValue * 32.569).toFixed(2)
-                                      : oneInchValue}{" "}
-                                    1INCH
-                                  </p>
-                                  <p>
-                                    Min USD Received:{" "}
-                                    {selectedToken === "ETH"
-                                      ? (ethValue * 32.569 * 100).toFixed(2)
-                                      : (oneInchValue * 100).toFixed(2)}{" "}
-                                    USD
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div
-                            className={`w-full my-2 text-[#EB8863] p-2 rounded-md ${isInputFocused ? "block" : "hidden"
-                              }`}
-                            style={{ maxWidth: "380px" }}
-                          >
-                            <div className="flex items-center">
-                              <img
-                                src={Group216}
-                                alt=""
-                                className="w-4 h-4 mr-2"
-                                style={{ filter: "invert(1)" }}
-                              />
-                              <span className="text-left">
-                                You don't have enough ETH in your account to pay
-                                for transaction fees on the Ethereum network.
-                                Please deposit ETH from another account.
-                              </span>
-                            </div>
-                          </div>
-
-                          {balance < ethValue && (
-                            <div className="w-full p-2 rounded-md ps-3 bg-[#BA5858] text-[#E92626] dark:text-darkText">
-                              Not enough balance
-                            </div>
-                          )}
-                          
-                          <div className="w-full flex justify-center mt-3">
-                            <button
-                              onClick={handleTransaction}
-                              className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#e6a6ef] rounded-xl border-b-2 dark:border-darkBackground/50 p-3 px-8 shadow-lg font-semibold text-[16px] cursor-pointer"
-                            >
-                              Switch
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-
-                  </div>
-                </div> */}
+                {}
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                   {!isMobile2 && (
                     <div
@@ -849,7 +592,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                            {/* First Container */}
+                            {}
                             <div className="hidden lg1:flex justify-center">
                               <div
                                 className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -895,26 +638,28 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
-                            {/* Second Container */}
+                            {}
                             <div className=" w-full flex justify-center">
                               <div
-                                className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                                className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                                 style={{ height: "70px", width: "160px" }}
                               >
                                 <button
                                   className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary button1"
                                   onClick={copyToClipboard}
                                 >
-                                  <GrCopy className="h-5 w-4 ml-3 lg1:ml-0" />
+                                  <GrCopy className="h-5 w-4 ml-4 lg1:ml-6" />
                                   <span className="ml-1">Copy principal</span>
                                 </button>
                                 <button
                                   className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday button1"
-                                  onClick={handleViewOnExplorerClick}
+                                  onClick={() =>
+                                    (window.location.href = "/faucet")
+                                  }
                                 >
-                                  <CiShare1 className="h-5 w-[18px] -ml-1 dark:text-darkText " />
+                                  <CiShare1 className="h-5 -ml-[1px] w-[18px] dark:text-darkText" />
                                   <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
-                                    View On Explorer
+                                    Faucet Asset
                                   </span>
                                 </button>
                               </div>
@@ -949,7 +694,7 @@ export default function Navbar({ isHomeNav }) {
                             Settings
                           </h2>
 
-                          {/* Dark Mode Setting */}
+                          {}
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex flex-row items-center justify-around">
                               <label
@@ -970,7 +715,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
                           </div>
 
-                          {/* Testnet Mode Setting */}
+                          {}
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col">
                               <label
@@ -990,6 +735,49 @@ export default function Navbar({ isHomeNav }) {
                               />
                             </div>
                           </div>
+
+                          {}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex flex-row items-center justify-around relative group">
+                              <label
+                                htmlFor="soundMode"
+                                className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText flex items-center"
+                              >
+                                Sound
+                                <Info
+                                  size={16}
+                                  className="ml-2 cursor-pointer"
+                                />
+                              </label>
+
+                              {}
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
+                                Enabling this will allow the user to hear sound
+                                when supply, borrow, repay, or withdraw actions
+                                are performed.
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                              <span className="text-[13px] mr-2">
+                                {isSoundOn ? "ON" : "OFF"}
+                              </span>
+                              <CustomizedSwitches
+                                checked={isSoundOn}
+                                onChange={handleSoundToggle}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex align-center justify-center w-[93%] border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
+                          <div className="flex w-full align-center justify-center mb-2">
+                            <button
+                              type="button"
+                              className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
+                              onClick={handleTour}
+                            >
+                              Start Guide Tour
+                            </button>
+                          </div>
                         </div>
                       </>
                     )}
@@ -1002,22 +790,25 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                      {/* Toggle between Menu and X icons */}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
               </div>
             ) : (
-              // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
               <div className="flex gap-3">
-                <Button
-                  title={"Connect Wallet"}
-                  onClickHandler={handleWalletConnect}
-                  className={
-                    "broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"
-                  }
-                />
+               <button
+                  className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[8px] p-[11px] md:px-8 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
+                  onClick={handleWalletConnect}
+                >
+                  <div className="flex items-center justify-center">
+                    <p className="hidden md:flex">Connect Wallet</p>
+                    <div>
+                      <FaWallet  size={17} className="ml-0 md:hidden" />
+                    </div>
+                    
+                  </div>
+                </button>
                 <div className="flex items-center justify-center">
                   <div className="relative">
                     {!isMobile ? (
@@ -1033,8 +824,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                          {/* Toggle between Menu and X icons */}
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                         </div>
                       </div>
                     )}
@@ -1044,7 +834,7 @@ export default function Navbar({ isHomeNav }) {
                           Settings
                         </h2>
 
-                        {/* Dark Mode Setting */}
+                        {}
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label
@@ -1065,7 +855,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        {/* Testnet Mode Setting */}
+                        {}
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label

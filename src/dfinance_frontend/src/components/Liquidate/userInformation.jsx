@@ -33,6 +33,8 @@ const UserInformationPopup = ({
   assetBalance,
 }) => {
   const liquidateTrigger = useSelector((state) => state.liquidateUpdate.LiquidateTrigger);
+console.log("mappedItem in userInformation", mappedItem);
+
   console.log("liquidateTrigger in userinfo", liquidateTrigger);
   const { backendActor, principal: currentUserPrincipal } = useAuth();
   const [rewardAmount, setRewardAmount] = useState();
@@ -158,9 +160,9 @@ const UserInformationPopup = ({
     ckUSDT: ckUSDTUsdRate,
   };
   useEffect(() => {
-    const totalCollateral = mappedItem.totalCollateral;
-    const totalDebt = mappedItem.totalDebt;
-    const liquidationThreshold = mappedItem.liquidationThreshold;
+    const totalCollateral = Number(mappedItem.totalCollateral);
+    const totalDebt = Number(mappedItem.totalDebt);
+    const liquidationThreshold = Number( mappedItem.liquidationThreshold);
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
@@ -926,7 +928,7 @@ const UserInformationPopup = ({
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    const newValue = Number(userAccountData?.Ok?.[4]) / 10000000000;
+    const newValue = Number(mappedItem.healthFactor) / 10000000000;
     setValue(newValue);
   }, [liquidateTrigger]);
   // const currentHealthFactor = 1;
@@ -1491,7 +1493,7 @@ const UserInformationPopup = ({
                       User Principal
                     </p>
                     <p className="text-xs font-semibold text-[#2A1F9D] dark:text-darkText dark:opacity-100 ">
-                      {` ${principal}`}
+                      {` ${mappedItem?.principal?._arr.toString()}`}
                     </p>
                   </div>
                 </div>
@@ -1501,10 +1503,10 @@ const UserInformationPopup = ({
                       User Health Factor
                     </p>
                     <p className="text-xs font-medium ">
-                      {Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
+                      {Number(value) > 100
                         ? "Infinity"
                         : parseFloat(
-                            Number(userAccountData?.Ok?.[4]) / 10000000000
+                            Number(value)
                           ).toFixed(2)}
                     </p>
                   </div>

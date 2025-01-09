@@ -38,6 +38,9 @@ const DebtStatus = () => {
   const [assetSupply, setAssetSupplied] = useState({});
   const [assetBorrow, setAssetBorrowed] = useState({});
   const [assetBalances, setAssetBalances] = useState([]);
+   const [liquidationUsers, setLiquidationUsers] = useState([]); // To store parsed result
+  const [liquidationLoading, setLiquidationLoading] = useState(false); // Loading state
+  const [error, setError] = useState(""); // Error state
   const {
     assets,
     reserveData,
@@ -63,7 +66,7 @@ const DebtStatus = () => {
     createLedgerActor,
   } = useAuth();
   const [users, setUsers] = useState([]);
-
+  const [Users, setusers] = useState([]);
   const [userLoadingStates, setUserLoadingStates] = useState({});
 
   useEffect(() => {
@@ -77,80 +80,57 @@ const DebtStatus = () => {
     };
     fetchUsers();
   }, [getAllUsers, liquidateTrigger]);
-  const [liquidationLoading, setLiquidationLoading] = useState(true);
+  
  const stableUserAccountData = useMemo(() => userAccountData, [userAccountData]);
 const stableUsers = useMemo(() => users, [users]);
 
-useEffect(() => {
-  console.log("Effect triggered in users");
-  console.log("Users:", stableUsers);
-  console.log("UserAccountData:", stableUserAccountData);
-  console.log("User:", user);
 
-  setLiquidationLoading(true);
+const fetchLiquidationUsers = async (totalPages, pageSize) => {
+  try {
+    const result = await backendActor.get_liquidation_users_concurrent(
+      totalPages,
+      pageSize
+    );
 
-  if (
-    stableUsers &&
-    Array.isArray(stableUsers) &&
-    Object.keys(stableUserAccountData || {}).length === stableUsers.length
-  ) {
-    const filtered = stableUsers
-      .map((item) => {
-        if (!item || !item[0]) return null;
-        const principal = item[0];
-        const accountData = stableUserAccountData?.[principal];
+    // Parse the result
+    const parsedResult = result.map(([principal, userAccountData]) => ({
+      principal: Principal.fromUint8Array(principal),
+      collateral: userAccountData.collateral,
+      debt: userAccountData.debt,
+      ltv: userAccountData.ltv,
+      liquidationThreshold: userAccountData.liquidation_threshold,
+      healthFactor: userAccountData.health_factor,
+      availableBorrow: userAccountData.available_borrow,
+      hasZeroLtvCollateral: userAccountData.has_zero_ltv_collateral,
+    }));
 
-        const totalDebt = Number(accountData?.Ok?.[1]) / 1e8 || 0;
-        const totalCollateral = Number(accountData?.Ok?.[0]) / 1e8 || 0;
-        const healthFactor = accountData
-          ? Number(accountData?.Ok?.[4]) / 10000000000
-          : 0;
-          const liquidationThreshold =
-          Number(accountData?.Ok?.[3]) / 100000000 ||
-          0;
-          console.log("liquidationThreshold",accountData?.Ok?.[3])
-        return {
-          reserves: item[1]?.reserves || [],
-          principal,
-          healthFactor,
-          item,
-          totalDebt,
-          totalCollateral,
-          liquidationThreshold,
-          
-        };
-      })
-      .filter(
-        (mappedItem) =>
-          mappedItem &&
-          mappedItem.healthFactor < 1 &&
-          mappedItem.principal.toString() !== user.toString() &&
-          mappedItem.totalDebt > 0
-      );
-
-    if (filtered && filtered.length > 0) {
-      console.log("Updating filteredUsers:", filtered);
-      setFilteredUsers(filtered);
-      setLiquidationLoading(false); // Stop loading only when filteredUsers is valid
-    } else {
-      console.log("No valid filtered users found yet.");
-      setFilteredUsers([]); // Ensure filteredUsers is reset to an empty array
-    }
+    return parsedResult;
+  } catch (error) {
+    console.error("Error fetching liquidation users:", error);
+    throw error;
   }
-}, [stableUsers, stableUserAccountData, liquidateTrigger]);
+};
 
-// Ensure loading stops when all users and account data are processed
-useEffect(() => {
-  if (
-    stableUsers &&
-    stableUsers.length > 0 &&
-    Object.keys(stableUserAccountData || {}).length === stableUsers.length
-  ) {
-    setLiquidationLoading(false); // Stop loading only when processing is complete
-  }
-}, [stableUsers, stableUserAccountData, liquidateTrigger]);
 
-  
+ 
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      setLiquidationLoading(true); // Start loading
+      try {
+        const data = await fetchLiquidationUsers(5, 10); // Example: 5 pages, 10 users per page
+        setLiquidationUsers(data); // Store parsed result in state
+      } catch (err) {
+        console.error("Failed to load liquidation users:", err);
+        setError("Failed to fetch users. Please try again later."); // Set user-friendly error message
+      } finally {
+        setLiquidationLoading(false); // End loading
+      }
+    };
+
+    loadUsers();
+  }, []);
+console.log("users",users)
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
@@ -207,13 +187,22 @@ useEffect(() => {
 }, [users, liquidateTrigger]);
 
   
-  
+const relevantItems = liquidationUsers.filter(
+  (item) =>
+    item.principal.toText() !== "aaaa-aa" && (item.collateral !== 0n || item.debt !== 0n)
+);
+
+
+const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
+const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
   const fetchAssetData = async () => {
     const balances = {};
 
     await Promise.all(
-      filteredUsers.map(async (mappedItem) => {
-        const principal = mappedItem.principal;
+      currentItems.map(async (mappedItem) => {
+        const principal = mappedItem.principal?._arr;
         const userBalances = {};
 
         await Promise.all(
@@ -279,7 +268,7 @@ useEffect(() => {
   };
 
   useEffect(() => {
-    if (filteredUsers.length > 0) {
+    if (currentItems.length > 0) {
       fetchAssetData();
     }
   }, [filteredUsers, assets, users, liquidateTrigger]);
@@ -377,11 +366,7 @@ useEffect(() => {
       (Number(DebtIndex) * 1e8)
     );
   };
-
-  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+ 
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -438,7 +423,7 @@ useEffect(() => {
           Debt users list
         </h1>
       </div>
-      {console.log("filteredUsers", filteredUsers)}
+      {console.log("filteredUsers", liquidationUsers)}
       <div className="w-full mt-6">
         {liquidationLoading ? (
           // Show loader while loading
@@ -446,8 +431,8 @@ useEffect(() => {
             <MiniLoader isLoading={true} />
           </div>
         ) : !liquidationLoading &&
-          filteredUsers &&
-          filteredUsers.length === 0 ? (
+        relevantItems &&
+        relevantItems.length === 0 ? (
           // Show "No users found" only when loading is complete and filteredUsers is processed
           <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
             <div className="w-20 h-15">
@@ -487,14 +472,16 @@ useEffect(() => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((mappedItem, index) => {
+                  {console.log("currentItems", currentItems)}
+                  {currentItems.map((item, index) => {
+                     {console.log("mappedItem", item)}
                     const userLoading =
-                      userLoadingStates[mappedItem.principal.toText()];
+                      userLoadingStates[item.principal.toText()];
                     return (
                       <tr
                         key={index}
                         className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
-                          index !== users.length - 1
+                          index !== liquidationUsers.length - 1
                             ? "gradient-line-bottom"
                             : ""
                         }`}
@@ -502,7 +489,7 @@ useEffect(() => {
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
                             <p>
-                              {truncateText(mappedItem.principal.toText(), 14)}
+                              {truncateText(item.principal?._arr?.toString(), 14)}
                             </p>
                           </div>
                         </td>
@@ -510,15 +497,16 @@ useEffect(() => {
                           <div className="flex flex-row ml-2 mt-2">
                             <div>
                               <p className="font-medium">
-                                {`$${formatValue(mappedItem.totalDebt)}`}
+                                {`$${formatValue(Number(item.debt)/1e8)}`}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td className="p-5 align-top hidden md:table-cell py-8">
                           <div className="flex gap-2 items-center">
-                            {Array.isArray(mappedItem?.reserves?.[0]) &&
-                              mappedItem.reserves[0].map((item, index) => {
+                          {console.log("reserve",reserveData)}
+                            {Array.isArray(item?.reserves?.[0]) &&
+                              item.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
 
                                 const assetSupply = calculateAssetSupply(
@@ -560,8 +548,8 @@ useEffect(() => {
                         </td>
                         <td className="p-5 align-top hidden md:table-cell py-8">
                           <div className="flex gap-2 items-center">
-                            {Array.isArray(mappedItem?.reserves?.[0]) &&
-                              mappedItem.reserves[0].map((item, index) => {
+                            {Array.isArray(item?.reserves?.[0]) &&
+                              item.reserves[0].map((item, index) => {
                                 const assetName = item?.[0];
                                 const reserve = reserveData?.[assetName];
                                 const assetSupply = calculateAssetSupply(
@@ -609,7 +597,7 @@ useEffect(() => {
                               title={<span className="inline">Liquidate</span>}
                               className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-[12px] lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
                               onClickHandler={() =>
-                                handleDetailsClick(mappedItem)
+                                handleDetailsClick(item)
                               }
                             />
                           </div>

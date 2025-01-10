@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useRoutes } from "react-router-dom";
 import { useAuth } from "./utils/useAuthClient";
 import routesList from "./routes/routes";
@@ -21,7 +21,7 @@ export default function App() {
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
   const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
-  let TRACKING_ID = "G-EVCJPRHQYX";
+  let TRACKING_ID = "G-HP2ELMSQCW";
   const { filteredItems, loading } = useAssetData();
   const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
 
@@ -184,7 +184,7 @@ export default function App() {
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
-
+    console.log("status", status);
     if (status === "finished" || status === "skipped") {
       if (isAuthenticated && principal) {
         const storedData = localStorage.getItem("userGuideData");
@@ -227,7 +227,7 @@ export default function App() {
         behavior: "smooth",
       });
     }
-    if (data.index === 21) {
+    if (status === "paused") {
       navigate("/dashboard");
     }
   };
@@ -259,6 +259,7 @@ export default function App() {
             skip: "Skip",
           }}
           callback={handleJoyrideCallback}
+          disableOverlayClose={true}
         />
       )}
 

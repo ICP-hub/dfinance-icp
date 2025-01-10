@@ -221,8 +221,9 @@ const DebtStatus = () => {
 
   const relevantItems = liquidationUsers.filter(
     (item) =>
+      
       item.principal?._arr.toText() !== user.toString() &&
-      (item.collateral !== 0 || item.debt !== 0)
+      (item.collateral !== 0 && item.debt !== 0)
   );
 
   const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);

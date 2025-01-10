@@ -168,7 +168,7 @@ pub async fn execute_liquidation(
     ic_cdk::println!("bonus: {}", bonus);
     let reward_amount: Nat = collateral_amount.clone() + bonus.clone();
     ic_cdk::println!("reward_amount: {}", reward_amount);
-
+ 
     let supply_param = ExecuteSupplyParams {
         asset: collateral_asset.to_string(),
         amount: reward_amount.clone(),

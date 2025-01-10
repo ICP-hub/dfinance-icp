@@ -479,7 +479,10 @@ pub async fn get_liquidation_users_concurrent(
                         available_borrow: user_account_data_tuple.5,
                         has_zero_ltv_collateral: user_account_data_tuple.6,
                     };
-                    page_liq_list.push((user_principal, user_account_data, user_data));
+                    if user_account_data.health_factor.clone() < Nat::from(100000000u128){
+                        page_liq_list.push((user_principal, user_account_data, user_data));
+                    }
+                   
                 }
             }
             page_liq_list

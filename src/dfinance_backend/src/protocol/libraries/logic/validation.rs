@@ -285,7 +285,7 @@ impl ValidationLogic {
         ic_cdk::println!("asset supply = {}",reserve.asset_supply);
         ic_cdk::println!("subtract amount = {}",reserve.asset_supply.clone() - current_locked.clone());
 
-        if amount <= (reserve.asset_supply.clone() - current_locked){
+        if amount <= ((reserve.asset_supply.clone() - reserve.asset_borrow.clone()) - current_locked){
             if let Err(e) = lock_amount(&reserve.asset_name.clone().unwrap(), &amount, &user_principal) {
                 return Err(e);
             }

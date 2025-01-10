@@ -1324,7 +1324,10 @@ const UserInformationPopup = ({
                   } else if (assetName === "ckUSDT" && ckUSDTUsdRate) {
                     collateralRate = ckUSDTUsdRate / 1e8;
                   }
-                  const collateralAmount = amountToRepayUSD / collateralRate;
+                  const collateralAmount =
+                    selectedAsset === selectedDebtAsset
+                      ? amountToRepay
+                      : amountToRepayUSD / collateralRate;
                   const assetBalance =
                     assetName === "ckBTC"
                       ? ckBTCBalance

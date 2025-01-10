@@ -24,8 +24,9 @@ import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 
 const DebtStatus = () => {
-   const liquidateTrigger = useSelector((state) => state.liquidateUpdate.LiquidateTrigger);
-   console.log("liquidateTrigger", liquidateTrigger)
+  const liquidateTrigger = useSelector(
+    (state) => state.liquidateUpdate.LiquidateTrigger
+  );
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
@@ -38,7 +39,7 @@ const DebtStatus = () => {
   const [assetSupply, setAssetSupplied] = useState({});
   const [assetBorrow, setAssetBorrowed] = useState({});
   const [assetBalances, setAssetBalances] = useState([]);
-   const [liquidationUsers, setLiquidationUsers] = useState([]); // To store parsed result
+  const [liquidationUsers, setLiquidationUsers] = useState([]); // To store parsed result
   const [liquidationLoading, setLiquidationLoading] = useState(false); // Loading state
   const [error, setError] = useState(""); // Error state
   const {
@@ -68,6 +69,33 @@ const DebtStatus = () => {
   const [users, setUsers] = useState([]);
   const [Users, setusers] = useState([]);
   const [userLoadingStates, setUserLoadingStates] = useState({});
+  const [totalUsers, setTotalUsers] = useState(null); // Initialize state
+
+  const getTotalUser = async () => {
+    if (!backendActor) {
+      console.error("Error: Backend actor is not initialized.");
+      throw new Error("Backend actor not initialized");
+    }
+
+    try {
+      const totalUser = await backendActor.get_total_users();
+      setTotalUsers(totalUser); // Update state
+    } catch (error) {
+      console.error("Error fetching total users:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    // Fetch total users on component mount
+    (async () => {
+      try {
+        await getTotalUser();
+      } catch (error) {
+        console.error("Failed to fetch total users:", error.message);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -80,45 +108,50 @@ const DebtStatus = () => {
     };
     fetchUsers();
   }, [getAllUsers, liquidateTrigger]);
-  
- const stableUserAccountData = useMemo(() => userAccountData, [userAccountData]);
-const stableUsers = useMemo(() => users, [users]);
 
+  const stableUserAccountData = useMemo(
+    () => userAccountData,
+    [userAccountData]
+  );
+  const stableUsers = useMemo(() => users, [users]);
 
-const fetchLiquidationUsers = async (totalPages, pageSize) => {
-  try {
-    const result = await backendActor.get_liquidation_users_concurrent(
-      totalPages,
-      pageSize
-    );
+  const fetchLiquidationUsers = async (totalPages, pageSize) => {
+    try {
+      const result = await backendActor.get_liquidation_users_concurrent(
+        totalPages,
+        pageSize
+      );
 
-    // Parse the result
-    const parsedResult = result.map(([principal, userAccountData]) => ({
-      principal: Principal.fromUint8Array(principal),
-      collateral: userAccountData.collateral,
-      debt: userAccountData.debt,
-      ltv: userAccountData.ltv,
-      liquidationThreshold: userAccountData.liquidation_threshold,
-      healthFactor: userAccountData.health_factor,
-      availableBorrow: userAccountData.available_borrow,
-      hasZeroLtvCollateral: userAccountData.has_zero_ltv_collateral,
-    }));
+      // Parse the result
+      const parsedResult = result.map(
+        ([principal, userAccountData, userData]) => ({
+          principal: Principal.fromUint8Array(principal),
+          collateral: userAccountData.collateral,
+          debt: userAccountData.debt,
+          ltv: userAccountData.ltv,
+          liquidationThreshold: userAccountData.liquidation_threshold,
+          healthFactor: userAccountData.health_factor,
+          availableBorrow: userAccountData.available_borrow,
+          hasZeroLtvCollateral: userAccountData.has_zero_ltv_collateral,
+          userData: userData,
+        })
+      );
 
-    return parsedResult;
-  } catch (error) {
-    console.error("Error fetching liquidation users:", error);
-    throw error;
-  }
-};
-
-
- 
+      return parsedResult;
+    } catch (error) {
+      console.error("Error fetching liquidation users:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const loadUsers = async () => {
       setLiquidationLoading(true); // Start loading
       try {
-        const data = await fetchLiquidationUsers(5, 10); // Example: 5 pages, 10 users per page
+        const usersPerPage = 10; // Number of users to fetch per page
+        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
+
+        const data = await fetchLiquidationUsers(totalPages, usersPerPage); // Example: 5 pages, 10 users per page
         setLiquidationUsers(data); // Store parsed result in state
       } catch (err) {
         console.error("Failed to load liquidation users:", err);
@@ -129,8 +162,7 @@ const fetchLiquidationUsers = async (totalPages, pageSize) => {
     };
 
     loadUsers();
-  }, []);
-console.log("users",users)
+  }, [totalUsers, liquidateTrigger]);
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
@@ -153,50 +185,50 @@ console.log("users",users)
 
   const cachedData = useRef({});
 
-const fetchUserAccountDataWithCache = async (userData) => {
-  const principal = userData?.principal;
-  if (!principal || cachedData.current[principal]) return; // Skip if already cached
+  const fetchUserAccountDataWithCache = async (userData) => {
+    const principal = userData?.principal;
+    if (!principal || cachedData.current[principal]) return; // Skip if already cached
 
-  try {
-    const result = await backendActor.get_user_account_data([principal]);
-    if (result) {
-      cachedData.current[principal] = result; // Cache the result
-      setUserAccountData((prev) => ({ ...prev, [principal]: result }));
+    try {
+      const result = await backendActor.get_user_account_data([principal]);
+      if (result) {
+        cachedData.current[principal] = result; // Cache the result
+        setUserAccountData((prev) => ({ ...prev, [principal]: result }));
+      }
+    } catch (error) {
+      console.error(`Error fetching data for principal: ${principal}`, error);
     }
-  } catch (error) {
-    console.error(`Error fetching data for principal: ${principal}`, error);
-  }
-};
+  };
 
-useEffect(() => {
-  cachedData.current = {};
-  if (!users || users.length === 0) return;
+  useEffect(() => {
+    cachedData.current = {};
+    if (!users || users.length === 0) return;
 
-  console.log(`Fetching account data for ${users.length} users...`);
+    // Parallelize fetching with Promise.all
+    Promise.all(
+      users.map((userData) => {
+        const principal = userData[0];
+        if (principal)
+          return fetchUserAccountDataWithCache({ ...userData, principal });
+        return null; // Skip invalid users
+      })
+    )
+      .then(() => console.log("All user account data fetched"))
+      .catch((error) =>
+        console.error("Error fetching user account data in batch:", error)
+      );
+  }, [users, liquidateTrigger]);
 
-  // Parallelize fetching with Promise.all
-  Promise.all(
-    users.map((userData) => {
-      const principal = userData[0];
-      if (principal) return fetchUserAccountDataWithCache({ ...userData, principal });
-      return null; // Skip invalid users
-    })
-  )
-    .then(() => console.log("All user account data fetched"))
-    .catch((error) => console.error("Error fetching user account data in batch:", error));
-}, [users, liquidateTrigger]);
+  const relevantItems = liquidationUsers.filter(
+    (item) =>
+      item.principal?._arr.toText() !== user.toString() &&
+      (item.collateral !== 0 || item.debt !== 0)
+  );
 
-  
-const relevantItems = liquidationUsers.filter(
-  (item) =>
-    item.principal.toText() !== "aaaa-aa" && (item.collateral !== 0n || item.debt !== 0n)
-);
-
-
-const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
-const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
   const fetchAssetData = async () => {
     const balances = {};
 
@@ -271,7 +303,7 @@ const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
     if (currentItems.length > 0) {
       fetchAssetData();
     }
-  }, [filteredUsers, assets, users, liquidateTrigger]);
+  }, [liquidationUsers, assets, users, liquidateTrigger]);
 
   const getBalanceForPrincipalAndAsset = (
     principal,
@@ -325,13 +357,16 @@ const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
       const supplyValue = Number(asset_supply[asset]);
       return supplyValue;
     }
+
     return;
   };
+
   const getAssetBorrowValue = (asset, principal) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
       return borrowValue;
     }
+
     return;
   };
 
@@ -340,15 +375,16 @@ const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
     const currentLiquidity = reserve?.Ok?.liquidity_index;
     const assetBalance =
       getBalanceForPrincipalAndAsset(
-        mappedItem.principal,
+        mappedItem.principal?._arr,
         assetName,
         "dtokenBalance"
       ) || 0;
 
-    return (
+    const supplyValue =
       (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
-      (Number(currentLiquidity) * 1e8)
-    );
+      (Number(currentLiquidity) * 1e8);
+
+    return supplyValue;
   };
 
   const calculateAssetBorrow = (assetName, mappedItem, reserveData) => {
@@ -356,17 +392,17 @@ const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
     const DebtIndex = reserve?.Ok?.debt_index;
     const assetBorrowBalance =
       getBalanceForPrincipalAndAsset(
-        mappedItem.principal,
+        mappedItem.principal?._arr,
         assetName,
         "debtTokenBalance"
       ) || 0;
 
-    return (
+    const borrowValue =
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-      (Number(DebtIndex) * 1e8)
-    );
+      (Number(DebtIndex) * 1e8);
+
+    return borrowValue;
   };
- 
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -423,17 +459,12 @@ const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
           Debt users list
         </h1>
       </div>
-      {console.log("filteredUsers", liquidationUsers)}
       <div className="w-full mt-6">
         {liquidationLoading ? (
-          // Show loader while loading
           <div className="h-[400px] flex justify-center items-center">
             <MiniLoader isLoading={true} />
           </div>
-        ) : !liquidationLoading &&
-        relevantItems &&
-        relevantItems.length === 0 ? (
-          // Show "No users found" only when loading is complete and filteredUsers is processed
+        ) : !liquidationLoading && currentItems && currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
             <div className="w-20 h-15">
               <img
@@ -472,11 +503,9 @@ const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
                   </tr>
                 </thead>
                 <tbody>
-                  {console.log("currentItems", currentItems)}
                   {currentItems.map((item, index) => {
-                     {console.log("mappedItem", item)}
                     const userLoading =
-                      userLoadingStates[item.principal.toText()];
+                      userLoadingStates[item.principal?._arr.toText()];
                     return (
                       <tr
                         key={index}
@@ -489,7 +518,10 @@ const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
                             <p>
-                              {truncateText(item.principal?._arr?.toString(), 14)}
+                              {truncateText(
+                                item.principal?._arr?.toString(),
+                                14
+                              )}
                             </p>
                           </div>
                         </td>
@@ -497,108 +529,106 @@ const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
                           <div className="flex flex-row ml-2 mt-2">
                             <div>
                               <p className="font-medium">
-                                {`$${formatValue(Number(item.debt)/1e8)}`}
+                                {`$${formatValue(Number(item.debt) / 1e8)}`}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td className="p-5 align-top hidden md:table-cell py-8">
                           <div className="flex gap-2 items-center">
-                          {console.log("reserve",reserveData)}
-                            {Array.isArray(item?.reserves?.[0]) &&
-                              item.reserves[0].map((item, index) => {
-                                const assetName = item?.[0];
-
-                                const assetSupply = calculateAssetSupply(
-                                  assetName,
-                                  mappedItem,
-                                  reserveData
-                                );
-                                const assetBorrow = calculateAssetBorrow(
-                                  assetName,
-                                  mappedItem,
-                                  reserveData
-                                );
-
-                                if (assetBorrow > 0) {
-                                  return (
-                                    <img
-                                      key={index}
-                                      src={
-                                        assetName === "ckBTC"
-                                          ? ckBTC
-                                          : assetName === "ckETH"
-                                          ? ckETH
-                                          : assetName === "ckUSDC"
-                                          ? ckUSDC
-                                          : assetName === "ICP"
-                                          ? icp
-                                          : assetName === "ckUSDT"
-                                          ? ckUSDT
-                                          : undefined
-                                      }
-                                      alt={assetName || "asset"}
-                                      className="rounded-[50%] w-7"
-                                    />
+                            {Array.isArray(item?.userData?.reserves?.[0]) &&
+                              item?.userData?.reserves?.[0].map(
+                                (mappedItem, index) => {
+                                  const assetName = mappedItem?.[0];
+                                  const assetSupply = calculateAssetSupply(
+                                    assetName,
+                                    item,
+                                    reserveData
                                   );
+                                  const assetBorrow = calculateAssetBorrow(
+                                    assetName,
+                                    item,
+                                    reserveData
+                                  );
+
+                                  if (assetBorrow > 0) {
+                                    return (
+                                      <img
+                                        key={index}
+                                        src={
+                                          assetName === "ckBTC"
+                                            ? ckBTC
+                                            : assetName === "ckETH"
+                                            ? ckETH
+                                            : assetName === "ckUSDC"
+                                            ? ckUSDC
+                                            : assetName === "ICP"
+                                            ? icp
+                                            : assetName === "ckUSDT"
+                                            ? ckUSDT
+                                            : undefined
+                                        }
+                                        alt={assetName || "asset"}
+                                        className="rounded-[50%] w-7"
+                                      />
+                                    );
+                                  }
+                                  return null;
                                 }
-                                return null;
-                              })}
+                              )}
                           </div>
                         </td>
                         <td className="p-5 align-top hidden md:table-cell py-8">
                           <div className="flex gap-2 items-center">
-                            {Array.isArray(item?.reserves?.[0]) &&
-                              item.reserves[0].map((item, index) => {
-                                const assetName = item?.[0];
-                                const reserve = reserveData?.[assetName];
-                                const assetSupply = calculateAssetSupply(
-                                  assetName,
-                                  mappedItem,
-                                  reserveData
-                                );
-                                const assetBorrow = calculateAssetBorrow(
-                                  assetName,
-                                  mappedItem,
-                                  reserveData
-                                );
-
-                                if (assetSupply > 0) {
-                                  return (
-                                    <img
-                                      key={index}
-                                      src={
-                                        assetName === "ckBTC"
-                                          ? ckBTC
-                                          : assetName === "ckETH"
-                                          ? ckETH
-                                          : assetName === "ckUSDC"
-                                          ? ckUSDC
-                                          : assetName === "ICP"
-                                          ? icp
-                                          : assetName === "ckUSDT"
-                                          ? ckUSDT
-                                          : undefined
-                                      }
-                                      alt={assetName || "asset"}
-                                      className="rounded-[50%] w-7"
-                                    />
+                            {Array.isArray(item?.userData?.reserves?.[0]) &&
+                              item?.userData?.reserves?.[0].map(
+                                (mappedItem, index) => {
+                                  const assetName = mappedItem?.[0];
+                                  const assetSupply = calculateAssetSupply(
+                                    assetName,
+                                    item,
+                                    reserveData
                                   );
+                                  const assetBorrow = calculateAssetBorrow(
+                                    assetName,
+                                    item,
+                                    reserveData
+                                  );
+
+                                  if (assetSupply > 0) {
+                                    return (
+                                      <img
+                                        key={index}
+                                        src={
+                                          assetName === "ckBTC"
+                                            ? ckBTC
+                                            : assetName === "ckETH"
+                                            ? ckETH
+                                            : assetName === "ckUSDC"
+                                            ? ckUSDC
+                                            : assetName === "ICP"
+                                            ? icp
+                                            : assetName === "ckUSDT"
+                                            ? ckUSDT
+                                            : undefined
+                                        }
+                                        alt={assetName || "asset"}
+                                        className="rounded-[50%] w-7"
+                                      />
+                                    );
+                                  }
+                                  return null;
                                 }
-                                return null;
-                              })}
+                              )}
                           </div>
                         </td>
-
                         {}
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button
                               title={<span className="inline">Liquidate</span>}
                               className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-[5px] px-9 py-3 shadow-md shadow-[#00000040] font-semibold text-[12px] lg:px-5 lg:py-[5px] sxs3:px-3 sxs3:py-[3px] sxs3:mt-[4px]"
-                              onClickHandler={() =>
-                                handleDetailsClick(item)
-                              }
+                              onClickHandler={() => handleDetailsClick(item)}
                             />
                           </div>
                         </td>

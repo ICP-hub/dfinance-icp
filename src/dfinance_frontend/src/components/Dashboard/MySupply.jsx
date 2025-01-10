@@ -41,7 +41,7 @@ import MiniLoader from "../Common/MiniLoader";
 
 const MySupply = () => {
   const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
-  console.log("dashboardRefreshTrigger", dashboardRefreshTrigger);
+  
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state, pathname } = useLocation();
@@ -114,7 +114,7 @@ const MySupply = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
-  console.log("availableBorrow",availableBorrow)
+ 
   const {
     isWalletCreated,
     isWalletModalOpen,
@@ -1978,7 +1978,7 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
-                {console.log("isSwitchingWallet", isSwitchingWallet)}
+                
                   {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />

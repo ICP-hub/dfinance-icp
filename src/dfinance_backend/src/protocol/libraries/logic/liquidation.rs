@@ -24,6 +24,7 @@ pub async fn execute_liquidation(
     amount: Nat,
     on_behalf_of: Principal,
 ) -> Result<Nat, Error> {
+    ic_cdk::println!("Amount: {:?}", amount);
     if debt_asset.trim().is_empty() && collateral_asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);

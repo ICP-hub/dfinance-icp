@@ -178,8 +178,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     const numericAmount = parseFloat(inputAmount);
     const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
-
-    if (numericAmount > availableAmount) {
+console.log("availableAmount", availableAmount);
+    if (numericAmount > exchangeRate) {
       return;
     }
 

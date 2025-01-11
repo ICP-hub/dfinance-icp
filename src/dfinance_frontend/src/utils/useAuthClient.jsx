@@ -132,6 +132,7 @@ export const useAuthClient = (options = defaultOptions) => {
       setAccountId(null);
       localStorage.removeItem("sessionStart");
       if (isSwitchingWallet == false) {
+        localStorage.removeItem("connectedWallet");
         window.location.reload();
       }
     } catch (error) 
@@ -153,10 +154,10 @@ export const useAuthClient = (options = defaultOptions) => {
   checkSession();
 
   const updateClient = async (client) => {
+    console.log("client",client);
     try {
       const isAuthenticated = await client.isAuthenticated();
       setIsAuthenticated(isAuthenticated);
-
       const identity = client.getIdentity();
       setIdentity(identity);
 
@@ -178,8 +179,17 @@ export const useAuthClient = (options = defaultOptions) => {
       );
       setBackendActor(backendActor);
       
-    } catch (error) {}
+    } catch (error) {
+      console.log(error.message);
+    }
   };
+
+  useEffect(() => {
+    const savedAuth = localStorage.getItem("isAuthenticated");
+    if (savedAuth === "true") {
+      reloadLogin(); // Ensure the user is reauthenticated on refresh
+    }
+  }, []);
   
   const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });

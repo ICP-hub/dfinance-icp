@@ -319,9 +319,9 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         }
     }
 
-    let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.unwrap());
+    let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.clone().unwrap());
 
-    ic_cdk::println!("usd amount of the facut = {}", usd_amount);
+    ic_cdk::println!("usd amount of the facut = {}, {}", usd_amount, rate.unwrap());
 
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
@@ -334,7 +334,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         );
         if usd_amount.clone() > user_reserve_data.faucet_limit {
             ic_cdk::println!("amount is too much");
-            return Err(Error::AmountTooMuch);
+            return Err(Error::AmountTooMuch);//TODO change error line
         }
 
         if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())

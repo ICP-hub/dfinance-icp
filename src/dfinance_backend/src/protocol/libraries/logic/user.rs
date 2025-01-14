@@ -74,8 +74,9 @@ pub async fn calculate_user_account_data(
             Nat::from(0u128),
             Nat::from(0u128),
             Nat::from(0u128),
-            Nat::from(0u128),
+           
             max,
+            Nat::from(0u128),
             false,
         ));
     }
@@ -479,9 +480,9 @@ pub async fn get_liquidation_users_concurrent(
                         available_borrow: user_account_data_tuple.5,
                         has_zero_ltv_collateral: user_account_data_tuple.6,
                     };
-                    println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
+                    ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
 
-                    if user_account_data.health_factor != Nat::from(0u128) && user_account_data.health_factor > Nat::from(100000000u128){
+                    if user_account_data.health_factor < Nat::from(100000000u128){
                         page_liq_list.push((user_principal, user_account_data, user_data));
                     }
                    

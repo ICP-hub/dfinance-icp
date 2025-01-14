@@ -28,7 +28,8 @@ const utilitySlice = createSlice({
     },
 
     setConnectedWallet: (state, action) => {
-      state.connectedWallet = action.payload
+      state.connectedWallet = action.payload;
+      localStorage.setItem("connectedWallet", action.payload); 
     },
 
     disconnectWallet: (state) => {

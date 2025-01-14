@@ -30,7 +30,7 @@ const CreateWallet = () => {
 
   const principalObj = Principal.fromText(principal);
 
-
+  console.log("isAuthenticated",isAuthenticated);
   return (
     <>
       {isAuthenticated ? (

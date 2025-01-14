@@ -13,7 +13,7 @@ import joyRideReducer from './reducers/joyRideReducer';
 import faucetUpdateReducer from "./reducers/faucetUpdateReducer"
 import dashboardDataUpdateReducer from "./reducers/dashboardDataUpdateReducer"
 import liquidateUpdateReducer from "./reducers/liquidateUpdateReducer"
-
+import borrowRefreshReducer from "./reducers/borrowRefreshReducer"
 export const store = configureStore({
     reducer: {
         user: userReducer,
@@ -30,6 +30,7 @@ export const store = configureStore({
         faucetUpdate:faucetUpdateReducer,
         dashboardUpdate: dashboardDataUpdateReducer,
         liquidateUpdate: liquidateUpdateReducer,
+        borrowRefresh: borrowRefreshReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

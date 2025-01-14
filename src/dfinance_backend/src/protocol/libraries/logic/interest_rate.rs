@@ -9,7 +9,7 @@ use crate::{
         },
     },
     get_reserve_data,
-    protocol::libraries::math::math_utils::ScalingMath,
+    protocol::libraries::math::math_utils::ScalingMath, user_normalized_supply,
 };
 use candid::{CandidType, Deserialize, Nat};
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
@@ -119,8 +119,15 @@ pub async fn calculate_interest_rates(
     };
 
     if total_debt != Nat::from(0u128) {
-
-        let total_supply = reserve.asset_supply.scaled_mul(reserve.liquidity_index);
+        ic_cdk::println!("liq added = {}",liq_added);
+        ic_cdk::println!("liq taken = {}",liq_taken);
+        
+        // let total_supply = reserve.asset_supply.scaled_mul(reserve.liquidity_index);
+        let total_supply = match user_normalized_supply(reserve.clone()) {
+            Ok(supply) => reserve.asset_supply.scaled_mul(supply),
+            Err(e) => return Err(e),
+        };
+        ic_cdk::println!("total supply = {}",total_supply);
         let available_liq = total_supply + liq_added - liq_taken;
         
         ic_cdk::println!("Available liquidity: {:?}", available_liq);

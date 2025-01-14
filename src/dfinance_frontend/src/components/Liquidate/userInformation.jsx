@@ -557,13 +557,10 @@ const UserInformationPopup = ({
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
         amount: supplyAmount,
-        on_behalf_of: mappedItem.principal
+        on_behalf_of:   mappedItem?.principal?._arr
       };
       const result = await backendActor.execute_liquidation(
-        selectedDebtAsset,
-        selectedAsset,
-        supplyAmount,
-        mappedItem?.principal?._arr
+        liquidationParams
       );
 
       if ("Ok" in result) {

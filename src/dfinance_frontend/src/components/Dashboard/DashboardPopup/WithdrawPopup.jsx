@@ -314,7 +314,10 @@ const WithdrawPopup = ({
     );
     
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
+    console.log("collateral & debt",totalCollateral,amountTaken, totalCollateralValue, totalDeptValue);
+    
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
+    console.log("ltv",ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)

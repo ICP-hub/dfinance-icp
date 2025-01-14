@@ -109,7 +109,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (ckBTCUsdRate && ckBTCUsdRate > 0) {
       const btcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
+        console.log("btc", FaucetLimit[asset], FaucetUsage[asset], ckBTCUsdRate, btcAmount);
       const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
+      console.log("tr",truncatedBtcAmount);
       setFaucetBTC(truncatedBtcAmount);
     }
 
@@ -243,6 +245,7 @@ console.log("availableAmount", availableAmount);
         }
 
         const natAmount = Math.round(numericAmount * Math.pow(10, 8));
+        console.log("natAmount", natAmount);
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
         if (numericAmount > availableAmount) {
           toast.error(`Faucet limit exceeded! `, {

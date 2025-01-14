@@ -1018,11 +1018,14 @@ const MySupply = () => {
                                   )?.dtokenBalance || 0;
                                 console.log("dtoken balance", assetBalance);
                                 console.log("normalize_supply", getAssetSupplyValue(asset));
+                                console.log("current liq = ",currentLiquidity);
                                 const assetSupply =
                                   (Number(assetBalance) *
                                     Number(getAssetSupplyValue(asset))) /
                                   (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
                                 console.log("asset supply", assetSupply);
+                                const modiassetSupply = (Number(getAssetSupplyValue(asset))/Number(currentLiquidity))*Number(assetBalance);
+                                console.log("modified asset", modiassetSupply);
                                 const item = filteredItems.find(
                                   (item) => item[0] === asset
                                 );

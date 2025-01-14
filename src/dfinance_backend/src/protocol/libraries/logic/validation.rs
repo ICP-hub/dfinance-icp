@@ -129,6 +129,7 @@ impl ValidationLogic {
 
         if final_amount > user_current_supply {
             ic_cdk::println!("Withdraw amount exceeds current supply.");
+            ic_cdk::println!("final amount and current {} {}",final_amount,user_current_supply);
             return Err(Error::WithdrawMoreThanSupply);
         }
 
@@ -594,8 +595,8 @@ impl ValidationLogic {
             return Err(Error::LessRewardAmount);
         }
 
-        if health_factor / Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
-            return Err(Error::HealthFactorLess);
+        if health_factor/Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
+            return Err(Error::HealthFactorLess);//TODO change name of the error
         }
 
         // validating reserve states

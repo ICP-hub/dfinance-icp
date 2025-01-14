@@ -1016,12 +1016,13 @@ const MySupply = () => {
                                   assetBalances.find(
                                     (balance) => balance.asset === asset
                                   )?.dtokenBalance || 0;
-
+                                console.log("dtoken balance", assetBalance);
+                                console.log("normalize_supply", getAssetSupplyValue(asset));
                                 const assetSupply =
                                   (Number(assetBalance) *
                                     Number(getAssetSupplyValue(asset))) /
                                   (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
-
+                                console.log("asset supply", assetSupply);
                                 const item = filteredItems.find(
                                   (item) => item[0] === asset
                                 );

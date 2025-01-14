@@ -197,7 +197,7 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                asset_borrow: params.amount.clone(),
+                asset_borrow: params.amount.clone(),//remove
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 last_update_timestamp: current_timestamp(),

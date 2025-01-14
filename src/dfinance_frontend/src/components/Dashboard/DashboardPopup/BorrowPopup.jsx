@@ -12,19 +12,180 @@ import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { Principal } from "@dfinity/principal";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
+import useAssetData from "../../Common/useAssets";
+const Borrow = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue: borrowableValueprop,
+  borrowableAssetValue: borrowableAssetValueprop,
+  total_supply,
+  total_borrow,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance,
+    fetchBalance,
+  } = useFetchConversionRate();
+  const [availableBorrow, setAvailableBorrow] = useState([]);
+  console.log("available borrow", availableBorrow);
+  console.log(
+    "total_supply total_borrow",
+    total_supply,
+    total_borrow,
+    total_supply - total_borrow
+  );
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
+  const { filteredItems } = useAssetData();
+  const [totalSupply, setTotalSupply] = useState(0);
+  const [totalBorrow, setTotalBorrow] = useState(0);
+  const [borrowableValue, setBorrowableValue] = useState("0.00000000");
+  const [borrowableAssetValue, setBorrowableAssetValue] = useState("0.0000");
 
-const Borrow = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange }) => {
-  console.log("borroable value ",borrowableValue)
+  // Function to fetch asset data
+  const fetchAssetData = () => {
+    const item = filteredItems.find((item) => item[0] === asset);
+
+    if (item && item[1]?.Ok) {
+      const assetData = item[1].Ok;
+
+      const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
+      const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+
+      setTotalSupply(total_supply);
+      setTotalBorrow(total_borrow);
+    }
+  };
+
+  // Function to calculate borrowable values
+  const calculateBorrowableValues = (
+    asset,
+    availableBorrow,
+    remainingBorrowable
+  ) => {
+    let borrowableValue = "0.00000000";
+    let borrowableAssetValue = "0.0000";
+
+    const assetRates = {
+      ckBTC: ckBTCUsdRate,
+      ckETH: ckETHUsdRate,
+      ckUSDC: ckUSDCUsdRate,
+      ICP: ckICPUsdRate,
+      ckUSDT: ckUSDTUsdRate,
+    };
+
+    const rate = assetRates[asset] / 1e8;
+    console.log(
+      "availableBorrow remainingBorrowable",
+      availableBorrow,
+      remainingBorrowable
+    );
+    if (rate) {
+      borrowableValue =
+        remainingBorrowable < Number(availableBorrow) / rate
+          ? remainingBorrowable
+          : Number(availableBorrow) / rate;
+
+      borrowableAssetValue =
+        remainingBorrowable < Number(availableBorrow) / rate
+          ? remainingBorrowable * rate
+          : Number(availableBorrow);
+    }
+
+    return { borrowableValue, borrowableAssetValue };
+  };
+
+  // useEffect to fetch asset data and update borrowable values every second
+  useEffect(() => {
+    const updateValues = () => {
+      fetchAssetData();
+      console.log(
+        "totalSupply totalBorrow",
+        totalSupply,
+        totalBorrow,
+        totalSupply - totalBorrow
+      );
+      const remainingBorrowable = totalSupply - totalBorrow;
+
+      const updatedValues = calculateBorrowableValues(
+        asset,
+        availableBorrow,
+        remainingBorrowable
+      );
+      console.log("updatedValues", updatedValues);
+      setBorrowableValue(updatedValues.borrowableValue);
+      setBorrowableAssetValue(updatedValues.borrowableAssetValue);
+    };
+
+    // Set an interval to update values every second
+    const intervalId = setInterval(updateValues, 200);
+
+    // Cleanup the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [
+    asset,
+    filteredItems,
+    totalSupply,
+    totalBorrow,
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  ]);
+
+  const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
+    useUserData();
+
+  useEffect(() => {
+    if (userAccountData?.Ok?.length > 5) {
+      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
+      setAvailableBorrow(borrowValue);
+    } else {
+      setAvailableBorrow(0);
+    }
+  }, [userAccountData, userData, dashboardRefreshTrigger]);
+
   const dispatch = useDispatch();
+
   const { backendActor, principal } = useAuth();
-  const principalObj = useMemo(() => Principal.fromText(principal),[principal]);
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
 
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =
+    useState(false);
 
   const [error, setError] = useState("");
   const [usdValue, setUsdValue] = useState(0);
@@ -34,11 +195,12 @@ const Borrow = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, re
   const modalRef = useRef(null);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
 
-  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
 
   const ledgerActors = useSelector((state) => state.ledger);
   useEffect(() => {
-if (onLoadingChange) {
+    if (onLoadingChange) {
       onLoadingChange(isLoading);
     }
   }, [isLoading, onLoadingChange]);
@@ -52,10 +214,14 @@ if (onLoadingChange) {
   const scaledAmount = amountAsNat64;
 
   const borrowErrorMessages = {
-    NoReserveDataFound: "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
-    NoCanisterIdFound: "The canister ID for the selected asset is missing. Please contact support.",
-    ErrorMintDebtTokens: "Borrow failed due to a debt token error. Your account state has been rolled back. Try again later.",
-    Default: "An unexpected error occurred during the borrow process. Please try again later.",
+    NoReserveDataFound:
+      "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
+    NoCanisterIdFound:
+      "The canister ID for the selected asset is missing. Please contact support.",
+    ErrorMintDebtTokens:
+      "Borrow failed due to a debt token error. Your account state has been rolled back. Try again later.",
+    Default:
+      "An unexpected error occurred during the borrow process. Please try again later.",
   };
 
   const handleBorrowETH = async () => {
@@ -78,7 +244,7 @@ if (onLoadingChange) {
     };
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
-       dispatch(toggleDashboardRefresh());
+      dispatch(toggleDashboardRefresh());
 
       if ("Ok" in borrowResult) {
         trackEvent(
@@ -114,8 +280,9 @@ if (onLoadingChange) {
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorKey = borrowResult.Err;
-        const userFriendlyMessage = borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
-        console.log("error",errorKey);
+        const userFriendlyMessage =
+          borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
+        console.log("error", errorKey);
         toast.error(userFriendlyMessage, {
           className: "custom-toast",
           position: "top-center",
@@ -151,9 +318,9 @@ if (onLoadingChange) {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
-  
+
   const numericBalance = parseFloat(balance);
- 
+
   const supplyBalance = numericBalance;
 
   useEffect(() => {
@@ -213,26 +380,33 @@ if (onLoadingChange) {
       setIsButtonDisabled(false);
     }
   }, [
-    asset, reserveliquidationThreshold, liquidationThreshold, assetSupply,assetBorrow,amount,usdValue,isAcknowledged,value,isAcknowledgmentRequired,setIsAcknowledged,
+    asset,
+    reserveliquidationThreshold,
+    liquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+    isAcknowledged,
+    value,
+    isAcknowledgmentRequired,
+    setIsAcknowledged,
   ]);
 
- 
-  
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
     liquidationThreshold
   ) => {
-     const amountTaken = usdValue || 0;
-    let totalCollateralValue =
-      parseFloat(totalCollateral);
-      if (totalCollateralValue < 0) {
-        totalCollateralValue = 0;  
-      }
-      let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);  
-      if (totalDeptValue < 0) {
-        totalDeptValue = 0;  
-      }
+    const amountTaken = usdValue || 0;
+    let totalCollateralValue = parseFloat(totalCollateral);
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+    let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;
+    }
     if (totalDeptValue === 0) {
       return Infinity;
     }
@@ -241,7 +415,6 @@ if (onLoadingChange) {
     );
   };
 
- 
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
     if (totalCollateral === 0) {
       return 0;
@@ -251,54 +424,56 @@ if (onLoadingChange) {
 
   const { healthFactorBackend } = useUserData();
 
-  console.log("healthfactor backend",healthFactorBackend)
+  console.log("healthfactor backend", healthFactorBackend);
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
-  
+
     // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-  
+
     // Prevent multiple decimal points
-    if (inputAmount.indexOf('.') !== inputAmount.lastIndexOf('.')) {
-      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf('.'));
+    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
-  
+
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
-  
+
     const numericAmount = parseFloat(inputAmount);
-  
+
     // Ensure the entered amount does not exceed the maximum borrowable value
     if (numericAmount > parseFloat(borrowableAssetValue)) {
       return;
     }
-  
+
     // Format the amount with commas and up to 8 decimal places
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-      formattedAmount = `${parseInt(integerPart).toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart).toLocaleString(
+        "en-US"
+      )}.${decimalPart.slice(0, 8)}`;
     } else {
       formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
     }
-  
+
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
-  
+
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
-  
+
     if (inputAmount === "") {
       setAmount("");
       setUsdValue(0);
       return;
     }
-  
+
     if (numericAmount <= supplyBalance) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
@@ -312,7 +487,7 @@ if (onLoadingChange) {
       setUsdValue(0);
     }
   };
-  
+
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -323,7 +498,6 @@ if (onLoadingChange) {
       setUsdValue("");
     }
   }, [amount, conversionRate]);
-  
 
   const handleMaxClick = () => {
     const maxAmount = parseFloat(borrowableValue).toFixed(8);
@@ -337,8 +511,10 @@ if (onLoadingChange) {
     updateAmountAndUsdValue(maxAmount);
   };
   const formatValue = (value) => {
-    if (!value) return '0';
-    return Number(value).toFixed(8).replace(/\.?0+$/, ''); // Ensure 8 decimals and remove trailing zeroes
+    if (!value) return "0";
+    return Number(value)
+      .toFixed(8)
+      .replace(/\.?0+$/, ""); // Ensure 8 decimals and remove trailing zeroes
   };
   return (
     <>
@@ -389,8 +565,11 @@ if (onLoadingChange) {
                       }
                     }}
                   >
-                    {formatValue(borrowableValue)}{" "}
-                    Max
+                    {parseFloat(borrowableValue) === 0 ? (
+                      <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
+                    ) : (
+                      `${formatValue(borrowableValue)} Max`
+                    )}
                   </p>
                 </div>
               </div>

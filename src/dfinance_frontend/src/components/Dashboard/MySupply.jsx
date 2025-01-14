@@ -21,7 +21,7 @@ import {
   setTotalUsdValueBorrow,
   setTotalUsdValueSupply,
 } from "../../redux/reducers/borrowSupplyReducer";
-
+import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 import MySupplyModal from "./MySupplyModal";
 import WithdrawPopup from "./DashboardPopup/WithdrawPopup";
 import SupplyPopup from "./DashboardPopup/SupplyPopup";
@@ -40,13 +40,16 @@ import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 
 const MySupply = () => {
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
-  
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
+  console.log("dashboardRefreshTrigger", dashboardRefreshTrigger);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state, pathname } = useLocation();
 
-  const { principal, fetchReserveData, createLedgerActor, user } = useAuth();
+  const { principal, fetchReserveData, createLedgerActor, user, backendActor } =
+    useAuth();
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
@@ -54,7 +57,7 @@ const MySupply = () => {
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [valueChanged, setValueChanged] = useState(false);
   const [availableBorrow, setAvailableBorrow] = useState([]);
   const [borrowableBTC, setBorrowableBTC] = useState(0);
   const [borrowableETH, setBorrowableETH] = useState(0);
@@ -69,7 +72,8 @@ const MySupply = () => {
   const handleToggleShowAllAssets = () => {
     setShowAllAssets(!showAllAssets);
   };
-  const { userData, userAccountData } = useUserData();
+  const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
+    useUserData();
   useEffect(() => {
     if (userData && userAccountData) {
       setLoading(false);
@@ -81,12 +85,12 @@ const MySupply = () => {
       (reserveGroup) => reserveGroup[1]?.liquidity_index
     );
     setCurrentLiquidityIndex(currentLiquidity);
-  
+
     // Check if the user has collateral
     const hasCollateral = userData?.Ok?.reserves[0]?.some(
       (reserveGroup) => reserveGroup[1]?.is_collateral !== false
     );
-  
+
     // Update availableBorrow regardless of collateral status
     if (userAccountData?.Ok?.length > 5) {
       const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
@@ -95,7 +99,7 @@ const MySupply = () => {
       setAvailableBorrow(0);
     }
   }, [userAccountData, userData, dashboardRefreshTrigger]);
-  
+
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -114,7 +118,7 @@ const MySupply = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
- 
+
   const {
     isWalletCreated,
     isWalletModalOpen,
@@ -344,7 +348,7 @@ const MySupply = () => {
     ckUSDTUsdRate,
     ckICPBalance,
     ckICPUsdRate,
-    dashboardRefreshTrigger
+    dashboardRefreshTrigger,
   ]);
 
   useEffect(() => {
@@ -399,7 +403,9 @@ const MySupply = () => {
     currentCollateralStatus,
     Ltv,
     borrowableValue,
-    borrowableAssetValue
+    borrowableAssetValue,
+    total_supply,
+    total_borrow
   ) => {
     setIsModalOpen({
       isOpen: true,
@@ -418,6 +424,8 @@ const MySupply = () => {
       Ltv: Ltv,
       borrowableValue: borrowableValue,
       borrowableAssetValue: borrowableAssetValue,
+      total_supply: total_supply,
+      total_borrow: total_borrow,
     });
   };
   const theme = useSelector((state) => state.theme.theme);
@@ -493,6 +501,8 @@ const MySupply = () => {
                 Ltv={isModalOpen.Ltv}
                 borrowableValue={isModalOpen.borrowableValue}
                 borrowableAssetValue={isModalOpen.borrowableAssetValue}
+                total_supply={isModalOpen.total_supply}
+                total_borrow={isModalOpen.total_borrow}
                 setIsModalOpen={setIsModalOpen}
               />
             }
@@ -628,7 +638,48 @@ const MySupply = () => {
         return null;
     }
   };
+  useEffect(() => {
+    setValueChanged(true);
+  }, [availableBorrow, filteredItems]);
+  useEffect(() => {
+    if (valueChanged) {
+      calculateBorrowableValues();
+    }
+  }, [valueChanged, availableBorrow, filteredItems]);
+  const calculateBorrowableValues = (
+    item,
+    availableBorrow,
+    remainingBorrowable
+  ) => {
+    let borrowableValue = "0.00000000";
+    let borrowableAssetValue = "0.0000";
 
+    if (Number(availableBorrow)) {
+      const assetRates = {
+        ckBTC: ckBTCUsdRate,
+        ckETH: ckETHUsdRate,
+        ckUSDC: ckUSDCUsdRate,
+        ICP: ckICPUsdRate,
+        ckUSDT: ckUSDTUsdRate,
+      };
+
+      const rate = assetRates[item[0]] / 1e8;
+
+      if (rate) {
+        borrowableValue =
+          remainingBorrowable < Number(availableBorrow) / rate
+            ? remainingBorrowable
+            : Number(availableBorrow) / rate;
+
+        borrowableAssetValue =
+          remainingBorrowable < Number(availableBorrow) / rate
+            ? remainingBorrowable * rate
+            : Number(availableBorrow);
+      }
+    }
+
+    return { borrowableValue, borrowableAssetValue };
+  };
   const noBorrowMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
       <div className="w-[55px] md:w-20 h-15">
@@ -1978,8 +2029,7 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
-                
-                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
+                  {filteredDataLoading && !isSwitchingWallet && !hasLoaded ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -2086,7 +2136,13 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckBTCBalance *(ckBTCUsdRate / 1e8))}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(
+                                                ckBTCBalance *
+                                                  (ckBTCUsdRate / 1e8)
+                                              )}
                                         </p>
                                       </>
                                     )}
@@ -2110,7 +2166,13 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckETHBalance*(ckETHUsdRate / 1e8))}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(
+                                                ckETHBalance *
+                                                  (ckETHUsdRate / 1e8)
+                                              )}
                                         </p>
                                       </>
                                     )}
@@ -2134,7 +2196,13 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCBalance*(ckUSDCUsdRate / 1e8))}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(
+                                                ckUSDCBalance *
+                                                  (ckUSDCUsdRate / 1e8)
+                                              )}
                                         </p>
                                       </>
                                     )}
@@ -2158,7 +2226,13 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckICPBalance*(ckICPUsdRate / 1e8))}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(
+                                                ckICPBalance *
+                                                  (ckICPUsdRate / 1e8)
+                                              )}
                                         </p>
                                       </>
                                     )}
@@ -2182,7 +2256,13 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTBalance*(ckUSDTUsdRate / 1e8))}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(
+                                                ckUSDTBalance *
+                                                  (ckUSDTUsdRate / 1e8)
+                                              )}
                                         </p>
                                       </>
                                     )}
@@ -2351,7 +2431,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isVisible && (
                 <>
-                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
+                  {filteredDataLoading && !isSwitchingWallet && !hasLoaded ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -2489,7 +2569,10 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckBTCUsdBalance)}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(ckBTCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2513,7 +2596,10 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckETHUsdBalance)}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(ckETHUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2537,7 +2623,10 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckUSDCUsdBalance)}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(ckUSDCUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2561,7 +2650,10 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckICPUsdBalance)}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(ckICPUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2585,7 +2677,10 @@ const MySupply = () => {
                                               })}
                                         </p>
                                         <p className="font-light">
-                                        ${isZeroBalance ? "0" : formatNumber(ckUSDTUsdBalance)}
+                                          $
+                                          {isZeroBalance
+                                            ? "0"
+                                            : formatNumber(ckUSDTUsdBalance)}
                                         </p>
                                       </>
                                     )}
@@ -2821,7 +2916,7 @@ const MySupply = () => {
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
-                  {borrowDataLoading  && !isSwitchingWallet? (
+                  {borrowDataLoading && !isSwitchingWallet ? (
                     <div className="h-[100px] flex justify-center items-center">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -3315,7 +3410,7 @@ const MySupply = () => {
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
-                  {borrowDataLoading  && !isSwitchingWallet? (
+                  {borrowDataLoading && !isSwitchingWallet ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -3843,7 +3938,7 @@ const MySupply = () => {
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isBorrowVisible && (
                 <>
-                  {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded ? (
+                  {filteredDataLoading && !isSwitchingWallet && !hasLoaded ? (
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
@@ -4293,6 +4388,7 @@ const MySupply = () => {
                                   <Button
                                     title={"Borrow"}
                                     onClickHandler={() => {
+                                      dispatch(toggleDashboardRefresh());
                                       fetchAssetBorrow(item[0]);
                                       const currentCollateralStatus =
                                         reserveData?.[1]?.is_collateral;
@@ -4348,123 +4444,21 @@ const MySupply = () => {
                                       const remainingBorrowable =
                                         Number(total_supply) -
                                         Number(total_borrow);
-                                      let borrowableValue = "0.00000000";
-                                      let borrowableAssetValue = "0.0000";
 
-                                      if (Number(availableBorrow)) {
-                                        if (item[0] === "ckBTC") {
-                                          borrowableValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckBTCUsdRate / 1e8)
-                                              ? remainingBorrowable
-                                              : Number(availableBorrow) /
-                                                (ckBTCUsdRate / 1e8)
-                                            : "0.00000000";
-
-                                          borrowableAssetValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckBTCUsdRate / 1e8)
-                                              ? remainingBorrowable *
-                                                (ckBTCUsdRate / 1e8)
-                                              : Number(availableBorrow)
-                                            : "0.0000";
-                                        } else if (item[0] === "ckETH") {
-                                          borrowableValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckETHUsdRate / 1e8)
-                                              ? remainingBorrowable
-                                              : Number(availableBorrow) /
-                                                (ckETHUsdRate / 1e8)
-                                            : "0.00000000";
-
-                                          borrowableAssetValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckETHUsdRate / 1e8)
-                                              ? remainingBorrowable *
-                                                (ckETHUsdRate / 1e8)
-                                              : Number(availableBorrow)
-                                            : "0.0000";
-                                        } else if (item[0] === "ckUSDC") {
-                                          borrowableValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckUSDCUsdRate / 1e8)
-                                              ? remainingBorrowable
-                                              : Number(availableBorrow) /
-                                                (ckUSDCUsdRate / 1e8)
-                                            : "0.00000000";
-
-                                          borrowableAssetValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckUSDCUsdRate / 1e8)
-                                              ? remainingBorrowable *
-                                                (ckUSDCUsdRate / 1e8)
-                                              : Number(availableBorrow)
-                                            : "0.0000";
-                                        } else if (item[0] === "ICP") {
-                                          borrowableValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckICPUsdRate / 1e8)
-                                              ? remainingBorrowable
-                                              : Number(availableBorrow) /
-                                                (ckICPUsdRate / 1e8)
-                                            : "0.00000000";
-
-                                          borrowableAssetValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckICPUsdRate / 1e8)
-                                              ? remainingBorrowable *
-                                                (ckICPUsdRate / 1e8)
-                                              : Number(availableBorrow)
-                                            : "0.0000";
-                                        } else if (item[0] === "ckUSDT") {
-                                          borrowableValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckUSDTUsdRate / 1e8)
-                                              ? remainingBorrowable
-                                              : Number(availableBorrow) /
-                                                (ckUSDTUsdRate / 1e8)
-                                            : "0.00000000";
-
-                                          borrowableAssetValue = Number(
-                                            availableBorrow
-                                          )
-                                            ? remainingBorrowable <
-                                              Number(availableBorrow) /
-                                                (ckUSDTUsdRate / 1e8)
-                                              ? remainingBorrowable *
-                                                (ckUSDTUsdRate / 1e8)
-                                              : Number(availableBorrow)
-                                            : "0.0000";
-                                        }
-                                      }
-
+                                      const {
+                                        borrowableValue,
+                                        borrowableAssetValue,
+                                      } = calculateBorrowableValues(
+                                        item,
+                                        availableBorrow,
+                                        Number(total_supply) -
+                                          Number(total_borrow)
+                                      );
+                                      console.log(
+                                        "borrowableValue",
+                                        borrowableValue,
+                                        borrowableAssetValue
+                                      );
                                       handleModalOpen(
                                         "borrow",
                                         item[0],
@@ -4499,7 +4493,9 @@ const MySupply = () => {
                                         Ltv,
                                         currentCollateralStatus,
                                         borrowableValue,
-                                        borrowableAssetValue
+                                        borrowableAssetValue,
+                                        total_supply,
+                                        total_borrow
                                       );
                                     }}
                                     disabled={!isEligible}
@@ -4546,7 +4542,7 @@ const MySupply = () => {
                   )}
 
                   <div className="w-full h-auto mt-6">
-                    {filteredDataLoading  && !isSwitchingWallet  && !hasLoaded? (
+                    {filteredDataLoading && !isSwitchingWallet && !hasLoaded ? (
                       <div className="min-h-[100px] flex justify-center items-center ">
                         <MiniLoader isLoading={true} />
                       </div>
@@ -4995,7 +4991,8 @@ const MySupply = () => {
                                   <div className="p-3 flex gap-3 justify-end">
                                     <Button
                                       title={"Borrow"}
-                                      onClickHandler={() => {
+                                      onClickHandler={async () => {
+                                        dispatch(toggleDashboardRefresh());
                                         fetchAssetBorrow(item[0]);
                                         const currentCollateralStatus =
                                           reserveData?.[1]?.is_collateral;
@@ -5054,122 +5051,21 @@ const MySupply = () => {
                                         const remainingBorrowable =
                                           Number(total_supply) -
                                           Number(total_borrow);
-                                        let borrowableValue = "0.00000000";
-                                        let borrowableAssetValue = "0.0000";
 
-                                        if (Number(availableBorrow)) {
-                                          if (item[0] === "ckBTC") {
-                                            borrowableValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckBTCUsdRate / 1e8)
-                                                ? remainingBorrowable
-                                                : Number(availableBorrow) /
-                                                  (ckBTCUsdRate / 1e8)
-                                              : "0.00000000";
-
-                                            borrowableAssetValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckBTCUsdRate / 1e8)
-                                                ? remainingBorrowable *
-                                                  (ckBTCUsdRate / 1e8)
-                                                : Number(availableBorrow)
-                                              : "0.0000";
-                                          } else if (item[0] === "ckETH") {
-                                            borrowableValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckETHUsdRate / 1e8)
-                                                ? remainingBorrowable
-                                                : Number(availableBorrow) /
-                                                  (ckETHUsdRate / 1e8)
-                                              : "0.00000000";
-
-                                            borrowableAssetValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckETHUsdRate / 1e8)
-                                                ? remainingBorrowable *
-                                                  (ckETHUsdRate / 1e8)
-                                                : Number(availableBorrow)
-                                              : "0.0000";
-                                          } else if (item[0] === "ckUSDC") {
-                                            borrowableValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckUSDCUsdRate / 1e8)
-                                                ? remainingBorrowable
-                                                : Number(availableBorrow) /
-                                                  (ckUSDCUsdRate / 1e8)
-                                              : "0.00000000";
-
-                                            borrowableAssetValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckUSDCUsdRate / 1e8)
-                                                ? remainingBorrowable *
-                                                  (ckUSDCUsdRate / 1e8)
-                                                : Number(availableBorrow)
-                                              : "0.0000";
-                                          } else if (item[0] === "ICP") {
-                                            borrowableValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckICPUsdRate / 1e8)
-                                                ? remainingBorrowable
-                                                : Number(availableBorrow) /
-                                                  (ckICPUsdRate / 1e8)
-                                              : "0.00000000";
-
-                                            borrowableAssetValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckICPUsdRate / 1e8)
-                                                ? remainingBorrowable *
-                                                  (ckICPUsdRate / 1e8)
-                                                : Number(availableBorrow)
-                                              : "0.0000";
-                                          } else if (item[0] === "ckUSDT") {
-                                            borrowableValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckUSDTUsdRate / 1e8)
-                                                ? remainingBorrowable
-                                                : Number(availableBorrow) /
-                                                  (ckUSDTUsdRate / 1e8)
-                                              : "0.00000000";
-
-                                            borrowableAssetValue = Number(
-                                              availableBorrow
-                                            )
-                                              ? remainingBorrowable <
-                                                Number(availableBorrow) /
-                                                  (ckUSDTUsdRate / 1e8)
-                                                ? remainingBorrowable *
-                                                  (ckUSDTUsdRate / 1e8)
-                                                : Number(availableBorrow)
-                                              : "0.0000";
-                                          }
-                                        }
+                                        const {
+                                          borrowableValue,
+                                          borrowableAssetValue,
+                                        } = calculateBorrowableValues(
+                                          item,
+                                          availableBorrow,
+                                          Number(total_supply) -
+                                            Number(total_borrow)
+                                        );
+                                        console.log(
+                                          "borrowableValue",
+                                          borrowableValue,
+                                          borrowableAssetValue
+                                        );
                                         handleModalOpen(
                                           "borrow",
                                           item[0],
@@ -5204,7 +5100,9 @@ const MySupply = () => {
                                           currentCollateralStatus,
                                           Ltv,
                                           borrowableValue,
-                                          borrowableAssetValue
+                                          borrowableAssetValue,
+                                          total_supply,
+                                          total_borrow
                                         );
                                       }}
                                       disabled={!isEligible}

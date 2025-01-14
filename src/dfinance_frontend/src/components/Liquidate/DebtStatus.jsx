@@ -219,12 +219,16 @@ const DebtStatus = () => {
       );
   }, [users, liquidateTrigger]);
 
-  const relevantItems = liquidationUsers.filter(
-    (item) =>
+  const relevantItems = liquidationUsers.filter((item) => {
+    console.log("Item:", item.debt); // Log each item to check its structure
+  
+    return (
+      item.principal?._arr.toText() !== user.toString() && item.debt !== 0n &&
+      item.collateral !== 0n 
       
-      item.principal?._arr.toText() !== user.toString() &&
-      (item.collateral !== 0 && item.debt !== 0)
-  );
+    );
+  });
+  
 
   const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;

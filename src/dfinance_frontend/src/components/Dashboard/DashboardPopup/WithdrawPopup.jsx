@@ -304,10 +304,15 @@ const WithdrawPopup = ({
       liquidationThreshold
     );
 
-    const amountTaken = collateral ? usdValue || 0 : 0;
+    const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
+
     const amountAdded = 0;
-    const totalCollateralValue =
-      parseFloat(totalCollateral) - parseFloat(amountTaken);
+    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
+
+    const totalCollateralValue = truncateTo8Decimals(
+      parseFloat(totalCollateral) - parseFloat(amountTaken)
+    );
+    
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     setPrevHealthFactor(currentHealthFactor);
@@ -318,7 +323,7 @@ const WithdrawPopup = ({
       toast.dismiss();
       toast.info("LTV Exceeded!");
     }
-
+// console.log("ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue",ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue,totalCollateralValue)
     if (
       (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) &&
       currentCollateralStatus

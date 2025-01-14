@@ -78,14 +78,19 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   
   
   useEffect(() => {
-    if (assetSupply && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
-      setUsdValue(convertedValue);
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
+  if (assetSupply && conversionRate) {
+    const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+    const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
+
+    // Truncate to 8 decimal places without rounding
+    const truncatedValue = Math.trunc(convertedValue * 1e8) / 1e8;
+
+    setUsdValue(truncatedValue);
+  } else {
+    setUsdValue(0);
+  }
+}, [amount, conversionRate]);
+
 
   const handleToggleCollateral = async () => {
     setIsLoading(true);
@@ -132,10 +137,13 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
     window.location.reload();
   };
   useEffect(() => {
-    const adjustedCollateral = currentCollateralStatus
-      ? Math.max(totalCollateral - usdValue, 0)
-      : Math.max(totalCollateral + usdValue, 0);
+    const Collateral = currentCollateralStatus
+  ? Math.max(totalCollateral - usdValue, 0)
+  : Math.max(totalCollateral + usdValue, 0);
 
+// Truncate to 8 decimal places
+const adjustedCollateral = Math.trunc(Collateral * 1e8) / 1e8;
+console.log("adjustedCollateral",adjustedCollateral,totalCollateral,usdValue)
     const healthFactor = calculateHealthFactor(
       adjustedCollateral,
       totalDebt,

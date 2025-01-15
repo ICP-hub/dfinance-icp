@@ -6,9 +6,12 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import { useDispatch } from "react-redux";
 
 const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange 
 }) => {
+  const dispatch = useDispatch();
   const { backendActor } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -92,7 +95,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
     try {
       // Call toggleCollateral with the required parameters
       await toggleCollateral(asset, assetSupply);
-     
+         dispatch(toggleDashboardRefresh());
       toast.success("Collateral updated successfully!");
       setIsPaymentDone(true);
       setIsVisible(false);
@@ -129,7 +132,6 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    window.location.reload();
   };
   useEffect(() => {
     const adjustedCollateral = currentCollateralStatus

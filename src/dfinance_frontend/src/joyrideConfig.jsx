@@ -2,6 +2,7 @@ import lightImages from "./components/Common/lightImages";
 import darkImages from "./components/Common/darkImages";
 import debtStatusImage from "../public/Helpers/debtStatusImage.png";
 import debtStatusImageLight from "../public/Helpers/debtStatusImageLight.png";
+
 export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "body",
@@ -281,6 +282,41 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: isMobile ? "center" : "right",
   },
   {
+    target: isMobile ? "body" : "#your-supplies",
+    content: (
+      <div className="relative flex flex-col text-justify text-[12px]">
+        <p className="mb-4">
+          In this section, You can toggle the collateral status of an asset by
+          clicking the toggle button.
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.collateralDark
+              : lightImages.collateralLight
+          }
+          alt="yourSuppliesWithdrawButton"
+          className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+        <p className="mb-4">
+          To disable collateral, click the toggle to open the popup and select
+          "Disable as Collateral." To enable it, click the toggle and choose
+          "Enable as Collateral."
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.collateralPopupDark
+              : lightImages.collateralPopupLight
+          }
+          alt="yourSuppliesWithdrawPopup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: isMobile ? "center" : "right",
+  },
+  {
     target: "#dashboard-nav-details",
     content: (
       <>
@@ -350,43 +386,43 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     ),
     placement: isMobile ? "center" : "bottom",
   },
+  // {
+  //   target: "#market-page1",
+  //   content: (
+  //     <div className="relative flex flex-col text-justify">
+  //       <h1 className="text-[22px] font-bold mb-2">Market</h1>
+  //       <p className="mb-4 text-[12px]">
+  //         The Market page shows all assets on the platform with details like
+  //         Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
+  //         to evaluate assets for supply or borrowing.
+  //       </p>
+  //       {isMobile2 ? (
+  //         <img
+  //           src={
+  //             theme === "dark"
+  //               ? darkImages.marketPageSmall
+  //               : lightImages.MarketPageSmallLight
+  //           }
+  //           alt="Faucet Button"
+  //           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+  //         />
+  //       ) : (
+  //         <img
+  //           src={
+  //             theme === "dark"
+  //               ? darkImages.marketPage
+  //               : lightImages.marketPageLight
+  //           }
+  //           alt="Faucet Button"
+  //           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+  //         />
+  //       )}
+  //     </div>
+  //   ),
+  //   placement: "center",
+  // },
   {
-    target: "#market-page1",
-    content: (
-      <div className="relative flex flex-col text-justify">
-        <h1 className="text-[22px] font-bold mb-2">Market</h1>
-        <p className="mb-4 text-[12px]">
-          The Market page shows all assets on the platform with details like
-          Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
-          to evaluate assets for supply or borrowing.
-        </p>
-        {isMobile2 ? (
-          <img
-            src={
-              theme === "dark"
-                ? darkImages.marketPageSmall
-                : lightImages.MarketPageSmallLight
-            }
-            alt="Faucet Button"
-            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-          />
-        ) : (
-          <img
-            src={
-              theme === "dark"
-                ? darkImages.marketPage
-                : lightImages.marketPageLight
-            }
-            alt="Faucet Button"
-            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-          />
-        )}
-      </div>
-    ),
-    placement: "center",
-  },
-  {
-    target: "#market-page1",
+    target: "body",
     content: (
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Market</h1>
@@ -481,7 +517,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: "center",
   },
   {
-    target: "#liquidation",
+    target: "body",
     content: (
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>

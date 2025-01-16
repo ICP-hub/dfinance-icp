@@ -1,4 +1,4 @@
-use crate::api::resource_manager::{acquire_lock, release_lock};
+use crate::api::resource_manager::{acquire_lock, get_all_principals, release_lock};
 use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
@@ -53,7 +53,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         return Err(Error::AnonymousPrincipal);
     }
 
+    let vec = get_all_principals();
+    ic_cdk::println!("number of principals = {:?}",vec.unwrap());
     let user_key = params.on_behalf_of;
+    ic_cdk::println!("user key = {:?}",user_key.to_string());
     // Acquire lock for the target user
     if let Err(e) = acquire_lock(&user_key) {
         ic_cdk::println!("Lock acquisition failed: {:?}", e);
@@ -61,7 +64,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     };
 
     // Ensure lock is released after the operation
-    let release_user_lock = || release_lock(&user_key);
+    //let release_user_lock = || release_lock(&user_key);
     let result = async {
         ic_cdk::println!(
             "params debt_asset and collateral_asset {:?} {:?}",
@@ -250,6 +253,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             ic_cdk::println!("liquidation validation failed: {:?}", e);
             return Err(e);
         };
+
+        ic_cdk::println!("liquidation validation successful");
 
         let burn_scaled_result = burn_scaled(
             &mut collateral_reserve_data,

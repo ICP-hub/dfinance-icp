@@ -184,7 +184,7 @@ export default function App() {
 
   const handleJoyrideCallback = (data) => {
     const { status } = data;
-    console.log("status", status);
+    console.log("data.index", data.index);
     if (status === "finished" || status === "skipped") {
       if (isAuthenticated && principal) {
         const storedData = localStorage.getItem("userGuideData");
@@ -206,7 +206,7 @@ export default function App() {
     if (data.action === "next" && data.index === 2) {
       navigate("/dashboard");
     }
-    if (data.action === "next" && data.index === 9) {
+    if ((data.index === 10)) {
       navigate("/market");
       window.scrollTo({
         top: 0,
@@ -227,8 +227,42 @@ export default function App() {
         behavior: "smooth",
       });
     }
+
+    if (data.action === "prev" && data.index === 1) {
+      navigate("/dashboard");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+    if (data.action === "prev" && data.index === 3) {
+      navigate("/Faucet");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+    if (data.action === "prev" && data.index === 10) {
+      navigate("/dashboard");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+    if (data.action === "prev" && data.index === 12) {
+      navigate("/market");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+
     if (status === "paused") {
       navigate("/dashboard");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     }
   };
 

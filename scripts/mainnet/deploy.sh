@@ -149,3 +149,11 @@ record {
 
 echo "ckBTC got deployed with a transfer fee of ${TRANSFER_FEE}"
 
+export admin_principal=$(dfx identity get-principal)
+
+# Deploy the canister with the principal as an argument
+dfx deploy dfinance_backend --ic --argument "(
+    principal \"$admin_principal\"
+)"
+
+dfx deploy --ic

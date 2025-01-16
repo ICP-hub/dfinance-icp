@@ -14,9 +14,6 @@ use ic_cdk::api::management_canister::http_request::{
 };
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
-// use lettre::message::header::ContentType;
-// use lettre::transport::smtp::authentication::Credentials;
-// use lettre::{Message, SmtpTransport, Transport};
 use serde::Serialize;
 use serde_json::json;
 use ic_cdk::api;
@@ -126,70 +123,70 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
 }
 
 // not used now so error hanling later
-pub async fn update_balance(
-    canister: Principal,
-    principal: Principal,
-    amount: Nat,
-) -> Result<Nat, String> {
-    let account = Account {
-        owner: principal,
-        subaccount: None,
-    };
+// pub async fn update_balance(
+//     canister: Principal,
+//     principal: Principal,
+//     amount: Nat,
+// ) -> Result<Nat, String> {
+//     let account = Account {
+//         owner: principal,
+//         subaccount: None,
+//     };
 
-    let (result,): (Result<Nat, String>,) =
-        ic_cdk::api::call::call(canister, "icrc1_update_balance_of", (account, amount))
-            .await
-            .map_err(|e| format!("Failed to call update_balance: {:?}", e.1))?;
+//     let (result,): (Result<Nat, String>,) =
+//         ic_cdk::api::call::call(canister, "icrc1_update_balance_of", (account, amount))
+//             .await
+//             .map_err(|e| format!("Failed to call update_balance: {:?}", e.1))?;
 
-    match result {
-        Ok(balance) => {
-            ic_cdk::println!("Updated balance successfully: {}", balance);
-            Ok(balance)
-        }
-        Err(err) => {
-            ic_cdk::println!("Failed to update balance: {}", err);
-            Err(err)
-        }
-    }
-}
+//     match result {
+//         Ok(balance) => {
+//             ic_cdk::println!("Updated balance successfully: {}", balance);
+//             Ok(balance)
+//         }
+//         Err(err) => {
+//             ic_cdk::println!("Failed to update balance: {}", err);
+//             Err(err)
+//         }
+//     }
+// }
 
-pub async fn get_fees(canister: Principal) -> Result<Nat, Error> {
-    if canister == Principal::anonymous() {
-        return Err(Error::AnonymousPrincipal);
-    }
-    let empty_arg_result = candid::encode_one(());
-    let empty_arg = match empty_arg_result {
-        Ok(args) => args,
-        Err(err) => {
-            ic_cdk::println!("Error encoding arguments: {:?}", err);
-            return Err(Error::ErrorEncoding);
-        }
-    };
+// pub async fn get_fees(canister: Principal) -> Result<Nat, Error> {
+//     if canister == Principal::anonymous() {
+//         return Err(Error::AnonymousPrincipal);
+//     }
+//     let empty_arg_result = candid::encode_one(());
+//     let empty_arg = match empty_arg_result {
+//         Ok(args) => args,
+//         Err(err) => {
+//             ic_cdk::println!("Error encoding arguments: {:?}", err);
+//             return Err(Error::ErrorEncoding);
+//         }
+//     };
 
-    let raw_response_result =
-        ic_cdk::api::call::call_raw(canister, "icrc1_fee", &empty_arg, 0).await;
-    let raw_response = match raw_response_result {
-        Ok(response) => {
-            ic_cdk::println!("Call succeeded with response: {:?}", response);
-            response
-        }
-        Err((code, message)) => {
-            ic_cdk::println!("Call failed with code: {:?}, message: {}", code, message);
-            return Err(Error::ErrorRawResponse);
-        }
-    };
+//     let raw_response_result =
+//         ic_cdk::api::call::call_raw(canister, "icrc1_fee", &empty_arg, 0).await;
+//     let raw_response = match raw_response_result {
+//         Ok(response) => {
+//             ic_cdk::println!("Call succeeded with response: {:?}", response);
+//             response
+//         }
+//         Err((code, message)) => {
+//             ic_cdk::println!("Call failed with code: {:?}, message: {}", code, message);
+//             return Err(Error::ErrorRawResponse);
+//         }
+//     };
 
-    let fees_result = decode_one(&raw_response);
-    let fees = match fees_result {
-        Ok(fee) => fee,
-        Err(err) => {
-            ic_cdk::println!("Error decoding balance: {:?}", err);
-            return Err(Error::ErrorDecoding);
-        }
-    };
+//     let fees_result = decode_one(&raw_response);
+//     let fees = match fees_result {
+//         Ok(fee) => fee,
+//         Err(err) => {
+//             ic_cdk::println!("Error decoding balance: {:?}", err);
+//             return Err(Error::ErrorDecoding);
+//         }
+//     };
 
-    Ok(fees)
-}
+//     Ok(fees)
+// }
 
 pub async fn asset_transfer(
     to: Principal,
@@ -540,43 +537,13 @@ pub async fn send_email_via_sendgrid(subject: String,message: String) -> Result<
     }
 }
 
-// #[update]
-// pub async fn send_email_via_smtp(message: String) -> Result<String, Error> {
-//     let email = Message::builder()
-//         .from("jyotirmay2000gupta@gmail.com".parse().unwrap())
-//         .to("sm6047787@gmail.com".parse().unwrap())
-//         .subject("Faucet Amount Low - Mint More Tokens")
-//         .body(message)
-//         .unwrap();
-
-//     let creds = Credentials::new("jyotirmay2000gupta@gmail.com".to_string(), "22812410".to_string());
-
-//     // Open a remote connection to the SMTP server
-//     let mailer = SmtpTransport::relay("smtp.gmail.com")
-//         .unwrap()
-//         .credentials(creds)
-//         .build();
-
-//     // Send the email
-//     match mailer.send(&email) {
-//         Ok(_) => {
-//             ic_cdk::println!("Email sent successfully!");
-//             Ok("Email sent successfully".to_string())
-//         }
-//         Err(e) => {
-//             ic_cdk::println!("Could not send email: {:?}", e);
-//             Err(Error::EmailError)
-//         }
-//     }
-// }
-
 #[update]
 pub async fn cycle_checker()-> Result<(), Error> {
 
     let subject = "Cycle are low - Mint more cycles".to_string();
     
-    let min_cycles: Nat = Nat::from(500_000_000_000u128);  // 500 billion cycles
-    let max_cycles: Nat = Nat::from(800_000_000_000u128);  // 800 billion cycles
+    let min_cycles: Nat = Nat::from(500_000_000_000u128); 
+    let max_cycles: Nat = Nat::from(800_000_000_000u128);  
 
     // Get the current cycle balance of the canister
     let current_cycles = Nat::from(api::canister_balance128());

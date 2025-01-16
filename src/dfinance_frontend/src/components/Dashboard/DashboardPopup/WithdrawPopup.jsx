@@ -119,7 +119,7 @@ const WithdrawPopup = ({
   
   const updateAmountAndUsdValue = (inputAmount) => {
     // Parse input and remove commas if present
-    const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
+    const numericAmount = parseFloat(inputAmount.toString().replace(/,/g, ""));
   
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
@@ -177,6 +177,8 @@ const WithdrawPopup = ({
       "We couldn't retrieve the reserve data for the asset. Please try again later.",
     ErrorBurnTokens:
       "There was an issue processing your transaction. The tokens could not be burned.",
+    WithdrawMoreThanSupply:
+      "You are trying to withdraw more than the available supply. Please check the amount and try again.",
     Default:
       "An unexpected error occurred during the withdraw process. Please try again later.",
   };
@@ -251,9 +253,15 @@ const WithdrawPopup = ({
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in withdrawResult) {
-        const errorKey = withdrawResult.Err;
-        const userFriendlyMessage =
-          ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
+        const errorObject = withdrawResult.Err; // Example: {WithdrawMoreThanSupply: null}
+        const errorKey = Object.keys(errorObject)[0]; // Dynamically extract the error key (e.g., "WithdrawMoreThanSupply")
+      
+        let userFriendlyMessage;
+        if (errorKey === "WithdrawMoreThanSupply") {
+          userFriendlyMessage = "You cannot withdraw more than your supplied amount.";
+        } else {
+          userFriendlyMessage = ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
+        }
         console.error("error", errorKey);
         toast.error(`Withdraw failed: ${userFriendlyMessage}`, {
           className: "custom-toast",
@@ -301,7 +309,8 @@ const WithdrawPopup = ({
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold
+      liquidationThreshold,
+      reserveliquidationThreshold
     );
 
     const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
@@ -348,7 +357,8 @@ const WithdrawPopup = ({
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
-    liquidationThreshold
+    liquidationThreshold,
+    reserveliquidationThreshold
   ) => {
     const amountTaken = collateral ? usdValue || 0 : 0;
 
@@ -365,10 +375,21 @@ const WithdrawPopup = ({
     if (totalDeptValue === 0) {
       return Infinity;
     }
-
+   
+       let avliq=(liquidationThreshold*totalCollateral);
+    console.log("avliq", avliq);
+    let tempLiq=(avliq-(amountTaken * reserveliquidationThreshold));
+     if (totalCollateralValue > 0) {tempLiq=tempLiq/totalCollateralValue;}
+    console.log("tempLiq", tempLiq);
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+    result = Math.round(result * 1e8) / 1e8; 
+    console.log("result", result);
     return (
-      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+      result
     );
+    
+   
+    
   };
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
@@ -384,19 +405,25 @@ const WithdrawPopup = ({
     const truncateToSevenDecimals = (value) => {
       const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
-      return truncated.toFixed(8); // Convert to string with exactly 7 decimals
+      return truncated; // Return as a number, not a string
     };
+  
+    // Determine the formatted asset supply based on its value
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
-        ? Number(assetSupply).toFixed(8)
+        ? parseFloat(Number(assetSupply).toFixed(8)) // Ensures it's a number
         : assetSupply >= 1e-7 && assetSupply < 1e-6
-        ? Number(assetSupply).toFixed(7)
-        : truncateToSevenDecimals(assetSupply)
-      : "0";
+        ? parseFloat(Number(assetSupply).toFixed(7)) // Ensures it's a number
+        : truncateToSevenDecimals(assetSupply) // Ensures it's a number
+      : 0;
+  
     const maxAmount = asset_supply;
+  
+    // Set the max amount and update related values
     setAmount(maxAmount);
     updateAmountAndUsdValue(maxAmount);
   };
+  
   const formatValue = (value) => {
     if (!value) return "0";
     return Number(value)

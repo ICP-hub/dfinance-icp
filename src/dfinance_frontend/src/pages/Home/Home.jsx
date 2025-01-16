@@ -197,7 +197,7 @@ const Home = () => {
               A Better Way To <span className="font-semibold">DeFi</span>
             </h1>
             <p className="text-[#737373] text-[13px] md:text-[16px] my-4 lg:my-6 dark:text-darkText">
-              Phase 1 Includes simple borrowing and lending with our points
+              Phase 1 includes simple borrowing and lending with our points
               system for a $DFIN airdrop
             </p>
 

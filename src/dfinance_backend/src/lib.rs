@@ -633,7 +633,7 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 // this function is for check which i will remove later.
-#[query]
+#[update]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {

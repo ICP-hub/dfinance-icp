@@ -10,7 +10,7 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::update_reserves_price;
+use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::reserve_ledger_canister_id;
 use candid::{Nat, Principal};
 use ic_cdk::update;
@@ -413,8 +413,8 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
         }
         ic_cdk::println!("Repay validated successfully");
 
-        if let Err(e) = update_reserves_price().await {
-            ic_cdk::println!("Failed to update reserves price: {:?}", e);
+        if let Err(e) = update_token_price(params.asset.clone()).await {
+            ic_cdk::println!("Failed to update token price: {:?}", e);
         }
 
         ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);

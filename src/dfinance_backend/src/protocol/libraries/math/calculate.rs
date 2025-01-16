@@ -4,6 +4,7 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
 use candid::{CandidType, Deserialize, Nat, Principal};
+use futures::future::ok;
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use serde::Serialize;
@@ -70,6 +71,15 @@ pub async fn update_reserves_price() -> Result<(), Error> {
             }
         }
     }
+    Ok(())
+}
+
+#[update]
+pub async fn update_token_price(asset:String)-> Result<(),Error>{
+   if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await{
+    return Err(e);
+    };
+
     Ok(())
 }
 

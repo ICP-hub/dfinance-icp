@@ -53,10 +53,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         return Err(Error::AnonymousPrincipal);
     }
 
-    let vec = get_all_principals();
-    ic_cdk::println!("number of principals = {:?}",vec.unwrap());
     let user_key = params.on_behalf_of;
-    ic_cdk::println!("user key = {:?}",user_key.to_string());
     // Acquire lock for the target user
     if let Err(e) = acquire_lock(&user_key) {
         ic_cdk::println!("Lock acquisition failed: {:?}", e);

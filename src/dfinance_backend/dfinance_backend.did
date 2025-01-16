@@ -189,13 +189,12 @@ service : (principal) -> {
   get_reserve_data : (text) -> (Result_9) query;
   get_total_supply : (principal) -> (Result_3) query;
   get_total_users : () -> (nat64) query;
-  get_user_account_data : (opt principal) -> (Result_10) query;
+  get_user_account_data : (opt principal) -> (Result_10);
   get_user_data : (principal) -> (Result_11) query;
   initialize : (text, ReserveData) -> (Result_1);
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result);
   reset_reserve_value : (text, text, nat) -> (Result_1);
-  to_check_amount : (text) -> (Result_3) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserves_price : () -> (Result_1);
   user_normalized_debt : (ReserveData) -> (Result_3) query;

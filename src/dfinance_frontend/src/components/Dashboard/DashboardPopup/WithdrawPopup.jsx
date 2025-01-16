@@ -253,9 +253,15 @@ const WithdrawPopup = ({
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in withdrawResult) {
-        const errorKey = withdrawResult.Err;
-        const userFriendlyMessage =
-          ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
+        const errorObject = withdrawResult.Err; // Example: {WithdrawMoreThanSupply: null}
+        const errorKey = Object.keys(errorObject)[0]; // Dynamically extract the error key (e.g., "WithdrawMoreThanSupply")
+      
+        let userFriendlyMessage;
+        if (errorKey === "WithdrawMoreThanSupply") {
+          userFriendlyMessage = "You cannot withdraw more than your supplied amount.";
+        } else {
+          userFriendlyMessage = ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
+        }
         console.error("error", errorKey);
         toast.error(`Withdraw failed: ${userFriendlyMessage}`, {
           className: "custom-toast",
@@ -303,7 +309,8 @@ const WithdrawPopup = ({
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold
+      liquidationThreshold,
+      reserveliquidationThreshold
     );
 
     const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
@@ -350,7 +357,8 @@ const WithdrawPopup = ({
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
-    liquidationThreshold
+    liquidationThreshold,
+    reserveliquidationThreshold
   ) => {
     const amountTaken = collateral ? usdValue || 0 : 0;
 
@@ -367,10 +375,21 @@ const WithdrawPopup = ({
     if (totalDeptValue === 0) {
       return Infinity;
     }
-
+   
+       let avliq=(liquidationThreshold*totalCollateral);
+    console.log("avliq", avliq);
+    let tempLiq=(avliq-(amountTaken * reserveliquidationThreshold));
+     if (totalCollateralValue > 0) {tempLiq=tempLiq/totalCollateralValue;}
+    console.log("tempLiq", tempLiq);
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+    result = Math.round(result * 1e8) / 1e8; 
+    console.log("result", result);
     return (
-      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+      result
     );
+    
+   
+    
   };
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {

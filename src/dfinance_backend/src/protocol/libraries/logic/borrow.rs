@@ -322,11 +322,15 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
         };
 
     let operation_key = user_principal;
-    // Acquire the lock
-    {
-        if let Err(e) = acquire_lock(&operation_key) {
-            ic_cdk::println!("Lock acquisition failed: {:?}", e);
-            return Err(Error::LockAcquisitionFailed);
+
+    if params.on_behalf_of.is_none() {
+        ic_cdk::println!("inside the on behalf");
+        // Acquire the lock
+        {
+            if let Err(e) = acquire_lock(&operation_key) {
+                ic_cdk::println!("Lock acquisition failed: {:?}", e);
+                return Err(Error::LockAcquisitionFailed);
+            }
         }
     }
 

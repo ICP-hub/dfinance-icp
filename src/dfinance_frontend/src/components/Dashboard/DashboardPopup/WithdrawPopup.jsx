@@ -119,7 +119,7 @@ const WithdrawPopup = ({
   
   const updateAmountAndUsdValue = (inputAmount) => {
     // Parse input and remove commas if present
-    const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
+    const numericAmount = parseFloat(inputAmount.toString().replace(/,/g, ""));
   
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
@@ -177,6 +177,8 @@ const WithdrawPopup = ({
       "We couldn't retrieve the reserve data for the asset. Please try again later.",
     ErrorBurnTokens:
       "There was an issue processing your transaction. The tokens could not be burned.",
+    WithdrawMoreThanSupply:
+      "You are trying to withdraw more than the available supply. Please check the amount and try again.",
     Default:
       "An unexpected error occurred during the withdraw process. Please try again later.",
   };

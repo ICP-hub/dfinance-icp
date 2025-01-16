@@ -961,7 +961,7 @@ const MySupply = () => {
                       }
 
                       // Accumulate total USD value supply
-                      if (assetSupply > 0) {
+                      if (assetSupply >= 0) {
                         totalUsdValueSupply += usdValue;
                         dispatch(setTotalUsdValueSupply(totalUsdValueSupply));
                       }
@@ -2907,7 +2907,7 @@ const MySupply = () => {
                       }
 
                       // Accumulate total USD value supply
-                      if (assetBorrow > 0) {
+                      if (assetBorrow >= 0) {
                         totalUsdValueBorrow += usdValue;
 
                         dispatch(setTotalUsdValueBorrow(totalUsdValueBorrow));

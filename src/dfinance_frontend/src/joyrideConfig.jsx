@@ -422,6 +422,40 @@ export const getSteps = (theme, isMobile2, isMobile) => [
   //   placement: "center",
   // },
   {
+    target: ".market-nav-details",
+    content: (
+      <div className="relative flex flex-col text-justify text-[12px]">
+        <p className="mb-4">Click on the menu button</p>
+        <p className="mb-4">
+          In here we can see Total Market Size, Total Available, and Total
+          Borrows.
+        </p>
+        {isMobile2 ? (
+          <img
+            src={
+              theme === "dark"
+                ? darkImages.marketNavDetailsDarkSmall
+                : lightImages.marketNavDetailsLightSmall
+            }
+            alt="marketeNavbarDetails"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={
+              theme === "dark"
+                ? darkImages.marketPageDetails
+                : lightImages.marketPageDetailsLight
+            }
+            alt="marketeNavbarDetails"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        )}
+      </div>
+    ),
+    placement: isMobile ? "center" : "bottom",
+  },
+  {
     target: "body",
     content: (
       <div className="relative flex flex-col text-justify">
@@ -456,40 +490,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     ),
     placement: "center",
   },
-  {
-    target: ".market-nav-details",
-    content: (
-      <div className="relative flex flex-col text-justify text-[12px]">
-        <p className="mb-4">Click on the menu button</p>
-        <p className="mb-4">
-          In here we can see Total Market Size, Total Available, and Total
-          Borrows.
-        </p>
-        {isMobile2 ? (
-          <img
-            src={
-              theme === "dark"
-                ? darkImages.marketNavDetailsDarkSmall
-                : lightImages.marketNavDetailsLightSmall
-            }
-            alt="marketeNavbarDetails"
-            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-          />
-        ) : (
-          <img
-            src={
-              theme === "dark"
-                ? darkImages.marketPageDetails
-                : lightImages.marketPageDetailsLight
-            }
-            alt="marketeNavbarDetails"
-            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-          />
-        )}
-      </div>
-    ),
-    placement: isMobile ? "center" : "bottom",
-  },
+
   {
     target: "#footer-liquidation",
     content: (

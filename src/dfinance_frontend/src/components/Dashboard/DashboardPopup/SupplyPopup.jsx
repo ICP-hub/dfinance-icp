@@ -148,7 +148,7 @@ const SupplyPopup = ({
       if (numericAmount <= supplyBalance) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
-        setUsdValue(convertedValue.toFixed(2));
+        setUsdValue(convertedValue.toFixed(8));
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
@@ -163,7 +163,7 @@ const SupplyPopup = ({
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue =
         Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue);
+      setUsdValue(convertedValue.toFixed(8));
     } else {
       setUsdValue(0);
     }
@@ -370,18 +370,17 @@ const SupplyPopup = ({
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold
+      liquidationThreshold,
+      reserveliquidationThreshold
     );
 
-    const amountTaken = 0;
     const amountAdded = collateral ? usdValue || 0 : 0;
-
     let totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountTaken);
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
-    let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
+    let totalDeptValue = parseFloat(totalDebt);
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
     }
@@ -404,9 +403,15 @@ const SupplyPopup = ({
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
-    liquidationThreshold
+    liquidationThreshold,
+reserveliquidationThreshold
   ) => {
     const amountAdded = collateral ? usdValue || 0 : 0;
+    console.log("totalCollateral", totalCollateral);
+    console.log("totalDebt", totalDebt);
+    console.log("liquidationThreshold", liquidationThreshold);
+    console.log("amountAdded", amountAdded);
+    console.log("reserveliquidationThreshold", reserveliquidationThreshold);
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
@@ -419,8 +424,16 @@ const SupplyPopup = ({
     if (totalDeptValue === 0) {
       return Infinity;
     }
+    let avliq=(liquidationThreshold*totalCollateral);
+    console.log("avliq", avliq);
+    let tempLiq=(avliq+(amountAdded * reserveliquidationThreshold))/totalCollateralValue;
+    //withdraw me minus hoga repay aur borrow same toggle add horaha to plus varna minus 
+    console.log("tempLiq", tempLiq);
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+    result = Math.round(result * 1e8) / 1e8; 
+    console.log("result", result);
     return (
-      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+      result
     );
   };
 

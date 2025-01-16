@@ -384,19 +384,25 @@ const WithdrawPopup = ({
     const truncateToSevenDecimals = (value) => {
       const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
-      return truncated.toFixed(8); // Convert to string with exactly 7 decimals
+      return truncated; // Return as a number, not a string
     };
+  
+    // Determine the formatted asset supply based on its value
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
-        ? Number(assetSupply).toFixed(8)
+        ? parseFloat(Number(assetSupply).toFixed(8)) // Ensures it's a number
         : assetSupply >= 1e-7 && assetSupply < 1e-6
-        ? Number(assetSupply).toFixed(7)
-        : truncateToSevenDecimals(assetSupply)
-      : "0";
+        ? parseFloat(Number(assetSupply).toFixed(7)) // Ensures it's a number
+        : truncateToSevenDecimals(assetSupply) // Ensures it's a number
+      : 0;
+  
     const maxAmount = asset_supply;
+  
+    // Set the max amount and update related values
     setAmount(maxAmount);
     updateAmountAndUsdValue(maxAmount);
   };
+  
   const formatValue = (value) => {
     if (!value) return "0";
     return Number(value)

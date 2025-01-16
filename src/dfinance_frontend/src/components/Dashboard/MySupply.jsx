@@ -67,7 +67,7 @@ const MySupply = () => {
   const [currentLiquidityIndex, setCurrentLiquidityIndex] = useState(0);
   const [showAllAssets, setShowAllAssets] = useState(true);
   const [hideZeroBorrowAssets, setHideZeroBorrowAssets] = useState(false);
-
+  const [assetBalances, setAssetBalances] = useState([]);
   // Handle toggle of showAllAssets
   const handleToggleShowAllAssets = () => {
     setShowAllAssets(!showAllAssets);
@@ -82,41 +82,53 @@ const MySupply = () => {
   useEffect(() => {
     // Check if userData has reserves
     const reserves = userData?.Ok?.reserves?.[0] || [];
+    console.log("Reserves:", reserves);
+  
+    let updatedAvailableBorrow = 0; // Initialize updatedAvailableBorrow
   
     // Iterate over each asset in the reserves
     reserves.map((reserveGroup) => {
       const asset = reserveGroup[0]; // Extract asset (e.g., "ckBTC", "ckETH")
       const liquidityIndex = reserveGroup[1]?.liquidity_index || 0;
-  
-      // Update current liquidity index
-      setCurrentLiquidityIndex(liquidityIndex);
+      console.log("Liquidity Index:", liquidityIndex);
   
       // Get the corresponding asset balance
       const assetBalance =
-        assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance ||
-        0;
+        assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
+      console.log("Asset Balance for", asset, ":", assetBalance);
   
       // Calculate asset supply
-      const assetSupply =
-        liquidityIndex > 0
-          ? (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-            (Number(liquidityIndex) * 1e8)
-          : 0;
+      const assetSupply = (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / (Number(liquidityIndex) * 1e8);
+      console.log("Asset Supply for", asset, ":", assetSupply);
   
       // Check if the user has collateral for this asset
-      const isCollateral = reserveGroup[1]?.is_collateral || false;
+      const isCollateral = reserveGroup[1]?.is_collateral || true;
+      console.log("Is Collateral for", asset, ":", isCollateral);
   
-      // Update availableBorrow based on assetSupply
-      if (assetSupply === 0) {
-        setAvailableBorrow(0);
-      } else if (userAccountData?.Ok?.length > 5) {
-        const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
-        setAvailableBorrow(isCollateral ? borrowValue : 0);
-      } else {
-        setAvailableBorrow(0);
+      // If assetSupply is greater than 0, update availableBorrow to borrowValue
+      if (assetSupply > 0) {
+        console.log("Asset Supply is greater than 0. Updating Available Borrow.");
+        if (userAccountData?.Ok?.length > 5) {
+          const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
+          console.log("Setting Available Borrow to borrowValue:", borrowValue);
+          updatedAvailableBorrow = isCollateral ? borrowValue : 0; // Update availableBorrow if any assetSupply > 0
+        } else {
+          console.log("User account data length is insufficient. Setting Available Borrow to 0.");
+          updatedAvailableBorrow = 0; // Ensure availableBorrow is 0 when insufficient account data
+        }
       }
     });
-  }, [userAccountData, userData, dashboardRefreshTrigger]);
+  
+    // After checking all reserves, update the availableBorrow state
+    setAvailableBorrow(updatedAvailableBorrow);
+  
+    // If no asset supply > 0, set availableBorrow to 0
+    if (updatedAvailableBorrow === 0) {
+      console.log("No asset supply > 0. Setting Available Borrow to 0.");
+      setAvailableBorrow(0);
+    }
+  
+  }, [userAccountData, userData, dashboardRefreshTrigger ,assetBalances]);
   
   
   const principalObj = useMemo(
@@ -146,7 +158,7 @@ const MySupply = () => {
   } = useSelector((state) => state.utility);
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
-  const [assetBalances, setAssetBalances] = useState([]);
+
   const [showZeroBalance, setShowZeroBalance] = useState(
     () => JSON.parse(localStorage.getItem("showZeroBalance")) || true
   );
@@ -3200,6 +3212,8 @@ const MySupply = () => {
                                         <Button
                                           title={"Borrow"}
                                           onClickHandler={() => {
+                                            
+                                        
                                             fetchAssetBorrow(asset);
                                             const reserveData =
                                               userData?.Ok?.reserves[0]?.find(
@@ -3343,6 +3357,14 @@ const MySupply = () => {
                                                     : Number(availableBorrow)
                                                   : "0.0000";
                                               }
+                                            }
+                                            if (borrowableValue === "0.00000000" || borrowableValue === "0.0000") {
+                                              // Show toast notification
+                                              toast.info("Insufficeint asset supply to allow borrow request");
+                                              
+                                              // Disable the button
+                                              setIsButtonDisabled(true);
+                                              return;  // Exit the function if borrowable value is 0
                                             }
                                             handleModalOpen(
                                               "borrow",
@@ -3814,6 +3836,14 @@ const MySupply = () => {
                                                 : Number(availableBorrow)
                                               : "0.0000";
                                           }
+                                        }
+                                        if (borrowableValue === "0.00000000" || borrowableValue === "0.0000") {
+                                          // Show toast notification
+                                          toast.info("Insufficeint asset supply to allow borrow request");
+                                          
+                                          // Disable the button
+                                          setIsButtonDisabled(true);
+                                          return;  // Exit the function if borrowable value is 0
                                         }
                                         handleModalOpen(
                                           "borrow",

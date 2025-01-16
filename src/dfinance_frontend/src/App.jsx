@@ -206,7 +206,7 @@ export default function App() {
     if (data.action === "next" && data.index === 2) {
       navigate("/dashboard");
     }
-    if (data.action === "next" && data.index === 9) {
+    if ((data.index === 10)) {
       navigate("/market");
       window.scrollTo({
         top: 0,
@@ -230,9 +230,17 @@ export default function App() {
 
     if (data.action === "prev" && data.index === 1) {
       navigate("/dashboard");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     }
     if (data.action === "prev" && data.index === 3) {
       navigate("/Faucet");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     }
     if (data.action === "prev" && data.index === 10) {
       navigate("/dashboard");
@@ -251,6 +259,10 @@ export default function App() {
 
     if (status === "paused") {
       navigate("/dashboard");
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     }
   };
 

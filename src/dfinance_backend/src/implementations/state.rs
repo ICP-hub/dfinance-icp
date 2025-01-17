@@ -2,7 +2,6 @@
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 
 use crate::constants::memory::{ASSET_INDEX_MEMORY_ID, CANISTER_MEMORY_ID, META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, USER_PROFILE_MEMORY_ID};
-use crate::declarations::assets::InitArgs;
 use crate::declarations::state::State;
 use crate::protocol::libraries::types::assets::{AssetIndex, CanisterList, MetaData, PriceCacheList, ReserveList, UserProfile};
 

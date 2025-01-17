@@ -122,34 +122,6 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     }
 }
 
-// not used now so error hanling later
-// pub async fn update_balance(
-//     canister: Principal,
-//     principal: Principal,
-//     amount: Nat,
-// ) -> Result<Nat, String> {
-//     let account = Account {
-//         owner: principal,
-//         subaccount: None,
-//     };
-
-//     let (result,): (Result<Nat, String>,) =
-//         ic_cdk::api::call::call(canister, "icrc1_update_balance_of", (account, amount))
-//             .await
-//             .map_err(|e| format!("Failed to call update_balance: {:?}", e.1))?;
-
-//     match result {
-//         Ok(balance) => {
-//             ic_cdk::println!("Updated balance successfully: {}", balance);
-//             Ok(balance)
-//         }
-//         Err(err) => {
-//             ic_cdk::println!("Failed to update balance: {}", err);
-//             Err(err)
-//         }
-//     }
-// }
-
 // pub async fn get_fees(canister: Principal) -> Result<Nat, Error> {
 //     if canister == Principal::anonymous() {
 //         return Err(Error::AnonymousPrincipal);

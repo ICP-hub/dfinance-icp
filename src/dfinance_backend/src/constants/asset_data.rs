@@ -1,6 +1,6 @@
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
-use crate::declarations::assets::{ReserveConfiguration, ReserveData};
+use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use candid::{Nat, Principal};

@@ -1,4 +1,4 @@
-use crate::api::resource_manager::{acquire_lock, get_all_principals, release_lock};
+use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;

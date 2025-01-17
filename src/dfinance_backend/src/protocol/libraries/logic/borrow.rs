@@ -1,6 +1,6 @@
-use crate::api::functions::{asset_transfer_from, get_balance};
+use crate::api::functions::asset_transfer_from;
 use crate::api::resource_manager::{
-    acquire_lock, get_locked_amount, is_amount_locked, lock_amount, release_amount, release_lock,
+    acquire_lock, is_amount_locked, release_amount, release_lock,
 };
 use crate::api::state_handler::*;
 use crate::constants::errors::Error;

@@ -122,11 +122,11 @@ pub async fn calculate_interest_rates(
         ic_cdk::println!("liq added = {}",liq_added);
         ic_cdk::println!("liq taken = {}",liq_taken);
         
-        // let total_supply = reserve.asset_supply.scaled_mul(reserve.liquidity_index);
-        let total_supply = match user_normalized_supply(reserve.clone()) {
-            Ok(supply) => reserve.asset_supply.scaled_mul(supply),
-            Err(e) => return Err(e),
-        };
+        let total_supply = reserve.asset_supply.scaled_mul(reserve.liquidity_index);
+        // let total_supply = match user_normalized_supply(reserve.clone()) {
+        //     Ok(supply) => reserve.asset_supply.scaled_mul(supply),
+        //     Err(e) => return Err(e),
+        // };
         ic_cdk::println!("total supply = {}",total_supply);
         let available_liq = total_supply + liq_added - liq_taken;
         

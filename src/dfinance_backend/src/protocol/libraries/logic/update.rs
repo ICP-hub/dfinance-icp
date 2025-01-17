@@ -197,7 +197,7 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                asset_borrow: params.amount.clone(),
+                asset_borrow: params.amount.clone(),//remove
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 last_update_timestamp: current_timestamp(),
@@ -239,7 +239,7 @@ impl UpdateLogic {
 
         match minted_result {
             Ok(()) => {
-                ic_cdk::println!("Minting dtokens successfully");
+                ic_cdk::println!("Minting debttokens successfully");
             }
             Err(e) => {
                 return Err(e);
@@ -475,7 +475,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let user_data_result = user_data(user_principal);
@@ -573,7 +573,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     }
 if total_debt != Nat::from(0u128) {
     let mut ltv = Nat::from(0u128);
-    //TODO if total_debt ==0 , so no need to cal ltv
     if amount != Nat::from(0u128) {
         let mut adjusted_collateral = Nat::from(0u128);
         if total_collateral < usd_amount.clone() {

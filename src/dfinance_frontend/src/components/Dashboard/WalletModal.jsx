@@ -24,7 +24,7 @@ const WalletModal = () => {
     isSwitchingWallet,
     connectedWallet,
   } = useSelector((state) => state.utility);
-  const { login, logout } = useAuth();
+  const { login, logout, isAuthenticated } = useAuth();
 
   const handleWalletConnect = () => {
     dispatch(
@@ -37,7 +37,7 @@ const WalletModal = () => {
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
     dispatch(setIsWalletConnected(true));
-    navigate("/dashboard/my-supply");
+    navigate("/dashboard");
   };
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const WalletModal = () => {
   }, [isWalletCreated]);
 
   const loginHandlerIsSwitch = async (val) => {
-    dispatch(setUserData(null));
+    handleLogout()
     await logout();
     await login(val);
     dispatch(setConnectedWallet(val));
@@ -82,6 +82,26 @@ const WalletModal = () => {
         return "Unknown Wallet";
     }
   };
+
+  useEffect(() => {
+    const savedWallet = localStorage.getItem("connectedWallet");
+    if (savedWallet) {
+      dispatch(setConnectedWallet(savedWallet));
+    }
+  }, [dispatch]);
+  
+
+  console.log("connectedWallet", connectedWallet)
+
+  useEffect(() => {
+    const reAuthenticate = async () => {
+      if (connectedWallet && !isAuthenticated) {
+        await loginHandler(connectedWallet);
+      }
+    };
+  
+    reAuthenticate();
+  }, [connectedWallet, isAuthenticated]);
 
   return (
     <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>

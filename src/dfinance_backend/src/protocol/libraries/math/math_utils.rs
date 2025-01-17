@@ -2,8 +2,10 @@ use std::ops::Mul;
 
 use candid::Nat;
 
+use crate::constants::interest_variables::constants::SCALING_FACTOR;
+
 fn get_scaling_value() -> Nat {
-    Nat::from(100000000u128)
+    Nat::from(SCALING_FACTOR)
 }
 
 const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days

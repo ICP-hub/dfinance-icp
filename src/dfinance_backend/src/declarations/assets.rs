@@ -1,4 +1,3 @@
-// pub accrued_to_treasury: Nat,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 #[derive(Debug, CandidType, Deserialize, Clone)]
@@ -9,9 +8,7 @@ pub struct ReserveData {
     pub debt_token_canister: Option<String>,
     pub borrow_rate: Nat, 
     pub current_liquidity_rate: Nat,
-    pub total_supply: Nat, //TODO remove
     pub asset_supply: Nat,
-    pub total_borrowed: Nat, //TODO remove
     pub asset_borrow: Nat,
     pub liquidity_index: Nat,
     pub debt_index: Nat,
@@ -19,28 +16,24 @@ pub struct ReserveData {
     pub can_be_collateral: Option<bool>,
     pub last_update_timestamp: u64,
     pub accure_to_platform: Nat,
-    pub userlist: Option<Vec<(String, bool)>> //TODO remove this if not needed for liq bot
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ReserveCache {
     pub reserve_configuration: ReserveConfiguration,
-    //Liquidity Index(t)=Liquidity Index(t−1) ×(1+ Borrow Interest Rate×Δt/365×100) 
     pub curr_liquidity_index: Nat,
     pub next_liquidity_index: Nat,
     pub curr_liquidity_rate: Nat,
-    //next_rate if needed
-    pub d_token_canister: Option<String>, //TODO remove 
-    pub debt_token_canister: Option<String>, //remove
     pub reserve_last_update_timestamp: u64,
     pub curr_debt_index: Nat,
     pub next_debt_index: Nat,
     pub curr_debt_rate: Nat,
     pub next_debt_rate: Nat,
-    pub debt_last_update_timestamp: u64, //for variable debt it is needed or not 
+    pub debt_last_update_timestamp: u64,
     pub reserve_factor: Nat,
 
     pub curr_debt: Nat,
+    pub next_debt: Nat,
     pub curr_supply: Nat,
    
 }
@@ -120,3 +113,17 @@ pub struct ExecuteWithdrawParams {
     pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct InitArgs {
+    pub controller_id: Principal
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ExecuteLiquidationParams {
+    pub debt_asset: String,
+    pub collateral_asset: String,
+    pub amount: Nat,
+    pub on_behalf_of: Principal,
+}
+

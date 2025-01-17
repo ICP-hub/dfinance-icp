@@ -381,50 +381,57 @@ const DashboardNav = () => {
     if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
         const reservesData = userData.Ok.reserves[0];
-
-        const calculatedNetApy = calculateNetSupplyApy(
-          reservesData,
-          reserveData
-        );
+  
+        const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
         setNetApy(calculatedNetApy);
-
+  
+        let totalBorrow = 0;  // Initialize a variable to store total borrow amount
+  
         reservesData.forEach((reserveGroup) => {
           const asset = reserveGroup[0];
           const reserve = reserveGroup[1];
-
+  
           const currentLiquidity = userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.liquidity_index;
-
+  
           const assetBalance =
             assetBalances?.find((balance) => balance.asset === asset)
               ?.dtokenBalance || 0;
-
+  
           const supply =
             (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
               Number(currentLiquidity) || 0;
-          if (supply > 0) {
+          if (supply) {
             setAssetSupply(supply);
           }
-
+  
           const DebtIndex = userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.variable_borrow_index;
-
+  
           const assetBorrowBalance =
             assetBalances.find((balance) => balance.asset === asset)
               ?.debtTokenBalance || 0;
-
+  
           const borrow =
             (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
               Number(DebtIndex) || 0;
-
+  
+          // Accumulate the borrow values
           if (borrow > 0) {
-            setAssetBorrow(borrow);
+            totalBorrow += borrow;  // Add borrow amount if greater than 0
           }
         });
+  
+        // If there's any borrow value, update assetBorrow
+        if (totalBorrow > 0) {
+          setAssetBorrow(totalBorrow);  // Set total borrow if any borrow is > 0
+        } else {
+          setAssetBorrow(0);  // Set 0 if no borrow value
+        }
       };
-
+  
       updateState();
     }
   }, [
@@ -434,11 +441,12 @@ const DashboardNav = () => {
     assetBalances,
     dashboardRefreshTrigger,
   ]);
+  
 
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
       const borrow = Number(userData.Ok.total_debt) / 100000000;
-      setAssetBorrow(borrow);
+      // setAssetBorrow(borrow);
     }
   }, [userData, dashboardRefreshTrigger]);
 
@@ -717,6 +725,7 @@ const DashboardNav = () => {
                       : walletDetailTabs
                     ) // Show walletDetailTabs everywhere else, including non-authenticated
                       .map((data, index) => {
+                        console.log("assetBorrow", assetBorrow);
                         if (
                           data.title === "Health Factor" &&
                           assetBorrow === 0

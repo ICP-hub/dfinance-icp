@@ -50,7 +50,7 @@ const Faucet = () => {
               Dfinance Protocol. Make sure to switch your wallet provider to the
               appropriate testnet network, select desired asset, and click
               ‘Faucet’ to get tokens transferred to your wallet. The assets on
-              our testnet are not “real,” meaning they have no monetary value.
+              our testnet are not “real”, meaning they have no monetary value.
             </p>
           </div>
           {isAuthenticated ? (

@@ -1,7 +1,8 @@
 import lightImages from "./components/Common/lightImages";
 import darkImages from "./components/Common/darkImages";
-import debtStatusImage from "../public/Helpers/debtStatusImage.png"
-import debtStatusImageLight from "../public/Helpers/debtStatusImageLight.png"
+import debtStatusImage from "../public/Helpers/debtStatusImage.png";
+import debtStatusImageLight from "../public/Helpers/debtStatusImageLight.png";
+
 export const getSteps = (theme, isMobile2, isMobile) => [
   {
     target: "body",
@@ -17,14 +18,20 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         {isMobile2 ? (
           <img
             src={
-              theme === "dark" ? darkImages .dfinanceHomeDarkSmall : lightImages.DfinanceHomeLightSmall
+              theme === "dark"
+                ? darkImages.dfinanceHomeDarkSmall
+                : lightImages.DfinanceHomeLightSmall
             }
             alt="dFinanceHomePage"
             className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
           />
         ) : (
           <img
-            src={theme === "dark" ? darkImages.dfinanceHomepage : lightImages.dfinanceHomepageLight}
+            src={
+              theme === "dark"
+                ? darkImages.dfinanceHomepage
+                : lightImages.dfinanceHomepageLight
+            }
             alt="dFinanceHomePage"
             className="rounded-lg shadow-2xl ring-1 ring-black/15 dark:ring-white/30"
           />
@@ -44,13 +51,21 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         {isMobile2 ? (
           <img
-            src={theme === "dark" ? darkImages.faucetSmall : lightImages.FaucetSmallLight}
+            src={
+              theme === "dark"
+                ? darkImages.faucetSmall
+                : lightImages.FaucetSmallLight
+            }
             alt="Faucet Button"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
         ) : (
           <img
-            src={theme === "dark" ? darkImages.faucetPage : lightImages.faucetPageLight}
+            src={
+              theme === "dark"
+                ? darkImages.faucetPage
+                : lightImages.faucetPageLight
+            }
             alt="Faucet Button"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
@@ -67,7 +82,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           On this page, you can click the faucet button for the desired asset.
         </p>
         <img
-          src={theme === "dark" ? darkImages.faucetButton : lightImages.faucetButtonLight}
+          src={
+            theme === "dark"
+              ? darkImages.faucetButton
+              : lightImages.faucetButtonLight
+          }
           alt="Faucet Button"
           className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -76,7 +95,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           wish to faucet.
         </p>
         <img
-          src={theme === "dark" ? darkImages.faucetPopup : lightImages.faucetPopupLight}
+          src={
+            theme === "dark"
+              ? darkImages.faucetPopup
+              : lightImages.faucetPopupLight
+          }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -99,14 +122,20 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         {isMobile2 ? (
           <img
             src={
-              theme === "dark" ? darkImages.dashboardPageSmall : lightImages.DashboardPageSmallLight
+              theme === "dark"
+                ? darkImages.dashboardPageSmall
+                : lightImages.DashboardPageSmallLight
             }
             alt="dashboardPage"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
         ) : (
           <img
-            src={theme === "dark" ? darkImages.dashboardPage : lightImages.DashboardPageLight}
+            src={
+              theme === "dark"
+                ? darkImages.dashboardPage
+                : lightImages.DashboardPageLight
+            }
             alt="dashboardPage"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
           />
@@ -136,11 +165,12 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           After clicking the supply button, a popup will appear. Enter the
           amount and approve the transaction.
         </p>
-        <p className="mb-4">And click "Supply" to complete the
-        process.</p>
+        <p className="mb-4">And click "Supply" to complete the process.</p>
         <img
           src={
-            theme === "dark" ? darkImages.supplySupply : lightImages.supplySupplyLight
+            theme === "dark"
+              ? darkImages.supplySupply
+              : lightImages.supplySupplyLight
           }
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -149,7 +179,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: isMobile ? "center" : "right",
   },
   {
-    target: isMobile? "body":"#dashboard-assets-to-borrow",
+    target: isMobile ? "body" : "#dashboard-assets-to-borrow",
     content: (
       <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
@@ -171,7 +201,9 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         <img
           src={
-            theme === "dark" ? darkImages.assetsToBorrowPopup : lightImages.assetsToBorrowPopupLight
+            theme === "dark"
+              ? darkImages.assetsToBorrowPopup
+              : lightImages.assetsToBorrowPopupLight
           }
           alt="assetsToBorrowPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -181,7 +213,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: isMobile ? "center" : "left",
   },
   {
-    target: isMobile? "body":"#your-borrow",
+    target: isMobile ? "body" : "#your-borrow",
     content: (
       <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
@@ -204,7 +236,9 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <p className="mb-4">And click "Repay" to complete the process.</p>
         <img
           src={
-            theme === "dark" ? darkImages.repayRepay : lightImages.yourBorrowRepayLight
+            theme === "dark"
+              ? darkImages.repayRepay
+              : lightImages.yourBorrowRepayLight
           }
           alt="yourBorrowRepayPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -214,7 +248,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: isMobile ? "center" : "left",
   },
   {
-    target: isMobile? "body":"#your-supplies",
+    target: isMobile ? "body" : "#your-supplies",
     content: (
       <div className="relative flex flex-col text-justify text-[12px]">
         <p className="mb-4">
@@ -239,6 +273,41 @@ export const getSteps = (theme, isMobile2, isMobile) => [
             theme === "dark"
               ? darkImages.yourSuppliesWithdrawPopup
               : lightImages.yourSuppliesWithdrawPopupLight
+          }
+          alt="yourSuppliesWithdrawPopup"
+          className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+      </div>
+    ),
+    placement: isMobile ? "center" : "right",
+  },
+  {
+    target: isMobile ? "body" : "#your-supplies",
+    content: (
+      <div className="relative flex flex-col text-justify text-[12px]">
+        <p className="mb-4">
+          In this section, You can toggle the collateral status of an asset by
+          clicking the toggle button.
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.collateralDark
+              : lightImages.collateralLight
+          }
+          alt="yourSuppliesWithdrawButton"
+          className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+        />
+        <p className="mb-4">
+          To disable collateral, click the toggle to open the popup and select
+          "Disable as Collateral." To enable it, click the toggle and choose
+          "Enable as Collateral."
+        </p>
+        <img
+          src={
+            theme === "dark"
+              ? darkImages.collateralPopupDark
+              : lightImages.collateralPopupLight
           }
           alt="yourSuppliesWithdrawPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -273,7 +342,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
               Threshold.
             </p>
             <img
-              src={theme === "dark" ? darkImages.riskDetails : lightImages.riskDetailsLight}
+              src={
+                theme === "dark"
+                  ? darkImages.riskDetails
+                  : lightImages.riskDetailsLight
+              }
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -286,7 +359,9 @@ export const getSteps = (theme, isMobile2, isMobile) => [
             </p>
             <img
               src={
-                theme === "dark" ? darkImages.dashboardNavDetails : lightImages.dashboardNavDetailsLight
+                theme === "dark"
+                  ? darkImages.dashboardNavDetails
+                  : lightImages.dashboardNavDetailsLight
               }
               alt="dashboarNavDetails"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -297,7 +372,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
               Threshold.
             </p>
             <img
-              src={theme === "dark" ? darkImages.riskDetails : lightImages.riskDetailsLight}
+              src={
+                theme === "dark"
+                  ? darkImages.riskDetails
+                  : lightImages.riskDetailsLight
+              }
               alt="Faucet Button"
               className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
             />
@@ -307,60 +386,41 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     ),
     placement: isMobile ? "center" : "bottom",
   },
-  {
-    target: "#market-page1",
-    content: (
-      <div className="relative flex flex-col text-justify">
-        <h1 className="text-[22px] font-bold mb-2">Market</h1>
-        <p className="mb-4 text-[12px]">
-          The Market page shows all assets on the platform with details like
-          Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
-          to evaluate assets for supply or borrowing.
-        </p>
-        {isMobile2 ? (
-          <img
-            src={theme === "dark" ? darkImages.marketPageSmall : lightImages.MarketPageSmallLight}
-            alt="Faucet Button"
-            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-          />
-        ) : (
-          <img
-            src={theme === "dark" ? darkImages.marketPage : lightImages.marketPageLight}
-            alt="Faucet Button"
-            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-          />
-        )}
-      </div>
-    ),
-    placement: "center",
-  },
-  {
-    target: "#market-page1",
-    content: (
-      <div className="relative flex flex-col text-justify">
-        <h1 className="text-[22px] font-bold mb-2">Market</h1>
-        <p className="mb-4 text-[12px]">
-          The Market page shows all assets on the platform with details like
-          Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
-          to evaluate assets for supply or borrowing.
-        </p>
-        {isMobile2 ? (
-          <img
-            src={theme === "dark" ? darkImages.marketPageSmall : lightImages.MarketPageSmallLight}
-            alt="Faucet Button"
-            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-          />
-        ) : (
-          <img
-            src={theme === "dark" ? darkImages.marketPage : lightImages.marketPageLight}
-            alt="Faucet Button"
-            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-          />
-        )}
-      </div>
-    ),
-    placement: "center",
-  },
+  // {
+  //   target: "#market-page1",
+  //   content: (
+  //     <div className="relative flex flex-col text-justify">
+  //       <h1 className="text-[22px] font-bold mb-2">Market</h1>
+  //       <p className="mb-4 text-[12px]">
+  //         The Market page shows all assets on the platform with details like
+  //         Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
+  //         to evaluate assets for supply or borrowing.
+  //       </p>
+  //       {isMobile2 ? (
+  //         <img
+  //           src={
+  //             theme === "dark"
+  //               ? darkImages.marketPageSmall
+  //               : lightImages.MarketPageSmallLight
+  //           }
+  //           alt="Faucet Button"
+  //           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+  //         />
+  //       ) : (
+  //         <img
+  //           src={
+  //             theme === "dark"
+  //               ? darkImages.marketPage
+  //               : lightImages.marketPageLight
+  //           }
+  //           alt="Faucet Button"
+  //           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+  //         />
+  //       )}
+  //     </div>
+  //   ),
+  //   placement: "center",
+  // },
   {
     target: ".market-nav-details",
     content: (
@@ -396,20 +456,69 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     placement: isMobile ? "center" : "bottom",
   },
   {
+    target: "body",
+    content: (
+      <div className="relative flex flex-col text-justify">
+        <h1 className="text-[22px] font-bold mb-2">Market</h1>
+        <p className="mb-4 text-[12px]">
+          The Market page shows all assets on the platform with details like
+          Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
+          to evaluate assets for supply or borrowing.
+        </p>
+        {isMobile2 ? (
+          <img
+            src={
+              theme === "dark"
+                ? darkImages.marketPageSmall
+                : lightImages.MarketPageSmallLight
+            }
+            alt="Faucet Button"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={
+              theme === "dark"
+                ? darkImages.marketPage
+                : lightImages.marketPageLight
+            }
+            alt="Faucet Button"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        )}
+      </div>
+    ),
+    placement: "center",
+  },
+
+  {
     target: "#footer-liquidation",
     content: (
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
         <p className="mb-4 text-[12px]">
-          Click on the 'Liquidation' button at the bottom of the page to
+          Click on the 'Liquidation' button at the footer of the page to
           navigate to the liquidation page.
         </p>
+        {isMobile2 ? (
+          <img
+            src={darkImages.footerSmallScreen}
+            alt="footerSmallScreen"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        ) : (
+          <img
+            src={darkImages.footerDesktop}
+            alt="footerDesktop"
+            className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
+          />
+        )}
       </div>
     ),
     placement: "center",
   },
   {
-    target: "#liquidation",
+    target: "body",
     content: (
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
@@ -435,7 +544,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           Here it will show the list of users with a health factor less than 1
         </p>
         <img
-          src={theme === "dark" ? darkImages.liquidationTable : lightImages.liquidationTableLight}
+          src={
+            theme === "dark"
+              ? darkImages.liquidationTable
+              : lightImages.liquidationTableLight
+          }
           alt="Faucet Popup"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -444,7 +557,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           details and open the user information popup.
         </p>
         <img
-          src={theme === "dark" ? darkImages.liquidateButton : lightImages.LiquidatebuttonLight}
+          src={
+            theme === "dark"
+              ? darkImages.liquidateButton
+              : lightImages.LiquidatebuttonLight
+          }
           alt="Faucet Button"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -463,7 +580,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
 
         <img
-          src={theme === "dark" ? darkImages.userInformation : lightImages.userInformationLight}
+          src={
+            theme === "dark"
+              ? darkImages.userInformation
+              : lightImages.userInformationLight
+          }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -477,7 +598,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
         <p className="mb-4 text-[12px]">
-        Select the debt asset to view repayments, then choose the collateral asset to see details and rewards. Click 'Approve' to proceed.
+          Select the debt asset to view repayments, then choose the collateral
+          asset to see details and rewards. Click 'Approve' to proceed.
         </p>
         <img
           src={
@@ -523,7 +645,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           then click 'Call Liquidation' to complete the process."
         </p>
         <img
-          src={theme === "dark" ? darkImages.warningPopup : lightImages.WarningPopupLight}
+          src={
+            theme === "dark"
+              ? darkImages.warningPopup
+              : lightImages.WarningPopupLight
+          }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -602,6 +728,6 @@ export const getStyles = (joyRideBackground, joyTextColor) => ({
     fontSize: "12px",
   },
   buttonClose: {
-    color: "#f25c54",
+    display: "none",
   },
 });

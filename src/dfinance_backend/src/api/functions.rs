@@ -16,6 +16,7 @@ use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
 use serde_json::json;
+use ic_cdk::api;
 
 // Icrc2_transfer_from inter canister call.
 pub async fn asset_transfer_from(
@@ -56,15 +57,14 @@ struct Account {
 }
 
 // Icrc1_balance inter canister call.
-#[query]
 pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Nat, Error> {
     if canister == Principal::anonymous() {
-        return Err(Error::InvalidCanister);
+        return Err(Error::AnonymousPrincipal);
     }
 
     // Validate the principal
     if principal == Principal::anonymous() {
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
     let account = Account {
         owner: principal,
@@ -107,7 +107,7 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
 #[query]
 pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     if canister_id == Principal::anonymous() {
-        return Err(Error::InvalidCanister);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let raw_response: Result<(Nat,), _> =
@@ -123,71 +123,70 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
 }
 
 // not used now so error hanling later
-pub async fn update_balance(
-    canister: Principal,
-    principal: Principal,
-    amount: Nat,
-) -> Result<Nat, String> {
-    let account = Account {
-        owner: principal,
-        subaccount: None,
-    };
+// pub async fn update_balance(
+//     canister: Principal,
+//     principal: Principal,
+//     amount: Nat,
+// ) -> Result<Nat, String> {
+//     let account = Account {
+//         owner: principal,
+//         subaccount: None,
+//     };
 
-    let (result,): (Result<Nat, String>,) =
-        ic_cdk::api::call::call(canister, "icrc1_update_balance_of", (account, amount))
-            .await
-            .map_err(|e| format!("Failed to call update_balance: {:?}", e.1))?;
+//     let (result,): (Result<Nat, String>,) =
+//         ic_cdk::api::call::call(canister, "icrc1_update_balance_of", (account, amount))
+//             .await
+//             .map_err(|e| format!("Failed to call update_balance: {:?}", e.1))?;
 
-    match result {
-        Ok(balance) => {
-            ic_cdk::println!("Updated balance successfully: {}", balance);
-            Ok(balance)
-        }
-        Err(err) => {
-            ic_cdk::println!("Failed to update balance: {}", err);
-            Err(err)
-        }
-    }
-}
+//     match result {
+//         Ok(balance) => {
+//             ic_cdk::println!("Updated balance successfully: {}", balance);
+//             Ok(balance)
+//         }
+//         Err(err) => {
+//             ic_cdk::println!("Failed to update balance: {}", err);
+//             Err(err)
+//         }
+//     }
+// }
 
-pub async fn get_fees(canister: Principal) -> Result<Nat,Error> {
+// pub async fn get_fees(canister: Principal) -> Result<Nat, Error> {
+//     if canister == Principal::anonymous() {
+//         return Err(Error::AnonymousPrincipal);
+//     }
+//     let empty_arg_result = candid::encode_one(());
+//     let empty_arg = match empty_arg_result {
+//         Ok(args) => args,
+//         Err(err) => {
+//             ic_cdk::println!("Error encoding arguments: {:?}", err);
+//             return Err(Error::ErrorEncoding);
+//         }
+//     };
 
-     if canister == Principal::anonymous() {
-        return Err(Error::InvalidCanister);
-    }
-    let empty_arg_result = candid::encode_one(());
-    let empty_arg = match empty_arg_result {
-        Ok(args) => args,
-        Err(err) => {
-            ic_cdk::println!("Error encoding arguments: {:?}", err);
-            return Err(Error::ErrorEncoding);
-        }
-    };
+//     let raw_response_result =
+//         ic_cdk::api::call::call_raw(canister, "icrc1_fee", &empty_arg, 0).await;
+//     let raw_response = match raw_response_result {
+//         Ok(response) => {
+//             ic_cdk::println!("Call succeeded with response: {:?}", response);
+//             response
+//         }
+//         Err((code, message)) => {
+//             ic_cdk::println!("Call failed with code: {:?}, message: {}", code, message);
+//             return Err(Error::ErrorRawResponse);
+//         }
+//     };
 
-    let raw_response_result = ic_cdk::api::call::call_raw(canister, "icrc1_fee", &empty_arg, 0)
-        .await;
-    let raw_response = match raw_response_result {
-        Ok(response) => {
-            ic_cdk::println!("Call succeeded with response: {:?}", response);
-            response
-        }
-        Err((code, message)) => {
-            ic_cdk::println!("Call failed with code: {:?}, message: {}", code, message);
-            return Err(Error::ErrorRawResponse);
-        }
-    };
+//     let fees_result = decode_one(&raw_response);
+//     let fees = match fees_result {
+//         Ok(fee) => fee,
+//         Err(err) => {
+//             ic_cdk::println!("Error decoding balance: {:?}", err);
+//             return Err(Error::ErrorDecoding);
+//         }
+//     };
 
-    let fees_result = decode_one(&raw_response);
-    let fees = match fees_result {
-        Ok(fee) => fee,
-        Err(err) => {
-            ic_cdk::println!("Error decoding balance: {:?}", err);
-            return Err(Error::ErrorDecoding);
-        }
-    };
-
-    Ok(fees)
-}
+//     Ok(fees)
+// }
 
 pub async fn asset_transfer(
     to: Principal,
@@ -244,7 +243,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
@@ -284,20 +283,29 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     if amount > balance {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("initial", asset.clone()).await;
+        if let Err(e) = send_admin_notifications("initial", asset.clone()).await {
+            ic_cdk::println!("Failed to send admin notification: {:?}", e);
+            return Err(e);
+        }
         return Err(Error::LowWalletBalance);
     }
 
     if (balance.clone() - amount.clone()) == Nat::from(0u128) {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("mid", asset.clone()).await;
+        if let Err(e) = send_admin_notifications("mid", asset.clone()).await {
+            ic_cdk::println!("Failed to send admin notification: {:?}", e);
+            return Err(e);
+        };
     }
 
     if (balance.clone() - amount.clone())
         <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
     {
         ic_cdk::println!("wallet balance is low");
-        send_admin_notifications("final", asset.clone()).await;
+        if let Err(e) = send_admin_notifications("final", asset.clone()).await {
+            ic_cdk::println!("Failed to send admin notification: {:?}", e);
+            return Err(e);
+        };
     }
 
     let mut rate: Option<Nat> = None;
@@ -305,23 +313,23 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     match get_cached_exchange_rate(asset.clone()) {
         Ok(price_cache) => {
             if let Some(cached_price) = price_cache.cache.get(&asset) {
-                let amount = cached_price.price.clone(); 
+                let amount = cached_price.price.clone();
                 rate = Some(amount);
                 ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
             } else {
                 ic_cdk::println!("No cached price found for {}", asset);
-                rate = None; 
+                rate = None;
             }
         }
         Err(err) => {
             ic_cdk::println!("Error fetching exchange rate for {}: {:?}", asset, err);
-            rate = None; 
+            rate = None;
         }
     }
 
-    let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.unwrap());
+    let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.clone().unwrap());
 
-    ic_cdk::println!("usd amount of the facut = {}", usd_amount);
+    ic_cdk::println!("usd amount of the facut = {}, {}", usd_amount, rate.unwrap());
 
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
@@ -334,7 +342,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         );
         if usd_amount.clone() > user_reserve_data.faucet_limit {
             ic_cdk::println!("amount is too much");
-            return Err(Error::AmountTooMuch);
+            return Err(Error::AmountTooMuch);//TODO change error line
         }
 
         if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
@@ -408,10 +416,9 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 }
 
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {
-
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     //Retrieve user data.
@@ -448,17 +455,23 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     Ok(())
 }
 
-async fn send_admin_notifications(stage: &str, asset: String) {
+async fn send_admin_notifications(stage: &str, asset: String) -> Result<(), Error> {
     let message = match stage {
         "initial" => format!("Dear Admin,\n\nThe platform's faucet balance for {} is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team", asset),
         "mid" => format!("Dear Admin,\n\nUrgent: The platform's faucet balance for {} is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team", asset),
         "final" => format!("Dear Admin,\n\nReminder: The platform's faucet balance for {} is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team", asset),
         _ => "".to_string(),
     };
-    send_email_via_sendgrid(message).await;
+
+    let subject = "Faucet Amount Low - Mint More Tokens".to_string();
+    if let Err(e) = send_email_via_sendgrid(subject, message).await {
+        ic_cdk::println!("Failed to send email: {:?}", e);
+        return Err(e);
+    }
+    Ok(())
 }
 
-pub async fn send_email_via_sendgrid(message: String) -> String {
+pub async fn send_email_via_sendgrid(subject: String,message: String) -> Result<String, Error> {
     let url = "https://api.sendgrid.com/v3/mail/send";
     let api_key = "";
 
@@ -478,8 +491,8 @@ pub async fn send_email_via_sendgrid(message: String) -> String {
     let email_data = json!( {
         "personalizations": [
             {
-                "to": [{"email": "sm6047787@gmail.com"}],
-                "subject": "Faucet Amount Low - Mint More Tokens"
+                "to": [{"email": "sativikverma@gmail.com"}],
+                "subject": subject
             }
         ],
         "from": { "email": "jyotirmay2000gupta@gmail.com" },
@@ -515,11 +528,40 @@ pub async fn send_email_via_sendgrid(message: String) -> String {
             let response_body =
                 String::from_utf8(response.body).expect("Response body is not UTF-8 encoded.");
             ic_cdk::println!("Email sent successfully. Response body: {}", response_body);
-            format!("Email sent successfully. Response: {}", response_body)
+            Ok("Email sent successfully".to_string())
         }
         Err((r, m)) => {
             ic_cdk::println!("Error sending email. RejectionCode: {:?}, Error: {}", r, m);
-            format!("Error sending email. RejectionCode: {:?}, Error: {}", r, m)
+            Err(Error::EmailError)
         }
     }
+}
+
+#[update]
+pub async fn cycle_checker()-> Result<(), Error> {
+
+    let subject = "Cycle are low - Mint more cycles".to_string();
+    
+    let min_cycles: Nat = Nat::from(500_000_000_000u128); 
+    let max_cycles: Nat = Nat::from(800_000_000_000u128);  
+
+    // Get the current cycle balance of the canister
+    let current_cycles = Nat::from(api::canister_balance128());
+
+    // Log the current cycle balance
+    ic_cdk::println!("Current cycles: {}", current_cycles);
+
+    if current_cycles < min_cycles {
+        ic_cdk::println!("Need to fill the gas: Current cycles are below the minimum threshold of 500 billion.");
+        if let Err(e) = send_email_via_sendgrid(subject.clone(), "Need to fill the gas: Current cycles are below the minimum threshold of 500 billion.".to_string()).await {
+            return Err(e);
+        }
+    } 
+    if current_cycles >= min_cycles && current_cycles <= max_cycles {
+        ic_cdk::println!("Urgent action needed: Current cycles are between the minimum (500 billion) and maximum (800 billion) threshold.");
+        if let Err(e) = send_email_via_sendgrid(subject.clone(), "Urgent action needed: Current cycles are between the minimum (500 billion) and maximum (800 billion) threshold.".to_string()).await {
+            return Err(e);
+        }
+    }
+    Ok(())
 }

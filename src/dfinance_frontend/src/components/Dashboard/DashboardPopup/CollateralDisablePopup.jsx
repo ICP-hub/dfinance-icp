@@ -6,9 +6,12 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import { useDispatch } from "react-redux";
 
 const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange 
 }) => {
+  const dispatch = useDispatch();
   const { backendActor } = useAuth();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -63,7 +66,23 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
           SetError("Price fetch failed: Your assets are safe, try again after some time.");
           throw new Error("ExchangeRateError: Price fetch failed.");
         }
+        if (errorMsg?.LTVGreaterThanThreshold === null) {
+          const errorText = "Collateral update failed: LTV exceeds the allowable threshold.";
+          toast.error(errorText, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
   
+          // Optionally set additional UI state for the error
+         
+          throw new Error("LTVGreaterThanThreshold: " + errorText);
+        }
         // Handle other errors if needed
         throw new Error(JSON.stringify(errorMsg));
       }
@@ -78,21 +97,26 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   
   
   useEffect(() => {
-    if (assetSupply && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
-      setUsdValue(convertedValue);
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
+  if (assetSupply && conversionRate) {
+    const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+    const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
+
+    // Truncate to 8 decimal places without rounding
+    const truncatedValue = Math.trunc(convertedValue * 1e8) / 1e8;
+
+    setUsdValue(truncatedValue);
+  } else {
+    setUsdValue(0);
+  }
+}, [amount, conversionRate]);
+
 
   const handleToggleCollateral = async () => {
     setIsLoading(true);
     try {
       // Call toggleCollateral with the required parameters
       await toggleCollateral(asset, assetSupply);
-     
+         dispatch(toggleDashboardRefresh());
       toast.success("Collateral updated successfully!");
       setIsPaymentDone(true);
       setIsVisible(false);
@@ -100,7 +124,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
       
       console.error("Error updating collateral:", error);
       const errorMessage = error?.message || "An unexpected error occurred.";
-      toast.error(`Error updating collateral: ${errorMessage}`);
+     // toast.error(`Error updating collateral: ${errorMessage}`);
     } finally {
       setIsLoading(false); // Reset loading state
     }
@@ -129,18 +153,34 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
-    window.location.reload();
   };
   useEffect(() => {
-    const adjustedCollateral = currentCollateralStatus
-      ? Math.max(totalCollateral - usdValue, 0)
-      : Math.max(totalCollateral + usdValue, 0);
+    const Collateral = currentCollateralStatus
+  ? Math.max(totalCollateral - usdValue, 0)
+  : Math.max(totalCollateral + usdValue, 0);
+    const adjustedCollateral = Math.trunc(Collateral * 1e8) / 1e8;
+    const totalCollateralValue = parseFloat(adjustedCollateral);
+    const totalDeptValue = parseFloat(totalDebt);
+    let result;
+    if (totalDeptValue === 0) {
+      result = Infinity;
+    } else
+    {let avliq=(liquidationThreshold*totalCollateral);
+    console.log("avliq", avliq);
+    let tempLiq = currentCollateralStatus
+    ? (avliq-(usdValue * reserveliquidationThreshold))
+    : (avliq+(usdValue * reserveliquidationThreshold))
+    
+     if (totalCollateralValue > 0) {tempLiq=tempLiq/totalCollateralValue;}
+    console.log("tempLiq", tempLiq);
+    result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+    result = Math.round(result * 1e8) / 1e8; 
+    console.log("result", result);}
+  console.log("result", result);
 
-    const healthFactor = calculateHealthFactor(
-      adjustedCollateral,
-      totalDebt,
-      liquidationThreshold
-    );
+    const healthFactor= result;
+    console.log("adjustedCollateral",adjustedCollateral,totalCollateral,usdValue)
+    
 
     const ltv = calculateLTV(adjustedCollateral, totalDebt);
 
@@ -169,18 +209,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
     asset,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,amount,usdValue,currentCollateralStatus,totalCollateral,totalDebt,
   ]);
 
-  const calculateHealthFactor = (
-    adjustedCollateral,
-    totalDebt,
-    liquidationThreshold
-  ) => {
-    const totalCollateralValue = parseFloat(totalCollateral);
-    const totalDeptValue = parseFloat(totalDebt);
-    if (totalDeptValue === 0) {
-      return Infinity;
-    }
-    return (adjustedCollateral * (liquidationThreshold / 100)) / totalDeptValue;
-  };
+  
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {

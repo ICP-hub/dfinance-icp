@@ -109,7 +109,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (ckBTCUsdRate && ckBTCUsdRate > 0) {
       const btcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
+        console.log("btc", FaucetLimit[asset], FaucetUsage[asset], ckBTCUsdRate, btcAmount);
       const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
+      console.log("tr",truncatedBtcAmount);
       setFaucetBTC(truncatedBtcAmount);
     }
 
@@ -178,8 +180,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     const numericAmount = parseFloat(inputAmount);
     const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
-
-    if (numericAmount > availableAmount) {
+console.log("availableAmount", availableAmount);
+    if (numericAmount > exchangeRate) {
       return;
     }
 
@@ -243,6 +245,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         }
 
         const natAmount = Math.round(numericAmount * Math.pow(10, 8));
+        console.log("natAmount", natAmount);
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
         if (numericAmount > availableAmount) {
           toast.error(`Faucet limit exceeded! `, {
@@ -439,9 +442,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       />
                       <span className="text-lg">{asset}</span>
                     </div>
-
-                    <p
-                      className="cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-2 py-1 rounded-md"
+                    <div
+                      className="cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md"
                       onClick={handleMaxAmountClick}
                     >
                       $
@@ -450,7 +452,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                         1e8
                       ).toLocaleString()}{" "}
                       Max
-                    </p>
+                    </div>
                   </div>
                 </div>
               </div>

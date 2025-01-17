@@ -468,3 +468,20 @@ button:active {
     width: 30vw !important;
   }
 }
+.spinner-border {
+  border: 2px solid transparent;
+  border-top: 2px solid #3498db; /* Change color as needed */
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

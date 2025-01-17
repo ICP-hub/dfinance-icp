@@ -4,6 +4,7 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
 use candid::{CandidType, Deserialize, Nat, Principal};
+use futures::future::ok;
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use serde::Serialize;
@@ -70,6 +71,15 @@ pub async fn update_reserves_price() -> Result<(), Error> {
             }
         }
     }
+    Ok(())
+}
+
+#[update]
+pub async fn update_token_price(asset:String)-> Result<(),Error>{
+   if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await{
+    return Err(e);
+    };
+
     Ok(())
 }
 
@@ -199,7 +209,7 @@ pub async fn get_exchange_rates(
             "ckUSDT" => "usdt".to_string(),
             _ => symbol,
         },
-        None => "USD".to_string(),
+        None => "USDT".to_string(),
     };
 
     let args = GetExchangeRateRequest {
@@ -249,7 +259,7 @@ pub async fn get_exchange_rates(
 
                 // Fetching price-cache data
                 ic_cdk::println!("exchange rate");
-                if quote_asset == "USD" {
+                if quote_asset == "USDT" {
                     let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
                         let price_cache_data = &mut state.price_cache_list;
                         if let Some(price_cache) = price_cache_data.get(&base_asset) {
@@ -275,7 +285,7 @@ pub async fn get_exchange_rates(
                             data
                         }
                         Err(e) => {
-                            panic!("{:?}", e);
+                            return Err(Error::NoPriceCache);
                         }
                     };
 

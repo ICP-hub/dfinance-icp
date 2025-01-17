@@ -32,6 +32,7 @@ impl Default for UserData {
             total_collateral: Some(Nat::from(0u128)),
             total_debt: Some(Nat::from(0u128)),
             reserves: Default::default(),
+            
            
         }
     }

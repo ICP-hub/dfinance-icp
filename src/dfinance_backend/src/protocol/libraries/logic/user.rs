@@ -1,4 +1,5 @@
 use super::update::user_data;
+use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
 use crate::get_all_users;
 use crate::protocol::libraries::types::datatypes::UserData;
@@ -29,10 +30,11 @@ pub async fn calculate_user_account_data(
     if let Some(principal) = on_behalf {
         if principal == Principal::anonymous() {
             ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::InvalidPrincipal);
+            return Err(Error::AnonymousPrincipal);
         }
     }
 
+    ic_cdk::println!("to check the on behalf = {:?}", on_behalf);
     ic_cdk::println!("to check the on behalf = {:?}", on_behalf);
 
     let user_principal = match on_behalf {
@@ -41,7 +43,7 @@ pub async fn calculate_user_account_data(
             let user_principal = ic_cdk::caller();
             if user_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
-                return Err(Error::InvalidPrincipal);
+                return Err(Error::AnonymousPrincipal);
             }
             if user_principal != ic_cdk::caller() {
                 return Err(Error::InvalidUser);
@@ -74,8 +76,9 @@ pub async fn calculate_user_account_data(
             Nat::from(0u128),
             Nat::from(0u128),
             Nat::from(0u128),
-            Nat::from(0u128),
+           
             max,
+            Nat::from(0u128),
             false,
         ));
     }
@@ -314,24 +317,24 @@ pub async fn get_user_balance_in_base_currency(
         }
     };
 
-    // let d_token_canister_principal: Principal =
-    //     Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
+    let d_token_canister_principal: Principal =
+        Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
 
-    // let balance_result = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
-    // let user_scaled_balance = match balance_result {
-    //     Ok(data) => {
-    //         ic_cdk::println!("get balance data : {:?}", data);
-    //         data
-    //     }
-    //     Err(e) => {
-    //         return Err(e);
-    //     }
-    // };
-    // ic_cdk::println!(
-    //     "Fetched balance from DToken canister: {:?}",
-    //     user_scaled_balance
-    // );
-    let user_scaled_balance = reserve.d_token_balance.clone();
+    let balance_result = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
+    let user_scaled_balance = match balance_result {
+        Ok(data) => {
+            ic_cdk::println!("get balance data : {:?}", data);
+            data
+        }
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    ic_cdk::println!(
+        "Fetched balance from DToken canister: {:?}",
+        user_scaled_balance
+    );
+    //let user_scaled_balance = reserve.d_token_balance.clone();
     let normalized_supply_result = user_normalized_supply(asset_reserve);
     let normalized_supply = match normalized_supply_result {
         Ok(data) => {
@@ -382,22 +385,22 @@ pub async fn get_user_debt_in_base_currency(
     };
 
     ic_cdk::println!("Fetching debt token canister principal from reserve...");
-    // let debt_token_canister_principal =
-    //     Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
+    let debt_token_canister_principal =
+        Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
 
-    // ic_cdk::println!("Fetching balance of user...");
-    // let balance_result = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
+    ic_cdk::println!("Fetching balance of user...");
+    let balance_result = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
 
-    // let mut user_variable_debt = match balance_result {
-    //     Ok(data) => {
-    //         ic_cdk::println!("get balance data : {:?}", data);
-    //         data
-    //     }
-    //     Err(e) => {
-    //         return Err(e);
-    //     }
-    // };
-    let mut user_variable_debt = reserve.debt_token_blance.clone();
+    let mut user_variable_debt = match balance_result {
+        Ok(data) => {
+            ic_cdk::println!("get balance data : {:?}", data);
+            data
+        }
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    // let mut user_variable_debt = reserve.debt_token_blance.clone();
     let user_normailzed_debt_result = user_normalized_debt(asset_reserve);
     let user_normailzed_debt = match user_normailzed_debt_result {
         Ok(data) => {
@@ -410,7 +413,7 @@ pub async fn get_user_debt_in_base_currency(
     };
 
     if user_variable_debt != Nat::from(0u128) {
-        //TODO need to divide this by user_reserve.variable_borrow_index
+        user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());
         user_variable_debt = user_variable_debt.scaled_mul(user_normailzed_debt);
         ic_cdk::println!(
             "User variable debt after normalization: {}",
@@ -479,7 +482,12 @@ pub async fn get_liquidation_users_concurrent(
                         available_borrow: user_account_data_tuple.5,
                         has_zero_ltv_collateral: user_account_data_tuple.6,
                     };
-                    page_liq_list.push((user_principal, user_account_data, user_data));
+                    ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
+
+                    if user_account_data.health_factor < Nat::from(100000000u128){
+                        page_liq_list.push((user_principal, user_account_data, user_data));
+                    }
+                   
                 }
             }
             page_liq_list

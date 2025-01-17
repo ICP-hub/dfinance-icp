@@ -7,6 +7,7 @@ pub enum Error {
     InvalidAmount,
     InvalidCanister,
     InvalidPrincipal,
+    AnonymousPrincipal,
     MaxAmount,
     ReserveInactive,
     ReservePaused,
@@ -55,6 +56,15 @@ pub enum Error {
     ErrorEncoding,
     ErrorRawResponse,
     ErrorDecoding,
+    LockAcquisitionFailed,
+    InsufficientLiquidity,
+    ErrorRollBack,
+    EmailError,
+    ErrorNotController,
+    InvalidVariableName,
+    TokenAlreadyExist,
+    FailedToReleaseLock,
+    LockOperationInProgess
 }
 
 impl Error {
@@ -64,7 +74,8 @@ impl Error {
             Error::InvalidAmount => "Amount must be greater than 0",
             Error::InvalidCanister => "Invalid canister id",
             Error::InvalidPrincipal => "Invalid principal id",
-            Error::MaxAmount => "Amount must be less than user balance",
+            Error::AnonymousPrincipal => "Anonymous principals are not allowed",
+            Error::MaxAmount => "Amount must be less than user available balance",
             Error::ReserveInactive => "Action requires an active reserve",
             Error::ReservePaused => "Action cannot be performed because the reserve is paused",
             Error::ReserveFrozen => "Action cannot be performed because the reserve is frozen",
@@ -112,6 +123,15 @@ impl Error {
             Error::ErrorEncoding => "Error encoding arguments",
             Error::ErrorRawResponse => "Error in raw response",
             Error::ErrorDecoding => "Error decoding response",
+            Error::LockAcquisitionFailed => "Failed to acquire lock",
+            Error::InsufficientLiquidity => "Insufficient liquidity",
+            Error::ErrorRollBack => "Error while rollback",
+            Error::EmailError => "Error in sending email to the admin",
+            Error::ErrorNotController => "you are not a controller",
+            Error::InvalidVariableName => "name of the variable is invalid - please enter it again",
+            Error::TokenAlreadyExist => "Token already exist - try again with different token",
+            Error::FailedToReleaseLock => "Failed to release lock",
+            Error::LockOperationInProgess => "Another operation is already in progress for user"
         }
     }
 }

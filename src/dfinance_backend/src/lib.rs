@@ -1,15 +1,18 @@
 use crate::constants::errors::Error;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
+use api::resource_manager::LOCKS;
+use api::resource_manager::{release_lock, acquire_lock};
 use candid::Nat;
 use candid::Principal;
+use declarations::assets::InitArgs;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
-use protocol::libraries::logic::user;
 use protocol::libraries::logic::user::calculate_user_account_data;
+use protocol::libraries::logic::user;
 
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
@@ -26,7 +29,7 @@ mod state;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::assets::{
-    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,ExecuteLiquidationParams
 };
 use crate::protocol::libraries::logic::user::UserAccountData;
 use crate::declarations::storable::Candid;
@@ -37,9 +40,33 @@ use std::time::Duration;
 const ONE_DAY: Duration = Duration::from_secs(86400);
 
 #[init]
-pub async fn init() {
+pub async fn init(args: Principal) {
+
+    ic_cdk::println!("init function = {:?}", args);
+
+
+    mutate_state(|state| {
+        state.meta_data.insert(0, Candid(InitArgs { controller_id: args }));
+    });
+
     ic_cdk::println!("function called");
     schedule_midnight_task().await;
+}
+
+#[query]
+pub fn get_controller() -> Result<InitArgs, Error> {
+
+    match read_state(|state| {
+        state
+            .meta_data
+            .get(&0)
+            .ok_or_else(|| Error::UserNotFound)
+    }) {
+        Ok(va) => {
+            Ok(va.0)
+        },
+        Err(_) => return Err(Error::ErrorNotController)
+    }
 }
 
 // Function to fetch the reserve-data based on the asset
@@ -59,7 +86,7 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
 fn get_user_data(user: Principal) -> Result<UserData, Error> {
     if user == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     read_state(|state| {
@@ -83,6 +110,17 @@ pub fn get_all_assets() -> Vec<String> {
         asset_names
     })
 }
+
+pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
+    read_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&asset) // No need for `to_string` or `clone` here
+            .map(|principal| principal.clone())   // Copy the `Principal` directly
+            .ok_or(Error::NoCanisterIdFound) // Return the error if the key is not found
+    })
+}
+
 
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
@@ -125,7 +163,7 @@ fn register_user() -> Result<String, Error> {
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let user_data = mutate_state(|state| {
@@ -160,7 +198,7 @@ pub async fn user_position(asset_name: String) -> Result<(Nat, Nat), Error> {
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let user_data_result = read_state(|state| {
@@ -289,7 +327,7 @@ pub async fn get_asset_supply(
     if let Some(principal) = on_behalf {
         if principal == Principal::anonymous() {
             ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::InvalidPrincipal);
+            return Err(Error::AnonymousPrincipal);
         }
     }
     ic_cdk::println!("Entering get_asset_supply function");
@@ -303,7 +341,7 @@ pub async fn get_asset_supply(
 
     if user_principal ==  Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
     ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
@@ -404,7 +442,7 @@ pub async fn get_asset_debt(
     if let Some(principal) = on_behalf {
         if principal == Principal::anonymous() {
             ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::InvalidPrincipal);
+            return Err(Error::AnonymousPrincipal);
         }
     }
     let user_principal = match on_behalf {
@@ -414,7 +452,7 @@ pub async fn get_asset_debt(
 
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::InvalidPrincipal);
+        return Err(Error::AnonymousPrincipal);
     }
 
     let user_data_result = user_data(user_principal);
@@ -489,9 +527,16 @@ pub async fn get_asset_debt(
 }
 
 
-//TODO add validation for this function
 #[query]
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
+
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
 
@@ -513,9 +558,16 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
 }
 
 //FRONTEND - userbalance(debttoken)*usernormalizedebt/userreserve.debtindex -> to get asset_debt of user for perticular asset
-//TODO add validation for this function
 #[query]
 pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
+
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
     let current_time = ic_cdk::api::time() / 1_000_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
 
@@ -531,7 +583,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
             reserve_data.borrow_rate
         );
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
-            reserve_data.borrow_rate.clone(), //TODO check if this dividing by 100 is necessary or not
+            reserve_data.borrow_rate.clone(),
             reserve_data.last_update_timestamp,
             current_time,
         );
@@ -545,13 +597,43 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
+
+#[update]
+async fn check_lock() -> Result<String, Error> {
+    let user_principal = ic_cdk::api::caller();
+    ic_cdk::println!("user principal = {} ", user_principal);
+
+    let result = acquire_lock(&user_principal);
+
+   
+    match result {
+        Ok(_) => Ok("Lock acquired".to_string()),
+        Err(e) => Err(Error::LockAcquisitionFailed),
+    }
+}
+#[query]
+async fn get_lock() -> Result<bool, Error> {
+    let user_principal = ic_cdk::api::caller();
+    ic_cdk::println!("user principal = {} ", user_principal);
+
+    let result = LOCKS
+    .lock()
+    .map(|locks| locks.get(&user_principal).cloned().unwrap_or_else(|| false));
+    
+
+   
+    match result {
+        Ok(_) => Ok(result.unwrap()),
+        Err(e) => Err(Error::LockAcquisitionFailed),
+    }
+}
+
 #[query]
 pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
-
 // this function is for check which i will remove later.
-#[query]
+#[update]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {

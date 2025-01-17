@@ -4,24 +4,12 @@ use crate::{
         interest_variables::{
             self,
             constants::{
-                BASE_VARIABLE_BORROW_RATE, CKBTC_BASE_VARIABLE_BORROW_RATE,
-                CKBTC_MAX_EXCESS_USAGE_RATIO, CKBTC_OPTIMAL_USAGE_RATIO,
-                CKBTC_VARIABLE_RATE_SLOPE1, CKBTC_VARIABLE_RATE_SLOPE2,
-                CKETH_BASE_VARIABLE_BORROW_RATE, CKETH_MAX_EXCESS_USAGE_RATIO,
-                CKETH_OPTIMAL_USAGE_RATIO, CKETH_VARIABLE_RATE_SLOPE1, CKETH_VARIABLE_RATE_SLOPE2,
-                CKUSDC_BASE_VARIABLE_BORROW_RATE, CKUSDC_MAX_EXCESS_USAGE_RATIO,
-                CKUSDC_OPTIMAL_USAGE_RATIO, CKUSDC_VARIABLE_RATE_SLOPE1,
-                CKUSDC_VARIABLE_RATE_SLOPE2, CKUSDT_BASE_VARIABLE_BORROW_RATE,
-                CKUSDT_MAX_EXCESS_USAGE_RATIO, CKUSDT_OPTIMAL_USAGE_RATIO,
-                CKUSDT_VARIABLE_RATE_SLOPE1, CKUSDT_VARIABLE_RATE_SLOPE2,
-                ICP_BASE_VARIABLE_BORROW_RATE, ICP_MAX_EXCESS_USAGE_RATIO, ICP_OPTIMAL_USAGE_RATIO,
-                ICP_VARIABLE_RATE_SLOPE1, ICP_VARIABLE_RATE_SLOPE2, MAX_EXCESS_USAGE_RATIO,
-                VARIABLE_RATE_SLOPE1, VARIABLE_RATE_SLOPE2,
+                BASE_VARIABLE_BORROW_RATE, CKBTC_BASE_VARIABLE_BORROW_RATE, CKBTC_MAX_EXCESS_USAGE_RATIO, CKBTC_OPTIMAL_USAGE_RATIO, CKBTC_VARIABLE_RATE_SLOPE1, CKBTC_VARIABLE_RATE_SLOPE2, CKETH_BASE_VARIABLE_BORROW_RATE, CKETH_MAX_EXCESS_USAGE_RATIO, CKETH_OPTIMAL_USAGE_RATIO, CKETH_VARIABLE_RATE_SLOPE1, CKETH_VARIABLE_RATE_SLOPE2, CKUSDC_BASE_VARIABLE_BORROW_RATE, CKUSDC_MAX_EXCESS_USAGE_RATIO, CKUSDC_OPTIMAL_USAGE_RATIO, CKUSDC_VARIABLE_RATE_SLOPE1, CKUSDC_VARIABLE_RATE_SLOPE2, CKUSDT_BASE_VARIABLE_BORROW_RATE, CKUSDT_MAX_EXCESS_USAGE_RATIO, CKUSDT_OPTIMAL_USAGE_RATIO, CKUSDT_VARIABLE_RATE_SLOPE1, CKUSDT_VARIABLE_RATE_SLOPE2, ICP_BASE_VARIABLE_BORROW_RATE, ICP_MAX_EXCESS_USAGE_RATIO, ICP_OPTIMAL_USAGE_RATIO, ICP_VARIABLE_RATE_SLOPE1, ICP_VARIABLE_RATE_SLOPE2, MAX_EXCESS_USAGE_RATIO, SCALING_FACTOR, VARIABLE_RATE_SLOPE1, VARIABLE_RATE_SLOPE2
             },
         },
     },
     get_reserve_data,
-    protocol::libraries::math::math_utils::ScalingMath,
+    protocol::libraries::math::math_utils::ScalingMath, user_normalized_supply,
 };
 use candid::{CandidType, Deserialize, Nat};
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
@@ -131,8 +119,15 @@ pub async fn calculate_interest_rates(
     };
 
     if total_debt != Nat::from(0u128) {
-
+        ic_cdk::println!("liq added = {}",liq_added);
+        ic_cdk::println!("liq taken = {}",liq_taken);
+        
         let total_supply = reserve.asset_supply.scaled_mul(reserve.liquidity_index);
+        // let total_supply = match user_normalized_supply(reserve.clone()) {
+        //     Ok(supply) => reserve.asset_supply.scaled_mul(supply),
+        //     Err(e) => return Err(e),
+        // };
+        ic_cdk::println!("total supply = {}",total_supply);
         let available_liq = total_supply + liq_added - liq_taken;
         
         ic_cdk::println!("Available liquidity: {:?}", available_liq);
@@ -189,7 +184,7 @@ pub async fn calculate_interest_rates(
     ic_cdk::println!("Overall borrow rate: {:?}", curr_borrow_rate);
 
     current_liquidity_rate = (curr_borrow_rate.clone().scaled_mul(supply_usage_ratio))
-        .scaled_mul(Nat::from(100000000u128) - (reserve_factor / Nat::from(100u128)));
+        .scaled_mul(Nat::from(SCALING_FACTOR) - (reserve_factor / Nat::from(100u128)));
 
     ic_cdk::println!(
         "Calculated liquidity rate before adjustment: {:?}",

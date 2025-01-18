@@ -1,5 +1,7 @@
 use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
+use crate::api::resource_manager::get_repay_locked_amount;
+use crate::api::resource_manager::repay_lock_amount;
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
@@ -195,10 +197,9 @@ pub async fn burn_scaled(
         balance_increase = (balance.clone().scaled_mul(index.clone()))
             - (balance
                 .clone()
-                .scaled_mul(user_state.liquidity_index.clone()));
-
-        ic_cdk::println!("Balance increase calculated: {}", balance_increase);
-
+                .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
+        ic_cdk::println!("balance_increase calculated = {}", balance_increase);
+        ic_cdk::println!("dtoken vs adjusted {} {}", user_state.d_token_balance, adjusted_amount);
         if user_state.d_token_balance == adjusted_amount {
             ic_cdk::println!("Setting DToken balance to zero");
             user_state.d_token_balance = Nat::from(0u128);
@@ -243,12 +244,19 @@ pub async fn burn_scaled(
         );
         ic_cdk::println!("before updating asset borrow = {:?}", reserve.asset_borrow);
 
+        if let Err(err) = repay_lock_amount(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
+            ic_cdk::println!("Error in repay_lock_amount: {:?}", err);
+            return Err(err);
+        }
+
         if reserve.asset_borrow == adjusted_amount {
             ic_cdk::println!("Setting asset borrow to zero");
             reserve.asset_borrow = Nat::from(0u128);
         } else {
             ic_cdk::println!("Subtracting adjusted amount from asset borrow");
-            reserve.asset_borrow -= adjusted_amount;
+            let repay_amount = get_repay_locked_amount(&reserve.asset_name.clone().unwrap());
+            ic_cdk::println!("repay amount = {}",repay_amount);
+            reserve.asset_borrow -= repay_amount;
         }
 
         ic_cdk::println!("Updated asset borrow: {}", reserve.asset_borrow);
@@ -286,13 +294,17 @@ pub async fn burn_scaled(
             ic_cdk::println!("Adjusting burn amount to balance");
             amount_to_burn = balance.clone();
             if burn_dtoken {
-                user_state.d_token_balance = Nat::from(0u128);
-            } else {
+               user_state.d_token_balance = Nat::from(0u128);
+               
+            }
+            else {
                 user_state.debt_token_blance = Nat::from(0u128);
             }
         }
-
-        ic_cdk::println!("Final burn amount: {}", amount_to_burn);
+        ic_cdk::println!(
+            "balance_increase is not greater than amount, amount_to_burn = {}",
+            amount_to_burn
+        );
 
         match asset_transfer(
             platform_principal,

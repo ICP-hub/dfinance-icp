@@ -8,6 +8,8 @@ use std::sync::Mutex;
 pub static LOCKS: Lazy<Mutex<HashMap<Principal, bool>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 pub static AMOUNT_LOCKS: Lazy<Mutex<HashMap<String, Nat>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
+pub static REPAY_AMOUNT_LOCKS: Lazy<Mutex<HashMap<String, Nat>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 pub static TO_CHECK_AMOUNT: Lazy<Mutex<HashMap<Principal, ()>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
@@ -217,14 +219,89 @@ pub fn is_amount_locked(user_principal: &Principal) -> bool {
     };
 
     if to_check_amount.contains_key(user_principal) {
-        ic_cdk::println!("Principal '{}' found. Clearing from TO_CHECK_AMOUNT.", user_principal);
+        ic_cdk::println!(
+            "Principal '{}' found. Clearing from TO_CHECK_AMOUNT.",
+            user_principal
+        );
 
         to_check_amount.remove(user_principal);
 
         true
     } else {
-        ic_cdk::println!("Principal '{}' not found in TO_CHECK_AMOUNT.", user_principal);
+        ic_cdk::println!(
+            "Principal '{}' not found in TO_CHECK_AMOUNT.",
+            user_principal
+        );
         false
     }
 }
 
+pub fn repay_lock_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
+    ic_cdk::println!("Attempting to lock amount: {} for asset: {}", amount, asset);
+
+    let mut amount_locks = match REPAY_AMOUNT_LOCKS.lock() {
+        Ok(lock) => lock,
+        Err(_) => {
+            ic_cdk::println!("Failed to acquire lock for AMOUNT_LOCKS.");
+            return Err(Error::LockAcquisitionFailed);
+        }
+    };
+
+    let current_locked = amount_locks
+        .get(asset)
+        .cloned()
+        .unwrap_or_else(|| Nat::from(0u128));
+
+    ic_cdk::println!(
+        "Current locked amount for asset '{}': {}",
+        asset,
+        current_locked
+    );
+
+    let new_locked_amount = current_locked + amount.clone();
+    amount_locks.insert(asset.to_string(), new_locked_amount.clone());
+
+    ic_cdk::println!(
+        "New locked amount for asset '{}': {}",
+        asset,
+        new_locked_amount
+    );
+    Ok(())
+}
+
+pub fn repay_release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
+    let mut locks = REPAY_AMOUNT_LOCKS
+        .lock()
+        .map_err(|_| Error::LockAcquisitionFailed)?;
+
+    if let Some(current_locked) = locks.get_mut(asset) {
+        ic_cdk::println!("Amount to release: {}", amount);
+        ic_cdk::println!("Current locked amount: {}", current_locked);
+
+        *current_locked -= amount.clone();
+
+        if *current_locked == Nat::from(0u128) {
+            locks.remove(asset);
+            ic_cdk::println!("Asset lock for '{}' fully released.", asset);
+        } else {
+            ic_cdk::println!("Updated locked amount for '{}': {}", asset, current_locked);
+        }
+    } else {
+        ic_cdk::println!("No locked amount found for asset '{}'.", asset);
+        return Err(Error::EmptyAsset);
+    }
+
+    Ok(())
+}
+
+pub fn get_repay_locked_amount(asset: &str) -> Nat {
+    REPAY_AMOUNT_LOCKS
+        .lock()
+        .map(|locks| {
+            locks
+                .get(asset)
+                .cloned()
+                .unwrap_or_else(|| Nat::from(0u128))
+        })
+        .unwrap_or_else(|_| Nat::from(0u128))
+}

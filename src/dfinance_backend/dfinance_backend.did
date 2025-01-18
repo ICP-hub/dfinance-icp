@@ -192,6 +192,7 @@ service : (principal) -> {
   get_user_account_data : (opt principal) -> (Result_10);
   get_user_data : (principal) -> (Result_11) query;
   initialize : (text, ReserveData) -> (Result_1);
+  platform_principal : () -> (principal) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result);
   reset_reserve_value : (text, text, nat) -> (Result_1);

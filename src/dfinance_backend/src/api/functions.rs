@@ -9,6 +9,7 @@ use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
+use ic_cdk::api;
 use ic_cdk::api::management_canister::http_request::{
     http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod,
 };
@@ -16,7 +17,6 @@ use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
 use serde_json::json;
-use ic_cdk::api;
 
 // Icrc2_transfer_from inter canister call.
 pub async fn asset_transfer_from(
@@ -301,7 +301,11 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.clone().unwrap());
 
-    ic_cdk::println!("usd amount of the facut = {}, {}", usd_amount, rate.unwrap());
+    ic_cdk::println!(
+        "usd amount of the facut = {}, {}",
+        usd_amount,
+        rate.unwrap()
+    );
 
     let user_reserve = user_reserve(&mut user_data, &asset);
     ic_cdk::println!("user reserve = {:?}", user_reserve);
@@ -314,7 +318,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         );
         if usd_amount.clone() > user_reserve_data.faucet_limit {
             ic_cdk::println!("amount is too much");
-            return Err(Error::AmountTooMuch);//TODO change error line
+            return Err(Error::AmountTooMuch); //TODO change error line
         }
 
         if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
@@ -443,7 +447,7 @@ async fn send_admin_notifications(stage: &str, asset: String) -> Result<(), Erro
     Ok(())
 }
 
-pub async fn send_email_via_sendgrid(subject: String,message: String) -> Result<String, Error> {
+pub async fn send_email_via_sendgrid(subject: String, message: String) -> Result<String, Error> {
     let url = "https://api.sendgrid.com/v3/mail/send";
     let api_key = "";
 
@@ -509,31 +513,7 @@ pub async fn send_email_via_sendgrid(subject: String,message: String) -> Result<
     }
 }
 
-#[update]
-pub async fn cycle_checker()-> Result<(), Error> {
-
-    let subject = "Cycle are low - Mint more cycles".to_string();
-    
-    let min_cycles: Nat = Nat::from(500_000_000_000u128); 
-    let max_cycles: Nat = Nat::from(800_000_000_000u128);  
-
-    // Get the current cycle balance of the canister
-    let current_cycles = Nat::from(api::canister_balance128());
-
-    // Log the current cycle balance
-    ic_cdk::println!("Current cycles: {}", current_cycles);
-
-    if current_cycles < min_cycles {
-        ic_cdk::println!("Need to fill the gas: Current cycles are below the minimum threshold of 500 billion.");
-        if let Err(e) = send_email_via_sendgrid(subject.clone(), "Need to fill the gas: Current cycles are below the minimum threshold of 500 billion.".to_string()).await {
-            return Err(e);
-        }
-    } 
-    if current_cycles >= min_cycles && current_cycles <= max_cycles {
-        ic_cdk::println!("Urgent action needed: Current cycles are between the minimum (500 billion) and maximum (800 billion) threshold.");
-        if let Err(e) = send_email_via_sendgrid(subject.clone(), "Urgent action needed: Current cycles are between the minimum (500 billion) and maximum (800 billion) threshold.".to_string()).await {
-            return Err(e);
-        }
-    }
-    Ok(())
+#[query]
+pub async fn cycle_checker() -> Nat {
+    Nat::from(api::canister_balance128())
 }

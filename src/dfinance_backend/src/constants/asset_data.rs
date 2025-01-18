@@ -5,7 +5,7 @@ use crate::declarations::storable::Candid;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use candid::{Nat, Principal};
 use ic_cdk::api::time;
-use ic_cdk::update;
+use ic_cdk::{query, update};
 
 #[update]
 pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
@@ -122,3 +122,9 @@ pub async fn reset_reserve_value(
     });
     Ok(())
 }
+
+#[query]
+pub fn to_check_controller() -> bool {
+    ic_cdk::api::is_controller(&ic_cdk::api::caller())
+}
+

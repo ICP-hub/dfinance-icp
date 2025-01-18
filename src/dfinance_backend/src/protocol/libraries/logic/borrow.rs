@@ -1,6 +1,6 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::resource_manager::{
-    acquire_lock, is_amount_locked, release_amount, release_lock,
+    acquire_lock, is_amount_locked, release_amount, release_lock, repay_release_amount,
 };
 use crate::api::state_handler::*;
 use crate::constants::errors::Error;
@@ -11,6 +11,7 @@ use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::reserve_ledger_canister_id;
 use candid::{Nat, Principal};
 use ic_cdk::update;
@@ -419,6 +420,24 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
 
         ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
+        let adjusted_amount = if params.amount.clone() % reserve_cache.next_debt_index.clone()
+            != Nat::from(0u128)
+            && params.amount.clone() < Nat::from(10u128)
+        {
+            ic_cdk::println!("Rounding up due to remainder and amount < 10");
+            params
+                .amount
+                .clone()
+                .scaled_div(reserve_cache.next_debt_index.clone())
+                + Nat::from(1u128)
+        } else {
+            ic_cdk::println!("No rounding required");
+            params
+                .amount
+                .clone()
+                .scaled_div(reserve_cache.next_debt_index.clone())
+        };
+
         // ----------- Update logic here -------------
         if let Err(e) = UpdateLogic::update_user_data_repay(
             user_principal,
@@ -431,6 +450,9 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
             ic_cdk::println!("Failed to update user data: {:?}", e);
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            if let Err(e) = repay_release_amount(&params.asset, &adjusted_amount) {
+                ic_cdk::println!("Failed to release amount lock: {:?}", e);
             }
             return Err(e);
         }
@@ -450,6 +472,10 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
             }
             return Err(e);
+        }
+
+        if let Err(e) = repay_release_amount(&params.asset, &adjusted_amount) {
+            ic_cdk::println!("Failed to release amount lock: {:?}", e);
         }
 
         mutate_state(|state| {

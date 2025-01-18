@@ -683,7 +683,7 @@ export default function Navbar({ isHomeNav }) {
                     {dropdownVisible && (
                       <>
                         <div
-                          className="fixed inset-0 bg-black opacity-40 z-40"
+                          className="fixed inset-0 bg-black bg-opacity-50 z-50"
                           onClick={() => setDropdownVisible(false)}
                         ></div>
                         <div

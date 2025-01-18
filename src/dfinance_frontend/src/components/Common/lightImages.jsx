@@ -38,7 +38,9 @@ const lightImages = {
     repayApproveLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735883280/repay_approve_light_ayllt6.webp",
     liquidationApproveLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736249700/liquidationApproveLight_fqrxns.webp",
     liquidationCallLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736249699/liquidationCallLight_rdv2c8.webp",
-    yourBorrowRepayLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736151505/repayLight_gdqeyp.webp"
+    yourBorrowRepayLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736151505/repayLight_gdqeyp.webp",
+    collateralLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736923517/collateralLight_whzoal.webp",
+    collateralPopupLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736923518/collateralPopupLight_floj5k.webp",
   };
   
   export default lightImages;

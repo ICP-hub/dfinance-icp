@@ -13,6 +13,7 @@ import emailjs from "emailjs-com";
 import useAssetData from "../../components/Common/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
+import MiniLoader from "../../components/Common/MiniLoader";
 const DashboardCards = () => {
   const navigate = useNavigate();
   const {
@@ -122,63 +123,63 @@ const DashboardCards = () => {
 
   const formatNumber = useFormatNumber();
   // State to track last sent notifications
-const [lastEmailDate, setLastEmailDate] = useState(null);
-const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
+  const [lastEmailDate, setLastEmailDate] = useState(null);
+  const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
 
-const sendEmailNotification = async (subject, htmlMessage) => {
-  try {
-    const templateParams = {
-      to_name: "Admin",
-      subject,
-      message: htmlMessage,
-    };
+  const sendEmailNotification = async (subject, htmlMessage) => {
+    try {
+      const templateParams = {
+        to_name: "Admin",
+        subject,
+        message: htmlMessage,
+      };
 
-    await emailjs.send(
-      "service_860ie6t", // Replace with your EmailJS Service ID
-      "template_s74va8z", // Replace with your EmailJS Template ID
-      templateParams,
-      "BMGYJ-HAO8cOyGE6E" // Replace with your EmailJS Public Key
-    );
+      await emailjs.send(
+        "service_860ie6t", // Replace with your EmailJS Service ID
+        "template_s74va8z", // Replace with your EmailJS Template ID
+        templateParams,
+        "BMGYJ-HAO8cOyGE6E" // Replace with your EmailJS Public Key
+      );
 
-    console.log("Email sent successfully.");
-  } catch (err) {
-    console.error("Failed to send email:", err);
-  }
-};
+      console.log("Email sent successfully.");
+    } catch (err) {
+      console.error("Failed to send email:", err);
+    }
+  };
 
-const handleNotification = async (currentCycles) => {
-  const today = new Date().toDateString();
+  const handleNotification = async (currentCycles) => {
+    const today = new Date().toDateString();
 
-  if (currentCycles < threshold) {
-    // Send exhaustion email if not sent today
-    if (lastExhaustedEmailDate !== today) {
-      setLastExhaustedEmailDate(today); // Track date of last sent email
-      const htmlMessage = `
+    if (currentCycles < threshold) {
+      // Send exhaustion email if not sent today
+      if (lastExhaustedEmailDate !== today) {
+        setLastExhaustedEmailDate(today); // Track date of last sent email
+        const htmlMessage = `
       <p>Your cycles are exhausted!</p>
       <p>Current Cycles: ${currentCycles}</p>
       <p>Threshold: ${formatNumber(threshold)}</p>
      
     `;
-      await sendEmailNotification("Cycle Exhausted",  htmlMessage);
-    }
-    setNotification("Warning: Cycles are exhausted! Renew them.");
-  } else if (currentCycles < threshold + 2000000000000) {
-    // Send warning email daily if not sent today
-    if (lastEmailDate !== today) {
-      setLastEmailDate(today); // Track date of last sent email
-      const htmlMessage = `
+        await sendEmailNotification("Cycle Exhausted", htmlMessage);
+      }
+      setNotification("Warning: Cycles are exhausted! Renew them.");
+    } else if (currentCycles < threshold + 2000000000000) {
+      // Send warning email daily if not sent today
+      if (lastEmailDate !== today) {
+        setLastEmailDate(today); // Track date of last sent email
+        const htmlMessage = `
         <p>The cycle count is below the safe threshold!</p>
         <p>Current Cycles: ${currentCycles}</p>
         <p>Threshold + 2T: ${formatNumber(threshold + 2 * T)}</p>
        
       `;
-      await sendEmailNotification("Cycle Warning",  htmlMessage);
+        await sendEmailNotification("Cycle Warning", htmlMessage);
+      }
+      setNotification("Warning: Cycles are nearing exhaustion!");
+    } else {
+      setNotification(""); // Clear notification if cycles are safe
     }
-    setNotification("Warning: Cycles are nearing exhaustion!");
-  } else {
-    setNotification(""); // Clear notification if cycles are safe
-  }
-};
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -210,8 +211,6 @@ const handleNotification = async (currentCycles) => {
 
     fetchData();
   }, [backendActor, interestAccure]);
-
-  
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -295,7 +294,9 @@ const handleNotification = async (currentCycles) => {
               >
                 {console.log("card.title", card.title)}
                 {loading ? (
-                  "Loading..."
+                  <div className="h-[150px] flex justify-center items-center">
+                    <MiniLoader isLoading={true} />
+                  </div>
                 ) : card.title === "Interest Accured" ? (
                   <>
                     <span className="font-normal">$</span>{" "}

@@ -10,6 +10,7 @@ import Faucet from "../pages/Faucet/faucet"
 import TransactionDetail from "../components/Dashboard/Transaction"
 import Liquidate from "../components/Liquidate/Liquidate"
 import DebtStatus from "../components/Liquidate/DebtStatus"
+import DashboardCards from "../pages/info/info"
 export default [
   {
     path: "/",
@@ -21,6 +22,14 @@ export default [
       element: (
       <MainDashboard includeDashboardNav={false}>
         <Error></Error> 
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/2a45fg",
+      element: (
+      <MainDashboard includeDashboardNav={false}>
+        <DashboardCards></DashboardCards> 
       </MainDashboard>
     ),
   },

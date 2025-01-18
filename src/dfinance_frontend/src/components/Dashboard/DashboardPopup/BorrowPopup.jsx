@@ -74,8 +74,8 @@ const Borrow = ({
     if (item && item[1]?.Ok) {
       const assetData = item[1].Ok;
 
-      const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
-      const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+      const total_supply = Number(assetData?.asset_supply ) / 100000000;
+      const total_borrow = Number(assetData?.asset_borrow ) / 100000000;
 
       setTotalSupply(total_supply);
       setTotalBorrow(total_borrow);
@@ -88,8 +88,8 @@ const Borrow = ({
     availableBorrow,
     remainingBorrowable
   ) => {
-    let borrowableValue = "0.00000000";
-    let borrowableAssetValue = "0.0000";
+    let borrowableValue = null;
+    let borrowableAssetValue = null;
 
     const assetRates = {
       ckBTC: ckBTCUsdRate,
@@ -120,33 +120,44 @@ const Borrow = ({
     return { borrowableValue, borrowableAssetValue };
   };
 
-  // useEffect to fetch asset data and update borrowable values every second
+  const [loading, setLoading] = useState(true); // Track loading state
+
   useEffect(() => {
-    const updateValues = () => {
-      fetchAssetData();
-      console.log(
-        "totalSupply totalBorrow",
-        totalSupply,
-        totalBorrow,
-        totalSupply - totalBorrow
-      );
-      const remainingBorrowable = totalSupply - totalBorrow;
-
-      const updatedValues = calculateBorrowableValues(
-        asset,
-        availableBorrow,
-        remainingBorrowable
-      );
-      console.log("updatedValues", updatedValues);
-      setBorrowableValue(updatedValues.borrowableValue);
-      setBorrowableAssetValue(updatedValues.borrowableAssetValue);
+    const updateValues = async () => {
+      setLoading(true); // Set loading to true before updating values
+  
+      try {
+        await fetchAssetData(); // Fetch data
+        console.log("totalSupply totalBorrow", totalSupply, totalBorrow, totalSupply - totalBorrow);
+  
+        const remainingBorrowable = totalSupply - totalBorrow;
+  
+        const updatedValues = calculateBorrowableValues(asset, availableBorrow, remainingBorrowable);
+        console.log("updatedValues", updatedValues);
+  
+        // Set the borrowable values
+        setBorrowableValue(updatedValues.borrowableValue);
+        setBorrowableAssetValue(updatedValues.borrowableAssetValue);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        // Introduce a small delay to prevent "0 glitch" before setting loading to false
+        setTimeout(() => {
+          setLoading(false); // Set loading to false after 1 second delay
+        }, 1000); // 1000ms (1 second) delay
+      }
     };
-
-    // Set an interval to update values every second
-    const intervalId = setInterval(updateValues, 200);
-
+  
+    // Call updateValues initially to fetch data
+    updateValues();
+  
+    // Set an interval to update values every 200ms
+    const intervalId = setInterval(updateValues, 1000);
+  
     // Cleanup the interval on component unmount
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [
     asset,
     filteredItems,
@@ -158,10 +169,9 @@ const Borrow = ({
     ckICPUsdRate,
     ckUSDTUsdRate,
   ]);
-
-  const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
-    useUserData();
-
+  
+  const { userData, userAccountData, refetchUserData, fetchUserAccountData } = useUserData();
+  
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
       const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
@@ -170,6 +180,9 @@ const Borrow = ({
       setAvailableBorrow(0);
     }
   }, [userAccountData, userData, dashboardRefreshTrigger]);
+  
+  
+  
 
   const dispatch = useDispatch();
 
@@ -553,24 +566,30 @@ const Borrow = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
+                   {console.log("borrowableValue", borrowableValue,loading)} 
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      parseFloat(borrowableValue) === 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
-                    onClick={() => {
-                      if (parseFloat(borrowableValue) > 0) {
-                        handleMaxClick();
-                      }
-                    }}
-                  >
-                    {parseFloat(borrowableValue) === 0 ? (
-                      <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
-                    ) : (
-                      `${formatValue(borrowableValue)} Max`
-                    )}
-                  </p>
+                
+  className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
+    parseFloat(borrowableValue) === 0
+      ? "text-gray-400 cursor-not-allowed"
+      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+  }`}
+  onClick={() => {
+    if (parseFloat(borrowableValue) > 0) {
+      handleMaxClick();
+    }
+  }}
+>
+  {loading && (borrowableValue == null || borrowableValue === "0") ? (
+    <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
+  ) : parseFloat(borrowableValue) === 0 ? (
+    "0 Max" // Display 0 if value is 0 after fetching
+  ) : (
+    `${formatValue(borrowableValue)} Max` // Display formatted value if > 0
+  )}
+</p>
+
+
                 </div>
               </div>
             </div>

@@ -133,7 +133,14 @@ pub async fn calculate_interest_rates(
     if total_debt != Nat::from(0u128) {
 
         let total_supply = reserve.asset_supply.scaled_mul(reserve.liquidity_index);
-        let available_liq = total_supply + liq_added - liq_taken;
+        ic_cdk::println!("total supply {}", total_supply.clone());
+        let mut available_liq = Nat::from(0u128);
+        if total_supply.clone() + liq_added.clone() < liq_taken && liq_taken.clone() - (total_supply.clone() + liq_added.clone()) < Nat::from(1000u128){
+            available_liq = Nat::from(0u128);
+        }else{
+             available_liq = total_supply + liq_added - liq_taken;
+        }
+       
         
         ic_cdk::println!("Available liquidity: {:?}", available_liq);
 
@@ -149,7 +156,7 @@ pub async fn calculate_interest_rates(
         ic_cdk::println!("Supply usage ratio: {:?}", supply_usage_ratio);
     }
 
-    // Check if borrow usage ratio exceeds optimal usage ratio
+  
     if borrow_usage_ratio > (params.optimal_usage_ratio.clone() / Nat::from(100u128)) {
         ic_cdk::println!(
             "Borrow usage ratio more than optimal: {} vs {}",

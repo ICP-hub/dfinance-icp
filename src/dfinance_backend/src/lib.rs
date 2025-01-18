@@ -378,9 +378,9 @@ pub async fn get_asset_supply(
             return Err(e);
         }
     };
-
-    let result = (normalized_supply_data.scaled_div(user_reserve.liquidity_index.clone()))
-    .scaled_mul(get_balance_value);
+    ic_cdk::println!("result in asset supply {} {} {}", normalized_supply_data, user_reserve.liquidity_index, get_balance_value);
+    let result = (normalized_supply_data.clone().scaled_div(user_reserve.liquidity_index.clone()))
+    .scaled_mul(get_balance_value.clone());
     ic_cdk::println!("Final calculated asset supply: {}", result);
 
     Ok(result)

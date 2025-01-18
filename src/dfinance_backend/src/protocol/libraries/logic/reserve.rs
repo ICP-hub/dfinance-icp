@@ -189,6 +189,7 @@ pub async fn burn_scaled(
                 .clone()
                 .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
+        ic_cdk::println!("dtoken vs adjusted {} {}", user_state.d_token_balance, adjusted_amount);
         if user_state.d_token_balance == adjusted_amount {
             user_state.d_token_balance = Nat::from(0u128);
         } else {
@@ -256,6 +257,13 @@ pub async fn burn_scaled(
             && balance.clone() - amount_to_burn.clone() < Nat::from(1000u128)
         {
             amount_to_burn = balance.clone();
+            if burn_dtoken {
+               user_state.d_token_balance = Nat::from(0u128);
+               
+            }
+            else {
+                user_state.debt_token_blance = Nat::from(0u128);
+            }
         }
         ic_cdk::println!(
             "balance_increase is not greater than amount, amount_to_burn = {}",

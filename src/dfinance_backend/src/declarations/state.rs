@@ -1,8 +1,5 @@
 use crate::protocol::libraries::types::assets::*;
 
-use super::assets::InitArgs;
-
-
 pub struct State {
     pub asset_index: AssetIndex,
     pub user_profile: UserProfile,

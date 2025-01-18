@@ -3,7 +3,7 @@ use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::get_reserve_data;
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
-use crate::protocol::libraries::logic::user::{calculate_user_account_data};
+use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserData;

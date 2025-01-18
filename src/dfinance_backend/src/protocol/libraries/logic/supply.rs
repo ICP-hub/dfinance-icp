@@ -1,15 +1,14 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::api::state_handler::{mutate_state, read_state};
+use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::update_reserves_price;
+use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::reserve_ledger_canister_id;
-use candid::types::principal;
 use candid::{Nat, Principal};
 use ic_cdk::update;
 // -------------------------------------
@@ -109,7 +108,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         }
         ic_cdk::println!("Supply validated successfully");
 
-        if let Err(_) = update_reserves_price().await {}
+        if let Err(_) = update_token_price(params.asset.clone()).await {}
 
         let liq_added = params.amount.clone();
         let liq_taken = Nat::from(0u128);

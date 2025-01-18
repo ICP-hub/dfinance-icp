@@ -2,7 +2,7 @@ use crate::constants::errors::Error;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::LOCKS;
-use api::resource_manager::{release_lock, acquire_lock};
+use api::resource_manager::acquire_lock;
 use candid::Nat;
 use candid::Principal;
 use declarations::assets::InitArgs;
@@ -12,7 +12,6 @@ use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_account_data;
-use protocol::libraries::logic::user;
 
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
@@ -633,7 +632,7 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 // this function is for check which i will remove later.
-#[query]
+#[update]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {

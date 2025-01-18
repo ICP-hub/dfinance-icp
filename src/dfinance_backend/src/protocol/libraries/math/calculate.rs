@@ -73,6 +73,15 @@ pub async fn update_reserves_price() -> Result<(), Error> {
     Ok(())
 }
 
+#[update]
+pub async fn update_token_price(asset:String)-> Result<(),Error>{
+   if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await{
+    return Err(e);
+    };
+
+    Ok(())
+}
+
 #[query]
 pub fn queary_reserve_price() -> Vec<PriceCache> {
     let tokens = read_state(|state| {
@@ -92,67 +101,6 @@ pub struct UserPosition {
     pub total_collateral_value: Nat,
     pub total_borrowed_value: Nat,
     pub liquidation_threshold: Nat,
-}
-pub fn calculate_health_factor(position: &UserPosition) -> Nat {
-    if position.total_borrowed_value == Nat::from(0u128) {
-        return get_max_value();
-    }
-
-    (position.total_collateral_value.clone() * position.liquidation_threshold.clone())
-        / position.total_borrowed_value.clone()
-}
-
-pub fn calculate_ltv(position: &UserPosition) -> Nat {
-    if position.total_collateral_value == Nat::from(0u128) {
-        return Nat::from(0u128);
-    }
-
-    position
-        .total_borrowed_value
-        .clone()
-        .scaled_div(position.total_collateral_value.clone())
-}
-
-pub fn cal_average_threshold(
-    amount: Nat,
-    amount_taken: Nat,
-    reserve_liq_thres: Nat,
-    user_total_collateral: Nat,
-    user_liq_thres: Nat,
-) -> Nat {
-    let numerator = (amount.clone().scaled_mul(reserve_liq_thres.clone()))
-        + (user_total_collateral.clone().scaled_mul(user_liq_thres))
-        - (amount_taken.clone().scaled_mul(reserve_liq_thres));
-
-    let denominator = amount + user_total_collateral - amount_taken;
-
-    if denominator == Nat::from(0u128) {
-        return Nat::from(0u128);
-    }
-
-    let result = numerator.scaled_div(denominator);
-    result
-}
-
-pub fn cal_average_ltv(
-    amount: Nat,
-    amount_taken: Nat,
-    reserve_ltv: Nat,
-    user_total_collateral: Nat,
-    user_max_ltv: Nat,
-) -> Nat {
-    let numerator = (amount.clone().scaled_mul(reserve_ltv.clone()))
-        + (user_total_collateral.clone().scaled_mul(user_max_ltv))
-        - (amount_taken.clone().scaled_mul(reserve_ltv));
-
-    let denominator = amount + user_total_collateral - amount_taken;
-
-    if denominator == Nat::from(0u128) {
-        return Nat::from(0u128);
-    }
-
-    let result = numerator.scaled_div(denominator);
-    result
 }
 
 // ------------ Real time asset data using XRC ------------

@@ -199,10 +199,16 @@ pub async fn burn_scaled(
                 .clone()
                 .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
-        ic_cdk::println!("dtoken vs adjusted {} {}", user_state.d_token_balance, adjusted_amount);
+        ic_cdk::println!(
+            "dtoken vs adjusted {} {}",
+            user_state.d_token_balance,
+            adjusted_amount
+        );
         if user_state.d_token_balance == adjusted_amount {
             ic_cdk::println!("Setting DToken balance to zero");
             user_state.d_token_balance = Nat::from(0u128);
+        } else if user_state.d_token_balance < adjusted_amount {
+            return Err(Error::ErrorDTokenBalanceLessThan);
         } else {
             ic_cdk::println!("Subtracting adjusted amount from DToken balance");
             user_state.d_token_balance -= adjusted_amount.clone();
@@ -244,7 +250,8 @@ pub async fn burn_scaled(
         );
         ic_cdk::println!("before updating asset borrow = {:?}", reserve.asset_borrow);
 
-        if let Err(err) = repay_lock_amount(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
+        if let Err(err) = repay_lock_amount(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
+        {
             ic_cdk::println!("Error in repay_lock_amount: {:?}", err);
             return Err(err);
         }
@@ -255,7 +262,7 @@ pub async fn burn_scaled(
         } else {
             ic_cdk::println!("Subtracting adjusted amount from asset borrow");
             let repay_amount = get_repay_locked_amount(&reserve.asset_name.clone().unwrap());
-            ic_cdk::println!("repay amount = {}",repay_amount);
+            ic_cdk::println!("repay amount = {}", repay_amount);
             reserve.asset_borrow -= repay_amount;
         }
 
@@ -294,10 +301,8 @@ pub async fn burn_scaled(
             ic_cdk::println!("Adjusting burn amount to balance");
             amount_to_burn = balance.clone();
             if burn_dtoken {
-               user_state.d_token_balance = Nat::from(0u128);
-               
-            }
-            else {
+                user_state.d_token_balance = Nat::from(0u128);
+            } else {
                 user_state.debt_token_blance = Nat::from(0u128);
             }
         }

@@ -121,8 +121,3 @@ pub async fn reset_reserve_value(
 pub fn to_check_controller() -> bool {
     ic_cdk::api::is_controller(&ic_cdk::api::caller())
 }
-
-#[query]
-pub fn platform_principal() -> Principal {
-    ic_cdk::api::id()
-}

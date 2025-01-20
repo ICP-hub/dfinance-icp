@@ -13,6 +13,7 @@ import emailjs from "emailjs-com";
 import useAssetData from "../../components/Common/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
+import MiniLoader from "../../components/Common/MiniLoader";
 const DashboardCards = () => {
   const navigate = useNavigate();
   const {
@@ -124,16 +125,16 @@ const DashboardCards = () => {
 
   const formatNumber = useFormatNumber();
   // State to track last sent notifications
-const [lastEmailDate, setLastEmailDate] = useState(null);
-const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
+  const [lastEmailDate, setLastEmailDate] = useState(null);
+  const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
 
-const sendEmailNotification = async (subject, htmlMessage) => {
-  try {
-    const templateParams = {
-      to_name: "Admin",
-      subject,
-      message: htmlMessage,
-    };
+  const sendEmailNotification = async (subject, htmlMessage) => {
+    try {
+      const templateParams = {
+        to_name: "Admin",
+        subject,
+        message: htmlMessage,
+      };
 
     await emailjs.send(
       "service_7pu7uvh", // Replace with your EmailJS Service ID
@@ -142,11 +143,11 @@ const sendEmailNotification = async (subject, htmlMessage) => {
       "uWDc83b20aMxTTyrz" // Replace with your EmailJS Public Key
     );
 
-    console.log("Email sent successfully.");
-  } catch (err) {
-    console.error("Failed to send email:", err);
-  }
-};
+      console.log("Email sent successfully.");
+    } catch (err) {
+      console.error("Failed to send email:", err);
+    }
+  };
 
 
 let emailInterval; // Variable to store the interval ID
@@ -335,8 +336,6 @@ const onTokenUpdate = (newBalance) => {
     fetchData();
   }, [backendActor, interestAccure]);
 
-  
-
   const handleNavigate = (path) => {
     navigate(path);
   };
@@ -421,7 +420,9 @@ const onTokenUpdate = (newBalance) => {
               >
                 {console.log("card.title", card.title)}
                 {loading ? (
-                  "Loading..."
+                  <div className="h-[150px] flex justify-center items-center">
+                    <MiniLoader isLoading={true} />
+                  </div>
                 ) : card.title === "Interest Accured" ? (
                   <>
                     <span className="font-normal">$</span>{" "}

@@ -39,6 +39,7 @@
     "ic-auth": "^0.9.1",
     "lucide-react": "^0.367.0",
     "next": "^14.2.4",
+    "nodemailer": "^6.9.16",
     "posthog-js": "^1.177.0",
     "rc-progress": "^4.0.0",
     "react": "^18.3.1",

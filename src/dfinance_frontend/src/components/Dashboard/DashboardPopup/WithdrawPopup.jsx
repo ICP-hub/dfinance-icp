@@ -123,11 +123,12 @@ const WithdrawPopup = ({
   
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
+        // Calculate USD value using raw conversion rate
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
   
         // Update state with formatted values
-        setUsdValue(parseFloat(convertedValue.toFixed(2)));
+        setUsdValue(parseFloat(convertedValue)); // Format for display
         setError(""); // Clear errors
       } else {
         setError("Amount exceeds the supply balance");
@@ -421,7 +422,7 @@ const WithdrawPopup = ({
   
     // Set the max amount and update related values
     setAmount(maxAmount);
-    updateAmountAndUsdValue(maxAmount);
+    updateAmountAndUsdValue(assetSupply);
   };
   
   const formatValue = (value) => {

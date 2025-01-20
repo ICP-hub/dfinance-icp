@@ -549,7 +549,8 @@ const onTokenUpdate = (newBalance) => {
                               </span>
                             </p>
                             {"  "}
-                            <div className="w-full h-[0.8px] bg-gradient-to-r from-[#EB8863] to-[#81198E] my-4 "></div>
+                           
+                            <div className="flex align-center justify-center w-full border-t-2 bg-gradient-to-r from-[#EB8863] to-[#81198E] mx-auto my-4 mb-5"></div>
                             <h3 className="mb-1 text-[#233D63]  dark:text-darkTextSecondary1">Testnet</h3>
                             <p className="font-normal text-sm">
                               Token Available:{" "}

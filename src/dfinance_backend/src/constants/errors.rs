@@ -64,7 +64,8 @@ pub enum Error {
     InvalidVariableName,
     TokenAlreadyExist,
     FailedToReleaseLock,
-    LockOperationInProgess
+    LockOperationInProgess,
+    ErrorDTokenBalanceLessThan
 }
 
 impl Error {
@@ -131,7 +132,8 @@ impl Error {
             Error::InvalidVariableName => "name of the variable is invalid - please enter it again",
             Error::TokenAlreadyExist => "Token already exist - try again with different token",
             Error::FailedToReleaseLock => "Failed to release lock",
-            Error::LockOperationInProgess => "Another operation is already in progress for user"
+            Error::LockOperationInProgess => "Another operation is already in progress for user",
+            Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance"
         }
     }
 }

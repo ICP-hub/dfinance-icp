@@ -582,8 +582,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.userInformation
-              : lightImages.userInformationLight
+              ? darkImages.userInfoDark
+              : lightImages.userInfoLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -604,8 +604,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.liquidationApproveDark
-              : lightImages.liquidationApproveLight
+              ? darkImages.approveLiquidationDark
+              : lightImages.approveLiquidationLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -625,8 +625,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.liquidationCallDark
-              : lightImages.liquidationCallLight
+              ? darkImages.callLiquidationDark
+              : lightImages.callLiquidationLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"

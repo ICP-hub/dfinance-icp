@@ -164,7 +164,8 @@ const Repay = ({
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
-  const numericBalance = parseFloat(balance);
+  const numericBalance = (balance);
+  console.log("numericBalance, fees", numericBalance, fees);
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
@@ -454,14 +455,14 @@ const Repay = ({
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
       return truncated.toFixed(8); // Convert to string with exactly 7 decimals
     };
-    let asset_borrow = assetBorrow
-      ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
-        ? Number(assetBorrow).toFixed(8)
-        : assetBorrow >= 1e-7 && assetBorrow < 1e-6
-        ? Number(assetBorrow).toFixed(7)
-        : truncateToSevenDecimals(assetBorrow)
+    let supply_Balance = supplyBalance
+      ? supplyBalance >= 1e-8 && supplyBalance < 1e-7
+        ? Number(supplyBalance).toFixed(8)
+        : supplyBalance >= 1e-7 && supplyBalance < 1e-6
+        ? Number(supplyBalance).toFixed(7)
+        : truncateToSevenDecimals(supplyBalance)
       : "0";
-    const maxAmount = asset_borrow.toString();
+    const maxAmount = supply_Balance.toString();
 
     updateAmountAndUsdValue(maxAmount);
   };
@@ -478,56 +479,59 @@ const Repay = ({
           <h1 className="font-semibold text-xl">Repay {asset} </h1>
 
           <div className="flex flex-col gap-2 mt-5 text-sm">
-            <div className="w-full">
-              <div className="w-full flex justify-between my-2">
-                <h1>Amount</h1>
-              </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="w-[50%]">
-                  <input
-                    type="text"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    disabled={supplyBalance === 0 || isApproved}
-                    className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder={`Enter Amount ${asset}`}
-                  />
-                  <p className="text-xs text-gray-500 px-2">
-                    {usdValue
-                      ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
-                      : "$0.00 USD"}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <div className="w-auto flex items-center gap-2">
-                    <img
-                      src={image}
-                      alt="Item Image"
-                      className="object-fill w-6 h-6 rounded-full"
-                    />
-                    <span className="text-lg">{asset}</span>
-                  </div>
-                  <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      assetBorrow === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
-                    onClick={() => {
-                      if (assetBorrow > 0 && !isApproved) {
-                        handleMaxClick();
-                      }
-                    }}
-                  >
-                    {}
-                    {truncateToSevenDecimals(assetBorrow)} Max
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="w-full">
+  <div className="w-full flex justify-between my-2">
+    <h1>Amount</h1>
+  </div>
+  <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+    <div className="w-[50%]">
+      <input
+        type="text"
+        value={amount}
+        onChange={handleAmountChange}
+        disabled={supplyBalance === 0 || isApproved}
+        className="lg:text-lg placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText mb-4"
+        placeholder={`Enter Amount ${asset}`}
+      />
+      <p className="text-xs text-gray-500 px-2 mb-2">
+        {usdValue
+          ? `$${usdValue.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })} USD`
+          : "$0.00 USD"}
+      </p>
+    </div>
+    <div className="flex flex-col items-end">
+      <div className="w-auto flex items-center gap-2">
+        <img
+          src={image}
+          alt="Item Image"
+          className="object-fill w-6 h-6 rounded-full"
+        />
+        <span className="text-lg">{asset}</span>
+      </div>
+      <p className="text-[10px] text-gray-500 text-right w-full mt-1">
+        Wallet Balance
+      </p>
+      <p
+        className={`text-xs mt-1 p-2 py-1 rounded-md button1 ${
+          assetBorrow === 0 || isApproved
+            ? "text-gray-400 cursor-not-allowed"
+            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+        }`}
+        onClick={() => {
+          if (assetBorrow > 0 && !isApproved) {
+            handleMaxClick();
+          }
+        }}
+      >
+        {truncateToSevenDecimals(supplyBalance)} Max
+      </p>
+    </div>
+  </div>
+</div>
+
             <div className="w-full ">
               <div className="w-full flex justify-between my-2">
                 <h1>Transaction overview</h1>
@@ -536,13 +540,13 @@ const Repay = ({
                 <div className="w-full flex flex-col my-1">
                   <div className="w-full flex justify-between items-center ">
                     <p className="text-nowrap">Remaining debt</p>
-                    <div className="w-4/12 flex flex-col items-end">
-                      <p className="text-xs mt-2">
+                    <div className="w-4/12 flex flex-col items-end text-nowrap">
+                      <p className="text-[14px] mt-1">
                         {(
                           assetBorrow - (amount?.replace(/,/g, "") || "")
                         ).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
+                          minimumFractionDigits: 7,
+                          maximumFractionDigits: 7,
                         })}{" "}
                         Max
                       </p>

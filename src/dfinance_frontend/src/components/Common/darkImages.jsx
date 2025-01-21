@@ -44,7 +44,8 @@ const darkImages = {
     collateralPopupDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1736923503/collateralPopupDark_ki83rh.webp",
     userInfoDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373401/userInfoDark_elm6ez.webp",
     approveLiquidationDark: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373401/approveLiquidationDark_vzfdla.webp",
-    callLiquidationDark: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373401/callLiquidationDark_tibcjw.webp"
+    callLiquidationDark: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373401/callLiquidationDark_tibcjw.webp",
+    warningPopupDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737439545/warningPopupDark_zvxejq.webp"
   };
   
   export default darkImages;

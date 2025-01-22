@@ -24,6 +24,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 import WalletModal from "../../components/Dashboard/WalletModal";
+import Lottie from "../Common/Lottie";
 const ITEMS_PER_PAGE = 8;
 
 const FaucetDetails = () => {
@@ -230,15 +231,11 @@ const FaucetDetails = () => {
           </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
-            <div className="w-20 h-15">
-              <img
-                src="/Transaction/empty file.gif"
-                alt="empty"
-                className="w-30"
-              />
+            <div className="mb-7 -ml-3 -mt-5">
+              <Lottie /> 
             </div>
-            <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
-              No assets found!
+            <p className="text-[#8490ff] text-sm font-medium dark:text-[#c2c2c2]">
+              NO ASSETS FOUND!
             </p>
           </div>
         ) : (

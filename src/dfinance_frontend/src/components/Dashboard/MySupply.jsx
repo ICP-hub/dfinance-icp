@@ -3368,6 +3368,7 @@ const MySupply = () => {
                                               Ltv,
                                               borrowableValue,
                                               borrowableAssetValue
+
                                             );
                                           }}
                                           disabled={isTableDisabled}
@@ -3395,6 +3396,12 @@ const MySupply = () => {
                                                   userAccountData?.Ok?.[1]
                                                 ) / 100000000
                                               ) || 0;
+                                              if (ckBalance === 0) {
+                                                toast.info(
+                                                  "Insufficeint wallet balance to allow repay request."
+                                                );
+                                                return;
+                                              }
                                             handleModalOpen(
                                               "repay",
                                               asset,
@@ -3414,6 +3421,7 @@ const MySupply = () => {
                                               totalDebt
                                             );
                                           }}
+                                          disabled={ckBalance === 0}
                                           className={`md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold`}
                                         />
                                       </div>
@@ -3871,6 +3879,12 @@ const MySupply = () => {
                                             Number(userAccountData?.Ok?.[1]) /
                                               100000000
                                           ) || 0;
+                                          if (ckBalance === 0) {
+                                            toast.info(
+                                              "Insufficeint wallet balance to allow repay request."
+                                            );
+                                            return;
+                                          }
                                         handleModalOpen(
                                           "repay",
                                           asset,
@@ -3889,6 +3903,7 @@ const MySupply = () => {
                                           totalDebt
                                         );
                                       }}
+                                      disabled={ckBalance === 0}
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                     />
                                   </div>

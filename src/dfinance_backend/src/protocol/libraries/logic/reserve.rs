@@ -175,11 +175,11 @@ pub async fn burn_scaled(
             return Err(err);
         }
     };
-    if balance.clone() > adjusted_amount.clone()
-        && balance.clone() - adjusted_amount.clone() < Nat::from(1000u128)
-    {
-        adjusted_amount = balance.clone();
-    }
+    // if balance.clone() > adjusted_amount.clone()
+    //     && balance.clone() - adjusted_amount.clone() < Nat::from(1000u128)
+    // {
+    //     adjusted_amount = balance.clone();
+    // }
     ic_cdk::println!("burn balance = {}", balance);
     ic_cdk::println!("adjusted balance = {}", adjusted_amount);
     let mut balance_increase = Nat::from(0u128);

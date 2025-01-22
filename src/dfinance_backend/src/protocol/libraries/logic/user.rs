@@ -1,4 +1,5 @@
 use super::update::user_data;
+use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
 use crate::get_all_users;
 use crate::protocol::libraries::types::datatypes::UserData;
@@ -315,24 +316,24 @@ pub async fn get_user_balance_in_base_currency(
         }
     };
 
-    // let d_token_canister_principal: Principal =
-    //     Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
+    let d_token_canister_principal: Principal =
+        Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
 
-    // let balance_result = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
-    // let user_scaled_balance = match balance_result {
-    //     Ok(data) => {
-    //         ic_cdk::println!("get balance data : {:?}", data);
-    //         data
-    //     }
-    //     Err(e) => {
-    //         return Err(e);
-    //     }
-    // };
-    // ic_cdk::println!(
-    //     "Fetched balance from DToken canister: {:?}",
-    //     user_scaled_balance
-    // );
-    let user_scaled_balance = reserve.d_token_balance.clone();
+    let balance_result = get_balance(d_token_canister_principal, user_principal).await; // fetch from d token balance of user
+    let user_scaled_balance = match balance_result {
+        Ok(data) => {
+            ic_cdk::println!("get balance data : {:?}", data);
+            data
+        }
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    ic_cdk::println!(
+        "Fetched balance from DToken canister: {:?}",
+        user_scaled_balance
+    );
+    // let user_scaled_balance = reserve.d_token_balance.clone();
     let normalized_supply_result = user_normalized_supply(asset_reserve);
     let normalized_supply = match normalized_supply_result {
         Ok(data) => {
@@ -383,22 +384,22 @@ pub async fn get_user_debt_in_base_currency(
     };
 
     ic_cdk::println!("Fetching debt token canister principal from reserve...");
-    // let debt_token_canister_principal =
-    //     Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
+    let debt_token_canister_principal =
+        Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
 
-    // ic_cdk::println!("Fetching balance of user...");
-    // let balance_result = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
+    ic_cdk::println!("Fetching balance of user...");
+    let balance_result = get_balance(debt_token_canister_principal, user_principal).await; // fetch from d token balance of user
 
-    // let mut user_variable_debt = match balance_result {
-    //     Ok(data) => {
-    //         ic_cdk::println!("get balance data : {:?}", data);
-    //         data
-    //     }
-    //     Err(e) => {
-    //         return Err(e);
-    //     }
-    // };
-    let mut user_variable_debt = reserve.debt_token_blance.clone();
+    let mut user_variable_debt = match balance_result {
+        Ok(data) => {
+            ic_cdk::println!("get balance data : {:?}", data);
+            data
+        }
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    // let mut user_variable_debt = reserve.debt_token_blance.clone();
     let user_normailzed_debt_result = user_normalized_debt(asset_reserve);
     let user_normailzed_debt = match user_normailzed_debt_result {
         Ok(data) => {

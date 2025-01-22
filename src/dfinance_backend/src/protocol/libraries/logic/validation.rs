@@ -126,6 +126,7 @@ impl ValidationLogic {
             }
         };
 
+
         if final_amount > user_current_supply {
             ic_cdk::println!("Withdraw amount exceeds current supply.");
             ic_cdk::println!("final amount and current {} {}",final_amount,user_current_supply);

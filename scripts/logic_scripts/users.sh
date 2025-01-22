@@ -8,7 +8,7 @@ supply_method="execute_supply"
 borrow_method="execute_borrow"
 
 # Number of users to register
-NUM_USERS=200
+NUM_USERS=1
 
 # Loop to register users
 for ((i=1; i<=NUM_USERS; i++))

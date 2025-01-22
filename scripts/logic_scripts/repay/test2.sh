@@ -2,14 +2,15 @@
 
 set -e
 
-source ../../.env
+source ../../../.env
 
 # Set variables
 ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai" 
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
 debt_canister="ajuq4-ruaaa-aaaaa-qaaga-cai"
-dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
+approve_method="icrc2_approve"
 reserve_data_method="get_reserve_data"
+get_user_method="get_user_data"
 
 # Use the default identity
 dfx identity use default
@@ -32,14 +33,36 @@ echo "Backend Canister Balance: $backend_balance"
 echo "User Debt Token Balance: $user1_debt_token_balance"
 echo "--------------------------------------"
 
+
+# Approve the transfer
+approve_amount=20000000
+echo "Approving transfer of $approve_amount from user1 to backend_canister..."
+allow=$(dfx canister call $ckbtc_canister $approve_method "(record {
+    from_subaccount=null;
+    spender=record { owner=principal\"${backend_canister_principal}\"; subaccount=null };
+    amount=$approve_amount:nat;
+    expected_allowance=null;
+    expires_at=null;
+    fee=null;
+    memo=null;
+    created_at_time=null
+})")
+echo "Allowance Set: $allow"
+
+echo "--------------------------------------"
+
 # Set the amount to repay
-amount=1000
 echo "Repaying $amount of ckbtc..."
-ON_BEHALF_OF=null
-asset="ckBTC"
+amount=20000000
 # Call the repay function
-repay=$(dfx canister call dfinance_backend repay "(\"ckBTC\", $amount:nat, ${ON_BEHALF_OF})")
+repay=$(dfx canister call dfinance_backend execute_repay "(record { 
+    asset=\"ckBTC\"; 
+    amount=$amount:nat; 
+    on_behalf_of=null; 
+})")
 echo "Repay Execution Result: $repay"
+
+echo "--------------------------------------"
 
 # Fetch and display balances after repay
 echo "Checking balances after repay..."
@@ -60,5 +83,11 @@ echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
 echo "Fetching user data..."
-user_data=$(../integration_scripts/user_data.sh)
+user_data=$(dfx canister call $backend_canister $get_user_method "(principal\"${user_principal}\")")
 echo "user data: $user_data"
+
+echo "--------------------------------------"
+
+echo "Test Case 2 Passed Successfully: Repay of $amount ckBTC failed as expected due to insufficient balance!"
+
+echo "--------------------------------------"

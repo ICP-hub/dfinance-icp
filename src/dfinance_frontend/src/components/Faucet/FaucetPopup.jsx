@@ -479,7 +479,7 @@ console.log("availableAmount", availableAmount);
                       </div>
                     </div>
                     <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                      Faucet limit has been exceeded. It will reset at midnight.
+                    Faucet limit has been exceeded. It will reset at 00:00 (UTC).
                     </div>
                   </div>
                 </div>

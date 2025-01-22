@@ -58,10 +58,11 @@ const DashboardCards = () => {
     ICP: ckICPUsdRate,
     ckUSDT: ckUSDTBalance,
   };
+  
   const { backendActor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [like, setLike] = useState(false); // State to control page visibility
-  const [notification, setNotification] = useState(""); // Notification message
+  const [like, setLike] = useState(false); 
+  const [notification, setNotification] = useState(""); 
   const checkControllerStatus = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -88,6 +89,7 @@ const DashboardCards = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [threshold] = useState(5000000000000);
+  const [tokenThreshold] = useState(10000);
   const { assets, reserveData, filteredItems, interestAccure } =
     useAssetData(searchQuery);
   console.log("filteredItems", filteredItems);
@@ -134,12 +136,12 @@ const DashboardCards = () => {
         message: htmlMessage,
       };
 
-      await emailjs.send(
-        "service_860ie6t", // Replace with your EmailJS Service ID
-        "template_s74va8z", // Replace with your EmailJS Template ID
-        templateParams,
-        "BMGYJ-HAO8cOyGE6E" // Replace with your EmailJS Public Key
-      );
+    await emailjs.send(
+      "service_7pu7uvh", // Replace with your EmailJS Service ID
+      "template_1k2eq7a", // Replace with your EmailJS Template ID
+      templateParams,
+      "uWDc83b20aMxTTyrz" // Replace with your EmailJS Public Key
+    );
 
       console.log("Email sent successfully.");
     } catch (err) {
@@ -147,47 +149,168 @@ const DashboardCards = () => {
     }
   };
 
-  const handleNotification = async (currentCycles) => {
-    const today = new Date().toDateString();
 
-    if (currentCycles < threshold) {
-      // Send exhaustion email if not sent today
-      if (lastExhaustedEmailDate !== today) {
-        setLastExhaustedEmailDate(today); // Track date of last sent email
-        const htmlMessage = `
-      <p>Your cycles are exhausted!</p>
-      <p>Current Cycles: ${currentCycles}</p>
-      <p>Threshold: ${formatNumber(threshold)}</p>
-     
+let emailInterval; // Variable to store the interval ID
+let lastExhaustedEmailTimestamp = 0;
+let lastWarningEmailTimestamp = 0;
+
+
+const handleNotification = (currentCycles,assetBalance) => {
+  const oneDay =24 * 60 * 60 * 1000; // 1 minute in milliseconds
+
+  console.log("Handling notification for cycles:", currentCycles);
+
+  // Function to send a warning email
+  const sendWarningEmail = async () => {
+    const htmlMessage = `
+    Your cycles are close to the threshold value. Please renew your cycles to avoid interruption.
+   Current Cycles: ${formatNumber(currentCycles)}
+   Threshold : ${formatNumber(threshold + 2000000000000)}
     `;
-        await sendEmailNotification("Cycle Exhausted", htmlMessage);
-      }
-      setNotification("Warning: Cycles are exhausted! Renew them.");
-    } else if (currentCycles < threshold + 2000000000000) {
-      // Send warning email daily if not sent today
-      if (lastEmailDate !== today) {
-        setLastEmailDate(today); // Track date of last sent email
-        const htmlMessage = `
-        <p>The cycle count is below the safe threshold!</p>
-        <p>Current Cycles: ${currentCycles}</p>
-        <p>Threshold + 2T: ${formatNumber(threshold + 2 * T)}</p>
-       
-      `;
-        await sendEmailNotification("Cycle Warning", htmlMessage);
-      }
-      setNotification("Warning: Cycles are nearing exhaustion!");
-    } else {
-      setNotification(""); // Clear notification if cycles are safe
+    try {
+      console.log("Sending warning email...");
+      await sendEmailNotification("Cycle Warning", htmlMessage);
+      lastWarningEmailTimestamp = Date.now(); 
+    } catch (error) {
+      console.error("Failed to send warning email:", error);
     }
   };
 
+  // Function to send an exhausted email
+  const sendExhaustedEmail = async () => {
+    const htmlMessage = `
+      Your cycles are exhausted! Please renew your cycles immediately to continue services.
+      Current Cycles: ${formatNumber(currentCycles)}
+      Threshold: ${formatNumber(threshold)}
+    `;
+    try {
+      console.log("Sending exhausted email...");
+      await sendEmailNotification("Cycle Exhausted", htmlMessage);
+      lastExhaustedEmailTimestamp = Date.now(); // Update the last exhausted email timestamp
+    } catch (error) {
+      console.error("Failed to send exhausted email:", error);
+    }
+  };
+
+  // Clear existing interval
+  if (emailInterval) {
+    console.log("Clearing previous interval...");
+    clearInterval(emailInterval);
+  }
+
+  // Set up a new interval to check and send emails every minute
+  emailInterval = setInterval(async () => {
+    console.log("Interval triggered. Checking conditions...");
+console.log("currentCycles",currentCycles);
+console.log("threshold",threshold);
+    if (currentCycles <= threshold) {
+      console.log("Cycles are exhausted. Sending exhausted email...");
+      await sendExhaustedEmail(); // Send exhausted email every minute until cycles increase
+    } else if (currentCycles > threshold && currentCycles < threshold + 2000000000000) {
+      console.log("Cycles are nearing the safe threshold. Sending warning email...");
+      await sendWarningEmail(); // Send warning email every minute until cycles increase
+    }
+    // Keep checking and sending emails every minute indefinitely.
+  }, oneDay); // Interval set to 1 minute
+};
+
+// Simulate cycle updates
+const onCycleUpdate = (newCycles) => {
+  console.log("Cycle count updated:", newCycles);
+  handleNotification(newCycles);
+};
+let lastTokenExhaustedEmailTimestamp = 0;
+let lastTokenWarningEmailTimestamp = 0;
+let emailinterval = null;  // Declare interval variable globally
+
+const handleTokenNotification = (assetName, assetBalance) => {
+  const oneDay = 24 * 60 * 60 * 1000; // 1 minute in milliseconds
+  const currentTime = Date.now();
+
+  console.log(`Handling token notification for ${assetName}:`, assetBalance);
+
+  // Function to send a warning email
+  const sendTokenWarningEmail = async () => {
+    const htmlMessage = `
+      Your balance of ${assetName} is approaching the threshold. Please mint  ${assetName} above threshold value .
+      Current Balance: ${formatNumber(assetBalance)}
+      Threshold: ${formatNumber(tokenThreshold)}
+    `;
+    try {
+      console.log("Sending token warning email...");
+      await sendEmailNotification(`${assetName} Warning`, htmlMessage);
+      lastTokenWarningEmailTimestamp = currentTime; // Update the last warning email timestamp
+    } catch (error) {
+      console.error("Failed to send token warning email:", error);
+    }
+  };
+
+  // Function to send an exhausted email
+  const sendTokenExhaustedEmail = async () => {
+    const htmlMessage = `
+      Your balance of ${assetName} is exhausted!  Please mint  ${assetName} above threshold value.
+      Current Balance: ${formatNumber(assetBalance)}
+      Threshold: ${formatNumber(tokenThreshold)}
+    `;
+    try {
+      console.log("Sending token exhausted email...");
+      await sendEmailNotification(`${assetName} Exhausted`, htmlMessage);
+      lastTokenExhaustedEmailTimestamp = currentTime; 
+    } catch (error) {
+      console.error("Failed to send token exhausted email:", error);
+    }
+  };
+
+  // If emailInterval exists, clear it before setting a new one
+  if (emailinterval) {
+    console.log("Clearing previous interval...");
+    clearInterval(emailinterval);
+  }
+
+  // Set up a new interval to check and send emails every minute
+  emailInterval = setInterval(async () => {
+    console.log("Interval triggered. Checking conditions...");
+    console.log("assetBalance", assetBalance);
+    console.log("tokenThreshold", tokenThreshold);
+
+    if (assetBalance <= tokenThreshold) {
+      console.log("Token balance is exhausted. Sending exhausted email...");
+      await sendTokenExhaustedEmail(); // Send exhausted email if balance is below threshold
+    } else if (assetBalance > tokenThreshold && assetBalance < tokenThreshold + 1000) {
+      console.log("Token balance is nearing the safe threshold. Sending warning email...");
+      await sendTokenWarningEmail(); // Send warning email if balance is nearing threshold
+    }
+  }, oneDay); // Check every minute (60 seconds)
+};
+
+
+// Function to handle token balances
+const handleTokenBalances = () => {
+  poolAssets.forEach((asset) => {
+    const assetBalance = assetBalances[asset.name];
+    if (assetBalance !== undefined) {
+      handleTokenNotification(asset.name, assetBalance);
+    }
+  });
+  
+};
+
+useEffect(() => {
+  // Call handleTokenBalances whenever asset balances change or after data is fetched
+  handleTokenBalances();
+}, [assetBalances, tokenThreshold]); // Trigger when asset balances or tokenThreshold change
+const onTokenUpdate = (newBalance) => {
+  console.log("Cycle count updated:", newBalance);
+  handleNotification(newBalance);
+};
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [users, cycles] = await Promise.all([getAllUsers(), getCycles()]);
+        // const users = await getAllUsers();
         const usersCount = users.length;
-
+// const cycles =5000000000000;
         const formattedData = [
           { title: "Users", value: usersCount, link: "/users" },
           { title: "Cycles", value: formatNumber(cycles), link: "/cycles" },
@@ -202,6 +325,7 @@ const DashboardCards = () => {
 
         setCardData(formattedData);
         await handleNotification(Number(cycles));
+        await onCycleUpdate(Number(cycles));
       } catch (err) {
         setError(err.message);
       } finally {
@@ -226,6 +350,7 @@ const DashboardCards = () => {
       return "text-green-500";
     }
   };
+
 
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -271,15 +396,16 @@ const DashboardCards = () => {
       }
     });
   };
-
+ 
+      
   return (
     <>
       {like ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-14 mt-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-14 px-5 mt-16">
           {cardData.map((card, index) => (
             <div
               key={index}
-              className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63]  dark:text-darkTextSecondary1 rounded-xl shadow-lg p-2 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
+              className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63]  dark:text-darkTextSecondary1 rounded-xl shadow-lg  px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
             >
               <h3 className="text-xl font-semibold mt-2">{card.title}</h3>
 
@@ -358,7 +484,7 @@ const DashboardCards = () => {
               )}
             </div>
           ))}
-          {error && <div className="text-red-500">{error}</div>}
+          {/* {error && <div className="text-red-500">{error}</div>} */}
           {showPopup && selectedAsset && (
             <div
               key={selectedAsset.name} // Unique key for the popup
@@ -423,10 +549,19 @@ const DashboardCards = () => {
                               </span>
                             </p>
                             {"  "}
+                           
+                            <div className="flex align-center justify-center  border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
+                            <h3 className="mb-1 text-[#233D63]  dark:text-darkTextSecondary1">Testnet</h3>
                             <p className="font-normal text-sm">
                               Token Available:{" "}
                               <span className="font-bold">
-                                ${Number(assetBalance / 1e8).toFixed(8)}
+                                {Number(assetBalance).toFixed(2)}
+                              </span>
+                            </p>
+                            <p className="font-normal text-sm">
+                              Token Threshold:{" "}
+                              <span className="font-bold">
+                                {Number(tokenThreshold)}
                               </span>
                             </p>
                           </li>

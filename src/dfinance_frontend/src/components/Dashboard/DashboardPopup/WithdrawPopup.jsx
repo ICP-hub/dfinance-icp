@@ -492,8 +492,8 @@ const WithdrawPopup = ({
                     {(
                       assetSupply - amount.toString().replace(/,/g, "")
                     ).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
+                      minimumFractionDigits: 7,
+                      maximumFractionDigits: 7,
                     })}{" "}
                     Max
                   </p>

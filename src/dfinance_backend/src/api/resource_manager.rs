@@ -179,6 +179,10 @@ pub fn release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
         ic_cdk::println!("Amount to release: {}", amount);
         ic_cdk::println!("Current locked amount: {}", current_locked);
 
+        if current_locked < &mut amount.clone() {
+            return Err(Error::AmountSubtractionError);
+        }
+
         *current_locked -= amount.clone();
 
         if *current_locked == Nat::from(0u128) {
@@ -277,6 +281,10 @@ pub fn repay_release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
     if let Some(current_locked) = locks.get_mut(asset) {
         ic_cdk::println!("Amount to release: {}", amount);
         ic_cdk::println!("Current locked amount: {}", current_locked);
+
+        if current_locked < &mut amount.clone() {
+            return Err(Error::AmountSubtractionError);
+        }
 
         *current_locked -= amount.clone();
 

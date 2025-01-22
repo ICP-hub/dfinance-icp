@@ -12,7 +12,7 @@ use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::reserve_ledger_canister_id;
+use crate::{declarations, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
 
@@ -474,9 +474,9 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
             return Err(e);
         }
 
-        if let Err(e) = repay_release_amount(&params.asset, &adjusted_amount) {
-            ic_cdk::println!("Failed to release amount lock: {:?}", e);
-        }
+        // if let Err(e) = repay_release_amount(&params.asset, &adjusted_amount) {
+        //     ic_cdk::println!("Failed to release amount lock: {:?}", e);
+        // }
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;
@@ -500,6 +500,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
                 Ok(new_balance)
             }
             Err(e) => {
+                ic_cdk::println!("inside the error");
                 //Rollback user state
                 let borrow_param = ExecuteBorrowParams {
                     asset: params.asset.clone(),

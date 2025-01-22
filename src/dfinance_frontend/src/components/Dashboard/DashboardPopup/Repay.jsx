@@ -455,17 +455,26 @@ const Repay = ({
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
       return truncated.toFixed(8); // Convert to string with exactly 7 decimals
     };
-    let supply_Balance = supplyBalance
-      ? supplyBalance >= 1e-8 && supplyBalance < 1e-7
-        ? Number(supplyBalance).toFixed(8)
-        : supplyBalance >= 1e-7 && supplyBalance < 1e-6
-        ? Number(supplyBalance).toFixed(7)
-        : truncateToSevenDecimals(supplyBalance)
+  
+    // Determine which value to use (assetBorrow or supplyBalance)
+    let selectedBalance =
+      supplyBalance > assetBorrow ? assetBorrow : supplyBalance;
+  
+    // Handle decimal truncation based on the value
+    let displayBalance = selectedBalance
+      ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
+        ? Number(selectedBalance).toFixed(8)
+        : selectedBalance >= 1e-7 && selectedBalance < 1e-6
+        ? Number(selectedBalance).toFixed(7)
+        : truncateToSevenDecimals(selectedBalance)
       : "0";
-    const maxAmount = supply_Balance.toString();
-
+  
+    const maxAmount = displayBalance.toString();
+  
+    // Update the amount and its USD value
     updateAmountAndUsdValue(maxAmount);
   };
+  
   const formatValue = (value) => {
     if (!value) return "0";
     return Number(value)

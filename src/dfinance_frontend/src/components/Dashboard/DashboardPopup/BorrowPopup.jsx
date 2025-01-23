@@ -459,7 +459,7 @@ const Borrow = ({
     const numericAmount = parseFloat(inputAmount);
 
     // Ensure the entered amount does not exceed the maximum borrowable value
-    if (numericAmount > parseFloat(borrowableAssetValue)) {
+    if (numericAmount > parseFloat(borrowableValue)) {
       return;
     }
 

@@ -53,6 +53,7 @@ const WithdrawPopup = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
@@ -325,6 +326,17 @@ const WithdrawPopup = ({
     
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
     console.log("collateral & debt",totalCollateral,amountTaken, totalCollateralValue, totalDeptValue);
+    let avliq=(liquidationThreshold*totalCollateral);
+    console.log("avliq", avliq);
+    let tempLiq = avliq - (amountTaken * reserveliquidationThreshold);
+
+    if (totalCollateralValue > 0) {
+      tempLiq = tempLiq / totalCollateralValue;
+    
+      // Truncate to 8 decimal places
+      const multiplier = Math.pow(10, 8);
+      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+    }
     
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("ltv",ltv);
@@ -332,13 +344,14 @@ const WithdrawPopup = ({
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
-    if (ltv * 100 >= liquidationThreshold && currentCollateralStatus) {
+    console.log("liq_thresh",ltv * 100, tempLiq);
+    if (ltv * 100 >= tempLiq && currentCollateralStatus) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
     }
 // console.log("ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue",ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue,totalCollateralValue)
     if (
-      (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) &&
+      (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
       currentCollateralStatus
     ) {
       setIsButtonDisabled(true);
@@ -353,6 +366,7 @@ const WithdrawPopup = ({
     assetBorrow,
     amount,
     usdValue,
+    liq_thresh
   ]);
 
   const calculateHealthFactor = (
@@ -379,9 +393,19 @@ const WithdrawPopup = ({
    
        let avliq=(liquidationThreshold*totalCollateral);
     console.log("avliq", avliq);
-    let tempLiq=(avliq-(amountTaken * reserveliquidationThreshold));
-     if (totalCollateralValue > 0) {tempLiq=tempLiq/totalCollateralValue;}
-    console.log("tempLiq", tempLiq);
+    let tempLiq = avliq - (amountTaken * reserveliquidationThreshold);
+
+    if (totalCollateralValue > 0) {
+      tempLiq = tempLiq / totalCollateralValue;
+    
+      // Truncate to 8 decimal places
+      const multiplier = Math.pow(10, 8);
+      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+    }
+    setTempLiq(tempLiq);
+    console.log("tempLiq", tempLiq.toFixed(8));
+    
+    
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
     result = Math.round(result * 1e8) / 1e8; 
     console.log("result", result);
@@ -395,10 +419,18 @@ const WithdrawPopup = ({
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {
-      return 0;
+      return "0.00000000"; // Return as a string with 8 decimal places
     }
-    return totalDeptValue / totalCollateralValue;
+  
+    const ltv = totalDeptValue / totalCollateralValue;
+  
+    // Truncate to 8 decimal places
+    const multiplier = Math.pow(10, 8);
+    const truncatedLTV = Math.floor(ltv * multiplier) / multiplier;
+  
+    return truncatedLTV.toFixed(8); // Return as a string with exactly 8 decimal places
   };
+  
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 

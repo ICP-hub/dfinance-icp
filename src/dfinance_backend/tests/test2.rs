@@ -438,52 +438,52 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             simulate_dtoken_transfer_failure: false,
         },
         // Non-existent asset case
-        // TestCase {
-        //     asset: "nonexistent_asset".to_string(),
-        //     amount: 500,
-        //     is_collateral: false,
-        //     expect_success: false,
-        //     expected_error_message: Some(
-        //         "Error retrieving asset principal: No principal found for asset: nonexistent_asset"
-        //             .to_string(),
-        //     ),
-        //     simulate_insufficient_balance: false,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
-        // // Minimum valid amount
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 1, // Minimum valid amount
-        //     is_collateral: true,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        //     simulate_insufficient_balance: false,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
-        // // Large amount
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 100_00, // Large amount
-        //     is_collateral: true,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        //     simulate_insufficient_balance: false,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
-        // // Insufficient balance
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 10_000_000, // Valid amount but insufficient balance
-        //     is_collateral: true,
-        //     expect_success: false,
-        //     expected_error_message: Some(
-        //         // "Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\""
-        //         //     .to_string(),
-        //         "Asset transfer failed, burned dtoken. Error: \"InsufficientFunds".to_string(),
-        //     ), // change it later on
-        //     simulate_insufficient_balance: true,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
+        TestCase {
+            asset: "nonexistent_asset".to_string(),
+            amount: 500,
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some(
+                "Error retrieving asset principal: No principal found for asset: nonexistent_asset"
+                    .to_string(),
+            ),
+            simulate_insufficient_balance: false,
+            simulate_dtoken_transfer_failure: false,
+        },
+        // Minimum valid amount
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: 1, // Minimum valid amount
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+            simulate_insufficient_balance: false,
+            simulate_dtoken_transfer_failure: false,
+        },
+        // Large amount
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: 100_00, // Large amount
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+            simulate_insufficient_balance: false,
+            simulate_dtoken_transfer_failure: false,
+        },
+        // Insufficient balance
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: 10_000_000, // Valid amount but insufficient balance
+            is_collateral: true,
+            expect_success: false,
+            expected_error_message: Some(
+                // "Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\""
+                //     .to_string(),
+                "Asset transfer failed, burned dtoken. Error: \"InsufficientFunds".to_string(),
+            ), // change it later on
+            simulate_insufficient_balance: true,
+            simulate_dtoken_transfer_failure: false,
+        },
     ];
 
     let user_principal =
@@ -877,17 +877,17 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             simulate_dtoken_transfer_failure: false,
         },
         // Insufficient balance
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 10_00_000, // Valid amount but insufficient balance
-        //     user: Principal::anonymous().to_string(),
-        //     on_behalf_of: "user6".to_string(),
-        //     interest_rate: Nat::from(0u64),
-        //     expect_success: false,
-        //     expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
-        //     simulate_insufficient_balance: true,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: 10_00_000, // Valid amount but insufficient balance
+            user: Principal::anonymous().to_string(),
+            on_behalf_of: "user6".to_string(),
+            interest_rate: Nat::from(0u64),
+            expect_success: false,
+            expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
+            simulate_insufficient_balance: true,
+            simulate_dtoken_transfer_failure: false,
+        },
     ];
 
     // let (pic, backend_canister) = setup();

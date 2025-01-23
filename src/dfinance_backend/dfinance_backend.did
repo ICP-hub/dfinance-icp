@@ -52,6 +52,7 @@ type Error = variant {
   LockOperationInProgess;
   BorrowCapExceeded;
   InsufficientLiquidity;
+  AmountSubtractionError;
   ErrorEncoding;
   HealthFactorLess;
   UnauthorizedAccess;

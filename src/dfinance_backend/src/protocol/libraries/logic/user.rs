@@ -334,7 +334,7 @@ pub async fn get_user_balance_in_base_currency(
         "Fetched balance from DToken canister: {:?}",
         user_scaled_balance
     );
-    //let user_scaled_balance = reserve.d_token_balance.clone();
+    // let user_scaled_balance = reserve.d_token_balance.clone();
     let normalized_supply_result = user_normalized_supply(asset_reserve);
     let normalized_supply = match normalized_supply_result {
         Ok(data) => {

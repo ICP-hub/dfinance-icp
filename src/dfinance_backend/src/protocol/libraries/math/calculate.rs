@@ -186,6 +186,7 @@ pub async fn get_exchange_rates(
                 let pow = 10usize.pow(v.metadata.decimals);
                 ic_cdk::println!("quote = {}", quote);
                 ic_cdk::println!("pow = {}", pow);
+                // Ask : should i handle the error here or not. 
                 let exchange_rate = (Nat::from(quote) * Nat::from(SCALING_FACTOR))
                     / (Nat::from(pow) - Nat::from(SCALING_FACTOR));
                 ic_cdk::println!("exchange rate = {}", exchange_rate);

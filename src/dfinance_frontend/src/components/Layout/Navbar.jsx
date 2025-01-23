@@ -562,7 +562,7 @@ export default function Navbar({ isHomeNav }) {
                   {switchWalletDrop && (
                     <>
                       <div
-                        className="fixed inset-0 bg-black opacity-40 z-40"
+                        className="fixed inset-0 bg-black opacity-40 z-50"
                         onClick={() => setSwitchWalletDrop(false)}
                         style={{ pointerEvents: "none" }}
                       ></div>

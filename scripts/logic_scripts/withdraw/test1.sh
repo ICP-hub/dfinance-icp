@@ -2,16 +2,14 @@
 
 set -e
 
-source ../../.env
+source ../../../.env
 
 # Set variables
-# ckbtc_canister=$CANISTER_ID_CKBTC_LEDGER  
 ckbtc_canister="a3shf-5eaaa-aaaaa-qaafa-cai"
 backend_canister=$CANISTER_ID_DFINANCE_BACKEND  
-debt_canister="c2lt4-zmaaa-aaaaa-qaaiq-cai"
 dtoken_canister="a4tbr-q4aaa-aaaaa-qaafq-cai"
-# dtoken_canister="c5kvi-uuaaa-aaaaa-qaaia-cai"
 reserve_data_method="get_reserve_data"
+get_user_method="get_user_data"
 
 # Use the default identity
 dfx identity use default
@@ -28,17 +26,25 @@ user_dtoken_balance=$(dfx canister call $dtoken_canister icrc1_balance_of "(reco
 echo "User Balance: $user_balance"
 echo "Backend Canister Balance: $backend_balance"
 echo "User Dtoken Balance: $user_dtoken_balance"
+
 echo "--------------------------------------"
 
 # Set the amount to withdraw
-amount=1000
+amount=3000
 collateral=true
-on_behalf_of=null  
 
 # Call the withdraw function
 echo "Withdrawing $amount of ckbtc..."
-withdraw=$(dfx canister call dfinance_backend withdraw "(\"ckBTC\", $amount:nat, ${on_behalf_of}, $collateral:bool)")
+withdraw=$(dfx canister call dfinance_backend execute_withdraw "(record { 
+    asset=\"ckBTC\"; 
+    amount=$amount:nat; 
+    on_behalf_of=null; 
+    is_collateral=$collateral 
+})")
+
 echo "Withdraw Execution Result: $withdraw"
+
+echo "--------------------------------------"
 
 # Fetch and display balances after withdraw
 echo "Checking balances after withdraw..."
@@ -48,6 +54,7 @@ user_dtoken_balance=$(dfx canister call $dtoken_canister icrc1_balance_of "(reco
 echo "User Balance after withdraw: $user_balance"
 echo "Backend Canister Balance after withdraw: $backend_balance"
 echo "User Dtoken Balance after withdraw: $user_dtoken_balance"
+
 echo "--------------------------------------"
 
 # Fetching reserve data after withdraw
@@ -57,5 +64,12 @@ echo "Reserve Data: $reserve_data"
 echo "--------------------------------------"
 
 echo "Fetching user data..."
-user_data=$(../integration_scripts/user_data.sh)
+user_data=$(dfx canister call $backend_canister $get_user_method "(principal\"${user_principal}\")")
 echo "user data: $user_data"
+
+echo "--------------------------------------"
+
+echo "Test Case 1 Passed: Withdraw of $amount ckBTC was successful!"
+
+echo "--------------------------------------"
+

@@ -135,6 +135,8 @@ impl ValidationLogic {
         };
         ic_cdk::println!("interest rate = {}", supplied_interest_rate);
 
+        ic_cdk::println!("to check the borrow = {}",user_current_supply.clone().scaled_mul(supplied_interest_rate.clone()));
+
         if final_amount > user_current_supply.clone().scaled_mul(supplied_interest_rate) {
             ic_cdk::println!("Withdraw amount exceeds current supply.");
             ic_cdk::println!(
@@ -251,6 +253,8 @@ impl ValidationLogic {
             let mut adjusted_collateral = Nat::from(0u128);
             if adjusted_collateral < usd_withdrawl.clone() {
                 adjusted_collateral = Nat::from(0u128);
+            }else if total_collateral < usd_withdrawl {
+                return Err(Error::AmountSubtractionError);
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();
             }
@@ -296,10 +300,6 @@ impl ValidationLogic {
         let current_locked = get_locked_amount(&reserve.asset_name.clone().unwrap());
         ic_cdk::println!("current locked amouunt = {}", current_locked);
         ic_cdk::println!("asset supply = {}", reserve.asset_supply);
-        ic_cdk::println!(
-            "subtract amount = {}",
-            reserve.asset_supply.clone() - current_locked.clone()
-        );
 
         if amount
             <= ((reserve.asset_supply.clone() - reserve.asset_borrow.clone()) - current_locked)

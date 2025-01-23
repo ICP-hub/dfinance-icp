@@ -38,6 +38,7 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
+import Lottie from "../Common/Lottie";
 
 const MySupply = () => {
   const dashboardRefreshTrigger = useSelector(
@@ -712,62 +713,42 @@ const MySupply = () => {
     return { borrowableValue, borrowableAssetValue };
   };
   const noBorrowMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
-      <div className="w-[55px] md:w-20 h-15">
-        <img
-          src="/Transaction/empty file.gif"
-          alt="empty"
-          className="w-30"
-          loading="lazy"
-        />
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
+      <div className="w-[55px] md:w-[65px]">
+      <Lottie /> 
       </div>
-      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
-        Nothing borrowed yet
+      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
+        NOTHING BORROWED YET !
       </p>
     </div>
   );
   const noSupplyMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
-      <div className="w-[55px] md:w-20 h-15">
-        <img
-          src="/Transaction/empty file.gif"
-          alt="empty"
-          className="w-30"
-          loading="lazy"
-        />
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
+      <div className="w-[55px] md:w-[65px]">
+      <Lottie /> 
       </div>
-      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
-        Nothing supplied yet
+      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
+      NOTHING SUPPLIED YET !
       </p>
     </div>
   );
   const noAssetsToSupplyMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
-      <div className="w-[55px] md:w-20 h-15">
-        <img
-          src="/Transaction/empty file.gif"
-          alt="empty"
-          className="w-30"
-          loading="lazy"
-        />
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
+     <div className="w-[55px] md:w-[65px]">
+      <Lottie /> 
       </div>
-      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
-        No assets to supply.
+      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
+        NO ASSETS TO SUPPLY !
       </p>
     </div>
   );
   const noAssetsToBorrowMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center pb-6 pt-2 opacity-60">
-      <div className="w-[55px] md:w-20 h-15">
-        <img
-          src="/Transaction/empty file.gif"
-          alt="empty"
-          className="w-30"
-          loading="lazy"
-        />
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
+      <div className="w-[55px] md:w-[65px]">
+      <Lottie /> 
       </div>
-      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
-        No assets to borrow.
+      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
+      NO ASSETS TO BORROW !
       </p>
     </div>
   );
@@ -3387,6 +3368,7 @@ const MySupply = () => {
                                               Ltv,
                                               borrowableValue,
                                               borrowableAssetValue
+
                                             );
                                           }}
                                           disabled={isTableDisabled}
@@ -3414,6 +3396,12 @@ const MySupply = () => {
                                                   userAccountData?.Ok?.[1]
                                                 ) / 100000000
                                               ) || 0;
+                                              if (ckBalance === 0) {
+                                                toast.info(
+                                                  "Insufficeint wallet balance to allow repay request."
+                                                );
+                                                return;
+                                              }
                                             handleModalOpen(
                                               "repay",
                                               asset,
@@ -3433,6 +3421,7 @@ const MySupply = () => {
                                               totalDebt
                                             );
                                           }}
+                                          disabled={ckBalance === 0}
                                           className={`md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold`}
                                         />
                                       </div>
@@ -3890,6 +3879,12 @@ const MySupply = () => {
                                             Number(userAccountData?.Ok?.[1]) /
                                               100000000
                                           ) || 0;
+                                          if (ckBalance === 0) {
+                                            toast.info(
+                                              "Insufficeint wallet balance to allow repay request."
+                                            );
+                                            return;
+                                          }
                                         handleModalOpen(
                                           "repay",
                                           asset,
@@ -3908,6 +3903,7 @@ const MySupply = () => {
                                           totalDebt
                                         );
                                       }}
+                                      disabled={ckBalance === 0}
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                     />
                                   </div>

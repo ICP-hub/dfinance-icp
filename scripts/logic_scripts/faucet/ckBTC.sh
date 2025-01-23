@@ -4,11 +4,11 @@
 set -e
 
 # Load environment variables from .env
-source ../../.env
+source ../../../.env
 
 CANISTER_ID=$CANISTER_ID_DFINANCE_BACKEND
-ASSET="ICP"                         
-AMOUNT=3000000000                       
+ASSET="ckBTC"                         
+AMOUNT=100000                       
 
 # Validate the input parameters
 if [ -z "$ASSET" ] || [ -z "$AMOUNT" ]; then

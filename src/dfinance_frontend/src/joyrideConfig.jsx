@@ -646,9 +646,9 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         <img
           src={
-            theme === "dark"
-              ? darkImages.warningPopup
-              : lightImages.WarningPopupLight
+          theme === "dark"
+              ? darkImages.warningPopupDark
+              : lightImages.warningPopupLight
           }
           alt="Faucet Popup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"

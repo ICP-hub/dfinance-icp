@@ -65,7 +65,8 @@ pub enum Error {
     TokenAlreadyExist,
     FailedToReleaseLock,
     LockOperationInProgess,
-    ErrorDTokenBalanceLessThan
+    ErrorDTokenBalanceLessThan,
+    AmountSubtractionError
 }
 
 impl Error {
@@ -133,7 +134,8 @@ impl Error {
             Error::TokenAlreadyExist => "Token already exist - try again with different token",
             Error::FailedToReleaseLock => "Failed to release lock",
             Error::LockOperationInProgess => "Another operation is already in progress for user",
-            Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance"
+            Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance",
+            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract"
         }
     }
 }

@@ -147,7 +147,7 @@ pub async fn get_exchange_rates(
             "ckUSDT" => "usdt".to_string(),
             _ => symbol,
         },
-        None => "USD".to_string(),
+        None => "USDT".to_string(),
     };
 
     let args = GetExchangeRateRequest {
@@ -197,7 +197,7 @@ pub async fn get_exchange_rates(
 
                 // Fetching price-cache data
                 ic_cdk::println!("exchange rate");
-                if quote_asset == "USD" {
+                if quote_asset == "USDT" {
                     let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
                         let price_cache_data = &mut state.price_cache_list;
                         if let Some(price_cache) = price_cache_data.get(&base_asset) {

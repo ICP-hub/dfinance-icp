@@ -492,17 +492,17 @@ const Repay = ({
   <div className="w-full flex justify-between my-2">
     <h1>Amount</h1>
   </div>
-  <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-3 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+  <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
     <div className="w-[50%]">
       <input
         type="text"
         value={amount}
         onChange={handleAmountChange}
         disabled={supplyBalance === 0 || isApproved}
-        className="lg:text-lg placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText mb-4"
-        placeholder={`Enter Amount ${asset}`}
+        className="lg:text-lg   mb-2 placeholder:text-xs lg:placeholder:text-sm focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                     placeholder={`Enter Amount ${asset}`}
       />
-      <p className="text-xs text-gray-500 px-2 mb-2">
+      <p className="text-xs text-gray-500 px-2  mt-4 mb-1">
         {usdValue
           ? `$${usdValue.toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -512,7 +512,7 @@ const Repay = ({
       </p>
     </div>
     <div className="flex flex-col items-end">
-      <div className="w-auto flex items-center gap-2">
+      <div className="w-auto flex items-center gap-2  mt-1">
         <img
           src={image}
           alt="Item Image"

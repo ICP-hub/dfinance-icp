@@ -195,7 +195,7 @@ pub async fn burn_scaled(
         let balance_user_indexed = balance
             .clone()
             .scaled_mul(user_state.liquidity_index.clone());
-
+            ic_cdk::println!("balance_increase calculated = {} {}", balance_indexed,balance_user_indexed);
         if balance_indexed < balance_user_indexed {
             return Err(Error::AmountSubtractionError); // Handle the error gracefully
         }
@@ -244,7 +244,7 @@ pub async fn burn_scaled(
         let balance_user_indexed = balance
             .clone()
             .scaled_mul(user_state.variable_borrow_index.clone());
-
+            ic_cdk::println!("balance_increase calculated = {} {}", balance_indexed,balance_user_indexed);
         if balance_indexed < balance_user_indexed {
             return Err(Error::AmountSubtractionError); // Handle the error gracefully
         }
@@ -383,11 +383,11 @@ pub async fn mint_scaled(
         amount.clone().scaled_div(index.clone())
     };
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount.clone());
-    if amount.clone() > adjusted_amount.clone()
-        && amount.clone() - adjusted_amount.clone() < Nat::from(1000u128)
-    {
-        adjusted_amount = amount.clone();
-    }
+    // if amount.clone() > adjusted_amount.clone()
+    //     && amount.clone() - adjusted_amount.clone() < Nat::from(1000u128)
+    // {
+    //     adjusted_amount = amount.clone();
+    // }
 
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
     if adjusted_amount == Nat::from(0u128) {

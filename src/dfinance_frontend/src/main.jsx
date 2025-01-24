@@ -9,7 +9,7 @@ import { AuthProvider } from "./utils/useAuthClient"
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
+  <React.StrictMode>
     <Provider store={store}>
       <AuthProvider >
         <BrowserRouter>
@@ -17,5 +17,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </BrowserRouter>
       </AuthProvider>
     </Provider>
-  //</React.StrictMode>
+  </React.StrictMode>
 )

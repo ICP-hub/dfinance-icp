@@ -1,6 +1,6 @@
 use crate::api::functions::asset_transfer_from;
 use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::api::state_handler::{mutate_state, read_state};
+use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::declarations::storable::Candid;
@@ -9,7 +9,6 @@ use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::reserve_ledger_canister_id;
-use candid::types::principal;
 use candid::{Nat, Principal};
 use ic_cdk::update;
 // -------------------------------------
@@ -243,6 +242,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             if liquidator_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
                 return Err(Error::AnonymousPrincipal);
+            }
+            if liquidator_principal != Principal::management_canister() {
+                ic_cdk::println!("User is not allowed to perform such transaction");
+                return Err(Error::InvalidPrincipal);
             }
             (user_principal, Some(liquidator_principal))
         } else {

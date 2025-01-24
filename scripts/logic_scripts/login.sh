@@ -15,16 +15,16 @@ dfx identity use default
 user_principal=$(dfx identity get-principal)
 echo "User Principal: $user_principal"
 
-echo "Fetching user data..."
-user_data=$(../integration_scripts/user_data.sh)
-echo "user data: $user_data"
+# echo "Fetching user data..."
+# user_data=$(../integration_scripts/user_data.sh)
+# echo "user data: $user_data"
 
 # Call the login function
 echo "Logging in..."
-login_result=$(dfx canister call $backend_canister login "()")
+login_result=$(dfx canister call $backend_canister register_user "()")
 echo "Login Execution Result: $login_result"
-echo "Fetching user data..."
-user_data=$(../integration_scripts/user_data.sh)
-echo "user data: $user_data"
+# echo "Fetching user data..."
+# user_data=$(../integration_scripts/user_data.sh)
+# echo "user data: $user_data"
 
 echo "Script completed."

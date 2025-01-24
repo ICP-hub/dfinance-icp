@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Number of users to delete
-NUM_USERS=41
+NUM_USERS=20
 
 # Loop to delete users
 for ((i=1; i<=NUM_USERS; i++))

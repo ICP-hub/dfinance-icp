@@ -8,7 +8,7 @@ use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::{get_asset_debt, get_asset_supply, get_cached_exchange_rate};
+use crate::{get_asset_debt, get_asset_supply, get_cached_exchange_rate, user_normalized_supply};
 use candid::{Nat, Principal};
 
 pub struct ValidationLogic;
@@ -118,7 +118,9 @@ impl ValidationLogic {
         let final_amount = amount.clone();
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        let user_dtokens = get_asset_supply(reserve.asset_name.clone().unwrap(), Some(user)).await;
+        let d_token_principal =
+            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap();
+        let user_dtokens = get_balance(d_token_principal, user).await;
 
         let user_current_supply = match user_dtokens {
             Ok(supply) => supply,
@@ -127,9 +129,21 @@ impl ValidationLogic {
             }
         };
 
-        if final_amount > user_current_supply {
+        let supplied_interest_rate = match user_normalized_supply(reserve.clone()) {
+            Ok(interest) => interest,
+            Err(e) => return Err(e),
+        };
+        ic_cdk::println!("interest rate = {}", supplied_interest_rate);
+
+        ic_cdk::println!("to check the borrow = {}",user_current_supply.clone().scaled_mul(supplied_interest_rate.clone()));
+
+        if final_amount > user_current_supply.clone().scaled_mul(supplied_interest_rate) {
             ic_cdk::println!("Withdraw amount exceeds current supply.");
-            ic_cdk::println!("final amount and current {} {}",final_amount,user_current_supply);
+            ic_cdk::println!(
+                "final amount and current {} {}",
+                final_amount,
+                user_current_supply
+            );
             return Err(Error::WithdrawMoreThanSupply);
         }
 
@@ -239,6 +253,8 @@ impl ValidationLogic {
             let mut adjusted_collateral = Nat::from(0u128);
             if adjusted_collateral < usd_withdrawl.clone() {
                 adjusted_collateral = Nat::from(0u128);
+            }else if total_collateral < usd_withdrawl {
+                return Err(Error::AmountSubtractionError);
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();
             }
@@ -279,18 +295,23 @@ impl ValidationLogic {
         let platform_principal = ic_cdk::api::id();
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-        ic_cdk::println!("amount in borrow ={}",amount);
+        ic_cdk::println!("amount in borrow ={}", amount);
 
         let current_locked = get_locked_amount(&reserve.asset_name.clone().unwrap());
-        ic_cdk::println!("current locked amouunt = {}",current_locked);
-        ic_cdk::println!("asset supply = {}",reserve.asset_supply);
-        ic_cdk::println!("subtract amount = {}",reserve.asset_supply.clone() - current_locked.clone());
+        ic_cdk::println!("current locked amouunt = {}", current_locked);
+        ic_cdk::println!("asset supply = {}", reserve.asset_supply);
 
-        if amount <= ((reserve.asset_supply.clone() - reserve.asset_borrow.clone()) - current_locked){
-            if let Err(e) = lock_amount(&reserve.asset_name.clone().unwrap(), &amount, &user_principal) {
+        if amount
+            <= ((reserve.asset_supply.clone() - reserve.asset_borrow.clone()) - current_locked)
+        {
+            if let Err(e) = lock_amount(
+                &reserve.asset_name.clone().unwrap(),
+                &amount,
+                &user_principal,
+            ) {
                 return Err(e);
             }
-        }else {
+        } else {
             return Err(Error::AmountTooMuch);
         }
 
@@ -476,14 +497,15 @@ impl ValidationLogic {
         };
 
         // let user_current_debt = get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
-        let user_current_debt = match get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await {
-            Ok(debt) => debt,
-            Err(e) => {
-                // Log the error or perform a fallback action
-                ic_cdk::println!("Error getting asset debt: {:?}", e);
-                return Err(e.into()); // Or handle the error accordingly
-            }
-        };
+        let user_current_debt =
+            match get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await {
+                Ok(debt) => debt,
+                Err(e) => {
+                    // Log the error or perform a fallback action
+                    ic_cdk::println!("Error getting asset debt: {:?}", e);
+                    return Err(e.into()); // Or handle the error accordingly
+                }
+            };
         ic_cdk::println!("User current debt: {:?}", user_current_debt);
         if user_current_debt == Nat::from(0u128) {
             return Err(Error::NoDebtToRepay);
@@ -595,8 +617,8 @@ impl ValidationLogic {
             return Err(Error::LessRewardAmount);
         }
 
-        if health_factor/Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
-            return Err(Error::HealthFactorLess);//TODO change name of the error
+        if health_factor / Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
+            return Err(Error::HealthFactorLess); //TODO change name of the error
         }
 
         // validating reserve states

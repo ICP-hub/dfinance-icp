@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -38,6 +38,7 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
+import Lottie from "../Common/Lottie";
 
 const MySupply = () => {
   const dashboardRefreshTrigger = useSelector(
@@ -47,6 +48,10 @@ const MySupply = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state, pathname } = useLocation();
+  const tooltipRef = useRef(null);
+  const [isBorrowPowerTooltipVis, setIsBorrowPowerTooltipVis] = useState(false);
+
+  const toggleBorrowTooltip = () => setIsBorrowPowerTooltipVis((prev) => !prev);
 
   const { principal, fetchReserveData, createLedgerActor, user, backendActor } =
     useAuth();
@@ -83,54 +88,59 @@ const MySupply = () => {
     // Check if userData has reserves
     const reserves = userData?.Ok?.reserves?.[0] || [];
     console.log("Reserves:", reserves);
-  
+
     let updatedAvailableBorrow = 0; // Initialize updatedAvailableBorrow
-  
+
     // Iterate over each asset in the reserves
     reserves.map((reserveGroup) => {
       const asset = reserveGroup[0]; // Extract asset (e.g., "ckBTC", "ckETH")
       const liquidityIndex = reserveGroup[1]?.liquidity_index || 0;
       console.log("Liquidity Index:", liquidityIndex);
-  
+
       // Get the corresponding asset balance
       const assetBalance =
-        assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
+        assetBalances.find((balance) => balance.asset === asset)
+          ?.dtokenBalance || 0;
       console.log("Asset Balance for", asset, ":", assetBalance);
-  
+
       // Calculate asset supply
-      const assetSupply = (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / (Number(liquidityIndex) * 1e8);
+      const assetSupply =
+        (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
+        (Number(liquidityIndex) * 1e8);
       console.log("Asset Supply for", asset, ":", assetSupply);
-  
+
       // Check if the user has collateral for this asset
       const isCollateral = reserveGroup[1]?.is_collateral || true;
       console.log("Is Collateral for", asset, ":", isCollateral);
-  
+
       // If assetSupply is greater than 0, update availableBorrow to borrowValue
       if (assetSupply > 0) {
-        console.log("Asset Supply is greater than 0. Updating Available Borrow.");
+        console.log(
+          "Asset Supply is greater than 0. Updating Available Borrow."
+        );
         if (userAccountData?.Ok?.length > 5) {
           const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
           console.log("Setting Available Borrow to borrowValue:", borrowValue);
           updatedAvailableBorrow = isCollateral ? borrowValue : 0; // Update availableBorrow if any assetSupply > 0
         } else {
-          console.log("User account data length is insufficient. Setting Available Borrow to 0.");
+          console.log(
+            "User account data length is insufficient. Setting Available Borrow to 0."
+          );
           updatedAvailableBorrow = 0; // Ensure availableBorrow is 0 when insufficient account data
         }
       }
     });
-  
+
     // After checking all reserves, update the availableBorrow state
     setAvailableBorrow(updatedAvailableBorrow);
-  
+
     // If no asset supply > 0, set availableBorrow to 0
     if (updatedAvailableBorrow === 0) {
       console.log("No asset supply > 0. Setting Available Borrow to 0.");
       setAvailableBorrow(0);
     }
-  
-  }, [userAccountData, userData, dashboardRefreshTrigger ,assetBalances]);
-  
-  
+  }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
+
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -712,62 +722,42 @@ const MySupply = () => {
     return { borrowableValue, borrowableAssetValue };
   };
   const noBorrowMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
-      <div className="w-[55px] md:w-20 h-15">
-        <img
-          src="/Transaction/empty file.gif"
-          alt="empty"
-          className="w-30"
-          loading="lazy"
-        />
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
+      <div className="w-[55px] md:w-[65px]">
+        <Lottie />
       </div>
-      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
-        Nothing borrowed yet
+      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
+        NOTHING BORROWED YET !
       </p>
     </div>
   );
   const noSupplyMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
-      <div className="w-[55px] md:w-20 h-15">
-        <img
-          src="/Transaction/empty file.gif"
-          alt="empty"
-          className="w-30"
-          loading="lazy"
-        />
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
+      <div className="w-[55px] md:w-[65px]">
+        <Lottie />
       </div>
-      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
-        Nothing supplied yet
+      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
+        NOTHING SUPPLIED YET !
       </p>
     </div>
   );
   const noAssetsToSupplyMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center opacity-60">
-      <div className="w-[55px] md:w-20 h-15">
-        <img
-          src="/Transaction/empty file.gif"
-          alt="empty"
-          className="w-30"
-          loading="lazy"
-        />
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
+      <div className="w-[55px] md:w-[65px]">
+        <Lottie />
       </div>
-      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
-        No assets to supply.
+      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
+        NO ASSETS TO SUPPLY !
       </p>
     </div>
   );
   const noAssetsToBorrowMessage = (
-    <div className="mt-2 flex flex-col justify-center align-center place-items-center pb-6 pt-2 opacity-60">
-      <div className="w-[55px] md:w-20 h-15">
-        <img
-          src="/Transaction/empty file.gif"
-          alt="empty"
-          className="w-30"
-          loading="lazy"
-        />
+    <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
+      <div className="w-[55px] md:w-[65px]">
+        <Lottie />
       </div>
-      <p className="text-[#233D63] text-[11px] md:text-sm font-semibold dark:text-darkText">
-        No assets to borrow.
+      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
+        NO ASSETS TO BORROW !
       </p>
     </div>
   );
@@ -1048,14 +1038,20 @@ const MySupply = () => {
                                     (balance) => balance.asset === asset
                                   )?.dtokenBalance || 0;
                                 console.log("dtoken balance", assetBalance);
-                                console.log("normalize_supply", getAssetSupplyValue(asset));
-                                console.log("current liq = ",currentLiquidity);
+                                console.log(
+                                  "normalize_supply",
+                                  getAssetSupplyValue(asset)
+                                );
+                                console.log("current liq = ", currentLiquidity);
                                 const assetSupply =
                                   (Number(assetBalance) *
                                     Number(getAssetSupplyValue(asset))) /
                                   (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
                                 console.log("asset supply", assetSupply);
-                                const modiassetSupply = (Number(getAssetSupplyValue(asset))/Number(currentLiquidity))*Number(assetBalance);
+                                const modiassetSupply =
+                                  (Number(getAssetSupplyValue(asset)) /
+                                    Number(currentLiquidity)) *
+                                  Number(assetBalance);
                                 console.log("modified asset", modiassetSupply);
                                 const item = filteredItems.find(
                                   (item) => item[0] === asset
@@ -2917,11 +2913,56 @@ const MySupply = () => {
                     })}
 
                     {/* Display total USD value of supply */}
-                    <div className="hidden md:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
-                      <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
-                        Total
-                      </span>{" "}
-                      ${formatNumber(totalUsdValueBorrow)}
+                    <div className="flex gap-2">
+                      <div className="hidden dxl:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 place-content-center rounded-md">
+                        <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
+                          Total
+                        </span>{" "}
+                        ${formatNumber(totalUsdValueBorrow)}
+                      </div>
+
+                      <div className="hidden dxl:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 place-content-center rounded-md">
+                        <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
+                          Borrow power used
+                        </span>{" "}
+                        {(() => {
+                          const ratio =
+                            (totalUsdValueBorrow / availableBorrow) * 100;
+                          if (isNaN(ratio) || !isFinite(ratio)) {
+                            return 0;
+                          } else if (ratio < 1) {
+                            return ratio.toFixed(6);
+                          } else {
+                            return ratio.toFixed(2);
+                          }
+                        })()}
+                        %
+                        <span
+                          className="relative inline-block place-content-center ml-1"
+                          onMouseEnter={() => setIsBorrowPowerTooltipVis(true)}
+                          onMouseLeave={() => setIsBorrowPowerTooltipVis(false)}
+                        >
+                          <Info
+                            size={15}
+                            className="ml-1 align-middle cursor-pointer button1 -mb-[3px]"
+                            onClick={toggleBorrowTooltip}
+                          />
+
+                          {isBorrowPowerTooltipVis && (
+                            <div
+                              ref={tooltipRef}
+                              className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
+                            >
+                              <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
+                                The % of your total borrowing power used. This
+                                is based on the amount of your collateral
+                                supplied and the total amount that you can
+                                borrow.
+                              </span>
+                            </div>
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2940,11 +2981,54 @@ const MySupply = () => {
               </button>
             </div>
 
-            <div className="inline-block md:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
-              <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
-                Total
-              </span>{" "}
-              ${formatNumber(totalUsdValueBorrow)}
+            <div>
+              <div className="inline-block dxl:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
+                  Total
+                </span>{" "}
+                ${formatNumber(totalUsdValueBorrow)}
+              </div>
+
+              <div className="inline-block dxl:hidden ml-4 w-auto mt-2 text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
+                <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
+                  Borrow power used
+                </span>{" "}
+                {(() => {
+                  const ratio = (totalUsdValueBorrow / availableBorrow) * 100;
+                  if (isNaN(ratio) || !isFinite(ratio)) {
+                    return 0;
+                  } else if (ratio < 1) {
+                    return ratio.toFixed(6);
+                  } else {
+                    return ratio.toFixed(2);
+                  }
+                })()}
+                %
+                <span
+                  className="relative inline-block place-content-center ml-1"
+                  onMouseEnter={() => setIsBorrowPowerTooltipVis(true)}
+                  onMouseLeave={() => setIsBorrowPowerTooltipVis(false)}
+                >
+                  <Info
+                    size={15}
+                    className="ml-1 align-middle cursor-pointer button1 -mb-[3px]"
+                    onClick={toggleBorrowTooltip}
+                  />
+
+                  {isBorrowPowerTooltipVis && (
+                    <div
+                      ref={tooltipRef}
+                      className="absolute w-[250px] bottom-full transform -translate-x-[75%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
+                    >
+                      <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
+                        The % of your total borrowing power used. This is based
+                        on the amount of your collateral supplied and the total
+                        amount that you can borrow.
+                      </span>
+                    </div>
+                  )}
+                </span>
+              </div>
             </div>
 
             {}
@@ -3212,8 +3296,6 @@ const MySupply = () => {
                                         <Button
                                           title={"Borrow"}
                                           onClickHandler={() => {
-                                            
-                                        
                                             fetchAssetBorrow(asset);
                                             const reserveData =
                                               userData?.Ok?.reserves[0]?.find(
@@ -3358,13 +3440,19 @@ const MySupply = () => {
                                                   : "0.0000";
                                               }
                                             }
-                                            if (borrowableValue === "0.00000000" || borrowableValue === "0.0000") {
+                                            if (
+                                              borrowableValue ===
+                                                "0.00000000" ||
+                                              borrowableValue === "0.0000"
+                                            ) {
                                               // Show toast notification
-                                              toast.info("Insufficeint asset supply to allow borrow request");
-                                              
+                                              toast.info(
+                                                "Insufficeint asset supply to allow borrow request"
+                                              );
+
                                               // Disable the button
                                               setIsButtonDisabled(true);
-                                              return;  // Exit the function if borrowable value is 0
+                                              return; // Exit the function if borrowable value is 0
                                             }
                                             handleModalOpen(
                                               "borrow",
@@ -3414,6 +3502,12 @@ const MySupply = () => {
                                                   userAccountData?.Ok?.[1]
                                                 ) / 100000000
                                               ) || 0;
+                                            if (ckBalance === 0) {
+                                              toast.info(
+                                                "Insufficeint wallet balance to allow repay request."
+                                              );
+                                              return;
+                                            }
                                             handleModalOpen(
                                               "repay",
                                               asset,
@@ -3433,6 +3527,7 @@ const MySupply = () => {
                                               totalDebt
                                             );
                                           }}
+                                          disabled={ckBalance === 0}
                                           className={`md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold`}
                                         />
                                       </div>
@@ -3837,13 +3932,18 @@ const MySupply = () => {
                                               : "0.0000";
                                           }
                                         }
-                                        if (borrowableValue === "0.00000000" || borrowableValue === "0.0000") {
+                                        if (
+                                          borrowableValue === "0.00000000" ||
+                                          borrowableValue === "0.0000"
+                                        ) {
                                           // Show toast notification
-                                          toast.info("Insufficeint asset supply to allow borrow request");
-                                          
+                                          toast.info(
+                                            "Insufficeint asset supply to allow borrow request"
+                                          );
+
                                           // Disable the button
                                           setIsButtonDisabled(true);
-                                          return;  // Exit the function if borrowable value is 0
+                                          return; // Exit the function if borrowable value is 0
                                         }
                                         handleModalOpen(
                                           "borrow",
@@ -3890,6 +3990,12 @@ const MySupply = () => {
                                             Number(userAccountData?.Ok?.[1]) /
                                               100000000
                                           ) || 0;
+                                        if (ckBalance === 0) {
+                                          toast.info(
+                                            "Insufficeint wallet balance to allow repay request."
+                                          );
+                                          return;
+                                        }
                                         handleModalOpen(
                                           "repay",
                                           asset,
@@ -3908,6 +4014,7 @@ const MySupply = () => {
                                           totalDebt
                                         );
                                       }}
+                                      disabled={ckBalance === 0}
                                       className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                     />
                                   </div>
@@ -4141,10 +4248,32 @@ const MySupply = () => {
                                           size={14}
                                           className="dark:opacity-50"
                                         />
-                                        <div className="absolute left-[85px] transform -translate-x-1/2 -mb-4 bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
-                                          This is the total amount you can
-                                          borrow, determined by your collateral
-                                          and limited by the borrow cap.
+                                        <div className="absolute left-[120px] transform -translate-x-1/2 -mb-[160px] bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-[11px] font-base w-[15rem] pointer-events-none ">
+                                          <div className="flex flex-col">
+                                            <p>
+                                              This is the total amount you can
+                                              borrow, determined by your
+                                              collateral and limited by the
+                                              borrow cap.
+                                            </p>
+                                            <hr className="my-1" />
+                                            <p>
+                                              Upon clickcing on max some amount
+                                              might left becasue of the
+                                              following reasons:
+                                              <ol>
+                                                <li>
+                                                  1. Borrow cap exceeded because
+                                                  someone else supplied in the
+                                                  meanwhile
+                                                </li>
+                                                <li>
+                                                  2. Price difference while
+                                                  borowing
+                                                </li>
+                                              </ol>
+                                            </p>
+                                          </div>
                                         </div>
                                       </span>
                                     </span>
@@ -4628,11 +4757,32 @@ const MySupply = () => {
                                         <span className="relative cursor-pointer">
                                           <span className="group inline-flex">
                                             <Info size={14} />
-                                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none">
-                                              This is the total amount you can
-                                              borrow, determined by your
-                                              collateral and limited by the
-                                              borrow cap.
+                                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none font-normal">
+                                              <div className="flex flex-col">
+                                                <p>
+                                                  This is the total amount you
+                                                  can borrow, determined by your
+                                                  collateral and limited by the
+                                                  borrow cap.
+                                                </p>
+                                                <hr className="my-2 text-gray-600" />
+                                                <p>
+                                                  Upon clickcing on max some
+                                                  amount might left becasue of
+                                                  the following reasons:
+                                                  <ol className="text-[11px] mt-1 ">
+                                                    <li>
+                                                      1. Borrow cap exceeded
+                                                      because someone else
+                                                      supplied in the meanwhile
+                                                    </li>
+                                                    <li>
+                                                      2. Price difference while
+                                                      borowing
+                                                    </li>
+                                                  </ol>
+                                                </p>
+                                              </div>
                                             </div>
                                           </span>
                                         </span>
@@ -4642,7 +4792,7 @@ const MySupply = () => {
                                         <span className="relative cursor-pointer">
                                           <span className="group inline-flex">
                                             <Info size={14} />
-                                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none">
+                                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none font-base">
                                               The variable borrow interest rate
                                               may change over time, influenced
                                               by market trends and conditions.

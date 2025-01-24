@@ -1,5 +1,8 @@
 use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
+use crate::api::resource_manager::get_repay_locked_amount;
+use crate::api::resource_manager::release_lock;
+use crate::api::resource_manager::repay_lock_amount;
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
@@ -178,30 +181,42 @@ pub async fn burn_scaled(
             return Err(err);
         }
     };
-
-    ic_cdk::println!("Comparing balance and adjusted amount...");
-    if balance.clone() > adjusted_amount.clone()
-        && balance.clone() - adjusted_amount.clone() < Nat::from(1000u128)
-    {
-        ic_cdk::println!("Adjusting amount to balance");
-        adjusted_amount = balance.clone();
-    }
-
-    ic_cdk::println!("Final adjusted amount: {}", adjusted_amount);
-
+    // if balance.clone() > adjusted_amount.clone()
+    //     && balance.clone() - adjusted_amount.clone() < Nat::from(1000u128)
+    // {
+    //     adjusted_amount = balance.clone();
+    // }
+    ic_cdk::println!("burn balance = {}", balance);
+    ic_cdk::println!("adjusted balance = {}", adjusted_amount);
     let mut balance_increase = Nat::from(0u128);
     if burn_dtoken {
         ic_cdk::println!("Processing DToken burn...");
-        balance_increase = (balance.clone().scaled_mul(index.clone()))
-            - (balance
-                .clone()
-                .scaled_mul(user_state.liquidity_index.clone()));
+        let balance_indexed = balance.clone().scaled_mul(index.clone());
+        let balance_user_indexed = balance
+            .clone()
+            .scaled_mul(user_state.liquidity_index.clone());
 
-        ic_cdk::println!("Balance increase calculated: {}", balance_increase);
+        if balance_indexed < balance_user_indexed {
+            return Err(Error::AmountSubtractionError); // Handle the error gracefully
+        }
 
+        balance_increase = balance_indexed - balance_user_indexed;
+
+        // balance_increase = (balance.clone().scaled_mul(index.clone()))
+        //     - (balance
+        //         .clone()
+        //         .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
+        ic_cdk::println!("balance_increase calculated = {}", balance_increase);
+        ic_cdk::println!(
+            "dtoken vs adjusted {} {}",
+            user_state.d_token_balance,
+            adjusted_amount
+        );
         if user_state.d_token_balance == adjusted_amount {
             ic_cdk::println!("Setting DToken balance to zero");
             user_state.d_token_balance = Nat::from(0u128);
+        } else if user_state.d_token_balance < adjusted_amount {
+            return Err(Error::ErrorDTokenBalanceLessThan);
         } else {
             ic_cdk::println!("Subtracting adjusted amount from DToken balance");
             user_state.d_token_balance -= adjusted_amount.clone();
@@ -213,6 +228,8 @@ pub async fn burn_scaled(
         if reserve.asset_supply == adjusted_amount {
             ic_cdk::println!("Setting asset supply to zero");
             reserve.asset_supply = Nat::from(0u128);
+        } else if reserve.asset_supply < adjusted_amount {
+            return Err(Error::AmountSubtractionError);
         } else {
             ic_cdk::println!("Subtracting adjusted amount from asset supply");
             reserve.asset_supply -= adjusted_amount;
@@ -222,16 +239,30 @@ pub async fn burn_scaled(
         user_state.liquidity_index = index.clone();
     } else {
         ic_cdk::println!("Processing variable borrow burn...");
-        balance_increase = (balance.clone().scaled_mul(index.clone()))
-            - (balance
-                .clone()
-                .scaled_mul(user_state.variable_borrow_index.clone()));
+
+        let balance_indexed = balance.clone().scaled_mul(index.clone());
+        let balance_user_indexed = balance
+            .clone()
+            .scaled_mul(user_state.variable_borrow_index.clone());
+
+        if balance_indexed < balance_user_indexed {
+            return Err(Error::AmountSubtractionError); // Handle the error gracefully
+        }
+
+        balance_increase = balance_indexed - balance_user_indexed;
+
+        // balance_increase = (balance.clone().scaled_mul(index.clone()))
+        //     - (balance
+        //         .clone()
+        //         .scaled_mul(user_state.variable_borrow_index.clone()));
 
         ic_cdk::println!("Balance increase calculated: {}", balance_increase);
 
         if user_state.debt_token_blance == adjusted_amount {
             ic_cdk::println!("Setting debt token balance to zero");
             user_state.debt_token_blance = Nat::from(0u128);
+        } else if user_state.debt_token_blance < adjusted_amount.clone() {
+            return Err(Error::AmountSubtractionError);
         } else {
             ic_cdk::println!("Subtracting adjusted amount from debt token balance");
             user_state.debt_token_blance -= adjusted_amount.clone();
@@ -243,11 +274,21 @@ pub async fn burn_scaled(
         );
         ic_cdk::println!("before updating asset borrow = {:?}", reserve.asset_borrow);
 
+        // if let Err(err) = repay_lock_amount(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
+        // {
+        //     ic_cdk::println!("Error in repay_lock_amount: {:?}", err);
+        //     return Err(err);
+        // }
+
         if reserve.asset_borrow == adjusted_amount {
             ic_cdk::println!("Setting asset borrow to zero");
             reserve.asset_borrow = Nat::from(0u128);
+        } else if reserve.asset_borrow < adjusted_amount {
+            return Err(Error::AmountSubtractionError);
         } else {
             ic_cdk::println!("Subtracting adjusted amount from asset borrow");
+            // let repay_amount = get_repay_locked_amount(&reserve.asset_name.clone().unwrap());
+            // ic_cdk::println!("repay amount = {}", repay_amount);
             reserve.asset_borrow -= adjusted_amount;
         }
 
@@ -277,6 +318,9 @@ pub async fn burn_scaled(
             }
         }
     } else {
+        if amount < balance_increase {
+            return Err(Error::AmountSubtractionError);
+        }
         let mut amount_to_burn = amount - balance_increase;
         ic_cdk::println!("Burning tokens, initial amount: {}", amount_to_burn);
 
@@ -291,8 +335,10 @@ pub async fn burn_scaled(
                 user_state.debt_token_blance = Nat::from(0u128);
             }
         }
-
-        ic_cdk::println!("Final burn amount: {}", amount_to_burn);
+        ic_cdk::println!(
+            "balance_increase is not greater than amount, amount_to_burn = {}",
+            amount_to_burn
+        );
 
         match asset_transfer(
             platform_principal,
@@ -363,10 +409,21 @@ pub async fn mint_scaled(
     let mut balance_increase = Nat::from(0u128);
     if minting_dtoken {
         println!("minting dtoken");
-        balance_increase = (balance.clone().scaled_mul(index.clone()))
-            - (balance
-                .clone()
-                .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
+
+        let balance_indexed = balance.clone().scaled_mul(index.clone());
+        let balance_user_indexed = balance
+            .clone()
+            .scaled_mul(user_state.liquidity_index.clone());
+
+        if balance_indexed < balance_user_indexed {
+            return Err(Error::AmountSubtractionError);
+        }
+        
+        balance_increase = balance_indexed - balance_user_indexed;
+        // balance_increase = (balance.clone().scaled_mul(index.clone()))
+        //     - (balance
+        //         .clone()
+        //         .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
         println!("balance incr dtoken{}", balance_increase);
         if user_state.liquidity_index == Nat::from(0u128) {
             user_state.d_token_balance = amount.clone();
@@ -381,10 +438,21 @@ pub async fn mint_scaled(
         println!("user new liq index {}", user_state.liquidity_index);
     } else {
         println!("minting debttoken");
-        balance_increase = (balance.clone().scaled_mul(index.clone()))
-            - (balance
-                .clone()
-                .scaled_mul(user_state.variable_borrow_index.clone()));
+
+        let balance_indexed = balance.clone().scaled_mul(index.clone());
+        let balance_user_indexed = balance
+            .clone()
+            .scaled_mul(user_state.variable_borrow_index.clone());
+
+        if balance_indexed < balance_user_indexed {
+            return Err(Error::AmountSubtractionError);
+        }
+        
+        balance_increase = balance_indexed - balance_user_indexed;
+        // balance_increase = (balance.clone().scaled_mul(index.clone()))
+        //     - (balance
+        //         .clone()
+        //         .scaled_mul(user_state.variable_borrow_index.clone()));
         println!("balance incr debttoken{}", balance_increase);
         if user_state.variable_borrow_index == Nat::from(0u128) {
             user_state.debt_token_blance = amount.clone();
@@ -421,7 +489,11 @@ pub async fn mint_scaled(
 }
 
 pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &ReserveCache) {
+    // TODO: need to handle the error in this.
     let mut vars = AccrueToTreasuryLocalVars::default();
+
+    let user_principal = ic_cdk::caller();
+
 
     if reserve_cache.reserve_factor == Nat::from(0u128) {
         return;
@@ -445,6 +517,10 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
         vars.curr_total_variable_debt
     );
 
+    if vars.curr_total_variable_debt < vars.prev_total_variable_debt {
+       let  _ =  release_lock(&user_principal);
+    }
+    
     vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
     ic_cdk::println!(
         "total_debt_accrued in accure: {:?}",

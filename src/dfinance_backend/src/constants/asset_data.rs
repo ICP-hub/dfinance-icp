@@ -1,11 +1,11 @@
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
-use crate::declarations::assets::{ReserveConfiguration, ReserveData};
+use crate::declarations::assets::ReserveData;
 use crate::declarations::storable::Candid;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use candid::{Nat, Principal};
 use ic_cdk::api::time;
-use ic_cdk::update;
+use ic_cdk::{query, update};
 
 #[update]
 pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
@@ -25,10 +25,10 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
         }
         Ok(())
     });
-    
+
     if let Err(e) = result {
         ic_cdk::println!("Error: {:?}", e);
-        return Err(e); 
+        return Err(e);
     }
 
     let token_canister_id =
@@ -51,7 +51,7 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
             Err(e) => return Err(e),
         };
 
-    reserve_data.last_update_timestamp = time();    
+    reserve_data.last_update_timestamp = time();
 
     mutate_state(|state| {
         state
@@ -101,18 +101,12 @@ pub async fn reset_reserve_value(
 
     match variable_name.as_str() {
         "liquidity_index" => reserve_data.liquidity_index = reset_value,
-        "ltv" => reserve_data.configuration.ltv =reset_value,
-        "liquidation_threshold" => {
-            reserve_data.configuration.liquidation_threshold = reset_value
-        }
-        "liquidation_bonus" => {
-            reserve_data.configuration.liquidation_bonus = reset_value
-        }
+        "ltv" => reserve_data.configuration.ltv = reset_value,
+        "liquidation_threshold" => reserve_data.configuration.liquidation_threshold = reset_value,
+        "liquidation_bonus" => reserve_data.configuration.liquidation_bonus = reset_value,
         "borrow_cap" => reserve_data.configuration.borrow_cap = reset_value,
-        "supply_cap" => reserve_data.configuration.supply_cap =reset_value,
-        "reserve_factor" => {
-            reserve_data.configuration.reserve_factor = reset_value
-        }
+        "supply_cap" => reserve_data.configuration.supply_cap = reset_value,
+        "reserve_factor" => reserve_data.configuration.reserve_factor = reset_value,
         _ => return Err(Error::InvalidVariableName),
     }
 
@@ -121,4 +115,9 @@ pub async fn reset_reserve_value(
         asset_index.insert(asset_name, Candid(reserve_data));
     });
     Ok(())
+}
+
+#[query]
+pub fn to_check_controller() -> bool {
+    ic_cdk::api::is_controller(&ic_cdk::api::caller())
 }

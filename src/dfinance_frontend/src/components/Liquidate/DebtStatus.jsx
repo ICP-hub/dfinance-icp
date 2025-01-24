@@ -22,6 +22,7 @@ import useUserData from "../customHooks/useUserData";
 import MiniLoader from "../Common/MiniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
+import Lottie from "../Common/Lottie";
 
 const DebtStatus = () => {
   const liquidateTrigger = useSelector(
@@ -471,15 +472,11 @@ const DebtStatus = () => {
           </div>
         ) : !liquidationLoading && currentItems && currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
-            <div className="w-20 h-15">
-              <img
-                src="/Transaction/empty file.gif"
-                alt="empty"
-                className="w-30"
-              />
+            <div className="mb-7 -ml-3 -mt-5">
+              <Lottie /> 
             </div>
-            <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
-              No users found!
+            <p className="text-[#8490ff] text-sm font-medium dark:text-[#c2c2c2]">
+              NO USERS FOUND!
             </p>
           </div>
         ) : (

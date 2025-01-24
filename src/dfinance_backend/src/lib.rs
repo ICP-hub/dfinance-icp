@@ -2,7 +2,7 @@ use crate::constants::errors::Error;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::LOCKS;
-use api::resource_manager::{release_lock, acquire_lock};
+use api::resource_manager::acquire_lock;
 use candid::Nat;
 use candid::Principal;
 use declarations::assets::InitArgs;
@@ -12,7 +12,6 @@ use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_account_data;
-use protocol::libraries::logic::user;
 
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
@@ -416,9 +415,9 @@ pub async fn get_asset_supply(
             return Err(e);
         }
     };
-
-    let result = (normalized_supply_data.scaled_div(user_reserve.liquidity_index.clone()))
-    .scaled_mul(get_balance_value);
+    ic_cdk::println!("result in asset supply {} {} {}", normalized_supply_data, user_reserve.liquidity_index, get_balance_value);
+    let result = (normalized_supply_data.clone().scaled_div(user_reserve.liquidity_index.clone()))
+    .scaled_mul(get_balance_value.clone());
     ic_cdk::println!("Final calculated asset supply: {}", result);
 
     Ok(result)

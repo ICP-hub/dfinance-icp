@@ -53,6 +53,7 @@ const WithdrawPopup = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
@@ -123,11 +124,12 @@ const WithdrawPopup = ({
   
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
+        // Calculate USD value using raw conversion rate
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
   
         // Update state with formatted values
-        setUsdValue(parseFloat(convertedValue.toFixed(2)));
+        setUsdValue(parseFloat(convertedValue)); // Format for display
         setError(""); // Clear errors
       } else {
         setError("Amount exceeds the supply balance");
@@ -324,6 +326,17 @@ const WithdrawPopup = ({
     
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
     console.log("collateral & debt",totalCollateral,amountTaken, totalCollateralValue, totalDeptValue);
+    let avliq=(liquidationThreshold*totalCollateral);
+    console.log("avliq", avliq);
+    let tempLiq = avliq - (amountTaken * reserveliquidationThreshold);
+
+    if (totalCollateralValue > 0) {
+      tempLiq = tempLiq / totalCollateralValue;
+    
+      // Truncate to 8 decimal places
+      const multiplier = Math.pow(10, 8);
+      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+    }
     
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("ltv",ltv);
@@ -331,13 +344,14 @@ const WithdrawPopup = ({
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
-    if (ltv * 100 >= liquidationThreshold && currentCollateralStatus) {
+    console.log("liq_thresh",ltv * 100, tempLiq);
+    if (ltv * 100 >= tempLiq && currentCollateralStatus) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
     }
 // console.log("ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue",ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue,totalCollateralValue)
     if (
-      (healthFactor <= 1 || ltv * 100 >= liquidationThreshold) &&
+      (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
       currentCollateralStatus
     ) {
       setIsButtonDisabled(true);
@@ -352,6 +366,7 @@ const WithdrawPopup = ({
     assetBorrow,
     amount,
     usdValue,
+    liq_thresh
   ]);
 
   const calculateHealthFactor = (
@@ -378,9 +393,19 @@ const WithdrawPopup = ({
    
        let avliq=(liquidationThreshold*totalCollateral);
     console.log("avliq", avliq);
-    let tempLiq=(avliq-(amountTaken * reserveliquidationThreshold));
-     if (totalCollateralValue > 0) {tempLiq=tempLiq/totalCollateralValue;}
-    console.log("tempLiq", tempLiq);
+    let tempLiq = avliq - (amountTaken * reserveliquidationThreshold);
+
+    if (totalCollateralValue > 0) {
+      tempLiq = tempLiq / totalCollateralValue;
+    
+      // Truncate to 8 decimal places
+      const multiplier = Math.pow(10, 8);
+      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+    }
+    setTempLiq(tempLiq);
+    console.log("tempLiq", tempLiq.toFixed(8));
+    
+    
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
     result = Math.round(result * 1e8) / 1e8; 
     console.log("result", result);
@@ -394,10 +419,18 @@ const WithdrawPopup = ({
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {
-      return 0;
+      return "0.00000000"; // Return as a string with 8 decimal places
     }
-    return totalDeptValue / totalCollateralValue;
+  
+    const ltv = totalDeptValue / totalCollateralValue;
+  
+    // Truncate to 8 decimal places
+    const multiplier = Math.pow(10, 8);
+    const truncatedLTV = Math.floor(ltv * multiplier) / multiplier;
+  
+    return truncatedLTV.toFixed(8); // Return as a string with exactly 8 decimal places
   };
+  
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
@@ -421,7 +454,7 @@ const WithdrawPopup = ({
   
     // Set the max amount and update related values
     setAmount(maxAmount);
-    updateAmountAndUsdValue(maxAmount);
+    updateAmountAndUsdValue(assetSupply);
   };
   
   const formatValue = (value) => {
@@ -440,23 +473,23 @@ const WithdrawPopup = ({
               <div className="w-full flex justify-between my-2">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-3 rounded-md">
+              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 dark:bg-darkBackground/30 dark:text-darkText cursor-pointer p-2 rounded-md">
                 <div className="w-[50%]">
                   <input
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
-                    className="lg:text-lg  placeholder:text-xs focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="lg:text-lg   mb-2 placeholder:text-xs lg:placeholder:text-sm focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter Amount ${asset}`}
                   />
-                  <p className="text-xs text-gray-500 px-2">
+                  <p className="text-xs text-gray-500 px-2  mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString()} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="w-auto flex items-center gap-2">
+                  <div className="w-auto flex items-center gap-2  mt-1">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
@@ -491,8 +524,8 @@ const WithdrawPopup = ({
                     {(
                       assetSupply - amount.toString().replace(/,/g, "")
                     ).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
+                      minimumFractionDigits: 7,
+                      maximumFractionDigits: 7,
                     })}{" "}
                     Max
                   </p>

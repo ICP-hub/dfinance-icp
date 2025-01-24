@@ -259,6 +259,7 @@ const Repay = ({
       "Unable to find reserve data. Ensure the asset is valid.",
     ErrorMintDebtTokens:
       "Failed to process the transaction. Please contact support.",
+      
     default: "An unexpected error occurred. Please try again later.",
   };
 
@@ -324,9 +325,26 @@ const Repay = ({
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
+        if (errorMsg?.AmountSubtractionError === null) {
+          toast.error("Repay failed: You cannot repay more than you owe.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else {
+          const isPanicError = error.message && error.message.toLowerCase().includes("panic");
+         console.error("error", isPanicError);
+        userFriendlyMessage = isPanicError
+          ? errorMessages.default
+          : error.message || "Repay action failed!";
         const userFriendlyMessage =
           errorMessages[errorMsg] || errorMessages.default;
-        console.log(userFriendlyMessage);
+        console.log(errorMsg);
         toast.error(`Repay failed: ${userFriendlyMessage}`, {
           className: "custom-toast",
           position: "top-center",
@@ -338,8 +356,12 @@ const Repay = ({
           progress: undefined,
         });
       }
-    } catch (error) {
+    } }catch (error) {
       console.error(error.message);
+      let message = error.message || "Repay action failed!";
+      if (message.includes(" Panicked at 'Cannot subtract b from a because b is larger than a.")) {
+        message = "You cannot repay more than you owe.";
+      }
       toast.error(`Error: ${error.message || "Repay action failed!"}`, {
         className: "custom-toast",
         position: "top-center",
@@ -351,6 +373,7 @@ const Repay = ({
         progress: undefined,
       });
     }
+     
   };
 
   const handleClosePaymentPopup = () => {

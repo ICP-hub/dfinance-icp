@@ -257,14 +257,31 @@ const WithdrawPopup = ({
       } else if ("Err" in withdrawResult) {
         const errorObject = withdrawResult.Err; // Example: {WithdrawMoreThanSupply: null}
         const errorKey = Object.keys(errorObject)[0]; // Dynamically extract the error key (e.g., "WithdrawMoreThanSupply")
-      
+      if (errorMsg?.AmountSubtractionError === null) {
+                toast.error("Withdraw failed: You cannot repay more than you owe.", {
+                  className: "custom-toast",
+                  position: "top-center",
+                  autoClose: 3000,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                  progress: undefined,
+                });
+              } else {
+                
         let userFriendlyMessage;
+        const isPanicError = error.message && error.message.toLowerCase().includes("panic");
+         console.error("error", isPanicError);
+        userFriendlyMessage = isPanicError
+          ? ERROR_MESSAGES.Default
+          : error.message || "Withdraw action failed!";
         if (errorKey === "WithdrawMoreThanSupply") {
           userFriendlyMessage = "You cannot withdraw more than your supplied amount.";
         } else {
           userFriendlyMessage = ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
         }
-        console.error("error", errorKey);
+        console.error("error", errorKey, userFriendlyMessage);
         toast.error(`Withdraw failed: ${userFriendlyMessage}`, {
           className: "custom-toast",
           position: "top-center",
@@ -276,7 +293,7 @@ const WithdrawPopup = ({
           progress: undefined,
         });
       }
-    } catch (error) {
+    } }catch (error) {
       console.error(`Error: ${error.message || "Withdraw action failed!"}`);
       toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
     } finally {
@@ -693,3 +710,4 @@ const WithdrawPopup = ({
 };
 
 export default WithdrawPopup;
+

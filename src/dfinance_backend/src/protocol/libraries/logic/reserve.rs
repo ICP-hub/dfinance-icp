@@ -257,7 +257,7 @@ pub async fn burn_scaled(
         //         .scaled_mul(user_state.variable_borrow_index.clone()));
 
         ic_cdk::println!("Balance increase calculated: {}", balance_increase);
-
+        ic_cdk::println!("adjusted_amount {} {}", adjusted_amount, user_state.debt_token_blance);
         if user_state.debt_token_blance == adjusted_amount {
             ic_cdk::println!("Setting debt token balance to zero");
             user_state.debt_token_blance = Nat::from(0u128);

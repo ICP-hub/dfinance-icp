@@ -548,6 +548,24 @@ const UserInformationPopup = ({
     setIsLoading(true);
     try {
       const supplyAmount = Number(Math.round(amountToRepay * 100000000));
+      const maxCollateralValue = calculatedData?.maxCollateral
+        ? calculatedData.maxCollateral / 1e8
+        : 0;
+
+      // Truncate maxCollateralValue to 7 decimal places
+      const truncatedMaxCollateral =
+        truncateToSevenDecimals(maxCollateralValue);
+
+      // Determine the reward amount conditionally
+      let rewardAmount = truncatedMaxCollateral;
+
+      if (rewardAmount === maxCollateralValue) {
+        rewardAmount = truncateToSevenDecimals(rewardAmount);
+      } else {
+        rewardAmount = truncatedMaxCollateral;
+      }
+
+      console.log("rewardAmount", rewardAmount);
       //  const supplyAmount = Number(Math.round(amountToRepay * 100000000);
       if (!backendActor) {
         throw new Error("Backend actor is not initialized");
@@ -557,31 +575,30 @@ const UserInformationPopup = ({
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
         amount: supplyAmount,
-        on_behalf_of:  mappedItem?.principal?._arr
+        on_behalf_of: mappedItem?.principal?._arr,
+        reward: rewardAmount,
       };
-      const result = await backendActor.execute_liquidation(
-        liquidationParams
-      );
+      const result = await backendActor.execute_liquidation(liquidationParams);
 
       if ("Ok" in result) {
         trackEvent(
           "Liq:" +
-          selectedDebtAsset +
-          "," +
-          selectedAsset +
-          "," +
-          Number(amountToRepay).toLocaleString() +
-          "," +
-          mappedItem.principal.toString(),
+            selectedDebtAsset +
+            "," +
+            selectedAsset +
+            "," +
+            Number(amountToRepay).toLocaleString() +
+            "," +
+            mappedItem.principal.toString(),
           "Assets",
           "Liq:" +
-          selectedDebtAsset +
-          "," +
-          selectedAsset +
-          "," +
-          Number(amountToRepay).toLocaleString() +
-          "," +
-          mappedItem.principal.toString()
+            selectedDebtAsset +
+            "," +
+            selectedAsset +
+            "," +
+            Number(amountToRepay).toLocaleString() +
+            "," +
+            mappedItem.principal.toString()
         );
         toast.success(`Liquidation successful!`, {
           className: "custom-toast",

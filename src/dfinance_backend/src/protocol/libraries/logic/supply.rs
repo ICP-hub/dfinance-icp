@@ -243,6 +243,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                 ic_cdk::println!("Anonymous principals are not allowed");
                 return Err(Error::AnonymousPrincipal);
             }
+            if liquidator_principal != Principal::management_canister() {
+                ic_cdk::println!("User is not allowed to perform such transaction");
+                return Err(Error::InvalidPrincipal);
+            }
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();

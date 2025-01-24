@@ -58,11 +58,11 @@ const DashboardCards = () => {
     ICP: ckICPUsdRate,
     ckUSDT: ckUSDTBalance,
   };
-  
+
   const { backendActor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [like, setLike] = useState(false); 
-  const [notification, setNotification] = useState(""); 
+  const [like, setLike] = useState(false);
+  const [notification, setNotification] = useState("");
   const checkControllerStatus = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -136,12 +136,12 @@ const DashboardCards = () => {
         message: htmlMessage,
       };
 
-    await emailjs.send(
-      "service_7pu7uvh", // Replace with your EmailJS Service ID
-      "template_1k2eq7a", // Replace with your EmailJS Template ID
-      templateParams,
-      "uWDc83b20aMxTTyrz" // Replace with your EmailJS Public Key
-    );
+      await emailjs.send(
+        "service_7pu7uvh", // Replace with your EmailJS Service ID
+        "template_1k2eq7a", // Replace with your EmailJS Template ID
+        templateParams,
+        "uWDc83b20aMxTTyrz" // Replace with your EmailJS Public Key
+      );
 
       console.log("Email sent successfully.");
     } catch (err) {
@@ -149,160 +149,166 @@ const DashboardCards = () => {
     }
   };
 
+  let emailInterval; // Variable to store the interval ID
+  let lastExhaustedEmailTimestamp = 0;
+  let lastWarningEmailTimestamp = 0;
 
-let emailInterval; // Variable to store the interval ID
-let lastExhaustedEmailTimestamp = 0;
-let lastWarningEmailTimestamp = 0;
+  const handleNotification = (currentCycles, assetBalance) => {
+    const oneDay = 24 * 60 * 60 * 1000; // 1 minute in milliseconds
 
+    console.log("Handling notification for cycles:", currentCycles);
 
-const handleNotification = (currentCycles,assetBalance) => {
-  const oneDay =24 * 60 * 60 * 1000; // 1 minute in milliseconds
-
-  console.log("Handling notification for cycles:", currentCycles);
-
-  // Function to send a warning email
-  const sendWarningEmail = async () => {
-    const htmlMessage = `
+    // Function to send a warning email
+    const sendWarningEmail = async () => {
+      const htmlMessage = `
     Your cycles are close to the threshold value. Please renew your cycles to avoid interruption.
    Current Cycles: ${formatNumber(currentCycles)}
    Threshold : ${formatNumber(threshold + 2000000000000)}
     `;
-    try {
-      console.log("Sending warning email...");
-      await sendEmailNotification("Cycle Warning", htmlMessage);
-      lastWarningEmailTimestamp = Date.now(); 
-    } catch (error) {
-      console.error("Failed to send warning email:", error);
-    }
-  };
+      try {
+        console.log("Sending warning email...");
+        await sendEmailNotification("Cycle Warning", htmlMessage);
+        lastWarningEmailTimestamp = Date.now();
+      } catch (error) {
+        console.error("Failed to send warning email:", error);
+      }
+    };
 
-  // Function to send an exhausted email
-  const sendExhaustedEmail = async () => {
-    const htmlMessage = `
+    // Function to send an exhausted email
+    const sendExhaustedEmail = async () => {
+      const htmlMessage = `
       Your cycles are exhausted! Please renew your cycles immediately to continue services.
       Current Cycles: ${formatNumber(currentCycles)}
       Threshold: ${formatNumber(threshold)}
     `;
-    try {
-      console.log("Sending exhausted email...");
-      await sendEmailNotification("Cycle Exhausted", htmlMessage);
-      lastExhaustedEmailTimestamp = Date.now(); // Update the last exhausted email timestamp
-    } catch (error) {
-      console.error("Failed to send exhausted email:", error);
+      try {
+        console.log("Sending exhausted email...");
+        await sendEmailNotification("Cycle Exhausted", htmlMessage);
+        lastExhaustedEmailTimestamp = Date.now(); // Update the last exhausted email timestamp
+      } catch (error) {
+        console.error("Failed to send exhausted email:", error);
+      }
+    };
+
+    // Clear existing interval
+    if (emailInterval) {
+      console.log("Clearing previous interval...");
+      clearInterval(emailInterval);
     }
+
+    // Set up a new interval to check and send emails every minute
+    emailInterval = setInterval(async () => {
+      console.log("Interval triggered. Checking conditions...");
+      console.log("currentCycles", currentCycles);
+      console.log("threshold", threshold);
+      if (currentCycles <= threshold) {
+        console.log("Cycles are exhausted. Sending exhausted email...");
+        await sendExhaustedEmail(); // Send exhausted email every minute until cycles increase
+      } else if (
+        currentCycles > threshold &&
+        currentCycles < threshold + 2000000000000
+      ) {
+        console.log(
+          "Cycles are nearing the safe threshold. Sending warning email..."
+        );
+        await sendWarningEmail(); // Send warning email every minute until cycles increase
+      }
+      // Keep checking and sending emails every minute indefinitely.
+    }, oneDay); // Interval set to 1 minute
   };
 
-  // Clear existing interval
-  if (emailInterval) {
-    console.log("Clearing previous interval...");
-    clearInterval(emailInterval);
-  }
+  // Simulate cycle updates
+  const onCycleUpdate = (newCycles) => {
+    console.log("Cycle count updated:", newCycles);
+    handleNotification(newCycles);
+  };
+  let lastTokenExhaustedEmailTimestamp = 0;
+  let lastTokenWarningEmailTimestamp = 0;
+  let emailinterval = null; // Declare interval variable globally
 
-  // Set up a new interval to check and send emails every minute
-  emailInterval = setInterval(async () => {
-    console.log("Interval triggered. Checking conditions...");
-console.log("currentCycles",currentCycles);
-console.log("threshold",threshold);
-    if (currentCycles <= threshold) {
-      console.log("Cycles are exhausted. Sending exhausted email...");
-      await sendExhaustedEmail(); // Send exhausted email every minute until cycles increase
-    } else if (currentCycles > threshold && currentCycles < threshold + 2000000000000) {
-      console.log("Cycles are nearing the safe threshold. Sending warning email...");
-      await sendWarningEmail(); // Send warning email every minute until cycles increase
-    }
-    // Keep checking and sending emails every minute indefinitely.
-  }, oneDay); // Interval set to 1 minute
-};
+  const handleTokenNotification = (assetName, assetBalance) => {
+    const oneDay = 24 * 60 * 60 * 1000; // 1 minute in milliseconds
+    const currentTime = Date.now();
 
-// Simulate cycle updates
-const onCycleUpdate = (newCycles) => {
-  console.log("Cycle count updated:", newCycles);
-  handleNotification(newCycles);
-};
-let lastTokenExhaustedEmailTimestamp = 0;
-let lastTokenWarningEmailTimestamp = 0;
-let emailinterval = null;  // Declare interval variable globally
+    console.log(`Handling token notification for ${assetName}:`, assetBalance);
 
-const handleTokenNotification = (assetName, assetBalance) => {
-  const oneDay = 24 * 60 * 60 * 1000; // 1 minute in milliseconds
-  const currentTime = Date.now();
-
-  console.log(`Handling token notification for ${assetName}:`, assetBalance);
-
-  // Function to send a warning email
-  const sendTokenWarningEmail = async () => {
-    const htmlMessage = `
+    // Function to send a warning email
+    const sendTokenWarningEmail = async () => {
+      const htmlMessage = `
       Your balance of ${assetName} is approaching the threshold. Please mint  ${assetName} above threshold value .
       Current Balance: ${formatNumber(assetBalance)}
       Threshold: ${formatNumber(tokenThreshold)}
     `;
-    try {
-      console.log("Sending token warning email...");
-      await sendEmailNotification(`${assetName} Warning`, htmlMessage);
-      lastTokenWarningEmailTimestamp = currentTime; // Update the last warning email timestamp
-    } catch (error) {
-      console.error("Failed to send token warning email:", error);
-    }
-  };
+      try {
+        console.log("Sending token warning email...");
+        await sendEmailNotification(`${assetName} Warning`, htmlMessage);
+        lastTokenWarningEmailTimestamp = currentTime; // Update the last warning email timestamp
+      } catch (error) {
+        console.error("Failed to send token warning email:", error);
+      }
+    };
 
-  // Function to send an exhausted email
-  const sendTokenExhaustedEmail = async () => {
-    const htmlMessage = `
+    // Function to send an exhausted email
+    const sendTokenExhaustedEmail = async () => {
+      const htmlMessage = `
       Your balance of ${assetName} is exhausted!  Please mint  ${assetName} above threshold value.
       Current Balance: ${formatNumber(assetBalance)}
       Threshold: ${formatNumber(tokenThreshold)}
     `;
-    try {
-      console.log("Sending token exhausted email...");
-      await sendEmailNotification(`${assetName} Exhausted`, htmlMessage);
-      lastTokenExhaustedEmailTimestamp = currentTime; 
-    } catch (error) {
-      console.error("Failed to send token exhausted email:", error);
+      try {
+        console.log("Sending token exhausted email...");
+        await sendEmailNotification(`${assetName} Exhausted`, htmlMessage);
+        lastTokenExhaustedEmailTimestamp = currentTime;
+      } catch (error) {
+        console.error("Failed to send token exhausted email:", error);
+      }
+    };
+
+    // If emailInterval exists, clear it before setting a new one
+    if (emailinterval) {
+      console.log("Clearing previous interval...");
+      clearInterval(emailinterval);
     }
+
+    // Set up a new interval to check and send emails every minute
+    emailInterval = setInterval(async () => {
+      console.log("Interval triggered. Checking conditions...");
+      console.log("assetBalance", assetBalance);
+      console.log("tokenThreshold", tokenThreshold);
+
+      if (assetBalance <= tokenThreshold) {
+        console.log("Token balance is exhausted. Sending exhausted email...");
+        await sendTokenExhaustedEmail(); // Send exhausted email if balance is below threshold
+      } else if (
+        assetBalance > tokenThreshold &&
+        assetBalance < tokenThreshold + 1000
+      ) {
+        console.log(
+          "Token balance is nearing the safe threshold. Sending warning email..."
+        );
+        await sendTokenWarningEmail(); // Send warning email if balance is nearing threshold
+      }
+    }, oneDay); // Check every minute (60 seconds)
   };
 
-  // If emailInterval exists, clear it before setting a new one
-  if (emailinterval) {
-    console.log("Clearing previous interval...");
-    clearInterval(emailinterval);
-  }
+  // Function to handle token balances
+  const handleTokenBalances = () => {
+    poolAssets.forEach((asset) => {
+      const assetBalance = assetBalances[asset.name];
+      if (assetBalance !== undefined) {
+        handleTokenNotification(asset.name, assetBalance);
+      }
+    });
+  };
 
-  // Set up a new interval to check and send emails every minute
-  emailInterval = setInterval(async () => {
-    console.log("Interval triggered. Checking conditions...");
-    console.log("assetBalance", assetBalance);
-    console.log("tokenThreshold", tokenThreshold);
-
-    if (assetBalance <= tokenThreshold) {
-      console.log("Token balance is exhausted. Sending exhausted email...");
-      await sendTokenExhaustedEmail(); // Send exhausted email if balance is below threshold
-    } else if (assetBalance > tokenThreshold && assetBalance < tokenThreshold + 1000) {
-      console.log("Token balance is nearing the safe threshold. Sending warning email...");
-      await sendTokenWarningEmail(); // Send warning email if balance is nearing threshold
-    }
-  }, oneDay); // Check every minute (60 seconds)
-};
-
-
-// Function to handle token balances
-const handleTokenBalances = () => {
-  poolAssets.forEach((asset) => {
-    const assetBalance = assetBalances[asset.name];
-    if (assetBalance !== undefined) {
-      handleTokenNotification(asset.name, assetBalance);
-    }
-  });
-  
-};
-
-useEffect(() => {
-  // Call handleTokenBalances whenever asset balances change or after data is fetched
-  handleTokenBalances();
-}, [assetBalances, tokenThreshold]); // Trigger when asset balances or tokenThreshold change
-const onTokenUpdate = (newBalance) => {
-  console.log("Cycle count updated:", newBalance);
-  handleNotification(newBalance);
-};
+  useEffect(() => {
+    // Call handleTokenBalances whenever asset balances change or after data is fetched
+    handleTokenBalances();
+  }, [assetBalances, tokenThreshold]); // Trigger when asset balances or tokenThreshold change
+  const onTokenUpdate = (newBalance) => {
+    console.log("Cycle count updated:", newBalance);
+    handleNotification(newBalance);
+  };
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -310,7 +316,7 @@ const onTokenUpdate = (newBalance) => {
         const [users, cycles] = await Promise.all([getAllUsers(), getCycles()]);
         // const users = await getAllUsers();
         const usersCount = users.length;
-// const cycles =5000000000000;
+        // const cycles =5000000000000;
         const formattedData = [
           { title: "Users", value: usersCount, link: "/users" },
           { title: "Cycles", value: formatNumber(cycles), link: "/cycles" },
@@ -350,7 +356,6 @@ const onTokenUpdate = (newBalance) => {
       return "text-green-500";
     }
   };
-
 
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -396,8 +401,7 @@ const onTokenUpdate = (newBalance) => {
       }
     });
   };
- 
-      
+
   return (
     <>
       {like ? (
@@ -549,9 +553,11 @@ const onTokenUpdate = (newBalance) => {
                               </span>
                             </p>
                             {"  "}
-                           
-                            <div className="flex align-center justify-center  border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
-                            <h3 className="mb-1 text-[#233D63]  dark:text-darkTextSecondary1">Testnet</h3>
+
+                            <div className="flex align-center justify-center border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
+                            <h3 className="mb-1 text-[#233D63]  dark:text-darkTextSecondary1">
+                              Testnet
+                            </h3>
                             <p className="font-normal text-sm">
                               Token Available:{" "}
                               <span className="font-bold">

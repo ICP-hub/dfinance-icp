@@ -544,7 +544,7 @@ const Repay = ({
         <span className="text-lg">{asset}</span>
       </div>
       <p className="text-[10px] text-gray-500 text-right w-full mt-1">
-        Wallet Balance
+        Wallet Balance:
       </p>
       <p
         className={`text-xs mt-1 p-2 py-1 rounded-md button1 ${

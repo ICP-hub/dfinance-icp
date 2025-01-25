@@ -576,7 +576,7 @@ const UserInformationPopup = ({
         collateral_asset: selectedAsset,
         amount: supplyAmount,
         on_behalf_of: mappedItem?.principal?._arr,
-        reward: rewardAmount*1e8,
+        reward: Number(Math.round(rewardAmount * 100000000)),
       };
       const result = await backendActor.execute_liquidation(liquidationParams);
 

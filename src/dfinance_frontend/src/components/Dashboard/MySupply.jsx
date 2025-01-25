@@ -121,7 +121,9 @@ const MySupply = () => {
         if (userAccountData?.Ok?.length > 5) {
           const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
           console.log("Setting Available Borrow to borrowValue:", borrowValue);
-          updatedAvailableBorrow = isCollateral ? borrowValue : 0; // Update availableBorrow if any assetSupply > 0
+         updatedAvailableBorrow = isCollateral ? borrowValue : 0; // Update availableBorrow if any assetSupply > 0
+        
+         
         } else {
           console.log(
             "User account data length is insufficient. Setting Available Borrow to 0."
@@ -133,12 +135,15 @@ const MySupply = () => {
 
     // After checking all reserves, update the availableBorrow state
     setAvailableBorrow(updatedAvailableBorrow);
-
+console.log("updatedAvailableBorrow",updatedAvailableBorrow)
     // If no asset supply > 0, set availableBorrow to 0
-    if (updatedAvailableBorrow === 0) {
+    if (!updatedAvailableBorrow || updatedAvailableBorrow < 0.01) {
       console.log("No asset supply > 0. Setting Available Borrow to 0.");
       setAvailableBorrow(0);
+    } else {
+      setAvailableBorrow(updatedAvailableBorrow);
     }
+    
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
 
   const principalObj = useMemo(
@@ -4124,7 +4129,7 @@ const MySupply = () => {
                             );
 
                             // Condition to hide assets with availableBorrow == 0
-                            const isBorrowAvailable = availableBorrowNumber > 0;
+                            const isBorrowAvailable = availableBorrowNumber > 0.01;
 
                             // Only filter assets that should be shown based on showAllAssets and borrow availability
                             if (!showAllAssets) {

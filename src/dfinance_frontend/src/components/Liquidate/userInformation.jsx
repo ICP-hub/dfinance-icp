@@ -661,7 +661,16 @@ const UserInformationPopup = ({
 
       setShowWarningPopup(false);
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
+      console.error("Caught error:", error.message);
+
+      let message = error.message || "Liquidation action failed!";
+  
+      // Check if the error contains the word "panic"
+      if (message.toLowerCase().includes("panic")) {
+        message = "A system error occurred. Please try again later.";
+      }
+  
+      toast.error(`Error: ${message}`, {
         className: "custom-toast",
         position: "top-center",
         autoClose: 3000,
@@ -671,7 +680,8 @@ const UserInformationPopup = ({
         draggable: true,
         progress: undefined,
       });
-      setTransactionResult("failure");
+  
+      setTransactionResult("failure")
     } finally {
       setIsLoading(false);
     }

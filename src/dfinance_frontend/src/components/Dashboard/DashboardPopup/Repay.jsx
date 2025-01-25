@@ -342,21 +342,27 @@ const Repay = ({
         userFriendlyMessage = isPanicError
           ? errorMessages.default
           : error.message || "Repay action failed!";
-        const userFriendlyMessage =
-          errorMessages[errorMsg] || errorMessages.default;
-        console.log(errorMsg);
-        toast.error(`Repay failed: ${userFriendlyMessage}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
+  
+          if (isPanicError) {
+            setPanicMessage("A critical system error occurred. Please try again later.");
+            setShowPanicPopup(true);
+          } else {
+            const userFriendlyMessage =
+              errorMessages[errorMsg] || errorMessages.default || "Repay action failed!";
+            toast.error(`Repay failed: ${userFriendlyMessage}`, {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          }
+        }
       }
-    } }catch (error) {
+     }catch (error) {
       console.error(error.message);
       let message = error.message || "Repay action failed!";
       if (message.includes(" Panicked at 'Cannot subtract b from a because b is larger than a.")) {

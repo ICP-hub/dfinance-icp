@@ -631,6 +631,14 @@ async fn get_lock() -> Result<bool, Error> {
 pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
+
+
+#[update]
+fn will_panic() -> String {
+    ic_cdk::println!("About to panic!");
+    panic!("This function always panics!");
+}
+
 // this function is for check which i will remove later.
 #[update]
 async fn get_user_account_data(

@@ -33,6 +33,10 @@ import Lottie from "../../components/Common/Lottie";
 
 const ITEMS_PER_PAGE = 8;
 const WalletDetails = () => {
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
+  
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const {
@@ -113,6 +117,7 @@ const WalletDetails = () => {
     totalReserveFactor,
     interestAccure,
     principal,
+    dashboardRefreshTrigger
   ]);
   const {
     ckBTCUsdRate,
@@ -240,7 +245,7 @@ const WalletDetails = () => {
     }
   }, [loading]);
   return (
-    <div id="market-page1" className="w-full">
+    <div id="market-page1" className="w-full" key={dashboardRefreshTrigger}>
       <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText -ml-3">
           ICP Assets

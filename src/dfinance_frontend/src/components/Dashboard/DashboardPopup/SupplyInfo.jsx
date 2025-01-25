@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import CircularProgress from "../../Common/CircularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const SupplyInfo = ({
   formatNumber,
@@ -15,6 +16,9 @@ const SupplyInfo = ({
   liquidationBonus,
   liquidationThreshold,
 }) => {
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const supplyCapNumber = supplyCap ? Number(supplyCap) : 0;
   const totalSupplyPercentage =
     supplyCapNumber && totalSupplied
@@ -100,6 +104,8 @@ const SupplyInfo = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  console.log("totalSupplied", totalSupplied)
 
   return (
     <div className="w-full lg:w-10/12 ">

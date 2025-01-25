@@ -37,6 +37,9 @@ import useUserData from "../customHooks/useUserData";
 import WalletModal from "./WalletModal";
 
 const AssetDetails = () => {
+  const dashboardRefreshTrigger = useSelector(
+      (state) => state.dashboardUpdate.refreshDashboardTrigger
+    );
   const {
     assets,
     filteredItems,
@@ -51,7 +54,7 @@ const AssetDetails = () => {
 
   const location = useLocation();
   const { assetData } = location.state || {};
-
+  console.log("assetData", assetData)
   const [borrowRateAPR, setBorrowRateAPR] = useState(null);
   const [supplyRateAPR, setSupplyRateAPR] = useState(null);
   const [totalBorrowed, setTotalBorrowed] = useState(null);
@@ -123,13 +126,13 @@ const AssetDetails = () => {
 
   useEffect(() => {
     fetchAssetData();
-  }, [assets, principalObj]);
+  }, [assets, principalObj, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (userData && userAccountData) {
       setLoading(false);
     }
-  }, [userData, userAccountData]);
+  }, [userData, userAccountData, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (assetData?.Ok) {
@@ -149,7 +152,7 @@ const AssetDetails = () => {
       setCanBeCollateral(Number(assetData.Ok.can_be_collateral?.[0])) /
         100000000;
     }
-  }, [assetData]);
+  }, [assetData, dashboardRefreshTrigger]);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -192,7 +195,7 @@ const AssetDetails = () => {
     };
 
     fetchData();
-  }, [assets]);
+  }, [assets, dashboardRefreshTrigger]);
 
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
@@ -246,7 +249,7 @@ const AssetDetails = () => {
     };
 
     fetchAssetPrinciple();
-  }, [principal, backendActor]);
+  }, [principal, backendActor, dashboardRefreshTrigger]);
 
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
@@ -331,6 +334,7 @@ const AssetDetails = () => {
     ckICPUsdRate,
     ckUSDTBalance,
     ckUSDTUsdRate,
+    dashboardRefreshTrigger
   ]);
 
   useEffect(() => {}, [id]);
@@ -338,17 +342,17 @@ const AssetDetails = () => {
   useEffect(() => {
     if (ckBTCBalance !== null) {
     }
-  }, [ckBTCBalance]);
+  }, [ckBTCBalance, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (ckETHBalance !== null) {
     }
-  }, [ckETHBalance]);
+  }, [ckETHBalance, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (ckUSDCBalance !== null) {
     }
-  }, [ckUSDCBalance]);
+  }, [ckUSDCBalance, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (error) {
@@ -360,7 +364,7 @@ const AssetDetails = () => {
       fetchBalance(id);
     } else {
     }
-  }, [id, fetchBalance]);
+  }, [id, fetchBalance, dashboardRefreshTrigger]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -389,6 +393,7 @@ const AssetDetails = () => {
     ckETHBalance,
     ckUSDCBalance,
     ckUSDTBalance,
+    dashboardRefreshTrigger
   ]);
 
   const formatNumber = useFormatNumber();
@@ -670,7 +675,7 @@ const AssetDetails = () => {
               <div className="border mt-6 rounded-xl px-3 py-2">
                 <div className="flex items-center gap-2">
                   <p className=" text-[12px] my-1 text-darkTextSecondary1">
-                    Assets to Supply
+                    Available to Supply
                   </p>
                 </div>
                 <div className="flex">

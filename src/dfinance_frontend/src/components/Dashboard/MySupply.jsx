@@ -726,8 +726,8 @@ const MySupply = () => {
       <div className="w-[55px] md:w-[65px]">
         <Lottie />
       </div>
-      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
-        NOTHING BORROWED YET !
+      <p className="text-[#8490ff] text-[11px] dark:text-[#c2c2c2] -mt-2 ml-3">
+        NOTHING BORROWED YET!
       </p>
     </div>
   );
@@ -736,8 +736,8 @@ const MySupply = () => {
       <div className="w-[55px] md:w-[65px]">
         <Lottie />
       </div>
-      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
-        NOTHING SUPPLIED YET !
+      <p className="text-[#8490ff] text-[11px] dark:text-[#c2c2c2] -mt-2 ml-3">
+        NOTHING SUPPLIED YET!
       </p>
     </div>
   );
@@ -746,8 +746,8 @@ const MySupply = () => {
       <div className="w-[55px] md:w-[65px]">
         <Lottie />
       </div>
-      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
-        NO ASSETS TO SUPPLY !
+      <p className="text-[#8490ff] text-[11px] dark:text-[#c2c2c2] -mt-2 ml-3">
+        NO ASSETS TO SUPPLY!
       </p>
     </div>
   );
@@ -756,8 +756,8 @@ const MySupply = () => {
       <div className="w-[55px] md:w-[65px]">
         <Lottie />
       </div>
-      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
-        NO ASSETS TO BORROW !
+      <p className="text-[#8490ff] text-[11px] dark:text-[#c2c2c2] -mt-2 ml-3">
+        NO ASSETS TO BORROW!
       </p>
     </div>
   );
@@ -2926,8 +2926,7 @@ const MySupply = () => {
                           Borrow power used
                         </span>{" "}
                         {(() => {
-                          const ratio =
-                            (totalUsdValueBorrow / availableBorrow) * 100;
+                          const ratio = (totalUsdValueBorrow / (availableBorrow + totalUsdValueBorrow)) * 100;
                           if (isNaN(ratio) || !isFinite(ratio)) {
                             return 0;
                           } else if (ratio < 1) {
@@ -2994,7 +2993,8 @@ const MySupply = () => {
                   Borrow power used
                 </span>{" "}
                 {(() => {
-                  const ratio = (totalUsdValueBorrow / availableBorrow) * 100;
+                  console.log("availableBorrowinAssetBorrow", availableBorrow)
+                   const ratio = (totalUsdValueBorrow / (availableBorrow + totalUsdValueBorrow)) * 100;
                   if (isNaN(ratio) || !isFinite(ratio)) {
                     return 0;
                   } else if (ratio < 1) {

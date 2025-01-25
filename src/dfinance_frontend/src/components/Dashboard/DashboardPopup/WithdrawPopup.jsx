@@ -32,7 +32,7 @@ const WithdrawPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  const {  backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuth();
   const dispatch = useDispatch();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -54,6 +54,7 @@ const WithdrawPopup = ({
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
@@ -81,22 +82,22 @@ const WithdrawPopup = ({
   };
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
-  
+
     // Allow clearing the input
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
-  
+
     // Allow only digits and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-  
+
     // Ensure only one decimal point exists
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
-  
+
     // Enforce a maximum of 8 digits including the decimal part
     const parts = inputAmount.split(".");
     if (parts[0].length > 8) {
@@ -106,28 +107,28 @@ const WithdrawPopup = ({
       parts[1] = parts[1].slice(0, 9 - parts[0].length);
     }
     inputAmount = parts.join(".");
-  
+
     // Prevent input from exceeding asset supply
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
       inputAmount = truncateToSevenDecimals(assetSupply).toString();
     }
-  
+
     // Update state with raw value (no formatting applied yet)
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
-  
+
   const updateAmountAndUsdValue = (inputAmount) => {
     // Parse input and remove commas if present
     const numericAmount = parseFloat(inputAmount.toString().replace(/,/g, ""));
-  
+
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
         // Calculate USD value using raw conversion rate
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
-  
+
         // Update state with formatted values
         setUsdValue(parseFloat(convertedValue)); // Format for display
         setError(""); // Clear errors
@@ -142,7 +143,7 @@ const WithdrawPopup = ({
       setError("Amount must be a positive number");
     }
   };
-  
+
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -253,36 +254,48 @@ const WithdrawPopup = ({
           progress: undefined,
         });
         setIsPaymentDone(true);
+        
         setIsVisible(false);
-      } else if ("Err" in withdrawResult) {
-        const errorObject = withdrawResult.Err; // Example: {WithdrawMoreThanSupply: null}
-        const errorKey = Object.keys(errorObject)[0]; // Dynamically extract the error key (e.g., "WithdrawMoreThanSupply")
-      if (errorMsg?.AmountSubtractionError === null) {
-                toast.error("Withdraw failed: You cannot repay more than you owe.", {
-                  className: "custom-toast",
-                  position: "top-center",
-                  autoClose: 3000,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                  progress: undefined,
-                });
-              } else {
-                
-        let userFriendlyMessage;
-        const isPanicError = error.message && error.message.toLowerCase().includes("panic");
-         console.error("error", isPanicError);
-        userFriendlyMessage = isPanicError
-          ? ERROR_MESSAGES.Default
-          : error.message || "Withdraw action failed!";
-        if (errorKey === "WithdrawMoreThanSupply") {
-          userFriendlyMessage = "You cannot withdraw more than your supplied amount.";
+      }else if ("Err" in withdrawResult) {
+        const errorObject = withdrawResult.Err;
+        const errorKey = Object.keys(errorObject)[0]; // Dynamically extract the error key
+  
+        // Check for panic error and show a popup instead of toast
+        const errorMessage = errorKey?.toString() || "An unexpected error occurred";
+        const isPanicError = errorMessage.toLowerCase().includes("panic");
+  
+        if (isPanicError) {
+          setShowPanicPopup(true);
+          setIsVisible(false);
         } else {
-          userFriendlyMessage = ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
+          let userFriendlyMessage =
+            errorKey === "WithdrawMoreThanSupply"
+              ? "You cannot withdraw more than your supplied amount."
+              : ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
+  
+          toast.error(`Withdraw failed: ${userFriendlyMessage}`, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         }
-        console.error("error", errorKey, userFriendlyMessage);
-        toast.error(`Withdraw failed: ${userFriendlyMessage}`, {
+      }
+    } catch (error) {
+      console.error(`Error: ${error.message || "Withdraw action failed!"}`);
+  
+      // Check if the error message contains "panic" and show popup
+      const isPanicError = error.message && error.message.toLowerCase().includes("panic");
+  
+      if (isPanicError) {
+        setShowPanicPopup(true);
+        setIsVisible(false);
+      } else {
+        toast.error(`Error: ${error.message || "Withdraw action failed!"}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -293,10 +306,7 @@ const WithdrawPopup = ({
           progress: undefined,
         });
       }
-    } }catch (error) {
-      console.error(`Error: ${error.message || "Withdraw action failed!"}`);
-      toast.error(`Error: ${error.message || "Withdraw action failed!"}`);
-    } finally {
+    }  finally {
       setIsLoading(false);
     }
   };
@@ -340,33 +350,39 @@ const WithdrawPopup = ({
     const totalCollateralValue = truncateTo8Decimals(
       parseFloat(totalCollateral) - parseFloat(amountTaken)
     );
-    
+
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
-    console.log("collateral & debt",totalCollateral,amountTaken, totalCollateralValue, totalDeptValue);
-    let avliq=(liquidationThreshold*totalCollateral);
+    console.log(
+      "collateral & debt",
+      totalCollateral,
+      amountTaken,
+      totalCollateralValue,
+      totalDeptValue
+    );
+    let avliq = liquidationThreshold * totalCollateral;
     console.log("avliq", avliq);
-    let tempLiq = avliq - (amountTaken * reserveliquidationThreshold);
+    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
 
     if (totalCollateralValue > 0) {
       tempLiq = tempLiq / totalCollateralValue;
-    
+
       // Truncate to 8 decimal places
       const multiplier = Math.pow(10, 8);
       tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
     }
-    
+
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    console.log("ltv",ltv);
+    console.log("ltv", ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
-    console.log("liq_thresh",ltv * 100, tempLiq);
+    console.log("liq_thresh", ltv * 100, tempLiq);
     if (ltv * 100 >= tempLiq && currentCollateralStatus) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
     }
-// console.log("ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue",ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue,totalCollateralValue)
+    // console.log("ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue",ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue,totalCollateralValue)
     if (
       (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
       currentCollateralStatus
@@ -383,7 +399,7 @@ const WithdrawPopup = ({
     assetBorrow,
     amount,
     usdValue,
-    liq_thresh
+    liq_thresh,
   ]);
 
   const calculateHealthFactor = (
@@ -407,47 +423,40 @@ const WithdrawPopup = ({
     if (totalDeptValue === 0) {
       return Infinity;
     }
-   
-       let avliq=(liquidationThreshold*totalCollateral);
+
+    let avliq = liquidationThreshold * totalCollateral;
     console.log("avliq", avliq);
-    let tempLiq = avliq - (amountTaken * reserveliquidationThreshold);
+    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
 
     if (totalCollateralValue > 0) {
       tempLiq = tempLiq / totalCollateralValue;
-    
+
       // Truncate to 8 decimal places
       const multiplier = Math.pow(10, 8);
       tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
     }
     setTempLiq(tempLiq);
     console.log("tempLiq", tempLiq.toFixed(8));
-    
-    
+
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
-    result = Math.round(result * 1e8) / 1e8; 
+    result = Math.round(result * 1e8) / 1e8;
     console.log("result", result);
-    return (
-      result
-    );
-    
-   
-    
+    return result;
   };
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {
       return "0.00000000"; // Return as a string with 8 decimal places
     }
-  
+
     const ltv = totalDeptValue / totalCollateralValue;
-  
+
     // Truncate to 8 decimal places
     const multiplier = Math.pow(10, 8);
     const truncatedLTV = Math.floor(ltv * multiplier) / multiplier;
-  
+
     return truncatedLTV.toFixed(8); // Return as a string with exactly 8 decimal places
   };
-  
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
@@ -457,7 +466,7 @@ const WithdrawPopup = ({
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
       return truncated; // Return as a number, not a string
     };
-  
+
     // Determine the formatted asset supply based on its value
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
@@ -466,14 +475,14 @@ const WithdrawPopup = ({
         ? parseFloat(Number(assetSupply).toFixed(7)) // Ensures it's a number
         : truncateToSevenDecimals(assetSupply) // Ensures it's a number
       : 0;
-  
+
     const maxAmount = asset_supply;
-  
+
     // Set the max amount and update related values
     setAmount(maxAmount);
     updateAmountAndUsdValue(assetSupply);
   };
-  
+
   const formatValue = (value) => {
     if (!value) return "0";
     return Number(value)
@@ -705,9 +714,46 @@ const WithdrawPopup = ({
           </div>
         </div>
       )}
+       {showPanicPopup && (
+              <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+                <div className="w-full flex flex-col items-center p-2 ">
+                  <button
+                    onClick={handleClosePaymentPopup}
+                    className="text-gray-400 focus:outline-none self-end button1"
+                  >
+                    <X size={24} />
+                  </button>
+      
+                  <div
+                    className="dark:bg-gradient 
+                      dark:from-darkGradientStart 
+                      dark:to-darkGradientEnd 
+                      dark:text-darkText  "
+                  >
+      
+                    <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                      Thanks for helping us improve DFinance! <br></br> You’ve
+                      uncovered a bug, and our dev team is on it.
+                    </p>
+      
+                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                      Your account is temporarily locked while we investigate and fix
+                      the issue. <br />
+                    </p>
+                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                      We appreciate your contribution and have logged your ID—testers
+                      like you are key to making DFinance better! <br />
+                      If you have any questions, feel free to reach out.
+                    </p>
+                  </div>
+      
+                 
+                </div>
+              </div>
+            )}
     </>
   );
 };
 
 export default WithdrawPopup;
-

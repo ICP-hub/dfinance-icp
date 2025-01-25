@@ -148,7 +148,7 @@ const UserInformationPopup = ({
     }
     return;
   };
-
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -576,7 +576,7 @@ const UserInformationPopup = ({
         collateral_asset: selectedAsset,
         amount: supplyAmount,
         on_behalf_of: mappedItem?.principal?._arr,
-        reward: rewardAmount,
+        reward: rewardAmount*1e8,
       };
       const result = await backendActor.execute_liquidation(liquidationParams);
 
@@ -661,16 +661,26 @@ const UserInformationPopup = ({
 
       setShowWarningPopup(false);
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      console.error("Caught error:", error.message);
+  
+      let message = error.message || "Liquidation action failed!";
+  
+      // Check if the error contains the word "panic"
+      if (message.toLowerCase().includes("panic")) {
+        setShowPanicPopup(true);
+      } else {
+        toast.error(`Error: ${message}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
+  
       setTransactionResult("failure");
     } finally {
       setIsLoading(false);
@@ -1157,7 +1167,44 @@ const UserInformationPopup = ({
               <X size={24} />
             </button>
           </div>
+          {showPanicPopup && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center p-2 ">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
 
+            <div
+              className="dark:bg-gradient 
+                dark:from-darkGradientStart 
+                dark:to-darkGradientEnd 
+                dark:text-darkText  "
+            >
+
+              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Thanks for helping us improve DFinance! <br></br> You’ve
+                uncovered a bug, and our dev team is on it.
+              </p>
+
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Your account is temporarily locked while we investigate and fix
+                the issue. <br />
+              </p>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                We appreciate your contribution and have logged your ID—testers
+                like you are key to making DFinance better! <br />
+                If you have any questions, feel free to reach out.
+              </p>
+            </div>
+
+           
+          </div>
+        </div>
+      )}
           {isDebtInfo ? (
             <div>
               <div className="mb-6">

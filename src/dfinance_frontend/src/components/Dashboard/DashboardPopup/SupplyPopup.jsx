@@ -77,7 +77,7 @@ const SupplyPopup = ({
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
   const principalObj = useMemo(
@@ -279,8 +279,8 @@ const SupplyPopup = ({
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
-
-        setIsPaymentDone(true);
+         setIsPaymentDone(true);
+       
         setIsVisible(false);
 
         if (isSoundOn) {
@@ -300,10 +300,38 @@ const SupplyPopup = ({
         });
       } else if ("Err" in response) {
         const errorKey = response.Err;
-        const userFriendlyMessage =
-          errorMessages[errorKey] || errorMessages.Default;
-        console.log(userFriendlyMessage);
-        toast.error(userFriendlyMessage, {
+        const errorMsg = errorKey?.toString() || "An unexpected error occurred";
+
+        // Check for panic error and show a popup instead of toast
+        if (errorMsg.toLowerCase().includes("panic")) {
+          setShowPanicPopup(true);
+          setIsVisible(false);
+        } else {
+          const userFriendlyMessage =
+            errorMessages[errorKey] || errorMessages.Default;
+          console.error("Error:", errorMsg);
+
+          toast.error(`Supply failed: ${userFriendlyMessage}`, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`Error: ${error.message || "Supply action failed!"}`);
+
+      // Check if the error message contains "panic" and show popup
+      if (error.message && error.message.toLowerCase().includes("panic")) {
+        setShowPanicPopup(true);
+        setIsVisible(false);
+      } else {
+        toast.error(`Error: ${error.message || "Supply action failed!"}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -314,18 +342,6 @@ const SupplyPopup = ({
           progress: undefined,
         });
       }
-    } catch (error) {
-      console.error(error.message);
-      toast.error("An unexpected error occurred. Please try again later.", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
     }
   };
 
@@ -404,7 +420,7 @@ const SupplyPopup = ({
     totalCollateral,
     totalDebt,
     liquidationThreshold,
-reserveliquidationThreshold
+    reserveliquidationThreshold
   ) => {
     const amountAdded = collateral ? usdValue || 0 : 0;
     console.log("totalCollateral", totalCollateral);
@@ -424,17 +440,17 @@ reserveliquidationThreshold
     if (totalDeptValue === 0) {
       return Infinity;
     }
-    let avliq=(liquidationThreshold*totalCollateral);
+    let avliq = liquidationThreshold * totalCollateral;
     console.log("avliq", avliq);
-    let tempLiq=(avliq+(amountAdded * reserveliquidationThreshold))/totalCollateralValue;
-    //withdraw me minus hoga repay aur borrow same toggle add horaha to plus varna minus 
+    let tempLiq =
+      (avliq + amountAdded * reserveliquidationThreshold) /
+      totalCollateralValue;
+    //withdraw me minus hoga repay aur borrow same toggle add horaha to plus varna minus
     console.log("tempLiq", tempLiq);
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
-    result = Math.round(result * 1e8) / 1e8; 
+    result = Math.round(result * 1e8) / 1e8;
     console.log("result", result);
-    return (
-      result
-    );
+    return result;
   };
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
@@ -728,6 +744,44 @@ reserveliquidationThreshold
             >
               Close Now
             </button>
+          </div>
+        </div>
+      )}
+      {showPanicPopup && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center p-2 ">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
+
+            <div
+              className="dark:bg-gradient 
+                dark:from-darkGradientStart 
+                dark:to-darkGradientEnd 
+                dark:text-darkText  "
+            >
+
+              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Thanks for helping us improve DFinance! <br></br> You’ve
+                uncovered a bug, and our dev team is on it.
+              </p>
+
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Your account is temporarily locked while we investigate and fix
+                the issue. <br />
+              </p>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                We appreciate your contribution and have logged your ID—testers
+                like you are key to making DFinance better! <br />
+                If you have any questions, feel free to reach out.
+              </p>
+            </div>
+
+           
           </div>
         </div>
       )}

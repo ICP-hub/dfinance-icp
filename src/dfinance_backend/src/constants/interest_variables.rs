@@ -112,4 +112,5 @@ pub mod constants {
     // ------------------- General Constants -------------------
     pub const INITIAL_DEBT_INDEX: u128 = 100000000;
     pub const SCALING_FACTOR: u128 = 100000000;
+    pub const MIN_BORROW: u128 = 100;
 }

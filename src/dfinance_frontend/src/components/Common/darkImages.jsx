@@ -45,7 +45,16 @@ const darkImages = {
     userInfoDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373401/userInfoDark_elm6ez.webp",
     approveLiquidationDark: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373401/approveLiquidationDark_vzfdla.webp",
     callLiquidationDark: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373401/callLiquidationDark_tibcjw.webp",
-    warningPopupDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737439545/warningPopupDark_zvxejq.webp"
+    warningPopupDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737439545/warningPopupDark_zvxejq.webp",
+    supplyDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969294/supplyDark_hu8l1x.webp",
+    borrowDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969295/borrowDark_jjqavg.webp",
+    repayDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969294/repayDark_cw9046.webp",
+    withdrawDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969295/withdrawDark_vjv0li.webp",
+    dashboardNavDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969295/dashboardNavDark_ratcjd.webp",
+    riskDetailsDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969294/riskDetailsDark_l3bj8o.webp",
+    dashboardNavMarketDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969295/dashboardNavMarketDark_ihl4yn.webp",
+    liquidationGetDebtStatusDark:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969295/liquidationGetDebtStatusDark_vekkbn.webp",
+    
   };
   
   export default darkImages;

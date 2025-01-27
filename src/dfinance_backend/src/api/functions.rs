@@ -1,3 +1,4 @@
+use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
@@ -220,175 +221,197 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
-    let user_data_result = user_data(user_principal);
-
-    let mut user_data = match user_data_result {
-        Ok(data) => {
-            ic_cdk::println!("User found");
-            data
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    };
-
-    let ledger_canister_id = mutate_state(|state| {
-        let reserve_list = &state.reserve_list;
-        reserve_list
-            .get(&asset.to_string().clone())
-            .map(|principal| principal.clone())
-            .ok_or_else(|| Error::NoCanisterIdFound)
-    })?;
-
-    let platform_principal = ic_cdk::api::id();
-    ic_cdk::println!("Platform principal: {:?}", platform_principal);
-
-    let balance_result = get_balance(ledger_canister_id, platform_principal).await;
-    let balance = match balance_result {
-        Ok(bal) => bal,
-        Err(e) => {
-            return Err(e);
-        }
-    };
-
-    ic_cdk::println!("balance of wallet = {}", balance);
-
-    if amount > balance {
-        ic_cdk::println!("wallet balance is low");
-        if let Err(e) = send_admin_notifications("initial", asset.clone()).await {
-            ic_cdk::println!("Failed to send admin notification: {:?}", e);
-            return Err(e);
-        }
-        return Err(Error::LowWalletBalance);
-    }
-
-    if (balance.clone() - amount.clone()) == Nat::from(0u128) {
-        ic_cdk::println!("wallet balance is low");
-        if let Err(e) = send_admin_notifications("mid", asset.clone()).await {
-            ic_cdk::println!("Failed to send admin notification: {:?}", e);
-            return Err(e);
-        };
-    }
-
-    if (balance.clone() - amount.clone())
-        <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
+    let operation_key = user_principal;
+    // Acquire the lock
     {
-        ic_cdk::println!("wallet balance is low");
-        if let Err(e) = send_admin_notifications("final", asset.clone()).await {
-            ic_cdk::println!("Failed to send admin notification: {:?}", e);
-            return Err(e);
-        };
+        if let Err(e) = acquire_lock(&operation_key) {
+            ic_cdk::println!("Lock acquisition failed: {:?}", e);
+            return Err(Error::LockAcquisitionFailed);
+        }
     }
 
-    let mut rate: Option<Nat> = None;
+    let result = async {
+        let user_data_result = user_data(user_principal);
 
-    match get_cached_exchange_rate(asset.clone()) {
-        Ok(price_cache) => {
-            if let Some(cached_price) = price_cache.cache.get(&asset) {
-                let amount = cached_price.price.clone();
-                rate = Some(amount);
-                ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
-            } else {
-                ic_cdk::println!("No cached price found for {}", asset);
+        let mut user_data = match user_data_result {
+            Ok(data) => {
+                ic_cdk::println!("User found");
+                data
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        let ledger_canister_id = mutate_state(|state| {
+            let reserve_list = &state.reserve_list;
+            reserve_list
+                .get(&asset.to_string().clone())
+                .map(|principal| principal.clone())
+                .ok_or_else(|| Error::NoCanisterIdFound)
+        })?;
+
+        let platform_principal = ic_cdk::api::id();
+        ic_cdk::println!("Platform principal: {:?}", platform_principal);
+
+        let balance_result = get_balance(ledger_canister_id, platform_principal).await;
+        let balance = match balance_result {
+            Ok(bal) => bal,
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        ic_cdk::println!("balance of wallet = {}", balance);
+
+        if amount > balance {
+            ic_cdk::println!("wallet balance is low");
+            if let Err(e) = send_admin_notifications("initial", asset.clone()).await {
+                ic_cdk::println!("Failed to send admin notification: {:?}", e);
+                return Err(e);
+            }
+            return Err(Error::LowWalletBalance);
+        }
+
+        if (balance.clone() - amount.clone()) == Nat::from(0u128) {
+            ic_cdk::println!("wallet balance is low");
+            if let Err(e) = send_admin_notifications("mid", asset.clone()).await {
+                ic_cdk::println!("Failed to send admin notification: {:?}", e);
+                return Err(e);
+            };
+        }
+
+        if (balance.clone() - amount.clone())
+            <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
+        {
+            ic_cdk::println!("wallet balance is low");
+            if let Err(e) = send_admin_notifications("final", asset.clone()).await {
+                ic_cdk::println!("Failed to send admin notification: {:?}", e);
+                return Err(e);
+            };
+        }
+
+        let mut rate: Option<Nat> = None;
+
+        match get_cached_exchange_rate(asset.clone()) {
+            Ok(price_cache) => {
+                if let Some(cached_price) = price_cache.cache.get(&asset) {
+                    let amount = cached_price.price.clone();
+                    rate = Some(amount);
+                    ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
+                } else {
+                    ic_cdk::println!("No cached price found for {}", asset);
+                    rate = None;
+                }
+            }
+            Err(err) => {
+                ic_cdk::println!("Error fetching exchange rate for {}: {:?}", asset, err);
                 rate = None;
             }
         }
-        Err(err) => {
-            ic_cdk::println!("Error fetching exchange rate for {}: {:?}", asset, err);
-            rate = None;
-        }
-    }
 
-    let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.clone().unwrap());
+        let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.clone().unwrap());
 
-    ic_cdk::println!(
-        "usd amount of the facut = {}, {}",
-        usd_amount,
-        rate.unwrap()
-    );
-
-    let user_reserve = user_reserve(&mut user_data, &asset);
-    ic_cdk::println!("user reserve = {:?}", user_reserve);
-
-    if let Some((_, user_reserve_data)) = user_reserve {
-        ic_cdk::println!("inside if statement");
         ic_cdk::println!(
-            "faucet user_reserve_data.faucet_limit = {}",
-            user_reserve_data.faucet_limit
+            "usd amount of the facut = {}, {}",
+            usd_amount,
+            rate.unwrap()
         );
-        if usd_amount.clone() > user_reserve_data.faucet_limit {
-            ic_cdk::println!("amount is too much");
-            return Err(Error::AmountTooMuch); //TODO change error line
-        }
 
-        if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
-            > user_reserve_data.faucet_limit
-        {
-            ic_cdk::println!("amount is too much second");
-            return Err(Error::AmountTooMuch);
-        }
-        user_reserve_data.faucet_usage += usd_amount;
-        ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
-    } else {
-        let mut new_reserve = UserReserveData {
-            reserve: asset.clone(),
-            is_collateral: true,
-            ..Default::default()
-        };
+        let user_reserve = user_reserve(&mut user_data, &asset);
+        ic_cdk::println!("user reserve = {:?}", user_reserve);
 
-        if usd_amount > new_reserve.faucet_limit {
-            ic_cdk::println!("amount is too much");
-            return Err(Error::AmountTooMuch);
-        }
+        if let Some((_, user_reserve_data)) = user_reserve {
+            ic_cdk::println!("inside if statement");
+            ic_cdk::println!(
+                "faucet user_reserve_data.faucet_limit = {}",
+                user_reserve_data.faucet_limit
+            );
+            if usd_amount.clone() > user_reserve_data.faucet_limit {
+                ic_cdk::println!("amount is too much");
+                return Err(Error::AmountTooMuch); //TODO change error line
+            }
 
-        if (new_reserve.faucet_usage.clone() + usd_amount.clone())
-            > new_reserve.faucet_limit.clone()
-        {
-            ic_cdk::println!("amount is too much second");
-            return Err(Error::AmountTooMuch);
-        }
-
-        new_reserve.faucet_usage += usd_amount;
-        ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
-
-        if let Some(ref mut reserves) = user_data.reserves {
-            reserves.push((asset.clone(), new_reserve.clone()));
+            if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
+                > user_reserve_data.faucet_limit
+            {
+                ic_cdk::println!("amount is too much second");
+                return Err(Error::AmountTooMuch);
+            }
+            user_reserve_data.faucet_usage += usd_amount;
+            ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
         } else {
-            user_data.reserves = Some(vec![(asset.clone(), new_reserve.clone())]);
+            let mut new_reserve = UserReserveData {
+                reserve: asset.clone(),
+                is_collateral: true,
+                ..Default::default()
+            };
+
+            if usd_amount > new_reserve.faucet_limit {
+                ic_cdk::println!("amount is too much");
+                return Err(Error::AmountTooMuch);
+            }
+
+            if (new_reserve.faucet_usage.clone() + usd_amount.clone())
+                > new_reserve.faucet_limit.clone()
+            {
+                ic_cdk::println!("amount is too much second");
+                return Err(Error::AmountTooMuch);
+            }
+
+            new_reserve.faucet_usage += usd_amount;
+            ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
+
+            if let Some(ref mut reserves) = user_data.reserves {
+                reserves.push((asset.clone(), new_reserve.clone()));
+            } else {
+                user_data.reserves = Some(vec![(asset.clone(), new_reserve.clone())]);
+            }
+
+            ic_cdk::println!(
+                "faucet new_reserve.faucet_usage = {}",
+                new_reserve.faucet_usage
+            );
         }
 
-        ic_cdk::println!(
-            "faucet new_reserve.faucet_usage = {}",
-            new_reserve.faucet_usage
-        );
+        ic_cdk::println!("user data before submit = {:?}", user_data);
+
+        mutate_state(|state| {
+            state
+                .user_profile
+                .insert(user_principal, Candid(user_data.clone()));
+        });
+
+        ic_cdk::println!("updated user data = {:?}", user_data);
+
+        match asset_transfer_from(
+            ledger_canister_id,
+            platform_principal,
+            user_principal,
+            amount.clone(),
+        )
+        .await
+        {
+            Ok(new_balance) => {
+                ic_cdk::println!("Asset transfer from backend to user executed successfully");
+                Ok(new_balance)
+            }
+            Err(_) => {
+                return Err(Error::ErrorFaucetTokens);
+            }
+        }
+    }
+    .await;
+
+    ic_cdk::println!("Faucet result: {:?}", result);
+
+    // Release the lock
+    if let Err(e) = release_lock(&operation_key) {
+        ic_cdk::println!("Failed to release lock: {:?}", e);
+        return Err(e);
     }
 
-    ic_cdk::println!("user data before submit = {:?}", user_data);
-
-    mutate_state(|state| {
-        state
-            .user_profile
-            .insert(user_principal, Candid(user_data.clone()));
-    });
-
-    ic_cdk::println!("updated user data = {:?}", user_data);
-
-    match asset_transfer_from(
-        ledger_canister_id,
-        platform_principal,
-        user_principal,
-        amount.clone(),
-    )
-    .await
-    {
-        Ok(new_balance) => {
-            ic_cdk::println!("Asset transfer from backend to user executed successfully");
-            Ok(new_balance)
-        }
-        Err(_) => {
-            return Err(Error::ErrorFaucetTokens);
-        }
-    }
+    result
 }
 
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {

@@ -125,5 +125,6 @@ pub struct ExecuteLiquidationParams {
     pub collateral_asset: String,
     pub amount: Nat,
     pub on_behalf_of: Principal,
+    pub reward_amount: Nat,
 }
 

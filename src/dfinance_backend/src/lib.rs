@@ -1,8 +1,8 @@
 use crate::constants::errors::Error;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
-use api::resource_manager::LOCKS;
 use api::resource_manager::acquire_lock;
+use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
 use declarations::assets::InitArgs;
@@ -28,10 +28,11 @@ mod state;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::assets::{
-    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,ExecuteLiquidationParams
+    ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
+    ExecuteWithdrawParams,
 };
-use crate::protocol::libraries::logic::user::UserAccountData;
 use crate::declarations::storable::Candid;
+use crate::protocol::libraries::logic::user::UserAccountData;
 use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
 use std::time::Duration;
@@ -40,33 +41,36 @@ const ONE_DAY: Duration = Duration::from_secs(86400);
 
 #[init]
 pub async fn init(args: Principal) {
-
     ic_cdk::println!("init function = {:?}", args);
 
-
     mutate_state(|state| {
-        state.meta_data.insert(0, Candid(InitArgs { controller_id: args }));
+        state.meta_data.insert(
+            0,
+            Candid(InitArgs {
+                controller_id: args,
+            }),
+        );
     });
 
     ic_cdk::println!("function called");
     schedule_midnight_task().await;
 }
 
-#[query]
-pub fn get_controller() -> Result<InitArgs, Error> {
+// #[query]
+// pub fn get_controller() -> Result<InitArgs, Error> {
 
-    match read_state(|state| {
-        state
-            .meta_data
-            .get(&0)
-            .ok_or_else(|| Error::UserNotFound)
-    }) {
-        Ok(va) => {
-            Ok(va.0)
-        },
-        Err(_) => return Err(Error::ErrorNotController)
-    }
-}
+//     match read_state(|state| {
+//         state
+//             .meta_data
+//             .get(&0)
+//             .ok_or_else(|| Error::UserNotFound)
+//     }) {
+//         Ok(va) => {
+//             Ok(va.0)
+//         },
+//         Err(_) => return Err(Error::ErrorNotController)
+//     }
+// }
 
 // Function to fetch the reserve-data based on the asset
 #[query]
@@ -115,11 +119,10 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
         let reserve_list = &state.reserve_list;
         reserve_list
             .get(&asset) // No need for `to_string` or `clone` here
-            .map(|principal| principal.clone())   // Copy the `Principal` directly
+            .map(|principal| principal.clone()) // Copy the `Principal` directly
             .ok_or(Error::NoCanisterIdFound) // Return the error if the key is not found
     })
 }
-
 
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
@@ -308,7 +311,6 @@ fn calculate_dynamic_balance(
     initial_deposit * (new_liquidity_index / prev_liquidity_index)
 }
 
-
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -338,7 +340,7 @@ pub async fn get_asset_supply(
         None => ic_cdk::caller(),
     };
 
-    if user_principal ==  Principal::anonymous() {
+    if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
     }
@@ -415,14 +417,20 @@ pub async fn get_asset_supply(
             return Err(e);
         }
     };
-    ic_cdk::println!("result in asset supply {} {} {}", normalized_supply_data, user_reserve.liquidity_index, get_balance_value);
-    let result = (normalized_supply_data.clone().scaled_div(user_reserve.liquidity_index.clone()))
+    ic_cdk::println!(
+        "result in asset supply {} {} {}",
+        normalized_supply_data,
+        user_reserve.liquidity_index,
+        get_balance_value
+    );
+    let result = (normalized_supply_data
+        .clone()
+        .scaled_div(user_reserve.liquidity_index.clone()))
     .scaled_mul(get_balance_value.clone());
     ic_cdk::println!("Final calculated asset supply: {}", result);
 
     Ok(result)
 }
-
 
 pub async fn get_asset_debt(
     asset_name: String,
@@ -522,13 +530,14 @@ pub async fn get_asset_debt(
         normalized_debt_data
     );
 
-    Ok((normalized_debt_data.scaled_div(user_reserve.variable_borrow_index.clone())).scaled_mul(get_balance_value))
+    Ok(
+        (normalized_debt_data.scaled_div(user_reserve.variable_borrow_index.clone()))
+            .scaled_mul(get_balance_value),
+    )
 }
-
 
 #[query]
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
-
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {
@@ -559,7 +568,6 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
 //FRONTEND - userbalance(debttoken)*usernormalizedebt/userreserve.debtindex -> to get asset_debt of user for perticular asset
 #[query]
 pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
-
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {
@@ -596,7 +604,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
-
 #[update]
 async fn check_lock() -> Result<String, Error> {
     let user_principal = ic_cdk::api::caller();
@@ -604,7 +611,6 @@ async fn check_lock() -> Result<String, Error> {
 
     let result = acquire_lock(&user_principal);
 
-   
     match result {
         Ok(_) => Ok("Lock acquired".to_string()),
         Err(e) => Err(Error::LockAcquisitionFailed),
@@ -616,11 +622,9 @@ async fn get_lock() -> Result<bool, Error> {
     ic_cdk::println!("user principal = {} ", user_principal);
 
     let result = LOCKS
-    .lock()
-    .map(|locks| locks.get(&user_principal).cloned().unwrap_or_else(|| false));
-    
+        .lock()
+        .map(|locks| locks.get(&user_principal).cloned().unwrap_or_else(|| false));
 
-   
     match result {
         Ok(_) => Ok(result.unwrap()),
         Err(e) => Err(Error::LockAcquisitionFailed),
@@ -641,14 +645,14 @@ async fn get_user_account_data(
     result
 }
 
+
 pub async fn schedule_midnight_task() {
     let _timer_id = set_timer_interval(time_until_midnight(), || {
         ic_cdk::spawn(async {
             let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
 
             for (user_principal, _) in vector_user_data {
-                if let Err(_) = reset_faucet_usage(user_principal).await {
-                }
+                if let Err(_) = reset_faucet_usage(user_principal).await {}
             }
         });
     });
@@ -675,5 +679,3 @@ export_candid!();
 //6. accuare_to_treasury for fees
 //7. liq_bot -> discuss about node or timer
 //8. frontend -> cal h.f , dont show negative apy, remove tofix
-
-

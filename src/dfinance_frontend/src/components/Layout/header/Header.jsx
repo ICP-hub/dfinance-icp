@@ -11,16 +11,16 @@ export const Header = () => {
         <header>
             <div>
                 <div>
-                    {/* logo */}
+                   
                 </div>
 
                 
-                    {/* list */}
+                   
                 <MenuItems items={items}/>
                 
 
                 <div>
-                    {/* button */}
+                   
                 </div>
             </div>
         </header>

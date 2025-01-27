@@ -15,15 +15,15 @@ const TabPanel = () => {
             <Swiper
                  breakpoints={{
                     640: {
-                        slidesPerView: 1, // Mobile screens
+                        slidesPerView: 1, 
                         spaceBetween: 15,
                     },
                     768: {
-                        slidesPerView: 2, // Tablets
+                        slidesPerView: 2, 
                         spaceBetween: 30,
                     },
                     1024: {
-                        slidesPerView: 4, // Desktops
+                        slidesPerView: 4, 
                         spaceBetween: 30,
                     },
                 }}

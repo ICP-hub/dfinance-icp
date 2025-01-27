@@ -45,10 +45,10 @@ export default function CustomizedSwitches({ checked, onChange }) {
           <IOSSwitch 
             sx={{ m: 1}} 
             checked={checked} 
-            onChange={onChange} // Allow toggling
+            onChange={onChange} 
           />
         }
-        // Optional: Add a label to show state
+        
       />
     </FormGroup>
   );

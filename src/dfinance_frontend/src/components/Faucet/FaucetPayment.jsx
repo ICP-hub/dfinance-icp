@@ -22,7 +22,7 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
     const handleClose = () => {
         setIsVisible(false);
         onClose();
-        window.location.reload()
+        // window.location.reload()
     };
 
     if (!isVisible) {

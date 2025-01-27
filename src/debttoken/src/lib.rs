@@ -782,7 +782,7 @@ fn __get_candid_interface_tmp_hack() -> String {
 fn main() {}
 
 #[test]
-fn check_candid_interface() {
+fn check_candid_interface() { 
     use candid_parser::utils::{service_equal, CandidSource};
 
     let new_interface = __export_service();

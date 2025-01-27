@@ -15,7 +15,7 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
     handleTestnetModeToggle(false);
     localStorage.removeItem("isTestnetMode");
     onClose();
-    toast.dismiss(); // This will remove all active toasts
+    toast.dismiss(); 
     toast.info("Testnet mode disabled successfully!");
   };
 
@@ -49,12 +49,7 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
               provide feedback.
             </p>
           </div>
-          {/* <button
-            onClick={handleDisableTestnetClick}
-            className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 shadow-lg font-semibold text-sm"
-          >
-            Disable Testnet Mode
-          </button> */}
+          {}
         </div>
         <ToastContainer />
       </div>

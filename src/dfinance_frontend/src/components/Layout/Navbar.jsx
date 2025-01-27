@@ -13,6 +13,9 @@ import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
 import { useRef } from "react";
 import { Star } from "lucide-react";
+import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
+import { FaWallet } from "react-icons/fa";
+
 import { styled } from "@mui/material/styles";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -42,7 +45,7 @@ import ThemeToggle from "../Common/ThemeToggle";
 import settingsIcon from "../../../public/Helpers/Settings.svg";
 import Vector from "../../../public/Helpers/Vector.svg";
 import Group216 from "../../../public/navbar/Group216.svg";
-// import SwitchTokensPopup from './Dashboard/SwitchToken';
+
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
@@ -52,8 +55,19 @@ import { ArrowUpDown } from "lucide-react";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
 import DFinanceLight from "../../../public/logo/DFinance-Light.svg";
 import star from "../../../public/Helpers/settings.svg";
+import { toggleSound } from "../../redux/reducers/soundReducer";
+
 export default function Navbar({ isHomeNav }) {
-  const isMobile = window.innerWidth <= 1115; // Adjust the breakpoint as needed
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+
+  const handleSoundToggle = () => {
+    dispatch(toggleSound());
+  };
+  const handleTour = () => {
+    dispatch(joyRideTrigger());
+    navigate("/dashboard");
+  };
+  const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const [isMobileNav, setIsMobileNav] = useState(false);
@@ -71,14 +85,11 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
-    // You can add similar logic for other dropdowns if needed
   };
 
   useEffect(() => {
-    // Add event listener for scroll to window or container
     window.addEventListener("scroll", handleCloseDropdownOnScroll);
 
-    // Clean up the event listener on unmount
     return () => {
       window.removeEventListener("scroll", handleCloseDropdownOnScroll);
     };
@@ -88,7 +99,6 @@ export default function Navbar({ isHomeNav }) {
   const location = useLocation();
 
   useEffect(() => {
-    // Close the switchWalletDrop dropdown when location changes
     setSwitchWalletDrop(false);
     setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
@@ -100,7 +110,7 @@ export default function Navbar({ isHomeNav }) {
   const [oneInchValue, setOneInchValue] = useState("0.00");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [selectedToken, setSelectedToken] = useState("ETH");
-  const [balance, setBalance] = useState(0); // Example balance, replace with actual balance
+  const [balance, setBalance] = useState(0);
   const [insufficientBalance, setInsufficientBalance] = useState(false);
   const [showTestnetPopup, setShowTestnetPopup] = useState(false);
   const handleEthChange = (e) => {
@@ -128,16 +138,9 @@ export default function Navbar({ isHomeNav }) {
     setSelectedToken(selectedToken === "ETH" ? "1INCH" : "ETH");
   };
   const handleTransaction = () => {
-    // Perform transaction logic here
     if (selectedToken === "ETH" && Number(ethValue) > balance) {
       setInsufficientBalance(true);
     } else {
-      // Perform transaction
-      console.log(
-        `Transaction initiated with ${selectedToken} and amount ${
-          selectedToken === "ETH" ? ethValue : oneInchValue
-        }`
-      );
     }
   };
   const handleInputFocus = () => {
@@ -145,7 +148,6 @@ export default function Navbar({ isHomeNav }) {
     setIsInputFocused(true);
   };
 
-  // Function to handle input blur
   const handleInputBlur = () => {
     setShowTransactionOverlay(false);
     setIsInputFocused(false);
@@ -170,7 +172,6 @@ export default function Navbar({ isHomeNav }) {
 
   const handleButtonClick = () => {
     setShowTestnetPopup(true);
-    console.log("kjfsh");
     setDropdownVisible(false);
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
@@ -191,9 +192,8 @@ export default function Navbar({ isHomeNav }) {
 
   const handleSwitchWallet = () => {
     if (switchWalletDrop) {
-      logout(); // Logout when disconnecting
+      logout();
     } else {
-      // dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
       setSwitchWalletDrop(!switchWalletDrop);
       setSwitchTokenDrop(false);
       setDropdownVisible(false);
@@ -241,22 +241,18 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-  const handleViewOnExplorerClick = () => {
-    // console.log("View on Explorer clicked");
-  };
+  const handleViewOnExplorerClick = () => {};
 
   const handleLaunchApp = () => {
-    navigate("/dashboard"); // Directly navigate to /dashboard/main
+    navigate("/dashboard");
   };
   const handleClose = () => {
     setSwitchTokenDrop(false);
   };
   const handleWalletConnect = () => {
-    // console.log("connrcterd");
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
-    // dispatch(setIsWalletCreated(true))
   };
 
   const [showTransactionOverlay, setShowTransactionOverlay] = useState(false);
@@ -293,12 +289,12 @@ export default function Navbar({ isHomeNav }) {
   useEffect(() => {
     if (previousIsTestnetMode.current !== isTestnetMode) {
       if (previousIsTestnetMode.current !== undefined) {
-        toast.dismiss(); // Dismiss any existing toasts
+        toast.dismiss();
       }
       toast.success(
         `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`,
         {
-          className: "custom-toast", // Add custom CSS class
+          className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
         }
@@ -324,7 +320,6 @@ export default function Navbar({ isHomeNav }) {
         ele.scrollIntoView({ behavior: "smooth" });
       }
     }
-    console.log(hash);
   }, [hash]);
 
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -338,7 +333,6 @@ export default function Navbar({ isHomeNav }) {
   useEffect(() => {
     window.addEventListener("resize", handleResize);
 
-    // Cleanup: remove event listener on component unmount
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -387,16 +381,15 @@ export default function Navbar({ isHomeNav }) {
 
   const handleLogoClick = () => {
     if (location.pathname === "/") {
-      // Scroll to top if on the home page
       window.scrollTo(0, 0);
     } else {
-      // Navigate to '/dashboard' if not on the home page
       navigate("/dashboard");
       setTimeout(() => {
         window.scrollTo(0, 0);
       }, 100);
     }
   };
+
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
@@ -505,6 +498,7 @@ export default function Navbar({ isHomeNav }) {
                     : HOME_TOP_NAV_LINK.map((link, index) => (
                         <NavLink
                           key={index}
+                          target={link.target}
                           to={link.route}
                           className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
                         >
@@ -543,8 +537,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                      {/* Toggle between Menu and X icons */}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
@@ -843,7 +836,7 @@ export default function Navbar({ isHomeNav }) {
                   {switchWalletDrop && (
                     <>
                       <div
-                        className="fixed inset-0 bg-black opacity-40 z-40"
+                        className="fixed inset-0 bg-black opacity-40 z-50"
                         onClick={() => setSwitchWalletDrop(false)}
                         style={{ pointerEvents: "none" }}
                       ></div>
@@ -873,7 +866,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                            {/* First Container */}
+                            {}
                             <div className="hidden lg1:flex justify-center">
                               <div
                                 className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -919,26 +912,28 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
-                            {/* Second Container */}
+                            {}
                             <div className=" w-full flex justify-center">
                               <div
-                                className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                                className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
                                 style={{ height: "70px", width: "160px" }}
                               >
                                 <button
                                   className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary button1"
                                   onClick={copyToClipboard}
                                 >
-                                  <GrCopy className="h-5 w-4 ml-3 lg1:ml-0" />
+                                  <GrCopy className="h-5 w-4 ml-4 lg1:ml-6" />
                                   <span className="ml-1">Copy principal</span>
                                 </button>
                                 <button
                                   className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday button1"
-                                  onClick={handleViewOnExplorerClick}
+                                  onClick={() =>
+                                    (window.location.href = "/faucet")
+                                  }
                                 >
-                                  <CiShare1 className="h-5 w-[18px] -ml-1 dark:text-darkText " />
+                                  <CiShare1 className="h-5 -ml-[1px] w-[18px] dark:text-darkText" />
                                   <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
-                                    View On Explorer
+                                    Faucet Asset
                                   </span>
                                 </button>
                               </div>
@@ -962,7 +957,7 @@ export default function Navbar({ isHomeNav }) {
                     {dropdownVisible && (
                       <>
                         <div
-                          className="fixed inset-0 bg-black opacity-40 z-40"
+                          className="fixed inset-0 bg-black bg-opacity-50 z-50"
                           onClick={() => setDropdownVisible(false)}
                         ></div>
                         <div
@@ -973,7 +968,7 @@ export default function Navbar({ isHomeNav }) {
                             Settings
                           </h2>
 
-                          {/* Dark Mode Setting */}
+                          {}
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex flex-row items-center justify-around">
                               <label
@@ -994,7 +989,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
                           </div>
 
-                          {/* Testnet Mode Setting */}
+                          {}
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col">
                               <label
@@ -1010,9 +1005,52 @@ export default function Navbar({ isHomeNav }) {
                               </span>
                               <CustomizedSwitches
                                 checked={isTestnetMode}
-                                onChange={handleTestnetModeToggle}
+                                // onChange={handleTestnetModeToggle}
                               />
                             </div>
+                          </div>
+
+                          {}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex flex-row items-center justify-around relative group">
+                              <label
+                                htmlFor="soundMode"
+                                className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText flex items-center"
+                              >
+                                Sound
+                                <Info
+                                  size={16}
+                                  className="ml-2 cursor-pointer"
+                                />
+                              </label>
+
+                              {}
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
+                                Enabling this will allow the user to hear sound
+                                when supply, borrow, repay, or withdraw actions
+                                are performed.
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                              <span className="text-[13px] mr-2">
+                                {isSoundOn ? "ON" : "OFF"}
+                              </span>
+                              <CustomizedSwitches
+                                checked={isSoundOn}
+                                onChange={handleSoundToggle}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex align-center justify-center w-[93%] border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
+                          <div className="flex w-full align-center justify-center mb-2">
+                            <button
+                              type="button"
+                              className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
+                              onClick={handleTour}
+                            >
+                              Start Guide Tour
+                            </button>
                           </div>
                         </div>
                       </>
@@ -1026,14 +1064,12 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                      {/* Toggle between Menu and X icons */}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
               </div>
             ) : (
-              // <Button title={"Connect Wallet"} onClickHandler={handleCreateInternetIdentity} />
               <div className="flex gap-3">
                 <button className=" flex items-center gap-2 z-20 py-2 px-4  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2">
                   {/* Custom Gradient Star */}
@@ -1052,13 +1088,18 @@ export default function Navbar({ isHomeNav }) {
                     0.00
                   </span>
                 </button>
-                <Button
-                  title={"Connect Wallet"}
-                  onClickHandler={handleWalletConnect}
-                  className={
-                    "broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-8 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px]"
-                  }
-                />
+               <button
+                  className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
+                  onClick={handleWalletConnect}
+                >
+                  <div className="flex items-center justify-center">
+                    <p className="hidden md:flex">Connect Wallet</p>
+                    <div>
+                      <FaWallet  size={17} className="ml-0 md:hidden" />
+                    </div>
+                    
+                  </div>
+                </button>
                 <div className="flex items-center justify-center">
                   <div className="relative">
                     {!isMobile ? (
@@ -1074,8 +1115,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}{" "}
-                          {/* Toggle between Menu and X icons */}
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                         </div>
                       </div>
                     )}
@@ -1085,7 +1125,7 @@ export default function Navbar({ isHomeNav }) {
                           Settings
                         </h2>
 
-                        {/* Dark Mode Setting */}
+                        {}
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label
@@ -1106,7 +1146,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        {/* Testnet Mode Setting */}
+                        {}
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label

@@ -16,7 +16,7 @@ candid = "0.10"
 candid-extractor = "0.1.4"
 ic-cdk = "0.15.0"
 ic-cdk-macros = "0.15.0"
-ic-cdk-timers = "0.7"                                             # Feel free to remove this dependency if you don't need timers
+ic-cdk-timers = "0.3.0" # Replace with the latest version if available
 ic-stable-structures = "0.6.5"
 serde = "1.0.203"
 serde_bytes = "0.11.15"
@@ -29,7 +29,9 @@ dotenv = "0.15.0"
 env_logger = "0.11"
 ic-xrc-types = "1.0.0"
 regex.workspace = true
-
+num-traits = "0.2"
+serde_json = "1.0"
+futures = "0.3"
 [dev-dependencies]
 pocket-ic = "4.0.0"
 tokio = { version = "1", features = ["full"] }

@@ -1,23 +1,40 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Layout/Navbar";
 import Footer from "../../components/Layout/Footer";
 import Ellipse from "../../components/Common/Ellipse";
 
 import DashboardNav from "../../components/Dashboard/DashboardNav";
+import Loading from "../../components/Common/Loading";
+import { usePageLoading } from "../../components/Common/useLoading";
+import useAssetData from "../../components/Common/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 
 const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { loading } = useAssetData();
+  const isLoading = usePageLoading();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     login();
-  //   }
-  // }, []);
+  const [isLoadingPage, setIsLoadingPage] = useState(
+    isAuthenticated ? loading : isLoading
+  );
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoadingPage) {
+        setIsLoadingPage(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoadingPage]);
+
+  if (isLoadingPage) {
+    return <Loading isLoading={isLoadingPage} />;
+  }
 
   return (
     <>
@@ -29,10 +46,10 @@ const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
           />
         </div>
 
-        {/* dashboard navbar */}
+        {}
         <Navbar isHomeNav={false} />
 
-        {/* main area */}
+        {}
         {isDGov ? (
           <div className="w-full">{children}</div>
         ) : (
@@ -43,7 +60,7 @@ const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
         )}
       </div>
 
-      {/* footer */}
+      {}
       <Footer />
     </>
   );

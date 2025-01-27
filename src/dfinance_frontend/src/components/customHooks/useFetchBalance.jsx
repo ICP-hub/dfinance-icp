@@ -1,8 +1,10 @@
 import { useCallback, useState } from "react";
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
+import { useSelector } from "react-redux";
 
 const useFetchBalance = (ledgerActors, principal) => {
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
   const [ckBTCBalance, setCkBTCBalance] = useState(null);
   const [ckETHBalance, setCkETHBalance] = useState(null);
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
@@ -10,7 +12,10 @@ const useFetchBalance = (ledgerActors, principal) => {
   const [ckICPBalance, setCkICPBalance] = useState(null);
   const [error, setError] = useState(null);
 
-  const principalObj = useMemo(() => Principal.fromText(principal), [principal]);
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
 
   const fetchBalance = useCallback(
     async (assetType) => {
@@ -18,14 +23,16 @@ const useFetchBalance = (ledgerActors, principal) => {
         try {
           const account = { owner: principalObj, subaccount: [] };
           const ledgerActor = ledgerActors[assetType];
-          if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
-            console.warn(`Ledger actor for ${assetType} not initialized or method not available`);
+          if (
+            !ledgerActor ||
+            typeof ledgerActor.icrc1_balance_of !== "function"
+          ) {
             return;
           }
 
           const balance = await ledgerActor.icrc1_balance_of(account);
-          const formattedBalance = Number(balance) / 100000000;
 
+          const formattedBalance = Number(balance) / 100000000;
 
           switch (assetType) {
             case "ckBTC":
@@ -40,19 +47,19 @@ const useFetchBalance = (ledgerActors, principal) => {
             case "ICP":
               setCkICPBalance(formattedBalance);
               break;
-              case "ckUSDT":
-                setCkUSDTBalance(formattedBalance);
-                break;
+            case "ckUSDT":
+              setCkUSDTBalance(formattedBalance);
+              break;
             default:
               throw new Error("Unsupported asset type");
           }
         } catch (error) {
-          console.error(`Error fetching balance for ${assetType}:`, error);
           setError(error);
         }
+      } else {
       }
     },
-    [ledgerActors, principalObj]
+    [ledgerActors, principalObj, dashboardRefreshTrigger]
   );
 
   return {

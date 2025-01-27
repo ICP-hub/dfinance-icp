@@ -201,6 +201,6 @@ service : (principal) -> {
   update_token_price : (text) -> (Result_1);
   user_normalized_debt : (ReserveData) -> (Result_3) query;
   user_normalized_supply : (ReserveData) -> (Result_3) query;
-  user_position : (text) -> (Result_12) query;
+  user_position : (text) -> (Result_11) query;
   will_panic : () -> (text);
 }

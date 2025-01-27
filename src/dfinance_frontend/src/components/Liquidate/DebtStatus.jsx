@@ -596,7 +596,15 @@ const DebtStatus = () => {
                                     item,
                                     reserveData
                                   );
-
+                                  const item1 = filteredItems.find(
+                                    (item) => item[0] === assetName
+                                  );
+                                  const reserveliquidationThreshold =
+                                    Number(
+                                      item1?.[1]?.Ok.configuration
+                                        .liquidation_threshold
+                                    ) / 100000000 || 0;
+                                    console.log("reserveliquidationThreshold", reserveliquidationThreshold);
                                   if (assetSupply > 0) {
                                     return (
                                       <img

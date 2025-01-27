@@ -121,9 +121,7 @@ const MySupply = () => {
         if (userAccountData?.Ok?.length > 5) {
           const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
           console.log("Setting Available Borrow to borrowValue:", borrowValue);
-         updatedAvailableBorrow = isCollateral ? borrowValue : 0; // Update availableBorrow if any assetSupply > 0
-        
-         
+          updatedAvailableBorrow = isCollateral ? borrowValue : 0; // Update availableBorrow if any assetSupply > 0
         } else {
           console.log(
             "User account data length is insufficient. Setting Available Borrow to 0."
@@ -135,7 +133,7 @@ const MySupply = () => {
 
     // After checking all reserves, update the availableBorrow state
     setAvailableBorrow(updatedAvailableBorrow);
-console.log("updatedAvailableBorrow",updatedAvailableBorrow)
+    console.log("updatedAvailableBorrow", updatedAvailableBorrow);
     // If no asset supply > 0, set availableBorrow to 0
     if (!updatedAvailableBorrow || updatedAvailableBorrow < 0.01) {
       console.log("No asset supply > 0. Setting Available Borrow to 0.");
@@ -143,7 +141,6 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
     } else {
       setAvailableBorrow(updatedAvailableBorrow);
     }
-    
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
 
   const principalObj = useMemo(
@@ -2931,7 +2928,10 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                           Borrow power used
                         </span>{" "}
                         {(() => {
-                          const ratio = (totalUsdValueBorrow / (availableBorrow + totalUsdValueBorrow)) * 100;
+                          const ratio =
+                            (totalUsdValueBorrow /
+                              (availableBorrow + totalUsdValueBorrow)) *
+                            100;
                           if (isNaN(ratio) || !isFinite(ratio)) {
                             return 0;
                           } else if (ratio < 1) {
@@ -2998,8 +2998,11 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                   Borrow power used
                 </span>{" "}
                 {(() => {
-                  console.log("availableBorrowinAssetBorrow", availableBorrow)
-                   const ratio = (totalUsdValueBorrow / (availableBorrow + totalUsdValueBorrow)) * 100;
+                  console.log("availableBorrowinAssetBorrow", availableBorrow);
+                  const ratio =
+                    (totalUsdValueBorrow /
+                      (availableBorrow + totalUsdValueBorrow)) *
+                    100;
                   if (isNaN(ratio) || !isFinite(ratio)) {
                     return 0;
                   } else if (ratio < 1) {
@@ -3446,9 +3449,8 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                               }
                                             }
                                             if (
-                                              borrowableValue ===
-                                                "0.00000000" ||
-                                              borrowableValue === "0.0000"
+                                             borrowableValue <= "0.00000000" ||
+                                          borrowableValue <= "0.0000"
                                             ) {
                                               // Show toast notification
                                               toast.info(
@@ -3938,8 +3940,8 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           }
                                         }
                                         if (
-                                          borrowableValue === "0.00000000" ||
-                                          borrowableValue === "0.0000"
+                                           borrowableValue <= "0.00000000" ||
+                                          borrowableValue <= "0.0000"
                                         ) {
                                           // Show toast notification
                                           toast.info(
@@ -4128,10 +4130,9 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                               availableBorrow || 0
                             );
 
-                            const remainingBorrowable = (total_supply - total_borrow) * 85 / 100;
-
                             // Condition to hide assets with availableBorrow == 0
-                            const isBorrowAvailable = availableBorrowNumber > 0.01;
+                            const isBorrowAvailable =
+                              availableBorrowNumber > 0.01;
 
                             // Only filter assets that should be shown based on showAllAssets and borrow availability
                             if (!showAllAssets) {
@@ -4161,9 +4162,9 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                 100000000;
 
                               const isEligibleA =
-                                ((total_supply_A - total_borrow_A) * 0.85) > 0;
+                                total_supply_A > total_borrow_A;
                               const isEligibleB =
-                                ((total_supply_B - total_borrow_B) * 0.85) > 0;
+                                total_supply_B > total_borrow_B;
 
                               if (isEligibleA && !isEligibleB) return -1;
                               if (!isEligibleA && isEligibleB) return 1;
@@ -4186,7 +4187,7 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                               availableBorrow || 0
                             );
 
-                            const isEligible = ((total_supply - total_borrow) * 0.85) > 0
+                            const isEligible = total_supply > total_borrow;
 
                             // Apply opacity if available borrow is 0
                             const itemClass =
@@ -4287,16 +4288,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckBTCUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4310,16 +4313,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckBTCUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckBTCUsdRate / 1e8)
@@ -4337,16 +4342,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckETHUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4360,16 +4367,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckETHUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckETHUsdRate / 1e8)
@@ -4387,16 +4396,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckUSDCUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4410,16 +4421,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckUSDCUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckUSDCUsdRate / 1e8)
@@ -4437,16 +4450,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckICPUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4460,16 +4475,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckICPUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckICPUsdRate / 1e8)
@@ -4487,16 +4504,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckUSDTUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4510,16 +4529,18 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckUSDTUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckUSDTUsdRate / 1e8)
@@ -4758,24 +4779,26 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           <span className="group inline-flex">
                                             <Info size={14} />
                                             <div className="absolute left-1/2 transform -translate-x-1/2 mb-2 bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs   w-[25vw] pointer-events-none ">
-                                            <div className="flex flex-col">
-                                              <p className="mb-1">
-                                                This is the total amount you can
-                                                borrow, determined by your
-                                                collateral and limited by the
-                                                borrow cap.
-                                              </p>
-                                              <hr className="my-1 mt-1" />
-                                              <p className="mt-2">
-                                                Clicking "Max" may leave a small
-                                                balance due to:
-                                              </p>
-                                              <ul>
-                                                <li>1. Borrow cap limit.</li>
-                                                <li>2. Price fluctuations.</li>
-                                              </ul>
+                                              <div className="flex flex-col">
+                                                <p className="mb-1">
+                                                  This is the total amount you
+                                                  can borrow, determined by your
+                                                  collateral and limited by the
+                                                  borrow cap.
+                                                </p>
+                                                <hr className="my-1 mt-1" />
+                                                <p className="mt-2">
+                                                  Clicking "Max" may leave a
+                                                  small balance due to:
+                                                </p>
+                                                <ul>
+                                                  <li>1. Borrow cap limit.</li>
+                                                  <li>
+                                                    2. Price fluctuations.
+                                                  </li>
+                                                </ul>
+                                              </div>
                                             </div>
-                                          </div>
                                           </span>
                                         </span>
                                       )}
@@ -4952,13 +4975,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckBTCUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -4972,13 +4997,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckBTCUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckBTCUsdRate / 1e8)
                                                 )
                                               : formatConditional(
@@ -4996,13 +5023,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckETHUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -5016,13 +5045,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckETHUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckETHUsdRate / 1e8)
                                                 )
                                               : formatConditional(
@@ -5040,13 +5071,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckUSDCUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -5060,13 +5093,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckUSDCUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckUSDCUsdRate / 1e8)
                                                 )
                                               : formatConditional(
@@ -5084,13 +5119,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckICPUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -5104,13 +5141,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckICPUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckICPUsdRate / 1e8)
                                                 )
                                               : formatConditional(
@@ -5128,13 +5167,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckUSDTUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -5148,13 +5189,15 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckUSDTUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckUSDTUsdRate / 1e8)
                                                 )
                                               : formatConditional(

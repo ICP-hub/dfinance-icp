@@ -64,6 +64,7 @@ const AssetDetails = () => {
   const { assetData } = location.state || {};
   console.log("assetData", assetData);
   const [borrowRateAPR, setBorrowRateAPR] = useState(null);
+  const [reserveFactor, setReserveFactor] = useState(null)
   const [supplyRateAPR, setSupplyRateAPR] = useState(null);
   const [totalBorrowed, setTotalBorrowed] = useState(null);
   const [totalSupplied, setTotalSupplied] = useState(null);
@@ -144,6 +145,7 @@ const AssetDetails = () => {
   useEffect(() => {
     if (assetData?.Ok) {
       setBorrowRateAPR(Number(assetData.Ok.borrow_rate) / 100000000);
+      setReserveFactor(Number(assetData.Ok.configuration.reserve_factor) / 100000000);
       setSupplyRateAPR(Number(assetData.Ok.current_liquidity_rate) / 100000000);
       setTotalBorrowed(Number(assetData.Ok.asset_borrow) / 100000000);
       setTotalSupplied(Number(assetData.Ok.asset_supply) / 100000000);
@@ -658,6 +660,7 @@ const AssetDetails = () => {
             borrowCap={borrowCap}
             totalBorrowed={totalBorrowed}
             borrowRateAPR={borrowRateAPR}
+            reserveFactor={reserveFactor}
           />
         );
       default:

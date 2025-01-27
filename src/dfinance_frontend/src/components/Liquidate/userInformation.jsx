@@ -159,50 +159,104 @@ const UserInformationPopup = ({
     ICP: ckICPUsdRate,
     ckUSDT: ckUSDTUsdRate,
   };
+ 
   useEffect(() => {
-    const totalCollateral = Number(mappedItem.collateral) / 1e8;
-    const totalDebt = Number(mappedItem.debt) / 1e8;
-    const liquidationThreshold = Number(mappedItem.liquidationThreshold) / 1e8;
-
+    // Convert values safely
+    const totalCollateral = Number(mappedItem.collateral) / 1e8 || 0;
+    const totalDebt = Number(mappedItem.debt) / 1e8 || 0;
+    const liquidationThreshold = Number(mappedItem.liquidationThreshold) / 1e8 || 0;
+  
+    // Extract liquidation thresholds for each asset
+    const assetLiquidationThresholds =
+      Array.isArray(mappedItem.userData?.reserves?.[0])
+        ? mappedItem.userData?.reserves?.[0].map((mappedItem) => {
+            const assetName = mappedItem?.[0];
+  
+            // Find corresponding asset in filteredItems
+            const item1 = filteredItems.find((item) => item[0] === assetName);
+  
+            // Extract and convert the liquidation threshold
+            const liquidationThreshold =
+              Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) / 1e8 || 0;
+  
+            console.log(`Asset: ${assetName}, Liquidation Threshold: ${liquidationThreshold}`);
+            return { assetName, liquidationThreshold };
+          })
+        : [];
+  
+    console.log("Asset Liquidation Thresholds:", assetLiquidationThresholds);
+  
+    // Get liquidation threshold for selected asset
+    const reserveliquidationThreshold =
+      assetLiquidationThresholds.find((item) => item.assetName === selectedAsset)
+        ?.liquidationThreshold || 0;
+  
+    console.log(`Liquidation Threshold for ${selectedAsset}:`, reserveliquidationThreshold);
+  
+    // Calculate the health factor using correct values
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold
+      liquidationThreshold,
+      reserveliquidationThreshold
     );
-
+  
+    // Calculate adjusted collateral and debt values
     const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
     const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
-
+  
     let totalCollateralValue =
-      parseFloat(totalCollateral) -
-      parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8));
+      totalCollateral - amountTaken * (assetRates[selectedAsset] / 1e8);
+  
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
-
-    let totalDeptValue =
-      parseFloat(totalDebt) -
-      parseFloat(amountAdded * (assetRates[selectedDebtAsset] / 1e8));
-    if (totalDeptValue < 0) {
-      totalDeptValue = 0;
+  
+    let totalDebtValue =
+      totalDebt - amountAdded * (assetRates[selectedDebtAsset] / 1e8);
+  
+    if (totalDebtValue < 0) {
+      totalDebtValue = 0;
     }
-
+  
+    // Calculate liquidation values
+    let avliq = liquidationThreshold * totalCollateral;
+    console.log("avliq", avliq);
+  
+    let tempLiq =
+      (avliq + amountTaken * reserveliquidationThreshold) / totalCollateralValue;
+  
+    console.log("tempLiq", tempLiq);
+  
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDebtValue;
+    result = Math.round(result * 1e8) / 1e8;
+  
+    console.log("result", result);
+  
+    // Update state with new values
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
+  
+    // No return statement here; state updates should happen instead
   }, [
     mappedItem.collateral,
     mappedItem.debt,
     calculatedData?.maxCollateral,
     calculatedData?.maxDebtToLiq,
     liquidateTrigger,
+    filteredItems,  // Ensure filteredItems is tracked
+    selectedAsset,  // Track selectedAsset changes
+    assetRates      // Ensure assetRates is updated
   ]);
+  
 
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
-    liquidationThreshold
+    liquidationThreshold,
+    reserveliquidationThreshold
   ) => {
     const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
     const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
@@ -232,10 +286,21 @@ const UserInformationPopup = ({
       return Infinity;
     }
 
-    const healthFactorValue =
-      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
+    // const healthFactorValue =
+    //   (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
 
-    return healthFactorValue;
+    // return healthFactorValue;
+    let avliq = liquidationThreshold * totalCollateral;
+    console.log("avliq", avliq);
+    let tempLiq =
+      (avliq + amountTaken * reserveliquidationThreshold) /
+      totalCollateralValue;
+    //withdraw me minus hoga repay aur borrow same toggle add horaha to plus varna minus
+    console.log("tempLiq", tempLiq);
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+    result = Math.round(result * 1e8) / 1e8;
+    console.log("result", result);
+    return result;
   };
 
   function roundToDecimal(value, decimalPlaces) {
@@ -257,6 +322,7 @@ const UserInformationPopup = ({
   const defaultAsset = "cketh";
   const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
     const reserve = reserveData?.[assetName];
+    
     const currentLiquidity = reserve?.Ok?.liquidity_index;
     const assetBalance =
       getBalanceForPrincipalAndAsset(

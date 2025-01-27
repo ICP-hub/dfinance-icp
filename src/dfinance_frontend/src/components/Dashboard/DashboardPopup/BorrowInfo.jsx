@@ -10,6 +10,8 @@ const BorrowInfo = ({
   totalBorrowed,
   borrowRateAPR,
 }) => {
+
+  
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
   const totalBorrowPercentage =
     borrowCapNumber && totalBorrowed ? totalBorrowed / borrowCapNumber : 0;

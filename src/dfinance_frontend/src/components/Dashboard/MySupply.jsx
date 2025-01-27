@@ -4128,6 +4128,8 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                               availableBorrow || 0
                             );
 
+                            const remainingBorrowable = (total_supply - total_borrow) * 85 / 100;
+
                             // Condition to hide assets with availableBorrow == 0
                             const isBorrowAvailable = availableBorrowNumber > 0.01;
 
@@ -4159,9 +4161,9 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                                 100000000;
 
                               const isEligibleA =
-                                total_supply_A > total_borrow_A;
+                                ((total_supply_A - total_borrow_A) * 0.85) > 0;
                               const isEligibleB =
-                                total_supply_B > total_borrow_B;
+                                ((total_supply_B - total_borrow_B) * 0.85) > 0;
 
                               if (isEligibleA && !isEligibleB) return -1;
                               if (!isEligibleA && isEligibleB) return 1;
@@ -4184,7 +4186,7 @@ console.log("updatedAvailableBorrow",updatedAvailableBorrow)
                               availableBorrow || 0
                             );
 
-                            const isEligible = total_supply > total_borrow;
+                            const isEligible = ((total_supply - total_borrow) * 0.85) > 0
 
                             // Apply opacity if available borrow is 0
                             const itemClass =

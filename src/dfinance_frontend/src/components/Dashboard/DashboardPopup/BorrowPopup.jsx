@@ -174,12 +174,16 @@ const Borrow = ({
   
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
-      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
+      const remainingBorrowable = (totalSupply - totalBorrow) * 85 / 100;
+      const borrowValue = remainingBorrowable > 0 
+        ? Number(userAccountData.Ok[5]) / 100000000 
+        : 0;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
     }
   }, [userAccountData, userData, dashboardRefreshTrigger]);
+  
   
   
   

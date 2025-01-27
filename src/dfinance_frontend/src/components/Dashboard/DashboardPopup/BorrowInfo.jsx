@@ -9,7 +9,10 @@ const BorrowInfo = ({
   borrowCap,
   totalBorrowed,
   borrowRateAPR,
+  reserveFactor
 }) => {
+
+  
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
   const totalBorrowPercentage =
     borrowCapNumber && totalBorrowed ? totalBorrowed / borrowCapNumber : 0;
@@ -164,7 +167,7 @@ const BorrowInfo = ({
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-            <p>60%</p>
+            <p>{reserveFactor}%</p>
           </div>
         </div>
       </div>

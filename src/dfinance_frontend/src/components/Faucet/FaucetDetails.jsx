@@ -231,10 +231,10 @@ const FaucetDetails = () => {
           </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
-            <div className="mb-7 -ml-3 -mt-5">
+            <div className="mb-3 -ml-3 -mt-5">
               <Lottie /> 
             </div>
-            <p className="text-[#8490ff] text-sm font-medium dark:text-[#c2c2c2]">
+            <p className="text-[#8490ff] text-sm dark:text-[#c2c2c2] opacity-90">
               NO ASSETS FOUND!
             </p>
           </div>

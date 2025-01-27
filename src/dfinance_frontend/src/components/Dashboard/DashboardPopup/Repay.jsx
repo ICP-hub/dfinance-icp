@@ -51,7 +51,7 @@ const Repay = ({
   const [maxUsdValue, setMaxUsdValue] = useState(0);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -259,6 +259,7 @@ const Repay = ({
       "Unable to find reserve data. Ensure the asset is valid.",
     ErrorMintDebtTokens:
       "Failed to process the transaction. Please contact support.",
+      
     default: "An unexpected error occurred. Please try again later.",
   };
 
@@ -324,23 +325,49 @@ const Repay = ({
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
-        const userFriendlyMessage =
-          errorMessages[errorMsg] || errorMessages.default;
-        console.log(userFriendlyMessage);
-        toast.error(`Repay failed: ${userFriendlyMessage}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
+        if (errorMsg?.AmountSubtractionError === null) {
+          toast.error("Repay failed: You cannot repay more than you owe.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }  else {
+          const isPanicError = JSON.stringify(errorMsg).toLowerCase().includes("panic");
+  
+          if (isPanicError) {
+            setShowPanicPopup(true);
+          } else {
+            const userFriendlyMessage =
+              errorMessages[errorMsg] || errorMessages.default || "Repay action failed!";
+            toast.error(`Repay failed: ${userFriendlyMessage}`, {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          }
+        }
       }
     } catch (error) {
-      console.error(error.message);
-      toast.error(`Error: ${error.message || "Repay action failed!"}`, {
+      console.error("Caught error:", error.message);
+      let message = error.message || "Repay action failed!";
+  
+      if (message.toLowerCase().includes("panic")) {
+        setShowPanicPopup(true);
+      } else if (message.includes("Panicked at 'Cannot subtract b from a because b is larger than a.")) {
+        message = "You cannot repay more than you owe.";
+      }
+  
+      toast.error(`Error: ${message}`, {
         className: "custom-toast",
         position: "top-center",
         autoClose: 3000,
@@ -351,8 +378,43 @@ const Repay = ({
         progress: undefined,
       });
     }
+     
   };
+//   const handlePanicCall = async () => {
+//     try {
+      
+//       const result = await backendActor.will_panic();
+// console.log("result", result);
+//       // If the function somehow returns a value without panicking
+//       toast.success(`Backend response: ${result}`, {
+//         className: "custom-toast",
+//         position: "top-center",
+//         autoClose: 3000,
+//         hideProgressBar: false,
+//         closeOnClick: true,
+//         pauseOnHover: true,
+//         draggable: true,
+//       });
+//     } catch (error) {
+//       console.error("Caught panic error:", error);
 
+//       // Check if error message contains panic indication
+//       if (error.message && error.message.toLowerCase().includes("panic")) {
+//         setShowPanicPopup(true);
+//         setIsVisible(false);
+//       } else {
+//         toast.error(`Error: ${error.message || "Unexpected error occurred"}`, {
+//           className: "custom-toast",
+//           position: "top-center",
+//           autoClose: 3000,
+//           hideProgressBar: false,
+//           closeOnClick: true,
+//           pauseOnHover: true,
+//           draggable: true,
+//         });
+//       }
+//     }
+//   };
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -362,6 +424,7 @@ const Repay = ({
     try {
       if (isApproved) {
         await handleRepayETH();
+        // await handlePanicCall();
       } else {
         await handleApprove();
       }
@@ -745,6 +808,44 @@ const Repay = ({
             >
               Close Now
             </button>
+          </div>
+        </div>
+      )}
+       {showPanicPopup && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center p-2 ">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
+
+            <div
+              className="dark:bg-gradient 
+                dark:from-darkGradientStart 
+                dark:to-darkGradientEnd 
+                dark:text-darkText  "
+            >
+
+              <h1 className="font-semibold text-xl mb-4 text-orange-600 ">Important Message</h1>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Thanks for helping us improve DFinance! <br></br> You’ve
+                uncovered a bug, and our dev team is on it.
+              </p>
+
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Your account is temporarily locked while we investigate and fix
+                the issue. <br />
+              </p>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                We appreciate your contribution and have logged your ID—testers
+                like you are key to making DFinance better! <br />
+                If you have any questions, feel free to reach out.
+              </p>
+            </div>
+
+           
           </div>
         </div>
       )}

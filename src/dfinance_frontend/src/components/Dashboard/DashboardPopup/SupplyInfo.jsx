@@ -4,22 +4,34 @@ import { X } from "lucide-react";
 import CircularProgress from "../../Common/CircularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const SupplyInfo = ({
   formatNumber,
   supplyCap,
   totalSupplied,
+  totalBorrowed,  // Assuming you are also tracking total borrowed
   supplyRateAPR,
   ltv,
   canBeCollateral,
   liquidationBonus,
   liquidationThreshold,
 }) => {
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
+
+  const [supplied, setSupplied] = useState(totalSupplied);
+  const [borrowed, setBorrowed] = useState(totalBorrowed);
+
+  useEffect(() => {
+    setSupplied(totalSupplied);
+    setBorrowed(totalBorrowed);
+  }, [dashboardRefreshTrigger, totalSupplied, totalBorrowed]);
+
   const supplyCapNumber = supplyCap ? Number(supplyCap) : 0;
   const totalSupplyPercentage =
-    supplyCapNumber && totalSupplied
-      ? (totalSupplied / supplyCapNumber) * 100
-      : 0;
+    supplyCapNumber && supplied ? (supplied / supplyCapNumber) * 100 : 0;
 
   const { id } = useParams();
   const tooltipRef = useRef(null);
@@ -50,10 +62,9 @@ const SupplyInfo = ({
   };
 
   const assetRate = getAssetRate(id);
-  const totalSuppliedAsset =
-    assetRate && totalSupplied ? Number(totalSupplied) * assetRate : 0;
-  const totalSuppliedCap =
-    assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
+  const totalSuppliedAsset = assetRate && supplied ? Number(supplied) * assetRate : 0;
+  const totalSuppliedCap = assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
+
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
 
@@ -61,15 +72,8 @@ const SupplyInfo = ({
       return "0";
     }
 
-    if (numericValue === 0) {
-      return "0";
-    } else if (numericValue >= 1) {
-      return numericValue.toFixed(2);
-    } else {
-      return numericValue.toFixed(7);
-    }
+    return numericValue >= 1 ? numericValue.toFixed(2) : numericValue.toFixed(7);
   };
-
   const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
   const [
     isLiquidationThresholdTooltipVisible,
@@ -85,7 +89,7 @@ const SupplyInfo = ({
     setLiquidationThresholdTooltipVisible((prev) => !prev);
   const toggleLiquidationPenaltyTooltip = () =>
     setLiquidationPenaltyTooltipVisible((prev) => !prev);
-
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
@@ -101,6 +105,9 @@ const SupplyInfo = ({
     };
   }, []);
 
+  console.log("Total Supplied:", supplied);
+  console.log("Total Borrowed:", borrowed);
+  
   return (
     <div className="w-full lg:w-10/12 ">
       <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7 lg:gap-0 md:gap-3">

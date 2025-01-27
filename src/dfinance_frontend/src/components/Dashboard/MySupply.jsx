@@ -133,11 +133,13 @@ const MySupply = () => {
 
     // After checking all reserves, update the availableBorrow state
     setAvailableBorrow(updatedAvailableBorrow);
-
+    console.log("updatedAvailableBorrow", updatedAvailableBorrow);
     // If no asset supply > 0, set availableBorrow to 0
-    if (updatedAvailableBorrow === 0) {
+    if (!updatedAvailableBorrow || updatedAvailableBorrow < 0.01) {
       console.log("No asset supply > 0. Setting Available Borrow to 0.");
       setAvailableBorrow(0);
+    } else {
+      setAvailableBorrow(updatedAvailableBorrow);
     }
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
 
@@ -726,8 +728,8 @@ const MySupply = () => {
       <div className="w-[55px] md:w-[65px]">
         <Lottie />
       </div>
-      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
-        NOTHING BORROWED YET !
+      <p className="text-[#8490ff] text-[11px] dark:text-[#c2c2c2] -mt-2 ml-3">
+        NOTHING BORROWED YET!
       </p>
     </div>
   );
@@ -736,8 +738,8 @@ const MySupply = () => {
       <div className="w-[55px] md:w-[65px]">
         <Lottie />
       </div>
-      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
-        NOTHING SUPPLIED YET !
+      <p className="text-[#8490ff] text-[11px] dark:text-[#c2c2c2] -mt-2 ml-3">
+        NOTHING SUPPLIED YET!
       </p>
     </div>
   );
@@ -746,8 +748,8 @@ const MySupply = () => {
       <div className="w-[55px] md:w-[65px]">
         <Lottie />
       </div>
-      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
-        NO ASSETS TO SUPPLY !
+      <p className="text-[#8490ff] text-[11px] dark:text-[#c2c2c2] -mt-2 ml-3">
+        NO ASSETS TO SUPPLY!
       </p>
     </div>
   );
@@ -756,8 +758,8 @@ const MySupply = () => {
       <div className="w-[55px] md:w-[65px]">
         <Lottie />
       </div>
-      <p className="text-[#8490ff] text-[11px] font-semibold dark:text-[#c2c2c2] -mt-2 ml-3">
-        NO ASSETS TO BORROW !
+      <p className="text-[#8490ff] text-[11px] dark:text-[#c2c2c2] -mt-2 ml-3">
+        NO ASSETS TO BORROW!
       </p>
     </div>
   );
@@ -2927,7 +2929,9 @@ const MySupply = () => {
                         </span>{" "}
                         {(() => {
                           const ratio =
-                            (totalUsdValueBorrow / availableBorrow) * 100;
+                            (totalUsdValueBorrow /
+                              (availableBorrow + totalUsdValueBorrow)) *
+                            100;
                           if (isNaN(ratio) || !isFinite(ratio)) {
                             return 0;
                           } else if (ratio < 1) {
@@ -2951,7 +2955,7 @@ const MySupply = () => {
                           {isBorrowPowerTooltipVis && (
                             <div
                               ref={tooltipRef}
-                              className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
+                              className="absolute w-[300px] bottom-full transform -translate-x-[39%] mb-4 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                             >
                               <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
                                 The % of your total borrowing power used. This
@@ -2994,7 +2998,11 @@ const MySupply = () => {
                   Borrow power used
                 </span>{" "}
                 {(() => {
-                  const ratio = (totalUsdValueBorrow / availableBorrow) * 100;
+                  console.log("availableBorrowinAssetBorrow", availableBorrow);
+                  const ratio =
+                    (totalUsdValueBorrow /
+                      (availableBorrow + totalUsdValueBorrow)) *
+                    100;
                   if (isNaN(ratio) || !isFinite(ratio)) {
                     return 0;
                   } else if (ratio < 1) {
@@ -3441,9 +3449,8 @@ const MySupply = () => {
                                               }
                                             }
                                             if (
-                                              borrowableValue ===
-                                                "0.00000000" ||
-                                              borrowableValue === "0.0000"
+                                             borrowableValue <= "0.00000000" ||
+                                          borrowableValue <= "0.0000"
                                             ) {
                                               // Show toast notification
                                               toast.info(
@@ -3933,8 +3940,8 @@ const MySupply = () => {
                                           }
                                         }
                                         if (
-                                          borrowableValue === "0.00000000" ||
-                                          borrowableValue === "0.0000"
+                                           borrowableValue <= "0.00000000" ||
+                                          borrowableValue <= "0.0000"
                                         ) {
                                           // Show toast notification
                                           toast.info(
@@ -4032,7 +4039,7 @@ const MySupply = () => {
 
           <div
             id="dashboard-assets-to-borrow"
-            className={`w-full mt-6 scrollbar-none lgx:overflow-none hide-scrollbar ${
+            className={`w-full mt-6  lgx:overflow-none  ${
               isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
             } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
@@ -4043,7 +4050,7 @@ const MySupply = () => {
                 </h1>
               </div>
               <button
-                className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-auto md:ml-0 button1"
+                className="flex items-center text-sm text-[#2A1F9D] font-semibold dark:text-darkTextSecondary cursor-pointer ml-4 button1"
                 onClick={toggleBorrowVisibility}
               >
                 {isBorrowVisible ? "Hide" : "Show"}
@@ -4105,7 +4112,7 @@ const MySupply = () => {
                   ) : filteredItems.length === 0 ? (
                     noAssetsToBorrowMessage
                   ) : (
-                    <div className="relative mt-4 max-h-[1250px] overflow-y-auto scrollbar-none">
+                    <div className="relative mt-4 max-h-[1250px] scrollbar-none">
                       {}
                       <div className="w-full">
                         {filteredItems
@@ -4124,7 +4131,8 @@ const MySupply = () => {
                             );
 
                             // Condition to hide assets with availableBorrow == 0
-                            const isBorrowAvailable = availableBorrowNumber > 0;
+                            const isBorrowAvailable =
+                              availableBorrowNumber > 0.01;
 
                             // Only filter assets that should be shown based on showAllAssets and borrow availability
                             if (!showAllAssets) {
@@ -4237,48 +4245,41 @@ const MySupply = () => {
                                     {item[0]}
                                   </span>
                                 </div>
-                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 mt-6 relative ">
-                                  <p className="text-[#233D63] dark:text-darkText flex ">
-                                    <span className="dark:opacity-50">
-                                      Available:
-                                    </span>
-                                    <span className="relative cursor-pointer">
-                                      <span className="group inline-flex ml-1">
-                                        <Info
-                                          size={14}
-                                          className="dark:opacity-50"
-                                        />
-                                        <div className="absolute left-[120px] transform -translate-x-1/2 -mb-[160px] bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-[11px] font-base w-[15rem] pointer-events-none ">
-                                          <div className="flex flex-col">
-                                            <p>
-                                              This is the total amount you can
-                                              borrow, determined by your
-                                              collateral and limited by the
-                                              borrow cap.
-                                            </p>
-                                            <hr className="my-1" />
-                                            <p>
-                                              Upon clickcing on max some amount
-                                              might left becasue of the
-                                              following reasons:
-                                              <ol>
-                                                <li>
-                                                  1. Borrow cap exceeded because
-                                                  someone else supplied in the
-                                                  meanwhile
-                                                </li>
-                                                <li>
-                                                  2. Price difference while
-                                                  borowing
-                                                </li>
-                                              </ol>
-                                            </p>
-                                          </div>
-                                        </div>
+                                <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-4  ">
+                                  <div className="flex relative group">
+                                    <p className="text-[#233D63] dark:text-darkText flex ">
+                                      <span className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                        Available:
                                       </span>
-                                    </span>
-                                  </p>
-
+                                      <span className="relative cursor-pointer">
+                                        <span className="group inline-flex ml-1">
+                                          <Info
+                                            size={14}
+                                            className="text-[#233D63] dark:text-darkText dark:opacity-50"
+                                          />
+                                          <div className="absolute left-[95px] transform -translate-x-1/2 mb-2 bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs  w-[15rem] pointer-events-none ">
+                                            <div className="flex flex-col">
+                                              <p>
+                                                This is the total amount you can
+                                                borrow, determined by your
+                                                collateral and limited by the
+                                                borrow cap.
+                                              </p>
+                                              <hr className="my-1" />
+                                              <p className="mt-2">
+                                                Clicking "Max" may leave a small
+                                                balance due to:
+                                              </p>
+                                              <ul>
+                                                <li>1. Borrow cap limit.</li>
+                                                <li>2. Price fluctuations.</li>
+                                              </ul>
+                                            </div>
+                                          </div>
+                                        </span>
+                                      </span>
+                                    </p>
+                                  </div>
                                   <p
                                     className={`text-right text-[#2A1F9D] dark:text-darkText `}
                                   >
@@ -4287,16 +4288,18 @@ const MySupply = () => {
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckBTCUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4310,16 +4313,18 @@ const MySupply = () => {
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckBTCUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckBTCUsdRate / 1e8)
@@ -4337,16 +4342,18 @@ const MySupply = () => {
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckETHUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4360,16 +4367,18 @@ const MySupply = () => {
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckETHUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckETHUsdRate / 1e8)
@@ -4387,16 +4396,18 @@ const MySupply = () => {
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckUSDCUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4410,16 +4421,18 @@ const MySupply = () => {
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckUSDCUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckUSDCUsdRate / 1e8)
@@ -4437,16 +4450,18 @@ const MySupply = () => {
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckICPUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4460,16 +4475,18 @@ const MySupply = () => {
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckICPUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckICPUsdRate / 1e8)
@@ -4487,16 +4504,18 @@ const MySupply = () => {
                                         <p>
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckUSDTUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   )
                                                 )
@@ -4510,16 +4529,18 @@ const MySupply = () => {
                                           $
                                           {Number(availableBorrow)
                                             ? Math.max(
-                                                Number(total_supply) -
-                                                  Number(total_borrow),
+                                                (Number(total_supply) -
+                                                  Number(total_borrow)) *
+                                                  0.85,
                                                 0
                                               ) <
                                               Number(availableBorrow) /
                                                 (ckUSDTUsdRate / 1e8)
                                               ? formatConditional(
                                                   Math.max(
-                                                    Number(total_supply) -
-                                                      Number(total_borrow),
+                                                    (Number(total_supply) -
+                                                      Number(total_borrow)) *
+                                                      0.85,
                                                     0
                                                   ) *
                                                     (ckUSDTUsdRate / 1e8)
@@ -4757,31 +4778,25 @@ const MySupply = () => {
                                         <span className="relative cursor-pointer">
                                           <span className="group inline-flex">
                                             <Info size={14} />
-                                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none font-normal">
+                                            <div className="absolute left-1/2 transform -translate-x-1/2 mb-2 bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs   w-[25vw] pointer-events-none ">
                                               <div className="flex flex-col">
-                                                <p>
+                                                <p className="mb-1">
                                                   This is the total amount you
                                                   can borrow, determined by your
                                                   collateral and limited by the
                                                   borrow cap.
                                                 </p>
-                                                <hr className="my-2 text-gray-600" />
-                                                <p>
-                                                  Upon clickcing on max some
-                                                  amount might left becasue of
-                                                  the following reasons:
-                                                  <ol className="text-[11px] mt-1 ">
-                                                    <li>
-                                                      1. Borrow cap exceeded
-                                                      because someone else
-                                                      supplied in the meanwhile
-                                                    </li>
-                                                    <li>
-                                                      2. Price difference while
-                                                      borowing
-                                                    </li>
-                                                  </ol>
+                                                <hr className="my-1 mt-1" />
+                                                <p className="mt-2">
+                                                  Clicking "Max" may leave a
+                                                  small balance due to:
                                                 </p>
+                                                <ul>
+                                                  <li>1. Borrow cap limit.</li>
+                                                  <li>
+                                                    2. Price fluctuations.
+                                                  </li>
+                                                </ul>
                                               </div>
                                             </div>
                                           </span>
@@ -4960,13 +4975,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckBTCUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -4980,13 +4997,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckBTCUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckBTCUsdRate / 1e8)
                                                 )
                                               : formatConditional(
@@ -5004,13 +5023,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckETHUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -5024,13 +5045,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckETHUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckETHUsdRate / 1e8)
                                                 )
                                               : formatConditional(
@@ -5048,13 +5071,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckUSDCUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -5068,13 +5093,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckUSDCUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckUSDCUsdRate / 1e8)
                                                 )
                                               : formatConditional(
@@ -5092,13 +5119,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckICPUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -5112,13 +5141,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckICPUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckICPUsdRate / 1e8)
                                                 )
                                               : formatConditional(
@@ -5136,13 +5167,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.00000000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckUSDTUsdRate / 1e8)
                                               ? formatConditional(
-                                                  Number(total_supply) -
-                                                    Number(total_borrow)
+                                                  (Number(total_supply) -
+                                                    Number(total_borrow)) *
+                                                    0.85
                                                 )
                                               : formatConditional(
                                                   Number(availableBorrow) /
@@ -5156,13 +5189,15 @@ const MySupply = () => {
                                           Number(total_borrow)
                                             ? "0.0000"
                                             : Number(availableBorrow)
-                                            ? Number(total_supply) -
-                                                Number(total_borrow) <
+                                            ? (Number(total_supply) -
+                                                Number(total_borrow)) *
+                                                0.85 <
                                               Number(availableBorrow) /
                                                 (ckUSDTUsdRate / 1e8)
                                               ? formatConditional(
                                                   (Number(total_supply) -
                                                     Number(total_borrow)) *
+                                                    0.85 *
                                                     (ckUSDTUsdRate / 1e8)
                                                 )
                                               : formatConditional(

@@ -1,6 +1,7 @@
 use super::update::user_data;
 use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::get_all_users;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
@@ -236,14 +237,14 @@ pub async fn calculate_user_account_data(
             ic_cdk::println!("Total debt for borrowed reserves {}", total_debt.clone());
         }
     }
-    if available_borrow < total_debt.clone() {
+    if available_borrow < total_debt.clone() || available_borrow < Nat::from(MIN_BORROW) {
         available_borrow = Nat::from(0u128);
     } else {
         available_borrow -= total_debt.clone();
     }
 
     ic_cdk::println!(
-        "avaible borrow after subtracting debt = {}",
+        "available borrow after subtracting debt = {}",
         available_borrow.clone()
     );
     avg_ltv = if total_collateral != Nat::from(0u128) {

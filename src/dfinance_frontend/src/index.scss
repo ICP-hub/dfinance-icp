@@ -127,6 +127,7 @@ body {
 .no-scroll {
   overflow: hidden;
 }
+/* Bouncing Loader */
 .bouncing-loader {
   position: absolute;
   display: flex;
@@ -137,6 +138,71 @@ body {
   z-index: 1000;
 }
 
+.bouncing-loader > .loader-element {
+  width: 20px;
+  height: 20px;
+  margin: 1px 3px;
+  margin-bottom: 35px;
+  animation: bouncing-loader 0.6s infinite alternate;
+}
+
+.bouncing-loader > div:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bouncing-loader > div:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.bouncing-loader > div:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+/* Bouncing Mini Loader */
+.bouncing-miniloader {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  z-index: 8; /* Reduced z-index */
+}
+
+.bouncing-miniloader > .loader-element {
+  width: 20px;
+  height: 20px;
+  margin: 1px 3px;
+  margin-bottom: 35px;
+  animation: bouncing-miniloader 0.6s infinite alternate;
+}
+
+.bouncing-miniloader > div:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bouncing-miniloader > div:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.bouncing-miniloader > div:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+/* Shared Keyframes */
+@keyframes bouncing-loader {
+  to {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bouncing-miniloader {
+  to {
+    transform: translateY(-10px);
+  }
+}
+
+/* Bouncing Div */
 .bouncing-div {
   position: absolute;
   display: flex;
@@ -145,14 +211,7 @@ body {
   place-items: center;
   width: 100%;
   height: 100%;
-}
-
-.bouncing-loader > .loader-element {
-  width: 20px;
-  height: 20px;
-  margin: 1px 3px;
-  margin-bottom: 35px;
-  animation: bouncing-loader 0.6s infinite alternate;
+  z-index: 1000;
 }
 
 .bouncing-div div {
@@ -163,29 +222,6 @@ body {
   animation: bouncing-div 0.7s infinite alternate;
 }
 
-@keyframes bouncing-loader {
-  to {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes bouncing-div {
-  to {
-    transform: translateY(-6px);
-  }
-}
-
-.bouncing-loader > div:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.bouncing-loader > div:nth-child(3) {
-  animation-delay: 0.4s;
-}
-.bouncing-loader > div:nth-child(4) {
-  animation-delay: 0.6s;
-}
-
 .bouncing-div > div:nth-child(2) {
   animation-delay: 0.1s;
 }
@@ -194,6 +230,48 @@ body {
   animation-delay: 0.3s;
 }
 
+/* Mini Bouncing Div */
+.bouncing-mini-div {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  z-index: 80; /* Reduced z-index */
+}
+
+.bouncing-mini-div div {
+  width: 4px;
+  height: 4px;
+  margin: 3px 1px;
+  border-radius: 50%;
+  animation: bouncing-mini-div 0.7s infinite alternate;
+}
+
+.bouncing-mini-div > div:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.bouncing-mini-div > div:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Shared Keyframes */
+@keyframes bouncing-div {
+  to {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes bouncing-mini-div {
+  to {
+    transform: translateY(-6px);
+  }
+}
+
+/* Fade In Animation */
 @keyframes fadeInLeft {
   0% {
     opacity: 0;
@@ -210,9 +288,6 @@ body {
   animation: fadeInLeft 0.5s ease forwards;
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
 
 .hide-scrollbar {
   -ms-overflow-style: none;
@@ -484,4 +559,12 @@ button:active {
   100% {
     transform: rotate(360deg);
   }
+}
+
+
+
+.hide-scrollbar::-webkit-scrollbar {
+
+  display: none;
+
 }

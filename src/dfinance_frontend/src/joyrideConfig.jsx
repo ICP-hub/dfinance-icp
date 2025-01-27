@@ -169,8 +169,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.supplySupply
-              : lightImages.supplySupplyLight
+              ? darkImages.supplyDark
+              : lightImages.supplyLight
           }
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -202,8 +202,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.assetsToBorrowPopup
-              : lightImages.assetsToBorrowPopupLight
+              ? darkImages.borrowDark
+              : lightImages.borrowLight
           }
           alt="assetsToBorrowPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -237,8 +237,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.repayRepay
-              : lightImages.yourBorrowRepayLight
+              ? darkImages.repayDark
+              : lightImages.repayLight
           }
           alt="yourBorrowRepayPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -271,8 +271,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <img
           src={
             theme === "dark"
-              ? darkImages.yourSuppliesWithdrawPopup
-              : lightImages.yourSuppliesWithdrawPopupLight
+              ? darkImages.withdrawDark
+              : lightImages.withdrawLight
           }
           alt="yourSuppliesWithdrawPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -360,8 +360,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
             <img
               src={
                 theme === "dark"
-                  ? darkImages.dashboardNavDetails
-                  : lightImages.dashboardNavDetailsLight
+                  ? darkImages.dashboardNavDark
+                  : lightImages.dashboardNavLight
               }
               alt="dashboarNavDetails"
               className="rounded-lg mb-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -374,7 +374,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
             <img
               src={
                 theme === "dark"
-                  ? darkImages.riskDetails
+                  ? darkImages.riskDetailsDark
                   : lightImages.riskDetailsLight
               }
               alt="Faucet Button"
@@ -444,8 +444,8 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           <img
             src={
               theme === "dark"
-                ? darkImages.marketPageDetails
-                : lightImages.marketPageDetailsLight
+                ? darkImages.dashboardNavMarketDark
+                : lightImages.dashboardNavMarketLight
             }
             alt="marketeNavbarDetails"
             className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -523,11 +523,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
         <p className="mb-4 text-[12px]">
-          In the "Liquidation" section, click on the "Get Debt Status Button" to
+          In the "Liquidation" section, click on the "Get Debt Status" button to
           see the liquidation List (if available).
         </p>
         <img
-          src={theme === "dark" ? debtStatusImage : debtStatusImageLight}
+          src={theme === "dark" ? darkImages.liquidationGetDebtStatusDark : lightImages.liquidationGetDebtStatusLight}
           alt="Faucet Button"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -541,7 +541,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
         <p className="mb-4 text-[12px]">
-          Here it will show the list of users with a health factor less than 1
+          Here it will show the list of users with a health factor less than 1.
         </p>
         <img
           src={
@@ -620,7 +620,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
       <div className="relative flex flex-col text-justify">
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
         <p className="mb-4 text-[12px]">
-          "Click on 'Call Liquidation' to proceed with the call."
+          Click on 'Call Liquidation' to proceed with the call.
         </p>
         <img
           src={
@@ -642,7 +642,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <h1 className="text-[22px] font-bold mb-2">Liquidation</h1>
         <p className="mb-4 text-[12px]">
           A warning popup will appear—click 'YES, Call Liquidation' to proceed,
-          then click 'Call Liquidation' to complete the process."
+          then click 'Call Liquidation' to complete the process.
         </p>
         <img
           src={

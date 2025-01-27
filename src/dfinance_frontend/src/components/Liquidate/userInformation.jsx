@@ -148,7 +148,7 @@ const UserInformationPopup = ({
     }
     return;
   };
-
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -159,50 +159,104 @@ const UserInformationPopup = ({
     ICP: ckICPUsdRate,
     ckUSDT: ckUSDTUsdRate,
   };
+ 
   useEffect(() => {
-    const totalCollateral = Number(mappedItem.collateral) / 1e8;
-    const totalDebt = Number(mappedItem.debt) / 1e8;
-    const liquidationThreshold = Number(mappedItem.liquidationThreshold) / 1e8;
-
+    // Convert values safely
+    const totalCollateral = Number(mappedItem.collateral) / 1e8 || 0;
+    const totalDebt = Number(mappedItem.debt) / 1e8 || 0;
+    const liquidationThreshold = Number(mappedItem.liquidationThreshold) / 1e8 || 0;
+  
+    // Extract liquidation thresholds for each asset
+    const assetLiquidationThresholds =
+      Array.isArray(mappedItem.userData?.reserves?.[0])
+        ? mappedItem.userData?.reserves?.[0].map((mappedItem) => {
+            const assetName = mappedItem?.[0];
+  
+            // Find corresponding asset in filteredItems
+            const item1 = filteredItems.find((item) => item[0] === assetName);
+  
+            // Extract and convert the liquidation threshold
+            const liquidationThreshold =
+              Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) / 1e8 || 0;
+  
+            console.log(`Asset: ${assetName}, Liquidation Threshold: ${liquidationThreshold}`);
+            return { assetName, liquidationThreshold };
+          })
+        : [];
+  
+    console.log("Asset Liquidation Thresholds:", assetLiquidationThresholds);
+  
+    // Get liquidation threshold for selected asset
+    const reserveliquidationThreshold =
+      assetLiquidationThresholds.find((item) => item.assetName === selectedAsset)
+        ?.liquidationThreshold || 0;
+  
+    console.log(`Liquidation Threshold for ${selectedAsset}:`, reserveliquidationThreshold);
+  
+    // Calculate the health factor using correct values
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold
+      liquidationThreshold,
+      reserveliquidationThreshold
     );
-
+  
+    // Calculate adjusted collateral and debt values
     const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
     const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
-
+  
     let totalCollateralValue =
-      parseFloat(totalCollateral) -
-      parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8));
+      totalCollateral - amountTaken * (assetRates[selectedAsset] / 1e8);
+  
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
-
-    let totalDeptValue =
-      parseFloat(totalDebt) -
-      parseFloat(amountAdded * (assetRates[selectedDebtAsset] / 1e8));
-    if (totalDeptValue < 0) {
-      totalDeptValue = 0;
+  
+    let totalDebtValue =
+      totalDebt - amountAdded * (assetRates[selectedDebtAsset] / 1e8);
+  
+    if (totalDebtValue < 0) {
+      totalDebtValue = 0;
     }
-
+  
+    // Calculate liquidation values
+    let avliq = liquidationThreshold * totalCollateral;
+    console.log("avliq", avliq);
+  
+    let tempLiq =
+      (avliq + amountTaken * reserveliquidationThreshold) / totalCollateralValue;
+  
+    console.log("tempLiq", tempLiq);
+  
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDebtValue;
+    result = Math.round(result * 1e8) / 1e8;
+  
+    console.log("result", result);
+  
+    // Update state with new values
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
+  
+    // No return statement here; state updates should happen instead
   }, [
     mappedItem.collateral,
     mappedItem.debt,
     calculatedData?.maxCollateral,
     calculatedData?.maxDebtToLiq,
     liquidateTrigger,
+    filteredItems,  // Ensure filteredItems is tracked
+    selectedAsset,  // Track selectedAsset changes
+    assetRates      // Ensure assetRates is updated
   ]);
+  
 
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
-    liquidationThreshold
+    liquidationThreshold,
+    reserveliquidationThreshold
   ) => {
     const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
     const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
@@ -232,10 +286,21 @@ const UserInformationPopup = ({
       return Infinity;
     }
 
-    const healthFactorValue =
-      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
+    // const healthFactorValue =
+    //   (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
 
-    return healthFactorValue;
+    // return healthFactorValue;
+    let avliq = liquidationThreshold * totalCollateral;
+    console.log("avliq", avliq);
+    let tempLiq =
+      (avliq + amountTaken * reserveliquidationThreshold) /
+      totalCollateralValue;
+    //withdraw me minus hoga repay aur borrow same toggle add horaha to plus varna minus
+    console.log("tempLiq", tempLiq);
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+    result = Math.round(result * 1e8) / 1e8;
+    console.log("result", result);
+    return result;
   };
 
   function roundToDecimal(value, decimalPlaces) {
@@ -257,6 +322,7 @@ const UserInformationPopup = ({
   const defaultAsset = "cketh";
   const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
     const reserve = reserveData?.[assetName];
+    
     const currentLiquidity = reserve?.Ok?.liquidity_index;
     const assetBalance =
       getBalanceForPrincipalAndAsset(
@@ -548,6 +614,24 @@ const UserInformationPopup = ({
     setIsLoading(true);
     try {
       const supplyAmount = Number(Math.round(amountToRepay * 100000000));
+      const maxCollateralValue = calculatedData?.maxCollateral
+        ? calculatedData.maxCollateral / 1e8
+        : 0;
+
+      // Truncate maxCollateralValue to 7 decimal places
+      const truncatedMaxCollateral =
+        truncateToSevenDecimals(maxCollateralValue);
+
+      // Determine the reward amount conditionally
+      let rewardAmount = truncatedMaxCollateral;
+
+      if (rewardAmount === maxCollateralValue) {
+        rewardAmount = truncateToSevenDecimals(rewardAmount);
+      } else {
+        rewardAmount = truncatedMaxCollateral;
+      }
+
+      console.log("rewardAmount", rewardAmount);
       //  const supplyAmount = Number(Math.round(amountToRepay * 100000000);
       if (!backendActor) {
         throw new Error("Backend actor is not initialized");
@@ -557,31 +641,30 @@ const UserInformationPopup = ({
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
         amount: supplyAmount,
-        on_behalf_of:  mappedItem?.principal?._arr
+        on_behalf_of: mappedItem?.principal?._arr,
+        reward: Number(Math.round(rewardAmount * 100000000)),
       };
-      const result = await backendActor.execute_liquidation(
-        liquidationParams
-      );
+      const result = await backendActor.execute_liquidation(liquidationParams);
 
       if ("Ok" in result) {
         trackEvent(
           "Liq:" +
-          selectedDebtAsset +
-          "," +
-          selectedAsset +
-          "," +
-          Number(amountToRepay).toLocaleString() +
-          "," +
-          mappedItem.principal.toString(),
+            selectedDebtAsset +
+            "," +
+            selectedAsset +
+            "," +
+            Number(amountToRepay).toLocaleString() +
+            "," +
+            mappedItem.principal.toString(),
           "Assets",
           "Liq:" +
-          selectedDebtAsset +
-          "," +
-          selectedAsset +
-          "," +
-          Number(amountToRepay).toLocaleString() +
-          "," +
-          mappedItem.principal.toString()
+            selectedDebtAsset +
+            "," +
+            selectedAsset +
+            "," +
+            Number(amountToRepay).toLocaleString() +
+            "," +
+            mappedItem.principal.toString()
         );
         toast.success(`Liquidation successful!`, {
           className: "custom-toast",
@@ -644,16 +727,26 @@ const UserInformationPopup = ({
 
       setShowWarningPopup(false);
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      console.error("Caught error:", error.message);
+  
+      let message = error.message || "Liquidation action failed!";
+  
+      // Check if the error contains the word "panic"
+      if (message.toLowerCase().includes("panic")) {
+        setShowPanicPopup(true);
+      } else {
+        toast.error(`Error: ${message}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
+  
       setTransactionResult("failure");
     } finally {
       setIsLoading(false);
@@ -1140,7 +1233,44 @@ const UserInformationPopup = ({
               <X size={24} />
             </button>
           </div>
+          {showPanicPopup && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center p-2 ">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
 
+            <div
+              className="dark:bg-gradient 
+                dark:from-darkGradientStart 
+                dark:to-darkGradientEnd 
+                dark:text-darkText  "
+            >
+
+              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Thanks for helping us improve DFinance! <br></br> You’ve
+                uncovered a bug, and our dev team is on it.
+              </p>
+
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Your account is temporarily locked while we investigate and fix
+                the issue. <br />
+              </p>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                We appreciate your contribution and have logged your ID—testers
+                like you are key to making DFinance better! <br />
+                If you have any questions, feel free to reach out.
+              </p>
+            </div>
+
+           
+          </div>
+        </div>
+      )}
           {isDebtInfo ? (
             <div>
               <div className="mb-6">

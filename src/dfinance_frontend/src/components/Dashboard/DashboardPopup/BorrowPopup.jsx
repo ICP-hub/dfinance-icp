@@ -66,7 +66,7 @@ const Borrow = ({
   const [totalBorrow, setTotalBorrow] = useState(0);
   const [borrowableValue, setBorrowableValue] = useState("0.00000000");
   const [borrowableAssetValue, setBorrowableAssetValue] = useState("0.0000");
-
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
   // Function to fetch asset data
   const fetchAssetData = () => {
     const item = filteredItems.find((item) => item[0] === asset);
@@ -130,7 +130,7 @@ const Borrow = ({
         await fetchAssetData(); // Fetch data
         console.log("totalSupply totalBorrow", totalSupply, totalBorrow, totalSupply - totalBorrow);
   
-        const remainingBorrowable = totalSupply - totalBorrow;
+        const remainingBorrowable = (totalSupply - totalBorrow) * 0.85;
   
         const updatedValues = calculateBorrowableValues(asset, availableBorrow, remainingBorrowable);
         console.log("updatedValues", updatedValues);
@@ -174,12 +174,17 @@ const Borrow = ({
   
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
-      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
+      const remainingBorrowable = (totalSupply - totalBorrow) * 85 / 100;
+      console.log("remainingBorrowable in borrow", remainingBorrowable)
+      const borrowValue = remainingBorrowable > 0 
+        ? Number(userAccountData.Ok[5]) / 100000000 
+        : 0;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
     }
   }, [userAccountData, userData, dashboardRefreshTrigger]);
+  
   
   
   
@@ -293,10 +298,37 @@ const Borrow = ({
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorKey = borrowResult.Err;
-        const userFriendlyMessage =
-          borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
-        console.log("error", errorKey);
-        toast.error(userFriendlyMessage, {
+        const errorMessage = borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
+  
+        // Check for panic error and show a popup
+        if (errorMessage.toLowerCase().includes("panic")) {
+          setPanicMessage("A critical system error occurred. Please try again later.");
+          setShowPanicPopup(true);
+        } else {
+          toast.error(errorMessage, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+  
+        setIsPaymentDone(false);
+        setIsVisible(true);
+      }
+    }  catch (error) {
+      console.error(`Error: ${error.message || "Borrow action failed!"}`);
+  
+      // Handle panic error case
+      if (error.message && error.message.toLowerCase().includes("panic")) {
+        setPanicMessage("A critical system error occurred. Please try again later.");
+        setShowPanicPopup(true);
+      } else {
+        toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -306,20 +338,8 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
-        setIsPaymentDone(false);
-        setIsVisible(true);
       }
-    } catch (error) {
-      toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+  
       setIsPaymentDone(false);
       setIsVisible(true);
     } finally {
@@ -782,6 +802,44 @@ const Borrow = ({
             >
               Close Now
             </button>
+          </div>
+        </div>
+      )}
+       {showPanicPopup && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center p-2 ">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
+
+            <div
+              className="dark:bg-gradient 
+                dark:from-darkGradientStart 
+                dark:to-darkGradientEnd 
+                dark:text-darkText  "
+            >
+
+              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Thanks for helping us improve DFinance! <br></br> You’ve
+                uncovered a bug, and our dev team is on it.
+              </p>
+
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Your account is temporarily locked while we investigate and fix
+                the issue. <br />
+              </p>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                We appreciate your contribution and have logged your ID—testers
+                like you are key to making DFinance better! <br />
+                If you have any questions, feel free to reach out.
+              </p>
+            </div>
+
+           
           </div>
         </div>
       )}

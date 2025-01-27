@@ -642,7 +642,7 @@ const UserInformationPopup = ({
         collateral_asset: selectedAsset,
         amount: supplyAmount,
         on_behalf_of: mappedItem?.principal?._arr,
-        reward: Number(Math.round(rewardAmount * 100000000)),
+        reward_amount: Number(Math.round(rewardAmount * 100000000)),
       };
       const result = await backendActor.execute_liquidation(liquidationParams);
 
@@ -1151,7 +1151,7 @@ const UserInformationPopup = ({
           </h2>
           <p className="text-md text-[#989898] text-center dark:text-darkText mt-4 font-light">
             Are you sure you want to liquidate on behalf of "
-            <strong className="font-bold">{principal.toString()}</strong>"?{" "}
+            <strong className="font-bold">{mappedItem.principal?._arr.toString()}</strong>"?{" "}
             <strong className="font-bold text-red-500">
               {amountToRepay === calculatedData.maxDebtToLiq / 1e8
                 ? truncateToSevenDecimals(amountToRepay)

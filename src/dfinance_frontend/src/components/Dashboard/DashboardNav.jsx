@@ -214,9 +214,14 @@ const DashboardNav = () => {
           ...item,
           count:
             calculatedNetWorth && calculatedNetWorth < 0.01
-              ? "<0.01"
+              ? "0"
               : calculatedNetWorth
-              ? `$${formatNumber(calculatedNetWorth)}`
+              ? (
+                <>
+                  <span style={{ fontWeight: "lighter" }}>$</span>
+                  {formatNumber(calculatedNetWorth)}
+                </>
+              )
               : "-",
         };
       } else if (item.id === 2) {

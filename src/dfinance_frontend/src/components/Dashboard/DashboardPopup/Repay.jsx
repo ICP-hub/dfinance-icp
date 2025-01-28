@@ -39,6 +39,7 @@ const Repay = ({
     () => Principal.fromText(principal),
     [principal]
   );
+  console.log("assetBorrow", assetBorrow)
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -94,6 +95,11 @@ const Repay = ({
     }
 
     setAmount(formattedAmount);
+    if (inputAmount !== supplyBalance.toString()) {
+      setMaxClicked(false);
+    } else{
+      setMaxClicked(true)
+    }
     updateAmountAndUsdValue(inputAmount);
   };
 
@@ -520,8 +526,10 @@ const Repay = ({
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const [maxAmount, setMaxAmount] = useState("0");
+  const [maxClicked, setMaxClicked] = useState(false);
 
   const handleMaxClick = () => {
+
     const truncateToSevenDecimals = (value) => {
       const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
@@ -540,9 +548,9 @@ const Repay = ({
         ? Number(selectedBalance).toFixed(7)
         : truncateToSevenDecimals(selectedBalance)
       : "0";
-
     const maxAmount = displayBalance.toString();
     setMaxAmount(maxAmount);
+        setMaxClicked(true);
 
     // Update the amount and its USD value
     updateAmountAndUsdValue(maxAmount);
@@ -684,18 +692,14 @@ const Repay = ({
             </div>
 
             <div className="w-full mt-3">
-              {parseFloat(
-                assetBorrow - (amount?.replace(/,/g, "") || "")
-              ).toFixed(7) !== "0.0000000" &&
-                supplyBalance < parseFloat(maxAmount) && (
-                  <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
-                    <p className="text-yellow-800 text-[13px]">
-                      <span className="font-semibold">Warning: </span> Amount
-                      will remain even after max repaying since wallet balance
-                      is less.
-                    </p>
-                  </div>
-                )}
+            {maxClicked && supplyBalance < assetBorrow && (
+                <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
+                  <p className="text-yellow-800 text-[13px]">
+                    <span className="font-semibold">Warning: </span> Due to an
+                    insufficient wallet balance, some amount will still remain.
+                  </p>
+                </div>
+              )}
 
               {supplyBalance >= parseFloat(maxAmount) &&
                 parseFloat(

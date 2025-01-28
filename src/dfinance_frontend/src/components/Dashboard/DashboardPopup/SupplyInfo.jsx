@@ -158,7 +158,7 @@ const SupplyInfo = ({
       </div>
       <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
         <p className="mt-4 text-[#5B62FE] flex items-center gap-2 dark:text-darkText">
-          Collateral usage {canBeCollateral ? <Check /> : <X />}{" "}
+          Collateral usage: {canBeCollateral ? <Check /> : <X />}{" "}
           {canBeCollateral ? "Can be collateral" : "Cannot be collateral"}
         </p>
 

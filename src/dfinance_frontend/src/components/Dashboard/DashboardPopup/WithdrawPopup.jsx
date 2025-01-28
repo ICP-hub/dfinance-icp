@@ -648,7 +648,7 @@ const WithdrawPopup = ({
                 <p className="text-yellow-800 text-[13px] font-medium">
                   <span className="font-semibold">Warning: </span>
                   Due to interest rates, a small amount might still remain even
-                  after the maximum repayment.
+                  after the maximum withdraw.
                 </p>
               </div>
             )}

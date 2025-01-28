@@ -1321,14 +1321,14 @@ const AssetDetails = () => {
                 </div>
               </div>
 
-              {borrowableValue <= "0" && (
+              {/* {borrowableValue <= "0" && (
                 <div className="bg-[#59588D] mt-5 rounded-lg px-2 py-1">
                   <p className=" text-[10px] my-1">
                     Your wallet is empty. Please add assets to your wallet
                     before supplying.
                   </p>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>

@@ -3594,7 +3594,7 @@ const MySupply = () => {
                                 </span>
                               </span>
                             </div>
-                            <div className="p-3">Apy type</div>
+                            <div className="p-3">APY type</div>
                             <div className="p-3"></div>
                           </div>
                         )}

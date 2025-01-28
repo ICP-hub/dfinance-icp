@@ -217,7 +217,7 @@ const WithdrawPopup = ({
       const withdrawResult = await backendActor.execute_withdraw(
         withdrawParams
       );
-      // dispatch(toggleDashboardRefresh());
+      dispatch(toggleDashboardRefresh());
 
       if ("Ok" in withdrawResult) {
         trackEvent(
@@ -269,11 +269,20 @@ const WithdrawPopup = ({
           setShowPanicPopup(true);
           setIsVisible(false);
         } else {
-          let userFriendlyMessage =
-            errorKey === "WithdrawMoreThanSupply"
-              ? "You cannot withdraw more than your supplied amount."
-              : ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
-
+          let userFriendlyMessage;
+        
+          // Handle specific error cases
+          switch (errorKey) {
+            case "WithdrawMoreThanSupply":
+              userFriendlyMessage = "You cannot withdraw more than your supplied amount.";
+              break;
+            case "AmountSubtractionError":
+              userFriendlyMessage = "You cannot withdraw more than you owe.";
+              break;
+            default:
+              userFriendlyMessage = ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
+          }
+        
           toast.error(`Withdraw failed: ${userFriendlyMessage}`, {
             className: "custom-toast",
             position: "top-center",
@@ -285,6 +294,7 @@ const WithdrawPopup = ({
             progress: undefined,
           });
         }
+        
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Withdraw action failed!"}`);

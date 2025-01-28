@@ -254,16 +254,17 @@ const WithdrawPopup = ({
           progress: undefined,
         });
         setIsPaymentDone(true);
-        
+
         setIsVisible(false);
-      }else if ("Err" in withdrawResult) {
+      } else if ("Err" in withdrawResult) {
         const errorObject = withdrawResult.Err;
         const errorKey = Object.keys(errorObject)[0]; // Dynamically extract the error key
-  
+
         // Check for panic error and show a popup instead of toast
-        const errorMessage = errorKey?.toString() || "An unexpected error occurred";
+        const errorMessage =
+          errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
-  
+
         if (isPanicError) {
           setShowPanicPopup(true);
           setIsVisible(false);
@@ -272,7 +273,7 @@ const WithdrawPopup = ({
             errorKey === "WithdrawMoreThanSupply"
               ? "You cannot withdraw more than your supplied amount."
               : ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
-  
+
           toast.error(`Withdraw failed: ${userFriendlyMessage}`, {
             className: "custom-toast",
             position: "top-center",
@@ -287,10 +288,11 @@ const WithdrawPopup = ({
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Withdraw action failed!"}`);
-  
+
       // Check if the error message contains "panic" and show popup
-      const isPanicError = error.message && error.message.toLowerCase().includes("panic");
-  
+      const isPanicError =
+        error.message && error.message.toLowerCase().includes("panic");
+
       if (isPanicError) {
         setShowPanicPopup(true);
         setIsVisible(false);
@@ -306,7 +308,7 @@ const WithdrawPopup = ({
           progress: undefined,
         });
       }
-    }  finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -629,6 +631,17 @@ const WithdrawPopup = ({
           </div>
 
           <div className="w-full flex  mt-3">
+            {parseFloat(
+              assetSupply - amount.toString().replace(/,/g, "")
+            ).toFixed(7) === "0.0000000" && (
+              <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
+                <p className="text-yellow-800 text-[13px] font-medium">
+                  <span className="font-semibold">Warning: </span>
+                  Due to interest rates, a small amount might still remain even
+                  after the maximum repayment.
+                </p>
+              </div>
+            )}
             <div className="flex items-center">
               {}
               <div className="relative group">
@@ -714,44 +727,41 @@ const WithdrawPopup = ({
           </div>
         </div>
       )}
-       {showPanicPopup && (
-              <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-                <div className="w-full flex flex-col items-center p-2 ">
-                  <button
-                    onClick={handleClosePaymentPopup}
-                    className="text-gray-400 focus:outline-none self-end button1"
-                  >
-                    <X size={24} />
-                  </button>
-      
-                  <div
-                    className="dark:bg-gradient 
+      {showPanicPopup && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center p-2 ">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
+
+            <div
+              className="dark:bg-gradient 
                       dark:from-darkGradientStart 
                       dark:to-darkGradientEnd 
                       dark:text-darkText  "
-                  >
-      
-                    <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
-                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                      Thanks for helping us improve DFinance! <br></br> You’ve
-                      uncovered a bug, and our dev team is on it.
-                    </p>
-      
-                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                      Your account is temporarily locked while we investigate and fix
-                      the issue. <br />
-                    </p>
-                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                      We appreciate your contribution and have logged your ID—testers
-                      like you are key to making DFinance better! <br />
-                      If you have any questions, feel free to reach out.
-                    </p>
-                  </div>
-      
-                 
-                </div>
-              </div>
-            )}
+            >
+              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Thanks for helping us improve DFinance! <br></br> You’ve
+                uncovered a bug, and our dev team is on it.
+              </p>
+
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Your account is temporarily locked while we investigate and fix
+                the issue. <br />
+              </p>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                We appreciate your contribution and have logged your ID—testers
+                like you are key to making DFinance better! <br />
+                If you have any questions, feel free to reach out.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

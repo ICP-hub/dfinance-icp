@@ -36,6 +36,7 @@ const Borrow = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  console.log("liquidationThreshold", liquidationThreshold);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -376,33 +377,41 @@ const Borrow = ({
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
   useEffect(() => {
+  
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
       liquidationThreshold
     );
+  
+  
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-
+  
+  
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
+  
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
     );
-
+  
+  
     if (value < 2 && value > 1) {
       setIsAcknowledgmentRequired(true);
     } else {
       setIsAcknowledgmentRequired(false);
       setIsAcknowledged(false);
     }
+  
     if (ltv * 100 >= liquidationThreshold) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
     }
+  
     if (
       healthFactor <= 1 ||
       ltv * 100 >= liquidationThreshold ||
@@ -425,39 +434,37 @@ const Borrow = ({
     isAcknowledgmentRequired,
     setIsAcknowledged,
   ]);
-
-  const calculateHealthFactor = (
-    totalCollateral,
-    totalDebt,
-    liquidationThreshold
-  ) => {
+  
+  const calculateHealthFactor = (totalCollateral, totalDebt, liquidationThreshold) => {
+  
     const amountTaken = usdValue || 0;
-    let totalCollateralValue = parseFloat(totalCollateral);
-    if (totalCollateralValue < 0) {
-      totalCollateralValue = 0;
-    }
+    let totalCollateralValue = parseFloat(totalCollateral) || 0;
+    if (totalCollateralValue < 0) totalCollateralValue = 0;
+  
     let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
-    if (totalDeptValue < 0) {
-      totalDeptValue = 0;
-    }
+    if (totalDeptValue < 0) totalDeptValue = 0;
+  
     if (totalDeptValue === 0) {
       return Infinity;
     }
-    return (
-      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
-    );
+  
+    const result = (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
+    return result;
   };
-
+  
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
+  
     if (totalCollateral === 0) {
       return 0;
     }
-    return nextTotalDebt / totalCollateral;
+  
+    const result = nextTotalDebt / totalCollateral;
+    return result;
   };
+  
 
   const { healthFactorBackend } = useUserData();
 
-  console.log("healthfactor backend", healthFactorBackend);
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
@@ -510,7 +517,7 @@ const Borrow = ({
     if (numericAmount <= supplyBalance) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
-      setUsdValue(convertedValue.toFixed(2));
+      setUsdValue(convertedValue.toFixed(7));
       setError("");
     } else if (inputAmount.length > 8) {
       setError("Amount exceeds the maximum allowed digits.");
@@ -526,7 +533,7 @@ const Borrow = ({
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue =
         Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue.toFixed(2));
+      setUsdValue(convertedValue.toFixed(7));
     } else {
       setUsdValue("");
     }

@@ -39,7 +39,7 @@ const Repay = ({
     () => Principal.fromText(principal),
     [principal]
   );
-  console.log("assetBorrow", assetBorrow)
+  console.log("assetBorrow", assetBorrow);
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -521,7 +521,6 @@ const Repay = ({
   const [maxClicked, setMaxClicked] = useState(false);
 
   const handleMaxClick = () => {
-
     const truncateToSevenDecimals = (value) => {
       const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
       const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
@@ -542,7 +541,7 @@ const Repay = ({
       : "0";
     const maxAmount = displayBalance.toString();
     setMaxAmount(maxAmount);
-        setMaxClicked(true);
+    setMaxClicked(true);
 
     // Update the amount and its USD value
     updateAmountAndUsdValue(maxAmount);
@@ -684,43 +683,39 @@ const Repay = ({
             </div>
 
             <div className="w-full mt-3">
-            {maxClicked && supplyBalance < assetBorrow && (
+              {amount > 0 && amount > supplyBalance ? (
+                <div className="bg-[#BA5858] p-2 rounded-lg my-2">
+                  <div className="text-white text-[12px]">
+                    Amount exceeds your wallet balance.
+                  </div>
+                </div>
+              ) : supplyBalance <= 0 ? (
+                <div className="bg-[#BA5858] p-2 rounded-lg my-2">
+                  <div className="text-white text-[12px]">
+                    You do not have enough {asset} in your account to pay for
+                    transaction fees. Please deposit {asset} from another
+                    account.
+                  </div>
+                </div>
+              ) : maxClicked && supplyBalance < assetBorrow ? (
                 <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
                   <p className="text-yellow-800 text-[13px]">
                     <span className="font-semibold">Warning: </span> Due to an
                     insufficient wallet balance, some amount will still remain.
                   </p>
                 </div>
-              )}
-
-              {supplyBalance >= parseFloat(maxAmount) &&
+              ) : supplyBalance >= parseFloat(maxAmount) &&
                 parseFloat(
                   assetBorrow - (amount?.replace(/,/g, "") || "")
-                ).toFixed(7) === "0.0000000" && (
-                  <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
-                    <p className="text-yellow-800 text-[13px]">
-                      <span className="font-semibold">Warning: </span>Due to interest rates, a small amount might still remain after the maximum repayment.
-                    </p>
-                  </div>
-                )}
-
-              <>
-                {amount > 0 && amount > supplyBalance ? (
-                  <div className="bg-[#BA5858] p-2 rounded-lg my-2">
-                    <div className="text-white text-[12px]">
-                      Amount exceeds your wallet balance.
-                    </div>
-                  </div>
-                ) : supplyBalance <= 0 ? (
-                  <div className="bg-[#BA5858] p-2 rounded-lg my-2">
-                    <div className="text-white text-[12px]">
-                      You do not have enough {asset} in your account to pay for
-                      transaction fees. Please deposit {asset} from another
-                      account.
-                    </div>
-                  </div>
-                ) : null}
-              </>
+                ).toFixed(7) === "0.0000000" ? (
+                <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
+                  <p className="text-yellow-800 text-[13px]">
+                    <span className="font-semibold">Warning: </span> Due to
+                    interest rates, a small amount might still remain after the
+                    maximum repayment.
+                  </p>
+                </div>
+              ) : null}
 
               <div className="flex flex-col gap-4 mt-4">
                 {/* Approve Button */}

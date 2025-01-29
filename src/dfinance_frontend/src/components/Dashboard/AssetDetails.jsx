@@ -891,133 +891,87 @@ const AssetDetails = () => {
                 <div className="flex">
                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 ">
                     <div className="text-sm text-[#eeeef0] dark:text-darkText flex flex-col justify-center">
-                      {id === "ckBTC" && (
-                        <>
-                          <p>
-                            {ckBTCBalance === 0
-                              ? "0"
-                              : ckBTCBalance >= 1
-                              ? Number(ckBTCBalance).toLocaleString(undefined, {
+                      {(() => {
+                        const assetData = {
+                          ckBTC: {
+                            balance: ckBTCBalance,
+                            usdBalance: ckBTCUsdBalance,
+                            rate: ckBTCUsdRate,
+                          },
+                          ckETH: {
+                            balance: ckETHBalance,
+                            usdBalance: ckETHUsdBalance,
+                            rate: ckETHUsdRate,
+                          },
+                          ckUSDC: {
+                            balance: ckUSDCBalance,
+                            usdBalance: ckUSDCUsdBalance,
+                            rate: ckUSDCUsdRate,
+                          },
+                          ICP: {
+                            balance: ckICPBalance,
+                            usdBalance: ckICPUsdBalance,
+                            rate: ckICPUsdRate,
+                          },
+                          ckUSDT: {
+                            balance: ckUSDTBalance,
+                            usdBalance: ckUSDTUsdBalance,
+                            rate: ckUSDTUsdRate,
+                          },
+                        }[id];
+
+                        if (!assetData) return null;
+
+                        const { balance, usdBalance, rate } = assetData;
+                        const usdRate = rate / 1e8;
+                        const calculatedUsdValue = balance * usdRate;
+
+                        // Determine how to display the balance
+                        let displayedBalance;
+                        if (
+                          !isFinite(calculatedUsdValue) ||
+                          calculatedUsdValue === 0
+                        ) {
+                          displayedBalance = "0.00"; // Show "0.00" if USD value is exactly 0
+                        } else if (calculatedUsdValue < 0.01) {
+                          displayedBalance = `<${(
+                            0.01 / usdRate
+                          ).toLocaleString(undefined, {
+                            minimumFractionDigits: 7,
+                            maximumFractionDigits: 7,
+                          })}`; // Show "<" sign for small asset values
+                        } else {
+                          displayedBalance =
+                            balance >= 1
+                              ? balance.toLocaleString(undefined, {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 })
-                              : Number(ckBTCBalance).toLocaleString(undefined, {
+                              : balance.toLocaleString(undefined, {
                                   minimumFractionDigits: 7,
                                   maximumFractionDigits: 7,
-                                })}
-                          </p>
-                          <p className="font-light">
-                            $
-                            {ckBTCBalance === 0
-                              ? "0"
-                              : formatNumber(ckBTCUsdBalance)}
-                          </p>
-                        </>
-                      )}
-                      {id === "ckETH" && (
-                        <>
-                          <p>
-                            {ckETHBalance === 0
-                              ? "0"
-                              : ckETHBalance >= 1
-                              ? Number(ckETHBalance).toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })
-                              : Number(ckETHBalance).toLocaleString(undefined, {
-                                  minimumFractionDigits: 7,
-                                  maximumFractionDigits: 7,
-                                })}
-                          </p>
-                          <p className="font-light">
-                            $
-                            {ckETHBalance === 0
-                              ? "0"
-                              : formatNumber(ckETHUsdBalance)}
-                          </p>
-                        </>
-                      )}
-                      {id === "ckUSDC" && (
-                        <>
-                          <p>
-                            {ckUSDCBalance === 0
-                              ? "0"
-                              : ckUSDCBalance >= 1
-                              ? Number(ckUSDCBalance).toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  }
-                                )
-                              : Number(ckUSDCBalance).toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 7,
-                                    maximumFractionDigits: 7,
-                                  }
-                                )}
-                          </p>
-                          <p className="font-light">
-                            $
-                            {ckUSDCBalance === 0
-                              ? "0"
-                              : formatNumber(ckUSDCUsdBalance)}
-                          </p>
-                        </>
-                      )}
-                      {id === "ICP" && (
-                        <>
-                          <p>
-                            {ckICPBalance === 0
-                              ? "0"
-                              : ckICPBalance >= 1
-                              ? Number(ckICPBalance).toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })
-                              : Number(ckICPBalance).toLocaleString(undefined, {
-                                  minimumFractionDigits: 7,
-                                  maximumFractionDigits: 7,
-                                })}
-                          </p>
-                          <p className="font-light">
-                            $
-                            {ckICPBalance === 0
-                              ? "0"
-                              : formatNumber(ckICPUsdBalance)}
-                          </p>
-                        </>
-                      )}
-                      {id === "ckUSDT" && (
-                        <>
-                          <p>
-                            {ckUSDTBalance === 0
-                              ? "0"
-                              : ckUSDTBalance >= 1
-                              ? Number(ckUSDTBalance).toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  }
-                                )
-                              : Number(ckUSDTBalance).toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 7,
-                                    maximumFractionDigits: 7,
-                                  }
-                                )}
-                          </p>
-                          <p className="font-light">
-                            $
-                            {ckUSDTBalance === 0
-                              ? "0"
-                              : formatNumber(ckUSDTUsdBalance)}
-                          </p>
-                        </>
-                      )}
+                                });
+                        }
+
+                        return (
+                          <>
+                            <p>{displayedBalance}</p>
+                            <p className="font-light">
+                              {calculatedUsdValue === 0
+                                ? "$0.00"
+                                : calculatedUsdValue < 0.01
+                                ? "<0.01$"
+                                : `$${calculatedUsdValue.toLocaleString(
+                                    undefined,
+                                    {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    }
+                                  )}`}
+                            </p>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="ml-auto">
@@ -1121,7 +1075,7 @@ const AssetDetails = () => {
                       }}
                       disabled={ckBalance === 0}
                       className={
-                        "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"
+                        "my-2 text-white bg-gradient-to-r from-[#CBA534] to-[#639AB5] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"
                       }
                     />
                   </div>
@@ -1151,52 +1105,86 @@ const AssetDetails = () => {
                       {(() => {
                         let balance = 0;
                         let usdBalance = 0;
+                        let usdRate = 0;
 
                         // Assign borrowable values based on asset ID
                         switch (id) {
                           case "ckBTC":
                             balance = borrowableValue;
                             usdBalance = borrowableAssetValue;
+                            usdRate = ckBTCUsdRate / 1e8;
                             break;
                           case "ckETH":
                             balance = borrowableValue;
                             usdBalance = borrowableAssetValue;
+                            usdRate = ckETHUsdRate / 1e8;
                             break;
                           case "ckUSDC":
                             balance = borrowableValue;
                             usdBalance = borrowableAssetValue;
+                            usdRate = ckUSDCUsdRate / 1e8;
                             break;
                           case "ICP":
                             balance = borrowableValue;
                             usdBalance = borrowableAssetValue;
+                            usdRate = ckICPUsdRate / 1e8;
                             break;
                           case "ckUSDT":
                             balance = borrowableValue;
                             usdBalance = borrowableAssetValue;
+                            usdRate = ckUSDTUsdRate / 1e8;
                             break;
                           default:
                             balance = 0;
                             usdBalance = 0;
+                            usdRate = 0;
                             break;
+                        }
+
+                        const calculatedUsdValue = balance * usdRate;
+
+                        // Determine how to display the borrowable balance
+                        let displayedBalance;
+                        if (
+                          !isFinite(calculatedUsdValue) ||
+                          calculatedUsdValue === 0
+                        ) {
+                          displayedBalance = "0.00"; // Show "0.00" if USD value is exactly 0
+                        } else if (calculatedUsdValue < 0.01) {
+                          displayedBalance = `<${(
+                            0.01 / usdRate
+                          ).toLocaleString(undefined, {
+                            minimumFractionDigits: 7,
+                            maximumFractionDigits: 7,
+                          })}`; // Show "<" sign for small asset values
+                        } else {
+                          displayedBalance =
+                            balance >= 1
+                              ? balance.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })
+                              : balance.toLocaleString(undefined, {
+                                  minimumFractionDigits: 7,
+                                  maximumFractionDigits: 7,
+                                });
                         }
 
                         return (
                           <>
-                            <p>
-                              {balance <= 0
-                                ? "0"
-                                : balance >= 1
-                                ? Number(balance).toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })
-                                : Number(balance).toLocaleString(undefined, {
-                                    minimumFractionDigits: 7,
-                                    maximumFractionDigits: 7,
-                                  })}
-                            </p>
+                            <p>{displayedBalance}</p>
                             <p className="font-light">
-                              ${ balance <=0 ? 0 : formatNumber(usdBalance)}
+                              {calculatedUsdValue === 0
+                                ? "$0.00"
+                                : calculatedUsdValue < 0.01
+                                ? "<0.01$"
+                                : `$${calculatedUsdValue.toLocaleString(
+                                    undefined,
+                                    {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    }
+                                  )}`}
                             </p>
                           </>
                         );

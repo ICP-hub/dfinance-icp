@@ -214,10 +214,12 @@ const UserInformationPopup = ({
     const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
     const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
 
-    let totalCollateralValue = Math.trunc(
-      (parseFloat(totalCollateral) -
-        parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) * 1e8
-    ) / 1e8;
+    let totalCollateralValue =
+      Math.trunc(
+        (parseFloat(totalCollateral) -
+          parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) *
+          1e8
+      ) / 1e8;
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
@@ -286,21 +288,25 @@ const UserInformationPopup = ({
       ckUSDT: ckUSDTUsdRate,
     };
 
-    let totalCollateralValue = Math.trunc(
-      (parseFloat(totalCollateral) -
-        parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) * 1e8
-    ) / 1e8;
+    let totalCollateralValue =
+      Math.trunc(
+        (parseFloat(totalCollateral) -
+          parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) *
+          1e8
+      ) / 1e8;
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
     console.log("assetRates[selectedAsset]", assetRates[selectedAsset]);
     console.log("totalCollateralValue", totalCollateralValue);
     console.log("totalCollateral", totalCollateral);
-    let totalDeptValue = Math.trunc(
-      (parseFloat(totalDebt) -
-        parseFloat(amountAdded * (assetRates[selectedDebtAsset] / 1e8))) * 1e8
-    ) / 1e8;
-    
+    let totalDeptValue =
+      Math.trunc(
+        (parseFloat(totalDebt) -
+          parseFloat(amountAdded * (assetRates[selectedDebtAsset] / 1e8))) *
+          1e8
+      ) / 1e8;
+
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
     }
@@ -641,6 +647,33 @@ const UserInformationPopup = ({
     }
   };
 
+  const errorMessages = {
+    EmptyAsset: "The asset cannot be empty. Please select a valid asset.",
+    InvalidAssetLength:
+      "Asset name is too long. Maximum length is 7 characters.",
+    InvalidAmount:
+      "The amount specified is invalid. It must be greater than zero.",
+    AnonymousPrincipal: "Anonymous users cannot perform this action.",
+    LockAcquisitionFailed:
+      "Failed to acquire lock for the operation. Try again later.",
+    NoReserveDataFound:
+      "No reserve data found for the selected asset. Please try again.",
+    NoUserReserveDataFound:
+      "User reserve data not found. Ensure you have the required assets.",
+    NoCanisterIdFound:
+      "Collateral asset canister ID is missing. Contact support.",
+    ConversionErrorFromTextToPrincipal:
+      "Conversion error occurred. Please refresh and retry.",
+    ExchangeRateError: "Failed to fetch price data. Try again later.",
+    CryptoBaseAssetNotFound: "Failed to fetch price data. Try again later.",
+    HealthFactorLess: "Health Factor is too high to proceed with liquidation.",
+    InterestRateUpdateFailed:
+      "Interest rates could not be updated. Please retry.",
+    ErrorRollBack:
+      "An error occurred during rollback. Contact support if the issue persists.",
+    Default: "An unexpected error occurred. Please try again later.",
+  };
+
   const handleConfirmLiquidation = async () => {
     setIsLoading(true);
     try {
@@ -709,64 +742,38 @@ const UserInformationPopup = ({
         });
         setTransactionResult("success");
       } else if ("Err" in result) {
-        const errorMsg = result.Err;
-        console.error("errorMsg", errorMsg);
-        if (errorMsg?.ExchangeRateError === null) {
-          toast.error("Price fetch failed", {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-          setError(
-            "Price fetch failed: Your assets are safe, try again after some time."
-          );
-        } else if (errorMsg?.HealthFactorLess === null) {
-          toast.error("health factor too high ", {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-          setError("Health Factor too high to proceed for liquidation.");
-        } else {
-          toast.error(
-            `Error: ${error.message || "An unexpected error occurred"}`,
-            {
-              className: "custom-toast",
-              position: "top-center",
-              autoClose: 3000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-            }
-          );
-        }
+        const errorKey = result.Err;
+        const errorMsg = errorKey?.toString() || "An unexpected error occurred";
 
+        if (errorMsg.toLowerCase().includes("panic")) {
+          setShowPanicPopup(true);
+          setIsVisible(false);
+        } else {
+          const userFriendlyMessage =
+            errorMessages[errorKey] || errorMessages.Default;
+          console.error("Error:", errorKey);
+
+          toast.error(`Liquidation failed: ${userFriendlyMessage}`, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
         setTransactionResult("failure");
       }
-
-      setShowWarningPopup(false);
     } catch (error) {
-      console.error("Caught error:", error.message);
+      console.error(`Error: ${error.message || "Liquidation action failed!"}`);
 
-      let message = error.message || "Liquidation action failed!";
-
-      // Check if the error contains the word "panic"
-      if (message.toLowerCase().includes("panic")) {
+      if (error.message && error.message.toLowerCase().includes("panic")) {
         setShowPanicPopup(true);
+        setIsVisible(false);
       } else {
-        toast.error(`Error: ${message}`, {
+        toast.error(`Error: ${error.message || "Liquidation action failed!"}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -951,14 +958,66 @@ const UserInformationPopup = ({
         <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-1 flex justify-between items-center">
           {/* Reward Amount */}
           <div>
-            <p className="text-sm font-medium text-green-500">
-              {adjustedRewardAmount.toFixed(8).toLocaleString()}
-            </p>
-            {usdRate && (
-              <p className="text-xs font-normal text-gray-500 dark:text-darkTextSecondary mt-1">
-                ${formatValue(rewardInUSD)}
-              </p>
-            )}
+            {(() => {
+              const assetRates = {
+                ckETH: ckETHUsdRate,
+                ckBTC: ckBTCUsdRate,
+                ckUSDC: ckUSDCUsdRate,
+                ICP: ckICPUsdRate,
+                ckUSDT: ckUSDTUsdRate,
+              };
+
+              const usdRate = assetRates[asset]
+                ? assetRates[asset] / 1e8
+                : null;
+              const adjustedRewardAmount =
+                rewardAmount !== calculatedData?.maxCollateral / 1e8
+                  ? calculatedData?.maxCollateral / 1e8
+                  : rewardAmount;
+              const rewardInUSD = usdRate ? adjustedRewardAmount * usdRate : 0;
+
+              // Determine how to display the reward amount
+              let displayedReward;
+              if (!isFinite(rewardInUSD) || rewardInUSD === 0) {
+                displayedReward = "0.00"; // Show "0.00" if USD value is exactly 0
+              } else if (rewardInUSD < 0.01) {
+                displayedReward = `<${(0.01 / usdRate).toLocaleString(
+                  undefined,
+                  {
+                    minimumFractionDigits: 8,
+                    maximumFractionDigits: 8,
+                  }
+                )}`; // Show "<" sign for small reward values
+              } else {
+                displayedReward = adjustedRewardAmount.toLocaleString(
+                  undefined,
+                  {
+                    minimumFractionDigits: 8,
+                    maximumFractionDigits: 8,
+                  }
+                );
+              }
+
+              return (
+                <>
+                  <p className="text-sm font-medium text-green-500">
+                    {displayedReward}
+                  </p>
+                  {usdRate && (
+                    <p className="text-xs font-normal text-gray-500 dark:text-darkTextSecondary mt-1">
+                      {rewardInUSD === 0
+                        ? "$0.00"
+                        : rewardInUSD < 0.01
+                        ? "<0.01$"
+                        : `$${rewardInUSD.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}`}
+                    </p>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* Including Bonus with Value and Image */}
@@ -1416,32 +1475,74 @@ const UserInformationPopup = ({
                     </h3>
                     <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm text-[#c25252] mt-2 flex flex-row justify-between items-start">
                       <div>
-                        <p className="text-sm font-semibold">
-                          {amountToRepay ? (
-                            calculatedData?.maxDebtToLiq / 1e8 !==
-                            amountToRepay ? (
-                              formatValue(calculatedData?.maxDebtToLiq / 1e8)
-                            ) : (
-                              formatValue(amountToRepay)
-                            )
-                          ) : (
-                            <span className="text-gray-300 text-[11px] text-normal">
-                              --
-                            </span>
-                          )}
-                        </p>
+                        {(() => {
+                          const assetRates = {
+                            ckETH: ckETHUsdRate,
+                            ckBTC: ckBTCUsdRate,
+                            ckUSDC: ckUSDCUsdRate,
+                            ICP: ckICPUsdRate,
+                            ckUSDT: ckUSDTUsdRate,
+                          };
 
-                        <p className="text-xs font-light text-gray-500 dark:text-darkTextSecondary mt-1">
-                          {amountToRepay && selectedDebtAsset
-                            ? `$${formatValue(
-                                amountToRepay !==
-                                  calculatedData?.maxDebtToLiq / 1e8
-                                  ? (calculatedData?.maxDebtToLiq / 1e8) *
-                                      (assetRates[selectedDebtAsset] / 1e8)
-                                  : amountToRepayUSD
-                              )}`
-                            : ""}
-                        </p>
+                          const usdRate = assetRates[selectedDebtAsset]
+                            ? assetRates[selectedDebtAsset] / 1e8
+                            : null;
+
+                          const adjustedAmountToRepay =
+                            amountToRepay !== calculatedData?.maxDebtToLiq / 1e8
+                              ? calculatedData?.maxDebtToLiq / 1e8
+                              : amountToRepay;
+
+                          const repayInUSD = usdRate
+                            ? adjustedAmountToRepay * usdRate
+                            : 0;
+
+                          // Determine how to display the amount to repay
+                          let displayedRepayAmount;
+                          if (!isFinite(repayInUSD) || repayInUSD === 0) {
+                            displayedRepayAmount = "0.00"; // Show "0.00" if USD value is exactly 0
+                          } else if (repayInUSD < 0.01) {
+                            displayedRepayAmount = `<${(
+                              0.01 / usdRate
+                            ).toLocaleString(undefined, {
+                              minimumFractionDigits: 8,
+                              maximumFractionDigits: 8,
+                            })}`; // Show "<" sign for small values
+                          } else {
+                            displayedRepayAmount =
+                              adjustedAmountToRepay.toLocaleString(undefined, {
+                                minimumFractionDigits: 8,
+                                maximumFractionDigits: 8,
+                              });
+                          }
+
+                          return (
+                            <>
+                              <p className="text-sm font-semibold">
+                                {amountToRepay ? (
+                                  displayedRepayAmount
+                                ) : (
+                                  <span className="text-gray-300 text-[11px] text-normal">
+                                    --
+                                  </span>
+                                )}
+                              </p>
+
+                              <p className="text-xs font-light text-gray-500 dark:text-darkTextSecondary mt-1">
+                                {amountToRepay && selectedDebtAsset
+                                  ? repayInUSD === 0
+                                    ? "$0.00"
+                                    : repayInUSD < 0.01
+                                    ? "<0.01$"
+                                    : `$${repayInUSD.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}`
+                                  : ""}
+                              </p>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       <div className="ml-4">

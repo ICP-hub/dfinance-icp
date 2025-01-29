@@ -652,7 +652,7 @@ const UserInformationPopup = ({
     InvalidAssetLength:
       "Asset name is too long. Maximum length is 7 characters.",
     InvalidAmount:
-      "The amount specified is invalid. It must be greater than zero.",
+      "An unexpected error occurred. Please try again later.",
     AnonymousPrincipal: "Anonymous users cannot perform this action.",
     LockAcquisitionFailed:
       "Failed to acquire lock for the operation. Try again later.",

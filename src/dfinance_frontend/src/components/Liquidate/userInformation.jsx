@@ -462,7 +462,7 @@ const UserInformationPopup = ({
   const handleCheckboxClick = (e) => {
     setIsCheckboxChecked(e.target.checked);
   };
-
+  const [collateralAmount, setCollateralAmount] = useState(0);
   const ledgerActors = useSelector((state) => state.ledger);
 
   const principalObj = useMemo(
@@ -552,15 +552,56 @@ const UserInformationPopup = ({
     };
 
     fetchData();
-  }, [amountToRepay, selectedDebtAsset, selectedAsset, liquidateTrigger]);
+  }, [
+    amountToRepay,
+    selectedDebtAsset,
+    selectedAsset,
+    liquidateTrigger,
+    collateralAmount,
+  ]);
 
+  //  Update `collateralAmount` when dependencies change
+  useEffect(() => {
+    if (!selectedAsset || !selectedDebtAsset || !collateralRate) {
+      setCollateralAmount(collateral); // Fallback to old collateral
+      return;
+    }
+
+    const newCollateralAmount =
+      selectedAsset === selectedDebtAsset
+        ? amountToRepay
+        : amountToRepayUSD / collateralRate;
+
+    console.log(" Setting collateralAmount:", newCollateralAmount);
+    setCollateralAmount(newCollateralAmount);
+  }, [
+    selectedAsset,
+    selectedDebtAsset,
+    amountToRepay,
+    amountToRepayUSD,
+    collateralRate,
+  ]);
+
+  // ✅ Log after state update completes
+  useEffect(() => {
+    console.log(" Updated collateralAmount:", collateralAmount);
+  }, [collateralAmount]);
+
+  //  Ensure `collateralAmount` is correctly used in calculations
   function cal_max_collateral_to_liq(
     supplyAmount,
     totalDebt,
     collateralBalance,
     selectedAsset
   ) {
-    // Ensure all parameters are valid numbers
+    console.log("Function cal_max_collateral_to_liq called");
+
+    console.log("supplyAmount:", supplyAmount);
+    console.log("totalDebt:", totalDebt);
+    console.log("collateralBalance:", collateralBalance);
+    console.log("selectedAsset:", selectedAsset);
+    console.log("Using Updated collateralAmount:", collateralAmount); //  Ensuring we use the latest collateralAmount
+
     if (isNaN(supplyAmount) || isNaN(totalDebt) || isNaN(collateralBalance)) {
       throw new Error(
         "Invalid input parameters. All parameters must be numbers."
@@ -578,47 +619,66 @@ const UserInformationPopup = ({
     const usdRate = assetRates[selectedAsset]
       ? assetRates[selectedAsset] / 1e8
       : null;
-
-    if (!usdRate) {
+    if (!usdRate)
       console.error("USD rate not found for selectedAsset:", selectedAsset);
-    }
 
     const debtPrice = assetRates[selectedDebtAsset]
       ? assetRates[selectedDebtAsset] / 1e8
       : null;
-
-    if (!debtPrice) {
+    if (!debtPrice)
       console.error(
         "Debt price not found for selectedDebtAsset:",
         selectedDebtAsset
       );
-    }
 
-    const collateralAmount = Math.trunc(
-      (collateral + collateral * (liquidation_bonus / 100)) * 1e8
+    //  Truncate function to ensure precision without rounding
+    const truncateToEightDecimals = (value) => Math.floor(value * 1e8) / 1e8;
+
+    //  Use collateralAmount instead of collateral
+    const truncatedCollateral = truncateToEightDecimals(collateralAmount);
+    const truncatedCollateralBalance =
+      truncateToEightDecimals(collateralBalance);
+
+    console.log("Truncated collateralAmount:", truncatedCollateral);
+    console.log("Truncated collateralBalance:", truncatedCollateralBalance);
+
+    let finalCollateralAmount = truncateToEightDecimals(
+      (truncatedCollateral + truncatedCollateral * (liquidation_bonus / 100)) *
+        1e8
+    );
+
+    console.log(
+      "Updated finalCollateralAmount before returning:",
+      finalCollateralAmount
     );
 
     const generalLiquidityBonus = (100 + liquidation_bonus) * 100;
+    console.log("General Liquidity Bonus:", generalLiquidityBonus);
 
     let maxCollateral, maxDebtToLiq;
 
-    if (collateralAmount > collateralBalance) {
-      maxCollateral = collateralBalance;
+    if (finalCollateralAmount > truncatedCollateralBalance) {
+      console.log("Collateral amount exceeds collateral balance, adjusting...");
+      maxCollateral = truncatedCollateralBalance;
 
       const calculatedValue =
-        ((collateral * usdRate) / debtPrice) * (1000 / generalLiquidityBonus);
+        ((truncatedCollateral * usdRate) / debtPrice) *
+        (1000 / generalLiquidityBonus);
+      console.log("Calculated Debt-to-Liquidate Value:", calculatedValue);
 
-      if (calculatedValue > 0) {
-        maxDebtToLiq = Math.trunc(calculatedValue); // Truncate if > 1
-      } else {
-        maxDebtToLiq = calculatedValue; // Keep original value if <= 1
-      }
+      maxDebtToLiq = truncateToEightDecimals(calculatedValue);
+      console.log("Max Debt To Liquidate (Truncated):", maxDebtToLiq);
+
       setInfo(true);
     } else {
+      console.log("Collateral amount is within balance.");
       maxDebtToLiq = supplyAmount;
-      maxCollateral = collateralAmount;
+      maxCollateral = finalCollateralAmount;
       setInfo(false);
     }
+
+    console.log("Final maxCollateral:", maxCollateral);
+    console.log("Final maxDebtToLiq:", maxDebtToLiq);
 
     return {
       maxCollateral,
@@ -638,7 +698,7 @@ const UserInformationPopup = ({
         selectedAssetsupply,
         selectedAsset
       );
-
+      console.log("response", response);
       if (response) {
         return response;
       }
@@ -651,8 +711,7 @@ const UserInformationPopup = ({
     EmptyAsset: "The asset cannot be empty. Please select a valid asset.",
     InvalidAssetLength:
       "Asset name is too long. Maximum length is 7 characters.",
-    InvalidAmount:
-      "An unexpected error occurred. Please try again later.",
+    InvalidAmount: "An unexpected error occurred. Please try again later.",
     AnonymousPrincipal: "Anonymous users cannot perform this action.",
     LockAcquisitionFailed:
       "Failed to acquire lock for the operation. Try again later.",
@@ -1187,6 +1246,7 @@ const UserInformationPopup = ({
       setFactor("50");
     }
   }, [userAccountData]);
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       {transactionResult ? (

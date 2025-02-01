@@ -657,7 +657,7 @@ const UserInformationPopup = ({
     selectedAsset
   ) {
     console.log("Function cal_max_collateral_to_liq called");
-    console.log("to check agaaaa = ",Math.trunc(rewardAmount * 100000000))
+    console.log("to check agaaaa = ", Math.trunc(rewardAmount * 100000000))
 
     console.log("supplyAmount:", supplyAmount);
     console.log("totalDebt:", totalDebt);
@@ -803,46 +803,46 @@ const UserInformationPopup = ({
     setIsLoading(true);
     try {
       const supplyAmount = Math.trunc(amountToRepay * 100000000);
-     // Convert maxCollateral to correct decimal format
-const maxCollateralValue = calculatedData?.maxCollateral
-? calculatedData.maxCollateral / 1e8
-: 0;
+      // Convert maxCollateral to correct decimal format
+      const maxCollateralValue = calculatedData?.maxCollateral
+        ? calculatedData.maxCollateral / 1e8
+        : 0;
 
-// ✅ Strictly truncate to 8 decimal places (NO ROUNDING)
-const truncateToEightDecimals = (num) => {
-return Math.trunc(num * 1e8) / 1e8;
-};
+      // ✅ Strictly truncate to 8 decimal places (NO ROUNDING)
+      const truncateToEightDecimals = (num) => {
+        return Math.trunc(num * 1e8) / 1e8;
+      };
 
-// Apply truncation function
-const truncatedMaxCollateral = truncateToEightDecimals(maxCollateralValue);
+      // Apply truncation function
+      const truncatedMaxCollateral = truncateToEightDecimals(maxCollateralValue);
 
-// ✅ Determine the reward amount conditionally
-let rewardAmount = truncatedMaxCollateral;
+      // ✅ Determine the reward amount conditionally
+      let rewardAmount = truncatedMaxCollateral;
 
-// Debugging logs
-console.log("reward amount", rewardAmount);
-console.log("max collateral value", maxCollateralValue);
-console.log("truncatedMaxCollateral", truncatedMaxCollateral);
+      // Debugging logs
+      console.log("reward amount", rewardAmount);
+      console.log("max collateral value", maxCollateralValue);
+      console.log("truncatedMaxCollateral", truncatedMaxCollateral);
 
-// ✅ Ensure the rewardAmount is strictly 8 decimal places
-rewardAmount = truncateToEightDecimals(rewardAmount);
+      // ✅ Ensure the rewardAmount is strictly 8 decimal places
+      rewardAmount = truncateToEightDecimals(rewardAmount);
 
-console.log("Final rewardAmount", rewardAmount);
+      console.log("Final rewardAmount", rewardAmount);
 
-// ✅ Backend execution
-if (!backendActor) {
-throw new Error("Backend actor is not initialized");
-}
+      // ✅ Backend execution
+      if (!backendActor) {
+        throw new Error("Backend actor is not initialized");
+      }
 
-const liquidationParams = {
-debt_asset: selectedDebtAsset,
-collateral_asset: selectedAsset,
-amount: supplyAmount,
-on_behalf_of: mappedItem?.principal?._arr,
-reward_amount: Math.trunc(rewardAmount * 1e8), // Convert back to integer format
-};
+      const liquidationParams = {
+        debt_asset: selectedDebtAsset,
+        collateral_asset: selectedAsset,
+        amount: supplyAmount,
+        on_behalf_of: mappedItem?.principal?._arr,
+        reward_amount: Math.trunc(rewardAmount * 1e8), // Convert back to integer format
+      };
 
-console.log("result of = ", Math.trunc(rewardAmount * 1e8));
+      console.log("result of = ", Math.trunc(rewardAmount * 1e8));
 
 
       const result = await backendActor.execute_liquidation(liquidationParams);
@@ -1549,7 +1549,7 @@ console.log("result of = ", Math.trunc(rewardAmount * 1e8));
                       const assetBorrowAmount = Math.trunc(
                         Number((assetBorrow * (factor / 100)) / 1e8) * 1e8
                       ) / 1e8;
-                      
+
                       // TODO: resolve nine values are coming now.
 
                       console.log("assest borrow amount", assetBorrowAmount);
@@ -1662,7 +1662,7 @@ console.log("result of = ", Math.trunc(rewardAmount * 1e8));
                           const repayInUSD = usdRate
                             ? adjustedAmountToRepay * usdRate
                             : 0;
-console.log("repayin usd",repayInUSD)
+                          console.log("repayin usd", repayInUSD)
                           // Determine how to display the amount to repay
                           let displayedRepayAmount;
                           if (!isFinite(repayInUSD) || repayInUSD === 0) {

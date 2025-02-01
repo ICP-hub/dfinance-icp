@@ -36,7 +36,7 @@ const WalletDetails = () => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const {
@@ -45,8 +45,7 @@ const WalletDetails = () => {
     isSwitchingWallet,
     connectedWallet,
   } = useSelector((state) => state.utility);
-  const { isAuthenticated, principal} =
-    useAuth();
+  const { isAuthenticated, principal } = useAuth();
   const {
     totalMarketSize,
     totalSupplySize,
@@ -117,7 +116,7 @@ const WalletDetails = () => {
     totalReserveFactor,
     interestAccure,
     principal,
-    dashboardRefreshTrigger
+    dashboardRefreshTrigger,
   ]);
   const {
     ckBTCUsdRate,
@@ -331,14 +330,14 @@ const WalletDetails = () => {
       )}
 
       <div className="w-full mt-6">
-      {loading &&isAuthenticated && !isSwitchingWallet  && !hasLoaded? (
+        {loading && isAuthenticated && !isSwitchingWallet && !hasLoaded ? (
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center ">
             <MiniLoader isLoading={true} />
           </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
             <div className="mb-7 -ml-3 -mt-5">
-              <Lottie /> 
+              <Lottie />
             </div>
             <p className="text-[#8490ff] text-sm font-medium dark:text-[#c2c2c2]">
               NO ASSETS FOUND!
@@ -438,118 +437,82 @@ const WalletDetails = () => {
                       <td className="p-2 align-center py-6">
                         <div className="flex justify-center items-center flex-row">
                           <div className="flex-grow text-center">
-                            {}
+                            {/* Asset values */}
                             <p className="min-w-[70px] text-center">
-                              {item[0] === "ckBTC" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_supply) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_supply) /
-                                        100000000
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckETH" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_supply) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_supply) /
-                                        100000000
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckUSDC" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_supply) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_supply) /
-                                        100000000
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ICP" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_supply) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_supply) /
-                                        100000000
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckUSDT" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_supply) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_supply) /
-                                        100000000
-                                    )
-                                  : "0.00")}
+                              {(() => {
+                                const assetSupply =
+                                  Number(item[1].Ok.asset_supply) / 100000000;
+                                let usdRate = 0;
+
+                                switch (item[0]) {
+                                  case "ckBTC":
+                                    usdRate = ckBTCUsdRate / 1e8;
+                                    break;
+                                  case "ckETH":
+                                    usdRate = ckETHUsdRate / 1e8;
+                                    break;
+                                  case "ckUSDC":
+                                    usdRate = ckUSDCUsdRate / 1e8;
+                                    break;
+                                  case "ICP":
+                                    usdRate = ckICPUsdRate / 1e8;
+                                    break;
+                                  case "ckUSDT":
+                                    usdRate = ckUSDTUsdRate / 1e8;
+                                    break;
+                                  default:
+                                    return "0.00";
+                                }
+
+                                const usdValue = assetSupply * usdRate;
+
+                                if (!isFinite(usdValue) || usdValue === 0) {
+                                  return "0.00"; // Show "0.00" if USD value is exactly 0
+                                } else if (usdValue < 0.01) {
+                                  return `<${formatValue(0.01 / usdRate)}`; // Show "<" sign for small asset values
+                                } else {
+                                  return formatValue(assetSupply); // Normal display
+                                }
+                              })()}
                             </p>
 
-                            {}
+                            {/* Asset USD Conversions */}
                             <p className="font-light text-[12px] text-center">
-                              $
-                              {item[0] === "ckBTC" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_supply) /
-                                    100000000) *
-                                    (ckBTCUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_supply) /
-                                        100000000) *
-                                        (ckBTCUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckETH" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_supply) /
-                                    100000000) *
-                                    (ckETHUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_supply) /
-                                        100000000) *
-                                        (ckETHUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckUSDC" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_supply) /
-                                    100000000) *
-                                    (ckUSDCUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_supply) /
-                                        100000000) *
-                                        (ckUSDCUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ICP" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_supply) /
-                                    100000000) *
-                                    (ckICPUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_supply) /
-                                        100000000) *
-                                        (ckICPUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckUSDT" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_supply) /
-                                    100000000) *
-                                    (ckUSDTUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_supply) /
-                                        100000000) *
-                                        (ckUSDTUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
+                              {(() => {
+                                const assetSupply =
+                                  Number(item[1].Ok.asset_supply) / 100000000;
+                                let usdRate = 0;
+
+                                switch (item[0]) {
+                                  case "ckBTC":
+                                    usdRate = ckBTCUsdRate / 1e8;
+                                    break;
+                                  case "ckETH":
+                                    usdRate = ckETHUsdRate / 1e8;
+                                    break;
+                                  case "ckUSDC":
+                                    usdRate = ckUSDCUsdRate / 1e8;
+                                    break;
+                                  case "ICP":
+                                    usdRate = ckICPUsdRate / 1e8;
+                                    break;
+                                  case "ckUSDT":
+                                    usdRate = ckUSDTUsdRate / 1e8;
+                                    break;
+                                  default:
+                                    return "$0.00";
+                                }
+
+                                const usdValue = assetSupply * usdRate;
+
+                                if (!isFinite(usdValue) || usdValue === 0) {
+                                  return "$0.00"; // Show "0.00" if USD value is exactly 0
+                                } else if (usdValue < 0.01) {
+                                  return "<0.01$"; // Show "<0.01$" for small values
+                                } else {
+                                  return `$${formatValue(usdValue)}`; // Normal display
+                                }
+                              })()}
                             </p>
 
                             {}
@@ -558,7 +521,11 @@ const WalletDetails = () => {
                             className="lg:hidden justify-center ml-6"
                             onClick={() => handleChevronClick(item[0])}
                           >
-                            <ChevronRight size={22} color={chevronColor} className="cursor-pointer" />
+                            <ChevronRight
+                              size={22}
+                              color={chevronColor}
+                              className="cursor-pointer"
+                            />
                           </div>
                         </div>
                       </td>
@@ -578,117 +545,82 @@ const WalletDetails = () => {
                       <td className="p-2 align-center hidden lg:table-cell">
                         <div className="flex justify-center flex-row">
                           <div>
+                            {/* Asset values */}
                             <p className="min-w-[150px] text-center">
-                              {item[0] === "ckBTC" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_borrow) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_borrow) /
-                                        100000000
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckETH" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_borrow) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_borrow) /
-                                        100000000
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckUSDC" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_borrow) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_borrow) /
-                                        100000000
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ICP" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_borrow) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_borrow) /
-                                        100000000
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckUSDT" &&
-                                (isFinite(
-                                  Number(item[1].Ok.asset_borrow) / 100000000
-                                )
-                                  ? formatValue(
-                                      Number(item[1].Ok.asset_borrow) /
-                                        100000000
-                                    )
-                                  : "0.00")}
+                              {(() => {
+                                const assetBorrow =
+                                  Number(item[1].Ok.asset_borrow) / 100000000;
+                                let usdRate = 0;
+
+                                switch (item[0]) {
+                                  case "ckBTC":
+                                    usdRate = ckBTCUsdRate / 1e8;
+                                    break;
+                                  case "ckETH":
+                                    usdRate = ckETHUsdRate / 1e8;
+                                    break;
+                                  case "ckUSDC":
+                                    usdRate = ckUSDCUsdRate / 1e8;
+                                    break;
+                                  case "ICP":
+                                    usdRate = ckICPUsdRate / 1e8;
+                                    break;
+                                  case "ckUSDT":
+                                    usdRate = ckUSDTUsdRate / 1e8;
+                                    break;
+                                  default:
+                                    return "0.00";
+                                }
+
+                                const usdValue = assetBorrow * usdRate;
+
+                                if (!isFinite(usdValue) || usdValue === 0) {
+                                  return "0.00";
+                                } else if (usdValue < 0.01) {
+                                  return `<${formatValue(0.01 / usdRate)}`;
+                                } else {
+                                  return formatValue(assetBorrow);
+                                }
+                              })()}
                             </p>
 
-                            {}
+                            {/* USD Conversion Rates */}
                             <p className="font-light text-[12px] text-center">
-                              $
-                              {item[0] === "ckBTC" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_borrow) /
-                                    100000000) *
-                                    (ckBTCUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_borrow) /
-                                        100000000) *
-                                        (ckBTCUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckETH" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_borrow) /
-                                    100000000) *
-                                    (ckETHUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_borrow) /
-                                        100000000) *
-                                        (ckETHUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckUSDC" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_borrow) /
-                                    100000000) *
-                                    (ckUSDCUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_borrow) /
-                                        100000000) *
-                                        (ckUSDCUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ICP" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_borrow) /
-                                    100000000) *
-                                    (ckICPUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_borrow) /
-                                        100000000) *
-                                        (ckICPUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
-                              {item[0] === "ckUSDT" &&
-                                (isFinite(
-                                  (Number(item[1].Ok.asset_borrow) /
-                                    100000000) *
-                                    (ckUSDTUsdRate / 1e8)
-                                )
-                                  ? formatValue(
-                                      (Number(item[1].Ok.asset_borrow) /
-                                        100000000) *
-                                        (ckUSDTUsdRate / 1e8)
-                                    )
-                                  : "0.00")}
+                              {(() => {
+                                const assetBorrow =
+                                  Number(item[1].Ok.asset_borrow) / 100000000;
+                                let usdRate = 0;
+
+                                switch (item[0]) {
+                                  case "ckBTC":
+                                    usdRate = ckBTCUsdRate / 1e8;
+                                    break;
+                                  case "ckETH":
+                                    usdRate = ckETHUsdRate / 1e8;
+                                    break;
+                                  case "ckUSDC":
+                                    usdRate = ckUSDCUsdRate / 1e8;
+                                    break;
+                                  case "ICP":
+                                    usdRate = ckICPUsdRate / 1e8;
+                                    break;
+                                  case "ckUSDT":
+                                    usdRate = ckUSDTUsdRate / 1e8;
+                                    break;
+                                  default:
+                                    return "$0.00";
+                                }
+
+                                const usdValue = assetBorrow * usdRate;
+
+                                if (!isFinite(usdValue) || usdValue === 0) {
+                                  return "$0.00"; // Show "0" if USD value is actually 0
+                                } else if (usdValue < 0.01) {
+                                  return "<0.01$"; // Display "<0.01$" for small values
+                                } else {
+                                  return `$${formatValue(usdValue)}`; // Normal case
+                                }
+                              })()}
                             </p>
                           </div>
                         </div>

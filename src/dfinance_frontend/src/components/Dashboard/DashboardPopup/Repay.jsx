@@ -65,75 +65,67 @@ const Repay = ({
   };
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
-
+  
     if (inputAmount === "") {
-      setAmount(""); // Set the amount state to empty
-      updateAmountAndUsdValue(""); // Ensure that the raw value is also empty
-      return; // Exit early if the input is cleared
+      setAmount(""); // Reset amount state
+      updateAmountAndUsdValue(""); // Ensure raw value is also reset
+      return;
     }
-    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-
+  
+    inputAmount = inputAmount.replace(/[^0-9.]/g, ""); // Allow only numbers and a single dot
+  
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
-
-    const numericAmount = parseFloat(inputAmount);
-
+  
+    let numericAmount = parseFloat(inputAmount);
+    if (isNaN(numericAmount)) numericAmount = 0; // Prevent NaN issues
+  
+    // Prevent exceeding assetBorrow
     if (numericAmount > assetBorrow) {
+      numericAmount = assetBorrow;
       inputAmount = truncateToSevenDecimals(assetBorrow).toString();
     }
-
-    let formattedAmount;
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
-    } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
-    }
-
-    setAmount(formattedAmount);
-    if (inputAmount !== supplyBalance.toString()) {
-      setMaxClicked(false);
-    } else {
-      setMaxClicked(true);
-    }
+  
+    setAmount(inputAmount);
+    setMaxClicked(inputAmount === assetBorrow.toString());
+    
     updateAmountAndUsdValue(inputAmount);
   };
-
+  
   const updateAmountAndUsdValue = (inputAmount) => {
-    const numericAmount = parseFloat(inputAmount);
-
-    if (!isNaN(numericAmount) && numericAmount >= 0) {
-      if (numericAmount <= assetBorrow) {
-        const formattedAmount = formatAmountWithCommas(inputAmount);
-        const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-
-        const convertedValue = Number(numericAmount) * adjustedConversionRate;
-        setUsdValue(convertedValue.toFixed(2));
-        setAmount(formattedAmount);
-        setError("");
-      } else {
-        setError("Amount exceeds the supply balance");
-      }
-    } else if (inputAmount === "") {
+    let numericAmount = parseFloat(inputAmount);
+    
+    if (isNaN(numericAmount) || numericAmount < 0) {
       setAmount("");
-      setUsdValue(0);
-      setError("");
-    } else {
+      setUsdValue("0.00"); // ✅ Always show 2 decimal places
       setError("Amount must be a positive number");
+      return;
     }
+  
+    if (numericAmount > assetBorrow) {
+      setError("Amount exceeds the supply balance");
+      return;
+    }
+  
+    const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+    const convertedValue = numericAmount * adjustedConversionRate;
+  
+    // ✅ Always format `usdValue` to 2 decimal places from the start
+    setUsdValue(convertedValue.toFixed(7)); 
+    setAmount(inputAmount);
+    setError("");
   };
-
+  
+  
+  // ✅ Remove formatting when updating amount, only format for display
   const formatAmountWithCommas = (amount) => {
-    const parts = amount.split(".");
-
+    if (!amount) return "0";
+    const parts = amount.toString().split(".");
     parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
-
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
+  
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
   useEffect(() => {
@@ -146,7 +138,7 @@ const Repay = ({
 
       const truncatedValue = (
         Math.floor(convertedValue * Math.pow(10, 8)) / Math.pow(10, 8)
-      ).toFixed(8);
+      ).toFixed(7);
 
       setUsdValue(truncatedValue);
     } else {

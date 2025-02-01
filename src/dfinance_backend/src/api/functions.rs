@@ -161,6 +161,7 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
 //     Ok(fees)
 // }
 
+// icrc1_transfer
 pub async fn asset_transfer(
     to: Principal,
     ledger: Principal,
@@ -193,6 +194,25 @@ pub async fn asset_transfer(
     }
 }
 
+/// # Faucet Function
+/// 
+/// This function allows users to request tokens from a faucet for a specified asset and amount. 
+/// It performs the following steps:
+/// - Validates the asset and amount inputs.
+/// - Ensures the caller is not an anonymous principal.
+/// - Acquires a lock to prevent concurrent faucet requests.
+/// - Retrieves user data and checks the ledger balance.
+/// - Validates the faucet limit and updates user usage.
+/// - Transfers the requested amount from the platform to the user.
+/// - Releases the lock after the operation.
+/// 
+/// # Arguments
+/// - `asset`: The asset symbol (e.g., "ETH", "BTC"). Must be non-empty and <= 7 characters.
+/// - `amount`: The amount of tokens to request. Must be greater than zero.
+/// 
+/// # Returns
+/// - `Ok(Nat)`: The new balance after the transfer.
+/// - `Err(Error)`: If any validation or operation fails.
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
@@ -414,6 +434,21 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     result
 }
 
+
+/// # Reset Faucet Usage Function
+/// 
+/// This function resets the faucet usage for a specific user. It performs the following steps:
+/// - Validates that the caller is not an anonymous principal.
+/// - Retrieves the user's data.
+/// - Iterates through the user's reserves and resets the `faucet_usage` to zero for each reserve.
+/// - Updates the user's data in the state.
+/// 
+/// # Arguments
+/// - `user_principal`: The principal of the user whose faucet usage is to be reset.
+/// 
+/// # Returns
+/// - `Ok(())`: If the faucet usage is successfully reset.
+/// - `Err(Error)`: If the user is anonymous, no user data is found, or no reserves are available.
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");

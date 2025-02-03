@@ -15,9 +15,7 @@ use crate::{
         },
         storable::Candid,
     },
-    protocol::libraries::
-        types::datatypes::UserReserveData,
-    
+    protocol::libraries::types::datatypes::UserReserveData,
 };
 use candid::{Nat, Principal};
 use ic_cdk::api::time;
@@ -28,8 +26,23 @@ fn current_timestamp() -> u64 {
 pub struct UpdateLogic;
 
 impl UpdateLogic {
-    // ------------- Update user data function for supply -------------
-
+    /// Asynchronously updates the user data for supplying assets, including minting of dTokens.
+    ///
+    /// This function performs the following operations:
+    /// 1. Fetches user data based on the provided `user_principal`.
+    /// 2. Updates the user's reserve data, including asset, collateral status, and the last update timestamp.
+    /// 3. If the user does not have a reserve for the provided asset, a new reserve is created.
+    /// 4. Calls the minting function (`mint_scaled`) to mint dTokens for the user.
+    /// 5. Mutates the system state by updating the user profile with the new or updated data.
+    ///
+    /// # Parameters:
+    /// - `user_principal`: The principal of the user whose data is being updated.
+    /// - `reserve_cache`: The cache containing reserve-related data, including the liquidity index.
+    /// - `params`: The parameters related to the asset supply operation, such as the asset and amount.
+    /// - `reserve`: The current state of the reserve, which may be updated.
+    ///
+    /// # Returns:
+    /// Returns `Ok(())` if the user data is updated successfully, or an `Error` if any operation fails.
     pub async fn update_user_data_supply(
         user_principal: Principal,
         reserve_cache: &ReserveCache,
@@ -61,7 +74,6 @@ impl UpdateLogic {
             reserve_data.reserve = params.asset.clone();
             reserve_data.is_collateral = params.is_collateral;
             reserve_data.last_update_timestamp = current_timestamp();
-           
 
             if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
                 if reserve_data.is_borrowed {
@@ -101,7 +113,7 @@ impl UpdateLogic {
                 }) {
                 reserve_data
             } else {
-                return Err(Error::NoUserReserveDataFound); 
+                return Err(Error::NoUserReserveDataFound);
             };
             new_reserve_data
         };
@@ -197,11 +209,11 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                asset_borrow: params.amount.clone(),//remove
+                asset_borrow: params.amount.clone(), //remove
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 last_update_timestamp: current_timestamp(),
-               
+
                 ..Default::default()
             };
 
@@ -256,7 +268,24 @@ impl UpdateLogic {
         Ok(())
     }
 
-    // ------------- Update user data function for withdraw -------------
+    /// Asynchronously updates the user data for borrowing assets, including minting of debt tokens.
+    ///
+    /// This function performs the following operations:
+    /// 1. Retrieves the reserve data for the provided asset.
+    /// 2. Fetches the user data based on the provided `user_principal`.
+    /// 3. Updates the user's reserve data, including setting the borrowed status and the last update timestamp.
+    /// 4. If the user does not have a reserve for the provided asset, a new reserve is created.
+    /// 5. Calls the minting function (`mint_scaled`) to mint debt tokens for the user.
+    /// 6. Mutates the system state to update the user profile with the new or updated data.
+    ///
+    /// # Parameters:
+    /// - `user_principal`: The principal of the user whose data is being updated.
+    /// - `reserve_cache`: The cache containing reserve-related data, including the debt index.
+    /// - `params`: The parameters related to the asset borrowing operation, such as the asset and amount.
+    /// - `reserve`: The current state of the reserve, which may be updated.
+    ///
+    /// # Returns:
+    /// Returns `Ok(())` if the user data is updated successfully, or an `Error` if any operation fails.
     pub async fn update_user_data_withdraw(
         user_principal: Principal,
         reserve_cache: &ReserveCache,
@@ -319,7 +348,6 @@ impl UpdateLogic {
             } else {
                 reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
             }
-
         } else {
             ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
             return Err(Error::NoReserveDataFound);
@@ -330,11 +358,11 @@ impl UpdateLogic {
             user_principal,
         )
         .await?;
-    if params.is_collateral==false && dtoken_balance == Nat::from(0u128) {
-        if let Some((_, reserve_data)) = user_reserve {
-        reserve_data.is_collateral = true;
-    }
-  }
+        if params.is_collateral == false && dtoken_balance == Nat::from(0u128) {
+            if let Some((_, reserve_data)) = user_reserve {
+                reserve_data.is_collateral = true;
+            }
+        }
         // if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
         //     if let Some(ref mut reserves) = user_data.reserves {
         //         reserves.retain(|(name, _)| name != &params.asset);
@@ -430,7 +458,6 @@ impl UpdateLogic {
         } else {
             return Err(Error::NoUserReserveDataFound);
         }
-        
 
         // if debttoken_balance == Nat::from(0u128) && is_collateral == false {
         //     if let Some(ref mut reserves) = user_data.reserves {
@@ -571,44 +598,41 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
             return Err(e);
         }
     }
-if total_debt != Nat::from(0u128) {
-    let mut ltv = Nat::from(0u128);
-    if amount != Nat::from(0u128) {
-        let mut adjusted_collateral = Nat::from(0u128);
-        if total_collateral < usd_amount.clone() {
-            adjusted_collateral = Nat::from(0u128);
-        }else{
-            adjusted_collateral = total_collateral.clone() - usd_amount.clone();
-        }
-        
-        ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
-        if total_debt == Nat::from(0u128) {
-            ltv = Nat::from(0u128);
-        } else {
-            ltv = total_debt.scaled_div(adjusted_collateral);
-        }
-    
-    } else {
-        let adjusted_collateral = total_collateral.clone() + added_usd_amount;
-        ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
-        if total_debt == Nat::from(0u128) {
-            ltv = Nat::from(0u128);
-        } else {
-            ltv = total_debt.scaled_div(adjusted_collateral);
-        }
-        
-    }
+    if total_debt != Nat::from(0u128) {
+        let mut ltv = Nat::from(0u128);
+        if amount != Nat::from(0u128) {
+            let mut adjusted_collateral = Nat::from(0u128);
+            if total_collateral < usd_amount.clone() {
+                adjusted_collateral = Nat::from(0u128);
+            } else {
+                adjusted_collateral = total_collateral.clone() - usd_amount.clone();
+            }
 
-    ltv = ltv * Nat::from(100u128);
-    ic_cdk::println!("New ltv: {}", ltv);
-    if ltv >= liquidation_threshold_var {
-        return Err(Error::LTVGreaterThanThreshold);
+            ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
+            if total_debt == Nat::from(0u128) {
+                ltv = Nat::from(0u128);
+            } else {
+                ltv = total_debt.scaled_div(adjusted_collateral);
+            }
+        } else {
+            let adjusted_collateral = total_collateral.clone() + added_usd_amount;
+            ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
+            if total_debt == Nat::from(0u128) {
+                ltv = Nat::from(0u128);
+            } else {
+                ltv = total_debt.scaled_div(adjusted_collateral);
+            }
+        }
+
+        ltv = ltv * Nat::from(100u128);
+        ic_cdk::println!("New ltv: {}", ltv);
+        if ltv >= liquidation_threshold_var {
+            return Err(Error::LTVGreaterThanThreshold);
+        }
     }
-}
     let user_reserve = user_reserve(&mut user_data, &asset);
 
     if let Some((_, user_reserve_data)) = user_reserve {
-        
         user_reserve_data.is_collateral = !user_reserve_data.is_collateral;
 
         if user_reserve_data.is_using_as_collateral_or_borrow {

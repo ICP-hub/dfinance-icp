@@ -1,24 +1,55 @@
+use ic_cdk::update;
+use candid::{Nat, Principal};
+use crate::api::state_handler::*;
+use crate::constants::errors::Error;
+use crate::reserve_ledger_canister_id;
+use crate::declarations::storable::Candid;
 use crate::api::functions::asset_transfer_from;
+use crate::protocol::libraries::logic::reserve::{self};
+use crate::protocol::libraries::logic::update::UpdateLogic;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::protocol::libraries::logic::validation::ValidationLogic;
+use crate::protocol::libraries::math::calculate::update_token_price;
+use crate::constants::interest_variables::constants::INITIAL_DEBT_INDEX;
+use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::api::resource_manager::{
     acquire_lock, is_amount_locked, release_amount, release_lock, repay_release_amount,
 };
-use crate::api::state_handler::*;
-use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::INITIAL_DEBT_INDEX;
-use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::declarations::storable::Candid;
-use crate::protocol::libraries::logic::reserve::{self};
-use crate::protocol::libraries::logic::update::UpdateLogic;
-use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::update_token_price;
-use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::{declarations, reserve_ledger_canister_id};
-use candid::{Nat, Principal};
-use ic_cdk::update;
 
 // -------------------------------------
 // ----------- BORROW LOGIC ------------
 // -------------------------------------
+
+/// @title Execute Borrow Function
+/// @notice This function allows users to borrow a specified amount of assets, performing all necessary checks, state updates, and validations.
+///         It first validates the input parameters, checks the caller's identity, acquires a lock, and proceeds with a sequence of operations
+///         including validating the borrow request, updating user and reserve data, and transferring the asset to the user.
+///         If any operation fails, it rolls back previous changes and ensures that all resources are properly released, including locks and amounts.
+///
+/// @dev The function follows a structured workflow:
+///      1. **Input validation**: Ensures the asset name is valid, the amount is greater than zero, and that the caller is not anonymous.
+///      2. **Lock acquisition**: Ensures only one operation can proceed at a time for a user.
+///      3. **State mutation**: The reserve data and user profile are updated in the canister's state.
+///      4. **Borrow validation**: Checks whether the borrow request complies with platform rules (e.g., limits, available assets).
+///      5. **Asset transfer**: Transfers the requested amount of asset from the platform's reserve to the user's wallet.
+///      6. **Rollback mechanism**: In case of a failure in any part of the process, the function reverts any changes made to the system and releases resources.
+///
+/// @param params The parameters needed to execute the borrow operation, including the asset name and the amount to be borrowed.
+///               The structure of `ExecuteBorrowParams` includes:
+///               - `asset`: The name of the asset to be borrowed.
+///               - `amount`: The amount of the asset to be borrowed.
+/// 
+/// @return Result<Nat, Error> Returns the new balance of the user after a successful asset transfer or an error code if any operation fails.
+///
+/// @error Error::EmptyAsset If the asset name is empty.
+/// @error Error::InvalidAssetLength If the asset name exceeds the maximum length.
+/// @error Error::InvalidAmount If the borrow amount is less than or equal to zero.
+/// @error Error::AnonymousPrincipal If the caller is an anonymous principal.
+/// @error Error::LockAcquisitionFailed If the lock acquisition fails.
+/// @error Error::NoReserveDataFound If the reserve data for the asset cannot be found.
+/// @error Error::BorrowValidationFailed If the borrow request fails validation.
+/// @error Error::ErrorRollBack If the borrow process fails and rollback operations cannot be completed.
+/// @error Error::ErrorMintDebtTokens If the system fails to mint the necessary debt tokens when the asset transfer fails.
 #[update]
 pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {
@@ -279,6 +310,28 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 // -------------------------------------
 // ------------ REPAY LOGIC ------------
 // -------------------------------------
+
+/// @notice Executes the repay operation for a given asset and amount. This function validates the parameters,
+/// performs necessary checks for asset conditions, and updates the user's debt position in the reserve system.
+/// It also ensures that operations are performed by valid principals and manages locking during the operation.
+/// If the operation fails at any step, the state is rolled back to ensure consistency.
+///
+/// @param params The parameters for the repay operation. Includes the asset to repay, the amount, and the principal
+///               that the repayment is being made on behalf of (if any).
+///               - `asset`: The name of the asset to be repaid (string).
+///               - `amount`: The amount of the asset to repay (Nat).
+///               - `on_behalf_of`: The principal ID of the user being repaid on behalf of (Optional, Principal).
+/// 
+/// @return Result<Nat, Error> Returns the updated balance (Nat) after the repayment is executed or an error
+///         indicating why the repayment failed (Error).
+///
+/// @dev This function performs the following actions:
+/// - Validates the parameters (asset, amount, on behalf of principal).
+/// - Acquires a lock to prevent re-entrancy issues during the repayment process.
+/// - Fetches the reserve data and validates if the repayment can proceed.
+/// - Updates the user’s data in the reserve after the repayment is successful.
+/// - Handles the token transfer from the liquidator or user to the platform canister.
+/// - If any step fails, the transaction is rolled back and the state is reverted to prevent inconsistencies.
 #[update]
 pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {

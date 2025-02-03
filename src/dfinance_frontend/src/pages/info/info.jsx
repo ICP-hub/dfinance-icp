@@ -71,25 +71,25 @@ const DashboardCards = () => {
   });
   const { backendActor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [like, setLike] = useState(true);
+  const [like, setLike] = useState(false);
   const [notification, setNotification] = useState("");
-  // const checkControllerStatus = async () => {
-  //   if (!backendActor) {
-  //     throw new Error("Backend actor not initialized");
-  //   }
-  //   try {
-  //     const result = await backendActor.to_check_controller();
-  //     console.log("Controller Status:", result); // Debug log
-  //     setLike(result); // Update `like` state with the backend value
-  //   } catch (err) {
-  //     console.error("Error fetching controller status:", err);
-  //     setError("Failed to fetch controller status");
-  //   }
-  // };
+  const checkControllerStatus = async () => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.to_check_controller();
+      console.log("Controller Status:", result); // Debug log
+      setLike(result); // Update `like` state with the backend value
+    } catch (err) {
+      console.error("Error fetching controller status:", err);
+      setError("Failed to fetch controller status");
+    }
+  };
 
-  // useEffect(() => {
-  //   checkControllerStatus();
-  // }, [backendActor]);
+  useEffect(() => {
+    checkControllerStatus();
+  }, [backendActor]);
   const [cardData, setCardData] = useState([
     { title: "Users", value: "Loading...", link: "/users" },
     { title: "Cycles", value: "5678", link: "/cycles" },

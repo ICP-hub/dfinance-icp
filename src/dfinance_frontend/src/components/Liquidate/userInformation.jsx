@@ -964,7 +964,7 @@ const UserInformationPopup = ({
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose();
-    // dispatch(toggleRefreshLiquidate());
+    dispatch(toggleRefreshLiquidate());
   };
 
   useEffect(() => {

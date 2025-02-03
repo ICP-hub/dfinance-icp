@@ -8,6 +8,7 @@ import WalletModal from "../../components/Dashboard/WalletModal";
 import Lottie from "../../components/Common/Lottie";
 import useAssetData from "../../components/Common/useAssets";
 import MiniLoader from "../../components/Common/MiniLoader";
+import Error from "../../pages/Error";
 const HealthFactorList = () => {
   const { backendActor, isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,7 +27,24 @@ const HealthFactorList = () => {
   const [userAccountData, setUserAccountData] = useState({});
   const [healthFactors, setHealthFactors] = useState({});
   const filterRef = useRef(null); // Reference for dropdown
+  const [like, setLike] = useState(false);
+  const checkControllerStatus = async () => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.to_check_controller();
+      console.log("Controller Status:", result); // Debug log
+      setLike(result); // Update `like` state with the backend value
+    } catch (err) {
+      console.error("Error fetching controller status:", err);
+      setError("Failed to fetch controller status");
+    }
+  };
 
+  useEffect(() => {
+    checkControllerStatus();
+  }, [backendActor]);
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -210,7 +228,8 @@ const HealthFactorList = () => {
     };
   }, [selectedUser]);
   return (
-    <div id="dashboard-page" className="w-full">
+    like ? (
+    <div id="health-page" className="w-full">
       {/* ICP Assets + Search Bar */}
       <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8 relative">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText -ml-3">
@@ -572,6 +591,9 @@ const HealthFactorList = () => {
       )}
       {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
     </div>
+    ) : (
+      <Error />
+    )
   );
 };
 

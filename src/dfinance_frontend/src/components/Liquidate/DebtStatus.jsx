@@ -376,40 +376,93 @@ const DebtStatus = () => {
     return;
   };
 
-  const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
-    const reserve = reserveData?.[assetName];
-    const currentLiquidity = reserve?.Ok?.liquidity_index;
+  // const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
+  //   const reserve = reserveData?.[assetName];
+  //   const currentLiquidity = reserve?.Ok?.liquidity_index;
+  //   const assetBalance =
+  //     getBalanceForPrincipalAndAsset(
+  //       mappedItem.principal?._arr,
+  //       assetName,
+  //       "dtokenBalance"
+  //     ) || 0;
+
+  //   const supplyValue =
+  //     (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
+  //     (Number(currentLiquidity) * 1e8);
+
+  //   return supplyValue;
+  // };
+
+  // const calculateAssetBorrow = (assetName, mappedItem, reserveData) => {
+  //   const reserve = reserveData?.[assetName];
+  //   const DebtIndex = reserve?.Ok?.debt_index;
+  //   const assetBorrowBalance =
+  //     getBalanceForPrincipalAndAsset(
+  //       mappedItem.principal?._arr,
+  //       assetName,
+  //       "debtTokenBalance"
+  //     ) || 0;
+
+  //   const borrowValue =
+  //     (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
+  //     (Number(DebtIndex) * 1e8);
+
+  //   return borrowValue;
+  // };
+  const calculateAssetSupply = (assetName, mappedItem) => {
+    const reserves = mappedItem?.userData?.reserves?.[0] || [];
+  console.log("reserve in asset supply",reserves)
+    let currentLiquidity = 0;
+    reserves.map((reserveGroup) => {
+      if (reserveGroup[0] === assetName) {
+        currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
+        console.log("Liquidity Index for", assetName, ":", currentLiquidity);
+      }
+    });
+  
     const assetBalance =
       getBalanceForPrincipalAndAsset(
         mappedItem.principal?._arr,
         assetName,
         "dtokenBalance"
       ) || 0;
-
-    const supplyValue =
+  
+    if (!currentLiquidity) return 0; // Prevent division by zero
+   
+    return Math.trunc(
       (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
-      (Number(currentLiquidity) * 1e8);
-
-    return supplyValue;
+      Number(currentLiquidity)
+    );
   };
-
-  const calculateAssetBorrow = (assetName, mappedItem, reserveData) => {
-    const reserve = reserveData?.[assetName];
-    const DebtIndex = reserve?.Ok?.debt_index;
+  
+  const calculateAssetBorrow = (assetName, mappedItem) => {
+    const reserves =mappedItem?.userData?.reserves?.[0] || [];
+  console.log("reserves in borrow",reserves)
+    let debtIndex = 0;
+    reserves.map((reserveGroup) => {
+      if (reserveGroup[0] === assetName) {
+        debtIndex = reserveGroup[1]?. variable_borrow_index
+         || 0;
+        console.log("Debt Index for", assetName, ":", debtIndex);
+      }
+    });
+  
     const assetBorrowBalance =
       getBalanceForPrincipalAndAsset(
         mappedItem.principal?._arr,
         assetName,
         "debtTokenBalance"
       ) || 0;
-
-    const borrowValue =
+  
+    if (!debtIndex) return 0; // Prevent division by zero
+  
+    // Calculate asset borrow
+    return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-      (Number(DebtIndex) * 1e8);
-
-    return borrowValue;
+      Number(debtIndex)
+    );
   };
-
+ 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
@@ -545,12 +598,12 @@ const DebtStatus = () => {
                                   const assetSupply = calculateAssetSupply(
                                     assetName,
                                     item,
-                                    reserveData
+                                   
                                   );
                                   const assetBorrow = calculateAssetBorrow(
                                     assetName,
                                     item,
-                                    reserveData
+                                   
                                   );
 
                                   if (assetBorrow > 0) {
@@ -589,12 +642,12 @@ const DebtStatus = () => {
                                   const assetSupply = calculateAssetSupply(
                                     assetName,
                                     item,
-                                    reserveData
+                                    
                                   );
                                   const assetBorrow = calculateAssetBorrow(
                                     assetName,
                                     item,
-                                    reserveData
+                                    
                                   );
                                   const item1 = filteredItems.find(
                                     (item) => item[0] === assetName

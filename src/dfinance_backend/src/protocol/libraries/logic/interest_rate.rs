@@ -1,3 +1,6 @@
+use serde::Serialize;
+use candid::{CandidType, Deserialize, Nat};
+use interest_variables::constants::OPTIMAL_USAGE_RATIO;
 use crate::{
     constants::{
         errors::Error,
@@ -24,9 +27,6 @@ use crate::{
     protocol::libraries::math::math_utils::ScalingMath,
     user_normalized_supply,
 };
-use candid::{CandidType, Deserialize, Nat};
-use interest_variables::constants::OPTIMAL_USAGE_RATIO;
-use serde::Serialize;
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct InterestRateParams {
@@ -37,6 +37,10 @@ pub struct InterestRateParams {
     pub variable_rate_slope2: Nat,
 }
 
+
+/// @dev Initializes interest rate parameters for the specified asset.
+/// @param asset The asset name (e.g., "ckBTC", "ckETH", "ICP", etc.).
+/// @return Returns initialized `InterestRateParams` for the asset, or default values if unrecognized.
 pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     println!("asset name in initialize {:?}", asset.to_string());
     match asset {
@@ -99,6 +103,15 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     }
 }
 
+
+/// @dev Calculates the interest rates based on liquidity added, liquidity taken, and total debt.
+/// It computes both the borrow rate and the liquidity rate based on the given parameters.
+/// @param liq_added The amount of liquidity added.
+/// @param liq_taken The amount of liquidity taken.
+/// @param total_debt The total debt amount.
+/// @param params The interest rate parameters for the asset.
+/// @param reserve_factor The reserve factor for the asset.
+/// @param asset The asset name (e.g., "ckBTC", "ckETH", "ICP").
 pub async fn calculate_interest_rates(
     liq_added: Nat,
     liq_taken: Nat,

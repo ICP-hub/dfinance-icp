@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
@@ -14,6 +14,12 @@ import useAssetData from "../../components/Common/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
 import MiniLoader from "../../components/Common/MiniLoader";
+import { Doughnut, Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
+
+// Register Chart.js elements
+ChartJS.register(ArcElement, Tooltip);
+
 const DashboardCards = () => {
   const navigate = useNavigate();
   const {
@@ -58,7 +64,11 @@ const DashboardCards = () => {
     ICP: ckICPUsdRate,
     ckUSDT: ckUSDTBalance,
   };
-
+  const [healthStats, setHealthStats] = useState({
+    lessThanOne: 0,
+    greaterThanOne: 0,
+    infinity: 0,
+  });
   const { backendActor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [like, setLike] = useState(false);
@@ -101,18 +111,32 @@ const DashboardCards = () => {
     { name: "ICP", imageUrl: icp },
   ];
   console.log("interestAccure", interestAccure);
+  const [users, setUsers] = useState([]); //  State to store users
+
+  const handleViewMore = () => {
+    navigate("/2a45fg/health-factor-list"); // 🔹 Navigate to the new page
+  };
   const getAllUsers = async () => {
     if (!backendActor) {
-      throw new Error("Backend actor not initialized");
+      console.error("Backend actor not initialized");
+      return;
     }
 
     try {
       const allUsers = await backendActor.get_all_users();
-      return allUsers;
+      console.log("Retrieved Users:", allUsers);
+
+      setUsers(allUsers); //  Store users in state
     } catch (error) {
-      throw error;
+      console.error("Error fetching users:", error);
     }
   };
+
+  //  Fetch Users on Component Mount
+  useEffect(() => {
+    getAllUsers();
+  }, []);
+
   const getCycles = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -290,6 +314,24 @@ const DashboardCards = () => {
       }
     }, oneDay); // Check every minute (60 seconds)
   };
+  const pieData = {
+    datasets: [
+      {
+        data: [
+          healthStats.lessThanOne,
+          healthStats.greaterThanOne,
+          healthStats.infinity,
+        ],
+        backgroundColor: ["#EF4444", "#22C55E", "#EAB308"],
+        hoverBackgroundColor: ["#EF4444", "#22C55E", "#EAB308"],
+
+        borderColor: "#ffffff", // White border for separation
+        borderWidth: 6, // Creates spacing between segments
+        cutout: "70%", // Makes it a donut chart
+        hoverOffset: 4,
+      },
+    ],
+  };
 
   // Function to handle token balances
   const handleTokenBalances = () => {
@@ -311,12 +353,14 @@ const DashboardCards = () => {
   };
   useEffect(() => {
     const fetchData = async () => {
+      if (!users.length) return; //  Ensure users are available before proceeding
+
       setLoading(true);
       try {
-        const [users, cycles] = await Promise.all([getAllUsers(), getCycles()]);
-        // const users = await getAllUsers();
-        const usersCount = users.length;
-        // const cycles =5000000000000;
+        const cycles = await getCycles(); // Fetch cycles only
+
+        const usersCount = users.length; //  Use stored users count
+
         const formattedData = [
           { title: "Users", value: usersCount, link: "/users" },
           { title: "Cycles", value: formatNumber(cycles), link: "/cycles" },
@@ -340,7 +384,84 @@ const DashboardCards = () => {
     };
 
     fetchData();
-  }, [backendActor, interestAccure]);
+  }, [users, interestAccure]);
+  const cachedData = useRef({}); //  Cache to store fetched user data
+  const [userAccountData, setUserAccountData] = useState({});
+  const [healthFactors, setHealthFactors] = useState({});
+
+  //  Fetch and cache user account data
+  const fetchUserAccountDataWithCache = async (principal) => {
+    if (!principal || cachedData.current[principal]) return; //  Skip if already cached
+
+    try {
+      const result = await backendActor.get_user_account_data([principal]);
+      if (result) {
+        cachedData.current[principal] = result; //  Cache result
+        setUserAccountData((prev) => ({ ...prev, [principal]: result }));
+      }
+    } catch (error) {
+      console.error(` Error fetching data for principal: ${principal}`, error);
+    }
+  };
+
+  //  Fetch all user data in parallel, ensuring cache usage
+  useEffect(() => {
+    if (!users || users.length === 0) return; //  Ensure `users` is valid
+
+    //  Fetch user data in parallel while respecting cache
+    Promise.all(
+      users.map(([principal]) => {
+        if (principal) return fetchUserAccountDataWithCache(principal);
+        return null; // Skip invalid users
+      })
+    )
+      .then(() => console.log(" All user account data fetched"))
+      .catch((error) =>
+        console.error(" Error fetching user account data in batch:", error)
+      );
+  }, [users]); //  Runs when users change
+  console.log("userAccountData", userAccountData);
+  useEffect(() => {
+    if (!userAccountData || Object.keys(userAccountData).length === 0) return;
+
+    const updatedHealthFactors = {};
+
+    Object.entries(userAccountData).forEach(([principal, data]) => {
+      if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
+        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000; //  Divide by 1e8
+      } else {
+        updatedHealthFactors[principal] = null; //  Handle missing values
+      }
+    });
+
+    console.log(
+      " Updated Health Factors (Divided by 1e8):",
+      updatedHealthFactors
+    );
+    setHealthFactors(updatedHealthFactors);
+  }, [userAccountData]);
+
+  //  Extract and update Health Factor statistics
+  useEffect(() => {
+    if (!healthFactors || Object.keys(healthFactors).length === 0) return;
+
+    let lessThanOne = 0,
+      greaterThanOne = 0,
+      infinity = 0;
+
+    Object.values(healthFactors).forEach((factor) => {
+      if (factor === "Infinity" || factor > 100) {
+        //  Classify `>100` as Infinity
+        infinity++;
+      } else if (!isNaN(Number(factor)) && Number(factor) < 1) {
+        lessThanOne++;
+      } else if (!isNaN(Number(factor))) {
+        greaterThanOne++;
+      }
+    });
+
+    setHealthStats({ lessThanOne, greaterThanOne, infinity });
+  }, [healthFactors]);
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -404,91 +525,178 @@ const DashboardCards = () => {
 
   return (
     <>
-      {like ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-14 px-5 mt-16">
-          {cardData.map((card, index) => (
-            <div
-              key={index}
-              className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63]  dark:text-darkTextSecondary1 rounded-xl shadow-lg  px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
-            >
-              <h3 className="text-xl font-semibold mt-2">{card.title}</h3>
-
-              <p
-                className={`text-4xl font-bold mt-2 ${
-                  loading
-                    ? "text-[#233D63] dark:text-darkText"
-                    : card.title === "Cycles"
-                    ? getCycleColor(card.value) // Apply cycle color only for Cycles
-                    : "text-[#233D63] dark:text-darkText"
-                }`}
+      {loading ? (
+        <div className="h-[150px] flex justify-center items-center">
+          <MiniLoader isLoading={true} />
+        </div>
+      ) : like ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-14 px-5 mt-16">
+          {/*  Users Card */}
+          {cardData
+            .filter((card) => card.title === "Users")
+            .map((card, index) => (
+              <div
+                key={index}
+                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
               >
-                {console.log("card.title", card.title)}
-                {loading ? (
-                  <div className="h-[150px] flex justify-center items-center">
-                    <MiniLoader isLoading={true} />
-                  </div>
-                ) : card.title === "Interest Accured" ? (
-                  <>
-                    <span className="font-normal">$</span>{" "}
-                    {/* Smaller font for the dollar sign */}
-                    {card.value}
-                  </>
-                ) : (
-                  card.value
-                )}
-              </p>
-
-              {card.title === "Reserves" && !loading && (
-                <div className="mt-3 flex flex-wrap justify-center gap-6">
-                  {card.assets.map((asset, idx) => (
-                    <label
-                      key={idx}
-                      className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="asset"
-                        className="visble"
-                        ref={radioRefs[asset.name]}
-                        onChange={() => handleAssetSelection(asset)}
-                      />
-                      <img
-                        src={asset.imageUrl}
-                        alt={asset.name}
-                        className="w-8 h-8 object-cover rounded-full border-2 border-transparent checked:border-blue-500 ml-1"
-                      />
-                    </label>
-                  ))}
-                </div>
-              )}
-
-              {/* Show threshold if it's the "Cycles" card */}
-              {card.title === "Cycles" && !loading && (
-                <p className="text-sm mt-3 text-[#233D63]  dark:text-darkTextSecondary">
-                  Threshold Value: {formatNumber(threshold)}
+                <h3 className="text-xl font-semibold mt-2 ">{card.title}</h3>
+                <p className="text-4xl font-bold mb-3.5 mt-2 text-[#233D63] dark:text-darkText">
+                  {card.value}
                 </p>
-              )}
 
-              {/* Display 'View Details' button only for the 'Users' card */}
-              {card.title === "Users" && !loading && (
-                <a
-                  href="https://analytics.google.com/analytics/web/#/analysis/p472242742/edit/5FJVJVVVSzm_gOhVztd31w"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 flex items-center  text-[#233D63] hover:dark:text-darkText  dark:text-darkTextSecondary hover:text-[#070d15] text-sm"
-                >
-                  Open Analytics{" "}
-                  <ExternalLink
-                    className="ml-1"
-                    size={16}
-                    dark:color="#87CEEB"
-                    color="#4169E1"
-                  />
-                </a>
-              )}
+                {/*  Users Card: View Analytics Button */}
+                {!loading && (
+                  <a
+                    href="https://analytics.google.com/analytics/web/#/analysis/p472242742/edit/5FJVJVVVSzm_gOhVztd31w"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 mb-14 flex items-center text-[#233D63] hover:dark:text-darkText dark:text-darkTextSecondary hover:text-[#070d15] text-sm"
+                  >
+                    Open Analytics{" "}
+                    <ExternalLink
+                      className="ml-1"
+                      size={16}
+                      dark:color="#87CEEB"
+                      color="#4169E1"
+                    />
+                  </a>
+                )}
+              </div>
+            ))}
+
+          {/*  Health Factor Card */}
+          <div className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300 relative">
+            {/* Small View More Button */}
+            <button
+              onClick={handleViewMore}
+              className="absolute top-2 right-2  text-white rounded-md px-2 py-0.5 text-xs  hover:bg-opacity-80 transition"
+            >
+              More
+            </button>
+
+            <h3 className="text-xl font-semibold text-center mb-3 mt-5">
+              Health Factor
+            </h3>
+
+            <div className="flex justify-between items-center w-full">
+              {/*  Left Side - Legend */}
+              <div className="flex flex-col space-y-1 pl-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-4 bg-red-500 border border-white rounded-md"></div>
+                  <span className="ml-2 text-sm text-gray-100">&lt; 1</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-10 h-4 bg-green-500 border border-white rounded-md"></div>
+                  <span className="ml-2 text-sm text-gray-100">&gt; 1</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-10 h-4 bg-yellow-500 border border-white rounded-md"></div>
+                  <span className="ml-2 text-sm text-gray-100">Infinity</span>
+                </div>
+              </div>
+
+              {/*  Right Side - Pie Chart */}
+              {/* Adjusted Container Size */}
+              <div className="w-40 h-26 pr-2">
+                <Doughnut
+                  data={pieData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false, // Allow resizing
+                    cutout: "70%", // Controls the hollow center
+                    plugins: {
+                      legend: { display: false }, // Hide default legend
+                      tooltip: { enabled: true }, // Keep tooltips
+                    },
+                  }}
+                />
+              </div>
             </div>
-          ))}
-          {/* {error && <div className="text-red-500">{error}</div>} */}
+          </div>
+
+          {/*  Reserves Card */}
+          {cardData
+            .filter((card) => card.title === "Reserves")
+            .map((card, index) => (
+              <div
+                key={index}
+                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
+              >
+                <h3 className="text-xl font-semibold  mt-2.5">{card.title}</h3>
+                <p className="text-4xl font-bold mb-3 mt-2.5 text-[#233D63] dark:text-darkText">
+                  {card.value}
+                </p>
+
+                {/*  Asset Selection */}
+                {!loading && (
+                  <div className="mt-2.5 mb-14 flex flex-wrap justify-center gap-6">
+                    {card.assets.map((asset, idx) => (
+                      <label
+                        key={idx}
+                        className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="asset"
+                          className="visible"
+                          ref={radioRefs[asset.name]}
+                          onChange={() => handleAssetSelection(asset)}
+                        />
+                        <img
+                          src={asset.imageUrl}
+                          alt={asset.name}
+                          className="w-6 h-6 object-cover rounded-full border-2 border-transparent checked:border-blue-500 ml-1"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+
+          {/*  Interest Accrued Card */}
+          {cardData
+            .filter((card) => card.title === "Interest Accured")
+            .map((card, index) => (
+              <div
+                key={index}
+                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
+              >
+                <h3 className="text-xl font-semibold mt-1.5 ">{card.title}</h3>
+                <p className="text-4xl font-bold mb-5 mt-2 text-[#233D63] dark:text-darkText">
+                  <span className="font-normal">$</span>
+                  {card.value}
+                </p>
+              </div>
+            ))}
+
+          {/*  Cycles Card */}
+          {cardData
+            .filter((card) => card.title === "Cycles")
+            .map((card, index) => (
+              <div
+                key={index}
+                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
+              >
+                <h3 className="text-xl font-semibold mt-5">{card.title}</h3>
+                <p
+                  className={`text-4xl font-bold mt-2 ${
+                    loading
+                      ? "text-[#233D63] dark:text-darkText"
+                      : getCycleColor(card.value)
+                  }`}
+                >
+                  {loading ? <MiniLoader isLoading={true} /> : card.value}
+                </p>
+
+                {/*  Threshold for Cycles */}
+                {!loading && (
+                  <p className="text-sm mt-3 text-[#233D63] dark:text-darkTextSecondary">
+                    Threshold Value: {formatNumber(threshold)}
+                  </p>
+                )}
+              </div>
+            ))}
           {showPopup && selectedAsset && (
             <div
               key={selectedAsset.name} // Unique key for the popup

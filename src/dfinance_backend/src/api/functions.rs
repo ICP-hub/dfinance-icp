@@ -1,7 +1,6 @@
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::get_cached_exchange_rate;
@@ -11,13 +10,19 @@ use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::api;
-use ic_cdk::api::management_canister::http_request::{
-    http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod,
-};
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
 use serde_json::json;
+// use ic_cdk::api::management_canister::http_request::{
+//     http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod,
+// };
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+struct Account {
+    owner: Principal,
+    subaccount: Option<Vec<u8>>,
+}
 
 // Icrc2_transfer_from inter canister call.
 pub async fn asset_transfer_from(
@@ -51,10 +56,37 @@ pub async fn asset_transfer_from(
     }
 }
 
-#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
-struct Account {
-    owner: Principal,
-    subaccount: Option<Vec<u8>>,
+// icrc1_transfer
+pub async fn asset_transfer(
+    to: Principal,
+    ledger: Principal,
+    from: Principal,
+    amount: Nat,
+) -> Result<Nat, String> {
+    let token_args = TransferArgs {
+        to: TransferAccount {
+            owner: to,
+            subaccount: None,
+        },
+        fee: None,
+        spender_subaccount: None,
+        memo: None,
+        created_at_time: None,
+        amount: amount.clone(),
+    };
+
+    let (new_result,): (TransferFromResult,) =
+        call(ledger, "icrc1_transfer", (token_args, false, Some(from)))
+            .await
+            .map_err(|e| e.1)?;
+    ic_cdk::println!(
+        "asset_transfer executed successfully and the call result : {:?}",
+        new_result
+    );
+    match new_result {
+        TransferFromResult::Ok(balance) => Ok(balance),
+        TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+    }
 }
 
 // Icrc1_balance inter canister call.
@@ -105,6 +137,20 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
     Ok(balance)
 }
 
+/// # Get Total Supply Function
+///
+/// This function retrieves the total supply of tokens from a specified canister using the `icrc1_total_supply` method.
+/// It performs the following steps:
+/// - Validates that the provided `canister_id` is not an anonymous principal.
+/// - Makes an inter-canister call to the `icrc1_total_supply` endpoint of the specified canister.
+/// - Returns the total supply of tokens if the call is successful.
+///
+/// # Arguments
+/// - `canister_id`: The principal of the canister from which to retrieve the total supply.
+///
+/// # Returns
+/// - `Ok(Nat)`: The total supply of tokens.
+/// - `Err(Error)`: If the `canister_id` is anonymous or the inter-canister call fails.
 #[query]
 pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     if canister_id == Principal::anonymous() {
@@ -123,76 +169,25 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     }
 }
 
-// pub async fn get_fees(canister: Principal) -> Result<Nat, Error> {
-//     if canister == Principal::anonymous() {
-//         return Err(Error::AnonymousPrincipal);
-//     }
-//     let empty_arg_result = candid::encode_one(());
-//     let empty_arg = match empty_arg_result {
-//         Ok(args) => args,
-//         Err(err) => {
-//             ic_cdk::println!("Error encoding arguments: {:?}", err);
-//             return Err(Error::ErrorEncoding);
-//         }
-//     };
-
-//     let raw_response_result =
-//         ic_cdk::api::call::call_raw(canister, "icrc1_fee", &empty_arg, 0).await;
-//     let raw_response = match raw_response_result {
-//         Ok(response) => {
-//             ic_cdk::println!("Call succeeded with response: {:?}", response);
-//             response
-//         }
-//         Err((code, message)) => {
-//             ic_cdk::println!("Call failed with code: {:?}, message: {}", code, message);
-//             return Err(Error::ErrorRawResponse);
-//         }
-//     };
-
-//     let fees_result = decode_one(&raw_response);
-//     let fees = match fees_result {
-//         Ok(fee) => fee,
-//         Err(err) => {
-//             ic_cdk::println!("Error decoding balance: {:?}", err);
-//             return Err(Error::ErrorDecoding);
-//         }
-//     };
-
-//     Ok(fees)
-// }
-
-pub async fn asset_transfer(
-    to: Principal,
-    ledger: Principal,
-    from: Principal,
-    amount: Nat,
-) -> Result<Nat, String> {
-    let token_args = TransferArgs {
-        to: TransferAccount {
-            owner: to,
-            subaccount: None,
-        },
-        fee: None,
-        spender_subaccount: None,
-        memo: None,
-        created_at_time: None,
-        amount: amount.clone(),
-    };
-
-    let (new_result,): (TransferFromResult,) =
-        call(ledger, "icrc1_transfer", (token_args, false, Some(from)))
-            .await
-            .map_err(|e| e.1)?;
-    ic_cdk::println!(
-        "asset_transfer executed successfully and the call result : {:?}",
-        new_result
-    );
-    match new_result {
-        TransferFromResult::Ok(balance) => Ok(balance),
-        TransferFromResult::Err(err) => Err(format!("{:?}", err)),
-    }
-}
-
+/// # Faucet Function
+///
+/// This function allows users to request tokens from a faucet for a specified asset and amount.
+/// It performs the following steps:
+/// - Validates the asset and amount inputs.
+/// - Ensures the caller is not an anonymous principal.
+/// - Acquires a lock to prevent concurrent faucet requests.
+/// - Retrieves user data and checks the ledger balance.
+/// - Validates the faucet limit and updates user usage.
+/// - Transfers the requested amount from the platform to the user.
+/// - Releases the lock after the operation.
+///
+/// # Arguments
+/// - `asset`: The asset symbol (e.g., "ETH", "BTC"). Must be non-empty and <= 7 characters.
+/// - `amount`: The amount of tokens to request. Must be greater than zero.
+///
+/// # Returns
+/// - `Ok(Nat)`: The new balance after the transfer.
+/// - `Err(Error)`: If any validation or operation fails.
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
@@ -266,30 +261,26 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
         if amount > balance {
             ic_cdk::println!("wallet balance is low");
-            if let Err(e) = send_admin_notifications("initial", asset.clone()).await {
-                ic_cdk::println!("Failed to send admin notification: {:?}", e);
-                return Err(e);
-            }
             return Err(Error::LowWalletBalance);
         }
 
-        if (balance.clone() - amount.clone()) == Nat::from(0u128) {
-            ic_cdk::println!("wallet balance is low");
-            if let Err(e) = send_admin_notifications("mid", asset.clone()).await {
-                ic_cdk::println!("Failed to send admin notification: {:?}", e);
-                return Err(e);
-            };
-        }
+        // if (balance.clone() - amount.clone()) == Nat::from(0u128) {
+        //     ic_cdk::println!("wallet balance is low");
+        //     if let Err(e) = send_admin_notifications("mid", asset.clone()).await {
+        //         ic_cdk::println!("Failed to send admin notification: {:?}", e);
+        //         return Err(e);
+        //     };
+        // }
 
-        if (balance.clone() - amount.clone())
-            <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
-        {
-            ic_cdk::println!("wallet balance is low");
-            if let Err(e) = send_admin_notifications("final", asset.clone()).await {
-                ic_cdk::println!("Failed to send admin notification: {:?}", e);
-                return Err(e);
-            };
-        }
+        // if (balance.clone() - amount.clone())
+        //     <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
+        // {
+        //     ic_cdk::println!("wallet balance is low");
+        //     if let Err(e) = send_admin_notifications("final", asset.clone()).await {
+        //         ic_cdk::println!("Failed to send admin notification: {:?}", e);
+        //         return Err(e);
+        //     };
+        // }
 
         let mut rate: Option<Nat> = None;
 
@@ -414,6 +405,20 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     result
 }
 
+/// # Reset Faucet Usage Function
+///
+/// This function resets the faucet usage for a specific user. It performs the following steps:
+/// - Validates that the caller is not an anonymous principal.
+/// - Retrieves the user's data.
+/// - Iterates through the user's reserves and resets the `faucet_usage` to zero for each reserve.
+/// - Updates the user's data in the state.
+///
+/// # Arguments
+/// - `user_principal`: The principal of the user whose faucet usage is to be reset.
+///
+/// # Returns
+/// - `Ok(())`: If the faucet usage is successfully reset.
+/// - `Err(Error)`: If the user is anonymous, no user data is found, or no reserves are available.
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
@@ -454,89 +459,97 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     Ok(())
 }
 
-async fn send_admin_notifications(stage: &str, asset: String) -> Result<(), Error> {
-    let message = match stage {
-        "initial" => format!("Dear Admin,\n\nThe platform's faucet balance for {} is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team", asset),
-        "mid" => format!("Dear Admin,\n\nUrgent: The platform's faucet balance for {} is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team", asset),
-        "final" => format!("Dear Admin,\n\nReminder: The platform's faucet balance for {} is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team", asset),
-        _ => "".to_string(),
-    };
 
-    let subject = "Faucet Amount Low - Mint More Tokens".to_string();
-    if let Err(e) = send_email_via_sendgrid(subject, message).await {
-        ic_cdk::println!("Failed to send email: {:?}", e);
-        return Err(e);
-    }
-    Ok(())
-}
-
-pub async fn send_email_via_sendgrid(subject: String, message: String) -> Result<String, Error> {
-    let url = "https://api.sendgrid.com/v3/mail/send";
-    let api_key = "";
-
-    let request_headers = vec![
-        HttpHeader {
-            name: "Authorization".to_string(),
-            value: format!("Bearer {}", api_key),
-        },
-        HttpHeader {
-            name: "Content-Type".to_string(),
-            value: "application/json".to_string(),
-        },
-    ];
-
-    ic_cdk::println!("Headers prepared: {:?}", request_headers);
-
-    let email_data = json!( {
-        "personalizations": [
-            {
-                "to": [{"email": "sativikverma@gmail.com"}],
-                "subject": subject
-            }
-        ],
-        "from": { "email": "jyotirmay2000gupta@gmail.com" },
-        "content": [
-            {
-                "type": "text/plain",
-                "value": message,
-            }
-        ]
-    });
-
-    ic_cdk::println!("Email data prepared: {}", email_data);
-
-    let request_body: Option<Vec<u8>> = Some(email_data.to_string().as_bytes().to_vec());
-
-    let request = CanisterHttpRequestArgument {
-        url: url.to_string(),
-        method: HttpMethod::POST,
-        body: request_body,
-        max_response_bytes: None,
-        transform: None,
-        headers: request_headers,
-    };
-
-    ic_cdk::println!("Request prepared: {:?}", request);
-
-    // Send the HTTP request to SendGrid
-    let timeout = 120_000_000_000;
-    ic_cdk::println!("Sending HTTP request with timeout: {}", timeout);
-
-    match http_request(request, timeout).await {
-        Ok((response,)) => {
-            let response_body =
-                String::from_utf8(response.body).expect("Response body is not UTF-8 encoded.");
-            ic_cdk::println!("Email sent successfully. Response body: {}", response_body);
-            Ok("Email sent successfully".to_string())
-        }
-        Err((r, m)) => {
-            ic_cdk::println!("Error sending email. RejectionCode: {:?}, Error: {}", r, m);
-            Err(Error::EmailError)
-        }
-    }
-}
-
+/// # Cycle Checker Function
+///
+/// This function retrieves the current cycle balance of the canister.
+/// It uses the `canister_balance128` API to fetch the balance and returns it as a `Nat`.
+///
+/// # Returns
+/// - `Nat`: The current cycle balance of the canister.
 #[query]
 pub async fn cycle_checker() -> Nat {
     Nat::from(api::canister_balance128())
 }
+
+// async fn send_admin_notifications(stage: &str, asset: String) -> Result<(), Error> {
+//     let message = match stage {
+//         "initial" => format!("Dear Admin,\n\nThe platform's faucet balance for {} is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team", asset),
+//         "mid" => format!("Dear Admin,\n\nUrgent: The platform's faucet balance for {} is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team", asset),
+//         "final" => format!("Dear Admin,\n\nReminder: The platform's faucet balance for {} is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team", asset),
+//         _ => "".to_string(),
+//     };
+
+//     let subject = "Faucet Amount Low - Mint More Tokens".to_string();
+//     if let Err(e) = send_email_via_sendgrid(subject, message).await {
+//         ic_cdk::println!("Failed to send email: {:?}", e);
+//         return Err(e);
+//     }
+//     Ok(())
+// }
+
+// pub async fn send_email_via_sendgrid(subject: String, message: String) -> Result<String, Error> {
+//     let url = "https://api.sendgrid.com/v3/mail/send";
+//     let api_key = "";
+
+//     let request_headers = vec![
+//         HttpHeader {
+//             name: "Authorization".to_string(),
+//             value: format!("Bearer {}", api_key),
+//         },
+//         HttpHeader {
+//             name: "Content-Type".to_string(),
+//             value: "application/json".to_string(),
+//         },
+//     ];
+
+//     ic_cdk::println!("Headers prepared: {:?}", request_headers);
+
+//     let email_data = json!( {
+//         "personalizations": [
+//             {
+//                 "to": [{"email": "sativikverma@gmail.com"}],
+//                 "subject": subject
+//             }
+//         ],
+//         "from": { "email": "jyotirmay2000gupta@gmail.com" },
+//         "content": [
+//             {
+//                 "type": "text/plain",
+//                 "value": message,
+//             }
+//         ]
+//     });
+
+//     ic_cdk::println!("Email data prepared: {}", email_data);
+
+//     let request_body: Option<Vec<u8>> = Some(email_data.to_string().as_bytes().to_vec());
+
+//     let request = CanisterHttpRequestArgument {
+//         url: url.to_string(),
+//         method: HttpMethod::POST,
+//         body: request_body,
+//         max_response_bytes: None,
+//         transform: None,
+//         headers: request_headers,
+//     };
+
+//     ic_cdk::println!("Request prepared: {:?}", request);
+
+//     // Send the HTTP request to SendGrid
+//     let timeout = 120_000_000_000;
+//     ic_cdk::println!("Sending HTTP request with timeout: {}", timeout);
+
+//     match http_request(request, timeout).await {
+//         Ok((response,)) => {
+//             let response_body =
+//                 String::from_utf8(response.body).expect("Response body is not UTF-8 encoded.");
+//             ic_cdk::println!("Email sent successfully. Response body: {}", response_body);
+//             Ok("Email sent successfully".to_string())
+//         }
+//         Err((r, m)) => {
+//             ic_cdk::println!("Error sending email. RejectionCode: {:?}, Error: {}", r, m);
+//             Err(Error::EmailError)
+//         }
+//     }
+// }

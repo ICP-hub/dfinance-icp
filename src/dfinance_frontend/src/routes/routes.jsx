@@ -11,6 +11,8 @@ import TransactionDetail from "../components/Dashboard/Transaction"
 import Liquidate from "../components/Liquidate/Liquidate"
 import DebtStatus from "../components/Liquidate/DebtStatus"
 import DashboardCards from "../pages/info/info"
+import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
+import { Outlet } from "react-router-dom";
 export default [
   {
     path: "/",
@@ -27,11 +29,21 @@ export default [
   },
   {
     path: "/2a45fg",
-      element: (
+    element: (
       <MainDashboard includeDashboardNav={false}>
-        <DashboardCards></DashboardCards> 
+        <Outlet /> {/* ✅ Required for child routes to work */}
       </MainDashboard>
     ),
+    children: [
+      {
+        index: true, // ✅ Loads DashboardCards when visiting /2a45fg
+        element: <DashboardCards />,
+      },
+      {
+        path: "health-factor-list", // ✅ This makes it /2a45fg/health-factor-list
+        element: <HealthFactorList />,
+      },
+    ],
   },
   {
     path: "/dashboard",
@@ -81,6 +93,7 @@ export default [
       </MainDashboard>
     ),
   },
+ 
   {
     path: "/stake",
     element: (

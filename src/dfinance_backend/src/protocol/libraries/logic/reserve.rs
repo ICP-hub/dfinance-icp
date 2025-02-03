@@ -195,7 +195,11 @@ pub async fn burn_scaled(
         let balance_user_indexed = balance
             .clone()
             .scaled_mul(user_state.liquidity_index.clone());
-            ic_cdk::println!("balance_increase calculated = {} {}", balance_indexed,balance_user_indexed);
+        ic_cdk::println!(
+            "balance_increase calculated = {} {}",
+            balance_indexed,
+            balance_user_indexed
+        );
         if balance_indexed < balance_user_indexed {
             return Err(Error::AmountSubtractionError); // Handle the error gracefully
         }
@@ -220,6 +224,12 @@ pub async fn burn_scaled(
         } else {
             ic_cdk::println!("Subtracting adjusted amount from DToken balance");
             user_state.d_token_balance -= adjusted_amount.clone();
+            // mainting threasold here.
+            // TODO: look into the threshold value again
+            ic_cdk::println!("dtoken balance after subtraction = {}", user_state.d_token_balance);
+            if user_state.d_token_balance < Nat::from(1000u128) {
+                user_state.d_token_balance = Nat::from(0u128);
+            }
         }
 
         ic_cdk::println!("Updated DToken balance: {}", user_state.d_token_balance);
@@ -244,7 +254,11 @@ pub async fn burn_scaled(
         let balance_user_indexed = balance
             .clone()
             .scaled_mul(user_state.variable_borrow_index.clone());
-            ic_cdk::println!("balance_increase calculated = {} {}", balance_indexed,balance_user_indexed);
+        ic_cdk::println!(
+            "balance_increase calculated = {} {}",
+            balance_indexed,
+            balance_user_indexed
+        );
         if balance_indexed < balance_user_indexed {
             return Err(Error::AmountSubtractionError); // Handle the error gracefully
         }
@@ -257,7 +271,11 @@ pub async fn burn_scaled(
         //         .scaled_mul(user_state.variable_borrow_index.clone()));
 
         ic_cdk::println!("Balance increase calculated: {}", balance_increase);
-        ic_cdk::println!("adjusted_amount {} {}", adjusted_amount, user_state.debt_token_blance);
+        ic_cdk::println!(
+            "adjusted_amount {} {}",
+            adjusted_amount,
+            user_state.debt_token_blance
+        );
         if user_state.debt_token_blance == adjusted_amount {
             ic_cdk::println!("Setting debt token balance to zero");
             user_state.debt_token_blance = Nat::from(0u128);
@@ -266,6 +284,12 @@ pub async fn burn_scaled(
         } else {
             ic_cdk::println!("Subtracting adjusted amount from debt token balance");
             user_state.debt_token_blance -= adjusted_amount.clone();
+            ic_cdk::println!("debt token balance after subtraction = {}", user_state.debt_token_blance);
+            // mainting threasold here.
+            // TODO: look into the threshold value again
+            if user_state.debt_token_blance < Nat::from(1000u128) {
+                user_state.debt_token_blance = Nat::from(0u128);
+            }
         }
 
         ic_cdk::println!(
@@ -418,7 +442,7 @@ pub async fn mint_scaled(
         if balance_indexed < balance_user_indexed {
             return Err(Error::AmountSubtractionError);
         }
-        
+
         balance_increase = balance_indexed - balance_user_indexed;
         // balance_increase = (balance.clone().scaled_mul(index.clone()))
         //     - (balance
@@ -447,7 +471,7 @@ pub async fn mint_scaled(
         if balance_indexed < balance_user_indexed {
             return Err(Error::AmountSubtractionError);
         }
-        
+
         balance_increase = balance_indexed - balance_user_indexed;
         // balance_increase = (balance.clone().scaled_mul(index.clone()))
         //     - (balance
@@ -494,7 +518,6 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
 
     let user_principal = ic_cdk::caller();
 
-
     if reserve_cache.reserve_factor == Nat::from(0u128) {
         return;
     }
@@ -518,9 +541,9 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
     );
 
     if vars.curr_total_variable_debt < vars.prev_total_variable_debt {
-       let  _ =  release_lock(&user_principal);
+        let _ = release_lock(&user_principal);
     }
-    
+
     vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
     ic_cdk::println!(
         "total_debt_accrued in accure: {:?}",

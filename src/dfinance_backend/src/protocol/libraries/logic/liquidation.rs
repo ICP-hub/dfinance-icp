@@ -16,9 +16,11 @@ use crate::{
     declarations::assets::ExecuteSupplyParams,
     protocol::libraries::{logic::update::UpdateLogic, math::calculate::get_exchange_rates},
 };
-use crate::{get_cached_exchange_rate, get_reserve_data};
+use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
+
+use super::user;
 
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
@@ -114,37 +116,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             }
         };
 
-        //let (mut reward_amount, mut reward_collateral) = (Nat::from(0u128), Nat::from(0u128));
-        let mut earned_rewards = Nat::from(0u128);
-
-        let reward_result: Result<(Nat, Nat), Error> = to_get_reward_amount(
-            params.amount.clone(),
-            params.collateral_asset.clone(),
-            params.debt_asset.clone(),
-            collateral_reserve_data.clone(),
-            user_principal.clone(),
-        )
-        .await;
-
-        match reward_result {
-            Ok((amount, _collateral)) => {
-                earned_rewards = amount;
-            }
-            Err(err) => {
-                println!("Error occurred: {:?}", err);
-                return Err(err);
-            }
-        }
-
-        ic_cdk::println!("earned_rewards: {:?}", earned_rewards);
-
-        if params.reward_amount > earned_rewards {
-            ic_cdk::println!("Reward amount is greater than earned rewards");
-            return Err(Error::InvalidAmount);
-        }
-
-        ic_cdk::println!("reward_amount: {:?}", earned_rewards);
-
         let user_data_result = user_data(user_principal);
         let mut user_account_data = match user_data_result {
             Ok(data) => {
@@ -174,6 +145,39 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 return Err(Error::NoUserReserveDataFound);
             }
         };
+
+        //let (mut reward_amount, mut reward_collateral) = (Nat::from(0u128), Nat::from(0u128));
+        let mut earned_rewards = Nat::from(0u128);
+        let reward_result: Result<Nat, Error> = to_get_reward_amount(
+            params.amount.clone(),
+            params.collateral_asset.clone(),
+            params.debt_asset.clone(),
+            collateral_reserve_data.clone(),
+            user_principal.clone(),
+            user_reserve_data.clone(),
+        )
+        .await;
+
+        match reward_result {
+            Ok(amount) => {
+                earned_rewards = amount;
+            }
+            Err(err) => {
+                println!("Error occurred: {:?}", err);
+                return Err(err);
+            }
+        }
+        ic_cdk::println!("reward amount: {:?}", params.reward_amount);
+        ic_cdk::println!("earned_rewards: {:?}", earned_rewards);
+
+        if params.reward_amount > earned_rewards {
+            ic_cdk::println!("Reward amount is greater than earned rewards");
+            return Err(Error::InvalidAmount);
+        }
+
+        // panic!("something went wrong"); 
+        // ic_cdk::println!("reward_amount: {:?}", earned_rewards);
+
 
         let liquidator_data_result = user_data(liquidator_principal);
         let mut liquidator_data = match liquidator_data_result {
@@ -483,19 +487,24 @@ pub async fn to_get_reward_amount(
     debt_asset: String,
     collateral_reserve_data: ReserveData,
     user_principal: Principal,
-) -> Result<(Nat, Nat), Error> {
+    user_reserve_data: UserReserveData,
+) -> Result<(Nat), Error> {
     ic_cdk::println!("Starting to_get_reward_amount function");
+    ic_cdk::println!("Received parameters: amount = {:?}, collateral_asset = {:?}, debt_asset = {:?}, user_principal = {:?}", amount, collateral_asset, debt_asset, user_principal);
 
     let d_token_canister =
         match Principal::from_text(collateral_reserve_data.d_token_canister.clone().unwrap()) {
-            Ok(canister) => canister,
+            Ok(canister) => {
+                ic_cdk::println!("Parsed d_token_canister: {:?}", canister);
+                canister
+            }
             Err(e) => {
                 ic_cdk::println!("Error converting text to principal: {:?}", e);
                 return Err(Error::EmailError);
             }
         };
 
-    let collateral_balance = match get_balance(d_token_canister, user_principal).await {
+    let mut collateral_balance = match get_balance(d_token_canister, user_principal).await {
         Ok(balance) => {
             ic_cdk::println!("Collateral balance fetched: {:?}", balance);
             balance
@@ -506,27 +515,85 @@ pub async fn to_get_reward_amount(
         }
     };
 
-    let mut collateral_amount = amount.clone();
-    if collateral_asset != debt_asset {
-        let debt_in_usd = get_exchange_rates(
-            debt_asset.clone(),
-            Some(collateral_asset.clone()),
-            amount.clone(),
-        )
-        .await;
-        match debt_in_usd {
-            Ok((converted_amount, _timestamp)) => {
-                // Extracted the amount in USD
-                collateral_amount = converted_amount.clone();
-                ic_cdk::println!("converted amount: {:?}", converted_amount);
-            }
-            Err(e) => {
-                ic_cdk::println!("Error getting exchange rate: {:?}", e);
-                return Err(e);
+    ic_cdk::println!("user normalized = {}",user_normalized_supply(collateral_reserve_data.clone()).unwrap());
+    ic_cdk::println!("liquidity index = {}",user_reserve_data.liquidity_index);
+
+    collateral_balance = (collateral_balance
+        .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))
+    .scaled_div(user_reserve_data.liquidity_index);
+
+    ic_cdk::println!("Collateral balance normalized: {:?}", collateral_balance);
+
+    ic_cdk::println!("Fetching cached exchange rates for debt and collateral assets");
+    let debt_in_usd = match get_cached_exchange_rate(debt_asset.clone()) {
+        Ok(price_cache) => {
+            if let Some(cached_price) = price_cache.cache.get(&debt_asset) {
+                ic_cdk::println!("Fetched debt asset exchange rate: {:?}", cached_price.price);
+                Some(cached_price.price.clone())
+            } else {
+                ic_cdk::println!("No cached price found for debt asset: {:?}", debt_asset);
+                None
             }
         }
+        Err(err) => {
+            ic_cdk::println!(
+                "Error fetching exchange rate for debt asset {:?}: {:?}",
+                debt_asset,
+                err
+            );
+            None
+        }
+    };
+
+    let collateral_in_usd = match get_cached_exchange_rate(collateral_asset.clone()) {
+        Ok(price_cache) => {
+            if let Some(cached_price) = price_cache.cache.get(&collateral_asset) {
+                ic_cdk::println!(
+                    "Fetched collateral asset exchange rate: {:?}",
+                    cached_price.price
+                );
+                Some(cached_price.price.clone())
+            } else {
+                ic_cdk::println!(
+                    "No cached price found for collateral asset: {:?}",
+                    collateral_asset
+                );
+                None
+            }
+        }
+        Err(err) => {
+            ic_cdk::println!(
+                "Error fetching exchange rate for collateral asset {:?}: {:?}",
+                collateral_asset,
+                err
+            );
+            None
+        }
+    };
+
+    let mut collateral_amount = amount.clone();
+    ic_cdk::println!("Initial collateral amount: {:?}", collateral_amount);
+
+    if collateral_asset != debt_asset {
+        ic_cdk::println!("Collateral and debt assets are different, fetching exchange rates");
+        ic_cdk::println!("debt_in_usd: {:?}", debt_in_usd);
+        ic_cdk::println!("collateral_in_usd: {:?}", collateral_in_usd);
+        ic_cdk::println!("amount = {}", amount.clone());
+        ic_cdk::println!(
+            "amount * debt_in_usd: {:?}",
+            amount.clone() * debt_in_usd.clone().unwrap()
+        );
+        ic_cdk::println!(
+            "collateral_in_usd: {:?}",
+            (amount.clone() * debt_in_usd.clone().unwrap()) / collateral_in_usd.clone().unwrap()
+        );
+        collateral_amount = (amount * debt_in_usd.unwrap()) / collateral_in_usd.unwrap()
     }
-    ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
+    ic_cdk::println!("Final collateral amount: {:?}", collateral_amount);
+    ic_cdk::println!(
+        "liquidation bonus: {:?}",
+        collateral_reserve_data.configuration.liquidation_bonus
+    );
 
     let final_collateral_amount = collateral_amount.clone()
         + collateral_amount.clone().scaled_mul(
@@ -537,88 +604,21 @@ pub async fn to_get_reward_amount(
                 / Nat::from(100u128),
         );
 
-    ic_cdk::println!(
-        "Collateral amount calculated: {:?}",
-        final_collateral_amount
-    );
-
-    let general_liquidity_bonus = (Nat::from(100u128)
-        + collateral_reserve_data.configuration.liquidation_bonus)
-        * Nat::from(100u128);
-
-    ic_cdk::println!("General liquidity bonus: {:?}", general_liquidity_bonus);
+    ic_cdk::println!("Calculated final collateral: {:?}", final_collateral_amount);
 
     let max_collateral;
-    let max_debt_to_liq;
-
-    let debt_in_usd = match get_cached_exchange_rate(debt_asset.clone()) {
-        Ok(price_cache) => {
-            if let Some(cached_price) = price_cache.cache.get(&debt_asset) {
-                let amount = cached_price.price.clone();
-                Some(amount)
-            } else {
-                ic_cdk::println!("No cached price found for {}", debt_asset);
-                None
-            }
-        }
-        Err(err) => {
-            ic_cdk::println!("Error fetching exchange rate for {}: {:?}", debt_asset, err);
-            None
-        }
-    };
-
-    let collateral_in_usd = match get_cached_exchange_rate(collateral_asset.clone()) {
-        Ok(price_cache) => {
-            if let Some(cached_price) = price_cache.cache.get(&collateral_asset) {
-                let amount = cached_price.price.clone();
-                ic_cdk::println!(
-                    "Fetched exchange rate for {}: {:?}",
-                    collateral_asset,
-                    amount
-                );
-                Some(amount)
-            } else {
-                ic_cdk::println!("No cached price found for {}", collateral_asset);
-                None
-            }
-        }
-        Err(err) => {
-            ic_cdk::println!(
-                "Error fetching exchange rate for {}: {:?}",
-                collateral_asset,
-                err
-            );
-            None
-        }
-    };
 
     if final_collateral_amount > collateral_balance {
         max_collateral = collateral_balance;
         ic_cdk::println!("Max collateral set to balance: {:?}", max_collateral);
 
-        let calculated_value = ((collateral_amount.scaled_mul(collateral_in_usd.unwrap()))
-            / debt_in_usd.unwrap())
-            * (Nat::from(1000u128) / general_liquidity_bonus);
-
-        max_debt_to_liq = calculated_value
     } else {
         max_collateral = final_collateral_amount;
-        max_debt_to_liq = collateral_amount.clone();
         ic_cdk::println!(
             "Max collateral set to calculated amount: {:?}",
             max_collateral
         );
-        ic_cdk::println!(
-            "Max debt to liquidate set to provided amount: {:?}",
-            max_debt_to_liq
-        );
     }
 
-    ic_cdk::println!(
-        "Returning final values: max_collateral = {:?}, max_debt_to_liq = {:?}",
-        max_collateral,
-        max_debt_to_liq
-    );
-
-    Ok((max_collateral, max_debt_to_liq)) // Correct return statement
+    Ok((max_collateral))
 }

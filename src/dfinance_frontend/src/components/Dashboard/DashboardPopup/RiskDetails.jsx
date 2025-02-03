@@ -5,30 +5,26 @@ import { useSelector } from "react-redux";
 
 const RiskPopup = ({ onClose, userData, userAccountData }) => {
   const popupRef = useRef(null);
+  const theme = useSelector((state) => state.theme.theme);
 
   const totalCollateral =
     parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
-
   const totalDebt =
     parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
-
   const health_Factor_Value =
     Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
       ? Infinity
       : parseFloat((Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2));
-
-      
-   const Ltv_Value = (totalDebt / totalCollateral)*100;
-
+  const Ltv_Value = (totalDebt / totalCollateral) * 100;
   const liquidationThreshold_Value =
     Number(userAccountData?.Ok?.[3]) / 100000000 || 0
       ? (Number(userAccountData?.Ok?.[3]) / 100000000).toFixed(2)
       : "0.00";
-
   const healthFactorMinValue = 1;
   const Max_Ltv = parseFloat(
     Number(userAccountData?.Ok?.[2]) / 100000000
   ).toFixed(2);
+
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       onClose();
@@ -48,17 +44,14 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
     if (typeof value !== "number" || isNaN(value)) {
       return NaN;
     }
-
     if (value === Infinity) {
       return 100;
     } else if (value === -Infinity) {
       return 0;
     }
-
     const minValue = 0;
     const maxValue = 100;
     const offset = 5;
-
     const position = Math.max(
       0,
       Math.min(
@@ -66,7 +59,6 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
         ((value - minValue) / (maxValue - minValue)) * (100 - offset) + offset
       )
     );
-
     return value === 0 ? 0 : position;
   };
 
@@ -81,6 +73,7 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
     }
     return ((value - min) / (max - min)) * 100;
   };
+
   const calculateMaxLTVPosition = (value, min, max) => {
     if (
       typeof value !== "number" ||
@@ -114,8 +107,6 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
     100
   );
   const currentMaxLtvPosition = calculateMaxLTVPosition(MaxLtvValue, 0, 100);
-
-  const theme = useSelector((state) => state.theme.theme);
 
   const healthFactorColor =
     theme === "dark"
@@ -168,9 +159,9 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
     <div className="fixed inset-0 flex items-center justify-center z-50 transition-bar">
       <div className="absolute inset-0 bg-black opacity-50"></div>
       <div
-  ref={popupRef}
-  className="bg-white rounded-lg overflow-y-auto shadow-lg w-full max-w-[400px] lg:max-w-[780px] max-h-[95vh] mx-4 sm:mx-auto z-10 lg:p-4 p-1 relative dark:bg-darkOverlayBackground"
->
+        ref={popupRef}
+        className="bg-white rounded-lg overflow-y-auto shadow-lg w-full max-w-[400px] lg:max-w-[780px] max-h-[95vh] mx-4 sm:mx-auto z-10 lg:p-4 p-1 relative dark:bg-darkOverlayBackground"
+      >
         <div
           className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer button1"
           onClick={onClose}

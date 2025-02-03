@@ -3,7 +3,9 @@ import { useAuth } from "../../utils/useAuthClient";
 import { useSelector } from "react-redux";
 
 const useRealTimeConversionRate = (asset) => {
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const [conversionRate, setConversionRate] = useState(0);
   const [error, setError] = useState(null);
   const { backendActor } = useAuth();
@@ -14,9 +16,7 @@ const useRealTimeConversionRate = (asset) => {
         if (!backendActor) {
           throw new Error("Backend actor is not available");
         }
-
         const result = await backendActor.get_cached_exchange_rate(asset);
-
         if (result.Ok && result.Ok.cache && result.Ok.cache.length > 0) {
           const rate = result.Ok.cache[0]?.[1]?.price;
 

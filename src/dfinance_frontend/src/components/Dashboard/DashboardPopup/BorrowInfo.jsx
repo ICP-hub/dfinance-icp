@@ -9,15 +9,17 @@ const BorrowInfo = ({
   borrowCap,
   totalBorrowed,
   borrowRateAPR,
-  reserveFactor
+  reserveFactor,
 }) => {
+  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] =
+    useState(false);
 
-  
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
   const totalBorrowPercentage =
     borrowCapNumber && totalBorrowed ? totalBorrowed / borrowCapNumber : 0;
-  const { id } = useParams();
 
+  const { id } = useParams();
+  const tooltipRef = useRef(null);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -48,13 +50,12 @@ const BorrowInfo = ({
     assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
   const totalBorrowedCap =
     assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
+
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
-
     if (isNaN(numericValue)) {
       return "0";
     }
-
     if (numericValue === 0) {
       return "0";
     } else if (numericValue >= 1) {
@@ -63,9 +64,6 @@ const BorrowInfo = ({
       return numericValue.toFixed(7);
     }
   };
-  const tooltipRef = useRef(null);
-  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] =
-    useState(false);
 
   const toggleReserveFactorTooltip = () =>
     setIsReserveFactorTooltipVis((prev) => !prev);

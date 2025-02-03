@@ -10,7 +10,7 @@ const SupplyInfo = ({
   formatNumber,
   supplyCap,
   totalSupplied,
-  totalBorrowed,  // Assuming you are also tracking total borrowed
+  totalBorrowed,
   supplyRateAPR,
   ltv,
   canBeCollateral,
@@ -20,9 +20,27 @@ const SupplyInfo = ({
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
+  const { id } = useParams();
+  const tooltipRef = useRef(null);
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
 
   const [supplied, setSupplied] = useState(totalSupplied);
   const [borrowed, setBorrowed] = useState(totalBorrowed);
+  const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
+  const [
+    isLiquidationThresholdTooltipVisible,
+    setLiquidationThresholdTooltipVisible,
+  ] = useState(false);
+  const [
+    isLiquidationPenaltyTooltipVisible,
+    setLiquidationPenaltyTooltipVisible,
+  ] = useState(false);
 
   useEffect(() => {
     setSupplied(totalSupplied);
@@ -32,17 +50,6 @@ const SupplyInfo = ({
   const supplyCapNumber = supplyCap ? Number(supplyCap) : 0;
   const totalSupplyPercentage =
     supplyCapNumber && supplied ? (supplied / supplyCapNumber) * 100 : 0;
-
-  const { id } = useParams();
-  const tooltipRef = useRef(null);
-
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-  } = useFetchConversionRate();
 
   const getAssetRate = (assetName) => {
     switch (assetName) {
@@ -62,34 +69,27 @@ const SupplyInfo = ({
   };
 
   const assetRate = getAssetRate(id);
-  const totalSuppliedAsset = assetRate && supplied ? Number(supplied) * assetRate : 0;
-  const totalSuppliedCap = assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
+  const totalSuppliedAsset =
+    assetRate && supplied ? Number(supplied) * assetRate : 0;
+  const totalSuppliedCap =
+    assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
-
     if (isNaN(numericValue)) {
       return "0";
     }
-
-    return numericValue >= 1 ? numericValue.toFixed(2) : numericValue.toFixed(7);
+    return numericValue >= 1
+      ? numericValue.toFixed(2)
+      : numericValue.toFixed(7);
   };
-  const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
-  const [
-    isLiquidationThresholdTooltipVisible,
-    setLiquidationThresholdTooltipVisible,
-  ] = useState(false);
-  const [
-    isLiquidationPenaltyTooltipVisible,
-    setLiquidationPenaltyTooltipVisible,
-  ] = useState(false);
 
   const toggleLTVTooltip = () => setLTVTooltipVisible((prev) => !prev);
   const toggleLiquidationThresholdTooltip = () =>
     setLiquidationThresholdTooltipVisible((prev) => !prev);
   const toggleLiquidationPenaltyTooltip = () =>
     setLiquidationPenaltyTooltipVisible((prev) => !prev);
-  
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
@@ -105,9 +105,6 @@ const SupplyInfo = ({
     };
   }, []);
 
-  console.log("Total Supplied:", supplied);
-  console.log("Total Borrowed:", borrowed);
-  
   return (
     <div className="w-full lg:w-10/12 ">
       <div className="w-full flex flex-col md:flex-row items-start sxs3:flex-row sxs3:mb-7 lg:gap-0 md:gap-3">
@@ -221,9 +218,8 @@ const SupplyInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[75%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                      A liquidation threshold is the point at which a
-                      borrowed position becomes too risky and will be
-                      liquidated.
+                      A liquidation threshold is the point at which a borrowed
+                      position becomes too risky and will be liquidated.
                       <hr className="my-2 opacity-50" />
                       For example, if the threshold is 80%, the position will be
                       liquidated when the debt reaches 80% of the collateral's

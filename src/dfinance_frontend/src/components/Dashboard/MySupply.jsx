@@ -29,7 +29,6 @@ import PaymentDone from "./DashboardPopup/PaymentDone";
 import Borrow from "./DashboardPopup/BorrowPopup";
 import Repay from "./DashboardPopup/Repay";
 import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
-
 import { Check, Eye, EyeOff, Info } from "lucide-react";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
@@ -41,20 +40,55 @@ import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
 
 const MySupply = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  console.log("dashboardRefreshTrigger", dashboardRefreshTrigger);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { state, pathname } = useLocation();
-  const tooltipRef = useRef(null);
-  const [isBorrowPowerTooltipVis, setIsBorrowPowerTooltipVis] = useState(false);
-
-  const toggleBorrowTooltip = () => setIsBorrowPowerTooltipVis((prev) => !prev);
-
+  const theme = useSelector((state) => state.theme.theme);
   const { principal, fetchReserveData, createLedgerActor, user, backendActor } =
     useAuth();
+  const { state, pathname } = useLocation();
+  const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
+    useUserData();
+  const tooltipRef = useRef(null);
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance,
+    fetchBalance,
+  } = useFetchConversionRate();
+  const {
+    assets,
+    reserveData,
+    filteredItems,
+    asset_supply,
+    asset_borrow,
+    fetchAssetSupply,
+    fetchAssetBorrow,
+    loading: filteredDataLoading,
+  } = useAssetData();
+  const {
+    isWalletCreated,
+    isWalletModalOpen,
+    isSwitchingWallet,
+    connectedWallet,
+  } = useSelector((state) => state.utility);
+  const filteredReserveData = Object.fromEntries(filteredItems);
+  const formatNumber = useFormatNumber();
+
+  const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
+  const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
+
+  // ====== Local State Management ======
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
@@ -73,47 +107,104 @@ const MySupply = () => {
   const [showAllAssets, setShowAllAssets] = useState(true);
   const [hideZeroBorrowAssets, setHideZeroBorrowAssets] = useState(false);
   const [assetBalances, setAssetBalances] = useState([]);
-  // Handle toggle of showAllAssets
-  const handleToggleShowAllAssets = () => {
-    setShowAllAssets(!showAllAssets);
+  const [isBorrowPowerTooltipVis, setIsBorrowPowerTooltipVis] = useState(false);
+  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
+  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
+  const [showZeroBalance, setShowZeroBalance] = useState(
+    () => JSON.parse(localStorage.getItem("showZeroBalance")) || true
+  );
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [Collateral, setCollateral] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState({
+    isOpen: false,
+    type: "",
+    asset: "",
+    image: "",
+    balance: "",
+  });
+  const handleModalOpen = (
+    type,
+    asset,
+    image,
+    supplyRateAPR,
+    balance,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    totalCollateral,
+    totalDebt,
+    currentCollateralStatus,
+    Ltv,
+    borrowableValue,
+    borrowableAssetValue,
+    total_supply,
+    total_borrow
+  ) => {
+    setIsModalOpen({
+      isOpen: true,
+      type: type,
+      asset: asset,
+      image: image,
+      supplyRateAPR: supplyRateAPR,
+      balance: balance,
+      liquidationThreshold: liquidationThreshold,
+      reserveliquidationThreshold: reserveliquidationThreshold,
+      assetSupply: assetSupply,
+      assetBorrow: assetBorrow,
+      totalCollateral: totalCollateral,
+      totalDebt: totalDebt,
+      currentCollateralStatus: currentCollateralStatus,
+      Ltv: Ltv,
+      borrowableValue: borrowableValue,
+      borrowableAssetValue: borrowableAssetValue,
+      total_supply: total_supply,
+      total_borrow: total_borrow,
+    });
   };
-  const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
-    useUserData();
+  const [activeSection, setActiveSection] = useState("supply");
+  const [isVisible, setIsVisible] = useState(true);
+  const [isBorrowVisible, setIsBorrowVisible] = useState(true);
+  const [isborrowVisible, setIsborrowVisible] = useState(true);
+  const [isSupplyVisible, setIsSupplyVisible] = useState(true);
+  const [toggled, set] = useState(true);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [calculatedReserves, setCalculatedReserves] = useState([]);
+  const [totalAssetSupply, setTotalAssetSupply] = useState(0);
+  const [totalAssetBorrow, setTotalAssetBorrow] = useState(0);
+  const toggleBorrowTooltip = () => setIsBorrowPowerTooltipVis((prev) => !prev);
+
   useEffect(() => {
     if (userData && userAccountData) {
       setLoading(false);
     }
   }, [userData, userAccountData, dashboardRefreshTrigger]);
+
+  // Update available borrow amount
   useEffect(() => {
-    // Check if userData has reserves
     const reserves = userData?.Ok?.reserves?.[0] || [];
     console.log("Reserves:", reserves);
 
-    let updatedAvailableBorrow = 0; // Initialize updatedAvailableBorrow
+    let updatedAvailableBorrow = 0;
 
-    // Iterate over each asset in the reserves
     reserves.map((reserveGroup) => {
-      const asset = reserveGroup[0]; // Extract asset (e.g., "ckBTC", "ckETH")
+      const asset = reserveGroup[0];
       const liquidityIndex = reserveGroup[1]?.liquidity_index || 0;
       console.log("Liquidity Index:", liquidityIndex);
 
-      // Get the corresponding asset balance
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.dtokenBalance || 0;
       console.log("Asset Balance for", asset, ":", assetBalance);
 
-      // Calculate asset supply
       const assetSupply =
         (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
         (Number(liquidityIndex) * 1e8);
       console.log("Asset Supply for", asset, ":", assetSupply);
 
-      // Check if the user has collateral for this asset
       const isCollateral = reserveGroup[1]?.is_collateral || true;
       console.log("Is Collateral for", asset, ":", isCollateral);
 
-      // If assetSupply is greater than 0, update availableBorrow to borrowValue
       if (assetSupply > 0) {
         console.log(
           "Asset Supply is greater than 0. Updating Available Borrow."
@@ -121,20 +212,18 @@ const MySupply = () => {
         if (userAccountData?.Ok?.length > 5) {
           const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
           console.log("Setting Available Borrow to borrowValue:", borrowValue);
-          updatedAvailableBorrow = isCollateral ? borrowValue : 0; // Update availableBorrow if any assetSupply > 0
+          updatedAvailableBorrow = isCollateral ? borrowValue : 0;
         } else {
           console.log(
             "User account data length is insufficient. Setting Available Borrow to 0."
           );
-          updatedAvailableBorrow = 0; // Ensure availableBorrow is 0 when insufficient account data
+          updatedAvailableBorrow = 0;
         }
       }
     });
 
-    // After checking all reserves, update the availableBorrow state
     setAvailableBorrow(updatedAvailableBorrow);
     console.log("updatedAvailableBorrow", updatedAvailableBorrow);
-    // If no asset supply > 0, set availableBorrow to 0
     if (!updatedAvailableBorrow || updatedAvailableBorrow < 0.01) {
       console.log("No asset supply > 0. Setting Available Borrow to 0.");
       setAvailableBorrow(0);
@@ -142,45 +231,6 @@ const MySupply = () => {
       setAvailableBorrow(updatedAvailableBorrow);
     }
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
-
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance,
-    fetchBalance,
-  } = useFetchConversionRate();
-
-  const {
-    isWalletCreated,
-    isWalletModalOpen,
-    isSwitchingWallet,
-    connectedWallet,
-  } = useSelector((state) => state.utility);
-  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
-  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
-
-  const [showZeroBalance, setShowZeroBalance] = useState(
-    () => JSON.parse(localStorage.getItem("showZeroBalance")) || true
-  );
-  const handleCheckboxChange = () => {
-    setShowZeroBalance((prev) => {
-      const newValue = !prev;
-      localStorage.setItem("showZeroBalance", JSON.stringify(newValue));
-      return newValue;
-    });
-  };
 
   useEffect(() => {
     const savedShowZeroBalance = JSON.parse(
@@ -191,17 +241,12 @@ const MySupply = () => {
     }
   }, []);
 
-  const {
-    assets,
-    reserveData,
-    filteredItems,
-    asset_supply,
-    asset_borrow,
-    fetchAssetSupply,
-    fetchAssetBorrow,
-    loading: filteredDataLoading,
-  } = useAssetData();
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
 
+  // Fetch asset balances and update state
   const fetchAssetData = async () => {
     const balances = [];
 
@@ -252,11 +297,14 @@ const MySupply = () => {
     setAssetBalances(balances);
   };
 
+  const handleToggleShowAllAssets = () => {
+    setShowAllAssets(!showAllAssets);
+  };
+
   useEffect(() => {
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
 
-  const [loadingUserData, setUserDataLoading] = useState(true);
   useEffect(() => {
     const fetchSupplyData = async () => {
       if (assets.length === 0) return;
@@ -291,14 +339,13 @@ const MySupply = () => {
     fetchSupplyData();
     fetchBorrowData();
   }, [assets, dashboardRefreshTrigger]);
-  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
-    // If loading is finished, mark as loaded
     if (!filteredDataLoading) {
       setHasLoaded(true);
     }
   }, [filteredDataLoading]);
+
   const visibleItems = filteredItems.filter((item) => {
     const balance =
       item[0] === "ckBTC"
@@ -416,69 +463,6 @@ const MySupply = () => {
     fetchAllData();
   }, [fetchBalance, fetchConversionRate, dashboardRefreshTrigger]);
 
-  const filteredReserveData = Object.fromEntries(filteredItems);
-
-  const [Collateral, setCollateral] = useState(true);
-
-  const formatNumber = useFormatNumber();
-
-  const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
-
-  const [isModalOpen, setIsModalOpen] = useState({
-    isOpen: false,
-    type: "",
-    asset: "",
-    image: "",
-    balance: "",
-  });
-  const handleModalOpen = (
-    type,
-    asset,
-    image,
-    supplyRateAPR,
-    balance,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    totalCollateral,
-    totalDebt,
-    currentCollateralStatus,
-    Ltv,
-    borrowableValue,
-    borrowableAssetValue,
-    total_supply,
-    total_borrow
-  ) => {
-    setIsModalOpen({
-      isOpen: true,
-      type: type,
-      asset: asset,
-      image: image,
-      supplyRateAPR: supplyRateAPR,
-      balance: balance,
-      liquidationThreshold: liquidationThreshold,
-      reserveliquidationThreshold: reserveliquidationThreshold,
-      assetSupply: assetSupply,
-      assetBorrow: assetBorrow,
-      totalCollateral: totalCollateral,
-      totalDebt: totalDebt,
-      currentCollateralStatus: currentCollateralStatus,
-      Ltv: Ltv,
-      borrowableValue: borrowableValue,
-      borrowableAssetValue: borrowableAssetValue,
-      total_supply: total_supply,
-      total_borrow: total_borrow,
-    });
-  };
-  const theme = useSelector((state) => state.theme.theme);
-  const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
-  const [activeSection, setActiveSection] = useState("supply");
-  const [isVisible, setIsVisible] = useState(true);
-  const [isBorrowVisible, setIsBorrowVisible] = useState(true);
-  const [isborrowVisible, setIsborrowVisible] = useState(true);
-  const [isSupplyVisible, setIsSupplyVisible] = useState(true);
-  const [toggled, set] = useState(true);
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
@@ -491,7 +475,7 @@ const MySupply = () => {
   const toggleSupplyVisibility = () => {
     setIsSupplyVisible(!isSupplyVisible);
   };
-  const [selectedAsset, setSelectedAsset] = useState(null);
+
   const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);
     navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
@@ -681,14 +665,17 @@ const MySupply = () => {
         return null;
     }
   };
+
   useEffect(() => {
     setValueChanged(true);
   }, [availableBorrow, filteredItems]);
+
   useEffect(() => {
     if (valueChanged) {
       calculateBorrowableValues();
     }
   }, [valueChanged, availableBorrow, filteredItems]);
+
   const calculateBorrowableValues = (
     item,
     availableBorrow,
@@ -723,6 +710,7 @@ const MySupply = () => {
 
     return { borrowableValue, borrowableAssetValue };
   };
+
   const noBorrowMessage = (
     <div className="mt-2 flex flex-col justify-center align-center place-items-center dark:opacity-70">
       <div className="w-[55px] md:w-[65px]">
@@ -771,6 +759,7 @@ const MySupply = () => {
     }
     return noSupplyMessage;
   };
+
   const getAssetBorrowValue = (asset, principal) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
@@ -778,6 +767,7 @@ const MySupply = () => {
     }
     return noBorrowMessage;
   };
+
   const isTableDisabled =
     !userData?.Ok?.reserves ||
     !userData?.Ok?.reserves[0] ||
@@ -799,17 +789,13 @@ const MySupply = () => {
 
   if (filteredItems && filteredItems.length > 0) {
     const item = filteredItems[0][1].Ok;
-
     const total_supply = item.total_supply;
     const total_borrow = item.total_borrow;
-
     current_liquidity_rate = item.current_liquidity_rate
       ? item.current_liquidity_rate[0]
       : "0";
     borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0] : "0";
   }
-
-  const [calculatedReserves, setCalculatedReserves] = useState([]);
 
   useEffect(() => {
     if (userData?.Ok?.reserves[0]) {
@@ -848,17 +834,15 @@ const MySupply = () => {
 
   let totalUsdValueSupply = 0;
   let totalUsdValueBorrow = 0;
-  const [totalAssetSupply, setTotalAssetSupply] = useState(0);
-  const [totalAssetBorrow, setTotalAssetBorrow] = useState(0);
+
   const hasVisibleAssets = filteredItems.some((item) => {
     const assetData = item[1].Ok;
     const total_supply = Number(assetData.asset_supply || 0) / 100000000;
     const total_borrow = Number(assetData.asset_borrow || 0) / 100000000;
     const availableBorrowNumber = Number(availableBorrow || 0);
-
-    // Check if the asset is visible (eligible) based on availableBorrow > 0 and total_supply > total_borrow
     return availableBorrowNumber > 0 && total_supply > total_borrow;
   });
+
   useEffect(() => {
     let totalSupply = 0;
     let totalBorrow = 0;
@@ -873,13 +857,15 @@ const MySupply = () => {
     setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
   }, [dashboardRefreshTrigger]);
+
   const hasValidAssets = userData?.Ok?.reserves?.[0]?.some((reserveGroup) => {
     const asset = reserveGroup[0];
     const assetBalance = assetBalances.find(
       (balance) => balance.asset === asset
     )?.debtTokenBalance;
-    return assetBalance > 0; // Check if any asset has a debtTokenBalance > 0
+    return assetBalance > 0;
   });
+
   return (
     <div className="w-full flex-col lg:flex-row flex gap-6 md:-mt-[3rem]">
       <div className="flex justify-center -mb-30 lg:hidden">

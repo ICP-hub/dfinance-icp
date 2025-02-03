@@ -36,13 +36,26 @@ const SupplyPopup = ({
 }) => {
   const dispatch = useDispatch();
   const { backendActor, principal } = useAuth();
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const fees = useSelector((state) => state.fees.fees);
+  const { healthFactorBackend } = useUserData();
+
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
-  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const [maxUsdValue, setMaxUsdValue] = useState(0);
+  const [usdValue, setUsdValue] = useState(0);
+  const [amount, setAmount] = useState(null);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isPaymentDone, setIsPaymentDone] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const modalRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
+
   const transactionFee = 0;
-  const fees = useSelector((state) => state.fees.fees);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
   const errorMessages = {
@@ -62,24 +75,17 @@ const SupplyPopup = ({
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
+
   const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
   const hasEnoughBalance = balance >= transactionFee;
   const value = currentHealthFactor;
-  const [maxUsdValue, setMaxUsdValue] = useState(0);
-  const [usdValue, setUsdValue] = useState(0);
-  const [amount, setAmount] = useState(null);
-  const [isApproved, setIsApproved] = useState(false);
-  const [isPaymentDone, setIsPaymentDone] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const modalRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showPanicPopup, setShowPanicPopup] = useState(false);
+
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
+
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -91,23 +97,19 @@ const SupplyPopup = ({
     }
   }, [isLoading, onLoadingChange]);
 
+  // Handles user input for supply amount
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
-
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
-
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
-
     const numericAmount = parseFloat(inputAmount);
-
     if (numericAmount > supplyBalance) {
       setError(
         `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
@@ -118,9 +120,7 @@ const SupplyPopup = ({
     } else {
       setError("");
     }
-
     let formattedAmount;
-
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
 
@@ -130,20 +130,18 @@ const SupplyPopup = ({
     } else {
       formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
     }
-
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
 
+  // Updates the USD equivalent of the supply amount
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
-
     if (inputAmount === "") {
       setAmount("");
       setUsdValue(0);
       return;
     }
-
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -168,6 +166,7 @@ const SupplyPopup = ({
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
+
   useEffect(() => {
     if (balance && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -180,6 +179,7 @@ const SupplyPopup = ({
   }, [amount, conversionRate]);
   const ledgerActors = useSelector((state) => state.ledger);
 
+  // Approves the supply transaction
   const handleApprove = async () => {
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -196,9 +196,7 @@ const SupplyPopup = ({
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
-
     const totalAmount = scaledAmount + transferfee;
-
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -241,9 +239,9 @@ const SupplyPopup = ({
   const isCollateral = true;
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
-
   const scaledAmount = amountAsNat64;
 
+  // Executes the supply transaction
   const handleSupplyETH = async () => {
     try {
       let ledgerActor;
@@ -279,8 +277,7 @@ const SupplyPopup = ({
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
-         setIsPaymentDone(true);
-       
+        setIsPaymentDone(true);
         setIsVisible(false);
 
         if (isSoundOn) {
@@ -302,7 +299,6 @@ const SupplyPopup = ({
         const errorKey = response.Err;
         const errorMsg = errorKey?.toString() || "An unexpected error occurred";
 
-        // Check for panic error and show a popup instead of toast
         if (errorMsg.toLowerCase().includes("panic")) {
           setShowPanicPopup(true);
           setIsVisible(false);
@@ -326,7 +322,6 @@ const SupplyPopup = ({
     } catch (error) {
       console.error(`Error: ${error.message || "Supply action failed!"}`);
 
-      // Check if the error message contains "panic" and show popup
       if (error.message && error.message.toLowerCase().includes("panic")) {
         setShowPanicPopup(true);
         setIsVisible(false);
@@ -445,7 +440,6 @@ const SupplyPopup = ({
     let tempLiq =
       (avliq + amountAdded * reserveliquidationThreshold) /
       totalCollateralValue;
-    //withdraw me minus hoga repay aur borrow same toggle add horaha to plus varna minus
     console.log("tempLiq", tempLiq);
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
     result = Math.round(result * 1e8) / 1e8;
@@ -460,8 +454,6 @@ const SupplyPopup = ({
     return (totalDeptValue / totalCollateralValue) * 100;
   };
 
-  const { healthFactorBackend } = useUserData();
-
   const handleMaxClick = () => {
     const maxAmount = supplyBalance.toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
@@ -471,12 +463,14 @@ const SupplyPopup = ({
     setAmount(formattedAmount);
     updateAmountAndUsdValue(maxAmount);
   };
+
   const formatValue = (value) => {
     if (!value) return "0";
     return Number(value)
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
   return (
     <>
       {isVisible && (
@@ -763,7 +757,6 @@ const SupplyPopup = ({
                 dark:to-darkGradientEnd 
                 dark:text-darkText  "
             >
-
               <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
               <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 Thanks for helping us improve DFinance! <br></br> You’ve
@@ -780,8 +773,6 @@ const SupplyPopup = ({
                 If you have any questions, feel free to reach out.
               </p>
             </div>
-
-           
           </div>
         </div>
       )}

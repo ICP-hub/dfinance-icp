@@ -28,18 +28,6 @@ import Lottie from "../Common/Lottie";
 const ITEMS_PER_PAGE = 8;
 
 const FaucetDetails = () => {
-  const refreshTrigger = useSelector(
-    (state) => state.faucetUpdate.refreshTrigger
-  );
-  console.log("refreshTrigger", refreshTrigger);
-  const { isAuthenticated, principal, backendActor, createLedgerActor } =
-    useAuth();
-
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,8 +40,19 @@ const FaucetDetails = () => {
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
-  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  const { filteredItems, loading } = useAssetData();
+  const refreshTrigger = useSelector(
+    (state) => state.faucetUpdate.refreshTrigger
+  );
+  const { isAuthenticated, principal, backendActor, createLedgerActor } =
+    useAuth();
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
   const {
     isWalletCreated,
     isWalletModalOpen,
@@ -158,6 +157,7 @@ const FaucetDetails = () => {
     ckUSDTBalance,
     refreshTrigger,
   ]);
+
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -197,11 +197,15 @@ const FaucetDetails = () => {
     setShowPopup(true);
   };
 
+  useEffect(() => {
+    if (!loading) {
+      setHasLoaded(true);
+    }
+  }, [loading]);
+
   const closePopup = () => {
     setShowPopup(false);
   };
-
-  const { filteredItems, loading } = useAssetData();
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
@@ -210,14 +214,7 @@ const FaucetDetails = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
   const filteredReserveData = Object.fromEntries(filteredItems);
   const formatNumber = useFormatNumber();
-  const [hasLoaded, setHasLoaded] = useState(false);
 
-  useEffect(() => {
-    // If loading is finished, mark as loaded
-    if (!loading) {
-      setHasLoaded(true);
-    }
-  }, [loading]);
   return (
     <div className="w-full">
       <div className="w-full flex items-center px-1">
@@ -311,7 +308,7 @@ const FaucetDetails = () => {
                           {item[0]}
                         </div>
                       </td>
-                      <td >
+                      <td>
                         <div className="p-3">
                           <div>
                             <center>
@@ -345,25 +342,22 @@ const FaucetDetails = () => {
                                 }[item[0]];
 
                                 if (!assetData) return null;
-
                                 const { balance, usdBalance, rate } = assetData;
                                 const usdRate = rate / 1e8;
                                 const calculatedUsdValue = balance * usdRate;
-
-                                // Determine how to display the balance
                                 let displayedBalance;
                                 if (
                                   !isFinite(calculatedUsdValue) ||
                                   calculatedUsdValue === 0
                                 ) {
-                                  displayedBalance = "0.00"; // Show "0.00" if USD value is exactly 0
+                                  displayedBalance = "0.00";
                                 } else if (calculatedUsdValue < 0.01) {
                                   displayedBalance = `<${(
                                     0.01 / usdRate
                                   ).toLocaleString(undefined, {
                                     minimumFractionDigits: 7,
                                     maximumFractionDigits: 7,
-                                  })}`; // Show "<" sign for small asset values
+                                  })}`;
                                 } else {
                                   displayedBalance =
                                     balance >= 1
@@ -376,7 +370,6 @@ const FaucetDetails = () => {
                                           maximumFractionDigits: 7,
                                         });
                                 }
-
                                 return (
                                   <>
                                     <p>{displayedBalance}</p>

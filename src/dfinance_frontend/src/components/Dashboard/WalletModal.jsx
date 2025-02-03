@@ -47,7 +47,7 @@ const WalletModal = () => {
   }, [isWalletCreated]);
 
   const loginHandlerIsSwitch = async (val) => {
-    handleLogout()
+    handleLogout();
     await logout();
     await login(val);
     dispatch(setConnectedWallet(val));
@@ -89,9 +89,8 @@ const WalletModal = () => {
       dispatch(setConnectedWallet(savedWallet));
     }
   }, [dispatch]);
-  
 
-  console.log("connectedWallet", connectedWallet)
+  console.log("connectedWallet", connectedWallet);
 
   useEffect(() => {
     const reAuthenticate = async () => {
@@ -99,7 +98,7 @@ const WalletModal = () => {
         await loginHandler(connectedWallet);
       }
     };
-  
+
     reAuthenticate();
   }, [connectedWallet, isAuthenticated]);
 
@@ -166,9 +165,6 @@ const WalletModal = () => {
             </div>
           )}
         </div>
-        
-
-        
       </div>
     </Modal>
   );

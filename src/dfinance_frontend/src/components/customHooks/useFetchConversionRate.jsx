@@ -4,7 +4,9 @@ import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 
 const useFetchConversionRate = (pollInterval = 2000) => {
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const ledgerActors = useSelector((state) => state.ledger);
   const { principal, backendActor } = useAuth();
   const {
@@ -21,7 +23,6 @@ const useFetchConversionRate = (pollInterval = 2000) => {
   const [ckUSDTUsdRate, setCkUSDTUsdRate] = useState(null);
   const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
   const [error, setError] = useState(null);
-
   const intervalIdRef = useRef(null);
 
   const fetchConversionRate = useCallback(async () => {
@@ -30,10 +31,8 @@ const useFetchConversionRate = (pollInterval = 2000) => {
         setError("Backend actor is not available.");
         return;
       }
-
       const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
       let fetchedRates = 0;
-
       const rates = await Promise.all(
         assets.map(async (asset) => {
           try {
@@ -96,7 +95,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     ckUSDCUsdRate,
     ckICPUsdRate,
     ckUSDTUsdRate,
-    dashboardRefreshTrigger
+    dashboardRefreshTrigger,
   ]);
 
   useEffect(() => {

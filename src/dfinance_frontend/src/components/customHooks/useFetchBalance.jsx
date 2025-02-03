@@ -4,7 +4,9 @@ import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 const useFetchBalance = (ledgerActors, principal) => {
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const [ckBTCBalance, setCkBTCBalance] = useState(null);
   const [ckETHBalance, setCkETHBalance] = useState(null);
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
@@ -29,11 +31,8 @@ const useFetchBalance = (ledgerActors, principal) => {
           ) {
             return;
           }
-
           const balance = await ledgerActor.icrc1_balance_of(account);
-
           const formattedBalance = Number(balance) / 100000000;
-
           switch (assetType) {
             case "ckBTC":
               setCkBTCBalance(formattedBalance);

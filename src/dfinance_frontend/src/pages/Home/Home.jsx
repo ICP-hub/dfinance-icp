@@ -21,13 +21,17 @@ import {
 import { usePageLoading } from "../../components/Common/useLoading";
 
 const Home = () => {
+  const intervalRef = useRef();
+
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const theme = useSelector((state) => state.theme.theme);
   const isLoading = usePageLoading();
-
   const [currentFAQ, setCurrentFAQ] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,11 +63,6 @@ const Home = () => {
       behavior: "smooth",
     });
   };
-  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
-
-  const intervalRef = useRef();
 
   useEffect(() => {
     const startInterval = () => {

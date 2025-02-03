@@ -32,11 +32,29 @@ import MiniLoader from "../../components/Common/MiniLoader";
 import Lottie from "../../components/Common/Lottie";
 
 const ITEMS_PER_PAGE = 8;
+
 const WalletDetails = () => {
+  const [Showsearch, setShowSearch] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [selectedAssetData, setSelectedAssetData] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const theme = useSelector((state) => state.theme.theme);
+  const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
+
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const {
@@ -118,29 +136,11 @@ const WalletDetails = () => {
     principal,
     dashboardRefreshTrigger,
   ]);
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance,
-    fetchBalance,
-  } = useFetchConversionRate();
 
-  const [Showsearch, setShowSearch] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
-  const [showPopup, setShowPopup] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
-  const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 8;
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -152,9 +152,6 @@ const WalletDetails = () => {
     setSelectedAsset(asset);
     navigate(`/market/asset-details/${asset}`, { state: { assetData } });
   };
-
-  const theme = useSelector((state) => state.theme.theme);
-  const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const closePopup = () => {
     setShowPopup(false);
@@ -182,8 +179,6 @@ const WalletDetails = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
-  const [selectedAssetData, setSelectedAssetData] = useState(null);
-
   const handleChevronClick = (assetName) => {
     const selectedAssetData = currentItems.find(
       (item) => item[0] === assetName
@@ -209,6 +204,7 @@ const WalletDetails = () => {
       };
     }
   }, [showPopup]);
+
   useEffect(() => {
     if (showPopup) {
       document.body.style.overflow = "hidden";
@@ -222,6 +218,7 @@ const WalletDetails = () => {
   }, [showPopup]);
 
   const formatNumber = useFormatNumber();
+
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
@@ -235,14 +232,13 @@ const WalletDetails = () => {
       return numericValue.toFixed(7);
     }
   };
-  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
-    // If loading is finished, mark as loaded
     if (!loading) {
       setHasLoaded(true);
     }
   }, [loading]);
+
   return (
     <div id="market-page1" className="w-full" key={dashboardRefreshTrigger}>
       <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8">

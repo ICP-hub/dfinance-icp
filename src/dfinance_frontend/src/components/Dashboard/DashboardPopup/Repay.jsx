@@ -33,13 +33,16 @@ const Repay = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
+  const fees = useSelector((state) => state.fees.fees);
   const { backendActor, principal } = useAuth();
   const dispatch = useDispatch();
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
   );
-  console.log("assetBorrow", assetBorrow);
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -56,78 +59,67 @@ const Repay = ({
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
+  const [maxAmount, setMaxAmount] = useState("0");
+  const [maxClicked, setMaxClicked] = useState(false);
 
   const value = 5.23;
+
   const truncateToSevenDecimals = (value) => {
-    const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
-    const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
-    return truncated.toFixed(8); // Convert to string with exactly 7 decimals
+    const multiplier = Math.pow(10, 8);
+    const truncated = Math.floor(value * multiplier) / multiplier;
+    return truncated.toFixed(8);
   };
+
+  // Handles user input for repayment amount
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
-  
     if (inputAmount === "") {
-      setAmount(""); // Reset amount state
-      updateAmountAndUsdValue(""); // Ensure raw value is also reset
+      setAmount("");
+      updateAmountAndUsdValue("");
       return;
     }
-  
-    inputAmount = inputAmount.replace(/[^0-9.]/g, ""); // Allow only numbers and a single dot
-  
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
-  
     let numericAmount = parseFloat(inputAmount);
-    if (isNaN(numericAmount)) numericAmount = 0; // Prevent NaN issues
-  
-    // Prevent exceeding assetBorrow
+    if (isNaN(numericAmount)) numericAmount = 0;
     if (numericAmount > assetBorrow) {
       numericAmount = assetBorrow;
       inputAmount = truncateToSevenDecimals(assetBorrow).toString();
     }
-  
     setAmount(inputAmount);
     setMaxClicked(inputAmount === assetBorrow.toString());
-    
     updateAmountAndUsdValue(inputAmount);
   };
-  
+
+  // Updates the USD equivalent of the repayment amount
   const updateAmountAndUsdValue = (inputAmount) => {
     let numericAmount = parseFloat(inputAmount);
-    
     if (isNaN(numericAmount) || numericAmount < 0) {
       setAmount("");
       setUsdValue("0.00"); // ✅ Always show 2 decimal places
       setError("Amount must be a positive number");
       return;
     }
-  
     if (numericAmount > assetBorrow) {
       setError("Amount exceeds the supply balance");
       return;
     }
-  
     const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
     const convertedValue = numericAmount * adjustedConversionRate;
-  
-    // ✅ Always format `usdValue` to 2 decimal places from the start
-    setUsdValue(convertedValue.toFixed(7)); 
+    setUsdValue(convertedValue.toFixed(7));
     setAmount(inputAmount);
     setError("");
   };
-  
-  
-  // ✅ Remove formatting when updating amount, only format for display
+
   const formatAmountWithCommas = (amount) => {
     if (!amount) return "0";
     const parts = amount.toString().split(".");
     parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
-  
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -145,6 +137,7 @@ const Repay = ({
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
+
   useEffect(() => {
     if (assetBorrow && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -155,20 +148,20 @@ const Repay = ({
     }
   }, [amount, conversionRate]);
 
-  const fees = useSelector((state) => state.fees.fees);
-
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
+
   const numericBalance = balance;
-  console.log("numericBalance, fees", numericBalance, fees);
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
+
+  // Approves the repayment amount before executing repayment
   const handleApprove = async () => {
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -184,11 +177,8 @@ const Repay = ({
     }
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-
     const scaledAmount = amountAsNat64;
-
     const totalAmount = scaledAmount + transferfee;
-
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -206,7 +196,6 @@ const Repay = ({
 
       if (approval?.Ok) {
         setIsApproved(true);
-
         toast.success(`Approval successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -261,6 +250,7 @@ const Repay = ({
     default: "An unexpected error occurred. Please try again later.",
   };
 
+  // Executes repayment transaction with the backend
   const handleRepayETH = async () => {
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -385,9 +375,9 @@ const Repay = ({
       });
     }
   };
+
   //   const handlePanicCall = async () => {
   //     try {
-
   //       const result = await backendActor.will_panic();
   // console.log("result", result);
   //       // If the function somehow returns a value without panicking
@@ -420,10 +410,12 @@ const Repay = ({
   //       }
   //     }
   //   };
+
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
+
   const handleClick = async () => {
     setIsLoading(true);
     try {
@@ -437,6 +429,7 @@ const Repay = ({
       setIsLoading(false);
     }
   };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -456,13 +449,13 @@ const Repay = ({
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
+  // Updates health factor based on repayment amount
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
       liquidationThreshold
     );
-
     const amountAdded = usdValue || 0;
     let totalCollateralValue = parseFloat(totalCollateral);
     if (totalCollateralValue < 0) {
@@ -498,7 +491,7 @@ const Repay = ({
       parseFloat(totalCollateral) + parseFloat(amountTaken);
     let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
     if (totalDeptValue < 0) {
-      totalDeptValue = 0; // Set to 0 if the value is negative
+      totalDeptValue = 0;
     }
     if (totalDeptValue === 0) {
       return Infinity;
@@ -515,23 +508,15 @@ const Repay = ({
     return totalDeptValue / totalCollateralValue;
   };
 
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-
-  const [maxAmount, setMaxAmount] = useState("0");
-  const [maxClicked, setMaxClicked] = useState(false);
-
   const handleMaxClick = () => {
     const truncateToSevenDecimals = (value) => {
-      const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
-      const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
-      return truncated.toFixed(8); // Convert to string with exactly 7 decimals
+      const multiplier = Math.pow(10, 8);
+      const truncated = Math.floor(value * multiplier) / multiplier;
+      return truncated.toFixed(8);
     };
 
-    // Determine which value to use (assetBorrow or supplyBalance)
     let selectedBalance =
       supplyBalance > assetBorrow ? assetBorrow : supplyBalance;
-
-    // Handle decimal truncation based on the value
     let displayBalance = selectedBalance
       ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
         ? Number(selectedBalance).toFixed(8)
@@ -542,8 +527,6 @@ const Repay = ({
     const maxAmount = displayBalance.toString();
     setMaxAmount(maxAmount);
     setMaxClicked(true);
-
-    // Update the amount and its USD value
     updateAmountAndUsdValue(maxAmount);
   };
 
@@ -551,7 +534,7 @@ const Repay = ({
     if (!value) return "0";
     return Number(value)
       .toFixed(8)
-      .replace(/\.?0+$/, ""); // Ensure 8 decimals and remove trailing zeroes
+      .replace(/\.?0+$/, "");
   };
   return (
     <>

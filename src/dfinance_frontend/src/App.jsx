@@ -14,21 +14,20 @@ import { getSteps, getStyles } from "./joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
 
 export default function App() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
   const theme = useSelector((state) => state.theme.theme);
-  0;
   const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
   const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
+
   const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
-  let TRACKING_ID = "G-HP2ELMSQCW";
-  const { filteredItems, loading } = useAssetData();
-  const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
 
-  useEffect(() => {
-    setIsTourVisible(isTourRunning);
-  }, [isTourRunning]);
-
+  const { loading } = useAssetData();
+  const isLoading = usePageLoading();
+  const routes = useRoutes(routesList);
   const {
     isAuthenticated,
     principal,
@@ -37,12 +36,21 @@ export default function App() {
     reloadLogin,
   } = useAuth();
 
+  const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
+  const [assetPrincipal, setAssetPrincipal] = useState({});
   const [joyrideState, setJoyrideState] = useState({
     run: true,
     steps: [],
     styles: {},
   });
 
+  useEffect(() => {
+    setIsTourVisible(isTourRunning);
+  }, [isTourRunning]);
+
+  /**
+   * Updates the joyride state when theme or screen size changes.
+   */
   useEffect(() => {
     setJoyrideState((prevState) => ({
       ...prevState,
@@ -57,9 +65,6 @@ export default function App() {
     joyTextColor,
     isTourRunning,
   ]);
-
-  const [assetPrincipal, setAssetPrincipal] = useState({});
-  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
@@ -81,6 +86,11 @@ export default function App() {
     fetchAssetPrinciple();
   }, [principal, backendActor]);
 
+  /**
+   * Fetches the principal ID of a given asset from the backend.
+   * @param {string} asset - The asset symbol (e.g., "ckBTC").
+   * @returns {string} - The asset principal ID as a string.
+   */
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -113,15 +123,16 @@ export default function App() {
     }
   };
 
+  /**
+   * Creates ledger actors for all fetched asset principals.
+   */
   useEffect(() => {
     if (assetPrincipal.ckBTC) {
       const actor = createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory);
-
       dispatch(setLedgerActor({ asset: "ckBTC", actor }));
     }
     if (assetPrincipal.ckETH) {
       const actor = createLedgerActor(assetPrincipal.ckETH, ledgerIdlFactory);
-
       dispatch(setLedgerActor({ asset: "ckETH", actor }));
     }
     if (assetPrincipal.ckUSDC) {
@@ -149,14 +160,9 @@ export default function App() {
     }
   }, [theme]);
 
-  const isLoading = usePageLoading();
-  const routes = useRoutes(routesList);
-
   const [isLoadingPage, setIsLoadingPage] = useState(
     isAuthenticated ? loading : isLoading
   );
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthenticated && principal) {
@@ -182,6 +188,10 @@ export default function App() {
     }
   }, [triggerDispatch, dispatch]);
 
+  /**
+   * Handles Joyride navigation logic and tour completion.
+   * @param {Object} data - Joyride callback data.
+   */
   const handleJoyrideCallback = (data) => {
     const { status } = data;
     console.log("data.index", data.index);
@@ -206,7 +216,7 @@ export default function App() {
     if (data.action === "next" && data.index === 2) {
       navigate("/dashboard");
     }
-    if ((data.index === 10)) {
+    if (data.index === 10) {
       navigate("/market");
       window.scrollTo({
         top: 0,

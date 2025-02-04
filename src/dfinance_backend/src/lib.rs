@@ -38,7 +38,12 @@ use ic_cdk_timers::set_timer_interval;
 use std::time::Duration;
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
-
+/*
+ * @title Initialization Function
+ * @dev Initializes the contract by setting the controller and scheduling a task.
+ * @param args The principal ID of the controller.
+ * @returns None
+ */
 #[init]
 pub async fn init(args: Principal) {
     ic_cdk::println!("init function = {:?}", args);
@@ -71,8 +76,12 @@ pub async fn init(args: Principal) {
 //         Err(_) => return Err(Error::ErrorNotController)
 //     }
 // }
-
-// Function to fetch the reserve-data based on the asset
+/*
+ * @title Get Reserve Data
+ * @dev Fetches the reserve data for a specific asset.
+ * @param asset The asset name.
+ * @returns The reserve data if found.
+ */
 #[query]
 fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
     read_state(|state| {
@@ -83,8 +92,12 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
             .ok_or_else(|| Error::NoReserveDataFound)
     })
 }
-
-// Function to get the user data based on the principal
+/*
+ * @title Get User Data
+ * @dev Retrieves user data for a given principal.
+ * @param user The principal of the user.
+ * @returns The user data if found.
+ */
 #[query]
 fn get_user_data(user: Principal) -> Result<UserData, Error> {
     if user == Principal::anonymous() {
@@ -100,8 +113,11 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
             .ok_or_else(|| Error::UserNotFound)
     })
 }
-
-// Get names of all assets of the reserve
+/*
+ * @title Get All Assets
+ * @dev Retrieves a list of all asset names available in the reserve.
+ * @returns A vector containing asset names.
+ */
 #[query]
 pub fn get_all_assets() -> Vec<String> {
     read_state(|state| {
@@ -113,7 +129,12 @@ pub fn get_all_assets() -> Vec<String> {
         asset_names
     })
 }
-
+/*
+ * @title Get Reserve Ledger Canister ID
+ * @dev Retrieves the principal ID of the canister handling a specific asset.
+ * @param asset The asset name.
+ * @returns The principal ID if found.
+ */
 pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
     read_state(|state| {
         let reserve_list = &state.reserve_list;
@@ -123,7 +144,12 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
             .ok_or(Error::NoCanisterIdFound) // Return the error if the key is not found
     })
 }
-
+/*
+ * @title Get Asset Principal
+ * @dev Retrieves the principal ID associated with an asset.
+ * @param asset_name The name of the asset.
+ * @returns The principal ID if found.
+ */
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
     if asset_name.trim().is_empty() {
@@ -142,8 +168,12 @@ pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
         }
     })
 }
+/*
+ * @title Get All Users
+ * @dev Retrieves a list of all registered users along with their data.
+ * @returns A vector of tuples containing user principals and their data.
+ */
 
-// Get all users
 #[query]
 pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     read_state(|state| {
@@ -154,8 +184,12 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
             .collect()
     })
 }
+/*
+ * @title Register User
+ * @dev Registers a new user if they do not already exist.
+ * @returns A string message indicating success.
+ */
 
-// Initialize user if not found
 #[update]
 fn register_user() -> Result<String, Error> {
     ic_cdk::println!("function is register running");
@@ -182,6 +216,12 @@ fn register_user() -> Result<String, Error> {
 
     user_data
 }
+/*
+ * @title Get User Position
+ * @dev Fetches the user's updated asset supply and borrow amounts.
+ * @param asset_name The asset name.
+ * @returns A tuple containing the updated asset supply and borrow amounts.
+ */
 
 #[query]
 pub async fn user_position(asset_name: String) -> Result<(Nat, Nat), Error> {
@@ -255,6 +295,12 @@ pub async fn user_position(asset_name: String) -> Result<(Nat, Nat), Error> {
 
     Ok((updated_asset_supply, updated_asset_borrow))
 }
+/*
+ * @title Get Cached Exchange Rate
+ * @dev Retrieves the cached exchange rate for a given asset.
+ * @param base_asset_symbol The symbol of the base asset.
+ * @returns The cached exchange rate as `PriceCache`.
+ */
 
 #[query]
 pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache, Error> {
@@ -299,6 +345,14 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
         }
     }
 }
+/*
+ * @title Calculate Dynamic Balance
+ * @dev Computes the updated balance based on liquidity indexes.
+ * @param initial_deposit The initial amount deposited.
+ * @param prev_liquidity_index The previous liquidity index.
+ * @param new_liquidity_index The latest liquidity index.
+ * @returns The dynamically updated balance.
+ */
 
 fn calculate_dynamic_balance(
     initial_deposit: Nat,
@@ -310,6 +364,13 @@ fn calculate_dynamic_balance(
     }
     initial_deposit * (new_liquidity_index / prev_liquidity_index)
 }
+/*
+ * @title Get Asset Supply
+ * @dev Fetches the total asset supply for a given asset.
+ * @param asset_name The asset name.
+ * @param on_behalf (Optional) The principal requesting the asset supply.
+ * @returns The total asset supply as `Nat`.
+ */
 
 pub async fn get_asset_supply(
     asset_name: String,
@@ -431,6 +492,13 @@ pub async fn get_asset_supply(
 
     Ok(result)
 }
+/*
+ * @title Get Asset Debt
+ * @dev Retrieves the total debt for a given asset.
+ * @param asset_name The name of the asset.
+ * @param on_behalf (Optional) The principal requesting the asset debt.
+ * @returns The total debt as `Nat`.
+ */
 
 pub async fn get_asset_debt(
     asset_name: String,
@@ -535,6 +603,12 @@ pub async fn get_asset_debt(
             .scaled_mul(get_balance_value),
     )
 }
+/*
+ * @title User Normalized Supply
+ * @dev Calculates the normalized supply of a user for a given reserve.
+ * @param reserve_data The reserve data containing liquidity index and rate.
+ * @returns The normalized supply as `Nat`.
+ */
 
 #[query]
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
@@ -564,6 +638,12 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
         return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
     }
 }
+/*
+ * @title User Normalized Debt
+ * @dev Computes the normalized debt of a user for a given reserve.
+ * @param reserve_data The reserve data containing debt index and borrow rate.
+ * @returns The normalized debt as `Nat`.
+ */
 
 //FRONTEND - userbalance(debttoken)*usernormalizedebt/userreserve.debtindex -> to get asset_debt of user for perticular asset
 #[query]
@@ -603,6 +683,11 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
         return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
     }
 }
+/*
+ * @title Check Lock
+ * @dev Attempts to acquire a lock for a user.
+ * @returns `"Lock acquired"` on success.
+ */
 
 #[update]
 async fn check_lock() -> Result<String, Error> {
@@ -616,6 +701,12 @@ async fn check_lock() -> Result<String, Error> {
         Err(e) => Err(Error::LockAcquisitionFailed),
     }
 }
+/*
+ * @title Get Lock Status
+ * @dev Checks if the user has an active lock.
+ * @returns `true` if the user has a lock, `false` otherwise.
+ */
+
 #[query]
 async fn get_lock() -> Result<bool, Error> {
     let user_principal = ic_cdk::api::caller();
@@ -630,20 +721,35 @@ async fn get_lock() -> Result<bool, Error> {
         Err(e) => Err(Error::LockAcquisitionFailed),
     }
 }
+/*
+ * @title Get Total Users
+ * @dev Retrieves the total number of registered users.
+ * @returns The total user count as `usize`.
+ */
 
 #[query]
 pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
+/*
+ * @title Force Panic
+ * @dev This function intentionally panics for testing purposes.
+ * @returns This function does not return, as it always panics.
+ */
 
 #[update]
 fn will_panic() -> String {
     ic_cdk::println!("About to panic!");
     panic!("This function always panics!");
 }
+/*
+ * @title Get User Account Data
+ * @dev Fetches the user’s account data.
+ * @param on_behalf (Optional) The principal requesting the data.
+ * @returns A tuple containing user financial data.
+ */
 
-// this function is for check which i will remove later.
 #[update]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
@@ -653,7 +759,11 @@ async fn get_user_account_data(
     result
 }
 
-
+/*
+ * @title Schedule Midnight Task
+ * @dev This function schedules a task to reset faucet usage at midnight.
+ * @returns None
+ */
 pub async fn schedule_midnight_task() {
     let _timer_id = set_timer_interval(time_until_midnight(), || {
         ic_cdk::spawn(async {
@@ -665,12 +775,23 @@ pub async fn schedule_midnight_task() {
         });
     });
 }
+/*
+ * @title Time Until Midnight
+ * @dev Calculates the duration remaining until midnight (UTC).
+ * @returns A `Duration` representing the time left until midnight.
+ */
 
 fn time_until_midnight() -> Duration {
     let now = ic_cdk::api::time();
     let nanos_since_midnight = now % ONE_DAY.as_nanos() as u64;
     Duration::from_nanos(ONE_DAY.as_nanos() as u64 - nanos_since_midnight)
 }
+/*
+ * @title Post Upgrade Hook
+ * @dev This function is automatically executed after an upgrade.
+ * @notice Re-initializes scheduled tasks, such as the midnight reset.
+ * @returns None (Executes `schedule_midnight_task` asynchronously).
+ */
 
 #[ic_cdk::post_upgrade]
 pub async fn post_upgrade() {

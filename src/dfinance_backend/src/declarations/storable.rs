@@ -3,6 +3,12 @@ use serde::Deserialize;
 use std::borrow::Cow;
 use ic_stable_structures::storable::{Blob, Bound, Storable};
 
+/* 
+ * @title Stored Principal
+ * @notice A lightweight wrapper for storing `Principal` values in stable memory.
+ * @dev Implements `Storable` using a fixed-size `Blob` (29 bytes) to ensure compatibility
+ *      with the Internet Computer's stable storage constraints.
+ */
 #[derive(Default, Clone,Debug)]
 pub struct Candid<T>(pub T)
 where
@@ -33,7 +39,14 @@ where
         &self.0
     }
 }
-
+/* 
+ * @title Candid Wrapper
+ * @notice A generic wrapper for Candid-serializable types to enable stable storage.
+ * @dev Implements the `Storable` trait, allowing efficient encoding and decoding for stable memory.
+ *      Uses `Encode!` and `Decode!` macros to serialize and deserialize the wrapped type.
+ * 
+ * @typeparam T Any type that implements `CandidType` and `Deserialize`. 
+ */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct StoredPrincipal(pub Principal);
 

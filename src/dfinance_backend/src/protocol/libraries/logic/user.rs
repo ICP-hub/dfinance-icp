@@ -24,6 +24,23 @@ pub struct UserConfig {
     pub collateral: bool,
     pub borrowing: bool,
 }
+/* 
+ * @title User Account Data Calculation
+ * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
+ *
+ * @dev Aggregates user reserves, fetches exchange rates, and determines borrowing capacity.
+ *
+ * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
+ * 
+ * @return A tuple containing:
+ *   - Total collateral
+ *   - Total debt
+ *   - Average LTV
+ *   - Liquidation threshold
+ *   - Health factor
+ *   - Available borrow
+ *   - Has zero-LTV collateral (bool)
+ */
 
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
@@ -296,7 +313,18 @@ pub async fn calculate_user_account_data(
         has_zero_ltv_collateral,
     ))
 }
-
+/* 
+ * @title Get User Balance in Base Currency
+ * @notice Computes the user's total balance in the base currency (USD equivalent).
+ *
+ * @dev Fetches the user's scaled balance, applies normalization, and multiplies by the asset's exchange rate.
+ *
+ * @param user_principal The principal of the user whose balance is being calculated.
+ * @param reserve The reserve data associated with the user's asset.
+ * @param asset_price The price of the asset in the base currency.
+ * 
+ * @return The user's balance in base currency.
+ */
 pub async fn get_user_balance_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
@@ -363,7 +391,18 @@ pub async fn get_user_balance_in_base_currency(
         .clone()
         .scaled_mul(asset_price.clone()))
 }
-
+/* 
+ * @title Get User Debt in Base Currency
+ * @notice Computes the user's total outstanding debt in the base currency.
+ *
+ * @dev Fetches the user's debt balance, applies normalization, and multiplies by the asset's exchange rate.
+ *
+ * @param user_principal The principal of the user whose debt is being calculated.
+ * @param reserve The reserve data associated with the user's asset.
+ * @param asset_price The price of the asset in the base currency.
+ * 
+ * @return The user's debt in base currency.
+ */
 pub async fn get_user_debt_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
@@ -426,7 +465,12 @@ pub async fn get_user_debt_in_base_currency(
     ic_cdk::println!("Final user debt in base currency: {}", result);
     Ok(result)
 }
-
+/* 
+ * @title User Account Data Structure
+ * @notice Stores financial data such as collateral, debt, and risk factors.
+ *
+ * @dev Tracks users' financial health and determines potential liquidation status.
+ */
 #[derive(Debug, Clone, CandidType, Deserialize)]
 pub struct UserAccountData {
     pub collateral: Nat,
@@ -437,7 +481,17 @@ pub struct UserAccountData {
     pub available_borrow: Nat,
     pub has_zero_ltv_collateral: bool,
 }
-
+/* 
+ * @title Get Users Eligible for Liquidation
+ * @notice Identifies users with a health factor below the liquidation threshold.
+ *
+ * @dev Uses concurrency for improved efficiency by fetching users in batches.
+ *
+ * @param total_pages The total number of pages to fetch users from.
+ * @param page_size The number of users per page.
+ * 
+ * @return A vector of tuples containing (Principal, UserAccountData, UserData).
+ */
 #[query]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,

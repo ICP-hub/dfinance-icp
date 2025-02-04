@@ -18,23 +18,47 @@ pub struct CachedPrice {
 pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,
 }
-
+/* 
+ * @title Maximum Value Helper
+ * @dev Returns the maximum possible value that can be stored in a `Nat` type.
+ *      This value is `2^128 - 1`, representing the largest unsigned 128-bit integer.
+ * @returns `Nat` - The maximum possible `Nat` value.
+ */
 fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
 }
-
+/* 
+ * @title Price Cache Management
+ * @dev Handles storing and retrieving cached prices of assets to avoid redundant calls.
+ *      Allows fetching and updating asset exchange rates efficiently.
+ */
 impl PriceCache {
+     /* 
+     * @title Get Cached Price
+     * @dev Retrieves the cached exchange rate for a given asset, if available.
+     * @param asset The name of the asset (e.g., "ckBTC", "ckETH").
+     * @returns Option<Nat> - Returns the cached price if it exists, otherwise `None`.
+     */
     pub fn get_cached_price_simple(&self, asset: &str) -> Option<Nat> {
         self.cache
             .get(asset)
             .map(|cached_price| cached_price.price.clone())
     }
-
+   /* 
+     * @title Set Cached Price
+     * @dev Updates the cached price for a specific asset.
+     * @param asset The name of the asset.
+     * @param price The latest exchange rate for the asset.
+     */
     pub fn set_price(&mut self, asset: String, price: Nat) {
         self.cache.insert(asset, CachedPrice { price });
     }
 }
-
+/* 
+ * @title Update Reserve Prices
+ * @dev Fetches the latest exchange rates for all reserves and updates the cache.
+ *      This function iterates through all the registered reserves and fetches new prices.
+ */
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
     // Fetch all the keys (asset names) from the reserve list
@@ -72,7 +96,11 @@ pub async fn update_reserves_price() -> Result<(), Error> {
     }
     Ok(())
 }
-
+/* 
+ * @title Update Token Price
+ * @dev Fetches the latest exchange rate for a single asset and updates the cache.
+ * @param asset The name of the asset whose price needs to be updated.
+ */
 #[update]
 pub async fn update_token_price(asset:String)-> Result<(),Error>{
    if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await{
@@ -81,7 +109,11 @@ pub async fn update_token_price(asset:String)-> Result<(),Error>{
 
     Ok(())
 }
-
+/* 
+ * @title Query Reserve Prices
+ * @dev Fetches the cached price data of all available assets from the state.
+ * @returns Vec<PriceCache> - A list of cached prices for each asset.
+ */
 #[query]
 pub fn queary_reserve_price() -> Vec<PriceCache> {
     let tokens = read_state(|state| {
@@ -95,7 +127,10 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
     ic_cdk::println!("all tokens are = {:?}", tokens);
     tokens
 }
-
+/* 
+ * @title User Financial Position
+ * @dev Represents a user's position in terms of collateral, borrowings, and liquidation threshold.
+ */
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct UserPosition {
     pub total_collateral_value: Nat,
@@ -103,7 +138,15 @@ pub struct UserPosition {
     pub liquidation_threshold: Nat,
 }
 
-// ------------ Real time asset data using XRC ------------
+/* 
+ * @title Fetch Exchange Rates
+ * @dev Fetches the latest exchange rate of a given base asset against a quote asset.
+ *      Supports both cryptocurrency and fiat asset classes.
+ * @param base_asset_symbol The base asset for which exchange rate is needed.
+ * @param quote_asset_symbol The asset against which the base asset is quoted. Defaults to USDT.
+ * @param amount The amount of the base asset to convert.
+ * @returns Result<(Nat, u64), ()> - Returns the exchange rate value and the timestamp.
+ */
 #[ic_cdk_macros::update]
 pub async fn get_exchange_rates(
     base_asset_symbol: String,

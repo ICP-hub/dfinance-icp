@@ -108,9 +108,6 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     }
 }
 
-
-
-
 /* 
  * @title Interest Rate Calculation
  * @notice Computes the borrow and liquidity rates based on liquidity, debt, and asset parameters.

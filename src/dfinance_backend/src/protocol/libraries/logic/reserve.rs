@@ -15,12 +15,11 @@ use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
 use ic_cdk::api::time;
 
-/* 
+/*
  * @title Accrual Treasury Variables
  * @notice Stores temporary values used during the treasury accrual process.
  * @dev Holds previous debt values and calculated accrual amounts.
  */
-
 struct AccrueToTreasuryLocalVars {
     prev_total_variable_debt: Nat,
     curr_total_variable_debt: Nat,
@@ -38,7 +37,8 @@ impl Default for AccrueToTreasuryLocalVars {
         }
     }
 }
-/* 
+
+/*
  * @title Timestamp Utility
  * @notice Returns the current timestamp in seconds.
  * @dev Converts nanoseconds from `time()` API to seconds.
@@ -47,7 +47,8 @@ impl Default for AccrueToTreasuryLocalVars {
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000
 }
-/* 
+
+/*
  * @title Reserve Cache Generator
  * @notice Generates a cache structure from `ReserveData`.
  * @dev This function copies essential reserve parameters into `ReserveCache` for quick access.
@@ -77,23 +78,22 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
     }
 }
 
-/// @title Update State Function
-/// @notice This function updates the state of the reserve data by checking if the state needs to be updated based on the current timestamp.
-///         It performs necessary operations such as updating indexes and accruing rewards to the treasury if the state is out of date.
-///         The function ensures that only necessary updates are made and prevents redundant state updates.
-///
-/// @dev The function follows a structured workflow:
-///      1. **Timestamp Check**: Compares the current timestamp with the `last_update_timestamp` in `reserve_data` to determine if an update is needed.
-///      2. **Update Indexes**: If the timestamp has changed, it proceeds to update the reserve indexes and accrue treasury rewards.
-///      3. **Accrue to Treasury**: Calls the `accrue_to_treasury` function to update any funds that need to be accrued to the treasury.
-///      4. **Update Last Update Timestamp**: Sets the `last_update_timestamp` to the current timestamp to mark the state as updated.
-///
-/// @param reserve_data The mutable reference to the `ReserveData` that holds the current state of the reserve, including the last update timestamp.
-/// @param reserve_cache The mutable reference to the `ReserveCache` that stores additional reserve-related data used for updates.
-///
-/// @return None This function does not return any value. It modifies the state of `reserve_data` and `reserve_cache` based on the updates.
-///
-/// @error None This function does not have explicit error handling, as it primarily operates on state updates and timestamp comparison.
+/**
+ * @title Update State Function
+ *
+ * @notice Updates the reserve state if the current timestamp differs from the last update timestamp. 
+ *         It ensures only necessary updates are made, such as updating indexes and accruing treasury rewards.
+ *
+ * @dev The function follows these steps:
+ *      1. Compares the current timestamp with the last update timestamp.
+ *      2. If outdated, updates reserve indexes and accrues treasury rewards.
+ *      3. Updates the last update timestamp to the current time.
+ *
+ * @param reserve_data The mutable reference to the `ReserveData` struct.
+ * @param reserve_cache The mutable reference to the `ReserveCache` struct.
+ *
+ * @return None The function modifies `reserve_data` and `reserve_cache` in place.
+ */
 pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
     let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
@@ -108,7 +108,7 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
     reserve_data.last_update_timestamp = current_time;
 }
 
-/* 
+/*
  * @title Update Indexes
  * @notice Updates liquidity and debt indices based on reserve data.
  * @dev Uses linear interest for liquidity and compounded interest for debt.
@@ -147,15 +147,24 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
     }
 }
 
-/* 
- * @title Update State
- * @notice Ensures the reserve state is up-to-date by adjusting indices and accruing treasury rewards.
- * @dev Compares timestamps, updates indices, and records changes.
+/*
+ * @title Update Interest Rates
+ * @notice Updates the interest rates based on collateral changes and debt levels.
+ *         It calculates new liquidity and debt rates, and updates the reserve data accordingly.
  *
- * @param reserve_data Reference to `ReserveData` for reserve state.
- * @param reserve_cache Reference to `ReserveCache` for additional data.
+ * @dev The function follows these steps:
+ *      1. Calculates the total debt using the current debt index.
+ *      2. Initializes the interest rate parameters based on the asset.
+ *      3. Calculates the new liquidity and debt rates using the updated collateral and debt data.
+ *      4. Updates the reserve data with the new interest rates.
+ *      5. Returns an error if the calculation fails.
  *
- * @return None (modifies `reserve_data` and `reserve_cache`).
+ * @param reserve_data The mutable reference to the `ReserveData` struct containing the current reserve state.
+ * @param reserve_cache The mutable reference to the `ReserveCache` struct holding the current reserve-related data.
+ * @param liq_taken The amount of collateral taken during liquidation.
+ * @param liq_added The amount of collateral added to the reserve.
+ *
+ * @return Result<(), Error> Returns `Ok` if the interest rates are successfully updated, or an error if the calculation fails.
  */
 pub async fn update_interest_rates(
     reserve_data: &mut ReserveData,
@@ -201,7 +210,7 @@ pub async fn update_interest_rates(
     Ok(())
 }
 
-/* 
+/*
  * @title Token Burn Handler
  * @notice Handles token burning, adjusting user and reserve states.
  *
@@ -477,7 +486,7 @@ pub async fn burn_scaled(
     }
 }
 
-/* 
+/*
  * @title Token Mint Handler
  *
  * @dev Adjusts mint amount, updates balances, modifies supply/borrow data,
@@ -624,7 +633,7 @@ pub async fn mint_scaled(
     }
 }
 
-/* 
+/*
  * @title Treasury Accrual Handler
  * @notice Calculates and mints accrued debt to the treasury based on reserve factor.
  *

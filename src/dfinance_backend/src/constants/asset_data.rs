@@ -8,7 +8,7 @@ use crate::api::state_handler::{mutate_state, read_state};
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 
 /*  
- * @title Reserve Initialization & Management  
+ * @title Reserve Initialization 
  * @notice Provides functionalities for initializing reserves, modifying reserve configurations,  
  *         and verifying controller permissions.  
  * @dev This module handles the creation of token canisters, updating reserve parameters,  
@@ -21,7 +21,6 @@ use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
  * # Returns  
  * @return `Ok(())` on success.  
  */
-
 #[update]
 pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
     let user_principal = ic_cdk::caller();
@@ -80,6 +79,7 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
 
     Ok(())
 }
+
 /*  
  * @title Reset Reserve Value  
  * @notice Resets a specific variable in the reserve configuration.  
@@ -93,8 +93,6 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
  * # Returns  
  * @return `Ok(())` on success.  
  */
-
-
 #[update]
 pub async fn reset_reserve_value(
     asset_name: String,
@@ -145,6 +143,7 @@ pub async fn reset_reserve_value(
     });
     Ok(())
 }
+
 /*  
  * @title Check Controller Permissions  
  * @notice Checks if the caller is a controller of the canister.  
@@ -153,7 +152,6 @@ pub async fn reset_reserve_value(
  * # Returns  
  * @return `true` if the caller is a controller, otherwise `false`.  
  */
-
 #[query]
 pub fn to_check_controller() -> bool {
     ic_cdk::api::is_controller(&ic_cdk::api::caller())

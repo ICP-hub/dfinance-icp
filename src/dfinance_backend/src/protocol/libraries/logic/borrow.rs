@@ -15,41 +15,39 @@ use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::api::resource_manager::{
     acquire_lock, is_amount_locked, release_amount, release_lock, repay_release_amount,
 };
+/*
+-------------------------------------
+----------- BORROW LOGIC ------------
+-------------------------------------
+ */
 
-// -------------------------------------
-// ----------- BORROW LOGIC ------------
-// -------------------------------------
-
-/// @title Execute Borrow Function
-/// @notice This function allows users to borrow a specified amount of assets, performing all necessary checks, state updates, and validations.
-///         It first validates the input parameters, checks the caller's identity, acquires a lock, and proceeds with a sequence of operations
-///         including validating the borrow request, updating user and reserve data, and transferring the asset to the user.
-///         If any operation fails, it rolls back previous changes and ensures that all resources are properly released, including locks and amounts.
-///
-/// @dev The function follows a structured workflow:
-///      1. **Input validation**: Ensures the asset name is valid, the amount is greater than zero, and that the caller is not anonymous.
-///      2. **Lock acquisition**: Ensures only one operation can proceed at a time for a user.
-///      3. **State mutation**: The reserve data and user profile are updated in the canister's state.
-///      4. **Borrow validation**: Checks whether the borrow request complies with platform rules (e.g., limits, available assets).
-///      5. **Asset transfer**: Transfers the requested amount of asset from the platform's reserve to the user's wallet.
-///      6. **Rollback mechanism**: In case of a failure in any part of the process, the function reverts any changes made to the system and releases resources.
-///
-/// @param params The parameters needed to execute the borrow operation, including the asset name and the amount to be borrowed.
-///               The structure of `ExecuteBorrowParams` includes:
-///               - `asset`: The name of the asset to be borrowed.
-///               - `amount`: The amount of the asset to be borrowed.
-/// 
-/// @return Result<Nat, Error> Returns the new balance of the user after a successful asset transfer or an error code if any operation fails.
-///
-/// @error Error::EmptyAsset If the asset name is empty.
-/// @error Error::InvalidAssetLength If the asset name exceeds the maximum length.
-/// @error Error::InvalidAmount If the borrow amount is less than or equal to zero.
-/// @error Error::AnonymousPrincipal If the caller is an anonymous principal.
-/// @error Error::LockAcquisitionFailed If the lock acquisition fails.
-/// @error Error::NoReserveDataFound If the reserve data for the asset cannot be found.
-/// @error Error::BorrowValidationFailed If the borrow request fails validation.
-/// @error Error::ErrorRollBack If the borrow process fails and rollback operations cannot be completed.
-/// @error Error::ErrorMintDebtTokens If the system fails to mint the necessary debt tokens when the asset transfer fails.
+/**
+ * @title Execute Borrow Function
+ * 
+ * @notice Allows users to borrow a specified amount of assets while performing necessary checks, 
+ *         state updates, and validations. The function:
+ *         - Validates input parameters.
+ *         - Checks the caller's identity.
+ *         - Acquires a lock.
+ *         - Validates the borrow request.
+ *         - Updates user and reserve data.
+ *         - Transfers the asset to the user.
+ *         - Rolls back changes if any operation fails.
+ * 
+ * @dev The function follows a structured workflow:
+ *      1. **Input validation**: Ensures a valid asset name, a positive amount, and a known caller.
+ *      2. **Lock acquisition**: Ensures only one operation can proceed at a time for a user.
+ *      3. **State mutation**: Updates reserve data and the user's profile in the canister's state.
+ *      4. **Borrow validation**: Verifies that the request complies with platform rules (e.g., limits, availability).
+ *      5. **Asset transfer**: Moves the requested amount from the platform's reserve to the user's wallet.
+ *      6. **Rollback mechanism**: If any step fails, reverts all changes and releases resources.
+ * 
+ * @param params The parameters required to execute the borrow operation:
+ *               - `asset`: The name of the asset to be borrowed.
+ *               - `amount`: The amount of the asset to be borrowed.
+ * 
+ * @return Result<Nat, Error> The user's new balance after a successful transaction or an error code if the operation fails.
+ */
 #[update]
 pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {
@@ -307,9 +305,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     result
 }
 
-// -------------------------------------
-// ------------ REPAY LOGIC ------------
-// -------------------------------------
+/*
+-------------------------------------
+------------ REPAY LOGIC ------------
+-------------------------------------
+ */
 
 /// @notice Executes the repay operation for a given asset and amount. This function validates the parameters,
 /// performs necessary checks for asset conditions, and updates the user's debt position in the reserve system.

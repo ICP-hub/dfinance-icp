@@ -6,7 +6,7 @@ use crate::declarations::state::State;
 use crate::protocol::libraries::types::assets::{AssetIndex, CanisterList, MetaData, PriceCacheList, ReserveList, UserProfile};
 
 /* 
- * @title State Initialization
+ * @title State 
  * @notice This struct represents the global state of the lending protocol.
  * @dev The state is initialized using a memory manager that allocates persistent storage.
  *      It manages key protocol components such as user profiles, reserves, price cache, and metadata.

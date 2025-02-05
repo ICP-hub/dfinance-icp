@@ -280,10 +280,15 @@ const UserInformationPopup = ({
     liquidationThreshold,
     reserveliquidationThreshold
   ) => {
+    console.log("total collateral = ", totalCollateral);
+    console.log("total debt = ", totalDebt);
+    console.log("liquidation threshold = ", liquidationThreshold);
+    console.log("reserve liquidation threshold = ", reserveliquidationThreshold);
     const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
     const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
-    console.log("amountTaken", amountTaken);
+    console.log("amountTaken to see", amountTaken);
     console.log("amountAdded", amountAdded);
+
     const assetRates = {
       ckETH: ckETHUsdRate,
       ckBTC: ckBTCUsdRate,
@@ -292,55 +297,76 @@ const UserInformationPopup = ({
       ckUSDT: ckUSDTUsdRate,
     };
 
+    console.log("assetRates:", assetRates);
+
     let totalCollateralValue =
       Math.trunc(
         (parseFloat(totalCollateral) -
           parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) *
-          1e8
+        1e8
       ) / 1e8;
+
+    console.log("parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8)", amountTaken * (assetRates[selectedAsset] / 1e8));
+    console.log("Initial totalCollateralValue calculation:", totalCollateralValue);
+
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
+    console.log("Total collateral value after checking for negatives:", totalCollateralValue);
     console.log("assetRates[selectedAsset]", assetRates[selectedAsset]);
-    console.log("totalCollateralValue", totalCollateralValue);
     console.log("totalCollateral", totalCollateral);
+
     let totalDeptValue =
       Math.trunc(
         (parseFloat(totalDebt) -
           parseFloat(amountAdded * (assetRates[selectedDebtAsset] / 1e8))) *
-          1e8
+        1e8
       ) / 1e8;
+
+    console.log("amountAdded * (assetRates[selectedDebtAsset] / 1e8", amountAdded * (assetRates[selectedDebtAsset] / 1e8));
+    console.log("Initial totalDeptValue calculation:", totalDeptValue);
 
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
     }
     if (totalDeptValue === 0) {
+      console.log("Total debt value is zero, returning Infinity");
       return Infinity;
     }
     console.log("assetRates[selectedDebtAsset]", assetRates[selectedDebtAsset]);
     console.log("totalDeptValue", totalDeptValue);
     console.log("totalDebt", totalDebt);
-    // const healthFactorValue =
-    //   (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue;
 
-    // return healthFactorValue;
     console.log("liquidationThreshold", liquidationThreshold);
     let avliq = Math.trunc(liquidationThreshold * totalCollateral * 1e8) / 1e8;
-    console.log("avliq", avliq);
-    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
+    console.log("Total avg liquidation threshold:", avliq); // previous liquidity threshold
+
+    // amount taken should be reward amount.
+    // let tempLiq = avliq - (amountTaken * reserveliquidationThreshold); // new liquidity threshold
+    let tempLiq = avliq - ((amountTaken * (assetRates[selectedAsset] / 1e8)) * reserveliquidationThreshold); // new liquidity threshold
+    console.log("tempLiq before checking collateral value:", tempLiq);
 
     if (totalCollateralValue > 0) {
-      tempLiq = tempLiq / totalCollateralValue;
+      tempLiq = tempLiq / totalCollateralValue; /// average liquidity threshold
+      console.log("tempLiq after dividing by totalCollateralValue:", tempLiq);
 
+      // Truncate to 8 decimal places
       const multiplier = Math.pow(10, 8);
       tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+      console.log("tempLiq after dividing by totalCollateralValue and truncating:", tempLiq);
     }
-    console.log("tempLiq", tempLiq);
-    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+
+    //withdraw me minus hoga repay aur borrow same toggle add horaha to plus varna minus
+    console.log("Final tempLiq:", tempLiq);
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;// health factor formaula.
+    console.log("Result before rounding:", result);
+
     result = Math.round(result * 1e8) / 1e8;
-    console.log("result", result);
+    console.log("Result after rounding:", result);
+
     return result;
   };
+
 
   function roundToDecimal(value, decimalPlaces) {
     const factor = Math.pow(10, decimalPlaces);

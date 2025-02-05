@@ -3,7 +3,7 @@ use serde::Serialize;
 
 /* 
  * @title Reserve Data
- * @notice Stores information about a financial reserve.
+ * @notice Stores information about a reserve of an asset.
  * @dev This struct contains details about asset reserves, including borrowing and liquidity rates.
  * 
  * @param asset_name The name of the asset (e.g., "ICP", "BTC").
@@ -38,10 +38,11 @@ pub struct ReserveData {
     pub last_update_timestamp: u64,
     pub accure_to_platform: Nat,
 }
+
 /* 
  * @title Reserve Cache
- * @notice Stores cached data related to a financial reserve.
- * @dev This struct caches important financial data for faster access and calculations.
+ * @notice Stores cached data related to a reserve of an asset.
+ * @dev This struct caches important reserve data for faster access and calculations.
  *
  * @param reserve_configuration The configuration details of the reserve.
  * @param curr_liquidity_index The current liquidity index.
@@ -77,9 +78,10 @@ pub struct ReserveCache {
     pub curr_supply: Nat,
    
 }
+
 /* 
  * @title Reserve Configuration
- * @notice Defines the configuration settings for a financial reserve.
+ * @notice Defines the configuration settings for a reserve of an asset.
  * @dev This struct includes parameters affecting borrowing, liquidation, and supply behavior.
  *
  * @param ltv The loan-to-value ratio.
@@ -108,6 +110,7 @@ pub struct ReserveConfiguration {
     pub paused: bool,
     pub reserve_factor: Nat,
 }
+
 /* 
  * @title Execute Supply Parameters
  * @notice Defines parameters required to execute a supply transaction.
@@ -123,6 +126,7 @@ pub struct ExecuteSupplyParams {
     pub is_collateral: bool,
 
 }
+
 /* 
  * @title Interest Rate Calculation Parameters
  * @notice Defines the parameters required to calculate interest rates.
@@ -150,6 +154,7 @@ pub struct CalculateInterestRatesParams {
     pub reserve: String,
     pub d_token: String,
 }
+
 /* 
  * @title Reserve Initialization Parameters
  * @notice Defines the parameters required to initialize a reserve.
@@ -173,6 +178,7 @@ pub struct InitReserveParams {
     pub reserves_count: u64,
     pub max_number_reserves: u64,
 }
+
 /* 
  * @title Interest Rate Modes
  * @notice Defines the different modes of interest rates.
@@ -188,6 +194,7 @@ pub enum InterestRateMode {
     Stable,
     Variable,
 }
+
 /* 
  * @title Execute Borrow Parameters
  * @notice Defines the parameters required to execute a borrow transaction.
@@ -200,6 +207,7 @@ pub struct ExecuteBorrowParams {
     pub asset: String,
     pub amount: Nat,
 }
+
 /* 
  * @title Execute Repay Parameters
  * @notice Defines the parameters required to execute a repayment transaction.
@@ -214,6 +222,7 @@ pub struct ExecuteRepayParams {
     pub amount: Nat,
     pub on_behalf_of: Option<Principal>,
 }
+
 /* 
  * @title Execute Withdraw Parameters
  * @notice Defines parameters required to execute a withdrawal transaction.
@@ -230,6 +239,7 @@ pub struct ExecuteWithdrawParams {
     pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
+
 /* 
  * @title Initialize Arguments
  * @notice Defines the arguments required to initialize the protocol.
@@ -240,6 +250,7 @@ pub struct ExecuteWithdrawParams {
 pub struct InitArgs {
     pub controller_id: Principal
 }
+
 /* 
  * @title Execute Liquidation Parameters
  * @notice Defines parameters required to execute a liquidation transaction.

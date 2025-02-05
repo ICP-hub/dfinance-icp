@@ -2,9 +2,10 @@ use candid::{CandidType, Deserialize};
 use candid::{Nat, Principal};
 use serde::Serialize;
 
+// TODO: anishka can you look on these comment only onece for the cheking purpose.
 /* 
  * @title Transfer From Arguments
- * @notice Defines the arguments for transferring assets using the `icrc2_transfer_from` function.
+ * @notice Defines the arguments for transferring assets.
  * @dev This struct includes the sender, recipient, transfer amount, and optional metadata.
  */
 #[derive(CandidType, Deserialize)]
@@ -20,7 +21,7 @@ pub struct TransferFromArgs {
 
 /* 
  * @title Transfer Arguments
- * @notice Defines the structure for an asset transfer using the `icrc1_transfer` function.
+ * @notice Defines the structure for an asset transfer.
  * @dev This struct stores necessary data for a direct asset transfer.
  */
 #[derive(CandidType, Deserialize)]
@@ -32,6 +33,7 @@ pub struct TransferArgs {
     pub created_at_time: Option<u64>,
     pub amount: Nat,
 }
+
 /* 
  * @title Transfer Account
  * @notice Represents an account involved in a transfer.
@@ -42,19 +44,23 @@ pub struct TransferAccount {
     pub owner: Principal,
     pub subaccount: Option<Vec<u8>>,
 }
-/* 
- * @title Transfer From Result
- * @notice Defines the possible outcomes of a `transfer_from` transaction.
- * @dev The result can either be successful (`Ok(Nat)`) or return an error (`Err(TransferFromError)`).
+
+/*
+ * @title TransferFromResult Enum
+ * @notice Represents the possible outcomes transaction.
+ * @dev This enum encapsulates the result. 
+ *      A successful transaction returns `Ok(Nat)`, where `Nat` represents the transferred amount.
+ *      If the transaction fails, it returns `Err(TransferFromError)`, specifying the error type.
  */
 #[derive(CandidType, Deserialize, Debug)]
 pub enum TransferFromResult {
     Ok(Nat),
     Err(TransferFromError),
 }
+
 /* 
  * @title Transfer From Error
- * @notice Enumerates possible errors encountered during a `transfer_from` transaction.
+ * @notice Enumerates possible errors encountered during transaction.
  * @dev Errors include insufficient funds, incorrect fees, or duplicate transactions.
  */
 #[derive(CandidType, Deserialize, Debug)]
@@ -103,12 +109,12 @@ pub enum ApproveError {
     Expired { ledger_time: Nat },
     InsufficientFunds { balance: Nat },
 }
+
 /* 
  * @title Approve Result
  * @notice Defines the possible outcomes of an approval transaction.
  * @dev The result is either `Ok(Nat)` (successful approval) or an error (`Err(ApproveError)`).
  */
-
 #[derive(CandidType, Deserialize, Serialize, Debug)]
 pub enum ApproveResult {
     Ok(Nat),

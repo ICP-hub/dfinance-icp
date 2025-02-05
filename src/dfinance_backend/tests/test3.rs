@@ -1,10 +1,13 @@
 use candid::types::principal;
 use candid::{decode_one, encode_args, encode_one, Principal};
 use candid::{CandidType, Deserialize, Nat};
+use ic_cdk::caller;
 // use dfinance_backend::declarations::assets::ReserveData;
 use pocket_ic::{PocketIc, WasmResult};
 use serde::Serialize;
+use std::error::Error;
 use std::fs;
+use std::ptr::null;
 
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
@@ -12,31 +15,31 @@ pub struct ReserveData {
     pub id: u16,
     pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,
-    pub borrow_rate: f64,
-    pub supply_rate_apr: Option<f64>,
-    pub total_supply: f64,
-    pub total_borrowed: f64,
-    pub liquidity_index: f64,
-    pub current_liquidity_rate: f64,
-    pub debt_index: f64,
+    pub borrow_rate: Nat,
+    pub current_liquidity_rate: Nat,
+    pub asset_supply: Nat,
+    pub asset_borrow: Nat,
+    pub liquidity_index: Nat,
+    pub debt_index: Nat,
     pub configuration: ReserveConfiguration,
     pub can_be_collateral: Option<bool>,
     pub last_update_timestamp: u64,
+    pub accure_to_platform: Nat,
 }
 
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct ReserveConfiguration {
-    pub ltv: u16,
-    pub liquidation_threshold: u16,
-    pub liquidation_bonus: u16,
+    pub ltv: Nat,
+    pub liquidation_threshold: Nat,
+    pub liquidation_bonus: Nat,
     pub borrowing_enabled: bool,
-    pub borrow_cap: u64,
-    pub supply_cap: u64,
-    pub liquidation_protocol_fee: u16,
+    pub borrow_cap: Nat, //TODO set it according to borrow
+    pub supply_cap: Nat, //set it according to supply
+    pub liquidation_protocol_fee: Nat,
     pub active: bool,
     pub frozen: bool,
     pub paused: bool,
-    pub reserve_factor: u16,
+    pub reserve_factor: Nat,
 }
 #[derive(CandidType, Deserialize)]
 pub struct TransferFromArgs {
@@ -159,35 +162,238 @@ const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance
 
 fn setup() -> (PocketIc, Principal) {
     let pic = PocketIc::new();
+    // let user_principal =
+    //     Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
+    //         .unwrap();
+
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
     pic.add_cycles(backend_canister, 5_000_000_000_000); // 2T Cycles
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
     pic.install_canister(backend_canister, wasm, vec![], None);
 
-    println!("Backend canister: {}", backend_canister);
+    ic_cdk::println!("Backend canister: {}", backend_canister);
 
-    //=================Reserve Initialize ==================
+    // 🔹 Define test input (token name + reserve data)
+    let token_name = "ICP".to_string();
+    let reserve_data = ReserveData {
+        asset_name: Some(token_name.clone()),
+        id: 1,
+        d_token_canister: None,
+        debt_token_canister: None,
+        borrow_rate: Nat::from(0u128), // Nat format for borrow_rate
+        current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
+        asset_supply: Nat::from(0u128), // Nat format for asset_supply
+        asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
+        liquidity_index: Nat::from(45u128), // Nat format for liquidity_index
+        debt_index: Nat::from(0u128),  // Nat format for debt_index
+        configuration: ReserveConfiguration {
+            ltv: Nat::from(58u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(63u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(1u128),      // Nat format for liquidation_bonus
+            borrowing_enabled: true,
+            borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
+            supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
+            liquidation_protocol_fee: Nat::from(0u128), // Nat format for liquidation_protocol_fee
+            frozen: false,
+            active: true,
+            paused: false,
+            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+        },
+        can_be_collateral: Some(true),
+        last_update_timestamp: 1, // Nat format for last_update_timestamp
+        accure_to_platform: Nat::from(0u128), // Nat format for accure_to_platform
+    };
 
-    let _ = pic.update_call(
+    //================= Initialize ==================
+    // 🔹 Call the `initialize` function
+
+    // 🔹 Call the `initialize` function
+    let result = pic.update_call(
         backend_canister,
-        Principal::anonymous(),
-        "initialize_reserve",
-        encode_one(()).unwrap(),
+        ic_cdk::caller(),
+        "initialize",
+        encode_args((&token_name, &reserve_data)).unwrap(),
     );
 
-    let _ = pic.update_call(
-        backend_canister,
-        Principal::anonymous(),
-        "faucet",
-        encode_args(("ckBTC", 100000u64)).unwrap(),
-    );
+    // 🔹 Decode the response
+    match result {
+        Ok(WasmResult::Reply(response)) => {
+            let initialize_response: Result<(), String> =
+                candid::decode_one(&response).expect("Failed to decode initialize response");
 
-    (pic, backend_canister)
+            match initialize_response {
+                Ok(()) => {
+                    ic_cdk::println!("✅ Initialize function succeeded for test case:");
+                    panic!("🚨 Expected failure but got success for test case");
+                }
+                Err(e) => {
+                    ic_cdk::println!(
+                        "❌ Initialize function failed as expected with error: {:?}",
+                        e
+                    );
+                    panic!("🚨 Expected success but got error: {:?}", e);
+                }
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => {
+            panic!("🚨 Initialize function was rejected: {:?}", reject_message);
+        }
+        Err(e) => {
+            panic!("🚨 Error calling initialize function: {:?}", e);
+        }
+    }
+
+    // // Call the `faucet` method on the backend canister
+    // let _ = pic.update_call(
+    //     backend_canister,
+    //     ic_cdk::caller(),
+    //     "faucet", // Method name
+    //     encode_args(("ICP", Nat::from(100000u128))).unwrap(), // Encode arguments
+    // );
+
+    // (pic, backend_canister)
 }
 
 #[test]
-fn test_deposit() {
+fn test_faucet() {
+    #[derive(Debug, Clone)]
+    struct TestCase {
+        asset: String,
+        amount: Nat,
+        expect_success: bool,
+        expected_error_message: Option<String>,
+        simulate_insufficient_balance: bool,
+        simulate_faucet_failure: bool,
+    }
+
+    let test_cases = vec![
+        // Valid faucet request
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(100000u128),
+            expect_success: true,
+            expected_error_message: None,
+            simulate_insufficient_balance: false,
+            simulate_faucet_failure: false,
+        },
+        // Non-existent asset case
+        TestCase {
+            asset: "nonexistent_asset".to_string(),
+            amount: Nat::from(50000u128),
+            expect_success: false,
+            expected_error_message: Some("Asset not found: nonexistent_asset".to_string()),
+            simulate_insufficient_balance: false,
+            simulate_faucet_failure: false,
+        },
+        // Minimum valid amount
+        // TestCase {
+        //     asset: "ICP".to_string(),
+        //     amount: 1, // Minimum valid amount
+        //     expect_success: true,
+        //     expected_error_message: None,
+        //     simulate_insufficient_balance: false,
+        //     simulate_faucet_failure: false,
+        // },
+        // Large amount request
+        // TestCase {
+        //     asset: "ICP".to_string(),
+        //     amount: 1_000_000, // Large amount
+        //     expect_success: true,
+        //     expected_error_message: None,
+        //     simulate_insufficient_balance: false,
+        //     simulate_faucet_failure: false,
+        // },
+        // Insufficient balance case
+        // TestCase {
+        //     asset: "ICP".to_string(),
+        //     amount: 10_000_000, // Valid amount but insufficient balance
+        //     expect_success: false,
+        //     expected_error_message: Some("Insufficient balance in faucet".to_string()),
+        //     simulate_insufficient_balance: true,
+        //     simulate_faucet_failure: false,
+        // },
+        // Faucet failure (simulate failure during transfer)
+        // TestCase {
+        //     asset: "ICP".to_string(),
+        //     amount: 100000,
+        //     user: Principal::anonymous().to_string(),
+        //     expect_success: false,
+        //     expected_error_message: Some("Faucet transfer failed".to_string()),
+        //     simulate_insufficient_balance: false,
+        //     simulate_faucet_failure: true,
+        // },
+    ];
+
+    let (pic, backend_canister) = setup();
+
+    for (i, case) in test_cases.iter().enumerate() {
+        ic_cdk::println!("Running test case no: {}", i + 1);
+        ic_cdk::println!("Test case details: {:?}", case);
+
+        // Simulate faucet request
+        let result = pic.update_call(
+            backend_canister,
+            ic_cdk::caller(),
+            "faucet",
+            encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+        );
+
+        match result {
+            Ok(WasmResult::Reply(response)) => {
+                let faucet_response: Result<(), String> =
+                    candid::decode_one(&response).expect("Failed to decode faucet response");
+
+                match faucet_response {
+                    Ok(()) => {
+                        if case.expect_success {
+                            ic_cdk::println!("Faucet succeeded for case: {:?}", case);
+                        } else {
+                            panic!("Expected failure but got success for case: {:?}", case);
+                        }
+                    }
+                    Err(e) => {
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(e.as_str()),
+                                "Error message mismatch for case: {:?}",
+                                case
+                            );
+                            ic_cdk::println!("Faucet failed as expected with error: {:?}", e);
+                        } else {
+                            panic!("Expected success but got error: {:?}", e);
+                        }
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                if !case.expect_success {
+                    assert_eq!(
+                        case.expected_error_message.as_deref(),
+                        Some(reject_message.as_str()),
+                        "Error message mismatch for case: {:?}",
+                        case
+                    );
+                    ic_cdk::println!("Faucet rejected as expected: {}", reject_message);
+                } else {
+                    panic!(
+                        "Expected success but got rejection for case: {:?} with message: {}",
+                        case, reject_message
+                    );
+                }
+            }
+            Err(e) => {
+                panic!("Error during faucet function call: {:?}", e);
+            }
+        }
+
+        println!("****************************************************************************");
+    }
+}
+
+#[test]
+fn test_supply() {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -343,7 +549,6 @@ fn test_deposit() {
             }
         }
 
-        
         println!();
         println!("****************************************************************************");
         println!();
@@ -507,13 +712,11 @@ fn test_borrow() {
             }
         }
 
-        
         println!();
         println!("****************************************************************************");
         println!();
     }
 }
-
 
 #[test]
 fn test_withdraw() {
@@ -672,14 +875,11 @@ fn test_withdraw() {
             }
         }
 
-        
         println!();
         println!("****************************************************************************");
         println!();
     }
 }
-
-
 
 #[test]
 fn test_repay() {
@@ -838,13 +1038,11 @@ fn test_repay() {
             }
         }
 
-        
         println!();
         println!("****************************************************************************");
         println!();
     }
 }
-
 
 #[test]
 fn test_liquidation() {
@@ -1003,7 +1201,6 @@ fn test_liquidation() {
             }
         }
 
-        
         println!();
         println!("****************************************************************************");
         println!();

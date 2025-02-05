@@ -224,21 +224,44 @@ const WalletDetails = () => {
   const formatNumber = useFormatNumber();
 
   const formatValue = (num) => {
-    if (num < 1) return num.toFixed(7); 
-  
-    if (num >= 1e12) return (num % 1e12 === 0) ? (num / 1e12) + "T" : (num / 1e12).toFixed(2) + "T"; 
-    if (num >= 1e9) return (num % 1e9 === 0) ? (num / 1e9) + "B" : (num / 1e9).toFixed(2) + "B"; 
-    if (num >= 1e6) return (num % 1e6 === 0) ? (num / 1e6) + "M" : (num / 1e6).toFixed(2) + "M"; 
-    if (num >= 1e3) return (num % 1e3 === 0) ? (num / 1e3) + "K" : (num / 1e3).toFixed(2) + "K"; 
-  
-    return num.toFixed(2); 
+    if (num < 1) return num.toFixed(7);
+
+    if (num >= 1e12)
+      return num % 1e12 === 0
+        ? num / 1e12 + "T"
+        : (num / 1e12).toFixed(2) + "T";
+    if (num >= 1e9)
+      return num % 1e9 === 0 ? num / 1e9 + "B" : (num / 1e9).toFixed(2) + "B";
+    if (num >= 1e6)
+      return num % 1e6 === 0 ? num / 1e6 + "M" : (num / 1e6).toFixed(2) + "M";
+    if (num >= 1e3)
+      return num % 1e3 === 0 ? num / 1e3 + "K" : (num / 1e3).toFixed(2) + "K";
+
+    return num.toFixed(2);
   };
+  
 
   useEffect(() => {
     if (!loading) {
       setHasLoaded(true);
     }
   }, [loading]);
+  function getUsdRate(assetType) {
+    switch (assetType) {
+      case "ckBTC":
+        return ckBTCUsdRate / 1e8;
+      case "ckETH":
+        return ckETHUsdRate / 1e8;
+      case "ckUSDC":
+        return ckUSDCUsdRate / 1e8;
+      case "ICP":
+        return ckICPUsdRate / 1e8;
+      case "ckUSDT":
+        return ckUSDTUsdRate / 1e8;
+      default:
+        return 0;
+    }
+  }
 
   return (
     <div id="market-page1" className="w-full" key={dashboardRefreshTrigger}>
@@ -694,6 +717,13 @@ const WalletDetails = () => {
                           className="w-8 h-8 rounded-full"
                         />
                       )}
+                      {selectedAssetData[0] === "ICP" && (
+                        <img
+                          src={icp}
+                          alt="ICP logo"
+                          className="w-8 h-8 rounded-full"
+                        />
+                      )}
                       <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">
                         {selectedAssetData[0]}
                       </p>
@@ -702,15 +732,22 @@ const WalletDetails = () => {
                     <div className="flex flex-col gap-5 mt-8">
                       <div className="flex justify-between">
                         <p className="text-sm dark:text-darkTextSecondary">
-                          Total Supply:
+                          Total Supplied:
                         </p>
-                        <div className="flex flex-col">
-                          {}
-                          <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText ">
-                            $
-                            {formatNumber(
-                              Number(selectedAssetData[1].Ok.total_supply) /
+                        <div className="flex flex-col items-end">
+                          <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
+                            {formatValue(
+                              Number(selectedAssetData[1].Ok.asset_supply) /
                                 100000000
+                            )}
+                          </p>
+
+                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            $
+                            {formatValue(
+                              (Number(selectedAssetData[1].Ok.asset_supply) /
+                                100000000) *
+                                getUsdRate(selectedAssetData[0])
                             )}
                           </p>
                         </div>
@@ -737,15 +774,22 @@ const WalletDetails = () => {
 
                       <div className="flex justify-between">
                         <p className="text-sm  dark:text-darkTextSecondary">
-                          Total Borrow:
+                          Total Borrowing:
                         </p>
-                        <div className="flex flex-col">
-                          {}
+                        <div className="flex flex-col items-end">
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                            $
-                            {formatNumber(
-                              Number(selectedAssetData[1].Ok.total_borrowed) /
+                            {formatValue(
+                              Number(selectedAssetData[1].Ok.asset_borrow) /
                                 100000000
+                            )}
+                          </p>
+
+                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            $
+                            {formatValue(
+                              (Number(selectedAssetData[1].Ok.asset_borrow) /
+                                100000000) *
+                                getUsdRate(selectedAssetData[0])
                             )}
                           </p>
                         </div>

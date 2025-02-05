@@ -134,7 +134,7 @@ const Borrow = ({
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable = (totalSupply - totalBorrow) * 0.85;
+        const remainingBorrowable = total_supply * 0.85 - total_borrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -169,7 +169,7 @@ const Borrow = ({
 
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
-      const remainingBorrowable = ((totalSupply - totalBorrow) * 85) / 100;
+      const remainingBorrowable = total_supply * 0.85 - total_borrow;
       console.log("remainingBorrowable in borrow", remainingBorrowable);
       const borrowValue =
         remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;

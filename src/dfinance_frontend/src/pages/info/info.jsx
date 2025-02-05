@@ -345,9 +345,9 @@ const DashboardCards = () => {
         hoverBackgroundColor: ["#EF4444", "#22C55E", "#EAB308"],
 
         borderColor: "#ffffff",
-        borderWidth: 6,
+        borderWidth: 3,
         cutout: "70%",
-        hoverOffset: 4,
+        hoverOffset: 6,
       },
     ],
   };

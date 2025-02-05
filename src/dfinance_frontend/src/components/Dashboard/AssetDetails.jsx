@@ -327,7 +327,7 @@ const AssetDetails = () => {
           setSupplyRate(supply_rate);
           setTotalSupply(total_supply);
           setTotalBorrow(total_borrow);
-          const remainingBorrowable = (total_supply - total_borrow) * 0.85;
+          const remainingBorrowable = ((total_supply* 0.85) - total_borrow) ;
           const assetRates = {
             ckBTC: ckBTCUsdRate,
             ckETH: ckETHUsdRate,

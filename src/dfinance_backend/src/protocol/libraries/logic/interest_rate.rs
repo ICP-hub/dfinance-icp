@@ -37,10 +37,15 @@ pub struct InterestRateParams {
     pub variable_rate_slope2: Nat,
 }
 
-
-/// @dev Initializes interest rate parameters for the specified asset.
-/// @param asset The asset name (e.g., "ckBTC", "ckETH", "ICP", etc.).
-/// @return Returns initialized `InterestRateParams` for the asset, or default values if unrecognized.
+/* 
+ * @title Interest Rate Parameter Initialization
+ * @notice Initializes and returns interest rate parameters for a given asset.
+ * @dev This function assigns predefined interest rate parameters based on the asset type.
+ *      If an unrecognized asset is provided, it defaults to standard values.
+ *
+ * @param asset The asset identifier (e.g., "ckBTC", "ckETH", "ICP", "ckUSDC", "ckUSDT").
+ * @return InterestRateParams A struct containing the asset's interest rate parameters.
+ */
 pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     println!("asset name in initialize {:?}", asset.to_string());
     match asset {
@@ -104,14 +109,25 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
 }
 
 
-/// @dev Calculates the interest rates based on liquidity added, liquidity taken, and total debt.
-/// It computes both the borrow rate and the liquidity rate based on the given parameters.
-/// @param liq_added The amount of liquidity added.
-/// @param liq_taken The amount of liquidity taken.
-/// @param total_debt The total debt amount.
-/// @param params The interest rate parameters for the asset.
-/// @param reserve_factor The reserve factor for the asset.
-/// @param asset The asset name (e.g., "ckBTC", "ckETH", "ICP").
+
+
+/* 
+ * @title Interest Rate Calculation
+ * @notice Computes the borrow and liquidity rates based on liquidity, debt, and asset parameters.
+ * @dev This function calculates interest rates considering liquidity added, liquidity taken, and total debt.
+ *      It follows the optimal usage ratio and adjusts borrow rates accordingly if excess usage occurs.
+ *
+ * @param liq_added The amount of liquidity added.
+ * @param liq_taken The amount of liquidity taken.
+ * @param total_debt The total debt amount.
+ * @param params Interest rate parameters for the asset.
+ * @param reserve_factor The reserve factor for the asset, used in liquidity rate calculations.
+ * @param asset The asset name (e.g., "ckBTC", "ckETH", "ICP").
+ *
+ * @return A tuple containing:
+ *         - (Nat) current_liquidity_rate: The computed liquidity rate.
+ *         - (Nat) curr_borrow_rate: The computed borrow rate.
+ */
 pub async fn calculate_interest_rates(
     liq_added: Nat,
     liq_taken: Nat,

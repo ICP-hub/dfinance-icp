@@ -4,6 +4,13 @@ use crate::declarations::state::State;
 
 use crate::memory::*;
 use std::cell::RefCell;
+/*
+ * @title Canister State Manager
+ * @dev This thread-local static variable initializes and manages the global state of the canister.
+ * @notice The state is created using the memory manager to ensure efficient storage handling.
+ * @returns A `RefCell` wrapping the `State` instance.
+ */
+
 thread_local! {
 
     // The state of the canister.

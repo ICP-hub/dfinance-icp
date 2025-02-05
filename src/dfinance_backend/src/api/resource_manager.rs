@@ -5,7 +5,9 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-/// Global lock to manage user locks.
+/* 
+ * Global lock to manage user locks.
+ */
 pub static LOCKS: Lazy<Mutex<HashMap<Principal, bool>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 pub static AMOUNT_LOCKS: Lazy<Mutex<HashMap<String, Nat>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
@@ -13,13 +15,17 @@ pub static REPAY_AMOUNT_LOCKS: Lazy<Mutex<HashMap<String, Nat>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 pub static TO_CHECK_AMOUNT: Lazy<Mutex<HashMap<Principal, ()>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
-
-/// @notice Attempts to acquire a lock for the given key (Principal).
-/// @dev Uses a global lock (`LOCKS`) to track locked keys.
-/// @param key The Principal ID for which the lock is being acquired.
-/// @return Returns `Ok(())` if the lock is acquired successfully, otherwise returns an `Error`.
-/// @custom:error `LockAcquisitionFailed` if the global lock cannot be acquired.
-/// @custom:error `LockOperationInProgess` if the key is already locked.    
+/* 
+ * @title Lock Management - Acquire Lock
+ * @notice Attempts to acquire a lock for the given key (Principal).
+ * @dev Uses a global lock (`LOCKS`) to track locked keys and prevent concurrent operations.
+ * 
+ * # Parameters
+ * @param key The Principal ID for which the lock is being acquired.
+ * 
+ * # Returns
+ * @return `Ok(())` if the lock is acquired successfully.
+ */
 pub fn acquire_lock(key: &Principal) -> Result<(), Error> {
     ic_cdk::println!("Attempting to acquire lock for key: {}", key);
 
@@ -48,12 +54,17 @@ pub fn acquire_lock(key: &Principal) -> Result<(), Error> {
 
     Ok(())
 }
-
-/// @notice Releases the lock for the given key (Principal).
-/// @dev Uses a global lock (`LOCKS`) to track and remove locked keys.
-/// @param key The Principal ID for which the lock is being released.
-/// @return Returns `Ok(())` if the lock is released successfully, otherwise returns an `Error`.
-/// @custom:error `LockAcquisitionFailed` if the global lock cannot be acquired.
+/* 
+ * @title Lock Management - Release Lock
+ * @notice Releases the lock for the given key (Principal).
+ * @dev Uses a global lock (`LOCKS`) to track and remove locked keys.
+ * 
+ * # Parameters
+ * @param key The Principal ID for which the lock is being released.
+ * 
+ * # Returns
+ * @return `Ok(())` if the lock is released successfully.
+ */
 pub fn release_lock(key: &Principal) -> Result<(), Error> {
     ic_cdk::println!("Attempting to release lock for key: {}", key);
 
@@ -83,6 +94,7 @@ pub fn release_lock(key: &Principal) -> Result<(), Error> {
 
     Ok(())
 }
+
 
 // TODO: remove this function no need in main code.
 #[update]
@@ -136,14 +148,19 @@ pub fn get_all_principals() -> Result<Vec<Principal>, Error> {
 
     Ok(principals)
 }
-
-/// @notice Locks a specified amount of an asset for a user.
-/// @dev Manages locked amounts using `AMOUNT_LOCKS` and tracks users in `TO_CHECK_AMOUNT`.
-/// @param asset The asset identifier (e.g., token name) to lock the amount for.
-/// @param amount The amount of the asset to be locked.
-/// @param user_principal The Principal ID of the user requesting the lock.
-/// @return Returns `Ok(())` if the amount is locked successfully, otherwise returns an `Error`.
-/// @custom:error `LockAcquisitionFailed` if the global lock for `AMOUNT_LOCKS` or `TO_CHECK_AMOUNT` cannot be acquired.
+/* 
+ * @title Asset Lock Management - Lock Amount
+ * @notice Locks a specified amount of an asset for a user.
+ * @dev Manages locked amounts using `AMOUNT_LOCKS` and tracks users in `TO_CHECK_AMOUNT`.
+ * 
+ * # Parameters
+ * @param asset The asset identifier (e.g., token name) to lock the amount for.
+ * @param amount The amount of the asset to be locked.
+ * @param user_principal The Principal ID of the user requesting the lock.
+ * 
+ * # Returns
+ * @return `Ok(())` if the amount is locked successfully.
+ */
 pub fn lock_amount(asset: &str, amount: &Nat, user_principal: &Principal) -> Result<(), Error> {
     ic_cdk::println!("Attempting to lock amount: {} for asset: {}", amount, asset);
 
@@ -188,15 +205,18 @@ pub fn lock_amount(asset: &str, amount: &Nat, user_principal: &Principal) -> Res
 
     Ok(())
 }
-
-/// @notice Releases a specified amount of an asset from the locked balance.
-/// @dev Updates the `AMOUNT_LOCKS` to reflect the released amount. If the locked balance becomes zero, it removes the asset entry.
-/// @param asset The asset identifier (e.g., token name) from which the amount is to be released.
-/// @param amount The amount of the asset to be released.
-/// @return Returns `Ok(())` if the amount is released successfully, otherwise returns an `Error`.
-/// @custom:error `LockAcquisitionFailed` if the global lock for `AMOUNT_LOCKS` cannot be acquired.
-/// @custom:error `AmountSubtractionError` if the release amount exceeds the currently locked balance.
-/// @custom:error `EmptyAsset` if no locked amount exists for the specified asset.
+/* 
+ * @title Asset Lock Management - Release Amount
+ * @notice Releases a specified amount of an asset from the locked balance.
+ * @dev Updates `AMOUNT_LOCKS` to reflect the released amount. If the locked balance becomes zero, it removes the asset entry.
+ * 
+ * # Parameters
+ * @param asset The asset identifier (e.g., token name) from which the amount is to be released.
+ * @param amount The amount of the asset to be released.
+ * 
+ * # Returns
+ * @return `Ok(())` if the amount is released successfully.
+ */
 pub fn release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
     let mut locks = AMOUNT_LOCKS
         .lock()
@@ -225,12 +245,17 @@ pub fn release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
 
     Ok(())
 }
-
-/// @notice Retrieves the currently locked amount for a specified asset.
-/// @dev Fetches the locked amount from `AMOUNT_LOCKS`. If the lock cannot be acquired or no amount is found, it returns `0`.
-/// @param asset The asset identifier (e.g., token name) whose locked amount is to be retrieved.
-/// @return The amount of the asset that is currently locked.
-/// @custom:returns `0` if no lock exists for the asset or if the lock acquisition fails.
+/* 
+ * @title Asset Lock Management - Get Locked Amount
+ * @notice Retrieves the currently locked amount for a specified asset.
+ * @dev Fetches the locked amount from `AMOUNT_LOCKS`. If no amount is found, it returns `0`.
+ * 
+ * # Parameters
+ * @param asset The asset identifier (e.g., token name) whose locked amount is to be retrieved.
+ * 
+ * # Returns
+ * @return `Nat` - The amount of the asset that is currently locked.
+ */
 pub fn get_locked_amount(asset: &str) -> Nat {
     AMOUNT_LOCKS
         .lock()
@@ -242,13 +267,18 @@ pub fn get_locked_amount(asset: &str) -> Nat {
         })
         .unwrap_or_else(|_| Nat::from(0u128))
 }
-
-/// @notice Checks if a given user principal has a locked amount.
-/// @dev Acquires a lock on `TO_CHECK_AMOUNT` and checks if the user's principal exists in the map.
-///      If found, it removes the entry and returns `true`, indicating that the user had a locked amount.
-/// @param user_principal The principal ID of the user to check for locked amounts.
-/// @return `true` if the user's principal is found and removed, otherwise `false`.
-/// @custom:error Returns `false` if the lock on `TO_CHECK_AMOUNT` cannot be acquired.
+/* 
+ * @title Asset Lock Management - Check Locked Amount
+ * @notice Checks if a given user principal has a locked amount.
+ * @dev Acquires a lock on `TO_CHECK_AMOUNT` and checks if the user's principal exists in the map.
+ *      If found, it removes the entry and returns `true`, indicating that the user had a locked amount.
+ *
+ * # Parameters
+ * @param user_principal The principal ID of the user to check for locked amounts.
+ *
+ * # Returns
+ * @return `bool` - Returns `true` if the user's principal is found and removed, otherwise `false`.
+ */
 pub fn is_amount_locked(user_principal: &Principal) -> bool {
     ic_cdk::println!("Checking principal existence: {:?}", user_principal);
 
@@ -277,7 +307,19 @@ pub fn is_amount_locked(user_principal: &Principal) -> bool {
         false
     }
 }
-
+/* 
+ * @title Repay Lock Management
+ * @notice Locks a specified amount of an asset for repayment.
+ * @dev Uses `REPAY_AMOUNT_LOCKS` to manage locked amounts for repayment.
+ *      Ensures proper handling in case of lock acquisition failure.
+ *
+ * # Parameters
+ * @param asset The asset identifier (e.g., token name) for which the amount is locked.
+ * @param amount The amount of the asset to be locked for repayment.
+ *
+ * # Returns
+ * @return `Ok(())` if the amount is locked successfully.
+ */
 pub fn repay_lock_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
     ic_cdk::println!("Attempting to lock amount: {} for asset: {}", amount, asset);
 
@@ -310,7 +352,19 @@ pub fn repay_lock_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
     );
     Ok(())
 }
-
+/* 
+ * @title Repay Lock Release
+ * @notice Releases a specified amount of an asset from the locked repayment balance.
+ * @dev Updates `REPAY_AMOUNT_LOCKS` to reflect the released amount.
+ *      If the locked balance reaches zero, it removes the asset entry.
+ *
+ * # Parameters
+ * @param asset The asset identifier (e.g., token name) from which the amount is to be released.
+ * @param amount The amount of the asset to be released.
+ *
+ * # Returns
+ * @return `Ok(())` if the amount is successfully released.
+ */
 pub fn repay_release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
     let mut locks = REPAY_AMOUNT_LOCKS
         .lock()
@@ -339,7 +393,18 @@ pub fn repay_release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
 
     Ok(())
 }
-
+/* 
+ * @title Get Repay Locked Amount
+ * @notice Retrieves the currently locked repayment amount for a specified asset.
+ * @dev Fetches the locked amount from `REPAY_AMOUNT_LOCKS`.
+ *      If the lock cannot be acquired or no amount is found, it returns `0`.
+ *
+ * # Parameters
+ * @param asset The asset identifier (e.g., token name) whose locked repayment amount is to be retrieved.
+ *
+ * # Returns
+ * @return `Nat` - The amount of the asset that is currently locked.
+ */
 pub fn get_repay_locked_amount(asset: &str) -> Nat {
     REPAY_AMOUNT_LOCKS
         .lock()

@@ -24,7 +24,22 @@ struct Account {
     subaccount: Option<Vec<u8>>,
 }
 
-// Icrc2_transfer_from inter canister call.
+
+/*
+ * @title Asset Transfer From Function
+ * @notice Transfers assets from one principal to another using the ICRC-2 standard.
+ * @dev This function interacts with the specified ledger canister to execute a `icrc2_transfer_from` call.
+ *      It enables asset transfers between users, with optional memo and timestamp settings.
+ *
+ * # Parameters
+ * - `ledger_canister_id` - The Principal of the ledger canister handling the asset.
+ * - `from` - The Principal of the sender account.
+ * - `to` - The Principal of the recipient account.
+ * - `amount` - The amount of the asset to transfer.
+ *
+ * # Returns
+ * Returns the transferred amount as `Nat` if successful, otherwise returns an error message.
+ */
 pub async fn asset_transfer_from(
     ledger_canister_id: Principal,
     from: Principal,
@@ -56,7 +71,22 @@ pub async fn asset_transfer_from(
     }
 }
 
-// icrc1_transfer
+
+/*
+ * @title Asset Transfer Function
+ * @notice Transfers assets to a specified principal using the ICRC-1 standard.
+ * @dev Calls the ledger canister to execute `icrc1_transfer`, allowing direct asset transfers.
+ *      This function is different from `asset_transfer_from` as it transfers from the caller instead of a delegated spender.
+ *
+ * # Parameters
+ * - `to` - The Principal of the recipient.
+ * - `ledger` - The Principal of the ledger canister handling the asset.
+ * - `from` - The Principal of the sender account.
+ * - `amount` - The amount of the asset to transfer.
+ *
+ * # Returns
+ * Returns the transferred amount as `Nat` if successful, otherwise returns an error message.
+ */
 pub async fn asset_transfer(
     to: Principal,
     ledger: Principal,
@@ -89,7 +119,21 @@ pub async fn asset_transfer(
     }
 }
 
-// Icrc1_balance inter canister call.
+/*
+ * @title Get Account Balance
+ * @notice Fetches the balance of a given principal from a specified ledger canister.
+ * @dev Calls `icrc1_balance_of` on the ledger canister to retrieve the balance of the provided principal.
+ *      Uses `call_raw` for efficient interaction with the canister.
+ * 
+ * # Parameters
+ * - `canister` - The Principal of the ledger canister.
+ * - `principal` - The Principal of the account whose balance is being queried.
+ * 
+ * # Returns
+ * Returns the account balance as `Nat` if successful, otherwise returns an `Error`.
+ */
+
+
 pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Nat, Error> {
     if canister == Principal::anonymous() {
         return Err(Error::AnonymousPrincipal);
@@ -137,20 +181,19 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
     Ok(balance)
 }
 
-/// # Get Total Supply Function
-///
-/// This function retrieves the total supply of tokens from a specified canister using the `icrc1_total_supply` method.
-/// It performs the following steps:
-/// - Validates that the provided `canister_id` is not an anonymous principal.
-/// - Makes an inter-canister call to the `icrc1_total_supply` endpoint of the specified canister.
-/// - Returns the total supply of tokens if the call is successful.
-///
-/// # Arguments
-/// - `canister_id`: The principal of the canister from which to retrieve the total supply.
-///
-/// # Returns
-/// - `Ok(Nat)`: The total supply of tokens.
-/// - `Err(Error)`: If the `canister_id` is anonymous or the inter-canister call fails.
+/*
+ * @title Retrieve Total Token Supply
+ * @notice Queries the total supply of tokens from a specified ledger canister.
+ * @dev Calls the `icrc1_total_supply` method of the given `canister_id` to fetch the total supply.
+ *      Ensures that the provided `canister_id` is valid and not an anonymous principal.
+ * 
+ * # Parameters
+ * - `canister_id` - The principal of the ledger canister from which to retrieve the total supply.
+ * 
+ * # Returns
+ * Returns the total supply of tokens as `Nat`.
+ */
+
 #[query]
 pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     if canister_id == Principal::anonymous() {
@@ -168,26 +211,20 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
         }
     }
 }
+/*
+ * @title Token Faucet
+ * @notice This function allows users to request tokens from the faucet for a specified asset and amount.
+ * @dev The function performs several validation checks, updates user data, and transfers tokens from the platform to the user.
+ *
+ * # Parameters
+ * - `asset` - The asset symbol (e.g., "ETH", "BTC"). Must be non-empty and <= 7 characters.
+ * - `amount` - The amount of tokens to request. Must be greater than zero.
+ *
+ * # Returns
+ * - `Ok(Nat)` - The new balance after the transfer.
+ */
 
-/// # Faucet Function
-///
-/// This function allows users to request tokens from a faucet for a specified asset and amount.
-/// It performs the following steps:
-/// - Validates the asset and amount inputs.
-/// - Ensures the caller is not an anonymous principal.
-/// - Acquires a lock to prevent concurrent faucet requests.
-/// - Retrieves user data and checks the ledger balance.
-/// - Validates the faucet limit and updates user usage.
-/// - Transfers the requested amount from the platform to the user.
-/// - Releases the lock after the operation.
-///
-/// # Arguments
-/// - `asset`: The asset symbol (e.g., "ETH", "BTC"). Must be non-empty and <= 7 characters.
-/// - `amount`: The amount of tokens to request. Must be greater than zero.
-///
-/// # Returns
-/// - `Ok(Nat)`: The new balance after the transfer.
-/// - `Err(Error)`: If any validation or operation fails.
+
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
@@ -404,21 +441,17 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     result
 }
-
-/// # Reset Faucet Usage Function
-///
-/// This function resets the faucet usage for a specific user. It performs the following steps:
-/// - Validates that the caller is not an anonymous principal.
-/// - Retrieves the user's data.
-/// - Iterates through the user's reserves and resets the `faucet_usage` to zero for each reserve.
-/// - Updates the user's data in the state.
-///
-/// # Arguments
-/// - `user_principal`: The principal of the user whose faucet usage is to be reset.
-///
-/// # Returns
-/// - `Ok(())`: If the faucet usage is successfully reset.
-/// - `Err(Error)`: If the user is anonymous, no user data is found, or no reserves are available.
+/*
+ * @title Reset Faucet Usage
+ * @notice This function resets the faucet usage for a specified user by setting their faucet usage to zero.
+ * @dev It validates the caller, retrieves the user data, resets the faucet usage, and updates the state.
+ *
+ * # Parameters
+ * - `user_principal` - The principal of the user whose faucet usage is to be reset.
+ *
+ * # Returns
+ * - `Ok(())` - If the faucet usage is successfully reset.
+ */
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
@@ -458,15 +491,15 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     ic_cdk::println!("updated user data after facuet reset = {:?}", user_data);
     Ok(())
 }
+/*
+ * @title Cycle Checker
+ * @notice Retrieves the current cycle balance of the canister.
+ * @dev Uses `canister_balance128` API to fetch the balance and return it as a `Nat`.
+ *
+ * # Returns
+ * - `Nat` - The current cycle balance of the canister.
+ */
 
-
-/// # Cycle Checker Function
-///
-/// This function retrieves the current cycle balance of the canister.
-/// It uses the `canister_balance128` API to fetch the balance and returns it as a `Nat`.
-///
-/// # Returns
-/// - `Nat`: The current cycle balance of the canister.
 #[query]
 pub async fn cycle_checker() -> Nat {
     Nat::from(api::canister_balance128())

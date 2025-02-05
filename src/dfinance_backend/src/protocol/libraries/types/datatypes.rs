@@ -1,6 +1,10 @@
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 
+/* 
+ * @title Transaction Data Structure
+ * @dev Represents a blockchain transaction with relevant details.
+ */
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
     pub transaction_hash: String,
@@ -12,10 +16,17 @@ pub struct Transaction {
     pub value: f64,
     pub transaction_fee: f64,
 }
-
+/* 
+ * @title Wrapper for Candid-compatible types
+ */
 #[derive(Debug)]
 pub struct Candid<T>(pub T);
 
+/* 
+ * @title User Data
+ * @dev Stores user-specific financial information.
+ * @notice This structure holds the user's reserves, collateral, and debt data.
+ */
 //FIXME remove this user data , can store reserves list directly to user profile
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
@@ -37,7 +48,10 @@ impl Default for UserData {
         }
     }
 }
-
+/* 
+ * @title User Reserve Data
+ * @dev Stores the user's balance and reserve-related details.
+ */
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserReserveData {
     pub reserve: String,
@@ -73,7 +87,10 @@ impl Default for UserReserveData {
         }
     }
 }
-
+/* 
+ * @title User State
+ * @dev Stores the user's adjusted balance and index.
+ */
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserState {
     pub adjusted_balance: Nat, 
@@ -88,7 +105,10 @@ impl Default for UserState {
         }
     }
 }
-
+/* 
+ * @title Reserve Initialization Parameters
+ * @dev Parameters required for initializing a reserve.
+ */
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InitReserveInput {
     pub d_token_impl: Principal,
@@ -107,7 +127,10 @@ pub struct InitReserveInput {
     pub stable_debt_token_symbol: String,
     pub params: Vec<u8>,
 }
-
+/* 
+ * @title Interest Rate Calculation Parameters
+ * @dev Parameters required for calculating interest rates.
+ */
 #[derive(Debug, CandidType, Deserialize, Serialize)]
 pub struct CalculateInterestRatesParams {
     pub liquidity_added: Nat,

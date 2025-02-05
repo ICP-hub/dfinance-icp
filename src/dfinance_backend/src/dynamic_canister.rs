@@ -8,7 +8,10 @@ use crate::constants::interest_variables::constants::{ACCOUNTS_OVERFLOW_TRIM_QUA
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use ic_cdk_macros::update;
-
+/*
+ * @title Initialization Arguments for Token Canister
+ * @dev Structure containing necessary parameters for initializing a token canister.
+ */
 #[derive(Debug, CandidType, Deserialize)]
 pub struct InitArgs {
     pub minting_account: Account,
@@ -25,7 +28,10 @@ pub struct InitArgs {
     pub maximum_number_of_accounts: Option<u64>,
     pub accounts_overflow_trim_quantity: Option<u64>,
 }
-
+/*
+ * @title Archive Options
+ * @dev Configuration parameters for transaction archival.
+ */
 #[derive(Debug, CandidType, Deserialize)]
 pub struct ArchiveOptions {
     pub trigger_threshold: usize,
@@ -44,30 +50,49 @@ pub struct ArchiveOptions {
 #[derive(Debug, Deserialize, CandidType)]
 
 pub struct UpgradeArgs {}
+/*
+ * @title Ledger Arguments
+ * @dev Enum defining initialization and upgrade options for the ledger canister.
+ */
 
 #[derive(Debug, Deserialize, CandidType)]
 pub enum LedgerArg {
     Init(InitArgs),
     Upgrade(Option<UpgradeArgs>),
 }
-
+/*
+ * @title Feature Flags
+ * @dev Enables or disables token features like ICRC2.
+ */
 #[derive(Debug, CandidType, Deserialize)]
 pub struct FeatureFlags {
     icrc2: bool,
 }
-
+/*
+ * @title Load Token Ledger WASM
+ * @dev Loads the compiled WebAssembly binary for the token ledger.
+ */
 fn ledger_wasm() -> Cow<'static, [u8]> {
     Cow::Borrowed(include_bytes!(
         "../../../target/wasm32-unknown-unknown/release/dtoken.wasm"
     ))
 }
-
+/*
+ * @title Load Test Token Ledger WASM
+ * @dev Loads the compiled WebAssembly binary for the test token ledger.
+ */
 fn test_ledger_wasm() -> Cow<'static, [u8]> {
     Cow::Borrowed(include_bytes!(
         "../../../target/wasm32-unknown-unknown/release/token_ledger.wasm"
     ))
 }
-
+/*
+ * @title Create Token Canister
+ * @dev Deploys a new token canister with given name and symbol.
+ * @param token_name Name of the new token.
+ * @param token_symbol Symbol for the token.
+ * @returns Principal ID of the created token canister.
+ */
 #[update]
 pub async fn create_token_canister(
     token_name: String,
@@ -169,6 +194,16 @@ pub async fn create_token_canister(
     ));
     Ok(canister_id)
 }
+/*
+ * @title Create Test Token Canister
+ * @dev Deploys a new test token canister with a given name and symbol.
+ *      It initializes the token and installs the test ledger WASM code.
+ *
+ * @param token_name - The name of the token to be created.
+ * @param token_symbol - The symbol of the token.
+ *
+ * @returns The `Principal` ID of the newly created test token canister.
+ */
 
 #[update]
 pub async fn create_testtoken_canister(token_name: String, token_symbol: String) -> Result<Principal,Error> {

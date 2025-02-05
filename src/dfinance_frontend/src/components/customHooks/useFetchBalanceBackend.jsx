@@ -3,6 +3,10 @@ import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
+/**
+ * Custom hook to fetch and store balances of various ckAssets from the backend canister.
+ * @returns {Object} - An object containing balances for ckAssets, fetchBalance function, and error state.
+ */
 const useFetchBalanceBackend = () => {
   const ledgerActors = useSelector((state) => state.ledger);
   const dashboardRefreshTrigger = useSelector(
@@ -20,6 +24,10 @@ const useFetchBalanceBackend = () => {
     [process.env.CANISTER_ID_DFINANCE_BACKEND]
   );
 
+  /**
+   * Fetches the balance of a specific asset type from the corresponding ledger actor.
+   * @param {string} assetType - The asset symbol (e.g., "ckBTC", "ckETH").
+   */
   const fetchBalance = useCallback(
     async (assetType) => {
       console.log("assetType", assetType);
@@ -62,7 +70,7 @@ const useFetchBalanceBackend = () => {
           console.error(error);
         }
       } else {
-        console.log("bkjsabc");
+        console.log("Error occured in useFetchBalanceBackend Hook");
       }
     },
     [ledgerActors, principalObj, dashboardRefreshTrigger]

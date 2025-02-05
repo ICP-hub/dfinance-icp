@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import useAssetData from "../Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 
 const HeroSection = () => {
   const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();

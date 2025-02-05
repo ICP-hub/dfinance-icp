@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
-import useFormatNumber from "../customHooks/useFormatNumber";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useFormatNumber from "./useFormatNumber";
+import useFetchConversionRate from "./useFetchConversionRate";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { useDispatch, useSelector } from "react-redux";
 
+/**
+ * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
+ * It integrates with backend actors, fetches conversion rates, and processes financial calculations.
+ * @param {string} searchQuery - Search string to filter assets.
+ * @returns {Object} - Returns asset data and utility functions.
+ */
 const useAssetData = (searchQuery = "") => {
   const dispatch = useDispatch();
   const dashboardRefreshTrigger = useSelector(
@@ -59,7 +65,10 @@ const useAssetData = (searchQuery = "") => {
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
 
-   // Fetch the total supply of a specific asset
+ /**
+   * Fetches the total supply of a specific asset.
+   * @param {string} asset - The asset.
+   */
   const fetchAssetSupply = async (asset) => {
     if (backendActor && isAuthenticated) {
       try {
@@ -80,7 +89,10 @@ const useAssetData = (searchQuery = "") => {
     }
   };
 
-   // Fetch the total borrowed amount of a specific asset
+  /**
+   * Fetches the total borrowed amount of a specific asset.
+   * @param {string} asset - The asset.
+   */
   const fetchAssetBorrow = async (asset) => {
     if (backendActor && isAuthenticated) {
       try {
@@ -101,7 +113,9 @@ const useAssetData = (searchQuery = "") => {
     }
   };
 
-  // Fetch asset details and calculate supply, borrow, and reserve factors
+  /**
+   * Fetches asset details and calculates supply, borrow, and reserve factors.
+   */
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0 || !fetchReserveData) {

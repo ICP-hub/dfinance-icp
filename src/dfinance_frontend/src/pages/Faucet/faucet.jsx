@@ -18,26 +18,26 @@ import bifinity from "../../../public/wallet/bifinity.png";
 import nfid from "../../../public/wallet/nfid.png";
 import WalletModal from "../../components/Dashboard/WalletModal";
 
+/**
+ * Faucet component allows users to receive testnet assets for testing purposes.
+ * Users must connect their wallet to receive assets.
+ *
+ * @returns {JSX.Element} - Returns the Faucet component.
+ */
 const Faucet = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {
-    isWalletCreated,
-    isWalletModalOpen,
-    isSwitchingWallet,
-    connectedWallet,
-  } = useSelector((state) => state.utility);
-
-  const { isAuthenticated, login, logout, principal, createLedgerActor } =
-    useAuth();
+  const { isWalletModalOpen, isSwitchingWallet } = useSelector(
+    (state) => state.utility
+  );
+  const { isAuthenticated } = useAuth();
+  const [isTestnetMode, setIsTestnetMode] = useState(true);
 
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
-
-  const [isTestnetMode, setIsTestnetMode] = useState(true); // Add state for testnet mode
 
   const handleTestnetModeToggle = () => {
     setIsTestnetMode((prevMode) => !prevMode);

@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import Pagination from "../Common/pagination";
-import useAssetData from "../Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
@@ -27,6 +27,13 @@ import WalletModal from "../../components/Dashboard/WalletModal";
 import Lottie from "../Common/Lottie";
 const ITEMS_PER_PAGE = 8;
 
+/**
+ * FaucetDetails Component
+ *
+ * This component displays the details of faucet assets available for users to claim. 
+ * It allows users to view various assets like `ckBTC`, `ckETH`, `ckUSDC`, `ICP`, and `ckUSDT`, 
+ * @returns {JSX.Element} - Returns the FaucetDetails component, including the faucet assets table and pagination controls.
+ */
 const FaucetDetails = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);

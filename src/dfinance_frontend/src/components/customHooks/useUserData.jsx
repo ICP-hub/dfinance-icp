@@ -4,6 +4,12 @@ import "react-toastify/dist/ReactToastify.css";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
 
+/**
+ * Custom hook to fetch and manage user data from the backend canister.
+ * Includes user account data, health factor, and error handling.
+ *
+ * @returns {Object} - Contains user data, health factor, error state, and refetch functions.
+ */
 const useUserData = () => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
@@ -15,6 +21,11 @@ const useUserData = () => {
   const [error, setError] = useState(null);
   const principalArray = principal ? principal.split("") : [];
 
+  /**
+   * Retrieves user data from the backend.
+   * @param {string} user - The identifier for the user.
+   * @returns {Object} - The user data retrieved from the backend.
+   */
   const getUserData = async (user) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -40,6 +51,10 @@ const useUserData = () => {
     }
   };
 
+  /**
+   * Fetches account-specific data for the authenticated user.
+   * Includes handling for pending states and health factor calculation.
+   */
   const fetchUserAccountData = async () => {
     if (backendActor && isAuthenticated) {
       try {

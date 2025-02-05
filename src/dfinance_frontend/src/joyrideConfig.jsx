@@ -168,9 +168,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         <p className="mb-4">And click "Supply" to complete the process.</p>
         <img
           src={
-            theme === "dark"
-              ? darkImages.supplyDark
-              : lightImages.supplyLight
+            theme === "dark" ? darkImages.supplyDark : lightImages.supplyLight
           }
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -201,9 +199,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         <img
           src={
-            theme === "dark"
-              ? darkImages.borrowDark
-              : lightImages.borrowLight
+            theme === "dark" ? darkImages.borrowDark : lightImages.borrowLight
           }
           alt="assetsToBorrowPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
@@ -235,11 +231,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         <p className="mb-4">And click "Repay" to complete the process.</p>
         <img
-          src={
-            theme === "dark"
-              ? darkImages.repayDark
-              : lightImages.repayLight
-          }
+          src={theme === "dark" ? darkImages.repayDark : lightImages.repayLight}
           alt="yourBorrowRepayPopup"
           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -386,41 +378,6 @@ export const getSteps = (theme, isMobile2, isMobile) => [
     ),
     placement: isMobile ? "center" : "bottom",
   },
-  // {
-  //   target: "#market-page1",
-  //   content: (
-  //     <div className="relative flex flex-col text-justify">
-  //       <h1 className="text-[22px] font-bold mb-2">Market</h1>
-  //       <p className="mb-4 text-[12px]">
-  //         The Market page shows all assets on the platform with details like
-  //         Total Supplied, Supply APY, Total Borrowing, and Borrowing APY. Use it
-  //         to evaluate assets for supply or borrowing.
-  //       </p>
-  //       {isMobile2 ? (
-  //         <img
-  //           src={
-  //             theme === "dark"
-  //               ? darkImages.marketPageSmall
-  //               : lightImages.MarketPageSmallLight
-  //           }
-  //           alt="Faucet Button"
-  //           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-  //         />
-  //       ) : (
-  //         <img
-  //           src={
-  //             theme === "dark"
-  //               ? darkImages.marketPage
-  //               : lightImages.marketPageLight
-  //           }
-  //           alt="Faucet Button"
-  //           className="rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
-  //         />
-  //       )}
-  //     </div>
-  //   ),
-  //   placement: "center",
-  // },
   {
     target: ".market-nav-details",
     content: (
@@ -527,7 +484,11 @@ export const getSteps = (theme, isMobile2, isMobile) => [
           see the liquidation List (if available).
         </p>
         <img
-          src={theme === "dark" ? darkImages.liquidationGetDebtStatusDark : lightImages.liquidationGetDebtStatusLight}
+          src={
+            theme === "dark"
+              ? darkImages.liquidationGetDebtStatusDark
+              : lightImages.liquidationGetDebtStatusLight
+          }
           alt="Faucet Button"
           className="mb-4 rounded-lg shadow-2xl ring-1 ring-black/10 dark:ring-white/30"
         />
@@ -646,7 +607,7 @@ export const getSteps = (theme, isMobile2, isMobile) => [
         </p>
         <img
           src={
-          theme === "dark"
+            theme === "dark"
               ? darkImages.warningPopupDark
               : lightImages.warningPopupLight
           }

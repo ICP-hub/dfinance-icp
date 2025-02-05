@@ -6,6 +6,16 @@ import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 
+/**
+ * SupplyInfo Component
+ *
+ * This component provides information on a specific asset's supply status, including total supplied,
+ * supply cap, borrowed amount, APY, and liquidation-related metrics like Max LTV, liquidation threshold,
+ * and liquidation penalty. It also includes interactive tooltips with additional details on LTV and liquidation threshold.
+ *
+ * @param {Object} props - The component props containing asset data and necessary functions.
+ * @returns {JSX.Element} - The rendered SupplyInfo component displaying key supply and risk metrics.
+ */
 const SupplyInfo = ({
   formatNumber,
   supplyCap,

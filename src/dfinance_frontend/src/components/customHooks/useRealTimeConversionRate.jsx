@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import { useSelector } from "react-redux";
 
+/**
+ * Custom hook to fetch and update the real-time conversion rate of a specified asset.
+ * The hook listens for dashboard updates and fetches the latest exchange rate from the backend actor.
+ *
+ * @param {string} asset - The asset symbol (e.g., "ckBTC", "ckETH").
+ * @returns {Object} - Contains the latest conversion rate and error state.
+ */
 const useRealTimeConversionRate = (asset) => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger

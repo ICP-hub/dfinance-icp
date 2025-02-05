@@ -13,7 +13,7 @@ import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import Button from "../Common/Button";
-import useAssetData from "../Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
@@ -38,6 +38,13 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
+
+/**
+ * MySupply Component
+ *
+ * This component displays the user's supply, borrow, withdraw and repay information for various assets.
+ * @returns {JSX.Element} - Returns the MySupply component displaying assets, balances, and user actions.
+ */
 
 const MySupply = () => {
   const navigate = useNavigate();
@@ -246,7 +253,12 @@ const MySupply = () => {
     [principal]
   );
 
-  // Fetch asset balances and update state
+  /**
+   * This function fetches the data for all assets that the user has, including reserve data and balance information.
+   * It uses the `createLedgerActor` function to interact with the ledger and retrieve the asset balances.
+   *
+   * @returns {void}
+   */
   const fetchAssetData = async () => {
     const balances = [];
 
@@ -676,6 +688,15 @@ const MySupply = () => {
     }
   }, [valueChanged, availableBorrow, filteredItems]);
 
+  /**
+   * This function calculates the borrowable value and asset value based on the available borrow and asset rate.
+   * It uses the provided asset supply rate and the available borrow to determine the borrowable amounts.
+   *
+   * @param {object} item - The item representing the asset.
+   * @param {number} availableBorrow - The available borrow amount for the asset.
+   * @param {number} remainingBorrowable - The remaining amount available for borrowing.
+   * @returns {object} - Returns an object containing the calculated borrowable value and asset value.
+   */
   const calculateBorrowableValues = (
     item,
     availableBorrow,
@@ -1559,7 +1580,7 @@ const MySupply = () => {
                       return (
                         (assetBalance > 0 || assetBalance === undefined) &&
                         getAssetSupplyValue(reserveGroup[0]) > 0n
-                      ); // Check both conditions
+                      );
                     }).length === 0 ? (
                     noSupplyMessage
                   ) : (
@@ -2277,20 +2298,19 @@ const MySupply = () => {
                                       const calculatedUsdValue =
                                         balance * usdRate;
 
-                                      // Determine how to display the balance
                                       let displayedBalance;
                                       if (
                                         !isFinite(calculatedUsdValue) ||
                                         calculatedUsdValue === 0
                                       ) {
-                                        displayedBalance = "0.00"; // Show "0.00" if USD value is exactly 0
+                                        displayedBalance = "0.00";
                                       } else if (calculatedUsdValue < 0.01) {
                                         displayedBalance = `<${(
                                           0.01 / usdRate
                                         ).toLocaleString(undefined, {
                                           minimumFractionDigits: 7,
                                           maximumFractionDigits: 7,
-                                        })}`; // Show "<" sign for small asset values
+                                        })}`;
                                       } else {
                                         displayedBalance =
                                           balance >= 1
@@ -2387,7 +2407,7 @@ const MySupply = () => {
                                       const currentLiquidity =
                                         userData?.Ok?.reserves[0]?.find(
                                           (reserveGroup) =>
-                                            reserveGroup[0] === item[0] // Check if the asset matches
+                                            reserveGroup[0] === item[0]
                                         )?.[1]?.liquidity_index;
                                       const assetBalance =
                                         assetBalances.find(
@@ -2403,7 +2423,7 @@ const MySupply = () => {
                                       const DebtIndex =
                                         userData?.Ok?.reserves[0]?.find(
                                           (reserveGroup) =>
-                                            reserveGroup[0] === item[0] // Check if the asset matches
+                                            reserveGroup[0] === item[0]
                                         )?.[1]?.variable_borrow_index;
 
                                       const assetBorrowBalance =
@@ -2650,20 +2670,19 @@ const MySupply = () => {
                                       const calculatedUsdValue =
                                         balance * usdRate;
 
-                                      // Determine how to display the balance
                                       let displayedBalance;
                                       if (
                                         !isFinite(calculatedUsdValue) ||
                                         calculatedUsdValue === 0
                                       ) {
-                                        displayedBalance = "0.00"; // Show "0.00" if USD value is exactly 0
+                                        displayedBalance = "0.00";
                                       } else if (calculatedUsdValue < 0.01) {
                                         displayedBalance = `<${(
                                           0.01 / usdRate
                                         ).toLocaleString(undefined, {
                                           minimumFractionDigits: 7,
                                           maximumFractionDigits: 7,
-                                        })}`; // Show "<" sign for small asset values
+                                        })}`;
                                       } else {
                                         displayedBalance =
                                           balance >= 1
@@ -2734,7 +2753,7 @@ const MySupply = () => {
                                         const currentLiquidity =
                                           userData?.Ok?.reserves[0]?.find(
                                             (reserveGroup) =>
-                                              reserveGroup[0] === item[0] // Check if the asset matches
+                                              reserveGroup[0] === item[0]
                                           )?.[1]?.liquidity_index;
                                         const assetBalance =
                                           assetBalances.find(
@@ -2752,7 +2771,7 @@ const MySupply = () => {
                                         const DebtIndex =
                                           userData?.Ok?.reserves[0]?.find(
                                             (reserveGroup) =>
-                                              reserveGroup[0] === item[0] // Check if the asset matches
+                                              reserveGroup[0] === item[0]
                                           )?.[1]?.variable_borrow_index;
 
                                         const assetBorrowBalance =
@@ -2862,7 +2881,7 @@ const MySupply = () => {
                       const asset = reserveGroup[0];
 
                       const DebtIndex = userData?.Ok?.reserves[0]?.find(
-                        (reserveGroup) => reserveGroup[0] === asset // Check if the asset matches
+                        (reserveGroup) => reserveGroup[0] === asset
                       )?.[1]?.variable_borrow_index;
 
                       const assetBorrowBalance =
@@ -2889,14 +2908,13 @@ const MySupply = () => {
                         usdValue = assetBorrow * (ckUSDTUsdRate / 1e8);
                       }
 
-                      // Accumulate total USD value supply
                       if (assetBorrow >= 0) {
                         totalUsdValueBorrow += usdValue;
 
                         dispatch(setTotalUsdValueBorrow(totalUsdValueBorrow));
                       }
 
-                      return null; // Return nothing here since we're doing the calculation and accumulation
+                      return null;
                     })}
 
                     {/* Display total USD value of supply */}
@@ -3063,14 +3081,14 @@ const MySupply = () => {
                                   return (
                                     getAssetBorrowValue(reserveGroup[0]) > 0n &&
                                     assetBalance > 0
-                                  ); // Check both conditions
+                                  );
                                 })
                                 .map((reserveGroup, index) => {
                                   const asset = reserveGroup[0];
                                   const DebtIndex =
                                     userData?.Ok?.reserves[0]?.find(
                                       (reserveGroup) =>
-                                        reserveGroup[0] === asset // Check if the asset matches
+                                        reserveGroup[0] === asset
                                     )?.[1]?.variable_borrow_index;
 
                                   const assetBorrowBalance =

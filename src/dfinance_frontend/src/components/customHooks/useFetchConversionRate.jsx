@@ -3,6 +3,13 @@ import useFetchBalance from "./useFetchBalance";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 
+/**
+ * Custom hook to fetch and update conversion rates for various ckAssets in USD.
+ * Polls the backend at a specified interval to get exchange rates and updates state accordingly.
+ *
+ * @param {number} pollInterval - The interval (in milliseconds) at which to poll for exchange rates.
+ * @returns {Object} - Contains conversion rates, balance states, error states, and fetch functions.
+ */
 const useFetchConversionRate = (pollInterval = 2000) => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
@@ -17,6 +24,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchBalance(ledgerActors, principal);
+
   const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
   const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
   const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
@@ -25,6 +33,10 @@ const useFetchConversionRate = (pollInterval = 2000) => {
   const [error, setError] = useState(null);
   const intervalIdRef = useRef(null);
 
+  /**
+   * Fetches conversion rates for multiple assets from the backend canister.
+   * Updates state with the latest prices and stops polling if all rates are retrieved.
+   */
   const fetchConversionRate = useCallback(async () => {
     try {
       if (!backendActor) {
@@ -87,6 +99,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
       }
     } catch (error) {
       setError(error.message);
+      console.error(error.message);
     }
   }, [
     backendActor,

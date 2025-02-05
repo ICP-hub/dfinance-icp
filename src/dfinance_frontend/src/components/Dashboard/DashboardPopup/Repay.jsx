@@ -13,6 +13,16 @@ import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
+/**
+ * Repay Component
+ *
+ * This component allows users to repay borrowed amounts in various assets. It handles user input for repayment amounts,
+ * updates the USD equivalent of the repayment, and manages the approval process before executing the repayment transaction.
+ *
+ * @param {Object} props - Component props containing asset details, modal state, user data, and other necessary data for repayment.
+ * @returns {JSX.Element} - Returns the Repay component, allowing users to input and execute repayment transactions.
+ */
+
 const Repay = ({
   asset,
   image,
@@ -70,7 +80,13 @@ const Repay = ({
     return truncated.toFixed(8);
   };
 
-  // Handles user input for repayment amount
+  /**
+   * Handles the change in the input field for the repayment amount. It ensures that only valid numeric input
+   * is accepted and updates the state accordingly. It also updates the USD equivalent of the entered amount.
+   *
+   * @param {object} e - The event triggered by user input in the amount field.
+   * @returns {void}
+   */
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
     if (inputAmount === "") {
@@ -93,7 +109,13 @@ const Repay = ({
     updateAmountAndUsdValue(inputAmount);
   };
 
-  // Updates the USD equivalent of the repayment amount
+  /**
+   * This function updates the USD equivalent of the repayment amount based on the entered amount and conversion rate.
+   * It also validates the input to ensure it is a positive number and does not exceed the available borrow balance.
+   *
+   * @param {string} inputAmount - The repayment amount entered by the user.
+   * @returns {void}
+   */
   const updateAmountAndUsdValue = (inputAmount) => {
     let numericAmount = parseFloat(inputAmount);
     if (isNaN(numericAmount) || numericAmount < 0) {
@@ -161,7 +183,11 @@ const Repay = ({
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
 
-  // Approves the repayment amount before executing repayment
+  /**
+   * This function handles the approval process before executing a repayment. It checks the asset type and uses the appropriate
+   * ledger actor to approve the repayment amount for the selected asset.
+   *
+   */
   const handleApprove = async () => {
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -250,7 +276,9 @@ const Repay = ({
     default: "An unexpected error occurred. Please try again later.",
   };
 
-  // Executes repayment transaction with the backend
+  /**
+   * This function executes the repayment transaction. It calls the backend to perform the repayment for the specified asset.
+   */
   const handleRepayETH = async () => {
     let ledgerActor;
     if (asset === "ckBTC") {

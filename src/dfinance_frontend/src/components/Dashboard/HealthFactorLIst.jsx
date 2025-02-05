@@ -6,36 +6,49 @@ import { SlidersHorizontal, SlidersVertical } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import Lottie from "../../components/Common/Lottie";
-import useAssetData from "../../components/Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import MiniLoader from "../../components/Common/MiniLoader";
 import Error from "../../pages/Error";
+
+/**
+ * HealthFactorList Component
+ *
+ * Fetches and displays a list of users with their associated health factors
+ * @returns {JSX.Element} - Returns the HealthFactorList component displaying users' health factors and additional details.
+ */
+
 const HealthFactorList = () => {
   const { backendActor, isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [users, setUsers] = useState([]); //  State to store users
+  const [users, setUsers] = useState([]);
+  const [userAccountData, setUserAccountData] = useState({});
+  const [healthFactors, setHealthFactors] = useState({});
+  const filterRef = useRef(null);
+  const [like, setLike] = useState(false);
   const { assets, reserveData, filteredItems, error, loading } =
     useAssetData(searchQuery);
   const [showFilter, setShowFilter] = useState(false);
-  const [healthFilter, setHealthFilter] = useState(""); // Stores selected filter
-  const {
-    isWalletCreated,
-    isWalletModalOpen,
-    isSwitchingWallet,
-    connectedWallet,
-  } = useSelector((state) => state.utility);
-  const cachedData = useRef({}); //  Cache to store fetched user data
-  const [userAccountData, setUserAccountData] = useState({});
-  const [healthFactors, setHealthFactors] = useState({});
-  const filterRef = useRef(null); // Reference for dropdown
-  const [like, setLike] = useState(false);
+  const [healthFilter, setHealthFilter] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const { isSwitchingWallet } = useSelector((state) => state.utility);
+  const cachedData = useRef({});
+  const popupRef = useRef(null);
+
+  /**
+   * Checks the status of the backend controller using the `to_check_controller` method.
+   * It updates the `like` state based on the result from the backend.
+   *
+   * @returns {void}
+   */
   const checkControllerStatus = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
     try {
       const result = await backendActor.to_check_controller();
-      console.log("Controller Status:", result); // Debug log
-      setLike(result); // Update `like` state with the backend value
+      console.log("Controller Status:", result);
+      setLike(result);
     } catch (err) {
       console.error("Error fetching controller status:", err);
       setError("Failed to fetch controller status");
@@ -45,7 +58,7 @@ const HealthFactorList = () => {
   useEffect(() => {
     checkControllerStatus();
   }, [backendActor]);
-  // Close dropdown when clicking outside
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (filterRef.current && !filterRef.current.contains(event.target)) {
@@ -57,6 +70,11 @@ const HealthFactorList = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  /**
+   * This function retrieves the list of all users from the backend by calling `get_all_users` method.
+   * It then sets the retrieved users into the state.
+   */
   const getAllUsers = async () => {
     if (!backendActor) {
       console.error("Backend actor not initialized");
@@ -67,25 +85,29 @@ const HealthFactorList = () => {
       const allUsers = await backendActor.get_all_users();
       console.log("Retrieved Users:", allUsers);
 
-      setUsers(allUsers); //  Store users in state
+      setUsers(allUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
 
-  //  Fetch Users on Component Mount
   useEffect(() => {
     getAllUsers();
   }, []);
 
-  //  Fetch and cache user account data
+  /**
+   * This function fetches the user account data for a specific principal. It uses caching to avoid fetching data
+   * for the same principal multiple times. The fetched data is stored in the `cachedData` ref.
+   *
+   * @param {string} principal - The principal of the user whose account data is being fetched.
+   */
   const fetchUserAccountDataWithCache = async (principal) => {
-    if (!principal || cachedData.current[principal]) return; //  Skip if already cached
+    if (!principal || cachedData.current[principal]) return;
 
     try {
       const result = await backendActor.get_user_account_data([principal]);
       if (result) {
-        cachedData.current[principal] = result; //  Cache result
+        cachedData.current[principal] = result;
         setUserAccountData((prev) => ({ ...prev, [principal]: result }));
       }
     } catch (error) {
@@ -93,64 +115,48 @@ const HealthFactorList = () => {
     }
   };
 
-  //  Fetch all user data in parallel, ensuring cache usage
   useEffect(() => {
-    if (!users || users.length === 0) return; //  Ensure `users` is valid
-
-    //  Fetch user data in parallel while respecting cache
+    if (!users || users.length === 0) return;
     Promise.all(
       users.map(([principal]) => {
         if (principal) return fetchUserAccountDataWithCache(principal);
-        return null; // Skip invalid users
+        return null;
       })
     )
       .then(() => console.log(" All user account data fetched"))
       .catch((error) =>
         console.error(" Error fetching user account data in batch:", error)
       );
-  }, [users]); //  Runs when users change
-  console.log("userAccountData", userAccountData);
+  }, [users]);
+
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
-
     const updatedHealthFactors = {};
-
     Object.entries(userAccountData).forEach(([principal, data]) => {
       if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
-        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000; //  Divide by 1e8
+        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000;
       } else {
-        updatedHealthFactors[principal] = null; //  Handle missing values
+        updatedHealthFactors[principal] = null;
       }
     });
 
-    console.log(
-      " Updated Health Factors (Divided by 1e8):",
-      updatedHealthFactors
-    );
     setHealthFactors(updatedHealthFactors);
   }, [userAccountData]);
-
-  //  Extract and update Health Factor statistics
 
   const handleNavigate = (path) => {
     navigate(path);
   };
 
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showSearch, setShowSearch] = useState(false);
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  // Function to toggle search bar visibility
   const showSearchBar = () => {
     setShowSearch(!showSearch);
   };
-  // Function to Open Popup
   const openPopup = (principal, data) => {
     if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7) return;
 
-    // Extract Unique Data Once
     const extractedData = {
       principal,
       totalCollateral: Number(data.Ok[0]) / 1e8,
@@ -168,30 +174,23 @@ const HealthFactorList = () => {
     setSelectedUser(extractedData);
   };
 
-  // Function to Close Popup
   const closePopup = () => {
     setSelectedUser(null);
   };
-  const popupRef = useRef(null);
 
   useEffect(() => {
-    // Function to close popup when clicking outside
     const handleClickOutside = (event) => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
         closePopup();
       }
     };
-
-    // Attach event listener when the popup is open
     document.addEventListener("mousedown", handleClickOutside);
-
     return () => {
-      // Cleanup the event listener when popup closes
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [closePopup]);
+
   useEffect(() => {
-    // Disable scrolling when the popup is open
     if (selectedUser) {
       document.body.style.overflow = "hidden";
     } else {
@@ -203,15 +202,13 @@ const HealthFactorList = () => {
           return false;
 
         const healthFactor = Number(data.Ok[4]) / 1e10;
-        const principalStr = principal.toLowerCase(); // Convert principal to lowercase
+        const principalStr = principal.toLowerCase();
 
-        // Apply search filter: Match principal OR health factor
         const matchesSearch =
           !searchQuery ||
           principalStr.includes(searchQuery.toLowerCase()) ||
           healthFactor.toString().includes(searchQuery);
 
-        // Apply Health Factor filter
         const matchesFilter =
           !healthFilter ||
           (healthFilter === "<1" && healthFactor < 1) ||
@@ -223,20 +220,17 @@ const HealthFactorList = () => {
     );
 
     return () => {
-      // Ensure scrolling is enabled when the component unmounts
       document.body.style.overflow = "auto";
     };
   }, [selectedUser]);
-  return (
-    like ? (
+
+  return like ? (
     <div id="health-page" className="w-full">
-      {/* ICP Assets + Search Bar */}
       <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8 relative">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText -ml-3">
           User Health Factors
         </h1>
 
-        {/* 🔍 Search & 🔽 Filter */}
         <div className="ml-auto flex items-center">
           <div className="ml-auto -pr-5">
             {showSearch && (
@@ -299,7 +293,6 @@ const HealthFactorList = () => {
             </defs>
           </svg>
 
-          {/* 🔽 Filter Button & Dropdown */}
           <div className="relative ml-3">
             <SlidersHorizontal
               size={20}
@@ -308,7 +301,6 @@ const HealthFactorList = () => {
              text-[#695fd4] dark:text-white hover:text-[#4c43b8]"
             />
 
-            {/* Show dropdown when `showFilter` is true */}
             {showFilter && (
               <div className="fixed inset-0  z-50 bg-black bg-opacity-50">
                 <div
@@ -359,7 +351,6 @@ const HealthFactorList = () => {
           </div>
         </div>
 
-        {/* Small Screen Search Bar */}
         {showSearch && (
           <input
             type="text"
@@ -372,15 +363,12 @@ const HealthFactorList = () => {
           />
         )}
       </div>
-      {/* User Health Factors Table */}
       <div className="w-full mt-6">
         {loading ? (
-          //  Show Loading Spinner While Fetching Users
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center">
             <MiniLoader isLoading={true} />
           </div>
         ) : Object.keys(userAccountData).length === 0 && !loading ? (
-          /*  No Data State */
           <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
             <div className="mb-7 -ml-3 -mt-5">
               <Lottie />
@@ -419,13 +407,11 @@ const HealthFactorList = () => {
                       const healthFactor = Number(data.Ok[4]) / 1e10;
                       const principalStr = principal.toLowerCase();
 
-                      // 🔍 Apply Search Filter (Principal or Health Factor)
                       const matchesSearch =
                         !searchQuery ||
                         principalStr.includes(searchQuery.toLowerCase()) ||
                         healthFactor.toString().includes(searchQuery);
 
-                      // 🔽 Apply Health Factor Filter
                       const matchesFilter =
                         !healthFilter ||
                         (healthFilter === "<1" && healthFactor < 1) ||
@@ -459,18 +445,18 @@ const HealthFactorList = () => {
                             <span
                               className={` ${
                                 healthFactor > 100
-                                  ? "text-yellow-500" // Infinity (♾️)
+                                  ? "text-yellow-500"
                                   : healthFactor === 0
-                                  ? "text-red-500" // Default critical
+                                  ? "text-red-500"
                                   : healthFactor > 3
-                                  ? "text-green-500" // Safe zone
+                                  ? "text-green-500"
                                   : healthFactor <= 1
-                                  ? "text-red-500" // High risk
+                                  ? "text-red-500"
                                   : healthFactor <= 1.5
-                                  ? "text-orange-600" // Medium risk
+                                  ? "text-orange-600"
                                   : healthFactor <= 2
-                                  ? "text-orange-400" // Lower risk
-                                  : "text-orange-300" // Slightly risky
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                               }`}
                             >
                               {healthFactor > 100
@@ -499,14 +485,12 @@ const HealthFactorList = () => {
         )}
       </div>
 
-      {/* Popup Modal */}
       {selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div
             ref={popupRef}
             className="bg-white dark:bg-darkOverlayBackground dark:text-darkText p-6 rounded-xl shadow-lg w-80 relative"
           >
-            {/* Close Button */}
             <button
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
               onClick={closePopup}
@@ -548,13 +532,11 @@ const HealthFactorList = () => {
                 </span>
               </p>
 
-              {/* Moved Health Factor from Table to Popup */}
               <p className="text-sm sm:hidden">
                 <b className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
                   Total Collateral:
                 </b>
                 <span className="text-[#2A1F9D] dark:text-darkText font-bold">
-                  {" "}
                   ${selectedUser.totalCollateral.toFixed(2)}
                 </span>
               </p>
@@ -563,7 +545,6 @@ const HealthFactorList = () => {
                   Total Borrowed:
                 </b>
                 <span className="text-[#2A1F9D] dark:text-darkText font-bold">
-                  {" "}
                   ${selectedUser.totalBorrowed.toFixed(2)}
                 </span>
               </p>
@@ -573,13 +554,11 @@ const HealthFactorList = () => {
                   Total Debt:
                 </b>
                 <span className="text-[#2A1F9D] dark:text-darkText font-bold">
-                  {" "}
                   ${selectedUser.totalDebt.toFixed(2)}
                 </span>
               </p>
             </div>
 
-            {/* Close Button */}
             <button
               onClick={closePopup}
               className="mt-4 w-full bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg shadow-md px-5 py-2 text-[14px] font-semibold"
@@ -591,9 +570,8 @@ const HealthFactorList = () => {
       )}
       {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
     </div>
-    ) : (
-      <Error />
-    )
+  ) : (
+    <Error />
   );
 };
 

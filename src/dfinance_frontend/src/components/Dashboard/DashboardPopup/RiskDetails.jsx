@@ -3,6 +3,19 @@ import { liquidationThresholdLabel } from "../../../utils/constants";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 
+/**
+ * RiskPopup Component
+ *
+ * This component displays a popup that provides details about the liquidation risk parameters of a user's collateral.
+ * It includes information such as the health factor, loan-to-value (LTV) ratio, and liquidation thresholds.
+ *
+ * @param {Object} props - The component props containing user data and necessary functions.
+ * @param {Function} onClose - Function to close the popup.
+ * @param {Object} userData - User's data for calculating liquidation risk.
+ * @param {Object} userAccountData - User's account data, including collateral, debt, and liquidation thresholds.
+ * @returns {JSX.Element} - Returns the RiskPopup component, displaying liquidation risk parameters.
+ */
+
 const RiskPopup = ({ onClose, userData, userAccountData }) => {
   const popupRef = useRef(null);
   const theme = useSelector((state) => state.theme.theme);
@@ -40,6 +53,12 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
     };
   }, []);
 
+  /**
+   * Calculates the position of the health factor value on a scale from 0 to 100.
+   *
+   * @param {number} value - The health factor value.
+   * @returns {number} - The calculated position of the health factor value.
+   */
   const calculateHealthFactorPosition = (value) => {
     if (typeof value !== "number" || isNaN(value)) {
       return NaN;
@@ -62,6 +81,14 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
     return value === 0 ? 0 : position;
   };
 
+  /**
+   * Calculates the position of the Loan-to-Value (LTV) ratio on a scale from 0 to 100.
+   *
+   * @param {number} value - The LTV value.
+   * @param {number} min - The minimum threshold for the LTV.
+   * @param {number} max - The maximum threshold for the LTV.
+   * @returns {number} - The calculated position of the LTV ratio.
+   */
   const calculateLTVPosition = (value, min, max) => {
     if (
       typeof value !== "number" ||
@@ -74,6 +101,15 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
     return ((value - min) / (max - min)) * 100;
   };
 
+  /**
+   * Calculates the position of the maximum Loan-to-Value (LTV) ratio on a scale from 0 to 100.
+   * It represents the maximum LTV threshold as a percentage of the allowable range.
+   *
+   * @param {number} value - The maximum LTV value.
+   * @param {number} min - The minimum threshold for the LTV.
+   * @param {number} max - The maximum threshold for the LTV.
+   * @returns {number} - The calculated position of the maximum LTV ratio.
+   */
   const calculateMaxLTVPosition = (value, min, max) => {
     if (
       typeof value !== "number" ||

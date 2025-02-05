@@ -36,6 +36,12 @@ const defaultOptions = {
   loginOptionsbifinity: {},
 };
 
+/**
+ * Custom hook for handling authentication with Internet Identity and other providers.
+ *
+ * @param {Object} options - Authentication configuration options.
+ * @returns {Object} - Authentication state and utility functions.
+ */
 export const useAuthClient = (options = defaultOptions) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accountIdString, setAccountIdString] = useState("");
@@ -72,6 +78,11 @@ export const useAuthClient = (options = defaultOptions) => {
   };
   let logoutTimeout;
 
+  /**
+   * Handles login process with selected identity provider.
+   * @param {string} provider - The provider name (ii, nfid, bifinity).
+   * @returns {Promise<AuthClient>} - Returns the authenticated client instance.
+   */
   const login = async (provider) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -121,6 +132,9 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  /**
+   * Logs out the user and clears session data.
+   */
   const logout = async () => {
     try {
       await authClient.logout();
@@ -154,6 +168,10 @@ export const useAuthClient = (options = defaultOptions) => {
 
   checkSession();
 
+  /**
+   * Updates client state with authentication details.
+   * @param {AuthClient} client - AuthClient instance.
+   */
   const updateClient = async (client) => {
     console.log("client", client);
     try {
@@ -201,6 +219,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
+  
   const reloadLogin = async () => {
     try {
       if (
@@ -212,7 +231,7 @@ export const useAuthClient = (options = defaultOptions) => {
     } catch (error) {}
   };
 
- // Registers user
+  // Registers user
   const checkUser = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");

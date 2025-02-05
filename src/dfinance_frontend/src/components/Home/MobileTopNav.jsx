@@ -260,10 +260,8 @@ const MobileTopNav = ({
                     </h1>
                   </div>
                   <div className="flex flex-col-reverse   lg:block">
-                    {}
 
                     <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                      {}
                       <div className="hidden lg1:flex justify-center">
                         <div
                           className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -450,10 +448,8 @@ const MobileTopNav = ({
                   Sound
                 </label>
 
-                {}
                 <Info size={16} className="ml-2 cursor-pointer" />
 
-                {}
                 <div className="absolute left-36 transform -translate-x-[40%] bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[30vw]">
                   Enabling this will allow the user to hear sound when supply,
                   borrow, repay, or withdraw functions are executed.

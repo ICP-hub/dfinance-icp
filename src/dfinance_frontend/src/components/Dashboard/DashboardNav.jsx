@@ -8,7 +8,7 @@ import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
 import { Principal } from "@dfinity/principal";
-import useAssetData from "../Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { useCallback } from "react";

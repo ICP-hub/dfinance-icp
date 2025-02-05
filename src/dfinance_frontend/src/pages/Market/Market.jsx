@@ -16,7 +16,7 @@ import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-import useAssetData from "../../components/Common/useAssets";
+import useAssetData from "../../components/customHooks/useAssets";
 import { setUserData } from "../../redux/reducers/userReducer";
 import {
   setIsWalletConnected,
@@ -33,6 +33,13 @@ import Lottie from "../../components/Common/Lottie";
 
 const ITEMS_PER_PAGE = 8;
 
+/**
+ *
+ * This component displays asset details in the user's wallet, including available balances,
+ * conversion rates, and overall market statistics. Users can also search and view details for individual assets.
+ *
+ * @returns {JSX.Element} - Returns the component.
+ */
 const WalletDetails = () => {
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -57,12 +64,9 @@ const WalletDetails = () => {
   );
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {
-    isWalletCreated,
-    isWalletModalOpen,
-    isSwitchingWallet,
-    connectedWallet,
-  } = useSelector((state) => state.utility);
+  const { isWalletCreated, isSwitchingWallet } = useSelector(
+    (state) => state.utility
+  );
   const { isAuthenticated, principal } = useAuth();
   const {
     totalMarketSize,
@@ -219,18 +223,15 @@ const WalletDetails = () => {
 
   const formatNumber = useFormatNumber();
 
-  const formatValue = (value) => {
-    const numericValue = parseFloat(value);
-    if (isNaN(numericValue)) {
-      return "0.00";
-    }
-    if (numericValue === 0) {
-      return "0.00";
-    } else if (numericValue >= 1) {
-      return numericValue.toFixed(2);
-    } else {
-      return numericValue.toFixed(7);
-    }
+  const formatValue = (num) => {
+    if (num < 1) return num.toFixed(7); 
+  
+    if (num >= 1e12) return (num % 1e12 === 0) ? (num / 1e12) + "T" : (num / 1e12).toFixed(2) + "T"; 
+    if (num >= 1e9) return (num % 1e9 === 0) ? (num / 1e9) + "B" : (num / 1e9).toFixed(2) + "B"; 
+    if (num >= 1e6) return (num % 1e6 === 0) ? (num / 1e6) + "M" : (num / 1e6).toFixed(2) + "M"; 
+    if (num >= 1e3) return (num % 1e3 === 0) ? (num / 1e3) + "K" : (num / 1e3).toFixed(2) + "K"; 
+  
+    return num.toFixed(2); 
   };
 
   useEffect(() => {
@@ -463,11 +464,11 @@ const WalletDetails = () => {
                                 const usdValue = assetSupply * usdRate;
 
                                 if (!isFinite(usdValue) || usdValue === 0) {
-                                  return "0.00"; // Show "0.00" if USD value is exactly 0
+                                  return "0.00";
                                 } else if (usdValue < 0.01) {
-                                  return `<${formatValue(0.01 / usdRate)}`; // Show "<" sign for small asset values
+                                  return `<${formatValue(0.01 / usdRate)}`;
                                 } else {
-                                  return formatValue(assetSupply); // Normal display
+                                  return formatValue(assetSupply);
                                 }
                               })()}
                             </p>
@@ -502,11 +503,11 @@ const WalletDetails = () => {
                                 const usdValue = assetSupply * usdRate;
 
                                 if (!isFinite(usdValue) || usdValue === 0) {
-                                  return "$0.00"; // Show "0.00" if USD value is exactly 0
+                                  return "$0.00";
                                 } else if (usdValue < 0.01) {
-                                  return "<0.01$"; // Show "<0.01$" for small values
+                                  return "<0.01$";
                                 } else {
-                                  return `$${formatValue(usdValue)}`; // Normal display
+                                  return `$${formatValue(usdValue)}`;
                                 }
                               })()}
                             </p>
@@ -610,11 +611,11 @@ const WalletDetails = () => {
                                 const usdValue = assetBorrow * usdRate;
 
                                 if (!isFinite(usdValue) || usdValue === 0) {
-                                  return "$0.00"; // Show "0" if USD value is actually 0
+                                  return "$0.00";
                                 } else if (usdValue < 0.01) {
-                                  return "<0.01$"; // Display "<0.01$" for small values
+                                  return "<0.01$";
                                 } else {
-                                  return `$${formatValue(usdValue)}`; // Normal case
+                                  return `$${formatValue(usdValue)}`;
                                 }
                               })()}
                             </p>

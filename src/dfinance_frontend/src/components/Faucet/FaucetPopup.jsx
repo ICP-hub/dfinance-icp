@@ -8,6 +8,17 @@ import { toast } from "react-toastify";
 import useUserData from "../customHooks/useUserData";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 
+/**
+ * FaucetPopup Component
+ *
+ * This component provides a popup interface to claim faucet tokens.
+ *
+ * @param {boolean} isOpen - Determines whether the popup is open or closed.
+ * @param {function} onClose - Function to close the popup.
+ * @param {string} asset - The selected asset for the faucet.
+ * @param {string} assetImage - Image for the selected asset.
+ * @returns {JSX.Element} - Returns the FaucetPopup component.
+ */
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const dispatch = useDispatch();
   const { backendActor } = useAuth();
@@ -235,7 +246,15 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       "An unexpected error occurred during the faucet process. Please try again later.",
   };
 
-  // Handles token faucet claims
+  /**
+   * handleFaucet function
+   *
+   * This function handles the process of claiming faucet tokens for the selected asset.
+   * It checks the input amount, ensures it's within the faucet limits, and then makes a request to the backend
+   * to transfer the requested amount of tokens. It also displays appropriate success or error messages.
+   *
+   * @param {string} asset - The asset selected by the user to claim.
+   */
   const handleFaucet = async (asset) => {
     setLoading(true);
     try {
@@ -338,6 +357,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const transferFee = fees[normalizedAsset] || fees.default;
 
+  /**
+   * handleResetFaucetUsage function
+   *
+   * This function resets the faucet usage data to its initial state for the selected asset.
+   */
   const handleResetFaucetUsage = async () => {
     setLoading(true);
     try {

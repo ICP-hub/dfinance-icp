@@ -3,12 +3,12 @@ import { useNavigate, useRoutes } from "react-router-dom";
 import { useAuth } from "./utils/useAuthClient";
 import routesList from "./routes/routes";
 import { useSelector } from "react-redux";
-import { usePageLoading } from "./components/Common/useLoading";
+import { usePageLoading } from "./components/customHooks/useLoading";
 import { useDispatch } from "react-redux";
 import { setLedgerActor } from "./redux/reducers/ledgerRedcuer";
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
 import { Principal } from "@dfinity/principal";
-import useAssetData from "./components/Common/useAssets";
+import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "./joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
@@ -44,7 +44,7 @@ export default function App() {
     styles: {},
   });
 
-  useEffect(() => {
+  useEffect(() => { 
     setIsTourVisible(isTourRunning);
   }, [isTourRunning]);
 

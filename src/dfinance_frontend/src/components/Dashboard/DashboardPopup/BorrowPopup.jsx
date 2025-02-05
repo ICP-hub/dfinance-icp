@@ -13,8 +13,13 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { Principal } from "@dfinity/principal";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
-import useAssetData from "../../Common/useAssets";
+import useAssetData from "../../customHooks/useAssets";
 
+/**
+ * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
+ *
+ * @param {Object} props - Component properties.
+ */
 const Borrow = ({
   asset,
   image,
@@ -43,13 +48,6 @@ const Borrow = ({
     ckUSDCUsdRate,
     ckICPUsdRate,
     ckUSDTUsdRate,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance,
-    fetchBalance,
   } = useFetchConversionRate();
   const [availableBorrow, setAvailableBorrow] = useState([]);
   const dashboardRefreshTrigger = useSelector(
@@ -62,8 +60,7 @@ const Borrow = ({
     () => Principal.fromText(principal),
     [principal]
   );
-  const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
-    useUserData();
+  const { userData, userAccountData } = useUserData();
   const ledgerActors = useSelector((state) => state.ledger);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -86,7 +83,9 @@ const Borrow = ({
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Function to fetch asset data
+  /**
+   * Fetches asset data and updates supply/borrow values.
+   */
   const fetchAssetData = () => {
     const item = filteredItems.find((item) => item[0] === asset);
     if (item && item[1]?.Ok) {
@@ -98,7 +97,9 @@ const Borrow = ({
     }
   };
 
-  // Function to calculate borrowable values
+  /**
+   * Calculates borrowable values based on conversion rates.
+   */
   const calculateBorrowableValues = (
     asset,
     availableBorrow,
@@ -150,10 +151,10 @@ const Borrow = ({
       }
     };
     updateValues();
-    const intervalId = setInterval(updateValues, 1000);
-    return () => {
-      clearInterval(intervalId);
-    };
+    // const intervalId = setInterval(updateValues, 1000);
+    // return () => {
+    //   clearInterval(intervalId);
+    // };
   }, [
     asset,
     filteredItems,
@@ -206,7 +207,9 @@ const Borrow = ({
       "An unexpected error occurred during the borrow process. Please try again later.",
   };
 
-  // Handles borrow operation, interacts with backend
+  /**
+   * Handles the borrow action by interacting with the backend.
+   */
   const handleBorrowETH = async () => {
     setIsLoading(true);
     let ledgerActor;
@@ -290,7 +293,6 @@ const Borrow = ({
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
 
-      // Handle panic error case
       if (error.message && error.message.toLowerCase().includes("panic")) {
         setPanicMessage(
           "A critical system error occurred. Please try again later."
@@ -537,7 +539,6 @@ const Borrow = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  {console.log("borrowableValue", borrowableValue, loading)}
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
                       parseFloat(borrowableValue) === 0
@@ -554,9 +555,9 @@ const Borrow = ({
                     (borrowableValue == null || borrowableValue === "0") ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
                     ) : parseFloat(borrowableValue) === 0 ? (
-                      "0 Max" // Display 0 if value is 0 after fetching
+                      "0 Max"
                     ) : (
-                      `${formatValue(borrowableValue)} Max` // Display formatted value if > 0
+                      `${formatValue(borrowableValue)} Max`
                     )}
                   </p>
                 </div>

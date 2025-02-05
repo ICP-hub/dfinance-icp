@@ -19,7 +19,7 @@ import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { toast } from "react-toastify";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 import "react-toastify/dist/ReactToastify.css";
-import useAssetData from "../Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
 import MySupplyModal from "./MySupplyModal";
@@ -35,6 +35,13 @@ import useUserData from "../customHooks/useUserData";
 import WalletModal from "./WalletModal";
 import Borrow from "./DashboardPopup/BorrowPopup";
 
+
+/**
+ * AssetDetails Component
+ *
+ * This component displays details of a selected asset, including supply and borrow information.
+ * @returns {JSX.Element} - Returns the AssetDetails component.
+ */
 const AssetDetails = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -115,6 +122,7 @@ const AssetDetails = () => {
   const [availableBorrow, setAvailableBorrow] = useState([]);
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const { userData, userAccountData } = useUserData();
+  
   const handleModalOpen = (
     type,
     asset,

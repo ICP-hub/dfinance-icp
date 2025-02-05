@@ -15,6 +15,15 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
+/**
+ * WithdrawPopup Component
+ *
+ * This component is a popup modal that allows users to withdraw an asset from a platform. It handles the input for withdrawal amount,
+ * validates the input, calculates the USD equivalent of the withdrawal, and executes the transaction.
+ *
+ * @returns {JSX.Element} - Returns the WithdrawPopup component.
+ */
+
 const WithdrawPopup = ({
   asset,
   image,
@@ -114,24 +123,27 @@ const WithdrawPopup = ({
       inputAmount = truncateToSevenDecimals(assetSupply).toString();
     }
 
-    // Update state with raw value (no formatting applied yet)
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
 
+  /**
+   * This function updates the USD equivalent of the withdrawal amount based on the conversion rate. It also checks if the
+   * amount is valid and less than or equal to the asset supply, providing error messages when necessary.
+   *
+   * @param {string} inputAmount - The amount entered by the user.
+   * @returns {void}
+   */
   const updateAmountAndUsdValue = (inputAmount) => {
-    // Parse input and remove commas if present
     const numericAmount = parseFloat(inputAmount.toString().replace(/,/g, ""));
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
-        // Calculate USD value using raw conversion rate
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
 
-        // Update state with formatted values
-        setUsdValue(parseFloat(convertedValue)); // Format for display
-        setError(""); // Clear errors
+        setUsdValue(parseFloat(convertedValue));
+        setError("");
       } else {
         setError("Amount exceeds the supply balance");
       }
@@ -186,6 +198,13 @@ const WithdrawPopup = ({
       "An unexpected error occurred during the withdraw process. Please try again later.",
   };
 
+  /**
+   * Handles the execution of the withdrawal transaction. It interacts with the backend actor to process the withdrawal,
+   * tracks the event using Google Analytics, and shows success or error messages based on the result. It also ensures that the
+   * withdrawal amount is within the allowed limit and updates the UI accordingly.
+   *
+   * @returns {void}
+   */
   const handleWithdraw = async () => {
     setIsLoading(true);
     let ledgerActor;
@@ -258,9 +277,8 @@ const WithdrawPopup = ({
         setIsVisible(false);
       } else if ("Err" in withdrawResult) {
         const errorObject = withdrawResult.Err;
-        const errorKey = Object.keys(errorObject)[0]; // Dynamically extract the error key
+        const errorKey = Object.keys(errorObject)[0];
 
-        // Check for panic error and show a popup instead of toast
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
@@ -270,19 +288,20 @@ const WithdrawPopup = ({
           setIsVisible(false);
         } else {
           let userFriendlyMessage;
-        
-          // Handle specific error cases
+
           switch (errorKey) {
             case "WithdrawMoreThanSupply":
-              userFriendlyMessage = "You cannot withdraw more than your supplied amount.";
+              userFriendlyMessage =
+                "You cannot withdraw more than your supplied amount.";
               break;
             case "AmountSubtractionError":
               userFriendlyMessage = "You cannot withdraw more than you owe.";
               break;
             default:
-              userFriendlyMessage = ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
+              userFriendlyMessage =
+                ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default;
           }
-        
+
           toast.error(`Withdraw failed: ${userFriendlyMessage}`, {
             className: "custom-toast",
             position: "top-center",
@@ -294,12 +313,10 @@ const WithdrawPopup = ({
             progress: undefined,
           });
         }
-        
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Withdraw action failed!"}`);
 
-      // Check if the error message contains "panic" and show popup
       const isPanicError =
         error.message && error.message.toLowerCase().includes("panic");
 
@@ -394,7 +411,6 @@ const WithdrawPopup = ({
       toast.dismiss();
       toast.info("LTV Exceeded!");
     }
-    // console.log("ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue",ltv,amountTaken,amountAdded,totalCollateral,totalDeptValue,totalCollateralValue)
     if (
       (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
       currentCollateralStatus
@@ -443,7 +459,6 @@ const WithdrawPopup = ({
     if (totalCollateralValue > 0) {
       tempLiq = tempLiq / totalCollateralValue;
 
-      // Truncate to 8 decimal places
       const multiplier = Math.pow(10, 8);
       tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
     }
@@ -458,39 +473,36 @@ const WithdrawPopup = ({
 
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {
-      return "0.00000000"; // Return as a string with 8 decimal places
+      return "0.00000000";
     }
 
     const ltv = totalDeptValue / totalCollateralValue;
 
-    // Truncate to 8 decimal places
     const multiplier = Math.pow(10, 8);
     const truncatedLTV = Math.floor(ltv * multiplier) / multiplier;
 
-    return truncatedLTV.toFixed(8); // Return as a string with exactly 8 decimal places
+    return truncatedLTV.toFixed(8);
   };
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleMaxClick = () => {
     const truncateToSevenDecimals = (value) => {
-      const multiplier = Math.pow(10, 8); // To shift the decimal 7 places
-      const truncated = Math.floor(value * multiplier) / multiplier; // Truncate the value
-      return truncated; // Return as a number, not a string
+      const multiplier = Math.pow(10, 8);
+      const truncated = Math.floor(value * multiplier) / multiplier;
+      return truncated;
     };
 
-    // Determine the formatted asset supply based on its value
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
-        ? parseFloat(Number(assetSupply).toFixed(8)) // Ensures it's a number
+        ? parseFloat(Number(assetSupply).toFixed(8))
         : assetSupply >= 1e-7 && assetSupply < 1e-6
-        ? parseFloat(Number(assetSupply).toFixed(7)) // Ensures it's a number
-        : truncateToSevenDecimals(assetSupply) // Ensures it's a number
+        ? parseFloat(Number(assetSupply).toFixed(7))
+        : truncateToSevenDecimals(assetSupply)
       : 0;
 
     const maxAmount = asset_supply;
 
-    // Set the max amount and update related values
     setAmount(maxAmount);
     updateAmountAndUsdValue(assetSupply);
   };
@@ -499,7 +511,7 @@ const WithdrawPopup = ({
     if (!value) return "0";
     return Number(value)
       .toFixed(8)
-      .replace(/\.?0+$/, ""); // Ensure 8 decimals and remove trailing zeroes
+      .replace(/\.?0+$/, "");
   };
   return (
     <>

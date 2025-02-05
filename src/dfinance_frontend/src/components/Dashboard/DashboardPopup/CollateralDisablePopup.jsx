@@ -9,6 +9,13 @@ import useUserData from "../../customHooks/useUserData";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import { useDispatch } from "react-redux";
 
+/**
+ * ColateralPopup Component
+ *
+ * This component allows users to enable or disable an asset as collateral.
+ * @param {Object} props - Component props
+ * @returns {JSX.Element} - Returns the ColateralPopup component.
+ */
 const ColateralPopup = ({
   asset,
   image,
@@ -54,7 +61,15 @@ const ColateralPopup = ({
     }
   }, [isLoading, onLoadingChange]);
 
-  // Toggles the collateral status of an asset
+  /**
+   *
+   * This function is responsible for enabling or disabling an asset as collateral.
+   * It calls the backend to update the collateral status and handles errors, such as price fetch failure or LTV threshold violations.
+   * After a successful operation, the collateral status is updated.
+   * @param {string} asset - The asset being toggled as collateral
+   * @param {number} assetSupply - The supply balance of the asset
+   * @throws {Error} - Throws error if the backend responds with failure
+   */
   async function toggleCollateral(asset, assetSupply) {
     try {
       const addedAmount = currentCollateralStatus

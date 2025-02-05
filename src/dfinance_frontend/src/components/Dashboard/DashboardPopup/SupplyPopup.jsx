@@ -14,6 +14,17 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
+/**
+ * SupplyPopup Component
+ *
+ * This component is a popup modal that allows users to supply an asset to a platform, taking into account factors like collateral,
+ * debt, liquidation thresholds, and the user's current health factor. 
+ * It calculates the USD equivalent of the supplied amount, manages user input for supply amounts, and handles approval 
+ * and supply transactions. 
+ *
+ * @returns {JSX.Element} - Returns the SupplyPopup component.
+ */
+
 const SupplyPopup = ({
   asset,
   image,

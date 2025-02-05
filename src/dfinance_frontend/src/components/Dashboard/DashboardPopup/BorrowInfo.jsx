@@ -4,6 +4,17 @@ import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 import { Info } from "lucide-react";
 
+/**
+ * BorrowInfo component displays borrowing-related data such as total borrowed amount,
+ * borrowing cap, APY rates, and reserve factor with a tooltip.
+ *
+ * @param {Object} props - Component props.
+ * @param {Function} props.formatNumber - Function to format numerical values.
+ * @param {number} props.borrowCap - Maximum amount that can be borrowed.
+ * @param {number} props.totalBorrowed - Total amount borrowed so far.
+ * @param {number} props.borrowRateAPR - Borrowing interest rate in APR.
+ * @param {number} props.reserveFactor - Reserve factor percentage.
+ */
 const BorrowInfo = ({
   formatNumber,
   borrowCap,

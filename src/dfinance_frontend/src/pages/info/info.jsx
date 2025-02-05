@@ -10,18 +10,42 @@ import { ExternalLink } from "lucide-react";
 import Error from "../Error";
 import useFormatNumber from "../../components/customHooks/useFormatNumber";
 import emailjs from "emailjs-com";
-import useAssetData from "../../components/Common/useAssets";
+import useAssetData from "../../components/customHooks/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
 import MiniLoader from "../../components/Common/MiniLoader";
 import { Doughnut, Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
-
-// Register Chart.js elements
 ChartJS.register(ArcElement, Tooltip);
 
+/**
+ * This component displays various statistics related to users, cycles, reserves, and interest accrued.
+ * It also monitors cycle and token thresholds and sends email notifications if thresholds are breached.
+ *
+ * @returns {JSX.Element} - Returns the DashboardCards component.
+ */
 const DashboardCards = () => {
   const navigate = useNavigate();
+  const { backendActor } = useAuth();
+  const formatNumber = useFormatNumber();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [like, setLike] = useState(false);
+  const [notification, setNotification] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [threshold] = useState(5000000000000);
+  const [tokenThreshold] = useState(10000);
+  const [users, setUsers] = useState([]);
+  const [lastEmailDate, setLastEmailDate] = useState(null);
+  const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const radioRefs = {};
+  const [filteredData, setFilteredData] = useState(null);
+  const [userAccountData, setUserAccountData] = useState({});
+  const [healthFactors, setHealthFactors] = useState({});
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -38,6 +62,7 @@ const DashboardCards = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchBalanceBackend();
+
   useEffect(() => {
     fetchBalance("ckBTC");
     fetchBalance("ckETH");
@@ -45,11 +70,7 @@ const DashboardCards = () => {
     fetchBalance("ICP");
     fetchBalance("ckUSDT");
   }, [fetchBalance]);
-  console.log("ckBTCBalance", ckBTCBalance);
-  console.log("ckETHBalance", ckETHBalance);
-  console.log("ckUSDCBalance", ckUSDCBalance);
-  console.log("ckICPBalance", ckICPBalance);
-  console.log("ckUSDTBalance", ckUSDTBalance);
+
   const assetRates = {
     ckETH: ckETHUsdRate,
     ckBTC: ckBTCUsdRate,
@@ -57,6 +78,7 @@ const DashboardCards = () => {
     ICP: ckICPBalance,
     ckUSDT: ckUSDTUsdRate,
   };
+
   const assetBalances = {
     ckETH: ckETHBalance,
     ckBTC: ckBTCBalance,
@@ -64,23 +86,24 @@ const DashboardCards = () => {
     ICP: ckICPUsdRate,
     ckUSDT: ckUSDTBalance,
   };
+
   const [healthStats, setHealthStats] = useState({
     lessThanOne: 0,
     greaterThanOne: 0,
     infinity: 0,
   });
-  const { backendActor } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [like, setLike] = useState(false);
-  const [notification, setNotification] = useState("");
+
+  /**
+   * Checks the controller status from the backend.
+   */
   const checkControllerStatus = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
     try {
       const result = await backendActor.to_check_controller();
-      console.log("Controller Status:", result); // Debug log
-      setLike(result); // Update `like` state with the backend value
+      console.log("Controller Status:", result);
+      setLike(result);
     } catch (err) {
       console.error("Error fetching controller status:", err);
       setError("Failed to fetch controller status");
@@ -90,19 +113,16 @@ const DashboardCards = () => {
   useEffect(() => {
     checkControllerStatus();
   }, [backendActor]);
+
   const [cardData, setCardData] = useState([
     { title: "Users", value: "Loading...", link: "/users" },
     { title: "Cycles", value: "5678", link: "/cycles" },
     { title: "Interest Accured", value: "5678", link: "/interest accured" },
     { title: "Reserves", value: "5", link: "/pools", assets: [] },
   ]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [threshold] = useState(5000000000000);
-  const [tokenThreshold] = useState(10000);
-  const { assets, reserveData, filteredItems, interestAccure } =
-    useAssetData(searchQuery);
-  console.log("filteredItems", filteredItems);
+
+  const { filteredItems, interestAccure } = useAssetData(searchQuery);
+
   const poolAssets = [
     { name: "ckBTC", imageUrl: ckBTC },
     { name: "ckETH", imageUrl: ckETH },
@@ -111,47 +131,46 @@ const DashboardCards = () => {
     { name: "ICP", imageUrl: icp },
   ];
   console.log("interestAccure", interestAccure);
-  const [users, setUsers] = useState([]); //  State to store users
 
   const handleViewMore = () => {
-    navigate("/2a45fg/health-factor-list"); // 🔹 Navigate to the new page
+    navigate("/2a45fg/health-factor-list");
   };
   const getAllUsers = async () => {
     if (!backendActor) {
       console.error("Backend actor not initialized");
       return;
     }
-
     try {
       const allUsers = await backendActor.get_all_users();
       console.log("Retrieved Users:", allUsers);
 
-      setUsers(allUsers); //  Store users in state
+      setUsers(allUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
 
-  //  Fetch Users on Component Mount
   useEffect(() => {
     getAllUsers();
   }, []);
 
+  /**
+   * Fetches the current cycle count from the backend.
+   */
   const getCycles = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
     const response = await backendActor.cycle_checker();
     console.log("response cycle checker", response);
-    // Assuming the response is an object like { cycles: 5678 }
-    return response.toString(); // Extract the 'cycles' property
+    return response.toString();
   };
 
-  const formatNumber = useFormatNumber();
-  // State to track last sent notifications
-  const [lastEmailDate, setLastEmailDate] = useState(null);
-  const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
-
+  /**
+   * Sends email notifications when cycle or token thresholds are breached.
+   * @param {string} subject - Email subject.
+   * @param {string} htmlMessage - Email body.
+   */
   const sendEmailNotification = async (subject, htmlMessage) => {
     try {
       const templateParams = {
@@ -161,10 +180,10 @@ const DashboardCards = () => {
       };
 
       await emailjs.send(
-        "service_7pu7uvh", // Replace with your EmailJS Service ID
-        "template_1k2eq7a", // Replace with your EmailJS Template ID
+        "service_7pu7uvh",
+        "template_1k2eq7a",
         templateParams,
-        "uWDc83b20aMxTTyrz" // Replace with your EmailJS Public Key
+        "uWDc83b20aMxTTyrz"
       );
 
       console.log("Email sent successfully.");
@@ -173,16 +192,18 @@ const DashboardCards = () => {
     }
   };
 
-  let emailInterval; // Variable to store the interval ID
+  let emailInterval;
   let lastExhaustedEmailTimestamp = 0;
   let lastWarningEmailTimestamp = 0;
 
+  /**
+   * Handles cycle-based notifications and sends warning or exhaustion emails.
+   * @param {number} currentCycles - The current number of cycles.
+   */
   const handleNotification = (currentCycles, assetBalance) => {
-    const oneDay = 24 * 60 * 60 * 1000; // 1 minute in milliseconds
-
+    const oneDay = 24 * 60 * 60 * 1000;
     console.log("Handling notification for cycles:", currentCycles);
 
-    // Function to send a warning email
     const sendWarningEmail = async () => {
       const htmlMessage = `
     Your cycles are close to the threshold value. Please renew your cycles to avoid interruption.
@@ -198,7 +219,6 @@ const DashboardCards = () => {
       }
     };
 
-    // Function to send an exhausted email
     const sendExhaustedEmail = async () => {
       const htmlMessage = `
       Your cycles are exhausted! Please renew your cycles immediately to continue services.
@@ -208,26 +228,24 @@ const DashboardCards = () => {
       try {
         console.log("Sending exhausted email...");
         await sendEmailNotification("Cycle Exhausted", htmlMessage);
-        lastExhaustedEmailTimestamp = Date.now(); // Update the last exhausted email timestamp
+        lastExhaustedEmailTimestamp = Date.now();
       } catch (error) {
         console.error("Failed to send exhausted email:", error);
       }
     };
 
-    // Clear existing interval
     if (emailInterval) {
       console.log("Clearing previous interval...");
       clearInterval(emailInterval);
     }
 
-    // Set up a new interval to check and send emails every minute
     emailInterval = setInterval(async () => {
       console.log("Interval triggered. Checking conditions...");
       console.log("currentCycles", currentCycles);
       console.log("threshold", threshold);
       if (currentCycles <= threshold) {
         console.log("Cycles are exhausted. Sending exhausted email...");
-        await sendExhaustedEmail(); // Send exhausted email every minute until cycles increase
+        await sendExhaustedEmail();
       } else if (
         currentCycles > threshold &&
         currentCycles < threshold + 2000000000000
@@ -235,10 +253,9 @@ const DashboardCards = () => {
         console.log(
           "Cycles are nearing the safe threshold. Sending warning email..."
         );
-        await sendWarningEmail(); // Send warning email every minute until cycles increase
+        await sendWarningEmail();
       }
-      // Keep checking and sending emails every minute indefinitely.
-    }, oneDay); // Interval set to 1 minute
+    }, oneDay);
   };
 
   // Simulate cycle updates
@@ -248,15 +265,19 @@ const DashboardCards = () => {
   };
   let lastTokenExhaustedEmailTimestamp = 0;
   let lastTokenWarningEmailTimestamp = 0;
-  let emailinterval = null; // Declare interval variable globally
+  let emailinterval = null;
 
+  /**
+   * Handles token balance-based notifications and sends warning or exhaustion emails.
+   * @param {string} assetName - Name of the asset.
+   * @param {number} assetBalance - Current asset balance.
+   */
   const handleTokenNotification = (assetName, assetBalance) => {
-    const oneDay = 24 * 60 * 60 * 1000; // 1 minute in milliseconds
+    const oneDay = 24 * 60 * 60 * 1000;
     const currentTime = Date.now();
 
     console.log(`Handling token notification for ${assetName}:`, assetBalance);
 
-    // Function to send a warning email
     const sendTokenWarningEmail = async () => {
       const htmlMessage = `
       Your balance of ${assetName} is approaching the threshold. Please mint  ${assetName} above threshold value .
@@ -266,13 +287,12 @@ const DashboardCards = () => {
       try {
         console.log("Sending token warning email...");
         await sendEmailNotification(`${assetName} Warning`, htmlMessage);
-        lastTokenWarningEmailTimestamp = currentTime; // Update the last warning email timestamp
+        lastTokenWarningEmailTimestamp = currentTime;
       } catch (error) {
         console.error("Failed to send token warning email:", error);
       }
     };
 
-    // Function to send an exhausted email
     const sendTokenExhaustedEmail = async () => {
       const htmlMessage = `
       Your balance of ${assetName} is exhausted!  Please mint  ${assetName} above threshold value.
@@ -288,13 +308,11 @@ const DashboardCards = () => {
       }
     };
 
-    // If emailInterval exists, clear it before setting a new one
     if (emailinterval) {
       console.log("Clearing previous interval...");
       clearInterval(emailinterval);
     }
 
-    // Set up a new interval to check and send emails every minute
     emailInterval = setInterval(async () => {
       console.log("Interval triggered. Checking conditions...");
       console.log("assetBalance", assetBalance);
@@ -302,7 +320,7 @@ const DashboardCards = () => {
 
       if (assetBalance <= tokenThreshold) {
         console.log("Token balance is exhausted. Sending exhausted email...");
-        await sendTokenExhaustedEmail(); // Send exhausted email if balance is below threshold
+        await sendTokenExhaustedEmail();
       } else if (
         assetBalance > tokenThreshold &&
         assetBalance < tokenThreshold + 1000
@@ -310,10 +328,11 @@ const DashboardCards = () => {
         console.log(
           "Token balance is nearing the safe threshold. Sending warning email..."
         );
-        await sendTokenWarningEmail(); // Send warning email if balance is nearing threshold
+        await sendTokenWarningEmail();
       }
-    }, oneDay); // Check every minute (60 seconds)
+    }, oneDay);
   };
+
   const pieData = {
     datasets: [
       {
@@ -325,9 +344,9 @@ const DashboardCards = () => {
         backgroundColor: ["#EF4444", "#22C55E", "#EAB308"],
         hoverBackgroundColor: ["#EF4444", "#22C55E", "#EAB308"],
 
-        borderColor: "#ffffff", // White border for separation
-        borderWidth: 6, // Creates spacing between segments
-        cutout: "70%", // Makes it a donut chart
+        borderColor: "#ffffff",
+        borderWidth: 6,
+        cutout: "70%",
         hoverOffset: 4,
       },
     ],
@@ -344,23 +363,22 @@ const DashboardCards = () => {
   };
 
   useEffect(() => {
-    // Call handleTokenBalances whenever asset balances change or after data is fetched
     handleTokenBalances();
-  }, [assetBalances, tokenThreshold]); // Trigger when asset balances or tokenThreshold change
+  }, [assetBalances, tokenThreshold]);
+
   const onTokenUpdate = (newBalance) => {
     console.log("Cycle count updated:", newBalance);
     handleNotification(newBalance);
   };
+
   useEffect(() => {
     const fetchData = async () => {
-      if (!users.length) return; //  Ensure users are available before proceeding
-
+      if (!users.length) return;
       setLoading(true);
+
       try {
-        const cycles = await getCycles(); // Fetch cycles only
-
-        const usersCount = users.length; //  Use stored users count
-
+        const cycles = await getCycles();
+        const usersCount = users.length;
         const formattedData = [
           { title: "Users", value: usersCount, link: "/users" },
           { title: "Cycles", value: formatNumber(cycles), link: "/cycles" },
@@ -385,18 +403,16 @@ const DashboardCards = () => {
 
     fetchData();
   }, [users, interestAccure]);
-  const cachedData = useRef({}); //  Cache to store fetched user data
-  const [userAccountData, setUserAccountData] = useState({});
-  const [healthFactors, setHealthFactors] = useState({});
+  const cachedData = useRef({});
 
   //  Fetch and cache user account data
   const fetchUserAccountDataWithCache = async (principal) => {
-    if (!principal || cachedData.current[principal]) return; //  Skip if already cached
+    if (!principal || cachedData.current[principal]) return;
 
     try {
       const result = await backendActor.get_user_account_data([principal]);
       if (result) {
-        cachedData.current[principal] = result; //  Cache result
+        cachedData.current[principal] = result;
         setUserAccountData((prev) => ({ ...prev, [principal]: result }));
       }
     } catch (error) {
@@ -406,21 +422,20 @@ const DashboardCards = () => {
 
   //  Fetch all user data in parallel, ensuring cache usage
   useEffect(() => {
-    if (!users || users.length === 0) return; //  Ensure `users` is valid
+    if (!users || users.length === 0) return;
 
-    //  Fetch user data in parallel while respecting cache
     Promise.all(
       users.map(([principal]) => {
         if (principal) return fetchUserAccountDataWithCache(principal);
-        return null; // Skip invalid users
+        return null;
       })
     )
       .then(() => console.log(" All user account data fetched"))
       .catch((error) =>
         console.error(" Error fetching user account data in batch:", error)
       );
-  }, [users]); //  Runs when users change
-  console.log("userAccountData", userAccountData);
+  }, [users]);
+
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
 
@@ -428,9 +443,9 @@ const DashboardCards = () => {
 
     Object.entries(userAccountData).forEach(([principal, data]) => {
       if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
-        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000; //  Divide by 1e8
+        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000;
       } else {
-        updatedHealthFactors[principal] = null; //  Handle missing values
+        updatedHealthFactors[principal] = null;
       }
     });
 
@@ -444,14 +459,11 @@ const DashboardCards = () => {
   //  Extract and update Health Factor statistics
   useEffect(() => {
     if (!healthFactors || Object.keys(healthFactors).length === 0) return;
-
     let lessThanOne = 0,
       greaterThanOne = 0,
       infinity = 0;
-
     Object.values(healthFactors).forEach((factor) => {
       if (factor === "Infinity" || factor > 100) {
-        //  Classify `>100` as Infinity
         infinity++;
       } else if (!isNaN(Number(factor)) && Number(factor) < 1) {
         lessThanOne++;
@@ -478,47 +490,41 @@ const DashboardCards = () => {
     }
   };
 
-  const [selectedAsset, setSelectedAsset] = useState(null);
-  const [showPopup, setShowPopup] = useState(false);
-  const radioRefs = {}; // Object to store refs for radio buttons
-  const [filteredData, setFilteredData] = useState(null); // New state for filtered data
   poolAssets.forEach((asset) => {
     radioRefs[asset.name] = React.createRef();
   });
+
   useEffect(() => {
-    // Disable scrolling when the popup is open
     if (showPopup) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
     }
-
-    // Cleanup to reset the overflow style when the component unmounts or popup is closed
     return () => {
       document.body.style.overflow = "auto";
     };
   }, [showPopup]);
+
   const handleAssetSelection = (asset) => {
-    // Close the popup momentarily to force re-rendering
     setShowPopup(false);
     console.log("filteredItems", filteredItems);
     console.log("selected asset", asset);
-    const filteredData = filteredItems.filter((item) => item[0] === asset.name); // Use item[0] if you want to compare the first element of the inner array
+    const filteredData = filteredItems.filter((item) => item[0] === asset.name);
     console.log("filteredData", filteredData);
     setFilteredData(filteredData);
     setTimeout(() => {
-      setSelectedAsset(asset); // Update the selected asset
-      setShowPopup(true); // Reopen the popup
+      setSelectedAsset(asset);
+      setShowPopup(true);
     }, 0);
   };
 
   const closePopup = () => {
     setShowPopup(false);
-    setSelectedAsset(null); // Clear selected asset
-    setFilteredData(null); // Clear filtered data
+    setSelectedAsset(null);
+    setFilteredData(null);
     Object.values(radioRefs).forEach((ref) => {
       if (ref.current) {
-        ref.current.checked = false; // Deselect the radio button
+        ref.current.checked = false;
       }
     });
   };
@@ -566,7 +572,6 @@ const DashboardCards = () => {
 
           {/*  Health Factor Card */}
           <div className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300 relative">
-            {/* Small View More Button */}
             <button
               onClick={handleViewMore}
               className="absolute top-2 right-2  text-white rounded-md px-2 py-0.5 text-xs  hover:bg-opacity-80 transition"
@@ -579,7 +584,6 @@ const DashboardCards = () => {
             </h3>
 
             <div className="flex justify-between items-center w-full">
-              {/*  Left Side - Legend */}
               <div className="flex flex-col space-y-1 pl-4">
                 <div className="flex items-center">
                   <div className="w-10 h-4 bg-red-500 border border-white rounded-md"></div>
@@ -596,17 +600,16 @@ const DashboardCards = () => {
               </div>
 
               {/*  Right Side - Pie Chart */}
-              {/* Adjusted Container Size */}
               <div className="w-40 h-26 pr-2">
                 <Doughnut
                   data={pieData}
                   options={{
                     responsive: true,
-                    maintainAspectRatio: false, // Allow resizing
-                    cutout: "70%", // Controls the hollow center
+                    maintainAspectRatio: false,
+                    cutout: "70%",
                     plugins: {
-                      legend: { display: false }, // Hide default legend
-                      tooltip: { enabled: true }, // Keep tooltips
+                      legend: { display: false },
+                      tooltip: { enabled: true },
                     },
                   }}
                 />
@@ -699,13 +702,13 @@ const DashboardCards = () => {
             ))}
           {showPopup && selectedAsset && (
             <div
-              key={selectedAsset.name} // Unique key for the popup
+              key={selectedAsset.name}
               className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
-              onClick={closePopup} // Close popup when backdrop is clicked
+              onClick={closePopup}
             >
               <div
                 className="bg-[#fcfafa] shadow-xl ring-1 ring-black/10 dark:ring-white/20 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 rounded-lg p-6 w-80"
-                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the popup
+                onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center gap-4 mb-4">
                   <img
@@ -719,16 +722,10 @@ const DashboardCards = () => {
                   {filteredData && filteredData.length > 0 ? (
                     <ul>
                       {filteredData.map((data, idx) => {
-                        // Log data for debugging
                         console.log("data", data[1]?.Ok?.asset_supply);
-
-                        // Get the asset name (e.g., 'ckETH', 'ckBTC')
                         const assetName = data[0];
-
-                        // Get the rate for the asset from assetRates
                         const assetRate = assetRates[assetName];
                         const assetBalance = assetBalances[assetName];
-                        // If the asset rate is not found, you can handle it here (optional)
                         if (!assetRate) {
                           return (
                             <li key={idx} className="mb-2">
@@ -788,7 +785,7 @@ const DashboardCards = () => {
                 </div>
                 <button
                   className="mt-4 w-full bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg shadow-md px-7 py-2  text-[14px] font-semibold"
-                  onClick={() => setShowPopup(false)} // Close popup when clicking the close button
+                  onClick={() => setShowPopup(false)}
                 >
                   Close
                 </button>

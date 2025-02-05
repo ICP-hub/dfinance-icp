@@ -7,18 +7,14 @@ export function usePageLoading() {
     const handleLoad = () => {
       setIsLoading(false);
     };
-
     const handleBeforeUnload = () => {
       setIsLoading(true);
     };
-
     window.addEventListener("load", handleLoad);
     window.addEventListener("beforeunload", handleBeforeUnload);
-
     if (document.readyState === "complete") {
       setIsLoading(false);
     }
-
     return () => {
       window.removeEventListener("load", handleLoad);
       window.removeEventListener("beforeunload", handleBeforeUnload);

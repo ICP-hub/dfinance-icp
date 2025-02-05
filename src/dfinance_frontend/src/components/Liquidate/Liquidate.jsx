@@ -9,6 +9,15 @@ import { useLocation } from "react-router-dom";
 import DebtStatus from "./DebtStatus";
 import WalletModal from "../Dashboard/WalletModal";
 
+/**
+ * Liquidate Component
+ *
+ * This component allows users to check the debt status of others in the system.
+ * If a user is not authenticated, they will be prompted to connect their wallet.
+ * Upon authentication, they can access a list of users in debt.
+ *
+ * @returns {JSX.Element} - Returns the Liquidate component.
+ */
 const Liquidate = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();

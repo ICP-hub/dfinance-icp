@@ -1,31 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { ArrowDownUp } from "lucide-react";
 import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
 import { useAuth } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
 import { ClickAwayListener } from "@mui/base/ClickAwayListener";
-import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
 import { useRef } from "react";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 import { FaWallet } from "react-icons/fa";
-import { styled } from "@mui/material/styles";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import loader from "../../../public/Helpers/loader.svg";
-import ARROW from "../../../public/wallet/ARROW.svg";
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from "../../utils/constants";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Drawer } from "@mui/material";
 import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/testnetmode";
@@ -38,21 +29,26 @@ import {
   setIsWalletConnected,
   setWalletModalOpen,
 } from "../../redux/reducers/utilityReducer";
-import settingsicon from "../../../public/Helpers/settings.png";
 import ThemeToggle from "../Common/ThemeToggle";
 import settingsIcon from "../../../public/Helpers/Settings.svg";
-import Vector from "../../../public/Helpers/Vector.svg";
-import Group216 from "../../../public/navbar/Group216.svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 import icplogo from "../../../public/wallet/icp.png";
 import { IoIosRocket } from "react-icons/io";
-import { ArrowUpDown } from "lucide-react";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
 import DFinanceLight from "../../../public/logo/DFinance-Light.svg";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
+/**
+ * Navbar Component
+ *
+ * The Navbar provides navigation links, wallet connection options,
+ * testnet mode toggle, dark mode switch, and account-related actions.
+ *
+ * @param {boolean} isHomeNav - Determines if the navbar is in home mode or dashboard mode.
+ * @returns {JSX.Element} - Navbar component.
+ */
 export default function Navbar({ isHomeNav }) {
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const isMobile = window.innerWidth <= 1115;

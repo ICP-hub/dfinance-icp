@@ -4406,9 +4406,8 @@ const MySupply = () => {
                                         Number(total_borrow)
                                           ? 0
                                           : Math.min(
-                                              (Number(total_supply) -
-                                                Number(total_borrow)) *
-                                                0.85,
+                                              Number(total_supply) * 0.85 -
+                                                Number(total_borrow),
                                               Number(availableBorrow) / usdRate
                                             );
 
@@ -4420,14 +4419,14 @@ const MySupply = () => {
                                         !isFinite(usdValue) ||
                                         usdValue === 0
                                       ) {
-                                        displayedAsset = "0.00000000"; // Show "0.00000000" if USD value is exactly 0
+                                        displayedAsset = "0.00000000";
                                       } else if (usdValue < 0.01) {
                                         displayedAsset = `<${(
                                           0.01 / usdRate
                                         ).toLocaleString(undefined, {
                                           minimumFractionDigits: 8,
                                           maximumFractionDigits: 8,
-                                        })}`; // Show "<" sign for small asset values
+                                        })}`;
                                       } else {
                                         displayedAsset =
                                           formatConditional(maxBorrow);
@@ -4883,28 +4882,26 @@ const MySupply = () => {
                                         Number(total_borrow)
                                           ? 0
                                           : Math.min(
-                                              (Number(total_supply) -
-                                                Number(total_borrow)) *
-                                                0.85,
+                                              Number(total_supply) * 0.85 -
+                                                Number(total_borrow),
                                               Number(availableBorrow) / usdRate
                                             );
 
                                       const usdValue = maxBorrow * usdRate;
 
-                                      // Determine how to display the borrowable asset amount
                                       let displayedAsset;
                                       if (
                                         !isFinite(usdValue) ||
                                         usdValue === 0
                                       ) {
-                                        displayedAsset = "0.00000000"; // Show "0.00000000" if USD value is exactly 0
+                                        displayedAsset = "0.00000000";
                                       } else if (usdValue < 0.01) {
                                         displayedAsset = `<${(
                                           0.01 / usdRate
                                         ).toLocaleString(undefined, {
                                           minimumFractionDigits: 8,
                                           maximumFractionDigits: 8,
-                                        })}`; // Show "<" sign for small asset values
+                                        })}`;
                                       } else {
                                         displayedAsset =
                                           formatConditional(maxBorrow);

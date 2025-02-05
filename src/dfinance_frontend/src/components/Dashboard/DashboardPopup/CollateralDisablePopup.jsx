@@ -43,6 +43,7 @@ const ColateralPopup = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [isCollateral, setIsCollateral] = useState(currentCollateralStatus);
+   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const value = currentHealthFactor;
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
@@ -72,64 +73,73 @@ const ColateralPopup = ({
    */
   async function toggleCollateral(asset, assetSupply) {
     try {
-      const addedAmount = currentCollateralStatus
-        ? BigInt(0)
-        : BigInt(Math.round(assetSupply * 100000000));
-      const amount = currentCollateralStatus
-        ? BigInt(Math.round(assetSupply * 100000000))
-        : BigInt(0);
+        const addedAmount = currentCollateralStatus
+            ? BigInt(0)
+            : BigInt(Math.round(assetSupply * 100000000));
+        const amount = currentCollateralStatus
+            ? BigInt(Math.round(assetSupply * 100000000))
+            : BigInt(0);
 
-      const response = await backendActor.toggle_collateral(
-        asset,
-        Number(amount),
-        addedAmount
-      );
+        const response = await backendActor.toggle_collateral(
+            asset,
+            Number(amount),
+            addedAmount
+        );
 
-      if (response?.Err) {
-        const errorMsg = response.Err;
+        if (response?.Err) {
+            const errorMsg = response.Err;
 
-        if (errorMsg?.ExchangeRateError === null) {
-          toast.error("Price fetch failed", {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
+            // Handle panic errors
+            if (typeof errorMsg === "string" && errorMsg.toLowerCase().includes("panic")) {
+                setShowPanicPopup(true);
+                
+                throw new Error("Panic detected: " + errorMsg);
+            }
 
-          SetError(
-            "Price fetch failed: Your assets are safe, try again after some time."
-          );
-          throw new Error("ExchangeRateError: Price fetch failed.");
+            if (errorMsg?.ExchangeRateError === null) {
+                toast.error("Price fetch failed", {
+                    className: "custom-toast",
+                    position: "top-center",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+
+                SetError(
+                    "Price fetch failed: Your assets are safe, try again after some time."
+                );
+                throw new Error("ExchangeRateError: Price fetch failed.");
+            }
+            if (errorMsg?.LTVGreaterThanThreshold === null) {
+                const errorText =
+                    "Collateral update failed: LTV exceeds the allowable threshold.";
+                toast.error(errorText, {
+                    className: "custom-toast",
+                    position: "top-center",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+
+                throw new Error("LTVGreaterThanThreshold: " + errorText);
+            }
+
+            throw new Error(JSON.stringify(errorMsg));
         }
-        if (errorMsg?.LTVGreaterThanThreshold === null) {
-          const errorText =
-            "Collateral update failed: LTV exceeds the allowable threshold.";
-          toast.error(errorText, {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
 
-          throw new Error("LTVGreaterThanThreshold: " + errorText);
-        }
-        throw new Error(JSON.stringify(errorMsg));
-      }
-
-      setIsCollateral(currentCollateralStatus);
+        setIsCollateral(currentCollateralStatus);
     } catch (error) {
-      console.error("Error in toggleCollateral:", error);
-      throw error;
+        console.error("Error in toggleCollateral:", error);
+        throw error;
     }
-  }
+}
+
 
   useEffect(() => {
     if (assetSupply && conversionRate) {
@@ -433,6 +443,41 @@ const ColateralPopup = ({
               Close Now
             </button>
           </div>
+           {showPanicPopup && (
+                  <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+                    <div className="w-full flex flex-col items-center p-2 ">
+                      <button
+                        onClick={handleClosePaymentPopup}
+                        className="text-gray-400 focus:outline-none self-end button1"
+                      >
+                        <X size={24} />
+                      </button>
+          
+                      <div
+                        className="dark:bg-gradient 
+                          dark:from-darkGradientStart 
+                          dark:to-darkGradientEnd 
+                          dark:text-darkText  "
+                      >
+                        <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+                        <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                          Thanks for helping us improve DFinance! <br></br> You’ve
+                          uncovered a bug, and our dev team is on it.
+                        </p>
+          
+                        <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                          Your account is temporarily locked while we investigate and fix
+                          the issue. <br />
+                        </p>
+                        <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                          We appreciate your contribution and have logged your ID—testers
+                          like you are key to making DFinance better! <br />
+                          If you have any questions, feel free to reach out.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
         </div>
       )}
     </>

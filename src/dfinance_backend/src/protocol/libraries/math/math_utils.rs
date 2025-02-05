@@ -1,8 +1,7 @@
 use std::ops::Mul;
-
 use candid::Nat;
-
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
+
 /* 
  * @title Get Scaling Value
  * @dev Returns the SCALING_FACTOR used in interest calculations.
@@ -14,6 +13,7 @@ fn get_scaling_value() -> Nat {
 
 const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
 //leap year calculation left 
+
 /* 
  * @title Calculate Linear Interest
  * @dev Computes interest using a simple linear model based on the provided interest rate.
@@ -31,6 +31,7 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
     ic_cdk::println!("time delta {} and result {} and rate {}", time_delta, result, rate);
     get_scaling_value() + result
 }
+
 /* 
  * @title Calculate Compounded Interest
  * @dev Computes interest using a continuous compounding formula based on the provided interest rate.
@@ -39,7 +40,6 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
  * @param current_timestamp The current timestamp (in seconds).
  * @returns The compounded interest factor as a `Nat`, scaled using `SCALING_FACTOR`.
  */
-
 pub fn calculate_compounded_interest(
     rate_input: Nat,
     last_update_timestamp: u64,
@@ -90,7 +90,6 @@ pub fn calculate_compounded_interest(
  * @param last_update_timestamp The timestamp (in seconds) when the interest was last updated.
  * @returns The compounded interest factor as a `Nat`, scaled using `SCALING_FACTOR`.
  */
-
 pub fn calculate_compounded_interest_with_current_timestamp(
     rate: Nat,
     last_update_timestamp: u64,
@@ -99,6 +98,7 @@ pub fn calculate_compounded_interest_with_current_timestamp(
     
     calculate_compounded_interest(rate, last_update_timestamp, current_timestamp)
 }
+
 /* 
  * @title Scaling Math Operations
  * @dev Defines mathematical operations for scaling values.

@@ -204,6 +204,7 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
         }
     }
 }
+
 /*
  * @title Token Faucet
  * @notice This function allows users to request tokens from the faucet for a specified asset and amount.

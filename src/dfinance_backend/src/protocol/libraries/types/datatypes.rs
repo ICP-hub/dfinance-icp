@@ -16,6 +16,7 @@ pub struct Transaction {
     pub value: f64,
     pub transaction_fee: f64,
 }
+
 /* 
  * @title Wrapper for Candid-compatible types
  */
@@ -48,6 +49,7 @@ impl Default for UserData {
         }
     }
 }
+
 /* 
  * @title User Reserve Data
  * @dev Stores the user's balance and reserve-related details.
@@ -87,6 +89,7 @@ impl Default for UserReserveData {
         }
     }
 }
+
 /* 
  * @title User State
  * @dev Stores the user's adjusted balance and index.
@@ -105,6 +108,7 @@ impl Default for UserState {
         }
     }
 }
+
 /* 
  * @title Reserve Initialization Parameters
  * @dev Parameters required for initializing a reserve.
@@ -127,6 +131,7 @@ pub struct InitReserveInput {
     pub stable_debt_token_symbol: String,
     pub params: Vec<u8>,
 }
+
 /* 
  * @title Interest Rate Calculation Parameters
  * @dev Parameters required for calculating interest rates.

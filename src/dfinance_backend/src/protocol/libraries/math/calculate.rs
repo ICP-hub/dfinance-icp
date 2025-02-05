@@ -18,22 +18,14 @@ pub struct CachedPrice {
 pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,
 }
-/* 
- * @title Maximum Value Helper
- * @dev Returns the maximum possible value that can be stored in a `Nat` type.
- *      This value is `2^128 - 1`, representing the largest unsigned 128-bit integer.
- * @returns `Nat` - The maximum possible `Nat` value.
- */
-fn get_max_value() -> Nat {
-    Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
-}
-/* 
+
+/*
  * @title Price Cache Management
  * @dev Handles storing and retrieving cached prices of assets to avoid redundant calls.
  *      Allows fetching and updating asset exchange rates efficiently.
  */
 impl PriceCache {
-     /* 
+    /*
      * @title Get Cached Price
      * @dev Retrieves the cached exchange rate for a given asset, if available.
      * @param asset The name of the asset (e.g., "ckBTC", "ckETH").
@@ -44,7 +36,8 @@ impl PriceCache {
             .get(asset)
             .map(|cached_price| cached_price.price.clone())
     }
-   /* 
+
+    /*
      * @title Set Cached Price
      * @dev Updates the cached price for a specific asset.
      * @param asset The name of the asset.
@@ -54,7 +47,8 @@ impl PriceCache {
         self.cache.insert(asset, CachedPrice { price });
     }
 }
-/* 
+
+/*
  * @title Update Reserve Prices
  * @dev Fetches the latest exchange rates for all reserves and updates the cache.
  *      This function iterates through all the registered reserves and fetches new prices.
@@ -96,20 +90,22 @@ pub async fn update_reserves_price() -> Result<(), Error> {
     }
     Ok(())
 }
-/* 
+
+/*
  * @title Update Token Price
  * @dev Fetches the latest exchange rate for a single asset and updates the cache.
  * @param asset The name of the asset whose price needs to be updated.
  */
 #[update]
-pub async fn update_token_price(asset:String)-> Result<(),Error>{
-   if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await{
-    return Err(e);
+pub async fn update_token_price(asset: String) -> Result<(), Error> {
+    if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await {
+        return Err(e);
     };
 
     Ok(())
 }
-/* 
+
+/*
  * @title Query Reserve Prices
  * @dev Fetches the cached price data of all available assets from the state.
  * @returns Vec<PriceCache> - A list of cached prices for each asset.
@@ -127,7 +123,8 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
     ic_cdk::println!("all tokens are = {:?}", tokens);
     tokens
 }
-/* 
+
+/*
  * @title User Financial Position
  * @dev Represents a user's position in terms of collateral, borrowings, and liquidation threshold.
  */
@@ -138,7 +135,7 @@ pub struct UserPosition {
     pub liquidation_threshold: Nat,
 }
 
-/* 
+/*
  * @title Fetch Exchange Rates
  * @dev Fetches the latest exchange rate of a given base asset against a quote asset.
  *      Supports both cryptocurrency and fiat asset classes.
@@ -215,7 +212,7 @@ pub async fn get_exchange_rates(
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
             Principal::from_text("avqkn-guaaa-aaaaa-qaaea-cai").unwrap(),
-        //    Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+            //    Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
             1_000_000_000,
@@ -229,7 +226,7 @@ pub async fn get_exchange_rates(
                 let pow = 10usize.pow(v.metadata.decimals);
                 ic_cdk::println!("quote = {}", quote);
                 ic_cdk::println!("pow = {}", pow);
-                // Ask : should i handle the error here or not. 
+                // Ask : should i handle the error here or not.
                 let exchange_rate = (Nat::from(quote) * Nat::from(SCALING_FACTOR))
                     / (Nat::from(pow) - Nat::from(SCALING_FACTOR));
                 ic_cdk::println!("exchange rate = {}", exchange_rate);

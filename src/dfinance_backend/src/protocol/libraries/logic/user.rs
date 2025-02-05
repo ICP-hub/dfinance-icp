@@ -24,6 +24,7 @@ pub struct UserConfig {
     pub collateral: bool,
     pub borrowing: bool,
 }
+
 /* 
  * @title User Account Data Calculation
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -313,6 +314,7 @@ pub async fn calculate_user_account_data(
         has_zero_ltv_collateral,
     ))
 }
+
 /* 
  * @title Get User Balance in Base Currency
  * @notice Computes the user's total balance in the base currency (USD equivalent).
@@ -391,6 +393,7 @@ pub async fn get_user_balance_in_base_currency(
         .clone()
         .scaled_mul(asset_price.clone()))
 }
+
 /* 
  * @title Get User Debt in Base Currency
  * @notice Computes the user's total outstanding debt in the base currency.
@@ -465,6 +468,7 @@ pub async fn get_user_debt_in_base_currency(
     ic_cdk::println!("Final user debt in base currency: {}", result);
     Ok(result)
 }
+
 /* 
  * @title User Account Data Structure
  * @notice Stores financial data such as collateral, debt, and risk factors.
@@ -481,6 +485,7 @@ pub struct UserAccountData {
     pub available_borrow: Nat,
     pub has_zero_ltv_collateral: bool,
 }
+
 /* 
  * @title Get Users Eligible for Liquidation
  * @notice Identifies users with a health factor below the liquidation threshold.

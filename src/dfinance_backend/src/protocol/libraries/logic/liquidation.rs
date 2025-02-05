@@ -19,6 +19,12 @@ use crate::{
     protocol::libraries::{logic::update::UpdateLogic, math::calculate::get_exchange_rates},
 };
 
+/*
+-------------------------------------
+----------- LIQUIDATION LOGIC ------------
+-------------------------------------
+ */
+
 /**
  * @title Execute Liquidation Function
  * 

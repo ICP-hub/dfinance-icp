@@ -637,16 +637,16 @@ pub async fn mint_scaled(
  * @title Treasury Accrual Handler
  * @notice Calculates and mints accrued debt to the treasury based on reserve factor.
  *
+ * @dev Determines accrued debt by comparing scaled total variable debt before and after index updates.
+ *      If reserve factor is non-zero, computes mintable amount and updates treasury.
+ * 
  * @param reserve_data Mutable reference to `ReserveData` (treasury accumulation).
  * @param reserve_cache Reference to `ReserveCache` (current & next debt/liquidity indices).
  *
- * @dev Determines accrued debt by comparing scaled total variable debt before and after index updates.
- *      If reserve factor is non-zero, computes mintable amount and updates treasury.
  *
  * @return None. This function modifies `reserve_data`, updating the treasury accumulation.
  *
  */
-
 pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &ReserveCache) {
     // TODO: need to handle the error in this.
     let mut vars = AccrueToTreasuryLocalVars::default();

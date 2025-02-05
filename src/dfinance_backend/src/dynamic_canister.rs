@@ -1,13 +1,22 @@
-use candid::{CandidType, Encode, Nat, Principal};
-use ic_cdk::api::management_canister::main::{CanisterInstallMode, CanisterSettings};
-use serde::Deserialize;
-use std::borrow::Cow;
 use crate::constants::asset_address::DEFAULT;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::{ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES, MAX_MEMO_LENGTH, MAX_MESSAGE_SIZE_BYTES, MAX_NUMBER_OF_ACCOUNTS, MAX_TRANSACTIONS_PER_RESPONSE, NODE_MAX_MEMORY_SIZE_BYTES, NUM_BLOCKS_TO_ARCHIVE, TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY, TEST_CYCLES_FOR_ARCHIVE_CREATION, TEST_DECIMALS, TEST_DEFAULT_CYCLES, TEST_MAX_MEMO_LENGTH, TEST_MAX_MESSAGE_SIZE_BYTES, TEST_MAX_NUMBER_OF_ACCOUNTS, TEST_MAX_TRANSACTIONS_PER_RESPONSE, TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE, TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD};
+use crate::constants::interest_variables::constants::{
+    ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES,
+    MAX_MEMO_LENGTH, MAX_MESSAGE_SIZE_BYTES, MAX_NUMBER_OF_ACCOUNTS, MAX_TRANSACTIONS_PER_RESPONSE,
+    NODE_MAX_MEMORY_SIZE_BYTES, NUM_BLOCKS_TO_ARCHIVE, TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY,
+    TEST_CYCLES_FOR_ARCHIVE_CREATION, TEST_DECIMALS, TEST_DEFAULT_CYCLES, TEST_MAX_MEMO_LENGTH,
+    TEST_MAX_MESSAGE_SIZE_BYTES, TEST_MAX_NUMBER_OF_ACCOUNTS, TEST_MAX_TRANSACTIONS_PER_RESPONSE,
+    TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
+    TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
+};
+use candid::{CandidType, Encode, Nat, Principal};
+use ic_cdk::api::management_canister::main::{CanisterInstallMode, CanisterSettings};
+use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
-use ic_cdk_macros::update;
+use serde::Deserialize;
+use std::borrow::Cow;
+
 /*
  * @title Initialization Arguments for Token Canister
  * @dev Structure containing necessary parameters for initializing a token canister.
@@ -28,6 +37,7 @@ pub struct InitArgs {
     pub maximum_number_of_accounts: Option<u64>,
     pub accounts_overflow_trim_quantity: Option<u64>,
 }
+
 /*
  * @title Archive Options
  * @dev Configuration parameters for transaction archival.
@@ -50,16 +60,17 @@ pub struct ArchiveOptions {
 #[derive(Debug, Deserialize, CandidType)]
 
 pub struct UpgradeArgs {}
+
 /*
  * @title Ledger Arguments
  * @dev Enum defining initialization and upgrade options for the ledger canister.
  */
-
 #[derive(Debug, Deserialize, CandidType)]
 pub enum LedgerArg {
     Init(InitArgs),
     Upgrade(Option<UpgradeArgs>),
 }
+
 /*
  * @title Feature Flags
  * @dev Enables or disables token features like ICRC2.
@@ -68,6 +79,7 @@ pub enum LedgerArg {
 pub struct FeatureFlags {
     icrc2: bool,
 }
+
 /*
  * @title Load Token Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the token ledger.
@@ -77,6 +89,7 @@ fn ledger_wasm() -> Cow<'static, [u8]> {
         "../../../target/wasm32-unknown-unknown/release/dtoken.wasm"
     ))
 }
+
 /*
  * @title Load Test Token Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the test token ledger.
@@ -86,6 +99,7 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
         "../../../target/wasm32-unknown-unknown/release/token_ledger.wasm"
     ))
 }
+
 /*
  * @title Create Token Canister
  * @dev Deploys a new token canister with given name and symbol.
@@ -194,6 +208,7 @@ pub async fn create_token_canister(
     ));
     Ok(canister_id)
 }
+
 /*
  * @title Create Test Token Canister
  * @dev Deploys a new test token canister with a given name and symbol.
@@ -204,9 +219,11 @@ pub async fn create_token_canister(
  *
  * @returns The `Principal` ID of the newly created test token canister.
  */
-
 #[update]
-pub async fn create_testtoken_canister(token_name: String, token_symbol: String) -> Result<Principal,Error> {
+pub async fn create_testtoken_canister(
+    token_name: String,
+    token_symbol: String,
+) -> Result<Principal, Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
@@ -289,11 +306,12 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, TEST_DEFAULT_CYCLES)
-        .await
-        .unwrap()
-        .0
-        .canister_id;
+    let canister_id =
+        ic_cdk::api::management_canister::main::create_canister(arg, TEST_DEFAULT_CYCLES)
+            .await
+            .unwrap()
+            .0
+            .canister_id;
 
     let install_config = ic_cdk::api::management_canister::main::InstallCodeArgument {
         mode: CanisterInstallMode::Install,

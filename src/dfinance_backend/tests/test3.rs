@@ -161,38 +161,40 @@ enum ApproveResult {
 }
 
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
+const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
 
 fn setup() -> (PocketIc, Principal) {
     let pic = PocketIc::new();
-    // let user_principal =
-    //     Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
-    //         .unwrap();
-
-    //================== backend canister =====================
-    let backend_canister = pic.create_canister();
-    pic.add_cycles(backend_canister, 5_000_000_000_000); // 2T Cycles
-    let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
     let user_principal =
         Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
             .unwrap();
-    let user_principal2 =
-        Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
-            .unwrap();
+
+    //================== backend canister =====================
+    let backend_canister = pic.create_canister();
+    pic.add_cycles(backend_canister, 5_000_000_000_000_000); // 2T Cycles
+    let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
     ic_cdk::println!("Backend canister: {}", backend_canister);
-    // ic_cdk::api::set_controller(user_principal);
     pic.install_canister(
         backend_canister,
         wasm,
-        candid::encode_one(user_principal).unwrap(),
-        None,
+        candid::encode_one(Principal::anonymous()).unwrap(),
+        Some(Principal::anonymous()),
     );
 
-    ic_cdk::println!("Backend canister: {}", backend_canister);
+    let xrc_canister = pic.create_canister();
+    pic.add_cycles(xrc_canister, 5_000_000_000_000_000); // 2T Cycles
+    let wasm = fs::read(XRC_WASM).expect("Wasm file not found, run 'dfx build'.");
+    pic.install_canister(xrc_canister, wasm, vec![], None);
+
+    ic_cdk::println!("xrc canister: {}", xrc_canister);
+    ic_cdk::println!("backend cycles = {}", pic.cycle_balance(backend_canister));
+    ic_cdk::println!("cycles = {}", pic.cycle_balance(xrc_canister));
+
     let _ = pocket_ic::PocketIc::set_controllers(
         &pic,
         backend_canister,
-        Some(user_principal),
-        vec![user_principal2],
+        Some(Principal::anonymous()),
+        vec![user_principal],
     );
     ic_cdk::println!("Backend canister: {}", backend_canister);
 
@@ -234,7 +236,7 @@ fn setup() -> (PocketIc, Principal) {
     // 🔹 Call the `initialize` function
     let result = pic.update_call(
         backend_canister,
-        user_principal2,
+        user_principal,
         "initialize",
         encode_args((&token_name, &reserve_data)).unwrap(),
     );
@@ -247,8 +249,7 @@ fn setup() -> (PocketIc, Principal) {
 
             match initialize_response {
                 Ok(()) => {
-                    ic_cdk::println!("✅ Initialize function succeeded for test case:");
-                    panic!("🚨 Expected failure but got success for test case");
+                    ic_cdk::println!("✅ Initialize function succeeded for test case");
                 }
                 Err(e) => {
                     ic_cdk::println!(
@@ -267,15 +268,80 @@ fn setup() -> (PocketIc, Principal) {
         }
     }
 
-    // // Call the `faucet` method on the backend canister
-    // let _ = pic.update_call(
-    //     backend_canister,
-    //     ic_cdk::caller(),
-    //     "faucet", // Method name
-    //     encode_args(("ICP", Nat::from(100000u128))).unwrap(), // Encode arguments
-    // );
+    let result = pic.update_call(
+        backend_canister,
+        user_principal,
+        "update_reserves_price",
+        encode_one(()).unwrap(),
+    );
 
-    // (pic, backend_canister)
+    // 🔹 Decode the response
+    match result {
+        Ok(WasmResult::Reply(response)) => {
+            let initialize_response: Result<String, errors::Error> = candid::decode_one(&response)
+                .expect("Failed to decode reserve price cache response");
+
+            match initialize_response {
+                Ok(_message) => {
+                    ic_cdk::println!("✅ update reserve price function succeeded");
+                }
+                Err(e) => {
+                    ic_cdk::println!(
+                        "update reserve price function failed as expected with error: {:?}",
+                        e
+                    );
+                    panic!("🚨 Expected success but got error: {:?}", e);
+                }
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => {
+            panic!(
+                "🚨update reserve price function was rejected: {:?}",
+                reject_message
+            );
+        }
+        Err(e) => {
+            panic!("🚨 Error calling update reserve price function: {:?}", e);
+        }
+    }
+
+    let result = pic.update_call(
+        backend_canister,
+        user_principal,
+        "register_user",
+        encode_one(()).unwrap(),
+    );
+
+    // 🔹 Decode the response
+    match result {
+        Ok(WasmResult::Reply(response)) => {
+            let initialize_response: Result<String, errors::Error> =
+                candid::decode_one(&response).expect("Failed to decode register user response");
+
+            match initialize_response {
+                Ok(_message) => {
+                    ic_cdk::println!("✅ Register user function succeeded");
+                }
+                Err(e) => {
+                    ic_cdk::println!(
+                        "Register user function failed as expected with error: {:?}",
+                        e
+                    );
+                    panic!("🚨 Expected success but got error: {:?}", e);
+                }
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => {
+            panic!(
+                "🚨 Register user function was rejected: {:?}",
+                reject_message
+            );
+        }
+        Err(e) => {
+            panic!("🚨 Error calling register user function: {:?}", e);
+        }
+    }
+    (pic, backend_canister)
 }
 
 #[test]
@@ -286,8 +352,8 @@ fn test_faucet() {
         amount: Nat,
         expect_success: bool,
         expected_error_message: Option<String>,
-        simulate_insufficient_balance: bool,
-        simulate_faucet_failure: bool,
+        // simulate_insufficient_balance: bool,
+        // simulate_faucet_failure: bool,
     }
 
     let test_cases = vec![
@@ -297,8 +363,8 @@ fn test_faucet() {
             amount: Nat::from(100000u128),
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_faucet_failure: false,
+            // simulate_insufficient_balance: false,
+            // simulate_faucet_failure: false,
         },
         // Non-existent asset case
         TestCase {
@@ -306,8 +372,8 @@ fn test_faucet() {
             amount: Nat::from(50000u128),
             expect_success: false,
             expected_error_message: Some("Asset not found: nonexistent_asset".to_string()),
-            simulate_insufficient_balance: false,
-            simulate_faucet_failure: false,
+            // simulate_insufficient_balance: false,
+            // simulate_faucet_failure: false,
         },
         // Minimum valid amount
         // TestCase {

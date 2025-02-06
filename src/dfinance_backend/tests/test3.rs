@@ -160,6 +160,23 @@ enum ApproveResult {
     Err(ApproveError),
 }
 
+// #[derive(CandidType, Serialize, Deserialize)]
+// struct Asset {
+//     symbol: String,
+// }
+
+// #[derive(CandidType, Serialize, Deserialize)]
+// struct GetExchangeRateRequest {
+//     base_asset: Asset,
+//     quote_asset: Asset,
+//     timestamp: Option<u64>,
+// }
+
+// #[derive(CandidType, Deserialize)]
+// struct GetExchangeRateResult {
+//     rate: f64, // Assuming XRC returns a floating point exchange rate
+// }
+
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
 const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
 
@@ -268,9 +285,35 @@ fn setup() -> (PocketIc, Principal) {
         }
     }
 
+    // let args = GetExchangeRateRequest {
+    //     base_asset: Asset {
+    //         symbol: "ICP".to_string(),
+    //     },
+    //     quote_asset: Asset {
+    //         symbol: "USD".to_string(),
+    //     },
+    //     timestamp: None, // Use Some(timestamp) if you want a historical rate
+    // };
+
+    // let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
+    //     pic.update_call(
+    //         xrc_canister,
+    //         "get_exchange_rate",
+    //         (args,),
+    //     );
+
+    // match res {
+    //     Ok((rate_result,)) => {
+    //         println!("Exchange rate: {:?}", rate_result.rate);
+    //     }
+    //     Err((code, msg)) => {
+    //         println!("Error: {:?}, {}", code, msg);
+    //     }
+    // }
+
     let result = pic.update_call(
         backend_canister,
-        user_principal,
+        Principal::anonymous(),
         "update_reserves_price",
         encode_one(()).unwrap(),
     );

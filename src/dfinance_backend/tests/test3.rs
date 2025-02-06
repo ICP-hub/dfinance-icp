@@ -3,7 +3,7 @@ use candid::{decode_one, encode_args, encode_one, Principal};
 use candid::{CandidType, Deserialize, Nat};
 use ic_cdk::caller;
 // use dfinance_backend::declarations::assets::ReserveData;
-use pocket_ic::{PocketIc, WasmResult};
+use pocket_ic::{CanisterSettings, PocketIc, WasmResult};
 use serde::Serialize;
 use std::error::Error;
 use std::fs;
@@ -172,9 +172,28 @@ fn setup() -> (PocketIc, Principal) {
     let backend_canister = pic.create_canister();
     pic.add_cycles(backend_canister, 5_000_000_000_000); // 2T Cycles
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
-    ic_cdk::println!("Backend canister to check: {}", backend_canister);
-    pic.install_canister(backend_canister, wasm, vec![], None);
+    let user_principal =
+        Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
+            .unwrap();
+    let user_principal2 =
+        Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae")
+            .unwrap();
+    ic_cdk::println!("Backend canister: {}", backend_canister);
+    // ic_cdk::api::set_controller(user_principal);
+    pic.install_canister(
+        backend_canister,
+        wasm,
+        candid::encode_one(user_principal).unwrap(),
+        None,
+    );
 
+    ic_cdk::println!("Backend canister: {}", backend_canister);
+    let _ = pocket_ic::PocketIc::set_controllers(
+        &pic,
+        backend_canister,
+        Some(user_principal),
+        vec![user_principal2],
+    );
     ic_cdk::println!("Backend canister: {}", backend_canister);
 
     // 🔹 Define test input (token name + reserve data)
@@ -211,10 +230,11 @@ fn setup() -> (PocketIc, Principal) {
     //================= Initialize ==================
     // 🔹 Call the `initialize` function
 
+    ic_cdk::println!("things are working:");
     // 🔹 Call the `initialize` function
     let result = pic.update_call(
         backend_canister,
-        ic_cdk::caller(),
+        user_principal2,
         "initialize",
         encode_args((&token_name, &reserve_data)).unwrap(),
     );
@@ -222,7 +242,7 @@ fn setup() -> (PocketIc, Principal) {
     // 🔹 Decode the response
     match result {
         Ok(WasmResult::Reply(response)) => {
-            let initialize_response: Result<(), String> =
+            let initialize_response: Result<(), errors::Error> =
                 candid::decode_one(&response).expect("Failed to decode initialize response");
 
             match initialize_response {
@@ -329,6 +349,9 @@ fn test_faucet() {
     ];
 
     let (pic, backend_canister) = setup();
+    let user_principal =
+        Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
+            .unwrap();
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("Running test case no: {}", i + 1);
@@ -337,7 +360,7 @@ fn test_faucet() {
         // Simulate faucet request
         let result = pic.update_call(
             backend_canister,
-            ic_cdk::caller(),
+            user_principal,
             "faucet",
             encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
         );

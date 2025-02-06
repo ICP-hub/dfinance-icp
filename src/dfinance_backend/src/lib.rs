@@ -61,21 +61,21 @@ pub async fn init(args: Principal) {
     schedule_midnight_task().await;
 }
 
-// #[query]
-// pub fn get_controller() -> Result<InitArgs, Error> {
+#[query]
+pub fn get_controller() -> Result<InitArgs, Error> {
 
-//     match read_state(|state| {
-//         state
-//             .meta_data
-//             .get(&0)
-//             .ok_or_else(|| Error::UserNotFound)
-//     }) {
-//         Ok(va) => {
-//             Ok(va.0)
-//         },
-//         Err(_) => return Err(Error::ErrorNotController)
-//     }
-// }
+    match read_state(|state| {
+        state
+            .meta_data
+            .get(&0)
+            .ok_or_else(|| Error::UserNotFound)
+    }) {
+        Ok(va) => {
+            Ok(va.0)
+        },
+        Err(_) => return Err(Error::ErrorNotController)
+    }
+}
 /*
  * @title Get Reserve Data
  * @dev Fetches the reserve data for a specific asset.

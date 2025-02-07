@@ -62,7 +62,10 @@ pub async fn asset_transfer_from(
     let (result,): (TransferFromResult,) = call(ledger_canister_id, "icrc2_transfer_from", (args,))
         .await
         .map_err(|e| e.1)?;
-
+    ic_cdk::println!(
+        "asset_transfer_from executed successfully and the call result : {:?}",
+        result
+    );
     match result {
         TransferFromResult::Ok(balance) => Ok(balance),
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),

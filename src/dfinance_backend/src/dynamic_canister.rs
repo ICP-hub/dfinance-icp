@@ -10,7 +10,7 @@ use crate::constants::interest_variables::constants::{
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
 use candid::{CandidType, Encode, Nat, Principal};
-use ic_cdk::api::management_canister::main::{CanisterInstallMode, CanisterSettings};
+use ic_cdk::api::management_canister::main::{update_settings, CanisterInstallMode, CanisterSettings};
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
@@ -328,4 +328,24 @@ pub async fn create_testtoken_canister(
         token_name, canister_id
     ));
     Ok(canister_id)
+}
+
+#[update]
+pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, String> {
+    let update_canister_args = ic_cdk::api::management_canister::main::UpdateSettingsArgument {
+        canister_id,
+        settings: CanisterSettings {
+            controllers: Some(vec![user, ic_cdk::api::id()]),
+            compute_allocation: None,
+            memory_allocation: None,
+            freezing_threshold: None,
+            reserved_cycles_limit: None,
+            log_visibility: None,
+            wasm_memory_limit: None,
+        },
+    };
+
+    update_settings(update_canister_args).await.unwrap();
+
+    Ok("done".to_string())
 }

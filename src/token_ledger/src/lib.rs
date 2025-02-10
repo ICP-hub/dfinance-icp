@@ -436,15 +436,15 @@ async fn execute_transfer(
 #[candid_method(update)]
 async fn icrc1_transfer(arg: TransferArg) -> Result<Nat, TransferError> {
 
-    // let caller = ic_cdk::api::caller();
-    // let platform_principal = ic_cdk::api::id();
+    let caller = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
 
-    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-    //     return Err(TransferError::GenericError {
-    //         message: "Unauthorized access.".to_string(),
-    //         error_code: Nat::from(2u32),
-    //     });
-    // }
+    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+        return Err(TransferError::GenericError {
+            message: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
 
     let from_account = Account {
         owner: ic_cdk::api::caller(),
@@ -474,15 +474,17 @@ async fn icrc1_transfer(arg: TransferArg) -> Result<Nat, TransferError> {
 #[candid_method(update)]
 async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromError> {
 
-    // let caller = ic_cdk::api::caller();
-    // let platform_principal = ic_cdk::api::id();
+    ic_cdk::println!("just want to check things if out ");
 
-    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-    //     return Err(TransferFromError::GenericError {
-    //         message: "Unauthorized access.".to_string(),
-    //         error_code: Nat::from(2u32),
-    //     });
-    // }
+    let caller = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+        return Err(TransferFromError::GenericError {
+            message: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
 
     let spender_account = Account {
         owner: ic_cdk::api::caller(),
@@ -591,15 +593,15 @@ fn get_data_certificate() -> DataCertificate {
 #[candid_method(update)]
 async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
 
-    let caller = ic_cdk::api::caller();
-    let platform_principal = ic_cdk::api::id();
+    // let caller = ic_cdk::api::caller();
+    // let platform_principal = ic_cdk::api::id();
 
-    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-        return Err(ApproveError::GenericError {
-            message: "Unauthorized access.".to_string(),
-            error_code: Nat::from(2u32),
-        });
-    }
+    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+    //     return Err(ApproveError::GenericError {
+    //         message: "Unauthorized access.".to_string(),
+    //         error_code: Nat::from(2u32),
+    //     });
+    // }
 
     let block_idx = Access::with_ledger_mut(|ledger| {
         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());

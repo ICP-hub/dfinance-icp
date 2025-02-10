@@ -1,4 +1,5 @@
-use crate::constants::asset_address::DEFAULT;
+use crate::constants::asset_address::default;
+// use crate::constants::asset_address::DEFAULT;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{
     ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES,
@@ -10,12 +11,16 @@ use crate::constants::interest_variables::constants::{
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
 use candid::{CandidType, Encode, Nat, Principal};
-use ic_cdk::api::management_canister::main::{update_settings, CanisterInstallMode, CanisterSettings};
+use futures::future::ok;
+use ic_cdk::api::management_canister::main::{
+    update_settings, CanisterInstallMode, CanisterSettings,
+};
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::Deserialize;
 use std::borrow::Cow;
+use std::default;
 
 /*
  * @title Initialization Arguments for Token Canister
@@ -115,7 +120,7 @@ pub async fn create_token_canister(
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
-            controllers: Some(vec![ic_cdk::api::id()]),
+            controllers: Some(vec![ic_cdk::api::id(), default().unwrap()]),
             memory_allocation: None,
             reserved_cycles_limit: None,
             log_visibility: None,
@@ -156,7 +161,7 @@ pub async fn create_token_canister(
         cycles_for_archive_creation: Some(CYCLES_FOR_ARCHIVE_CREATION),
         node_max_memory_size_bytes: Some(NODE_MAX_MEMORY_SIZE_BYTES),
         controller_id: ic_cdk::api::id(),
-        more_controller_ids: Some(vec![Principal::from_text(DEFAULT).unwrap()]),
+        more_controller_ids: Some(vec![default().unwrap()]),
     };
 
     let init_args = InitArgs {
@@ -227,7 +232,7 @@ pub async fn create_testtoken_canister(
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
-            controllers: Some(vec![ic_cdk::api::id()]),
+            controllers: Some(vec![ic_cdk::api::id(), default().unwrap()]),
             memory_allocation: None,
             reserved_cycles_limit: None,
             log_visibility: None,
@@ -237,7 +242,7 @@ pub async fn create_testtoken_canister(
     };
 
     let minting_account = Account {
-        owner: Principal::from_text(DEFAULT).unwrap(),
+        owner: default().unwrap(),
 
         subaccount: None,
     };
@@ -277,7 +282,7 @@ pub async fn create_testtoken_canister(
         node_max_memory_size_bytes: Some(TEST_NODE_MAX_MEMORY_SIZE_BYTES),
         controller_id: ic_cdk::api::id(),
 
-        more_controller_ids: Some(vec![Principal::from_text(DEFAULT).unwrap()]),
+        more_controller_ids: Some(vec![default().unwrap()]),
     };
 
     let init_args = InitArgs {
@@ -332,6 +337,11 @@ pub async fn create_testtoken_canister(
 
 #[update]
 pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, String> {
+    if !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+        ic_cdk::println!("principals are not allowed");
+        return Ok("principals are not allowed".to_string());
+    }
+
     let update_canister_args = ic_cdk::api::management_canister::main::UpdateSettingsArgument {
         canister_id,
         settings: CanisterSettings {

@@ -3,7 +3,7 @@ use candid::{decode_one, encode_args, encode_one, Principal};
 use candid::{CandidType, Deserialize, Nat};
 use ic_cdk::caller;
 // use dfinance_backend::declarations::assets::ReserveData;
-use pocket_ic::{CanisterSettings, PocketIc, WasmResult};
+use pocket_ic::{PocketIc, WasmResult};
 use serde::Serialize;
 use std::error::Error;
 use std::fs;

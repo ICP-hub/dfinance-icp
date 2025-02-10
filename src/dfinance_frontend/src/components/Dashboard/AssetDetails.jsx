@@ -34,7 +34,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import WalletModal from "./WalletModal";
 import Borrow from "./DashboardPopup/BorrowPopup";
-
+import { useStoicAuth } from "../../utils/useStoicAuth";
 
 /**
  * AssetDetails Component
@@ -58,20 +58,26 @@ const AssetDetails = () => {
     fetchAssetBorrow,
     loading: filteredDataLoading,
   } = useAssetData();
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
   const {
     isAuthenticated,
     principal,
-    backendActor,
     fetchReserveData,
     createLedgerActor,
-  } = useAuth();
+    backendActor,
+    user,
+  } = auth;
   const location = useLocation();
   const { assetData } = location.state || {};
   const {
     isWalletCreated,
     isWalletModalOpen,
     isSwitchingWallet,
-    connectedWallet,
+  
   } = useSelector((state) => state.utility);
   const { id } = useParams();
   const {
@@ -164,11 +170,15 @@ const AssetDetails = () => {
     });
   };
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // Return null if principal is not available
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid Principal:", error);
+      return null;
+    }
+  }, [principal]);
   useEffect(() => {
     if (userData && userAccountData) {
       setLoading(false);

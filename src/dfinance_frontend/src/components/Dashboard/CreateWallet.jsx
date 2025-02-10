@@ -20,19 +20,38 @@ import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ck
 import { useMemo } from "react";
 import WalletModal from "./WalletModal";
 import { Wallet } from "lucide-react";
-
+import { useStoicAuth } from "../../utils/useStoicAuth";
 const CreateWallet = () => {
   const dispatch = useDispatch();
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated, principal, createLedgerActor } = useAuth();
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
+  const {
+    isAuthenticated,
+    principal,
+    fetchReserveData,
+    createLedgerActor,
+    user,
+  } = auth;
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
-  const principalObj = Principal.fromText(principal);
+ const principalObj = useMemo(() => {
+    if (!principal) return null; // Return null if principal is not available
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid Principal:", error);
+      return null;
+    }
+  }, [principal]);
 
   return (
     <>

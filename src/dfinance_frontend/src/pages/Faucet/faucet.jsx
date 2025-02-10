@@ -17,7 +17,7 @@ import plug from "../../../public/wallet/plug.png";
 import bifinity from "../../../public/wallet/bifinity.png";
 import nfid from "../../../public/wallet/nfid.png";
 import WalletModal from "../../components/Dashboard/WalletModal";
-
+import { useStoicAuth } from "../../utils/useStoicAuth";
 /**
  * Faucet component allows users to receive testnet assets for testing purposes.
  * Users must connect their wallet to receive assets.
@@ -30,7 +30,18 @@ const Faucet = () => {
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated } = useAuth();
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
+  const {
+    isAuthenticated,
+    principal,
+    fetchReserveData,
+    createLedgerActor,
+    user,
+  } = auth;
   const [isTestnetMode, setIsTestnetMode] = useState(true);
 
   const handleWalletConnect = () => {

@@ -245,7 +245,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     }
 
     let user_principal = ic_cdk::caller();
-
+    ic_cdk::println!("Caller principal: {:?}", user_principal);
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);

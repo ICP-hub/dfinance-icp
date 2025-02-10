@@ -4,6 +4,7 @@ import { TAB_CARD_DATA } from "../../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
+
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
@@ -22,6 +23,7 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
+import { useStoicAuth } from "../../utils/useStoicAuth";
 
 const DashboardNav = () => {
   const {
@@ -54,13 +56,23 @@ const DashboardNav = () => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const tooltipRef = useRef(null);
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
   const {
     isAuthenticated,
     principal,
     fetchReserveData,
     createLedgerActor,
     user,
-  } = useAuth();
+  } = auth;
+  console.log("principal",isAuthenticated,
+    principal,
+    fetchReserveData,
+    createLedgerActor,
+    user,)
   const [assetBalances, setAssetBalances] = useState([]);
   const [netWorth, setNetWorth] = useState();
   const [netApy, setNetApy] = useState(0);
@@ -117,10 +129,15 @@ const DashboardNav = () => {
     setNetWorth(calculatedNetWorth);
   }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // Return null if principal is not available
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid Principal:", error);
+      return null;
+    }
+  }, [principal]);
 
   const fetchAssetData = async () => {
     const balances = [];

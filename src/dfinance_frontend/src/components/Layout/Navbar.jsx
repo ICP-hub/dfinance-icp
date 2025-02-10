@@ -39,7 +39,7 @@ import { IoIosRocket } from "react-icons/io";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
 import DFinanceLight from "../../../public/logo/DFinance-Light.svg";
 import { toggleSound } from "../../redux/reducers/soundReducer";
-
+import { useStoicAuth } from "../../utils/useStoicAuth";
 /**
  * Navbar Component
  *
@@ -156,6 +156,11 @@ export default function Navbar({ isHomeNav }) {
     setShowTransactionOverlay(false);
     setIsInputFocused(false);
   };
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
   const {
     isAuthenticated,
     login,
@@ -163,7 +168,8 @@ export default function Navbar({ isHomeNav }) {
     principal,
     reloadLogin,
     accountIdString,
-  } = useAuth();
+    
+  } = auth;
 
   const handleCreateInternetIdentity = () => {
     login();

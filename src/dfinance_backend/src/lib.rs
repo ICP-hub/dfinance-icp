@@ -194,7 +194,7 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
 fn register_user() -> Result<String, Error> {
     ic_cdk::println!("function is register running");
 
-    let user_principal: Principal = ic_cdk::api::caller();
+    let user_principal = ic_cdk::caller();
     ic_cdk::println!("user principal register = {} ", user_principal);
 
     if user_principal == Principal::anonymous() {

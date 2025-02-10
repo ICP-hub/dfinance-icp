@@ -1,5 +1,5 @@
 import { ChevronRight, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState ,useMemo} from "react";
 import { WALLET_ASSETS_TABLE_COL } from "../../utils/constants";
 import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
@@ -150,7 +150,15 @@ const WalletDetails = () => {
     setCurrentPage(pageNumber);
   };
 
-  const principalObj = Principal.fromText(principal);
+ const principalObj = useMemo(() => {
+    if (!principal) return null; // Return null if principal is not available
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid Principal:", error);
+      return null;
+    }
+  }, [principal]);
 
   const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Navbar from "../../components/Layout/Navbar";
 import Footer from "../../components/Layout/Footer";
 import Ellipse from "../../components/Common/Ellipse";
@@ -8,9 +9,17 @@ import Loading from "../../components/Common/Loading";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 import useAssetData from "../../components/customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
-
+import { useStoicAuth } from "../../utils/useStoicAuth";
 const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
-  const { isAuthenticated } = useAuth();
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
+  const {
+    isAuthenticated,
+    
+  } = auth;
   const { loading } = useAssetData();
   const isLoading = usePageLoading();
 

@@ -45,6 +45,7 @@ const WithdrawPopup = ({
   const dispatch = useDispatch();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
+  const [LTV, setLTV] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
@@ -84,11 +85,23 @@ const WithdrawPopup = ({
       onLoadingChange(isLoading);
     }
   }, [isLoading, onLoadingChange]);
+  const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+  const assetBorrowUsdValue = assetBorrow * adjustedConversionRate;
+  
+  // Function to truncate to 7 decimal digits
   const truncateToSevenDecimals = (value) => {
-    const multiplier = Math.pow(10, 7);
-    const truncated = Math.floor(value * multiplier) / multiplier;
-    return truncated.toFixed(7);
+    const multiplier = Math.pow(10, 7); // 7 decimal places
+    return Math.floor(value * multiplier) / multiplier;
   };
+  
+  // Apply condition for asset value calculation
+  const adjustedValue =
+    assetBorrowUsdValue < 0.01
+      ? assetSupply - assetBorrow / LTV
+      : assetSupply;
+  
+  // Ensure the value is truncated to 7 decimals
+  const formattedValue = truncateToSevenDecimals(adjustedValue);
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
@@ -402,6 +415,7 @@ const WithdrawPopup = ({
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("ltv", ltv);
+    setLTV(ltv);
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
@@ -487,24 +501,46 @@ const WithdrawPopup = ({
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
 
   const handleMaxClick = () => {
+    console.log("=== handleMaxClick Triggered ===");
+
     const truncateToSevenDecimals = (value) => {
       const multiplier = Math.pow(10, 8);
       const truncated = Math.floor(value * multiplier) / multiplier;
+      console.log(`Truncated Value: ${truncated}`);
       return truncated;
     };
 
-    let asset_supply = assetSupply
-      ? assetSupply >= 1e-8 && assetSupply < 1e-7
-        ? parseFloat(Number(assetSupply).toFixed(8))
-        : assetSupply >= 1e-7 && assetSupply < 1e-6
-        ? parseFloat(Number(assetSupply).toFixed(7))
-        : truncateToSevenDecimals(assetSupply)
-      : 0;
+    const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+    console.log(`Adjusted Conversion Rate: ${adjustedConversionRate}`);
 
-    const maxAmount = asset_supply;
+    const assetBorrowUsdValue = assetBorrow * adjustedConversionRate;
+    console.log(`Asset Borrow USD Value: ${assetBorrowUsdValue}`);
 
-    setAmount(maxAmount);
-    updateAmountAndUsdValue(assetSupply);
+    const formatAssetValue = (value) => {
+      return value >= 1e-8 && value < 1e-7
+        ? parseFloat(Number(value).toFixed(8))
+        : value >= 1e-7 && value < 1e-6
+        ? parseFloat(Number(value).toFixed(7))
+        : truncateToSevenDecimals(value);
+    };
+
+    let asset_supply = assetSupply ? formatAssetValue(assetSupply) : 0;
+    console.log(`Asset Supply (Processed): ${asset_supply}`);
+    console.log("assetBorrow", assetBorrow);
+    let adjustedSupply =
+      assetBorrowUsdValue < 0.01
+        ? formatAssetValue(asset_supply - assetBorrow / LTV)
+        : asset_supply;
+
+    console.log(`Max Amount (Final): ${adjustedSupply}`);
+    console.log(
+      `Condition (assetBorrowUsdValue < 0.01): ${assetBorrowUsdValue < 0.01}`
+    );
+    console.log(`Asset Borrow: ${assetBorrow}`);
+    console.log(`LTV: ${LTV}`);
+
+    setAmount(adjustedSupply);
+    updateAmountAndUsdValue(adjustedSupply);
   };
 
   const formatValue = (value) => {
@@ -556,7 +592,7 @@ const WithdrawPopup = ({
                     }}
                   >
                     {}
-                    {truncateToSevenDecimals(assetSupply)} Max {}
+                    {formattedValue.toFixed(7)} Max
                   </p>
                 </div>
               </div>

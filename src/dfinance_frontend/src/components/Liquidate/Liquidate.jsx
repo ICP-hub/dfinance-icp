@@ -8,7 +8,7 @@ import { ChevronLeft } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import DebtStatus from "./DebtStatus";
 import WalletModal from "../Dashboard/WalletModal";
-
+import { useStoicAuth } from "../../utils/useStoicAuth";
 /**
  * Liquidate Component
  *
@@ -24,7 +24,15 @@ const Liquidate = () => {
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated } = useAuth();
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
+  const {
+    isAuthenticated,
+    
+  } = auth;
   const [showDebtStatus, setShowDebtStatus] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
 

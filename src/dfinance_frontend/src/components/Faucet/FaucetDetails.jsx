@@ -17,6 +17,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
 import { useAuth } from "../../utils/useAuthClient";
+import { useStoicAuth } from "../../utils/useStoicAuth";
 import { useEffect } from "react";
 import useFetchBalance from "../customHooks/useFetchBalance";
 import useFormatNumber from "../customHooks/useFormatNumber";
@@ -54,17 +55,41 @@ const FaucetDetails = () => {
   const refreshTrigger = useSelector(
     (state) => state.faucetUpdate.refreshTrigger
   );
-  const { isAuthenticated, principal, backendActor, createLedgerActor } =
-    useAuth();
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  
+  // Dynamically select the appropriate auth hook
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
+  const {
+    isAuthenticated,
+    principal,
+    fetchReserveData,
+    createLedgerActor,
+    user,
+    backendActor
+  } = auth;
+  console.log("is authenticated", isAuthenticated,
+    backendActor,
+    principal,
+    fetchReserveData,
+    createLedgerActor,
+    user,)
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // Return null if principal is not available
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid Principal:", error);
+      return null;
+    }
+  }, [principal]);
   const {
     isWalletCreated,
     isWalletModalOpen,
     isSwitchingWallet,
-    connectedWallet,
+   
   } = useSelector((state) => state.utility);
   const {
     ckBTCUsdRate,

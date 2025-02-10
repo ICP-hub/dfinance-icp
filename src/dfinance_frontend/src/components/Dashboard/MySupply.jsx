@@ -38,7 +38,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
-
+import { useStoicAuth } from "../../utils/useStoicAuth";
 /**
  * MySupply Component
  *
@@ -53,11 +53,18 @@ const MySupply = () => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const theme = useSelector((state) => state.theme.theme);
-  const { principal, fetchReserveData, createLedgerActor, user, backendActor } =
-    useAuth();
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
+  const {
+    principal, fetchReserveData, createLedgerActor, user, backendActor
+  } = auth;
   const { state, pathname } = useLocation();
   const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
     useUserData();
+    console.log("user account data ",userAccountData)
   const tooltipRef = useRef(null);
   const {
     ckBTCUsdRate,
@@ -87,7 +94,7 @@ const MySupply = () => {
     isWalletCreated,
     isWalletModalOpen,
     isSwitchingWallet,
-    connectedWallet,
+   
   } = useSelector((state) => state.utility);
   const filteredReserveData = Object.fromEntries(filteredItems);
   const formatNumber = useFormatNumber();
@@ -248,10 +255,15 @@ const MySupply = () => {
     }
   }, []);
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // Return null if principal is not available
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid Principal:", error);
+      return null;
+    }
+  }, [principal]);
 
   /**
    * This function fetches the data for all assets that the user has, including reserve data and balance information.

@@ -3,6 +3,7 @@ import { X, TriangleAlert } from "lucide-react";
 import FaucetPayment from "./FaucetPayment";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
+import { useStoicAuth } from "../../utils/useStoicAuth";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { toast } from "react-toastify";
 import useUserData from "../customHooks/useUserData";
@@ -21,7 +22,15 @@ import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
  */
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const dispatch = useDispatch();
-  const { backendActor } = useAuth();
+ const { connectedWallet } = useSelector((state) => state.utility);
+ 
+   // Dynamically select the appropriate auth hook
+   const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+ 
+   const {
+     
+     backendActor
+   } = auth;
   const modalRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [faucetBTC, setFaucetBTC] = useState(0);

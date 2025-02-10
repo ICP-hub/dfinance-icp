@@ -3,7 +3,7 @@ import { useAuth } from "../../utils/useAuthClient";
 import "react-toastify/dist/ReactToastify.css";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
-
+import { useStoicAuth } from "../../utils/useStoicAuth";
 /**
  * Custom hook to fetch and manage user data from the backend canister.
  * Includes user account data, health factor, and error handling.
@@ -14,7 +14,15 @@ const useUserData = () => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const { backendActor, principal, user, isAuthenticated } = useAuth();
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
+
+  const {
+    backendActor, principal, user, isAuthenticated
+  } = auth;
+  console.log("use user data", backendActor, principal, user, isAuthenticated)
   const [userData, setUserData] = useState(null);
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
@@ -50,7 +58,7 @@ const useUserData = () => {
     } else {
     }
   };
-
+console.log("userData",userData)
   /**
    * Fetches account-specific data for the authenticated user.
    * Includes handling for pending states and health factor calculation.
@@ -90,7 +98,7 @@ const useUserData = () => {
       }
     }
   };
-
+console.log("user account data in use user data",userAccountData)
   useEffect(() => {
     fetchUserData(user);
   }, [user, backendActor, dashboardRefreshTrigger]);

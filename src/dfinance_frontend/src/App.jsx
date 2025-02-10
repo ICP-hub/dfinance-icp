@@ -12,7 +12,7 @@ import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "./joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
-
+import { useStoicAuth } from "./utils/useStoicAuth";
 export default function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -28,13 +28,18 @@ export default function App() {
   const { loading } = useAssetData();
   const isLoading = usePageLoading();
   const routes = useRoutes(routesList);
+  const { connectedWallet } = useSelector((state) => state.utility);
+
+  // Dynamically select the appropriate auth hook
+  const auth = connectedWallet === "stoic" ? useStoicAuth() : useAuth();
   const {
     isAuthenticated,
     principal,
     backendActor,
     createLedgerActor,
     reloadLogin,
-  } = useAuth();
+  
+  } = auth;
 
   const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
   const [assetPrincipal, setAssetPrincipal] = useState({});

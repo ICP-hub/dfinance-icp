@@ -486,15 +486,15 @@ async fn execute_transfer(
 #[candid_method(update)]
 async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {
     
-    let caller = ic_cdk::api::caller();
-    let platform_principal = ic_cdk::api::id();
+    // let caller = ic_cdk::api::caller();
+    // let platform_principal = ic_cdk::api::id();
 
-    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-        return Err(TransferError::GenericError {
-            message: "Unauthorized access.".to_string(),
-            error_code: Nat::from(2u32),
-        });
-    }
+    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+    //     return Err(TransferError::GenericError {
+    //         message: "Unauthorized access.".to_string(),
+    //         error_code: Nat::from(2u32),
+    //     });
+    // }
 
     if lock {
         return Err(TransferError::GenericError {
@@ -535,15 +535,15 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Pri
 #[candid_method(update)]
 async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromError> {
 
-    let caller = ic_cdk::api::caller();
-    let platform_principal = ic_cdk::api::id();
+    // let caller = ic_cdk::api::caller();
+    // let platform_principal = ic_cdk::api::id();
 
-    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-        return Err(TransferFromError::GenericError {
-            message: "Unauthorized access.".to_string(),
-            error_code: Nat::from(2u32),
-        });
-    }
+    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+    //     return Err(TransferFromError::GenericError {
+    //         message: "Unauthorized access.".to_string(),
+    //         error_code: Nat::from(2u32),
+    //     });
+    // }
 
     let spender_account = Account {
         owner: ic_cdk::api::caller(),

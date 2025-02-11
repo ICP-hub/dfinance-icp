@@ -183,7 +183,7 @@ const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
 fn setup() -> (PocketIc, Principal) {
     let pic = PocketIc::new();
     let user_principal =
-        Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
+        Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae")
             .unwrap();
 
     //================== backend canister =====================
@@ -314,7 +314,7 @@ fn setup() -> (PocketIc, Principal) {
     let result = pic.update_call(
         backend_canister,
         Principal::anonymous(),
-        "update_reserves_price",
+        "update_reserve_price_test",
         encode_one(()).unwrap(),
     );
 
@@ -459,7 +459,7 @@ fn test_faucet() {
 
     let (pic, backend_canister) = setup();
     let user_principal =
-        Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
+        Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae")
             .unwrap();
 
     for (i, case) in test_cases.iter().enumerate() {
@@ -477,14 +477,14 @@ fn test_faucet() {
 
         match result {
             Ok(WasmResult::Reply(reply)) => {
-                let decoded_response: Result<Result<Nat, errors::Error>, _> =
+                let decoded_response: Result<Nat, errors::Error> =
                     candid::decode_one(&reply);
 
                 match decoded_response {
-                    Ok(Ok(balance)) => {
+                    Ok(balance) => {
                         ic_cdk::println!("Faucet succeeded. New balance: {}", balance);
                     }
-                    Ok(Err(error)) => {
+                    Ok(error) => {
                         ic_cdk::println!("Faucet failed with error: {:?}", error);
                     }
                     Err(decode_err) => {

@@ -321,7 +321,7 @@ fn setup() -> (PocketIc, Principal) {
     // 🔹 Decode the response
     match result {
         Ok(WasmResult::Reply(response)) => {
-            let initialize_response: Result<String, errors::Error> = candid::decode_one(&response)
+            let initialize_response: Result<(), errors::Error> = candid::decode_one(&response)
                 .expect("Failed to decode reserve price cache response");
 
             match initialize_response {
@@ -395,8 +395,6 @@ fn test_faucet() {
         amount: Nat,
         expect_success: bool,
         expected_error_message: Option<String>,
-        // simulate_insufficient_balance: bool,
-        // simulate_faucet_failure: bool,
     }
 
     let test_cases = vec![
@@ -406,8 +404,6 @@ fn test_faucet() {
             amount: Nat::from(100000u128),
             expect_success: true,
             expected_error_message: None,
-            // simulate_insufficient_balance: false,
-            // simulate_faucet_failure: false,
         },
         // Non-existent asset case
         TestCase {
@@ -415,46 +411,35 @@ fn test_faucet() {
             amount: Nat::from(50000u128),
             expect_success: false,
             expected_error_message: Some("Asset not found: nonexistent_asset".to_string()),
-            // simulate_insufficient_balance: false,
-            // simulate_faucet_failure: false,
         },
         // Minimum valid amount
-        // TestCase {
-        //     asset: "ICP".to_string(),
-        //     amount: 1, // Minimum valid amount
-        //     expect_success: true,
-        //     expected_error_message: None,
-        //     simulate_insufficient_balance: false,
-        //     simulate_faucet_failure: false,
-        // },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(1u128), // Minimum valid amount
+            expect_success: true,
+            expected_error_message: None,
+        },
         // Large amount request
-        // TestCase {
-        //     asset: "ICP".to_string(),
-        //     amount: 1_000_000, // Large amount
-        //     expect_success: true,
-        //     expected_error_message: None,
-        //     simulate_insufficient_balance: false,
-        //     simulate_faucet_failure: false,
-        // },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(10_000_000_000u128), // Large amount
+            expect_success: true,
+            expected_error_message: None,
+        },
         // Insufficient balance case
-        // TestCase {
-        //     asset: "ICP".to_string(),
-        //     amount: 10_000_000, // Valid amount but insufficient balance
-        //     expect_success: false,
-        //     expected_error_message: Some("Insufficient balance in faucet".to_string()),
-        //     simulate_insufficient_balance: true,
-        //     simulate_faucet_failure: false,
-        // },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(10_000_000_000u128), // Valid amount but insufficient balance
+            expect_success: false,
+            expected_error_message: Some("Insufficient balance in faucet".to_string()),
+        },
         // Faucet failure (simulate failure during transfer)
-        // TestCase {
-        //     asset: "ICP".to_string(),
-        //     amount: 100000,
-        //     user: Principal::anonymous().to_string(),
-        //     expect_success: false,
-        //     expected_error_message: Some("Faucet transfer failed".to_string()),
-        //     simulate_insufficient_balance: false,
-        //     simulate_faucet_failure: true,
-        // },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(100000u128),
+            expect_success: false,
+            expected_error_message: Some("Faucet transfer failed".to_string()),
+        },
     ];
 
     let (pic, backend_canister) = setup();
@@ -478,7 +463,7 @@ fn test_faucet() {
         match result {
             Ok(WasmResult::Reply(reply)) => {
                 let decoded_response: Result<Nat, errors::Error> =
-                    candid::decode_one(&reply);
+                    candid::decode_one(&reply).expect("Failed to decode faucet response");
 
                 match decoded_response {
                     Ok(balance) => {

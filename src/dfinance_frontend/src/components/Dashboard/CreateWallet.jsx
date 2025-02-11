@@ -32,7 +32,7 @@ const CreateWallet = () => {
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
-  const principalObj = Principal.fromText(principal);
+  const principalObj = principal ? Principal.fromText(principal):null;
 
   return (
     <>

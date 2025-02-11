@@ -4,7 +4,7 @@ import App from './App';
 import './index.scss';
 
 import { Provider } from "react-redux"
-
+import Modal from 'react-modal';
 import {store} from "./redux/store";
 // import { PersistGate } from "redux-persist/integration/react";
 import { AuthProvider } from "./utils/useAuthClient"
@@ -22,7 +22,7 @@ import {
 import "@nfid/identitykit/react/styles.css";
 
 
-
+Modal.setAppElement('#root');
 // Define signers and canister ID
 const signers = [NFIDW, Plug];
 const canisterID = process.env.CANISTER_ID_ICPLAUNCHPAD_BACKEND;

@@ -63,7 +63,7 @@ export const useAuthClient = () => {
     try {
       await connect();
       const principal = identity.getPrincipal().toText();
-      setPrincipal(principal.toString());
+      setPrincipal(principal);
       // dispatch(
       //   loginSuccess({
       //     isAuthenticated: true,

@@ -20,10 +20,16 @@ const useFetchBalance = (ledgerActors, principal) => {
   const [ckICPBalance, setCkICPBalance] = useState(null);
   const [error, setError] = useState(null);
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  const principalObj = useMemo(() => {
+  if (!principal) return null;  // ✅ Prevent null values
+  try {
+    return Principal.fromText(principal);
+  } catch (error) {
+    console.error("Invalid principal:", principal);
+    return null;
+  }
+}, [principal]);
+
 
   /**
    * Fetches the balance of a given asset type using the corresponding ledger actor.

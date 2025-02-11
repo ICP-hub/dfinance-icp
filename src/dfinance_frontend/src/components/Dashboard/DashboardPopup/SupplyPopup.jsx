@@ -97,10 +97,15 @@ const SupplyPopup = ({
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+    const principalObj = useMemo(() => {
+  if (!principal) return null;  // ✅ Prevent null values
+  try {
+    return Principal.fromText(principal);
+  } catch (error) {
+    console.error("Invalid principal:", principal);
+    return null;
+  }
+}, [principal]);
 
   useEffect(() => {
     if (onLoadingChange) {

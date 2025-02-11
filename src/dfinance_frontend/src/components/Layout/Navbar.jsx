@@ -280,7 +280,7 @@ export default function Navbar({ isHomeNav }) {
 
     <button
                   className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
-                 
+                 onClick={onClick}
                 >
                   <div className="flex items-center justify-center">
                     <p className="hidden md:flex">Connect Wallet</p>

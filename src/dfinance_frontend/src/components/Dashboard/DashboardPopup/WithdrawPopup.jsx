@@ -48,10 +48,15 @@ const WithdrawPopup = ({
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+    const principalObj = useMemo(() => {
+  if (!principal) return null;  // ✅ Prevent null values
+  try {
+    return Principal.fromText(principal);
+  } catch (error) {
+    console.error("Invalid principal:", principal);
+    return null;
+  }
+}, [principal]);
   const fees = useSelector((state) => state.fees.fees);
 
   const normalizedAsset = asset ? asset.toLowerCase() : "default";

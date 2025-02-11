@@ -117,10 +117,15 @@ const DashboardNav = () => {
     setNetWorth(calculatedNetWorth);
   }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+    const principalObj = useMemo(() => {
+  if (!principal) return null;  // ✅ Prevent null values
+  try {
+    return Principal.fromText(principal);
+  } catch (error) {
+    console.error("Invalid principal:", principal);
+    return null;
+  }
+}, [principal]);
 
   const fetchAssetData = async () => {
     const balances = [];

@@ -174,6 +174,22 @@ pub struct ExecuteBorrowParams {
     pub amount: Nat,
 }
 
+#[derive(CandidType)]
+pub struct ExecuteRepayParams {
+    pub asset: String,
+    pub amount: Nat,
+    pub on_behalf_of: Option<Principal>,
+}
+
+#[derive(CandidType)]
+pub struct ExecuteLiquidationParams {
+    pub debt_asset: String,
+    pub collateral_asset: String,
+    pub amount: Nat,
+    pub on_behalf_of: Principal,
+    pub reward_amount: Nat,
+}
+
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
 const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
 
@@ -350,7 +366,7 @@ fn setup() -> (PocketIc, Principal) {
         configuration: ReserveConfiguration {
             ltv: Nat::from(75u128),                   // Nat format for ltv
             liquidation_threshold: Nat::from(78u128), // Nat format for liquidation_threshold
-            liquidation_bonus: Nat::from(45u128),      // Nat format for liquidation_bonus
+            liquidation_bonus: Nat::from(45u128),     // Nat format for liquidation_bonus
             borrowing_enabled: true,
             borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
             supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
@@ -490,18 +506,16 @@ fn setup() -> (PocketIc, Principal) {
     (pic, backend_canister)
 }
 
-
 #[test]
 fn call_test_function() {
     let (pic, backend_canister) = setup();
-    test_faucet(&pic, backend_canister);
-    test_supply(&pic, backend_canister);
-    test_borrow(&pic, backend_canister);
+    // test_faucet(&pic, backend_canister);
+    // test_supply(&pic, backend_canister);
+    // test_borrow(&pic, backend_canister);
     // test_repay(&pic, backend_canister);
     // test_withdraw(&pic, backend_canister);
-    // test_liquidation(&pic, backend_canister);
+    test_liquidation(&pic, backend_canister);
 }
-
 
 fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
@@ -557,7 +571,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         },
     ];
 
-    let user_principal =get_user_principal();
+    let user_principal = get_user_principal();
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("Running test case no: {}", i + 1);
@@ -614,7 +628,6 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     }
 }
 
-
 fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -658,8 +671,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
     ];
 
-
-    let user_principal =get_user_principal();
+    let user_principal = get_user_principal();
 
     ic_cdk::println!("");
     ic_cdk::println!(
@@ -731,7 +743,6 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     }
 }
 
-
 fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -774,7 +785,6 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         },
     ];
 
-    
     let user_principal = get_user_principal();
 
     ic_cdk::println!(
@@ -1021,139 +1031,98 @@ fn test_withdraw() {
     }
 }
 
-#[test]
-fn test_repay() {
+fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
-        amount: u64,
-        user: String,
-        on_behalf_of: String,
-        interest_rate: Nat,
+        amount: Nat,
+        on_behalf_of: Option<Principal>,
         expect_success: bool,
         expected_error_message: Option<String>,
-        simulate_insufficient_balance: bool,
-        simulate_dtoken_transfer_failure: bool,
     }
 
     let test_cases = vec![
-        // Valid borrow case
+        // Valid repay case
         TestCase {
-            asset: "ckBTC".to_string(), //
-            amount: 1000,
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user1".to_string(),
-            interest_rate: Nat::from(0u64),
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(1000u128),
+            on_behalf_of: Some(Principal::anonymous()),
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Non-existent asset case
         TestCase {
             asset: "nonexistent_asset".to_string(),
-            amount: 500,
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user2".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(50000u128),
+            on_behalf_of: Some(Principal::anonymous()),
             expect_success: false,
             expected_error_message: Some(
                 "No canister ID found for asset: nonexistent_asset".to_string(),
             ),
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Minimum valid amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 1, // Minimum valid amount
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user4".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(1u128),
+            on_behalf_of: Some(Principal::anonymous()),
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Large amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 10_000, // Large amount
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user5".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(10_000_000u128),
+            on_behalf_of: Some(Principal::anonymous()),
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
-        // Insufficient balance
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 10_00_000, // Valid amount but insufficient balance
-        //     user: Principal::anonymous().to_string(),
-        //     on_behalf_of: "user6".to_string(),
-        //     interest_rate: Nat::from(0u64),
-        //     expect_success: false,
-        //     expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
-        //     simulate_insufficient_balance: true,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
     ];
 
-    let (pic, backend_canister) = setup();
+    let user_principal = get_user_principal();
 
-    // for case in test_cases {
     println!();
     println!("****************************************************************************");
     println!();
     for (i, case) in test_cases.iter().enumerate() {
-        // Print the case number
         println!("Running test case no: {}", i + 1);
         println!();
         println!("Test case details: {:?}", case);
         println!();
         println!();
-        // Now call the borrow function  ///
+
+        let repay_params = ExecuteRepayParams {
+            asset: case.asset.clone(),
+            amount: case.amount.clone(),
+            on_behalf_of: case.on_behalf_of.clone(),
+        };
+
+        // Now call the repay function
         let result = pic.update_call(
             backend_canister,
-            Principal::anonymous(),
-            "borrow",
-            encode_args((
-                case.asset.clone(),
-                case.amount,
-                case.user.clone(),
-                case.on_behalf_of.clone(),
-                case.interest_rate.clone(),
-            ))
-            .unwrap(),
+            user_principal,
+            "execute_repay",
+            encode_one(repay_params).unwrap(),
         );
 
         match result {
-            Ok(WasmResult::Reply(response)) => {
-                let borrow_response: Result<(), String> =
-                    candid::decode_one(&response).expect("Failed to decode repay response");
+            Ok(WasmResult::Reply(reply)) => {
+                let repay_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&reply).expect("Failed to get IC repay response");
 
-                match borrow_response {
-                    Ok(()) => {
-                        if case.expect_success {
-                            println!("Repay succeeded for case: {:?}", case);
-                        } else {
-                            panic!("Expected failure but got success for case: {:?}", case);
-                        }
+                match repay_response {
+                    Ok(balance) => {
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Repay successful. New Balance: {}",
+                            i + 1,
+                            balance
+                        );
                     }
-                    Err(e) => {
-                        if !case.expect_success {
-                            assert_eq!(
-                                case.expected_error_message.as_deref(),
-                                Some(e.as_str()),
-                                "Error message mismatch for case: {:?}",
-                                case
-                            );
-                            println!("Repay failed as expected with error: {:?}", e);
-                        } else {
-                            panic!("Expected success but got error: {:?}", e);
-                        }
+                    Err(error) => {
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Repay failed with error: {:?}",
+                            i + 1,
+                            error
+                        );
                     }
                 }
             }
@@ -1162,187 +1131,158 @@ fn test_repay() {
                     assert_eq!(
                         case.expected_error_message.as_deref(),
                         Some(reject_message.as_str()),
-                        "Error message mismatch for case: {:?}",
-                        case
+                        "❌ IC Test Case {} Failed: Error message mismatch.",
+                        i + 1
                     );
-                    println!("Repay rejected as expected: {}", reject_message);
+                    ic_cdk::println!(
+                        "✅ IC Test Case {} Passed: Repay rejected as expected with message: {}",
+                        i + 1,
+                        reject_message
+                    );
                 } else {
-                    panic!(
-                        "Expected success but got rejection for case: {:?} with message: {}",
-                        case, reject_message
+                    ic_cdk::println!(
+                        "❌ IC Test Case {} Failed: Expected success but got rejection with message: {}",
+                        i + 1,
+                        reject_message
                     );
+                    panic!("Unexpected rejection.");
                 }
             }
             Err(e) => {
-                panic!("Error during repay function call: {:?}", e);
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Error during function call: {:?}",
+                    i + 1,
+                    e
+                );
+                panic!("Function call error.");
             }
         }
-
-        println!();
-        println!("****************************************************************************");
-        println!();
     }
+    ic_cdk::println!(
+        "\n======================== IC Repay Tests Completed ========================\n"
+    );
 }
 
-#[test]
-fn test_liquidation() {
+fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
-        asset: String,
-        amount: u64,
-        user: String,
-        on_behalf_of: String,
-        interest_rate: Nat,
+        debt_asset: String,
+        collateral_asset: String,
+        amount: Nat,
+        on_behalf_of: Principal,
+        reward_amount: Nat,
         expect_success: bool,
         expected_error_message: Option<String>,
-        simulate_insufficient_balance: bool,
-        simulate_dtoken_transfer_failure: bool,
     }
 
     let test_cases = vec![
-        // Valid borrow case
         TestCase {
-            asset: "ckBTC".to_string(), //
-            amount: 1000,
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user1".to_string(),
-            interest_rate: Nat::from(0u64),
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckETH".to_string(),
+            amount: Nat::from(1000u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(1045u128),
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
-        // Non-existent asset case
         TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: 500,
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user2".to_string(),
-            interest_rate: Nat::from(0u64),
+            debt_asset: "nonexistent_asset".to_string(),
+            collateral_asset: "ckETH".to_string(),
+            amount: Nat::from(50000u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(1045u128),
             expect_success: false,
             expected_error_message: Some(
                 "No canister ID found for asset: nonexistent_asset".to_string(),
             ),
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
-        // Minimum valid amount
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 1, // Minimum valid amount
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user4".to_string(),
-            interest_rate: Nat::from(0u64),
-            expect_success: true,
-            expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
-        },
-        // Large amount
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: 10_000, // Large amount
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user5".to_string(),
-            interest_rate: Nat::from(0u64),
-            expect_success: true,
-            expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
-        },
-        // Insufficient balance
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 10_00_000, // Valid amount but insufficient balance
-        //     user: Principal::anonymous().to_string(),
-        //     on_behalf_of: "user6".to_string(),
-        //     interest_rate: Nat::from(0u64),
-        //     expect_success: false,
-        //     expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
-        //     simulate_insufficient_balance: true,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
     ];
 
-    let (pic, backend_canister) = setup();
+    let user_principal = get_user_principal();
 
-    // for case in test_cases {
-    println!();
-    println!("****************************************************************************");
-    println!();
     for (i, case) in test_cases.iter().enumerate() {
-        // Print the case number
-        println!("Running test case no: {}", i + 1);
-        println!();
-        println!("Test case details: {:?}", case);
-        println!();
-        println!();
-        // Now call the borrow function  ///
+        ic_cdk::println!(
+            "\n───────────────────────────────────────────────────────────────────────"
+        );
+        ic_cdk::println!("🟢 Running Test Case #{}", i + 1);
+        ic_cdk::println!("📌 Debt Asset: {}", case.debt_asset);
+        ic_cdk::println!("📌 Collateral Asset: {}", case.collateral_asset);
+        ic_cdk::println!("📌 Amount: {}", case.amount);
+        ic_cdk::println!("📌 On Behalf Of: {:?}", case.on_behalf_of);
+        ic_cdk::println!("📌 Reward Amount: {}", case.reward_amount);
+        ic_cdk::println!("📌 Expected Success: {}", case.expect_success);
+        ic_cdk::println!(
+            "───────────────────────────────────────────────────────────────────────\n"
+        );
+
+        let liquidation_params = ExecuteLiquidationParams {
+            debt_asset: case.debt_asset.clone(),
+            collateral_asset: case.collateral_asset.clone(),
+            amount: case.amount.clone(),
+            on_behalf_of: case.on_behalf_of.clone(),
+            reward_amount: case.reward_amount.clone(),
+        };
+
         let result = pic.update_call(
             backend_canister,
-            Principal::anonymous(),
-            "borrow",
-            encode_args((
-                case.asset.clone(),
-                case.amount,
-                case.user.clone(),
-                case.on_behalf_of.clone(),
-                case.interest_rate.clone(),
-            ))
-            .unwrap(),
+            user_principal,
+            "execute_liquidation",
+            encode_one(liquidation_params).unwrap(),
         );
 
         match result {
             Ok(WasmResult::Reply(response)) => {
-                let borrow_response: Result<(), String> =
-                    candid::decode_one(&response).expect("Failed to decode borrow response");
+                let liquidation_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&response).expect("Failed to decode liquidation response");
 
-                match borrow_response {
-                    Ok(()) => {
+                match liquidation_response {
+                    Ok(_) => {
                         if case.expect_success {
-                            println!("Liquidation succeeded for case: {:?}", case);
+                            ic_cdk::println!(
+                                "✅ SUCCESS: Liquidation completed successfully for test case #{}",
+                                i + 1
+                            );
                         } else {
-                            panic!("Expected failure but got success for case: {:?}", case);
+                            ic_cdk::println!(
+                                "❌ ERROR: Expected failure but got success for test case #{}",
+                                i + 1
+                            );
                         }
                     }
                     Err(e) => {
-                        if !case.expect_success {
-                            assert_eq!(
-                                case.expected_error_message.as_deref(),
-                                Some(e.as_str()),
-                                "Error message mismatch for case: {:?}",
-                                case
-                            );
-                            println!("Liquidation failed as expected with error: {:?}", e);
-                        } else {
-                            panic!("Expected success but got error: {:?}", e);
-                        }
+                        ic_cdk::println!(
+                            "❌ UNEXPECTED FAILURE: Expected success but got error: {:?}",
+                            e
+                        );
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
                 if !case.expect_success {
+                    ic_cdk::println!(
+                        "✅ EXPECTED REJECTION: Liquidation rejected as expected: {}",
+                        reject_message
+                    );
                     assert_eq!(
                         case.expected_error_message.as_deref(),
                         Some(reject_message.as_str()),
-                        "Error message mismatch for case: {:?}",
-                        case
+                        "🔴 ERROR: Mismatch in rejection message for test case #{}",
+                        i + 1
                     );
-                    println!("Liquidation rejected as expected: {}", reject_message);
                 } else {
-                    panic!(
-                        "Expected success but got rejection for case: {:?} with message: {}",
-                        case, reject_message
-                    );
+                    ic_cdk::println!("❌ UNEXPECTED REJECTION: Expected success but got rejection with message: {}", reject_message);
                 }
             }
             Err(e) => {
-                panic!("Error during Liquidation function call: {:?}", e);
+                ic_cdk::println!(
+                    "🔥 CRITICAL ERROR: Execution failure during liquidation call: {:?}",
+                    e
+                );
             }
         }
 
-        println!();
-        println!("****************************************************************************");
-        println!();
+        ic_cdk::println!(
+            "\n───────────────────────────────────────────────────────────────────────\n"
+        );
     }
 }

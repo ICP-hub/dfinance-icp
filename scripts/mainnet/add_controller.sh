@@ -80,17 +80,17 @@ echo "Updating controllers for all assets, D-Tokens, and Debt Tokens..."
 
 for principal in "${PRINCIPALS[@]}"; do
     add_controller "$principal"
-    dfx canister install --wasm "/home/jyotirmay1789/dfinance-icp/target/wasm32-unknown-unknown/release/token_ledger.wasm" $principal --mode upgrade --network ic
+    dfx canister install --wasm "/home/anshikagoel/Quadb/dfinance-icp/target/wasm32-unknown-unknown/release/token_ledger.wasm" $principal --mode upgrade --network ic
 done
 
 for dtoken in "${D_TOKEN_PRINCIPALS[@]}"; do
     add_controller "$dtoken"
-    dfx canister install --wasm "/home/jyotirmay1789/dfinance-icp/target/wasm32-unknown-unknown/release/dtoken.wasm" $dtoken --mode upgrade --network ic
+    dfx canister install --wasm "/home/anshikagoel/Quadb/dfinance-icp/target/wasm32-unknown-unknown/release/dtoken.wasm" $dtoken --mode upgrade --network ic
 done
 
 for debt_token in "${DEBT_TOKEN_PRINCIPALS[@]}"; do
     add_controller "$debt_token"
-    dfx canister install --wasm "/home/jyotirmay1789/dfinance-icp/target/wasm32-unknown-unknown/release/debttoken.wasm" $debt_token --mode upgrade --network ic
+    dfx canister install --wasm "/home/anshikagoel/Quadb/dfinance-icp/target/wasm32-unknown-unknown/release/debttoken.wasm" $debt_token --mode upgrade --network ic
 done
 
 echo "All controllers updated successfully."

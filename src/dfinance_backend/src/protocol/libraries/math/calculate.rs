@@ -290,3 +290,57 @@ pub async fn get_exchange_rates(
         }
     }
 }
+
+
+// #[update]
+// pub async fn update_reserve_price_test() -> Result<(), Error> {
+  
+//     let manual_prices: HashMap<String, Nat> = vec![
+//         ("ckBTC".to_string(), Nat::from(10934116666666u128)), 
+//         ("ckETH".to_string(), Nat::from(302148333333u128)), 
+//         ("ICP".to_string(), Nat::from(819611111u128)), 
+//         ("ckUSDC".to_string(), Nat::from(111094444u128)),
+//         ("ckUSDT".to_string(), Nat::from(111111111u128)),   
+//     ]
+//     .into_iter()
+//     .collect();
+
+//     let keys: Vec<String> = read_state(|state| {
+//         state.reserve_list.iter().map(|(key, _)| key.clone()).collect()
+//     });
+
+//     println!("Keys (assets) = {:?}", keys);
+
+//     for asset_name in keys {
+//         println!("Updating test price for asset: {}", asset_name);
+        
+//         if let Some(price) = manual_prices.get(&asset_name) {
+//             let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
+//                 let price_cache_data = &mut state.price_cache_list;
+//                 if let Some(price_cache) = price_cache_data.get(&asset_name) {
+//                     ic_cdk::println!(
+//                         "calculate existing price cache = {:?}",
+//                         price_cache.0
+//                     );
+//                     Ok(price_cache.0.clone())
+//                 } else {
+//                     ic_cdk::println!("creating new price cache : not found");
+//                     let new_price_cache: PriceCache = PriceCache {
+//                         cache: HashMap::new(),
+//                     };
+//                     price_cache_data
+//                         .insert(asset_name.clone(), Candid(new_price_cache.clone()));
+//                     Ok(new_price_cache)
+//                 }
+//             });
+            
+//             if price_cache_result.is_err() {
+//                 println!("Failed to update price cache for {}", asset_name);
+//                 return Err(Error::ExchangeRateError);
+//             }
+//         } else {
+//             println!("No manual price found for asset: {}", asset_name);
+//         }
+//     }
+//     Ok(())
+// }

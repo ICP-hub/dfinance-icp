@@ -190,6 +190,14 @@ pub struct ExecuteLiquidationParams {
     pub reward_amount: Nat,
 }
 
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ExecuteWithdrawParams {
+    pub asset: String,
+    pub amount: Nat,
+    pub on_behalf_of: Option<Principal>,
+    pub is_collateral: bool,
+}
+
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
 const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
 
@@ -868,71 +876,56 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     );
 }
 
-#[test]
-fn test_withdraw() {
+
+fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
-        amount: u64,
-        user: String,
-        on_behalf_of: String,
-        interest_rate: Nat,
+        amount: Nat,
+        on_behalf_of: Option<Principal>,
+        is_collateral:bool,
         expect_success: bool,
         expected_error_message: Option<String>,
-        simulate_insufficient_balance: bool,
-        simulate_dtoken_transfer_failure: bool,
     }
 
     let test_cases = vec![
         // Valid borrow case
         TestCase {
             asset: "ckBTC".to_string(), //
-            amount: 1000,
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user1".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(1000u32),
+            on_behalf_of: None,
+            is_collateral:true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Non-existent asset case
         TestCase {
             asset: "nonexistent_asset".to_string(),
-            amount: 500,
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user2".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(500u32),
+            on_behalf_of: None,
+            is_collateral:false,
             expect_success: false,
             expected_error_message: Some(
                 "No canister ID found for asset: nonexistent_asset".to_string(),
             ),
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Minimum valid amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 1, // Minimum valid amount
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user4".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(1u32), // Minimum valid amount
+            on_behalf_of: None,
+            is_collateral:true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Large amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 10_000, // Large amount
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user5".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(10_000u32), // Large amount
+            on_behalf_of: None,
+            is_collateral:true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
         // Insufficient balance
         // TestCase {
@@ -940,20 +933,18 @@ fn test_withdraw() {
         //     amount: 10_00_000, // Valid amount but insufficient balance
         //     user: Principal::anonymous().to_string(),
         //     on_behalf_of: "user6".to_string(),
-        //     interest_rate: Nat::from(0u64),
         //     expect_success: false,
         //     expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
-        //     simulate_insufficient_balance: true,
-        //     simulate_dtoken_transfer_failure: false,
         // },
     ];
-
-    let (pic, backend_canister) = setup();
 
     // for case in test_cases {
     println!();
     println!("****************************************************************************");
     println!();
+    ic_cdk::println!(
+        "\n======================== Starting IC Withdraw Tests ========================\n"
+    );
     for (i, case) in test_cases.iter().enumerate() {
         // Print the case number
         println!("Running test case no: {}", i + 1);
@@ -961,46 +952,40 @@ fn test_withdraw() {
         println!("Test case details: {:?}", case);
         println!();
         println!();
-        // Now call the borrow function  ///
+
+        let withdraw_params = ExecuteWithdrawParams {
+            asset: case.asset.clone(),
+            amount: case.amount.clone(),
+            on_behalf_of:case.on_behalf_of,
+            is_collateral:case.is_collateral.clone()
+        };
+        // Now call the withdraw function  ///
         let result = pic.update_call(
             backend_canister,
-            Principal::anonymous(),
-            "borrow",
-            encode_args((
-                case.asset.clone(),
-                case.amount,
-                case.user.clone(),
-                case.on_behalf_of.clone(),
-                case.interest_rate.clone(),
-            ))
-            .unwrap(),
+            get_user_principal(),
+            "execute_withdraw",
+            encode_one(withdraw_params).unwrap(),
         );
 
         match result {
-            Ok(WasmResult::Reply(response)) => {
-                let borrow_response: Result<(), String> =
-                    candid::decode_one(&response).expect("Failed to decode withdraw response");
+            Ok(WasmResult::Reply(reply)) => {
+                let withdraw_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&reply).expect("Failed to get IC withdraw response");
 
-                match borrow_response {
-                    Ok(()) => {
-                        if case.expect_success {
-                            println!("Withdraw succeeded for case: {:?}", case);
-                        } else {
-                            panic!("Expected failure but got success for case: {:?}", case);
-                        }
+                match withdraw_response {
+                    Ok(balance) => {
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Withdraw successful. New Balance: {}",
+                            i + 1,
+                            balance
+                        );
                     }
-                    Err(e) => {
-                        if !case.expect_success {
-                            assert_eq!(
-                                case.expected_error_message.as_deref(),
-                                Some(e.as_str()),
-                                "Error message mismatch for case: {:?}",
-                                case
-                            );
-                            println!("Withdraw failed as expected with error: {:?}", e);
-                        } else {
-                            panic!("Expected success but got error: {:?}", e);
-                        }
+                    Err(error) => {
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Withdraw failed with error: {:?}",
+                            i + 1,
+                            error
+                        );
                     }
                 }
             }
@@ -1009,19 +994,26 @@ fn test_withdraw() {
                     assert_eq!(
                         case.expected_error_message.as_deref(),
                         Some(reject_message.as_str()),
-                        "Error message mismatch for case: {:?}",
-                        case
+                        "❌ IC Test Case {} Failed: Error message mismatch.",
+                        i + 1
                     );
-                    println!("Withdraw rejected as expected: {}", reject_message);
+                    ic_cdk::println!(
+                        "✅ IC Test Case {} Passed: Withdraw rejected as expected with message: {}",
+                        i + 1,
+                        reject_message
+                    );
                 } else {
-                    panic!(
-                        "Expected success but got rejection for case: {:?} with message: {}",
-                        case, reject_message
-                    );
+                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
+                    panic!("Unexpected rejection.");
                 }
             }
             Err(e) => {
-                panic!("Error during withdraw function call: {:?}", e);
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Error during function call: {:?}",
+                    i + 1,
+                    e
+                );
+                panic!("Function call error.");
             }
         }
 

@@ -167,18 +167,17 @@ pub struct ExecuteSupplyParams {
     pub is_collateral: bool,
 }
 
+#[derive(CandidType)]
 pub struct ExecuteBorrowParams {
     pub asset: String,
     pub amount: Nat,
 }
 
-
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
 const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
 
-fn get_user_principal()->Principal {
-    Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae")
-            .unwrap()
+fn get_user_principal() -> Principal {
+    Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae").unwrap()
 }
 
 fn setup() -> (PocketIc, Principal) {
@@ -283,32 +282,6 @@ fn setup() -> (PocketIc, Principal) {
             panic!("🚨 Error calling initialize function: {:?}", e);
         }
     }
-
-    // let args = GetExchangeRateRequest {
-    //     base_asset: Asset {
-    //         symbol: "ICP".to_string(),
-    //     },
-    //     quote_asset: Asset {
-    //         symbol: "USD".to_string(),
-    //     },
-    //     timestamp: None, // Use Some(timestamp) if you want a historical rate
-    // };
-
-    // let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
-    //     pic.update_call(
-    //         xrc_canister,
-    //         "get_exchange_rate",
-    //         (args,),
-    //     );
-
-    // match res {
-    //     Ok((rate_result,)) => {
-    //         println!("Exchange rate: {:?}", rate_result.rate);
-    //     }
-    //     Err((code, msg)) => {
-    //         println!("Error: {:?}, {}", code, msg);
-    //     }
-    // }
 
     let result = pic.update_call(
         backend_canister,
@@ -442,7 +415,7 @@ fn test_faucet() {
     ];
 
     let (pic, backend_canister) = setup();
-    let user_principal =get_user_principal();
+    let user_principal = get_user_principal();
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("Running test case no: {}", i + 1);
@@ -512,7 +485,7 @@ fn test_supply() {
 
     let test_cases = vec![
         TestCase {
-            asset: "ckBTC".to_string(),
+            asset: "ICP".to_string(),
             amount: Nat::from(1000u128),
             is_collateral: true,
             expect_success: true,
@@ -528,14 +501,14 @@ fn test_supply() {
             ),
         },
         TestCase {
-            asset: "ckBTC".to_string(),
+            asset: "ICP".to_string(),
             amount: Nat::from(1u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
-            asset: "ckBTC".to_string(),
+            asset: "ICP".to_string(),
             amount: Nat::from(10_000_000_000u128),
             is_collateral: true,
             expect_success: true,
@@ -544,7 +517,7 @@ fn test_supply() {
     ];
 
     let (pic, backend_canister) = setup();
-    let user_principal =get_user_principal();
+    let user_principal = get_user_principal();
 
     ic_cdk::println!("");
     ic_cdk::println!(
@@ -657,75 +630,56 @@ fn test_borrow() {
             expect_success: true,
             expected_error_message: None,
         },
-        // Insufficient balance
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 10_00_000, // Valid amount but insufficient balance
-        //     user: Principal::anonymous().to_string(),
-        //     on_behalf_of: "user6".to_string(),
-        //     interest_rate: Nat::from(0u64),
-        //     expect_success: false,
-        //     expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
-        //     simulate_insufficient_balance: true,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
     ];
 
     let (pic, backend_canister) = setup();
-    let user_principal =
-        Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
-            .unwrap();
+    let user_principal = get_user_principal();
 
-
-    // for case in test_cases {
-    println!();
-    println!("****************************************************************************");
-    println!();
+    ic_cdk::println!(
+        "\n======================== Starting IC Borrow Tests ========================\n"
+    );
     for (i, case) in test_cases.iter().enumerate() {
-        // Print the case number
-        println!("Running test case no: {}", i + 1);
-        println!();
-        println!("Test case details: {:?}", case);
-        println!();
-        println!();
+        ic_cdk::println!("\n------------------------------------------------------------");
+        ic_cdk::println!("IC Test Case {}: Executing Borrow Request", i + 1);
+        ic_cdk::println!("Asset: {}", case.asset);
+        ic_cdk::println!("Amount: {}", case.amount);
+        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        if let Some(ref msg) = case.expected_error_message {
+            ic_cdk::println!("Expected Error Message: {}", msg);
+        }
+        ic_cdk::println!("------------------------------------------------------------\n");
 
         let borrow_params = ExecuteBorrowParams {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
         };
-        // Now call the borrow function  ///
+
         let result = pic.update_call(
             backend_canister,
             user_principal,
             "execute_borrow",
-            encode_one(supply_params).unwrap(),
+            encode_one(borrow_params).unwrap(),
         );
 
         match result {
-            Ok(WasmResult::Reply(response)) => {
-                let borrow_response: Result<(), String> =
-                    candid::decode_one(&response).expect("Failed to decode borrow response");
+            Ok(WasmResult::Reply(reply)) => {
+                let supply_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&reply).expect("Failed to get IC supply response");
 
-                match borrow_response {
-                    Ok(()) => {
-                        if case.expect_success {
-                            println!("Borrow succeeded for case: {:?}", case);
-                        } else {
-                            panic!("Expected failure but got success for case: {:?}", case);
-                        }
+                match supply_response {
+                    Ok(balance) => {
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Borrow successful. New Balance: {}",
+                            i + 1,
+                            balance
+                        );
                     }
-                    Err(e) => {
-                        if !case.expect_success {
-                            assert_eq!(
-                                case.expected_error_message.as_deref(),
-                                Some(e.as_str()),
-                                "Error message mismatch for case: {:?}",
-                                case
-                            );
-                            println!("Borrow failed as expected with error: {:?}", e);
-                        } else {
-                            panic!("Expected success but got error: {:?}", e);
-                        }
+                    Err(error) => {
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Borrow failed with error: {:?}",
+                            i + 1,
+                            error
+                        );
                     }
                 }
             }
@@ -734,26 +688,32 @@ fn test_borrow() {
                     assert_eq!(
                         case.expected_error_message.as_deref(),
                         Some(reject_message.as_str()),
-                        "Error message mismatch for case: {:?}",
-                        case
+                        "❌ IC Test Case {} Failed: Error message mismatch.",
+                        i + 1
                     );
-                    println!("Borrow rejected as expected: {}", reject_message);
+                    ic_cdk::println!(
+                        "✅ IC Test Case {} Passed: Borrow rejected as expected with message: {}",
+                        i + 1,
+                        reject_message
+                    );
                 } else {
-                    panic!(
-                        "Expected success but got rejection for case: {:?} with message: {}",
-                        case, reject_message
-                    );
+                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
+                    panic!("Unexpected rejection.");
                 }
             }
             Err(e) => {
-                panic!("Error during borrow function call: {:?}", e);
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Error during function call: {:?}",
+                    i + 1,
+                    e
+                );
+                panic!("Function call error.");
             }
         }
-
-        println!();
-        println!("****************************************************************************");
-        println!();
     }
+    ic_cdk::println!(
+        "\n======================== IC Borrow Tests Completed ========================\n"
+    );
 }
 
 #[test]

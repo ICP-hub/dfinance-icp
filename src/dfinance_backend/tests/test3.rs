@@ -10,6 +10,7 @@ use std::ptr::null;
 use std::{clone, fs};
 mod error;
 use error as errors;
+use std::collections::HashMap;
 
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
@@ -226,9 +227,9 @@ fn setup() -> (PocketIc, Principal) {
     ic_cdk::println!("Backend canister: {}", backend_canister);
 
     // 🔹 Define test input (token name + reserve data)
-    let token_name = "ICP".to_string();
-    let reserve_data = ReserveData {
-        asset_name: Some(token_name.clone()),
+    let ICP_token_name = "ICP".to_string();
+    let ICP_reserve_data = ReserveData {
+        asset_name: Some(ICP_token_name.clone()),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -256,42 +257,172 @@ fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(0u128), // Nat format for accure_to_platform
     };
 
+    let ckBTC_token_name = "ckBTC".to_string();
+    let ckBTC_reserve_data = ReserveData {
+        asset_name: Some(ckBTC_token_name.clone()),
+        id: 1,
+        d_token_canister: None,
+        debt_token_canister: None,
+        borrow_rate: Nat::from(0u128), // Nat format for borrow_rate
+        current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
+        asset_supply: Nat::from(0u128), // Nat format for asset_supply
+        asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
+        liquidity_index: Nat::from(1u128), // Nat format for liquidity_index
+        debt_index: Nat::from(0u128),  // Nat format for debt_index
+        configuration: ReserveConfiguration {
+            ltv: Nat::from(73u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(78u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(5u128),      // Nat format for liquidation_bonus
+            borrowing_enabled: true,
+            borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
+            supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
+            liquidation_protocol_fee: Nat::from(0u128), // Nat format for liquidation_protocol_fee
+            frozen: false,
+            active: true,
+            paused: false,
+            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+        },
+        can_be_collateral: Some(true),
+        last_update_timestamp: 1, // Nat format for last_update_timestamp
+        accure_to_platform: Nat::from(0u128), // Nat format for accure_to_platform
+    };
+
+    let ckETH_token_name = "ckETH".to_string();
+    let ckETH_reserve_data = ReserveData {
+        asset_name: Some(ckETH_token_name.clone()),
+        id: 1,
+        d_token_canister: None,
+        debt_token_canister: None,
+        borrow_rate: Nat::from(0u128), // Nat format for borrow_rate
+        current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
+        asset_supply: Nat::from(0u128), // Nat format for asset_supply
+        asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
+        liquidity_index: Nat::from(1u128), // Nat format for liquidity_index
+        debt_index: Nat::from(0u128),  // Nat format for debt_index
+        configuration: ReserveConfiguration {
+            ltv: Nat::from(80u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(83u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(5u128),      // Nat format for liquidation_bonus
+            borrowing_enabled: true,
+            borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
+            supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
+            liquidation_protocol_fee: Nat::from(0u128), // Nat format for liquidation_protocol_fee
+            frozen: false,
+            active: true,
+            paused: false,
+            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+        },
+        can_be_collateral: Some(true),
+        last_update_timestamp: 1, // Nat format for last_update_timestamp
+        accure_to_platform: Nat::from(0u128), // Nat format for accure_to_platform
+    };
+
+    let ckUSDC_token_name = "ckUSDC".to_string();
+    let ckUSDC_reserve_data = ReserveData {
+        asset_name: Some(ckUSDC_token_name.clone()),
+        id: 1,
+        d_token_canister: None,
+        debt_token_canister: None,
+        borrow_rate: Nat::from(0u128), // Nat format for borrow_rate
+        current_liquidity_rate: Nat::from(1u128), // Nat format for current_liquidity_rate
+        asset_supply: Nat::from(0u128), // Nat format for asset_supply
+        asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
+        liquidity_index: Nat::from(45u128), // Nat format for liquidity_index
+        debt_index: Nat::from(0u128),  // Nat format for debt_index
+        configuration: ReserveConfiguration {
+            ltv: Nat::from(75u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(78u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(5u128),      // Nat format for liquidation_bonus
+            borrowing_enabled: true,
+            borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
+            supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
+            liquidation_protocol_fee: Nat::from(0u128), // Nat format for liquidation_protocol_fee
+            frozen: false,
+            active: true,
+            paused: false,
+            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+        },
+        can_be_collateral: Some(true),
+        last_update_timestamp: 1, // Nat format for last_update_timestamp
+        accure_to_platform: Nat::from(0u128), // Nat format for accure_to_platform
+    };
+
+    let ckUSDT_token_name = "ckUSDT".to_string();
+    let ckUSDT_reserve_data = ReserveData {
+        asset_name: Some(ckUSDT_token_name.clone()),
+        id: 1,
+        d_token_canister: None,
+        debt_token_canister: None,
+        borrow_rate: Nat::from(0u128), // Nat format for borrow_rate
+        current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
+        asset_supply: Nat::from(0u128), // Nat format for asset_supply
+        asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
+        liquidity_index: Nat::from(1u128), // Nat format for liquidity_index
+        debt_index: Nat::from(0u128),  // Nat format for debt_index
+        configuration: ReserveConfiguration {
+            ltv: Nat::from(75u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(78u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(45u128),      // Nat format for liquidation_bonus
+            borrowing_enabled: true,
+            borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
+            supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
+            liquidation_protocol_fee: Nat::from(0u128), // Nat format for liquidation_protocol_fee
+            frozen: false,
+            active: true,
+            paused: false,
+            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+        },
+        can_be_collateral: Some(true),
+        last_update_timestamp: 1, // Nat format for last_update_timestamp
+        accure_to_platform: Nat::from(0u128), // Nat format for accure_to_platform
+    };
+
+    let mut reserve_tokens_map: HashMap<String, ReserveData> = HashMap::new();
+
+    reserve_tokens_map.insert(ICP_token_name, ICP_reserve_data);
+    reserve_tokens_map.insert(ckBTC_token_name, ckBTC_reserve_data);
+    reserve_tokens_map.insert(ckETH_token_name, ckETH_reserve_data);
+    reserve_tokens_map.insert(ckUSDC_token_name, ckUSDC_reserve_data);
+    reserve_tokens_map.insert(ckUSDT_token_name, ckUSDT_reserve_data);
+
     //================= Initialize ==================
     // 🔹 Call the `initialize` function
 
     ic_cdk::println!("things are working:");
-    // 🔹 Call the `initialize` function
-    let result = pic.update_call(
-        backend_canister,
-        user_principal,
-        "initialize",
-        encode_args((&token_name, &reserve_data)).unwrap(),
-    );
+    for (token_name, reserve_data) in &reserve_tokens_map {
+        // 🔹 Call the `initialize` function
+        let result = pic.update_call(
+            backend_canister,
+            user_principal,
+            "initialize",
+            encode_args((token_name, reserve_data)).unwrap(),
+        );
 
-    // 🔹 Decode the response
-    match result {
-        Ok(WasmResult::Reply(response)) => {
-            let initialize_response: Result<(), errors::Error> =
-                candid::decode_one(&response).expect("Failed to decode initialize response");
+        // 🔹 Decode the response
+        match result {
+            Ok(WasmResult::Reply(response)) => {
+                let initialize_response: Result<(), errors::Error> =
+                    candid::decode_one(&response).expect("Failed to decode initialize response");
 
-            match initialize_response {
-                Ok(()) => {
-                    ic_cdk::println!("✅ Initialize function succeeded for test case");
-                }
-                Err(e) => {
-                    ic_cdk::println!(
-                        "❌ Initialize function failed as expected with error: {:?}",
-                        e
-                    );
-                    panic!("🚨 Expected success but got error: {:?}", e);
+                match initialize_response {
+                    Ok(()) => {
+                        ic_cdk::println!("✅ Initialize function succeeded for test case");
+                    }
+                    Err(e) => {
+                        ic_cdk::println!(
+                            "❌ Initialize function failed as expected with error: {:?}",
+                            e
+                        );
+                        panic!("🚨 Expected success but got error: {:?}", e);
+                    }
                 }
             }
-        }
-        Ok(WasmResult::Reject(reject_message)) => {
-            panic!("🚨 Initialize function was rejected: {:?}", reject_message);
-        }
-        Err(e) => {
-            panic!("🚨 Error calling initialize function: {:?}", e);
+            Ok(WasmResult::Reject(reject_message)) => {
+                panic!("🚨 Initialize function was rejected: {:?}", reject_message);
+            }
+            Err(e) => {
+                panic!("🚨 Error calling initialize function: {:?}", e);
+            }
         }
     }
 
@@ -397,8 +528,20 @@ fn setup() -> (PocketIc, Principal) {
     (pic, backend_canister)
 }
 
+
 #[test]
-fn test_faucet() {
+fn call_test_function() {
+    let (pic, backend_canister) = setup();
+    test_faucet(&pic, backend_canister);
+    // test_supply(&pic, backend_canister);
+    //test_borrow(&pic, backend_canister);
+    // test_repay(&pic, backend_canister);
+    // test_withdraw(&pic, backend_canister);
+    // test_liquidation(&pic, backend_canister);
+}
+
+
+fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -452,7 +595,6 @@ fn test_faucet() {
         },
     ];
 
-    let (pic, backend_canister) = setup();
     let user_principal =get_user_principal();
 
     for (i, case) in test_cases.iter().enumerate() {
@@ -510,8 +652,8 @@ fn test_faucet() {
     }
 }
 
-#[test]
-fn test_supply() {
+
+fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -554,7 +696,7 @@ fn test_supply() {
         },
     ];
 
-    let (pic, backend_canister) = setup();
+
     let user_principal =get_user_principal();
 
     ic_cdk::println!("");

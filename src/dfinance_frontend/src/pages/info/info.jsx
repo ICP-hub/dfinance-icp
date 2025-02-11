@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
@@ -26,7 +26,7 @@ ChartJS.register(ArcElement, Tooltip);
  */
 const DashboardCards = () => {
   const navigate = useNavigate();
-  const { backendActor } = useAuth();
+  const { backendActor } = useAuths();
   const formatNumber = useFormatNumber();
 
   const [searchQuery, setSearchQuery] = useState("");

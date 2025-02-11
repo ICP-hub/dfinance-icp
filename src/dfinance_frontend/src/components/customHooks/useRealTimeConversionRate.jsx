@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useSelector } from "react-redux";
 
 /**
@@ -15,7 +15,7 @@ const useRealTimeConversionRate = (asset) => {
   );
   const [conversionRate, setConversionRate] = useState(0);
   const [error, setError] = useState(null);
-  const { backendActor } = useAuth();
+  const { backendActor } = useAuths();
 
   useEffect(() => {
     const fetchConversionRate = async () => {

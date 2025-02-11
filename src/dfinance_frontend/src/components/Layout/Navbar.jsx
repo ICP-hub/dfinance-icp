@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
-import { ClickAwayListener } from "@mui/base/ClickAwayListener";
+// import { ClickAwayListener } from "@mui/base/ClickAwayListener";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
@@ -20,6 +20,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/testnetmode";
+import { ConnectWallet, useBalance, useIdentityKit } from "@nfid/identitykit/react";
 import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
@@ -163,7 +164,7 @@ export default function Navbar({ isHomeNav }) {
     principal,
     reloadLogin,
     accountIdString,
-  } = useAuth();
+  } = useAuths();
 
   const handleCreateInternetIdentity = () => {
     login();
@@ -275,7 +276,20 @@ export default function Navbar({ isHomeNav }) {
       dispatch(setUserData(null));
     }
   }, [isAuthenticated]);
+  const ConnectBtn = ({ onClick }) => (
 
+    <button
+                  className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
+                 
+                >
+                  <div className="flex items-center justify-center">
+                    <p className="hidden md:flex">Connect Wallet</p>
+                    <div>
+                      <FaWallet size={17} className="ml-0 md:hidden" />
+                    </div>
+                  </div>
+                </button>
+  );
   const handleTestnetModeToggle = () => {
     navigate("/dashboard");
     dispatch(toggleTestnetMode());
@@ -383,7 +397,7 @@ export default function Navbar({ isHomeNav }) {
 
   return (
     <>
-      <ClickAwayListener onClickAway={handleClickAway}>
+      {/* <ClickAwayListener onClickAway={handleClickAway}> */}
         <div className="w-full">
           <nav className="w-full py-4 md:py-5 dxl:py-9 flex items-center justify-between">
             <div className="flex justify-center items-center ">
@@ -792,7 +806,7 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : (
               <div className="flex gap-3">
-                <button
+                {/* <button
                   className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
                   onClick={handleWalletConnect}
                 >
@@ -802,7 +816,11 @@ export default function Navbar({ isHomeNav }) {
                       <FaWallet size={17} className="ml-0 md:hidden" />
                     </div>
                   </div>
-                </button>
+                </button> */}
+                <ConnectWallet
+              connectButtonComponent={ConnectBtn}
+              className="rounded-full bg-black"
+            />
                 <div className="flex items-center justify-center">
                   <div className="relative">
                     {!isMobile ? (
@@ -877,7 +895,7 @@ export default function Navbar({ isHomeNav }) {
             )}
           </nav>
         </div>
-      </ClickAwayListener>
+      {/* </ClickAwayListener> */}
 
       <MobileTopNav
         isMobileNav={isMobileNav}

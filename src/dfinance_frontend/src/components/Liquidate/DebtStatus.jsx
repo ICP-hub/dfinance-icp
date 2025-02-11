@@ -6,7 +6,7 @@ import {
 import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
 import Pagination from "../../components/Common/pagination";
@@ -80,7 +80,7 @@ const DebtStatus = () => {
     principal,
     fetchReserveData,
     createLedgerActor,
-  } = useAuth();
+  } = useAuths();
 
   const showSearchBar = () => {
     setShowSearch(!Showsearch);

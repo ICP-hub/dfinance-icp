@@ -3,7 +3,7 @@ import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Modal } from "@mui/material";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import FaucetDetails from "../../components/Faucet/FaucetDetails";
 import Element from "../../../public/element/Elements.svg";
 import { setUserData } from "../../redux/reducers/userReducer";
@@ -30,7 +30,7 @@ const Faucet = () => {
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
   const [isTestnetMode, setIsTestnetMode] = useState(true);
 
   const handleWalletConnect = () => {

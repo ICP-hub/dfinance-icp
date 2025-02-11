@@ -4,7 +4,7 @@ import { Info } from "lucide-react";
 import { Fuel } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Check, Wallet, X } from "lucide-react";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
@@ -41,7 +41,7 @@ const WithdrawPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuths();
   const dispatch = useDispatch();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);

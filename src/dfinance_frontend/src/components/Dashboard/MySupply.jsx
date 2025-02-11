@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Principal } from "@dfinity/principal";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import {
   MY_ASSET_TO_SUPPLY_TABLE_COL,
   MY_BORROW_ASSET_TABLE_ROWS,
@@ -54,7 +54,7 @@ const MySupply = () => {
   );
   const theme = useSelector((state) => state.theme.theme);
   const { principal, fetchReserveData, createLedgerActor, user, backendActor } =
-    useAuth();
+    useAuths();
   const { state, pathname } = useLocation();
   const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
     useUserData();

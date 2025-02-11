@@ -1,7 +1,7 @@
 import { Check, X, TriangleAlert } from "lucide-react";
 import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
@@ -55,7 +55,7 @@ const Borrow = ({
   );
   const { filteredItems } = useAssetData();
   const dispatch = useDispatch();
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuths();
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]

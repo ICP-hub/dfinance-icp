@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import useFetchBalance from "./useFetchBalance";
 import { useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 
 /**
  * Custom hook to fetch and update conversion rates for various ckAssets in USD.
@@ -15,7 +15,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const ledgerActors = useSelector((state) => state.ledger);
-  const { principal, backendActor } = useAuth();
+  const { principal, backendActor } = useAuths();
   const {
     ckBTCBalance,
     ckETHBalance,

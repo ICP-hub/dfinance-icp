@@ -10,7 +10,7 @@ import {
 } from "../../redux/reducers/utilityReducer";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import { setUserData } from "../../redux/reducers/userReducer";
@@ -30,7 +30,7 @@ const WalletModal = () => {
     isSwitchingWallet,
     connectedWallet,
   } = useSelector((state) => state.utility);
-  const { login, logout, isAuthenticated } = useAuth();
+  const { login, logout, isAuthenticated } = useAuths();
 
   const handleWalletConnect = () => {
     dispatch(

@@ -8,7 +8,7 @@ import {
   setConnectedWallet,
 } from "../../redux/reducers/utilityReducer";
 import { Modal } from "@mui/material";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
 import MySupply from "./MySupply";
 import icplogo from "../../../public/wallet/icp.png";
@@ -26,7 +26,7 @@ const CreateWallet = () => {
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated, principal, createLedgerActor } = useAuth();
+  const { isAuthenticated, principal, createLedgerActor } = useAuths();
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })

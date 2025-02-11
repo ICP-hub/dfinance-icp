@@ -4,7 +4,7 @@ import { TAB_CARD_DATA } from "../../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
 import { Principal } from "@dfinity/principal";
@@ -60,7 +60,7 @@ const DashboardNav = () => {
     fetchReserveData,
     createLedgerActor,
     user,
-  } = useAuth();
+  } = useAuths();
   const [assetBalances, setAssetBalances] = useState([]);
   const [netWorth, setNetWorth] = useState();
   const [netApy, setNetApy] = useState(0);

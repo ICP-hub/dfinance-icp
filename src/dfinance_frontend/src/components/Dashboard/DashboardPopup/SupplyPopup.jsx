@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Info, Check, Wallet, X } from "lucide-react";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
@@ -46,7 +46,7 @@ const SupplyPopup = ({
   onLoadingChange,
 }) => {
   const dispatch = useDispatch();
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuths();
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const fees = useSelector((state) => state.fees.fees);
   const { healthFactorBackend } = useUserData();

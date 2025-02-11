@@ -16,7 +16,7 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useEffect } from "react";
 import useFetchBalance from "../customHooks/useFetchBalance";
 import useFormatNumber from "../customHooks/useFormatNumber";
@@ -55,7 +55,7 @@ const FaucetDetails = () => {
     (state) => state.faucetUpdate.refreshTrigger
   );
   const { isAuthenticated, principal, backendActor, createLedgerActor } =
-    useAuth();
+    useAuths();
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]

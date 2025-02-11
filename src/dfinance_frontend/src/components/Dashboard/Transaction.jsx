@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import WalletModal from './WalletModal';
 
 const TransactionDetail = () => {
   const dispatch = useDispatch();
   const { isWalletCreated, isWalletModalOpen, isSwitchingWallet } = useSelector(state => state.utility);
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login } = useAuths();
   const location = useLocation();
   const { transaction } = location.state;
   const navigate = useNavigate();

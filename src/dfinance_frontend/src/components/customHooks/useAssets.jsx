@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
 import { idlFactory } from "../../../../declarations/dtoken";
@@ -23,7 +23,7 @@ const useAssetData = (searchQuery = "") => {
     backendActor,
     isAuthenticated,
     createLedgerActor,
-  } = useAuth();
+  } = useAuths();
 
   const [assets, setAssets] = useState([]);
   const [reserveData, setReserveData] = useState(null);

@@ -7,10 +7,10 @@ import DashboardNav from "../../components/Dashboard/DashboardNav";
 import Loading from "../../components/Common/Loading";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 import useAssetData from "../../components/customHooks/useAssets";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 
 const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
   const { loading } = useAssetData();
   const isLoading = usePageLoading();
 

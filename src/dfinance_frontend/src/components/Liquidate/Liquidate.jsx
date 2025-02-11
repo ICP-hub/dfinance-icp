@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Button from "../Common/Button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
 import { ChevronLeft } from "lucide-react";
 import { useLocation } from "react-router-dom";
@@ -24,7 +24,7 @@ const Liquidate = () => {
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
   const [showDebtStatus, setShowDebtStatus] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
 

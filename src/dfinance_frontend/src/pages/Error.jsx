@@ -4,14 +4,14 @@ import Element from "../../public/element/Elements.svg";
 import { useDispatch, useSelector } from "react-redux";
 import Astro from "../../public/Error/astro.png";
 import Globe from "../../public/Error/globe.png";
-import { useAuth } from "../utils/useAuthClient";
+import { useAuths } from "../utils/useAuthClient";
 import WalletModal from "../components/Dashboard/WalletModal";
 
 const Error = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isSwitchingWallet } = useSelector((state) => state.utility);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
 
   const handleTakeMeBack = () => {
     navigate("/");

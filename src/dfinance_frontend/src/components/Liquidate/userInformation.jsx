@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Info, Check, X, TriangleAlert } from "lucide-react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
 import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
@@ -36,7 +36,7 @@ const UserInformationPopup = ({
     (state) => state.liquidateUpdate.LiquidateTrigger
   );
 
-  const { backendActor, principal: currentUserPrincipal } = useAuth();
+  const { backendActor, principal: currentUserPrincipal } = useAuths();
   const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
   const [isApproved, setIsApproved] = useState(false);

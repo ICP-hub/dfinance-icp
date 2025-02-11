@@ -5,7 +5,7 @@ import { transactionHistory } from "../../utils/constants";
 import { MdContentCopy } from "react-icons/md";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useDispatch, useSelector } from "react-redux";
 import Element from "../../../public/element/Elements.svg";
 import {
@@ -21,7 +21,7 @@ const TransactionHistory = () => {
     useState(transactionHistory);
   const [currentPage, setCurrentPage] = useState(1);
   const location = useLocation();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login } = useAuths();
   const navigate = useNavigate();
   const shouldRenderTransactionHistory =
     location.pathname === "/dashboard/transaction-history";

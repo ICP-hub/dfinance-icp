@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Info, Check, Wallet, X, TriangleAlert } from "lucide-react";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -38,7 +38,7 @@ const ColateralPopup = ({
 }) => {
   const dispatch = useDispatch();
   const { healthFactorBackend } = useUserData();
-  const { backendActor } = useAuth();
+  const { backendActor } = useAuths();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);

@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import { STACK_DETAILS_TABS } from "../../utils/constants";
 
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
 import StakesConnected from "../../components/Stake/StakesConnected";
 
@@ -18,7 +18,7 @@ const StakeDetails = () => {
   const { isWalletCreated, isWalletModalOpen } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
 
   const handleWalletConnect = () => {
     dispatch(setWalletModalOpen(!isWalletModalOpen));

@@ -3,7 +3,7 @@ import { Drawer, useMediaQuery } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
@@ -106,7 +106,7 @@ const MobileTopNav = ({
     principal,
     reloadLogin,
     accountIdString,
-  } = useAuth();
+  } = useAuths();
 
   useEffect(() => {
     if (isAuthenticated === true) {

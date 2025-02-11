@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import "react-toastify/dist/ReactToastify.css";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
@@ -14,7 +14,7 @@ const useUserData = () => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const { backendActor, principal, user, isAuthenticated } = useAuth();
+  const { backendActor, principal, user, isAuthenticated } = useAuths();
   const [userData, setUserData] = useState(null);
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);

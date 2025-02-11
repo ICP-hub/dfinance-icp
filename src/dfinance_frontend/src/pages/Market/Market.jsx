@@ -5,7 +5,7 @@ import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { trackEvent } from "../../utils/googleAnalytics";
 import icplogo from "../../../public/wallet/icp.png";
@@ -67,7 +67,7 @@ const WalletDetails = () => {
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated, principal } = useAuth();
+  const { isAuthenticated, principal } = useAuths();
   const {
     totalMarketSize,
     totalSupplySize,

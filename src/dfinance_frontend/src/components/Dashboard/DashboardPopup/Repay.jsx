@@ -1,7 +1,7 @@
 import { Info, Check, X } from "lucide-react";
 import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
 import { useEffect } from "react";
@@ -47,7 +47,7 @@ const Repay = ({
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
   const fees = useSelector((state) => state.fees.fees);
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuths();
   const dispatch = useDispatch();
   const principalObj = useMemo(
     () => Principal.fromText(principal),

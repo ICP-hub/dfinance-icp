@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { ChevronRight, X } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { SlidersHorizontal, SlidersVertical } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
@@ -18,7 +18,7 @@ import Error from "../../pages/Error";
  */
 
 const HealthFactorList = () => {
-  const { backendActor, isAuthenticated } = useAuth();
+  const { backendActor, isAuthenticated } = useAuths();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
   const [userAccountData, setUserAccountData] = useState({});

@@ -6,8 +6,8 @@ use ic_cdk::caller;
 use pocket_ic::{PocketIc, WasmResult};
 use serde::Serialize;
 use std::error::Error;
-use std::fs;
 use std::ptr::null;
+use std::{clone, fs};
 mod error;
 use error as errors;
 
@@ -158,6 +158,13 @@ enum ApproveError {
 enum ApproveResult {
     Ok(Nat),
     Err(ApproveError),
+}
+
+#[derive(CandidType)]
+pub struct ExecuteSupplyParams {
+    pub asset: String,
+    pub amount: Nat,
+    pub is_collateral: bool,
 }
 
 // #[derive(CandidType, Serialize, Deserialize)]
@@ -507,134 +514,88 @@ fn test_supply() {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
-        amount: u64,
-        user: String,
-        on_behalf_of: String,
-        interest_rate: Nat,
+        amount: Nat,
+        is_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
-        simulate_insufficient_balance: bool,
-        simulate_dtoken_transfer_failure: bool,
     }
 
     let test_cases = vec![
-        // Valid borrow case
         TestCase {
-            asset: "ckBTC".to_string(), //
-            amount: 1000,
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user1".to_string(),
-            interest_rate: Nat::from(0u64),
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(1000u128),
+            is_collateral: true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
-        // Non-existent asset case
         TestCase {
             asset: "nonexistent_asset".to_string(),
-            amount: 500,
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user2".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(50000u128),
+            is_collateral: true,
             expect_success: false,
             expected_error_message: Some(
                 "No canister ID found for asset: nonexistent_asset".to_string(),
             ),
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
-        // Minimum valid amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 1, // Minimum valid amount
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user4".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(1u128),
+            is_collateral: true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
-        // Large amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: 10_000, // Large amount
-            user: Principal::anonymous().to_string(),
-            on_behalf_of: "user5".to_string(),
-            interest_rate: Nat::from(0u64),
+            amount: Nat::from(10_000_000_000u128),
+            is_collateral: true,
             expect_success: true,
             expected_error_message: None,
-            simulate_insufficient_balance: false,
-            simulate_dtoken_transfer_failure: false,
         },
-        // Insufficient balance
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: 10_00_000, // Valid amount but insufficient balance
-        //     user: Principal::anonymous().to_string(),
-        //     on_behalf_of: "user6".to_string(),
-        //     interest_rate: Nat::from(0u64),
-        //     expect_success: false,
-        //     expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
-        //     simulate_insufficient_balance: true,
-        //     simulate_dtoken_transfer_failure: false,
-        // },
     ];
 
     let (pic, backend_canister) = setup();
+    let user_principal =
+        Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae")
+            .unwrap();
 
-    // for case in test_cases {
-    println!();
-    println!("****************************************************************************");
-    println!();
+    ic_cdk::println!("");
+    ic_cdk::println!(
+        "****************************************************************************"
+    );
+    ic_cdk::println!("");
     for (i, case) in test_cases.iter().enumerate() {
-        // Print the case number
-        println!("Running test case no: {}", i + 1);
-        println!();
-        println!("Test case details: {:?}", case);
-        println!();
-        println!();
-        // Now call the borrow function  ///
+        ic_cdk::println!("Running test case no: {}", i + 1);
+        ic_cdk::println!("");
+        ic_cdk::println!("Test case details: {:?}", case);
+        ic_cdk::println!("");
+
+        let supply_params = ExecuteSupplyParams {
+            asset: case.asset.clone(),
+            amount: case.amount.clone(),
+            is_collateral: case.is_collateral,
+        };
+
         let result = pic.update_call(
             backend_canister,
-            Principal::anonymous(),
-            "borrow",
-            encode_args((
-                case.asset.clone(),
-                case.amount,
-                case.user.clone(),
-                case.on_behalf_of.clone(),
-                case.interest_rate.clone(),
-            ))
-            .unwrap(),
+            user_principal,
+            "execute_supply",
+            encode_one(supply_params).unwrap(),
         );
 
         match result {
-            Ok(WasmResult::Reply(response)) => {
-                let borrow_response: Result<(), String> =
-                    candid::decode_one(&response).expect("Failed to decode borrow response");
+            Ok(WasmResult::Reply(reply)) => {
+                let decoded_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&reply).expect("Failed to decode faucet response");
 
-                match borrow_response {
-                    Ok(()) => {
-                        if case.expect_success {
-                            println!("Deposit succeeded for case: {:?}", case);
-                        } else {
-                            panic!("Expected failure but got success for case: {:?}", case);
-                        }
+                match decoded_response {
+                    Ok(balance) => {
+                        ic_cdk::println!("Faucet succeeded. New balance: {}", balance);
                     }
-                    Err(e) => {
-                        if !case.expect_success {
-                            assert_eq!(
-                                case.expected_error_message.as_deref(),
-                                Some(e.as_str()),
-                                "Error message mismatch for case: {:?}",
-                                case
-                            );
-                            println!("Deposit failed as expected with error: {:?}", e);
-                        } else {
-                            panic!("Expected success but got error: {:?}", e);
-                        }
+                    Ok(error) => {
+                        ic_cdk::println!("Faucet failed with error: {:?}", error);
+                    }
+                    Err(decode_err) => {
+                        ic_cdk::println!("Failed to decode faucet response: {:?}", decode_err);
                     }
                 }
             }
@@ -646,7 +607,7 @@ fn test_supply() {
                         "Error message mismatch for case: {:?}",
                         case
                     );
-                    println!("Deposit rejected as expected: {}", reject_message);
+                    ic_cdk::println!("Faucet rejected as expected: {}", reject_message);
                 } else {
                     panic!(
                         "Expected success but got rejection for case: {:?} with message: {}",
@@ -655,13 +616,15 @@ fn test_supply() {
                 }
             }
             Err(e) => {
-                panic!("Error during deposit function call: {:?}", e);
+                panic!("Error during faucet function call: {:?}", e);
             }
         }
 
-        println!();
-        println!("****************************************************************************");
-        println!();
+        ic_cdk::println!("");
+        ic_cdk::println!(
+            "****************************************************************************"
+        );
+        ic_cdk::println!("");
     }
 }
 

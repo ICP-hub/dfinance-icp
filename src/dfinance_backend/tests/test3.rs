@@ -176,11 +176,14 @@ pub struct ExecuteBorrowParams {
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
 const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
 
+fn get_user_principal()->Principal {
+    Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae")
+            .unwrap()
+}
+
 fn setup() -> (PocketIc, Principal) {
     let pic = PocketIc::new();
-    let user_principal =
-        Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
-            .unwrap();
+    let user_principal = get_user_principal();
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
@@ -439,9 +442,7 @@ fn test_faucet() {
     ];
 
     let (pic, backend_canister) = setup();
-    let user_principal =
-        Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
-            .unwrap();
+    let user_principal =get_user_principal();
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("Running test case no: {}", i + 1);
@@ -543,9 +544,7 @@ fn test_supply() {
     ];
 
     let (pic, backend_canister) = setup();
-    let user_principal =
-        Principal::from_text("3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae")
-            .unwrap();
+    let user_principal =get_user_principal();
 
     ic_cdk::println!("");
     ic_cdk::println!(
@@ -573,18 +572,18 @@ fn test_supply() {
 
         match result {
             Ok(WasmResult::Reply(reply)) => {
-                let decoded_response: Result<Nat, errors::Error> =
-                    candid::decode_one(&reply).expect("Failed to decode faucet response");
+                let supply_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&reply).expect("Failed to get supply response");
 
-                match decoded_response {
+                match supply_response {
                     Ok(balance) => {
-                        ic_cdk::println!("Faucet succeeded. New balance: {}", balance);
+                        ic_cdk::println!("Supply succeeded. New balance: {}", balance);
                     }
                     Ok(error) => {
-                        ic_cdk::println!("Faucet failed with error: {:?}", error);
+                        ic_cdk::println!("Supply failed with error: {:?}", error);
                     }
                     Err(decode_err) => {
-                        ic_cdk::println!("Failed to decode faucet response: {:?}", decode_err);
+                        ic_cdk::println!("Failed to decode Supply response: {:?}", decode_err);
                     }
                 }
             }
@@ -596,7 +595,7 @@ fn test_supply() {
                         "Error message mismatch for case: {:?}",
                         case
                     );
-                    ic_cdk::println!("Faucet rejected as expected: {}", reject_message);
+                    ic_cdk::println!("Supply rejected as expected: {}", reject_message);
                 } else {
                     panic!(
                         "Expected success but got rejection for case: {:?} with message: {}",
@@ -605,7 +604,7 @@ fn test_supply() {
                 }
             }
             Err(e) => {
-                panic!("Error during faucet function call: {:?}", e);
+                panic!("Error during supply function call: {:?}", e);
             }
         }
 

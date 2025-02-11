@@ -33,7 +33,6 @@ export default function App() {
     principal,
     backendActor,
     createLedgerActor,
-    reloadLogin,
   } = useAuths();
 
   const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
@@ -149,9 +148,7 @@ export default function App() {
     }
   }, [assetPrincipal, dispatch]);
 
-  useEffect(() => {
-    reloadLogin();
-  }, []);
+ 
 
   useEffect(() => {
     if (localStorage.getItem("theme") === "dark") {

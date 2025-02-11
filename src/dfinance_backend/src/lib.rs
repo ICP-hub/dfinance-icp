@@ -12,7 +12,7 @@ use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_account_data;
-
+use candid::{CandidType,Deserialize};
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -798,6 +798,48 @@ pub async fn post_upgrade() {
     schedule_midnight_task().await;
 }
 
+#[derive(CandidType, Deserialize, Eq, PartialEq, Debug)]
+pub struct SupportedStandard {
+    pub url: String,
+    pub name: String,
+}
+ 
+
+#[query]
+fn icrc10_supported_standards() -> Vec<SupportedStandard> {
+    vec![
+        SupportedStandard {
+            url: "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md".to_string(),
+            name: "ICRC-10".to_string(),
+        },
+        SupportedStandard {
+            url: "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md".to_string(),
+            name: "ICRC-28".to_string(),
+        },
+    ]
+}
+ 
+
+#[derive(Clone, Debug, CandidType, Deserialize)]
+pub struct Icrc28TrustedOriginsResponse {
+    pub trusted_origins: Vec<String>
+}
+ 
+// list every base URL that users will authenticate to your app from
+
+#[update]
+fn icrc28_trusted_origins() -> Icrc28TrustedOriginsResponse {
+    let trusted_origins = vec![
+        String::from("https://bn2g3-lqaaa-aaaaj-azykq-cai.icp0.io/"),
+        String::from("http://localhost:3000"),
+        String::from("http://cbopz-duaaa-aaaaa-qaaka-cai.localhost:4943"),
+        String::from("http://127.0.0.1:4943/?canisterId=cbopz-duaaa-aaaaa-qaaka-cai"),
+        String::from("http://127.0.0.1:4943"),
+        String::from("http://localhost:4200"),
+    ];
+ 
+    return Icrc28TrustedOriginsResponse { trusted_origins }
+}
 export_candid!();
 
 //BUG 1. Total collateral and total debt -> updated according to  price of asset

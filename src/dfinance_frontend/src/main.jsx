@@ -24,8 +24,8 @@ import "@nfid/identitykit/react/styles.css";
 
 Modal.setAppElement('#root');
 // Define signers and canister ID
-const signers = [NFIDW, Plug];
-const canisterID = process.env.CANISTER_ID_ICPLAUNCHPAD_BACKEND;
+const signers = [NFIDW, Plug,InternetIdentity];
+const canisterID = process.env.CANISTER_ID_DFINANCE_BACKEND;
 const signerClientOptions = {
   targets: [canisterID],
   maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000), // 1 week in nanoseconds

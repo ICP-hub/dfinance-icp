@@ -1,6 +1,8 @@
 // Combined useAuthClient for Internet Identity, NFID, and Bitfinity Integration
 import { AuthClient } from "@dfinity/auth-client";
 import { createActor } from "../../../declarations/dfinance_backend/index";
+import { createActor as createTokenActor} from "../../../declarations/token_ledger/index";
+
 import { useDispatch } from "react-redux";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useBalance, useIdentity, useAccounts, useDelegationType, useIsInitializing, useAuth ,useAgent} from '@nfid/identitykit/react'
@@ -12,14 +14,7 @@ const AuthContext = createContext();
 
 export const useAuthClient = () => {
   const dispatch = useDispatch();
-  const [authClient, setAuthClient] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [accountIdString, setAccountIdString] = useState("");
   const [backendActor, setBackendActor] = useState(null);
-  
-  
- 
-  
   const [principal, setPrincipal] = useState(null);
   const { connect, disconnect, isConnecting, user } = useAuth();
   const { balance, fetchBalance } = useBalance();
@@ -27,9 +22,7 @@ export const useAuthClient = () => {
   const delegationType = useDelegationType();
   const isInitializing = useIsInitializing();
   const agent = useAgent();
-  const LOCAL_HOST = "http://127.0.0.1:4943";
-  const MAINNET_HOST = "https://ic0.app";
-  const HOST = process.env.DFX_NETWORK === "ic" ? MAINNET_HOST : LOCAL_HOST;
+
   const {
     isWalletCreated,
     isWalletModalOpen,
@@ -37,27 +30,27 @@ export const useAuthClient = () => {
     connectedWallet,
   } = useSelector((state) => state.utility);
 
+ 
   useEffect(() => {
-    AuthClient.create().then(setAuthClient);
-  }, []);
+    const initActor = async () => {
+      try {
+        if (user && identity && agent) {
+          // Fetch root key for local development
+          if (process.env.DFX_NETWORK !== "ic") {
+            await agent.fetchRootKey();
+          }
 
-  useEffect(() => {
-    if (authClient) {
-      initActor();
-    }
-  }, [authClient]);
-
-  const initActor = async () => {
-    try {
-      if (process.env.DFX_NETWORK !== "ic") {
-        await agent.fetchRootKey();
+          // Create actor
+          const actor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, { agent });
+          console.log('actor',actor)
+          setBackendActor(actor);
+        }
+      } catch (error) {
+        console.error("Error initializing actor:", error.message);
       }
-      const actor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, { agent });
-      setBackendActor(actor);
-    } catch (error) {
-      console.error("Error initializing actor:", error.message);
-    }
-  };
+    };
+    initActor();
+  }, [user, identity, agent]);
 
   const login = async () => {
     try {
@@ -89,7 +82,7 @@ export const useAuthClient = () => {
     try {
       await disconnect();
       setBackendActor(null);
-      setIsAuthenticated(false);
+      // setIsAuthenticated(false);
       
       setPrincipal(null);
       // dispatch(logoutSuccess());
@@ -119,24 +112,13 @@ export const useAuthClient = () => {
   // };
 
   const createLedgerActor = (canisterId, IdlFac) => {
-    const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
       agent.fetchRootKey().catch((err) => {});
     }
-    return Actor.createActor(IdlFac, { agent, canisterId });
+    return createTokenActor(IdlFac, { agent, canisterId });
   };
-  
-  const reloadLogin = async () => {
-    try {
-      if (
-        authClient.isAuthenticated() &&
-        !(await authClient.getIdentity().getPrincipal().isAnonymous())
-      ) {
-        updateClient(authClient);
-      }
-    } catch (error) {}
-  }; 
+
    const checkUser = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -185,11 +167,10 @@ export const useAuthClient = () => {
     login,
     logout,
     identity,
-        principal,
+     principal,
     backendActor,
     checkUser,
     createLedgerActor,
-    reloadLogin,
     fetchReserveData,
     getAllUsers,
   };

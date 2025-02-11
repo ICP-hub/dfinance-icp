@@ -21,15 +21,8 @@ const useFetchBalance = (ledgerActors, principal) => {
   const [error, setError] = useState(null);
 
   const principalObj = useMemo(() => {
-  if (!principal) return null;  // ✅ Prevent null values
-  try {
-    return Principal.fromText(principal);
-  } catch (error) {
-    console.error("Invalid principal:", principal);
-    return null;
-  }
-}, [principal]);
-
+    return principal ? Principal.fromText(principal) : null;
+  }, [principal]);
 
   /**
    * Fetches the balance of a given asset type using the corresponding ledger actor.
@@ -37,43 +30,46 @@ const useFetchBalance = (ledgerActors, principal) => {
    */
   const fetchBalance = useCallback(
     async (assetType) => {
-      if (principalObj) {
-        try {
-          const account = { owner: principalObj, subaccount: [] };
-          const ledgerActor = ledgerActors[assetType];
-          if (
-            !ledgerActor ||
-            typeof ledgerActor.icrc1_balance_of !== "function"
-          ) {
-            return;
-          }
-          const balance = await ledgerActor.icrc1_balance_of(account);
-          const formattedBalance = Number(balance) / 100000000;
-          switch (assetType) {
-            case "ckBTC":
-              setCkBTCBalance(formattedBalance);
-              break;
-            case "ckETH":
-              setCkETHBalance(formattedBalance);
-              break;
-            case "ckUSDC":
-              setCKUSDCBalance(formattedBalance);
-              break;
-            case "ICP":
-              setCkICPBalance(formattedBalance);
-              break;
-            case "ckUSDT":
-              setCkUSDTBalance(formattedBalance);
-              break;
-            default:
-              throw new Error("Unsupported asset type");
-          }
-        } catch (error) {
-          setError(error);
-          console.error(`Error fetching balance for ${assetType}:`, error);
-        }
-      } else {
+      if (!principalObj) {
         console.error("Invalid Principal:", principal);
+        return; // Exit early if principal is not present
+      }
+  
+      try {
+        const account = { owner: principalObj, subaccount: [] };
+        const ledgerActor = ledgerActors[assetType];
+  
+        if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
+          console.warn(`Ledger actor for ${assetType} is invalid.`);
+          return;
+        }
+  
+        const balance = await ledgerActor.icrc1_balance_of(account);
+        const formattedBalance = Number(balance) / 100000000;
+  
+        // Handle different asset types
+        switch (assetType) {
+          case "ckBTC":
+            setCkBTCBalance(formattedBalance);
+            break;
+          case "ckETH":
+            setCkETHBalance(formattedBalance);
+            break;
+          case "ckUSDC":
+            setCKUSDCBalance(formattedBalance);
+            break;
+          case "ICP":
+            setCkICPBalance(formattedBalance);
+            break;
+          case "ckUSDT":
+            setCkUSDTBalance(formattedBalance);
+            break;
+          default:
+            throw new Error("Unsupported asset type");
+        }
+      } catch (error) {
+        setError(error);
+        console.error(`Error fetching balance for ${assetType}:`, error);
       }
     },
     [ledgerActors, principalObj, dashboardRefreshTrigger]

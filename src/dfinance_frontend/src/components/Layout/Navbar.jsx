@@ -162,7 +162,6 @@ export default function Navbar({ isHomeNav }) {
     login,
     logout,
     principal,
-    reloadLogin,
     accountIdString,
   } = useAuths();
 

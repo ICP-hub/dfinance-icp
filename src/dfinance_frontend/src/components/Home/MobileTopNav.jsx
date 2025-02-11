@@ -104,7 +104,6 @@ const MobileTopNav = ({
     login,
     logout,
     principal,
-    reloadLogin,
     accountIdString,
   } = useAuths();
 

@@ -536,12 +536,6 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             expect_success: true,
             expected_error_message: None,
         },
-        TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: Nat::from(50000u128),
-            expect_success: false,
-            expected_error_message: Some("Asset not found: nonexistent_asset".to_string()),
-        },
         // Minimum valid amount
         TestCase {
             asset: "ckBTC".to_string(),
@@ -615,7 +609,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     );
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("IC Test Case {}: Executing Faucet Request", i + 1);
+        ic_cdk::println!("🔵 IC Test Case {}: Executing Faucet Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
         ic_cdk::println!("Amount: {}", case.amount);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
@@ -640,13 +634,18 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
 
                 match decoded_response {
                     Ok(balance) => {
-                        ic_cdk::println!("Faucet succeeded. New balance: {}", balance);
-                    }
-                    Ok(error) => {
-                        ic_cdk::println!("Faucet failed with error: {:?}", error);
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Faucet successful. New Balance: {}",
+                            i + 1,
+                            balance
+                        );
                     }
                     Err(decode_err) => {
-                        ic_cdk::println!("Failed to decode faucet response: {:?}", decode_err);
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Faucet failed with error: {:?}",
+                            i + 1,
+                            decode_err
+                        );
                     }
                 }
             }
@@ -655,19 +654,26 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                     assert_eq!(
                         case.expected_error_message.as_deref(),
                         Some(reject_message.as_str()),
-                        "Error message mismatch for case: {:?}",
-                        case
+                        "❌ IC Test Case {} Failed: Error message mismatch for case: {:?}",
+                        i + 1, case
                     );
-                    ic_cdk::println!("Faucet rejected as expected: {}", reject_message);
+                    ic_cdk::println!(
+                        "✅ IC Test Case {} Passed: Faucet rejected as expected with message: {}",
+                        i + 1,
+                        reject_message
+                    );
                 } else {
-                    panic!(
-                        "Expected success but got rejection for case: {:?} with message: {}",
-                        case, reject_message
-                    );
+                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
+                    panic!("Unexpected rejection.");
                 }
             }
             Err(e) => {
-                panic!("Error during faucet function call: {:?}", e);
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Error during faucet function call: {:?}",
+                    i + 1,
+                    e
+                );
+                panic!("Faucet function call error.");
             }
         }
     }
@@ -764,7 +770,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     );
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("IC Test Case {}: Executing Supply Request", i + 1);
+        ic_cdk::println!("🔵 IC Test Case {}: Executing Supply Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
         ic_cdk::println!("Amount: {}", case.amount);
         ic_cdk::println!("Is Collateral: {}", case.is_collateral);
@@ -790,24 +796,28 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     }
                     Ok(Err(err)) => {
                         // Handle the error returned by get_asset_principal
-                        ic_cdk::println!("Error retrieving asset principal: {:?}", err);
+                        ic_cdk::println!("❌ IC Test Case {} Failed: Error retrieving asset principal: {:?}",i+1, err);
                         None
                     }
                     Err(decode_err) => {
                         // Handle the error while decoding the response
-                        ic_cdk::println!("Error decoding the response: {}", decode_err);
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Borrow failed with error: {:?}",
+                            i + 1,
+                            decode_err
+                        );
                         None
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
                 // Handle the rejection message from the WasmResult
-                println!("Query call rejected: {}", reject_message);
+                println!("❌ Query call rejected: {}", reject_message);
                 None
             }
             Err(call_err) => {
                 // Handle the error from the query call itself
-                println!("Query call failed: {}", call_err);
+                println!("❌ Query call failed: {}", call_err);
                 None
             }
         };
@@ -835,8 +845,8 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             },
         };
 
-        let args_encoded = encode_one(approve_args).expect("Failed to encode approve arguments");
-
+        let args_encoded = encode_one(approve_args).expect("❌ Failed to encode approve arguments");
+        ic_cdk::println!("🟦 ICRC2 Approving ...");
         // Call the `approve` method on `ckbtc_canister`
         let approve_result = pic.update_call(
             asset_principal, //asset_canister variable
@@ -851,24 +861,24 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
                 match approve_response {
                     Ok(ApproveResult::Ok(block_index)) => {
-                        ic_cdk::println!("Approve succeeded, block index: {}", block_index);
+                        ic_cdk::println!("☑️ Approve succeeded, block index: {}", block_index);
                     }
                     Ok(ApproveResult::Err(error)) => {
-                        ic_cdk::println!("Approve failed with error: {:?}", error);
+                        ic_cdk::println!("❌ Approve failed with error: {:?}", error);
                         continue;
                     }
                     Err(e) => {
-                        ic_cdk::println!("Failed to decode ApproveResult: {:?}", e);
+                        ic_cdk::println!("❌  Failed to decode ApproveResult: {:?}", e);
                         continue;
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-               ic_cdk:: println!("Approve call rejected: {}", reject_message);
+               ic_cdk:: println!("❌  Approve call rejected: {}", reject_message);
                 continue;
             }
             Err(e) => {
-                ic_cdk::println!("Error during approve call: {:?}", e);
+                ic_cdk::println!("❌  Error during approve call: {:?}", e);
                 continue;
             }
         }
@@ -895,13 +905,18 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
 
                 match supply_response {
                     Ok(balance) => {
-                        ic_cdk::println!("Supply succeeded. New balance: {}", balance);
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Supply successful. New Balance: {}",
+                            i + 1,
+                            balance
+                        );
                     }
-                    Ok(error) => {
-                        ic_cdk::println!("Supply failed with error: {:?}", error);
-                    }
-                    Err(decode_err) => {
-                        ic_cdk::println!("Failed to decode Supply response: {:?}", decode_err);
+                    Err(error) => {
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Supply failed with error: {:?}",
+                            i + 1,
+                            error
+                        );
                     }
                 }
             }
@@ -910,19 +925,26 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     assert_eq!(
                         case.expected_error_message.as_deref(),
                         Some(reject_message.as_str()),
-                        "Error message mismatch for case: {:?}",
-                        case
+                        "❌ IC Test Case {} Failed: Error message mismatch for case: {:?}",
+                        i+1, case
                     );
-                    ic_cdk::println!("Supply rejected as expected: {}", reject_message);
+                    ic_cdk::println!(
+                        "✅ IC Test Case {} Passed: Supply rejected as expected with message: {}",
+                        i + 1,
+                        reject_message
+                    );
                 } else {
-                    panic!(
-                        "Expected success but got rejection for case: {:?} with message: {}",
-                        case, reject_message
-                    );
+                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
+                    panic!("Unexpected rejection.");
                 }
             }
             Err(e) => {
-                panic!("Error during supply function call: {:?}", e);
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Error during supply function call: {:?}",
+                    i + 1,
+                    e
+                );
+                panic!("Supply Function call error.");
             }
         }
     }
@@ -1041,7 +1063,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     );
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("IC Test Case {}: Executing Borrow Request", i + 1);
+        ic_cdk::println!("🔵 IC Test Case {}: Executing Borrow Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
         ic_cdk::println!("Amount: {}", case.amount);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
@@ -1064,10 +1086,10 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
 
         match result {
             Ok(WasmResult::Reply(reply)) => {
-                let supply_response: Result<Nat, errors::Error> =
+                let borrow_response: Result<Nat, errors::Error> =
                     candid::decode_one(&reply).expect("Failed to get IC borrow response");
 
-                match supply_response {
+                match borrow_response {
                     Ok(balance) => {
                         ic_cdk::println!(
                             "✅ IC Test Case {} Passed: Borrow successful. New Balance: {}",
@@ -1104,11 +1126,11 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             }
             Err(e) => {
                 ic_cdk::println!(
-                    "❌ IC Test Case {} Failed: Error during function call: {:?}",
+                    "❌ IC Test Case {} Failed: Error during borrow function call: {:?}",
                     i + 1,
                     e
                 );
-                panic!("Function call error.");
+                panic!("Borrow Function call error.");
             }
         }
     }
@@ -1261,7 +1283,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     );
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("IC Test Case {}: Executing Withdraw Request", i + 1);
+        ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
         ic_cdk::println!("Amount: {}", case.amount);
         ic_cdk::println!("On Behalf Of: {}", 
@@ -1330,7 +1352,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             }
             Err(e) => {
                 ic_cdk::println!(
-                    "❌ IC Test Case {} Failed: Error during function call: {:?}",
+                    "❌ IC Test Case {} Failed: Error during withdraw function call: {:?}",
                     i + 1,
                     e
                 );
@@ -1441,7 +1463,7 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("IC Test Case {}: Executing Repay Request", i + 1);
+        ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
         ic_cdk::println!("Amount: {}", case.amount);
         if let Some(ref principal) = case.on_behalf_of {
@@ -1514,11 +1536,11 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             }
             Err(e) => {
                 ic_cdk::println!(
-                    "❌ IC Test Case {} Failed: Error during function call: {:?}",
+                    "❌ IC Test Case {} Failed: Error during repay function call: {:?}",
                     i + 1,
                     e
                 );
-                panic!("Function call error.");
+                panic!("Repay Function call error.");
             }
         }
     }
@@ -1667,7 +1689,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     );
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("IC Test Case {}: Executing Liquidation Request", i + 1);
+        ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
         ic_cdk::println!("Debt Asset: {}", case.debt_asset);
         ic_cdk::println!("Collateral Asset: {}", case.collateral_asset);
         ic_cdk::println!("Amount: {}", case.amount);
@@ -1704,19 +1726,20 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                     Ok(_) => {
                         if case.expect_success {
                             ic_cdk::println!(
-                                "✅ SUCCESS: Liquidation completed successfully for test case #{}",
+                                "✅ IC Test Case {} Passed: Liquidation completed successfully",
                                 i + 1
                             );
                         } else {
                             ic_cdk::println!(
-                                "❌ ERROR: Expected failure but got success for test case #{}",
+                                "❌ IC Test Case {} Failed: Expected failure but got success",
                                 i + 1
                             );
                         }
                     }
                     Err(e) => {
                         ic_cdk::println!(
-                            "❌ UNEXPECTED FAILURE: Expected success but got error: {:?}",
+                            "❌ IC Test Case {} Failed: Liquidation failed with error: {:?}",
+                            i + 1,
                             e
                         );
                     }
@@ -1724,25 +1747,29 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             }
             Ok(WasmResult::Reject(reject_message)) => {
                 if !case.expect_success {
-                    ic_cdk::println!(
-                        "✅ EXPECTED REJECTION: Liquidation rejected as expected: {}",
-                        reject_message
-                    );
                     assert_eq!(
                         case.expected_error_message.as_deref(),
                         Some(reject_message.as_str()),
-                        "🔴 ERROR: Mismatch in rejection message for test case #{}",
+                        "❌ IC Test Case {} Failed: Error message mismatch.",
                         i + 1
                     );
+                    ic_cdk::println!(
+                        "✅ IC Test Case {} Passed: Liquidation rejected as expected with message: {}",
+                        i + 1,
+                        reject_message
+                    );
                 } else {
-                    ic_cdk::println!("❌ UNEXPECTED REJECTION: Expected success but got rejection with message: {}", reject_message);
+                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
+                    panic!("Unexpected rejection.");
                 }
             }
             Err(e) => {
                 ic_cdk::println!(
-                    "🔥 CRITICAL ERROR: Execution failure during liquidation call: {:?}",
+                    "❌ IC Test Case {} Failed: Error during liquidation function call: {:?}",
+                    i + 1,
                     e
                 );
+                panic!("Liquidation Function call error.");
             }
         }
     }

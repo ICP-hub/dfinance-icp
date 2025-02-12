@@ -1,13 +1,8 @@
-use candid::types::principal;
 use candid::{decode_one, encode_args, encode_one, Principal};
 use candid::{CandidType, Deserialize, Nat};
-use ic_cdk::caller;
-// use dfinance_backend::declarations::assets::ReserveData;
 use pocket_ic::{PocketIc, WasmResult};
 use serde::Serialize;
-use std::error::Error;
-use std::ptr::null;
-use std::{clone, fs};
+use std::fs;
 mod error;
 use error as errors;
 use std::collections::HashMap;
@@ -236,7 +231,6 @@ fn setup() -> (PocketIc, Principal) {
         Some(Principal::anonymous()),
         vec![user_principal],
     );
-    ic_cdk::println!("Backend canister: {}", backend_canister);
 
     // 🔹 Define test input (token name + reserve data)
     let ICP_token_name = "ICP".to_string();
@@ -249,12 +243,12 @@ fn setup() -> (PocketIc, Principal) {
         current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
         asset_supply: Nat::from(0u128), // Nat format for asset_supply
         asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
-        liquidity_index: Nat::from(45u128), // Nat format for liquidity_index
+        liquidity_index: Nat::from(100000000u128), // Nat format for liquidity_index
         debt_index: Nat::from(0u128),  // Nat format for debt_index
         configuration: ReserveConfiguration {
-            ltv: Nat::from(58u128),                   // Nat format for ltv
-            liquidation_threshold: Nat::from(63u128), // Nat format for liquidation_threshold
-            liquidation_bonus: Nat::from(1u128),      // Nat format for liquidation_bonus
+            ltv: Nat::from(5800000000u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(6300000000u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(100000000u128),      // Nat format for liquidation_bonus
             borrowing_enabled: true,
             borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
             supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
@@ -262,7 +256,7 @@ fn setup() -> (PocketIc, Principal) {
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+            reserve_factor: Nat::from(1500000000u128), // Nat format for reserve_factor
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1, // Nat format for last_update_timestamp
@@ -279,12 +273,12 @@ fn setup() -> (PocketIc, Principal) {
         current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
         asset_supply: Nat::from(0u128), // Nat format for asset_supply
         asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
-        liquidity_index: Nat::from(1u128), // Nat format for liquidity_index
+        liquidity_index: Nat::from(100000000u128), // Nat format for liquidity_index
         debt_index: Nat::from(0u128),  // Nat format for debt_index
         configuration: ReserveConfiguration {
-            ltv: Nat::from(73u128),                   // Nat format for ltv
-            liquidation_threshold: Nat::from(78u128), // Nat format for liquidation_threshold
-            liquidation_bonus: Nat::from(5u128),      // Nat format for liquidation_bonus
+            ltv: Nat::from(7300000000u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(7800000000u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(500000000u128),      // Nat format for liquidation_bonus
             borrowing_enabled: true,
             borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
             supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
@@ -292,7 +286,7 @@ fn setup() -> (PocketIc, Principal) {
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+            reserve_factor: Nat::from(1500000000u128), // Nat format for reserve_factor
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1, // Nat format for last_update_timestamp
@@ -309,12 +303,12 @@ fn setup() -> (PocketIc, Principal) {
         current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
         asset_supply: Nat::from(0u128), // Nat format for asset_supply
         asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
-        liquidity_index: Nat::from(1u128), // Nat format for liquidity_index
+        liquidity_index: Nat::from(100000000u128), // Nat format for liquidity_index
         debt_index: Nat::from(0u128),  // Nat format for debt_index
         configuration: ReserveConfiguration {
-            ltv: Nat::from(80u128),                   // Nat format for ltv
-            liquidation_threshold: Nat::from(83u128), // Nat format for liquidation_threshold
-            liquidation_bonus: Nat::from(5u128),      // Nat format for liquidation_bonus
+            ltv: Nat::from(8000000000u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(8300000000u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(500000000u128),      // Nat format for liquidation_bonus
             borrowing_enabled: true,
             borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
             supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
@@ -322,7 +316,7 @@ fn setup() -> (PocketIc, Principal) {
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+            reserve_factor: Nat::from(1500000000u128), // Nat format for reserve_factor
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1, // Nat format for last_update_timestamp
@@ -339,12 +333,12 @@ fn setup() -> (PocketIc, Principal) {
         current_liquidity_rate: Nat::from(1u128), // Nat format for current_liquidity_rate
         asset_supply: Nat::from(0u128), // Nat format for asset_supply
         asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
-        liquidity_index: Nat::from(45u128), // Nat format for liquidity_index
+        liquidity_index: Nat::from(100000000u128), // Nat format for liquidity_index
         debt_index: Nat::from(0u128),  // Nat format for debt_index
         configuration: ReserveConfiguration {
-            ltv: Nat::from(75u128),                   // Nat format for ltv
-            liquidation_threshold: Nat::from(78u128), // Nat format for liquidation_threshold
-            liquidation_bonus: Nat::from(5u128),      // Nat format for liquidation_bonus
+            ltv: Nat::from(7500000000u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(7800000000u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(500000000u128),      // Nat format for liquidation_bonus
             borrowing_enabled: true,
             borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
             supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
@@ -352,7 +346,7 @@ fn setup() -> (PocketIc, Principal) {
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+            reserve_factor: Nat::from(1500000000u128), // Nat format for reserve_factor
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1, // Nat format for last_update_timestamp
@@ -369,12 +363,12 @@ fn setup() -> (PocketIc, Principal) {
         current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
         asset_supply: Nat::from(0u128), // Nat format for asset_supply
         asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
-        liquidity_index: Nat::from(1u128), // Nat format for liquidity_index
+        liquidity_index: Nat::from(100000000u128), // Nat format for liquidity_index
         debt_index: Nat::from(0u128),  // Nat format for debt_index
         configuration: ReserveConfiguration {
-            ltv: Nat::from(75u128),                   // Nat format for ltv
-            liquidation_threshold: Nat::from(78u128), // Nat format for liquidation_threshold
-            liquidation_bonus: Nat::from(45u128),     // Nat format for liquidation_bonus
+            ltv: Nat::from(7500000000u128),                   // Nat format for ltv
+            liquidation_threshold: Nat::from(7800000000u128), // Nat format for liquidation_threshold
+            liquidation_bonus: Nat::from(450000000u128),     // Nat format for liquidation_bonus
             borrowing_enabled: true,
             borrow_cap: Nat::from(10_000_000_000u128), // Nat format for borrow_cap
             supply_cap: Nat::from(10_000_000_000u128), // Nat format for supply_cap
@@ -382,7 +376,7 @@ fn setup() -> (PocketIc, Principal) {
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(15u128), // Nat format for reserve_factor
+            reserve_factor: Nat::from(1500000000u128), // Nat format for reserve_factor
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1, // Nat format for last_update_timestamp
@@ -518,11 +512,11 @@ fn setup() -> (PocketIc, Principal) {
 fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_faucet(&pic, backend_canister);
-    // test_supply(&pic, backend_canister);
-    // test_borrow(&pic, backend_canister);
-    // test_repay(&pic, backend_canister);
-    // test_withdraw(&pic, backend_canister);
-    // test_liquidation(&pic, backend_canister);
+    test_supply(&pic, backend_canister);
+    test_withdraw(&pic, backend_canister);
+    test_borrow(&pic, backend_canister);
+    test_repay(&pic, backend_canister);
+    test_liquidation(&pic, backend_canister);
 }
 
 fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
@@ -538,13 +532,20 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         //  Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(500u128),
+            amount: Nat::from(800000000u128),
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(500u128),
+            asset: "nonexistent_asset".to_string(),
+            amount: Nat::from(50000u128),
+            expect_success: false,
+            expected_error_message: Some("Asset not found: nonexistent_asset".to_string()),
+        },
+        // Minimum valid amount
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(400000000u128), // Minimum valid amount
             expect_success: true,
             expected_error_message: None,
         },
@@ -679,7 +680,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Valid Test Cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1000u128),
+            amount: Nat::from(600000000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -723,11 +724,11 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
         TestCase {
-            asset: "ckBTC12345".to_string(), // Exceeds 7 characters
-            amount: Nat::from(100u128),
-            is_collateral: false,
-            expect_success: false,
-            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
+            asset: "ICP".to_string(),
+            amount: Nat::from(600000000u128),
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
@@ -759,6 +760,107 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("");
         ic_cdk::println!("Test case details: {:?}", case);
         ic_cdk::println!("");
+
+        let result  = pic.query_call(
+            backend_canister,
+            Principal::anonymous(),
+            "get_asset_principal",
+            encode_one(case.asset.clone()).unwrap(),
+        );
+
+       let asset_canister_id =  match result {
+            Ok(WasmResult::Reply(response_data)) => {
+                match decode_one::<Result<Principal, errors::Error>>(&response_data) {
+                    Ok(Ok(principal)) => {
+                        // Successfully retrieved the principal
+                        Some(principal)
+                    }
+                    Ok(Err(err)) => {
+                        // Handle the error returned by get_asset_principal
+                        ic_cdk::println!("Error retrieving asset principal: {:?}", err);
+                        None
+                    }
+                    Err(decode_err) => {
+                        // Handle the error while decoding the response
+                        ic_cdk::println!("Error decoding the response: {}", decode_err);
+                        None
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                // Handle the rejection message from the WasmResult
+                println!("Query call rejected: {}", reject_message);
+                None
+            }
+            Err(call_err) => {
+                // Handle the error from the query call itself
+                println!("Query call failed: {}", call_err);
+                None
+            }
+        };
+
+        let asset_principal = match asset_canister_id {
+            Some(principal) => principal,
+            None => {
+                // Handle the case where the asset principal was not found
+                // println!("{:?}", case.expected_error_message);
+                continue;
+            }
+        };
+
+        let approve_args = ApproveArgs {
+            fee: None,
+            memo: None,
+            from_subaccount: None,
+            created_at_time: None,
+            amount: Nat::from(1000_0000_000u128), //alternative
+            expected_allowance: None,
+            expires_at: None,
+            spender: Account {
+                owner: backend_canister,
+                subaccount: None,
+            },
+        };
+
+        let args_encoded = encode_one(approve_args).expect("Failed to encode approve arguments");
+
+        // Call the `approve` method on `ckbtc_canister`
+        let approve_result = pic.update_call(
+            asset_principal, //asset_canister variable
+            user_principal,
+            "icrc2_approve",
+            args_encoded,
+        );
+
+        // Handle the result of the approve call
+        match approve_result {
+            Ok(WasmResult::Reply(reply)) => {
+                let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
+                match approve_response {
+                    Ok(ApproveResult::Ok(block_index)) => {
+                        ic_cdk::println!("Approve succeeded, block index: {}", block_index);
+                    }
+                    Ok(ApproveResult::Err(error)) => {
+                        ic_cdk::println!("Approve failed with error: {:?}", error);
+                        continue;
+                    }
+                    Err(e) => {
+                        ic_cdk::println!("Failed to decode ApproveResult: {:?}", e);
+                        continue;
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+               ic_cdk:: println!("Approve call rejected: {}", reject_message);
+                continue;
+            }
+            Err(e) => {
+                ic_cdk::println!("Error during approve call: {:?}", e);
+                continue;
+            }
+        }
+
+
 
         let supply_params = ExecuteSupplyParams {
             asset: case.asset.clone(),
@@ -832,7 +934,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         // Valid Test Cases (Normal Withdrawals)
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100u128),
+            amount: Nat::from(300000000u128),
             expect_success: true,
             expected_error_message: None,
         },
@@ -865,7 +967,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         // Boundary Cases (Minimum and Maximum Withdrawals)
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1u128), // Minimum possible valid amount
+            amount: Nat::from(100000000u128),
             expect_success: true,
             expected_error_message: None,
         },
@@ -1021,16 +1123,17 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     let test_cases = vec![
         // Valid Withdrawals (Direct)
         TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(100u128),
+            asset: "ICP".to_string(), //
+            amount: Nat::from(300000000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
+        //Non-existent asset case
         TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(50u128),
+            asset: "nonexistent_asset".to_string(),
+            amount: Nat::from(50000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1063,8 +1166,8 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     
         // Valid Collateral Withdrawals
         TestCase {
-            asset: "ckETH".to_string(),
-            amount: Nat::from(200u128),
+            asset: "ICP".to_string(),
+            amount: Nat::from(100000000u128), // Minimum valid amount
             on_behalf_of: None,
             is_collateral: true, // Withdrawing collateral
             expect_success: true,
@@ -1084,7 +1187,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Boundary Cases (Minimum and Maximum Withdrawals)
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1u128),
+            amount: Nat::from(10_000_000u128), // Large amount
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1249,9 +1352,9 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             expected_error_message: None,
         },
         TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(50u128),
-            on_behalf_of: Some(Principal::from_text("aaaaa-aa").unwrap()),
+            asset: "ICP".to_string(),
+            amount: Nat::from(100000000u128),
+            on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },

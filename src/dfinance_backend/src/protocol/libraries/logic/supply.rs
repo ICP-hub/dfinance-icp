@@ -1,3 +1,4 @@
+
 use crate::api::functions::asset_transfer_from;
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::mutate_state;
@@ -104,7 +105,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
 
         let mut reserve_data = match reserve_data_result {
             Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset");
+                ic_cdk::println!("Reserve data found for asset = {:?}",data);
                 data
             }
             Err(e) => {

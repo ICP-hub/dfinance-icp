@@ -1,8 +1,6 @@
 use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
-use crate::api::resource_manager::get_repay_locked_amount;
 use crate::api::resource_manager::release_lock;
-use crate::api::resource_manager::repay_lock_amount;
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
@@ -20,7 +18,7 @@ use ic_cdk::api::time;
  * @notice Stores temporary values used during the treasury accrual process.
  * @dev Holds previous debt values and calculated accrual amounts.
  */
-struct AccrueToTreasuryLocalVars {
+struct AccrueToTreasuryLocalVars { //
     prev_total_variable_debt: Nat,
     curr_total_variable_debt: Nat,
     total_debt_accrued: Nat,

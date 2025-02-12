@@ -1,4 +1,4 @@
-use super::math_utils::ScalingMath;
+
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
@@ -124,16 +124,6 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
     tokens
 }
 
-/*
- * @title User Financial Position
- * @dev Represents a user's position in terms of collateral, borrowings, and liquidation threshold.
- */
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct UserPosition {
-    pub total_collateral_value: Nat,
-    pub total_borrowed_value: Nat,
-    pub liquidation_threshold: Nat,
-}
 
 /*
  * @title Fetch Exchange Rates

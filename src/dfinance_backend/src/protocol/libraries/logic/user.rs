@@ -2,6 +2,7 @@ use super::update::user_data;
 use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
+use crate::declarations::storable::Candid;
 use crate::get_all_users;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
@@ -12,7 +13,7 @@ use crate::{
 };
 use candid::{CandidType, Deserialize, Nat, Principal};
 use futures::stream::{FuturesUnordered, StreamExt};
-use ic_cdk::query;
+use ic_cdk::{query, update};
 
 
 fn get_max_value() -> Nat {
@@ -561,4 +562,37 @@ pub async fn get_liquidation_users_concurrent(
     }
 
     liq_list
+}
+
+
+/*
+ * @title Register User
+ * @dev Registers a new user if they do not already exist.
+ * @returns A string message indicating success.
+ */
+#[update]
+fn register_user() -> Result<String, Error> {
+    ic_cdk::println!("function is register running");
+
+    let user_principal: Principal = ic_cdk::api::caller();
+    ic_cdk::println!("user principal register = {} ", user_principal);
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    let user_data = mutate_state(|state| {
+        let user_index = &mut state.user_profile;
+        match user_index.get(&user_principal) {
+            Some(_) => Ok("User available".to_string()),
+            None => {
+                let default_user_data = UserData::default();
+                user_index.insert(user_principal.clone(), Candid(default_user_data));
+                Ok("User added".to_string())
+            }
+        }
+    });
+
+    user_data
 }

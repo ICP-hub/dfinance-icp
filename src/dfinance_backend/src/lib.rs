@@ -62,7 +62,7 @@ pub async fn init(args: Principal) {
     schedule_midnight_task().await;
 }
 
-// #[query]
+
 pub fn get_controller() -> Result<InitArgs, Error> {
 
     match read_state(|state| {
@@ -191,116 +191,6 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     })
 }
 
-/*
- * @title Register User
- * @dev Registers a new user if they do not already exist.
- * @returns A string message indicating success.
- */
-#[update]
-fn register_user() -> Result<String, Error> {
-    ic_cdk::println!("function is register running");
-
-    let user_principal: Principal = ic_cdk::api::caller();
-    ic_cdk::println!("user principal register = {} ", user_principal);
-
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
-
-    let user_data = mutate_state(|state| {
-        let user_index = &mut state.user_profile;
-        match user_index.get(&user_principal) {
-            Some(_) => Ok("User available".to_string()),
-            None => {
-                let default_user_data = UserData::default();
-                user_index.insert(user_principal.clone(), Candid(default_user_data));
-                Ok("User added".to_string())
-            }
-        }
-    });
-
-    user_data
-}
-
-/*
- * @title Get User Position
- * @dev Fetches the user's updated asset supply and borrow amounts.
- * @param asset_name The asset name.
- * @returns A tuple containing the updated asset supply and borrow amounts.
- */
-#[query]
-pub async fn user_position(asset_name: String) -> Result<(Nat, Nat), Error> {
-    if asset_name.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
-
-    if asset_name.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
-
-    let user_principal = ic_cdk::caller();
-    ic_cdk::println!("User principal: {}", user_principal);
-
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
-
-    let user_data_result = read_state(|state| {
-        state
-            .user_profile
-            .get(&user_principal)
-            .map(|user| user.0.clone())
-            .ok_or_else(|| Error::UserNotFound)
-    });
-
-    let user_data = match user_data_result {
-        Ok(data) => data,
-        Err(err) => return Err(err),
-    };
-
-    let user_reserve_data = user_data
-        .reserves
-        .as_ref()
-        .and_then(|reserves| reserves.iter().find(|(name, _)| name == &asset_name))
-        .map(|(_, reserve_data)| reserve_data)
-        .ok_or_else(|| Error::NoUserReserveDataFound)?;
-
-    let prev_liq_index = user_reserve_data.liquidity_index.clone();
-    let prev_borrow_index = user_reserve_data.variable_borrow_index.clone();
-
-    let updated_asset_supply = if user_reserve_data.asset_supply > Nat::from(0u128) {
-        calculate_dynamic_balance(
-            user_reserve_data.asset_supply.clone(),
-            prev_liq_index,
-            user_reserve_data.liquidity_index.clone(),
-        )
-    } else {
-        Nat::from(0u128)
-    };
-
-    let updated_asset_borrow = if user_reserve_data.asset_borrow > Nat::from(0u128) {
-        calculate_dynamic_balance(
-            user_reserve_data.asset_borrow.clone(),
-            prev_borrow_index,
-            user_reserve_data.variable_borrow_index.clone(),
-        )
-    } else {
-        Nat::from(0u128)
-    };
-
-    ic_cdk::println!(
-        "For asset {}: Updated asset supply = {}, Updated asset borrow = {}",
-        asset_name,
-        updated_asset_supply,
-        updated_asset_borrow
-    );
-
-    Ok((updated_asset_supply, updated_asset_borrow))
-}
 
 /*
  * @title Get Cached Exchange Rate
@@ -352,24 +242,7 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
     }
 }
 
-/*
- * @title Calculate Dynamic Balance
- * @dev Computes the updated balance based on liquidity indexes.
- * @param initial_deposit The initial amount deposited.
- * @param prev_liquidity_index The previous liquidity index.
- * @param new_liquidity_index The latest liquidity index.
- * @returns The dynamically updated balance.
- */
-fn calculate_dynamic_balance(
-    initial_deposit: Nat,
-    prev_liquidity_index: Nat,
-    new_liquidity_index: Nat,
-) -> Nat {
-    if prev_liquidity_index == Nat::from(0u128) {
-        return Nat::from(0u128);
-    }
-    initial_deposit * (new_liquidity_index / prev_liquidity_index)
-}
+
 /*
  * @title Get Asset Supply
  * @dev Fetches the total asset supply for a given asset.
@@ -667,7 +540,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
         ic_cdk::println!("No update needed as timestamps match.");
         return Ok(reserve_data.debt_index);
     }
-    //instead of userreservedata use value from reservedata
     else {
         ic_cdk::println!(
             "Previous borrow index & rate: {:?} {:?}",
@@ -689,23 +561,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
-/*
- * @title Check Lock
- * @dev Attempts to acquire a lock for a user.
- * @returns `"Lock acquired"` on success.
- */
-#[update]
-async fn check_lock() -> Result<String, Error> {
-    let user_principal = ic_cdk::api::caller();
-    ic_cdk::println!("user principal = {} ", user_principal);
-
-    let result = acquire_lock(&user_principal);
-
-    match result {
-        Ok(_) => Ok("Lock acquired".to_string()),
-        Err(e) => Err(Error::LockAcquisitionFailed),
-    }
-}
 
 /*
  * @title Get Lock Status
@@ -737,16 +592,6 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
-/*
- * @title Force Panic
- * @dev This function intentionally panics for testing purposes.
- * @returns This function does not return, as it always panics.
- */
-#[update]
-fn will_panic() -> String {
-    ic_cdk::println!("About to panic!");
-    panic!("This function always panics!");
-}
 
 /*
  * @title Get User Account Data
@@ -804,11 +649,4 @@ pub async fn post_upgrade() {
 
 export_candid!();
 
-//BUG 1. Total collateral and total debt -> updated according to  price of asset
-//2. Available borrow in real time
-//3. Burn function repay
-// 4. cal of liq_index and borrow index of user
-//5. Optimization
-//6. accuare_to_treasury for fees
-//7. liq_bot -> discuss about node or timer
-//8. frontend -> cal h.f , dont show negative apy, remove tofix
+

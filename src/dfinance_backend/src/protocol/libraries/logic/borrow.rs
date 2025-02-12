@@ -83,7 +83,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         }
     }
 
-    let asset = params.asset.clone();
     let amount_requested = params.amount.clone();
 
     let result: Result<Nat, Error> = async {

@@ -85,22 +85,6 @@ pub fn calculate_compounded_interest(
 }
 
 /* 
- * @title Calculate Compounded Interest with Current Timestamp
- * @dev Calls `calculate_compounded_interest` using the current blockchain timestamp.
- * @param rate The annual interest rate as a `Nat` (percentage basis).
- * @param last_update_timestamp The timestamp (in seconds) when the interest was last updated.
- * @returns The compounded interest factor as a `Nat`, scaled using `SCALING_FACTOR`.
- */
-pub fn calculate_compounded_interest_with_current_timestamp(
-    rate: Nat,
-    last_update_timestamp: u64,
-) -> Nat {
-    let current_timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
-    
-    calculate_compounded_interest(rate, last_update_timestamp, current_timestamp)
-}
-
-/* 
  * @title Scaling Math Operations
  * @dev Defines mathematical operations for scaling values.
  * @notice Provides multiplication and division functions that handle `SCALING_FACTOR`.

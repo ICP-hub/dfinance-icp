@@ -512,10 +512,10 @@ fn setup() -> (PocketIc, Principal) {
 fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_faucet(&pic, backend_canister);
-    // test_supply(&pic, backend_canister);
-    // test_withdraw(&pic, backend_canister);
-    // test_borrow(&pic, backend_canister);
-    // test_repay(&pic, backend_canister);
+    test_supply(&pic, backend_canister);
+    test_withdraw(&pic, backend_canister);
+    test_borrow(&pic, backend_canister);
+    test_repay(&pic, backend_canister);
     // test_liquidation(&pic, backend_canister);
 }
 
@@ -532,7 +532,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         //  Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(800000000u128),
+            amount: Nat::from(1100000000u128),
             expect_success: true,
             expected_error_message: None,
         },
@@ -545,7 +545,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         // Minimum valid amount
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(400000000u128), // Minimum valid amount
+            amount: Nat::from(40000u128), // Minimum valid amount
             expect_success: true,
             expected_error_message: None,
         },
@@ -690,14 +690,14 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Valid Test Cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(600000000u128),
+            amount: Nat::from(900000000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
-            asset: "ckUSDC".to_string(),
-            amount: Nat::from(100u128),
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(20000u128),
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -941,7 +941,6 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     }
 
     let test_cases = vec![
-        // Valid Test Cases (Normal Withdrawals)
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(300000000u128),
@@ -949,7 +948,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             expected_error_message: None,
         },
         TestCase {
-            asset: "ckUSDT".to_string(),
+            asset: "ckBTC".to_string(),
             amount: Nat::from(1000u128),
             expect_success: true,
             expected_error_message: None,
@@ -1133,8 +1132,8 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     let test_cases = vec![
         // Valid Withdrawals (Direct)
         TestCase {
-            asset: "ICP".to_string(), //
-            amount: Nat::from(300000000u128),
+            asset: "ICP".to_string(),
+            amount: Nat::from(200000000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1142,8 +1141,8 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         //Non-existent asset case
         TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: Nat::from(50000u128),
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(10000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1197,7 +1196,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Boundary Cases (Minimum and Maximum Withdrawals)
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000u128), // Large amount
+            amount: Nat::from(100_000_0000u128), // Large amount
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1359,14 +1358,14 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Valid cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100u128),
+            amount: Nat::from(300_000_000u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(100000000u128),
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(1000u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,

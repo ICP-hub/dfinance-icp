@@ -315,13 +315,20 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
 
     for asset_name in keys {
         ic_cdk::println!("Updating test price for asset: {}", asset_name);
+        let base_asset = match asset_name.as_str() {
+            "ckBTC" => "btc".to_string(),
+            "ckETH" => "eth".to_string(),
+            "ckUSDC" => "usdc".to_string(),
+            "ckUSDT" => "usdt".to_string(),
+            _ => asset_name.clone(),
+        };
         
         if let Some(price) = manual_prices.get(&asset_name) {
             ic_cdk::println!("Found manual price for {}: {:?}", asset_name, price);
             
             let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
                 let price_cache_data = &mut state.price_cache_list;
-                if let Some(price_cache) = price_cache_data.get(&asset_name) {
+                if let Some(price_cache) = price_cache_data.get(&base_asset) {
                     ic_cdk::println!("Existing price cache found for {}: {:?}", asset_name, price_cache.0);
                     Ok(price_cache.0.clone())
                 } else {
@@ -329,17 +336,17 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
                     let new_price_cache: PriceCache = PriceCache {
                         cache: HashMap::new(),
                     };
-                    price_cache_data.insert(asset_name.clone(), Candid(new_price_cache.clone()));
+                    price_cache_data.insert(base_asset.clone(), Candid(new_price_cache.clone()));
                     Ok(new_price_cache)
                 }
             });
 
             if let Ok(mut price_cache_data) = price_cache_result {
                 ic_cdk::println!("Updating price cache for {} with new price: {:?}", asset_name, price);
-                price_cache_data.cache.insert(asset_name.clone(), protocol::libraries::math::calculate::CachedPrice { price: price.clone() });
+                price_cache_data.cache.insert(base_asset.clone(), protocol::libraries::math::calculate::CachedPrice { price: price.clone() });
                 
                 mutate_state(|state| {
-                    state.price_cache_list.insert(asset_name.clone(), Candid(price_cache_data.clone()));
+                    state.price_cache_list.insert(base_asset.clone(), Candid(price_cache_data.clone()));
                     ic_cdk::println!("State updated successfully for asset: {}", asset_name);
                 });
             } else {

@@ -176,6 +176,8 @@ pub async fn update_interest_rates(
         .curr_debt
         .clone()
         .scaled_mul(reserve_cache.next_debt_index.clone());
+    ic_cdk::println!("curr debt {}", reserve_cache.curr_debt);
+    ic_cdk::println!("next debt index {}", reserve_cache.next_debt_index);
     let asset = reserve_data
         .asset_name
         .clone()

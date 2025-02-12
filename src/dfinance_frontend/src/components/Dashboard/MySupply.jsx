@@ -1072,7 +1072,7 @@ const MySupply = () => {
                                 const supplyRateApr =
                                   Number(
                                     item?.[1]?.Ok?.current_liquidity_rate
-                                  ) / 100000000 || 0;
+                                  ) * 100 / 100000000 || 0;
                                 const liquidationThreshold =
                                   Number(userAccountData?.Ok?.[3]) /
                                     100000000 || 0;
@@ -1661,7 +1661,7 @@ const MySupply = () => {
                                 const supplyRateApr =
                                   Number(
                                     item?.[1]?.Ok?.current_liquidity_rate
-                                  ) / 100000000 || 0;
+                                  ) * 100 / 100000000 || 0;
                                 const liquidationThreshold =
                                   Number(userAccountData?.Ok?.[3]) /
                                     100000000 || 0;
@@ -2373,14 +2373,14 @@ const MySupply = () => {
                                     </span>
                                   </div>
                                   <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
-                                    {Number(item[1].Ok.current_liquidity_rate) /
+                                    {Number(item[1].Ok.current_liquidity_rate) * 100 /
                                       100000000 <
                                     0.01
                                       ? "<0.01%"
                                       : `${(
                                           Number(
                                             item[1].Ok.current_liquidity_rate
-                                          ) / 100000000
+                                          ) * 100 / 100000000
                                         ).toFixed(2)}%`}
                                   </p>
                                 </div>
@@ -2459,7 +2459,7 @@ const MySupply = () => {
                                           (item[0] === "ckUSDT" && ckUSDT),
                                         Number(
                                           item[1]?.Ok.current_liquidity_rate
-                                        ) / 100000000,
+                                        ) * 100 / 100000000,
                                         item[0] === "ckBTC"
                                           ? ckBTCBalance
                                           : item[0] === "ckETH"
@@ -2724,14 +2724,14 @@ const MySupply = () => {
                                   </div>
 
                                   <div className="align-top">
-                                    {Number(item[1].Ok.current_liquidity_rate) /
+                                    {Number(item[1].Ok.current_liquidity_rate) * 100 /
                                       100000000 <
                                     0.01
                                       ? "<0.01%"
                                       : `${(
                                           Number(
                                             item[1].Ok.current_liquidity_rate
-                                          ) / 100000000
+                                          ) * 100 / 100000000
                                         ).toFixed(2)}%`}
                                   </div>
 
@@ -2809,7 +2809,7 @@ const MySupply = () => {
                                             (item[0] === "ckUSDT" && ckUSDT),
                                           Number(
                                             item[1]?.Ok.current_liquidity_rate
-                                          ) / 100000000,
+                                          ) * 100 / 100000000,
                                           item[0] === "ckBTC"
                                             ? ckBTCBalance
                                             : item[0] === "ckETH"
@@ -3143,7 +3143,7 @@ const MySupply = () => {
                                       : null;
 
                                   const borrowRateApr =
-                                    Number(item?.[1]?.Ok?.borrow_rate) /
+                                    Number(item?.[1]?.Ok?.borrow_rate) * 100 /
                                       100000000 || 0;
                                   const liquidationThreshold =
                                     Number(userAccountData?.Ok?.[3]) /
@@ -3722,7 +3722,7 @@ const MySupply = () => {
                                   ? ckUSDTBalance
                                   : null;
                               const borrowRateApr =
-                                Number(item?.[1]?.Ok?.borrow_rate) /
+                                Number(item?.[1]?.Ok?.borrow_rate) * 100/
                                   100000000 || 0;
                               const liquidationThreshold =
                                 Number(userAccountData?.Ok?.[3]) / 100000000 ||
@@ -4475,12 +4475,12 @@ const MySupply = () => {
                                     </span>
                                   </div>
                                   <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                    {Number(item[1].Ok.borrow_rate) /
+                                    {Number(item[1].Ok.borrow_rate) * 100 /
                                       100000000 <
                                     0.01
                                       ? "<0.01%"
                                       : `${(
-                                          Number(item[1].Ok.borrow_rate) /
+                                          Number(item[1].Ok.borrow_rate) * 100 /
                                           100000000
                                         ).toFixed(2)}%`}
                                   </p>
@@ -4569,7 +4569,7 @@ const MySupply = () => {
                                           (item[0] === "ckUSDC" && ckUSDC) ||
                                           (item[0] === "ICP" && icp) ||
                                           (item[0] === "ckUSDT" && ckUSDT),
-                                        Number(item[1].Ok.borrow_rate) /
+                                        Number(item[1].Ok.borrow_rate) * 100 /
                                           100000000,
                                         item[0] === "ckBTC"
                                           ? ckBTCBalance
@@ -4930,12 +4930,12 @@ const MySupply = () => {
 
                                   <div className="p-3 lgx:pl-4 align-center flex items-center">
                                     <p className="mt-1.5">
-                                      {Number(item[1].Ok.borrow_rate) /
+                                      {Number(item[1].Ok.borrow_rate) * 100/
                                         100000000 <
                                       0.01
                                         ? "<0.01%"
                                         : `${(
-                                            Number(item[1].Ok.borrow_rate) /
+                                            Number(item[1].Ok.borrow_rate) * 100 /
                                             100000000
                                           ).toFixed(2)}%`}
                                     </p>
@@ -5031,7 +5031,7 @@ const MySupply = () => {
                                             (item[0] === "ckUSDC" && ckUSDC) ||
                                             (item[0] === "ICP" && icp) ||
                                             (item[0] === "ckUSDT" && ckUSDT),
-                                          Number(item[1].Ok.borrow_rate) /
+                                          Number(item[1].Ok.borrow_rate) * 100 /
                                             100000000,
                                           item[0] === "ckBTC"
                                             ? ckBTCBalance

@@ -22,7 +22,8 @@ const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
  * @returns The linear interest factor as a `Nat`, scaled using `SCALING_FACTOR`.
  */
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
-    let rate = rate_input/Nat::from(100u128);
+    // let rate = rate_input/Nat::from(100u128);
+        let rate = rate_input;
     let current_timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
     ic_cdk::println!("current time in cal_linear function {} and seconds per year {} and last timestamp {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp);
     let time_delta = current_timestamp - last_update_timestamp;
@@ -52,7 +53,7 @@ pub fn calculate_compounded_interest(
         ic_cdk::println!("exp is 0, returning SCALING_FACTOR {}",get_scaling_value());
         return get_scaling_value();
     }
-    let rate = rate_input / Nat::from(100u128);
+    let rate = rate_input;
     ic_cdk::println!("Rate calculated: {}", rate);
     
     let scaled_rate = (rate.clone() * exp as u128) / SECONDS_PER_YEAR as u128;
